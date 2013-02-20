@@ -10,7 +10,10 @@ import Routing
 import API.APIVersion (APIVersion(..))
 import Kontra
 import API.Monad
-import Control.Monad.Error
+import DB.SQL2
+import Control.Exception.Lifted
+import Control.Monad.Trans
+import Control.Monad
 import Happstack.Fields
 import Text.JSON.Gen
 import Data.Maybe
@@ -33,7 +36,7 @@ apiCallCheckClient :: Kontrakcja m => m Response
 apiCallCheckClient = api $ do
     mclient  <- lift $ getField "client"
     when (isNothing mclient) $ do
-      throwError $ serverError "No client description"
+      throwIO . SomeKontraException $ serverError "No client description"
     runJSONGenT $ do
       value "valid" True
       value "valid_until" JSNull

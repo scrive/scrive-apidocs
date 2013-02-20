@@ -147,7 +147,7 @@ authorSignDocument actor did msigninfo timezone screenshots = onlyAuthor did $ \
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
     dbUpdate $ PreparationToPending did actor (Just timezone)
-    True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+    dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- please delete after Oct 1, 2012 -Eric
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
     -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
@@ -173,14 +173,11 @@ authorSendDocument user actor did timezone = do
         Log.debug $ "Preparation to pending for document " ++ show did
         dbUpdate $ PreparationToPending did actor (Just timezone)
         Log.debug $ "Setting invite time for  " ++ show did
-        r2 <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-        if (not r2)
-               then return $ Left $ DBActionNotAvailable $ "Can't send proper invitation time on document"
-               else do
-                 mdoc <- dbQuery $ GetDocumentByDocumentID did
-                 return $ case mdoc of
-                    Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
-                    Just d -> Right d
+        dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+        mdoc <- dbQuery $ GetDocumentByDocumentID did
+        return $ case mdoc of
+          Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
+          Just d -> Right d
 
 {- |
   Reseting all signatory attachments when document is in preparation | State of document is not checked

@@ -549,7 +549,7 @@ testMarkInvitationReadEvidenceLog = do
 testMarkDocumentSeenEvidenceLog :: TestEnv ()
 testMarkDocumentSeenEvidenceLog  = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ (all (isAuthor =>>^ isSignatory) . documentsignatorylinks))
   let Just sl = getAuthorSigLink doc
       k = unMagicHash $ signatorymagichash sl
       mh = unsafeMagicHash (k + 1)

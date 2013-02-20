@@ -54,7 +54,7 @@ testInviteStat = do
                                                           (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time) Nothing
-  True <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (systemActor time)
+  dbUpdate $ SetDocumentInviteTime (documentid doc') time (systemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatInviteEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents

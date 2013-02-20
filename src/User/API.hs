@@ -16,6 +16,7 @@ import Happstack.Server.Types
 import Routing
 import API.APIVersion (APIVersion(..))
 import Control.Applicative
+import Control.Exception.Lifted
 import User.Model
 import Kontra
 import API.Monad
@@ -26,6 +27,7 @@ import OAuth.Model
 import OAuth.View
 import Data.Maybe
 import DB
+import DB.SQL2
 import User.UserView
 import User.Utils
 import ScriveByMail.Model
@@ -82,10 +84,10 @@ apiCallGetUserPersonalToken = api $ do
                   _success <- dbUpdate $ CreatePersonalToken uid
                   token <- dbQuery $ GetPersonalToken uid
                   case token of
-                       Nothing ->  throwError $ serverError "No token found, this should not happend"
+                       Nothing ->  throwIO . SomeKontraException $ serverError "No token found, this should not happend"
                        Just t ->  return $ Ok $ jsonFromPersonalToken t
-              else throwError $ serverError "Email and password don't match"
-        _ -> throwError $ serverError "Email or password is missing"
+              else throwIO . SomeKontraException $ serverError "Email and password don't match"
+        _ -> throwIO . SomeKontraException $ serverError "Email or password is missing"
 
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
@@ -114,7 +116,7 @@ apiCallChangeUserPassword = api $ do
             else do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" False)
-     _ ->  throwError $ serverError "Newpassword fields do not match Scrive standard"
+     _ ->  throwIO . SomeKontraException $ serverError "Newpassword fields do not match Scrive standard"
 
 
 apiCallChangeUserLanguage :: Kontrakcja m => m Response
@@ -214,7 +216,7 @@ apiCallSignup = api $ do
   ctx <- getContext
   memail <- lift $ getOptionalFieldNoFlash asValidEmail "email"
   when (isNothing memail) $ do
-    throwError $ serverError "Email not provided or invalid"
+    throwIO . SomeKontraException $ serverError "Email not provided or invalid"
   let email = fromJust memail
   firstname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "firstName"
   lastname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "lastName"

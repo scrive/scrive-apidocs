@@ -1834,15 +1834,20 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where
 
 
 data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime () where
   update (SetDocumentInviteTime did invitetime actor) = do
     let ipaddress  = fromMaybe noIP $ actorIP actor
-    updateWithEvidence' (checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND (invite_time IS DISTINCT FROM ? OR invite_ip IS DISTINCT FROM ?)" [toSql did, toSql invitetime, toSql ipaddress]) tableDocuments
-      (    "invite_time =" <?> invitetime
-     <+> ", invite_ip =" <?> ipaddress
-     <+> "WHERE id =" <?> did
-      ) $ do
-      return $ InsertEvidenceEvent
+    let decode acc tm ip = (tm,ip) : acc
+    (old_tm, old_ip) <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "documents" $ do
+       sqlFrom "documents AS documents_old"
+       sqlWhere "documents.id = documents_old.id"
+       sqlSet "invite_time" invitetime
+       sqlSet "invite_ip" ipaddress
+       sqlResult "documents_old.invite_time"
+       sqlResult "documents_old.invite_ip"
+       sqlWhereDocumentIDIs did
+    when (old_tm /= Just invitetime || old_ip /= Just ipaddress) $ do
+      void $ update $ InsertEvidenceEvent
         SetDocumentInviteTimeEvidence
         (value "time" (formatMinutesTimeUTC invitetime) >> value "actor" (actorWho actor))
         (Just did)
