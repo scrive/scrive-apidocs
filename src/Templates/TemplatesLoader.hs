@@ -89,6 +89,7 @@ instance (Stringable a) => ToSElem (SElem a) where
   toSElem (LI a) = (LI $ fmap (toSElem) a)
   toSElem (SBLE a) = (SBLE $ convert a)
   toSElem (SNAT a) = (SNAT $ convert a)
+  toSElem (TXT a) = (STR $ convert a)
   toSElem SNull = SNull
 
 convert :: (Stringable a, Stringable b) => a -> b
