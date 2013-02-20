@@ -23,13 +23,12 @@ import User.UserControl
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import User.API
 
 accountInfoTests :: TestEnvSt -> Test
 accountInfoTests env = testGroup "AccountInfo" [
     testThat "lets private account upgrade to company account" env testPrivateToCompanyUpgrade
   , testThat "lets users change their email addresses" env testChangeEmailAddress
-  , testThat  "requesting email change fails is the entered emails are mismatched" env testAddressesMustMatchToRequestEmailChange
-  , testThat "need two addresses to request email changes" env testNeedTwoAddressesToRequestEmailChange
   , testThat "need unique email to request email change" env testNeedEmailToBeUniqueToRequestChange
   , testThat "need the correct action id to complete email change" env testEmailChangeFailsIfActionIDIsWrong
   , testThat "need the correct hash to complete email change" env testEmailChangeFailsIfMagicHashIsWrong
@@ -42,47 +41,42 @@ accountInfoTests env = testGroup "AccountInfo" [
 testPrivateToCompanyUpgrade :: TestEnv ()
 testPrivateToCompanyUpgrade = do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let upgradeinfo = UpgradeInfo "Test Corp"
-                                "Andrzejj"
-                                "Rybczakk"
-                                "Tester"
-                                "12345"
-  (res1, ctx1) <- upgradeCompanyForUser user upgradeinfo
+  let cname   = "Test Corp"
+      fstname =  "Andrzejj"
+      sndname = "Rybczakk"
+      position = "Tester"
+      phone =  "12345"
 
-  assertCompanyUpgradeSuccessful (userid user) upgradeinfo (res1, ctx1)
+  -- We create company with one call
+  ctx <- (\c -> c { ctxmaybeuser = Just user })   <$> mkContext defaultValue
+  req <- mkRequest POST []
+  (res, _) <- runTestKontra req ctx $ apiCallCreateCompany
+  assertEqual "Response code is 200" 200 (rsCode res)
+  Just user' <- dbQuery $ GetUserByID (userid user)
 
-data UpgradeInfo = UpgradeInfo String String String String String
-
-upgradeCompanyForUser :: User -> UpgradeInfo -> TestEnv (Response, Context)
-upgradeCompanyForUser user (UpgradeInfo cname fstname sndname position phone) = do
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  req <- mkRequest POST [ ("createcompany", inText "true")
+  -- Now we update profile with other call
+  ctx' <- (\c -> c { ctxmaybeuser = Just user' })   <$> mkContext defaultValue
+  req' <- mkRequest POST [ ("createcompany", inText "true")
                         , ("companyname", inText cname)
                         , ("fstname", inText fstname)
                         , ("sndname", inText sndname)
                         , ("companyposition", inText position)
                         , ("phone", inText phone)
                         ]
-  runTestKontra req ctx $ handleUserPost >>= sendRedirect
+  (res', ctx'') <- runTestKontra req' ctx' $ apiCallUpdateUserProfile
 
-assertCompanyUpgradeSuccessful :: UserID -> UpgradeInfo -> (Response, Context) -> TestEnv ()
-assertCompanyUpgradeSuccessful uid (UpgradeInfo cname fstname sndname position phone) (res, ctx) = do
-  Just user <- dbQuery $ GetUserByID uid
-  mcompany <- getCompanyForUser user
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "User is logged in" (Just $ userid user) (fmap userid $ ctxmaybeuser ctx)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx) `isFlashOfType` OperationDone
+  -- And we check if user has company and if data was updaated
+  Just user'' <- dbQuery $ GetUserByID (userid user)
+  mcompany <- getCompanyForUser  user''
+  assertEqual "Response code is 200" 200 (rsCode res')
+  assertEqual "User is logged in" (Just $ userid  user'') (fmap userid $ ctxmaybeuser  ctx'')
   assertBool "There is a company" $ isJust mcompany
-  assertBool "User is company admin" $ useriscompanyadmin user
+  assertBool "User is company admin" $ useriscompanyadmin  user''
   assertEqual "Company name was saved on company" (Just cname) (getCompanyName <$> mcompany)
-  assertEqual "First name was saved on user" fstname (getFirstName user)
-  assertEqual "Last name was saved on user" sndname (getLastName user)
-  assertEqual "Company position was saved on user" position (usercompanyposition $ userinfo user)
-  assertEqual "Phone number was saved on user" phone (userphone $ userinfo user)
+  assertEqual "First name was saved on user" fstname (getFirstName  user'')
+  assertEqual "Last name was saved on user" sndname (getLastName  user'')
+  assertEqual "Company position was saved on user" position (usercompanyposition $ userinfo  user'')
+  assertEqual "Phone number was saved on user" phone (userphone $ userinfo  user'')
 
 testChangeEmailAddress :: TestEnv ()
 testChangeEmailAddress = do
@@ -95,13 +89,9 @@ testChangeEmailAddress = do
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
-                        , ("newemailagain", inText "jim@bob.com")
                         ]
-  (res1, ctx1) <- runTestKontra req1 ctx $ handleUserPost >>= sendRedirect
-  assertEqual "Response code is 303" 303 (rsCode res1)
-  assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res1))
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationDone
+  (res1, ctx1) <- runTestKontra req1 ctx $ apiCallChangeEmail
+  assertEqual "Response code is 200" 200 (rsCode res1)
   Just uuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email hasn't changed yet" "bob@blue.com" (getEmail uuser)
 
@@ -123,37 +113,6 @@ testChangeEmailAddress = do
   Just uuuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email has changed" "jim@bob.com" (getEmail uuuser)
 
-testAddressesMustMatchToRequestEmailChange :: TestEnv ()
-testAddressesMustMatchToRequestEmailChange = do
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  req1 <- mkRequest POST [ ("changeemail", inText "true")
-                        , ("newemail", inText "jim@bob.com")
-                        , ("newemailagain", inText "jim2@bob.com")
-                        ]
-  (res1, ctx1) <- runTestKontra req1 ctx $ handleUserPost >>= sendRedirect
-  assertEqual "Response code is 303" 303 (rsCode res1)
-  assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res1))
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
-
-testNeedTwoAddressesToRequestEmailChange :: TestEnv ()
-testNeedTwoAddressesToRequestEmailChange = do
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  req1 <- mkRequest POST [ ("changeemail", inText "true")
-                        , ("newemail", inText "jim@bob.com")
-                        , ("newemailagain", inText "")
-                        ]
-  (res1, ctx1) <- runTestKontra req1 ctx $ handleUserPost >>= sendRedirect
-  assertEqual "Response code is 303" 303 (rsCode res1)
-  assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res1))
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
 
 testNeedEmailToBeUniqueToRequestChange :: TestEnv ()
 testNeedEmailToBeUniqueToRequestChange = do
@@ -166,11 +125,8 @@ testNeedEmailToBeUniqueToRequestChange = do
                         , ("newemail", inText "jim@bob.com")
                         , ("newemailagain", inText "jim@bob.com")
                         ]
-  (res1, ctx1) <- runTestKontra req1 ctx $ handleUserPost >>= sendRedirect
-  assertEqual "Response code is 303" 303 (rsCode res1)
-  assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res1))
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationDone
+  (res1, _) <- runTestKontra req1 ctx $ apiCallChangeEmail
+  assertEqual "Response code is 200" 200 (rsCode res1)
   actions <- getRequestChangeEmailActions
   assertEqual "No request email action was made" 0 (length $ actions)
 

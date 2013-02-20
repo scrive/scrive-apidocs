@@ -15,7 +15,7 @@ import qualified Text.JSON as J
 import KontraMonad
 import Happstack.Server.Types
 import Routing
-import Doc.APIVersion (APIVersion(..))
+import API.APIVersion (APIVersion(..))
 import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model

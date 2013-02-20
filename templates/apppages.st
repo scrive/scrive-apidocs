@@ -295,7 +295,11 @@ langSwitcher=
               jQuery(function() {
                    var changeLang = function(l) {
                       mixpanel.track('Click switch languages', { 'Language' : l });
-                      Language.changeforPageAndUserAndReload(l);
+                      $if(logged)$
+                        Language.changeForPageAndUserAndReload(l);
+                      $else$
+                        Language.changeForPageAndReload(l);
+                      $endif$
                    }
                    var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
                                               textWidth: 80,

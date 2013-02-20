@@ -88,6 +88,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   extraOption: function() {
             return this.get("extraOption");
+  },
+  close : function() {
+    this.trigger("close");
   }
 });
 
@@ -96,8 +99,9 @@ var ConfirmationView = Backbone.View.extend({
         "click .close"  :  "reject"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'reject', 'renderAcceptButton');
+        _.bindAll(this, 'render', 'reject', 'renderAcceptButton', 'clear');
         this.model.bind('change:acceptVisible', this.renderAcceptButton);
+        this.model.bind('close', this.clear);
         this.model.view = this;
         this.render();
     },

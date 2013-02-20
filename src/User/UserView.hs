@@ -18,11 +18,7 @@ module User.UserView (
     -- flash messages
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
-    flashMessageCompanyCreated,
-    flashMessageNoAccountType,
-    flashMessageInvalidAccountType,
     flashMessageMustAcceptTOS,
-    flashMessageBadOldPassword,
     flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
@@ -32,7 +28,6 @@ module User.UserView (
     flashMessageUserAlreadyActivated,
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
-    flashMessageChangeEmailMailSent,
     flashMessageMismatchedEmails,
     flashMessageProblemWithEmailChange,
     flashMessageProblemWithPassword,
@@ -84,9 +79,10 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
     value "personalnumber" $ getPersonalNumber user
     value "phone" $ userphone $ userinfo user
     value "mobile" $ usermobile $ userinfo user
+    value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "usercompanyname" $ getCompanyName user
-    value "usercompanynumber" $ getCompanyNumber user
+    value "usercompanyname" $ getCompanyName (user,mcompany)
+    value "usercompanynumber" $ getCompanyNumber (user,mcompany)
     value "lang"   $ "en" <| LANG_EN == (getLang user) |> "sv"
     value "footer" $ customfooter $ usersettings user
     valueM "mailapi" $ case (mumailapi) of
@@ -249,28 +245,9 @@ flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserDetailsSaved"
 
-flashMessageCompanyCreated :: TemplatesMonad m => m FlashMessage
-flashMessageCompanyCreated =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageCompanyCreated"
-
-
-flashMessageNoAccountType :: TemplatesMonad m => m FlashMessage
-flashMessageNoAccountType =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoAccountType"
-
-flashMessageInvalidAccountType :: TemplatesMonad m => m FlashMessage
-flashMessageInvalidAccountType =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidAccountType"
-
 flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
 flashMessageMustAcceptTOS =
   toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageMustAcceptTOS"
-
-
-flashMessageBadOldPassword :: TemplatesMonad m => m FlashMessage
-flashMessageBadOldPassword =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageBadOldPassword"
-
 
 flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordsDontMatch =
@@ -313,11 +290,6 @@ flashMessageNewActivationLinkSend =
 flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserSignupDone"
-
-flashMessageChangeEmailMailSent :: TemplatesMonad m => Email -> m FlashMessage
-flashMessageChangeEmailMailSent newemail =
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageChangeEmailMailSent" $
-                                  F.value "newemail" $ unEmail newemail)
 
 flashMessageMismatchedEmails :: TemplatesMonad m => m FlashMessage
 flashMessageMismatchedEmails =
