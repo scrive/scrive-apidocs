@@ -1329,24 +1329,19 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSig
        replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
   update (ErrorDocument docid errmsg actor) = do
-    doc_exists <- getOne $ SQL "SELECT TRUE FROM documents WHERE id = ?" [toSql docid]
-    case doc_exists of
-      Nothing -> do
-        Log.error $ "Cannot ErrorDocument document " ++ show docid ++ " because it does not exist"
-        return False
-      Just (_::Bool) -> do
-            updateWithEvidence tableDocuments
-              (    "status =" <?> DocumentError errmsg
-             <+> ", error_text =" <?> errmsg
-             <+> "WHERE id =" <?> docid
-              ) $ do
-              return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      sqlSet "status" $ DocumentError errmsg
+      sqlSet "error_text" errmsg
+      sqlWhereDocumentIDIs docid
+
+    _ <- update $ InsertEvidenceEvent
                 ErrorDocumentEvidence
                 (value "errmsg" errmsg >> value "actor" (actorWho actor))
                 (Just docid)
                 actor
+    return ()
 
 selectDocuments :: MonadDB m => SqlSelect -> DBEnv m [Document]
 selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit Nothing sqlquery
