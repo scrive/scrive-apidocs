@@ -159,6 +159,7 @@ data DocumentFilter
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
+  | DocumentFilterByCanSign UserID            -- ^ Only if given person can sign right now given document
   | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
   | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
   | DocumentFilterSignable                    -- ^ Document is signable
@@ -407,6 +408,14 @@ documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhere "signatory_links.is_author"
   sqlWhereEq "signatory_links.user_id" userid
 
+documentFilterToSQL (DocumentFilterByCanSign userid) = do
+  sqlWhere "signatory_links.is_partner"
+  sqlWhereEq "signatory_links.user_id" userid
+  sqlWhereEq "documents.status" Pending
+  sqlWhereIsNULL "signatory_links.sign_time"
+  sqlWhereEqSql "signatory_links.sign_order" documentSignorderExpression
+
+
 documentFilterToSQL (DocumentFilterByDocumentID did) = do
   sqlWhereEq "documents.id" did
 
@@ -556,6 +565,11 @@ documentStatusClassExpression =
        SQL ("(    COALESCE((SELECT min(") []
     <> statusClassCaseExpression
     <> SQL ") FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner), ?))" [toSql SCDraft]
+
+documentSignorderExpression :: SQL
+documentSignorderExpression =
+       SQL "(COALESCE((SELECT min(signatory_links.sign_order) FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner AND signatory_links.sign_time IS NULL), 1))" []
+
 
 statusClassCaseExpression :: SQL
 statusClassCaseExpression =
@@ -1952,7 +1966,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
         sqlFrom "documents"
         sqlJoin "signatory_links AS signatory_links_old"
         sqlWhere "signatory_links.id = signatory_links_old.id"
-
         sqlSet "invitation_delivery_status" status
         sqlResult "signatory_links_old.invitation_delivery_status"
 

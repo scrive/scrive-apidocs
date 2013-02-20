@@ -197,7 +197,9 @@ jsonDocumentsList = do
       fltSpec ("sender", tostr) = case reads tostr of
                                     ((suid,""):_) -> [DocumentFilterByAuthor suid]
                                     _ -> []
-
+      fltSpec ("cansign", tostr) = case reads tostr of
+                                    ((suid,""):_) -> [DocumentFilterByCanSign suid]
+                                    _ -> []
       fltSpec ("status", scstr) = case reads scstr of
                                     ((statusclasss,""):_) -> [DocumentFilterByStatusClass statusclasss]
                                     _ -> []
@@ -210,6 +212,7 @@ jsonDocumentsList = do
       searching  = docSearchingFromParams params
       pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
+  Log.debug $ "Filtering with " ++ show filters
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"

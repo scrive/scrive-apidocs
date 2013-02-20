@@ -108,7 +108,11 @@ module DB.SQL2
   , sqlWhereEVV
   , sqlWhereEVVV
   , sqlWhereEq
+<<<<<<< HEAD
   , sqlWhereEqE
+=======
+  , sqlWhereEqSql
+>>>>>>> Filtering on document that can be signed by given user
   , sqlWhereNotEq
   , sqlWhereNotEqE
   , sqlWhereIn
@@ -515,9 +519,14 @@ sqlWhereEVVV (exc,vsql1,vsql2,vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPla
 sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereEq name value = sqlWhere $ name <+> "=" <?> value
 
+<<<<<<< HEAD
 sqlWhereEqE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a SqlValue, Convertible SqlValue a)
             => (a -> a -> e) -> SQL -> a -> m ()
 sqlWhereEqE exc name value = sqlWhereEV (exc value, name) $ name <+> "=" <?> value
+=======
+sqlWhereEqSql :: (MonadState v m, SqlWhere v) => SQL -> SQL -> m ()
+sqlWhereEqSql name1 name2 = sqlWhere $ name1 <+> "=" <+> name2
+>>>>>>> Filtering on document that can be signed by given user
 
 sqlWhereNotEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereNotEq name value = sqlWhere $ name <+> "<>" <?> value

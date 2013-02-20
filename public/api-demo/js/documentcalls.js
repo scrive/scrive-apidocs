@@ -282,7 +282,8 @@ window.ListApiCall = ApiCall.extend({
              name : "List API call",
              tags : "[]",
              offset : 0,
-             limit : 5
+             limit : 5,
+             selectfilters : "[{\"name\":\"cansign\",\"value\":\"\"}]"
         },
         tags : function() {return this.get("tags");},
         setTags : function(tags) {
@@ -299,6 +300,11 @@ window.ListApiCall = ApiCall.extend({
             LocalStorage.set("api","limit",limit);
             this.set({"limit" : limit});
         },
+        selectfilters : function() {return this.get("selectfilters");},
+        setSelectfilters : function(selectfilters) {
+            LocalStorage.set("api","selectfilters",selectfilters);
+            this.set({"selectfilters" : selectfilters});
+        },
         initialize: function (args) {
         },
         isList : function() {return true;},
@@ -309,7 +315,9 @@ window.ListApiCall = ApiCall.extend({
                 cache: false,
                 data : { tags   : model.tags(),
                          offset : model.offset(),
-                         limit  : model.limit() },
+                         limit  : model.limit(),
+                         selectfilter : model.selectfilters()
+                },
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -638,11 +646,15 @@ window.ListApiCallView = Backbone.View.extend({
             offsetInput.change(function() {model.setOffset(offsetInput.val()); return false;})
             var limitInput = $("<input type='text'/>").val(model.limit());
             limitInput.change(function() {model.setLimit(limitInput.val()); return false;})
+            var selectfiltersInput = $("<input type='text'/>").val(model.selectfilters());
+            selectfiltersInput.change(function() {model.setSelectfilters(selectfiltersInput.val()); return false;})
+
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Tags: <BR/></div>").append(tagsInput));
             boxLeft.append($("<div>Offset: <BR/></div>").append(offsetInput));
             boxLeft.append($("<div>Limit: <BR/></div>").append(limitInput));
+            boxLeft.append($("<div>Select filters: <BR/></div>").append(selectfiltersInput));
             boxLeft.append($("<div/>").append(button));
             this.render();
         },
