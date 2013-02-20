@@ -3,10 +3,12 @@ module Utils.Cron (
   , forkCron_
   , forkCron
   , stopCron
+  , withCronJobs
   ) where
 
 import Control.Applicative
 import Control.Arrow hiding (loop)
+import Control.Exception (bracket)
 import Control.Monad
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -97,3 +99,9 @@ forkCron_ tg name seconds action = forkCron tg name seconds (const action)
 -- ThreadGroup object.
 stopCron :: CronInfo -> IO ()
 stopCron (CronInfo ctrl) = atomically . modifyTVar' ctrl $ second (const Finish)
+
+-- | Start a list of jobs, then perform an action, and finally stop the jobs
+withCronJobs :: [IO CronInfo] -> ([CronInfo] -> IO a) -> IO a
+withCronJobs jobs = bracket start stop where
+  start = sequence jobs
+  stop  = mapM_ stopCron
