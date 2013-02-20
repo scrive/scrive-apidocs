@@ -5,7 +5,6 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.Trans
 import System.Environment
-import qualified Control.Concurrent.Thread.Group as TG
 import qualified System.Time
 import Data.Maybe (catMaybes)
 
@@ -52,7 +51,6 @@ main = Log.withLogger $ do
     runDBEnv $ defineMany kontraFunctions
 
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
-  tg <- TG.new
   rng <- newCryptoRNGState
 
   let runScheduler = runQueue rng (dbConfig appConf) (SchedulerData appConf templates)
@@ -79,26 +77,26 @@ main = Log.withLogger $ do
       Log.error "WARNING: no Precog credentials!" >> return Nothing
 
   withCronJobs
-    ([ forkCron_ tg "timeoutDocuments" (60 * 10) $ do
+    ([ forkCron_ "timeoutDocuments" (60 * 10) $ do
          Log.cron "Running timeoutDocuments..."
          runScheduler timeoutDocuments
-     , forkCron_ tg "EmailChangeRequests" (60 * 60) $ do
+     , forkCron_ "EmailChangeRequests" (60 * 60) $ do
          Log.cron "Evaluating EmailChangeRequest actions..."
          runScheduler $ actionQueue emailChangeRequest
-     , forkCron_ tg "PasswordReminders" (60 * 60) $ do
+     , forkCron_ "PasswordReminders" (60 * 60) $ do
          Log.cron "Evaluating PasswordReminder actions..."
          runScheduler $ actionQueue passwordReminder
-     , forkCron_ tg "UserAccountRequests" (60 * 60) $ do
+     , forkCron_ "UserAccountRequests" (60 * 60) $ do
          Log.cron "Evaluating UserAccountRequest actions..."
          runScheduler $ actionQueue userAccountRequest
-     , forkCron_ tg "Sessions" (60 * 60) $ do
+     , forkCron_ "Sessions" (60 * 60) $ do
          Log.cron "Evaluating sessions..."
          runScheduler $ actionQueue session
-     , forkCron_ tg "EventsProcessing" 5 $ do
+     , forkCron_ "EventsProcessing" 5 $ do
          runScheduler processEvents
-     , forkCron_ tg "DocumentAPICallback" 10 $ do
+     , forkCron_ "DocumentAPICallback" 10 $ do
          runScheduler $ actionQueue documentAPICallback
-     , forkCron_ tg "RecurlySync" (60 * 60) . inDB $ do
+     , forkCron_ "RecurlySync" (60 * 60) . inDB $ do
          mtime <- getMinutesTime
          ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
          temps <- snd `liftM` liftIO (readMVar templates)
@@ -107,14 +105,14 @@ main = Log.withLogger $ do
              temps (recurlyAPIKey $ recurlyConfig appConf) mtime
            handleSyncNoProvider mtime
      ] ++ (if AWS.isAWSConfigOk appConf
-           then [forkCron_ tg "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon]
+           then [forkCron_ "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon]
            else []) ++
-     [ forkCron_ tg "removeOldDrafts" (60 * 60) $ do
+     [ forkCron_ "removeOldDrafts" (60 * 60) $ do
          Log.cron "Removing old, unsaved draft documents..."
          runScheduler $ do
            delCount <- dbUpdate $ RemoveOldDrafts 100
            Log.cron $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
-     , forkCron_ tg "Async Event Dispatcher" (10) . inDB $ do
+     , forkCron_ "Async Event Dispatcher" (10) . inDB $ do
          asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel, mprecog]) All
      ]) $ \_ -> do
        waitForTermination

@@ -36,8 +36,8 @@ data Command = Continue | Finish
 -- call to stopCron issued when action is running, but within interruptible section
 -- will interrupt the action immediately (this is particurarly useful when action
 -- has to block for a period of time and it's safe to interrupt it in such state).
-forkCron :: TG.ThreadGroup -> String -> Integer -> ((forall a. IO a -> IO a) -> IO ()) -> IO CronInfo
-forkCron tg name seconds action = do
+forkCron :: String -> Integer -> ((forall a. IO a -> IO a) -> IO ()) -> TG.ThreadGroup -> IO CronInfo
+forkCron name seconds action tg = do
   vars@(ctrl, _) <- atomically ((,) <$> newTVar (Waiting, Continue) <*> newTVar False)
   _ <- forkIO $ controller vars
   return $ CronInfo ctrl
@@ -92,16 +92,21 @@ forkCron tg name seconds action = do
 
 -- | Same as forkCron, but there is no way to make parts
 -- of passed action interruptible
-forkCron_ :: TG.ThreadGroup -> String -> Integer -> IO () -> IO CronInfo
-forkCron_ tg name seconds action = forkCron tg name seconds (const action)
+forkCron_ :: String -> Integer -> IO () -> TG.ThreadGroup -> IO CronInfo
+forkCron_ name seconds action = forkCron name seconds (const action)
 
 -- | Stops given cron thread. Use that before calling wait with appropriate
 -- ThreadGroup object.
 stopCron :: CronInfo -> IO ()
 stopCron (CronInfo ctrl) = atomically . modifyTVar' ctrl $ second (const Finish)
 
--- | Start a list of jobs, then perform an action, and finally stop the jobs
-withCronJobs :: [IO CronInfo] -> ([CronInfo] -> IO a) -> IO a
+-- | Start a list of jobs in a local thread group, then perform an action, and finally stop the jobs and wait for the thread group.
+withCronJobs :: [TG.ThreadGroup -> IO CronInfo] -> ((TG.ThreadGroup, [CronInfo]) -> IO a) -> IO a
 withCronJobs jobs = bracket start stop where
-  start = sequence jobs
-  stop  = mapM_ stopCron
+  start = do
+    tg <- TG.new
+    cil <- sequence (map ($ tg) jobs)
+    return (tg, cil)
+  stop (tg, cil) = do
+    mapM_ stopCron cil
+    TG.wait tg
