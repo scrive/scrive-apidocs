@@ -34,8 +34,8 @@ signupPage=
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.inner').append(new Signup({email: "$email:noescape()$"}).el());
-    jQuery('.short-input-section input').focus();
+    jQuery('.inner').append(new Signup({email:     "$email:noescape()$",
+                                        autofocus: true}).el());
   });
 </script>
 </div>

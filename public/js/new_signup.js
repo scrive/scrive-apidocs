@@ -1,6 +1,9 @@
 (function(window) {
 
   var SignupModel = Backbone.Model.extend({
+    autofocus: function() {
+      return this.get('autofocus');
+    },
     email: function() {
       return this.get('email');
     },
@@ -72,6 +75,12 @@
           name: 'email'
         });
 
+        // Automatically focus the appropriate login field.
+        if(model.autofocus()) {
+            $(document).ready(function() {
+                emailInput.input().focus();
+            });
+        }
 
         var signupButton = Button.init({
             size  : 'small',
