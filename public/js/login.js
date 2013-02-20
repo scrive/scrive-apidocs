@@ -171,6 +171,13 @@ var LoginView = Backbone.View.extend({
       emailinput.input().attr("autocomplete","false");
       body.append($("<div class='position first'/>").append(emailinput.input()));
       emailinput.input().click();
+      emailinput.input().focus(
+          function() {
+              window.setTimeout(function() {
+                  emailinput.input().select();
+              }, 100);
+          }
+      );
       var passwordinput = InfoTextInput.init({
               infotext: localization.loginModal.password,
               value : model.password(),
