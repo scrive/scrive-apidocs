@@ -15,6 +15,7 @@ class LoginHelper
     (@h.wait_until { @driver.find_element :css => ".short-input-container" })
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).click
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).send_keys password
     (@h.wait_until { @driver.find_element :css => ".short-input-container a.login-button" }).click
     (@h.wait_until { @driver.find_element :css => "a.js-logout" })
