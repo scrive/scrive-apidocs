@@ -20,7 +20,8 @@ var LoginModel = Backbone.Model.extend({
         password : "",
         referer : "",
         visible : true,
-        rememberPassword : false
+        rememberPassword : false,
+        autofocus: false
   },
   reminderView : function() {
      return this.get("reminderView") == true;
@@ -51,6 +52,9 @@ var LoginModel = Backbone.Model.extend({
   },
   referer : function() {
     return this.get("referer");
+  },
+  autofocus : function() {
+    return this.get("autofocus");
   },
   rememberPassword: function() {
     return this.get("rememberPassword");
@@ -191,6 +195,17 @@ var LoginView = Backbone.View.extend({
       });
       passwordinput.input().attr("autocomplete","false");
       body.append($("<div class='position'/>").append(passwordinput.input()));
+
+      // Automatically focus the appropriate login field.
+      if(model.autofocus()) {
+          $(document).ready(function() {
+              if(emailinput.input().val()) {
+                  passwordinput.input().focus();
+              } else {
+                  emailinput.input().focus();
+              }
+          });
+      }
 
       var loginButton = Button.init({
                   size  : "small",

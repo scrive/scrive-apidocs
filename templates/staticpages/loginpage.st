@@ -5,16 +5,8 @@ loginPage=
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.inner').append(new Login({referer: "$referer$"}).el());
-
-    var emailfield = jQuery('.short-input-section input[type=text]');
-    if(emailfield.val()) {
-      // Email field already filled, focus password instead
-      jQuery('.short-input-section input[type=password]').focus();
-    } else {
-      emailfield.focus();
-    }
-
+    jQuery('.inner').append(new Login({referer:   "$referer$",
+                                       autofocus: true}).el());
     mixpanel.register({
       Context : 'Login page'
     });
