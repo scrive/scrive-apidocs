@@ -175,7 +175,7 @@ var LoginView = Backbone.View.extend({
           function() {
               window.setTimeout(function() {
                   emailinput.input().select();
-              }, 100);
+              }, 200);
           }
       );
       var passwordinput = InfoTextInput.init({
