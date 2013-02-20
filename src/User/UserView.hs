@@ -18,11 +18,7 @@ module User.UserView (
     -- flash messages
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
-    flashMessageCompanyCreated,
-    flashMessageNoAccountType,
-    flashMessageInvalidAccountType,
     flashMessageMustAcceptTOS,
-    flashMessageBadOldPassword,
     flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
@@ -249,28 +245,9 @@ flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserDetailsSaved"
 
-flashMessageCompanyCreated :: TemplatesMonad m => m FlashMessage
-flashMessageCompanyCreated =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageCompanyCreated"
-
-
-flashMessageNoAccountType :: TemplatesMonad m => m FlashMessage
-flashMessageNoAccountType =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoAccountType"
-
-flashMessageInvalidAccountType :: TemplatesMonad m => m FlashMessage
-flashMessageInvalidAccountType =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidAccountType"
-
 flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
 flashMessageMustAcceptTOS =
   toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageMustAcceptTOS"
-
-
-flashMessageBadOldPassword :: TemplatesMonad m => m FlashMessage
-flashMessageBadOldPassword =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageBadOldPassword"
-
 
 flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordsDontMatch =
