@@ -1262,28 +1262,28 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
    
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m DeleteSigAttachment Bool where
+instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m DeleteSigAttachment () where
   update (DeleteSigAttachment did slid fid actor) = do
-    sig <- query $ GetSignatoryLinkByID did slid Nothing
-    case (maybesigninfo sig) of
-       Just _ ->  do
-            Log.error $ "Signatory has already signed. Cant delete attachment.docid: " ++ show did
-            return False
-       Nothing -> do 
-          case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
-            Nothing -> do
-              Log.error $ "No signatory attachment for that file id: " ++ show fid
-              return False
-            Just sa -> do
-              updateWithEvidence tableSignatoryAttachments
-                (   "file_id =" <?> SqlNull
-                <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
-                ) $ do
-                  return $ InsertEvidenceEvent
+    let decode acc email saname = acc ++ [(email,saname)]
+    (email::String,saname::String) <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_attachments" $ do
+      sqlFrom "signatory_links"
+      sqlWhere "signatory_links.id = signatory_attachments.signatory_link_id"
+      sqlSet "file_id" SqlNull
+      sqlResult $ parenthesize $ toSQLCommand $ sqlSelect "signatory_link_fields" $ do
+                                   sqlResult "value"
+                                   sqlWhereEq "type" EmailFT
+                                   sqlWhere "signatory_link_fields.signatory_link_id = signatory_attachments.signatory_link_id"
+      sqlResult "signatory_attachments.name"
+      sqlWhereEq "file_id" fid
+      sqlWhereSignatoryLinkIDIs slid
+      sqlWhereSignatoryHasNotSigned
+    _ <- update $ InsertEvidenceEvent
                     DeleteSigAttachmentEvidence
-                    (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
+                    (value "actor" (actorWho actor) >> value "name" saname >> value "email" email)
                     (Just did)
                     actor
+    return ()
+
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where

@@ -623,14 +623,13 @@ testDeleteSigAttachmentAlreadySigned = do
   randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
   u1 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
   assertBool "We can't upload signatory attachmnet"  u1
-  d1 <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
-  assertBool "We can't delete attachment"  d1
+  randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
   u2 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
   assertBool "We can't reupload attachment"  u2
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
-  d2 <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
-  assertBool  "We can remove attachment after signing" (not d2)
+  assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
+    randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
   
 testDeleteSigAttachmentEvidenceLog :: TestEnv ()
 testDeleteSigAttachmentEvidenceLog = do
@@ -642,8 +641,8 @@ testDeleteSigAttachmentEvidenceLog = do
                                              , signatoryattachmentname        = "attachment"
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
-  success <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (fileid file) (systemActor t)
-  assert success
+  randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (fileid file) (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == DeleteSigAttachmentEvidence) lg
 
@@ -1466,7 +1465,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   let sa = signatoryActor time noIP Nothing email1 sl
   randomUpdate $ SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) [att1, att2] sa
   edoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  success1 <- randomUpdate $ DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (fileid file1) sa
+  randomUpdate $ DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (fileid file1) sa
   Just ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   success2 <- randomUpdate $ SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) name1 (fileid file2) sa
@@ -1476,7 +1475,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   assertJust edoc1
   let doc1 = fromJust edoc1
   assertEqual "Both attachments were attached" 2 (length (signatoryattachments $ (documentsignatorylinks doc1) !! 0))
-  assert success1
+
   assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile)
                                                                            (signatoryattachments $ (documentsignatorylinks ndoc1) !! 0))
 
