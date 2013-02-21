@@ -2293,22 +2293,26 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddSignatoryLinkVisitedEvid
 data PostReminderSend = PostReminderSend Document SignatoryLink (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
    update (PostReminderSend doc sl mmsg actor) = do
-     success <- kRun01 $ "UPDATE" <+> raw (tblName tableSignatoryLinks) <+> "SET" <+>
-            (     "read_invitation =" <?> (Nothing :: Maybe MinutesTime)
-              <+> ", invitation_delivery_status =" <?> Unknown
-              <+> "WHERE document_id =" <?> documentid doc
-              <+> "AND id =" <?> signatorylinkid sl
-              <+> "AND sign_time IS NULL"
-              <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = document_id AND documents.status =" <?> Pending <+> ")"
-            )
-     when_ (success) $
-        update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+     kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+       sqlFrom "documents"
+       sqlSet "read_invitation" SqlNull
+       sqlSet "invitation_delivery_status" Unknown
+       sqlWhere "documents.id = signatory_links.document_id"
+
+       sqlWhereDocumentIDIs (documentid doc)
+       sqlWhereSignatoryLinkIDIs (signatorylinkid sl)
+       sqlWhereSignatoryHasNotSigned
+       sqlWhereDocumentStatusIs Pending
+
+     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           ReminderSend
           (value "name" (getSmartName sl))
           (Just $ documentid doc)
           (Just $ signatorylinkid sl)
           mmsg
           actor
+
+     return ()
 
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
