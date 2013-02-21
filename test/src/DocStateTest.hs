@@ -213,7 +213,7 @@ docStateTests env = testGroup "DocState" [
 
   testThat "ArchiveDocument fails if the archiving user is an unrelated user" env testArchiveDocumentUnrelatedUserLeft,
   testThat "ArchiveDocument fails if the archiving user is just another standard company user" env testArchiveDocumentCompanyStandardLeft,
-  testThat "RestoreArchivedDocument fails if the storing user is an unrlated user" env testRestoreArchivedDocumentUnrelatedUserLeft,
+  testThat "RestoreArchivedDocument fails if the storing user is an unrelated user" env testRestoreArchivedDocumentUnrelatedUserLeft,
   testThat "RestoreArchivedDocument fails if the restoring user is just another standard company user" env testRestoreArchiveDocumentCompanyStandardLeft,
   testThat "ReallyDeleteDocument fails if deleted by the author who is a standard company user" env testReallyDeleteDocumentCompanyAuthorLeft,
   testThat "ReallyDeleteDocument fails if the deleting user is just another standard company user" env testReallyDeleteDocumentCompanyStandardLeft,
@@ -314,8 +314,8 @@ testRestoreArchivedDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isClosed
   _ <- randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
-  assert success
+  randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RestoreArchivedDocumentEvidence) lg
 
@@ -884,9 +884,9 @@ testRestoreArchivedDocumentAuthorRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  assert success
+
   assertNoArchivedSigLink ndoc
 
 testRestoreArchiveDocumentCompanyAdminRight :: TestEnv ()
@@ -896,10 +896,9 @@ testRestoreArchiveDocumentCompanyAdminRight = doTimes 10 $ do
   adminuser <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->RestoreArchivedDocument adminuser (documentid doc) (systemActor t)
+  randomUpdate $ \t->RestoreArchivedDocument adminuser (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-  assert success
   assertNoArchivedSigLink ndoc
 
 testReallyDeleteDocumentPrivateAuthorRight :: TestEnv ()
@@ -952,8 +951,8 @@ testRestoreArchivedDocumentUnrelatedUserLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   unrelateduser <- addNewRandomUser
   randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->RestoreArchivedDocument unrelateduser (documentid doc) (systemActor t)
-  assert $ not success
+  assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True)$ do
+    randomUpdate $ \t->RestoreArchivedDocument unrelateduser (documentid doc) (systemActor t)
 
 testRestoreArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testRestoreArchiveDocumentCompanyStandardLeft = doTimes 10 $ do
@@ -962,8 +961,8 @@ testRestoreArchiveDocumentCompanyStandardLeft = doTimes 10 $ do
   standarduser <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->RestoreArchivedDocument standarduser (documentid doc) (systemActor t)
-  assert $ not success
+  assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $ do
+    randomUpdate $ \t->RestoreArchivedDocument standarduser (documentid doc) (systemActor t)
 
 testReallyDeleteDocumentCompanyAuthorLeft :: TestEnv ()
 testReallyDeleteDocumentCompanyAuthorLeft = doTimes 10 $ do
@@ -1006,7 +1005,7 @@ checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   docsafterarchive <- dbQuery (qry author)
   assertEqual "Expecting no docs after archive" [] (map documentid docsafterarchive)
-  _ <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
   docsafterestore <- dbQuery (qry author)
   assertEqual "Expecting one doc after restoring" [documentid doc] (map documentid docsafterestore)
 

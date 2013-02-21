@@ -1751,28 +1751,35 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
                  }
 
 data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument () where
   update (RestoreArchivedDocument user did actor) = do
-      updateRestorableDoc $ do
-      return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+
+      sqlSet "deleted" False
+
+      sqlWhere "NOT really_deleted"
+
+      sqlWhereExists $ sqlSelect "users" $ do
+          sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
+          sqlWhere "signatory_links.user_id = users.id"
+
+          sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument (userid user)
+          sqlWhereUserIsSelfOrCompanyAdmin
+
+      sqlWhereExists $ sqlSelect "documents" $ do
+          sqlJoinOn "users AS same_company_users" "TRUE"
+
+          sqlWhere $ "signatory_links.document_id = " <?> did
+          sqlWhere "documents.id = signatory_links.document_id"
+
+
+    _ <- update $ InsertEvidenceEvent
         RestoreArchivedDocumentEvidence
         (value "email" (getEmail user) >> value "actor" (actorWho actor) >>
                value "company" (isJust (usercompany user) && useriscompanyadmin user))
         (Just did)
         actor
-    where
-      updateRestorableDoc = updateWithEvidence tableSignatoryLinks
-          (  "deleted =" <?> False
-         <+> "WHERE (user_id = " <?> (userid user)
-         <+> "       OR EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-         <+>                  "  WHERE signatory_links.user_id = usr2.id "
-         <+>                  "    AND usr2.company_id = usr1.company_id "
-         <+>                  "    AND usr1.is_company_admin "
-         <+>                  "    AND usr1.id = " <?> (userid user) <+> "))"
-         <+> "AND document_id =" <?> did
-         <+> "AND really_deleted = FALSE"
-          )
-
+    return ()
 
 {- |
     Links up a signatory link to a user account.  This should happen when

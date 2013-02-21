@@ -122,7 +122,7 @@ handleRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> guardTrueM $ dbUpdate $ RestoreArchivedDocument user did actor) docids
+  mapM_ (\did -> dbUpdate $ RestoreArchivedDocument user did actor) docids
   J.runJSONGenT $ return ()
 
 handleReallyDelete :: Kontrakcja m => m JSValue
