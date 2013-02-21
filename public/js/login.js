@@ -237,7 +237,15 @@ var LoginView = Backbone.View.extend({
                                           
       });
       emailinput.input().attr("autocomplete","false");
-      
+        emailinput.input().focus(
+          function() {
+              emailinput.input().select();
+              window.setTimeout(function() {
+                  emailinput.input().select();
+              }, 200);
+          }
+      );
+
      var remindButton = Button.init({
                   size  : "small",
                   color : "blue",

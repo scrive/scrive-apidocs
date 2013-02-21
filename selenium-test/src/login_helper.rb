@@ -14,6 +14,8 @@ class LoginHelper
     @driver.navigate().to(@ctx.createKontrakcjaURL "/login")
     (@h.wait_until { @driver.find_element :css => ".short-input-container" })
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
+    puts "just clicked email input"
+    sleep 1
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).click
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).send_keys password
