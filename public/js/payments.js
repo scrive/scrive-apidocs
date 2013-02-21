@@ -255,7 +255,7 @@
         },
         createaccount: function(email, firstname, lastname, callback) {
             var model = this;
-            $.ajax('/api/fronend/signup',
+            $.ajax('/api/frontend/signup',
                    {type: 'POST',
                     data: {email: email,
                            firstName: firstname,
