@@ -463,7 +463,7 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
   subscription <- pguard' "handleSyncNewSubscriptionWithRecurlyOutside: No subscription." $ 
                   listToMaybe subscriptions
-  invoices <- pguardM "handleChangePlan" $
+  invoices <- pguardM "handleSyncNewSubscriptionWithRecurlyOutside: no invoices" $
               liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show ac
   let is = maybe "collected" inState $ listToMaybe invoices
   let eid = maybe (Left $ userid user) Right $ usercompany user
