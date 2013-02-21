@@ -169,7 +169,7 @@ Executable kontrakcja-server
   Build-depends: HDBC == 2.3.1.1
   Build-depends: HDBC-postgresql == 2.3.2.1.1
   Build-depends: HPDF == 1.4.2
-  Build-depends: HStringTemplate >= 0.6.5
+  Build-depends: HStringTemplate == 0.7.0
   Build-depends: HTTP == 4000.*
   Build-depends: HUnit
   Build-depends: HaXml == 1.22.5

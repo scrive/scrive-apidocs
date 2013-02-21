@@ -13,6 +13,7 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import User.UserControl
+import User.API
 import Utils.Default
 import Text.JSON.Gen as J
 import Text.JSON
@@ -77,16 +78,16 @@ testSuccessfulLoginSavesAStatEvent = do
 
 assertResettingPasswordLogsIn :: TestEnv ()
 assertResettingPasswordLogsIn = do
-  (user, _res, ctx) <- createUserAndResetPassword
+  (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
 
 assertResettingPasswordRecordsALoginEvent :: TestEnv ()
 assertResettingPasswordRecordsALoginEvent = do
-  (user, _res, ctx) <- createUserAndResetPassword
+  (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
   assertLoginEventRecordedFor (userid user)
 
-createUserAndResetPassword :: TestEnv (User, JSValue, Context)
+createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   pwd <- createPassword "admin"
   Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing defaultValue
@@ -95,8 +96,8 @@ createUserAndResetPassword = do
   req <- mkRequest POST [("password", inText "password123")]
   (_, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken
   req2 <- mkRequest GET []
-  (res, ctx'') <- runTestKontra req2 ctx' getUserJSON
-  return (user, res, ctx'')
+  (_res, ctx'') <- runTestKontra req2 ctx' apiCallGetUserProfile
+  return (user, ctx'')
 
 assertLoginEventRecordedFor :: UserID -> TestEnv ()
 assertLoginEventRecordedFor uid = do

@@ -168,7 +168,7 @@ createAPIToken = do
   user <- guardJust muser
   _success <- dbUpdate $ CreateAPIToken (userid user)
   return success
-  
+
 deleteAPIToken :: Kontrakcja m => m JSValue
 deleteAPIToken = do
   muser <- ctxmaybeuser <$> getContext
@@ -178,14 +178,14 @@ deleteAPIToken = do
     Nothing -> return ()
     Just token -> void $ dbUpdate $ DeleteAPIToken (userid user) token
   return success
-      
+
 createPersonalToken :: Kontrakcja m => m JSValue
 createPersonalToken = do
   muser <- ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ CreatePersonalToken (userid user)
   return success
-  
+
 deletePersonalToken :: Kontrakcja m => m JSValue
 deletePersonalToken = do
   muser <- ctxmaybeuser <$> getContext

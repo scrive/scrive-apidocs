@@ -166,7 +166,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessagePasswordExceedsMaxLength","Lösenord får max innehålla 250 tecken.","Password must contain at most 250 characters."
 "_flashMessageInputLessThanMinLength","$fieldnametitlecase$ måste innehålla minst $minlength$ tecken.","$fieldnametitlecase$ must contain at least $minlength$ characters."
 "_flashMessagePasswordLessThanMinLength","Lösenord måste innehålla minst 8 tecken.","Password must contain at least 8 characters."
-"_flashMessageInvalidAccountType","Den kontotyp du försöker att välja är inte tillåten.","The account type you are trying to select is not allowed."
 "_flashMessageInvalidCSV","Det uppstod ett problem med datan i din .csv. Var vänling och
  kontrollera och ladda upp igen.","An error occurred involving the data in your CSV file. Please
  check it, and upload again."
@@ -189,7 +188,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
  din inkorg och följ instruktionerna i mailet för att aktivera ditt
  konto.","We have resent your account activation link. Please go to your inbox
  and follow the instructions in the email to activate your account."
-"_flashMessageNoAccountType","Du måste välja kontotyp.","You must select an account type."
 "_flashMessageNoBulkDocumentRemindsSent","Tyvärr, det finns inga parter som återstår att signera.","Sorry there are no recipients left to sign."
 "_flashMessageNoDataInCSV","Kunde inte hitta några data i filen.","Scrive could not find any data in the file."
 "_flashMessageNoDataInCSVApartFromHeader","Kunde inte hitta några data i filen. Kunde endast hitta titlar.","Scrive could not find any data in the file apart from column
@@ -735,7 +733,8 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_changeEmailRequestButtonText","Ändra","Change"
 "_mailRequestChangeEmailTitle","Ändring av användarnamn","Username change"
 "_mailRequestChangeEmailExplanation","Du har begärt att få ändra ditt användarnamn och din e-post hos Scrive till $newemail$. Vänligen klicka på länken för att fullfölja ändringen:","You have requested that we change your Scrive username and email to $newemail$.  Please follow this link to complete the change:"
-"_flashMessageChangeEmailMailSent","Vi har mailat en bekräftelselänk till $newemail$. Vänligen följ instruktionerna för att fullborda ändringen.","We have mailed a confirmation link to $newemail$, please follow to complete the change."
+"_flashMessageChangeEmailMailSent1","Vi har mailat en bekräftelselänk till ","We have mailed a confirmation link to "
+"_flashMessageChangeEmailMailSent2",". Vänligen följ instruktionerna för att fullborda ändringen.",", please follow to complete the change."
 "_flashMessageMismatchedEmails","E-postadresserna matchar inte.","The emails you entered do not match."
 "_flashMessageProblemWithEmailChange","Vi kan tyvärr inte genomföra ändringen. Din länk kanske blivit gammal? Vänligen gör ny förfrågan.","We're unable to complete this change.  Perhaps your link has expired?  Please request again."
 "_flashMessageYourEmailHasChanged","Ditt användarnamn och din e-post har nu ändrats.","Your username and email have been successfully changed."
@@ -1120,3 +1119,5 @@ have an account please follow the account creation process. Free use of up to 5 
 "_phoneSubmitButtonLabel","OK","OK"
 "_phoneConfirmationText","Tack, en representant för Scrive kommer att ringa dig snart.","Thanks, someone from Scrive will call you soon!"
 "_startButtonLabel","Ta mig till tjänsten bara!","Just take me to the service!"
+"_flashMessageInvalidEmailFormat","E-post är ej korrekt formaterad.","Email is incorrectly formated."
+"_flashCantChangeEmail","Selected email is already ussed","Selected email is already ussed"

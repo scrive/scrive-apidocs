@@ -21,7 +21,7 @@ window.User = Backbone.Model.extend({
       ready : false
   },
   initialize: function(args) {
-        this.url = "/account/json";
+        this.url = "/api/frontend/getprofile";
   },
   ready : function() {
      return this.get("ready");
@@ -81,6 +81,7 @@ window.User = Backbone.Model.extend({
      return this.mailapi() != undefined;
   },
   parse: function(args) {
+     console.log("Parsing user " + this.get("ready"));
      return {
       id        : args.id,
       fstname   : args.fstname,

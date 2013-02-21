@@ -9,6 +9,7 @@ import DB
 import MinutesTime
 import User.Model
 import User.UserControl
+import User.API
 import User.History.Model
 import Context
 import TestKontra as T
@@ -19,7 +20,6 @@ import Login
 import SignupTest (getAccountCreatedActions)
 import Utils.Prelude
 import Text.JSON.Gen
-
 
 userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [
@@ -145,9 +145,8 @@ testHandlerForPasswordSetup = do
       <$> mkContext defaultValue
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
-                          , ("password2", inText "test1111test")
                           ]
-    _ <- runTestKontra req ctx $ handlePostUserSecurity
+    _ <- runTestKontra req ctx $ apiCallChangeUserPassword
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains password setup event"
@@ -160,9 +159,8 @@ testHandlerForPasswordSetupReq = do
       <$> mkContext defaultValue
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
-                          , ("password2", inText "test1111test")
                           ]
-    _ <- runTestKontra req ctx $ handlePostUserSecurity
+    _ <- runTestKontra req ctx $ apiCallChangeUserPassword
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains password setup event"
@@ -172,7 +170,7 @@ testHandlerForAccountCreated :: TestEnv ()
 testHandlerForAccountCreated = do
     ctx <- mkContext defaultValue
     req <- mkRequest POST [ ("email", inText "test@test.com")]
-    _ <- runTestKontra req ctx $ signupPagePost
+    _ <- runTestKontra req ctx $ apiCallSignup
     Just user <- dbQuery $ GetUserByEmail $ Email "test@test.com"
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
@@ -186,7 +184,7 @@ testHandlerForTOSAccept :: TestEnv ()
 testHandlerForTOSAccept = do
     ctx <- mkContext defaultValue
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
-    (_, ctx1) <- runTestKontra req1 ctx $ signupPagePost
+    (_, ctx1) <- runTestKontra req1 ctx $ apiCallSignup
     UserAccountRequest{..} <- head <$> getAccountCreatedActions
     req2 <- mkRequest POST [ ("tos", inText "on")
                            , ("fstname", inText "Karol")
@@ -211,7 +209,7 @@ testHandlerForDetailsChanged = do
                           , ("phone", inText "2221122")
                           , ("companyposition", inText "Engineer")
                           ]
-    _ <- runTestKontra req ctx $ handleUserPost
+    _ <- runTestKontra req ctx $ apiCallUpdateUserProfile
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains details changed event"

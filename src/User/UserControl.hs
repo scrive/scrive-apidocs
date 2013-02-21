@@ -19,7 +19,6 @@ import DB hiding (update, query)
 import Doc.Action
 import Doc.Model
 import Company.Model
-import Control.Logic
 import InputValidation
 import Kontra
 import KontraLink
@@ -41,23 +40,10 @@ import User.Action
 import User.Utils
 import User.History.Model
 import ScriveByMail.Model
-import Payments.Action
 import Payments.Model
 import ListUtil
 import qualified Templates.Fields as F
 import Routing
-
-getUserJSON :: Kontrakcja m => m JSValue
-getUserJSON = do
-    ctx <- getContext
-    case (ctxmaybeuser ctx) of
-         Just user -> do
-           mumailapi <- dbQuery $ GetUserMailAPI $ userid user
-           mcompany <- getCompanyForUser user
-           mcmailapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
-           userJSON user mumailapi mcompany mcmailapi (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
-         Nothing -> internalError
-
 
 handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
@@ -68,40 +54,6 @@ handleAccountGet = checkUserTOSGet $ do
            content <- showAccount user mcompany
            renderFromBody kontrakcja content
          Nothing -> sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
-
-handleUserPost :: Kontrakcja m => m KontraLink
-handleUserPost = do
-  guardLoggedIn
-  createcompany <- isFieldSet "createcompany"
-  changeemail <- isFieldSet "changeemail"
-  mlink <- case True of
-             _ | createcompany -> Just <$> handleCreateCompany
-             _ | changeemail -> Just <$> handleRequestChangeEmail
-             _ -> return Nothing
-
-  --whatever happens run the update in case they changed things in other places
-  ctx <- getContext
-  user' <- guardJust $ ctxmaybeuser ctx
-  --requery for the user as they may have been upgraded
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
-  infoUpdate <- getUserInfoUpdate
-  _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                                               (userinfo user) (infoUpdate $ userinfo user)
-                                               (userid <$> ctxmaybeuser ctx)
-  mcompany <- getCompanyForUser user
-  case (useriscompanyadmin user, mcompany) of
-    (True, Just company) -> do
-      companyinfoupdate <- getCompanyInfoUpdate
-      _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
-      return ()
-    _ -> return ()
-
-  case mlink of
-    Just link -> return link
-    Nothing -> do
-       addFlashM flashMessageUserDetailsSaved
-       return $ LinkAccount
 
 -- please treat this function like a public query form, it's not secure
 handleRequestPhoneCall :: Kontrakcja m => m KontraLink
@@ -123,27 +75,6 @@ handleRequestPhoneCall = do
     _ -> return ()
   return $ LinkDesignView
 
-handleRequestChangeEmail :: Kontrakcja m => m KontraLink
-handleRequestChangeEmail = do
-  ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  mnewemail <- getRequiredField asValidEmail "newemail"
-  mnewemailagain <- getRequiredField asValidEmail "newemailagain"
-  case (Email <$> mnewemail, Email <$> mnewemailagain) of
-    (Just newemail, Just newemailagain) | newemail == newemailagain -> do
-       mexistinguser <- dbQuery $ GetUserByEmail newemail
-       case mexistinguser of
-         Just _existinguser ->
-           sendChangeToExistingEmailInternalWarningMail user newemail
-         Nothing ->
-           sendRequestChangeEmailMail user newemail
-       --so there's no info leaking show this flash either way
-       addFlashM $ flashMessageChangeEmailMailSent newemail
-    (Just newemail, Just newemailagain) | newemail /= newemailagain -> do
-       addFlashM flashMessageMismatchedEmails
-    _ -> return ()
-  return $ LinkAccount
-
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
   ctx <- getContext
@@ -161,37 +92,6 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
     , title = "Request to Change Email to Existing Account"
     , content = content
     }
-
-sendRequestChangeEmailMail :: Kontrakcja m => User -> Email -> m ()
-sendRequestChangeEmailMail user newemail = do
-  ctx <- getContext
-  changeemaillink <- newEmailChangeRequestLink (userid user) newemail
-  mail <- mailEmailChangeRequest (ctxhostpart ctx) user newemail changeemaillink
-  scheduleEmailSendout (ctxmailsconfig ctx)
-                        (mail{to = [MailAddress{
-                                    fullname = getFullName user
-                                  , email = unEmail newemail }]})
-
-handleCreateCompany :: Kontrakcja m => m KontraLink
-handleCreateCompany = do
-  ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  company <- dbUpdate $ CreateCompany Nothing
-  mailapikey <- random
-  _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
-  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
-  -- payment plan needs to migrate to company
-  _ <- switchPlanToCompany (userid user) (companyid company)
-  upgradeduser <- guardJustM $ dbQuery $ GetUserByID $ userid user
-  _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
-  _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                                              [("is_company_admin", "false", "true")]
-                                              (Just $ userid user)
-  companyinfoupdate <- getCompanyInfoUpdate -- This is redundant to standard usage - bu I want to leave it here because of consistency
-  _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
-  addFlashM flashMessageCompanyCreated
-  return LoopBack
 
 handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
 handleGetChangeEmail uid hash = withUserGet $ do
@@ -335,55 +235,6 @@ handlePostUserMailAPI = withUserPost $ do
                              _ -> return ()
         return LinkUserMailAPI)
 
-handlePostUserLang :: Kontrakcja m => m ()
-handlePostUserLang = do
-  ctx <- getContext
-  case (ctxmaybeuser ctx) of
-    Just user -> do
-      mlang <- readField "lang"
-      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-           lang = fromMaybe (lang $ usersettings user) mlang
-         }
-      return ()
-    Nothing -> return ()
-
-handlePostUserSecurity :: Kontrakcja m => m KontraLink
-handlePostUserSecurity = do
-  ctx <- getContext
-  case (ctxmaybeuser ctx) of
-    Just user -> do
-      moldpassword <- getOptionalField asDirtyPassword "oldpassword"
-      mpassword <- getOptionalField asValidPassword "password"
-      mpassword2 <- getOptionalField asDirtyPassword "password2"
-      case (moldpassword, mpassword, mpassword2) of
-        (Just oldpassword, Just password, Just password2) ->
-          case (verifyPassword (userpassword user) oldpassword,
-                  checkPasswordsMatch password password2) of
-            (False,_) -> do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM flashMessageBadOldPassword
-            (_, Left f) -> do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM f
-            _ ->  do
-              passwordhash <- createPassword password
-              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM flashMessageUserDetailsSaved
-        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 -> do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM flashMessageMissingRequiredField
-        _ -> return ()
-      mlang <- readField "lang"
-      footer <- getField "customfooter"
-      footerCheckbox <- isFieldSet "footerCheckbox"
-      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             lang = fromMaybe (lang $ usersettings user) mlang,
-             customfooter = footer <| footerCheckbox |> Nothing
-           }
-      return LinkAccountSecurity
-    Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
-
 {- |
     Checks for live documents owned by the user.
 -}
@@ -485,14 +336,13 @@ handleAccountSetupPostWithMethod uid token sm = do
           runJSONGenT $ do
             value "ok" True
             value "location" $ show link
-              
+
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token AccountRequest
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
-    email.  This'll show them the usual landing page, but with a modal dialog
-    for changing their password.
+    email.  This'll show them the usual landing page, but with option to changing their password.
 -}
 handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink ThinPage)
 handlePasswordReminderGet uid token = do

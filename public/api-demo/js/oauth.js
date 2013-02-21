@@ -4,6 +4,7 @@
 var OAuthModel = Backbone.Model.extend({
         defaults: {
             shortcut : false,
+            shortcut_with_personal_token : false,
             consumer_key : LocalStorage.get("oauth","consumer_key") != undefined ? LocalStorage.get("oauth","consumer_key") : "",
             client_shared_secret : LocalStorage.get("oauth","client_shared_secret") != undefined ? LocalStorage.get("oauth","client_shared_secret") : "",
             callback :  LocalStorage.get("oauth","callback") != undefined ? LocalStorage.get("oauth","callback") : window.location.href,
@@ -13,6 +14,8 @@ var OAuthModel = Backbone.Model.extend({
             final_token :   LocalStorage.get("oauth","final_token") != undefined ? LocalStorage.get("oauth","final_token") : "",
             final_token_secret :   LocalStorage.get("oauth","final_token_secret") != undefined ? LocalStorage.get("oauth","final_token_secret") : "",
             priviliges :  LocalStorage.get("oauth","priviliges") != undefined ? LocalStorage.get("oauth","priviliges") : "DOC_CREATE",
+            email : "",
+            password : "",
         },
         save : function() {
             LocalStorage.set("oauth","consumer_key", this.consumer_key());
@@ -24,7 +27,7 @@ var OAuthModel = Backbone.Model.extend({
             LocalStorage.set("oauth","final_token",this.final_token());
             LocalStorage.set("oauth","final_token_secret",this.final_token_secret());
             LocalStorage.set("oauth","priviliges",this.priviliges());
-            
+
         },
         clear : function() {
             LocalStorage.set("oauth","verifier","");
@@ -42,13 +45,29 @@ var OAuthModel = Backbone.Model.extend({
             }, {silent: true});
             this.trigger("change");
             this.trigger("clear");
-        },   
+        },
         shortcut : function() {
             return this.get("shortcut");
         },
-        set_shortcut : function(v) {
-            this.set({"shortcut" : v}, {silent: true});
+        shortcut_with_personal_token : function() {
+            return this.get("shortcut_with_personal_token");
+        },
+        set_shortcut : function(v1, v2) {
+            this.set({"shortcut" : v1, "shortcut_with_personal_token" : v2}, {silent: true});
             this.save();
+        },
+        /* Email and password for shortcut */
+        email : function() {
+            return this.get("email");
+        },
+        set_email : function(v) {
+            this.set({"email" : v}, {silent: true});
+        },
+        password : function() {
+            return this.get("password");
+        },
+        set_password : function(v) {
+            this.set({"password" : v}, {silent: true});
         },
         /* TCR PARAMS*/
         consumer_key : function() {
@@ -122,14 +141,14 @@ var OAuthModel = Backbone.Model.extend({
             this.save();
         },
 
-        
+
         sendeTCR : function() {
                 var model = this;
                 new OAuthTemporaryCredentialRequest({
                       oauth_consumer_key : this.consumer_key(),
                       oauth_callback:  this.callback(),
                       oauth_client_shared_secret : this.client_shared_secret(),
-                      priviliges : this.priviliges()                              
+                      priviliges : this.priviliges()
                 }).send(function(res) {
                     model.set_token(res.oauth_token);
                     model.set_token_secret(res.oauth_token_secret);
@@ -144,14 +163,14 @@ var OAuthModel = Backbone.Model.extend({
                       oauth_client_shared_secret : this.client_shared_secret(),
                       oauth_token : this.token(),
                       oauth_token_secret : this.token_secret(),
-                      oauth_verifier : this.verifier()                      
+                      oauth_verifier : this.verifier()
                 }).send(function(res) {
                     model.set_final_token(res.oauth_token);
                     model.set_final_token_secret(res.oauth_token_secret);
                     model.save();
                     model.trigger("change");
                     model.trigger("ready");
-                    
+
                 });
         },
         authorizationForRequests: function() {
@@ -159,14 +178,29 @@ var OAuthModel = Backbone.Model.extend({
                    'oauth_consumer_key="' + this.consumer_key() + '",' +
                    'oauth_token="'        + this.final_token()     + '",' +
                    'oauth_signature="'    + this.client_shared_secret() + "&" + this.final_token_secret()    + '"'
-            
+
+        },
+        tryToGetPesonalToken : function() {
+             var model = this;
+             $.post(Scrive.apiUrl() + "getpersonaltoken", {email : model.email() , password : model.password()},
+              function(rs) {
+                    var resp = JSON.parse(rs)
+                    model.set_consumer_key(resp.apitoken);
+                    model.set_client_shared_secret(resp.apisecret);
+                    model.set_final_token(resp.accesstoken);
+                    model.set_final_token_secret(resp.accesssecret);
+                    model.save();
+                    model.trigger("change");
+                    model.trigger("ready");
+              }
+             );
         },
         ready: function() {
             return    this.final_token() != undefined && this.final_token() != ""
                    && this.final_token_secret() != undefined && this.final_token_secret() != ""
                    && this.consumer_key() != undefined && this.consumer_key() != ""
                    && this.client_shared_secret() != undefined && this.client_shared_secret() != "";
-                   
+
         },
         initialize : function() {
             if ($.getUrlVar("oauth_verifier") != undefined) {
@@ -174,7 +208,7 @@ var OAuthModel = Backbone.Model.extend({
                 window.location.href = window.location.href.substring(0,window.location.href.indexOf("?"))
             }
         }
-          
+
 });
 
 
@@ -185,6 +219,26 @@ var OAuthView = Backbone.View.extend({
             this.model.bind('change', this.render);
             this.render();
         },
+        personalTokenRequestSection : function() {
+            var model = this.model;
+            var box = $("<div class='section'>");
+            box.append("<div class='header'>Shortcut: Get personal token for user and use it.</div>");
+
+            var email_input = $("<input type='text'>").val(model.email());
+            email_input.change(function() {model.set_email(email_input.val()); return false;});
+            box.append($("<div><div class='label'>User email (<span class='code'>email</span>): </div></div>").append(email_input));
+
+            var password_input = $("<input type='password'>").val(model.password());
+            password_input.change(function() {model.set_password(password_input.val()); return false;});
+            box.append($("<div><div class='label'>User password (<span class='code'>password</span>): </div></div>").append(password_input));
+
+
+            var button = $("<input type='button' value='Get personal token'/ >");
+            button.click(function() {model.tryToGetPesonalToken(); return false;});
+            box.append(button);
+
+            return box;
+        },
         personalAccessSection : function() {
             var model = this.model;
             var box = $("<div class='section'>");
@@ -194,7 +248,7 @@ var OAuthView = Backbone.View.extend({
             var consumer_key_input = $("<input type='text'>").val(model.consumer_key());
             consumer_key_input.change(function() {model.set_consumer_key(consumer_key_input.val()); return false;});
             box.append($("<div><div class='label'>Client credentials identifier (<span class='code'>oauth_consumer_key</span>): </div></div>").append(consumer_key_input));
-            
+
             var client_shared_secret_input = $("<input type='text'>").val(model.client_shared_secret());
             client_shared_secret_input.change(function() {model.set_client_shared_secret(client_shared_secret_input.val()); return false;})
             box.append($("<div><div class='label'>Client credentials secret (<span class='code'>oauth_signature</span>): </div></div>").append(client_shared_secret_input));
@@ -202,7 +256,7 @@ var OAuthView = Backbone.View.extend({
             var token_input = $("<input type='text'>").val(model.final_token());
             token_input.change(function() {model.set_final_token(token_input.val()); return false;});
             box.append($("<div><div class='label'>Token credentials identifier (<span class='code'>oauth_token</span>): </div></div>").append(token_input));
-            
+
             var token_secret_input = $("<input type='text'>").val(model.final_token_secret());
             token_secret_input.change(function() {model.set_final_token_secret(token_secret_input.val()); return false;});
             box.append($("<div><div class='label'>Token credentials secret (<span class='code'>oauth_token_secret</span>): </div></div>").append(token_secret_input));
@@ -210,7 +264,7 @@ var OAuthView = Backbone.View.extend({
             var button = $("<input type='button' value='Set personal credentials'/ >");
             button.click(function() {model.trigger("change"); model.trigger("ready"); return false;});
             box.append(button);
-            
+
             return box;
         },
         TCRSection : function() {
@@ -222,7 +276,7 @@ var OAuthView = Backbone.View.extend({
             var consumer_key_input = $("<input type='text'>").val(model.consumer_key());
             box.append($("<div><div class='label'>Client credentials identifier (<span class='code'>oauth_consumer_key</span>): </div></div>").append(consumer_key_input))
             consumer_key_input.change(function() {model.set_consumer_key(consumer_key_input.val()); return false;})
-            
+
             var client_shared_secret_input = $("<input type='text'>").val(model.client_shared_secret());
             client_shared_secret_input.change(function() {model.set_client_shared_secret(client_shared_secret_input.val()); return false;})
             box.append($("<div><div class='label'>Client credentials secret (<span class='code'>oauth_signature</span>): </div></div>").append(client_shared_secret_input))
@@ -250,11 +304,11 @@ var OAuthView = Backbone.View.extend({
             var o5 = $("<option value='DOC_CREATE+DOC_SEND+DOC_CHECK'>DOC_CREATE+DOC_SEND+DOC_CHECK</option>")
             priviliges_input.append(o5);
             if (priviliges == "DOC_CREATE+DOC_SEND+DOC_CHECK") o5.attr("selected","TRUE");
-                                     
+
             priviliges_input.change(function() {model.set_priviliges(priviliges_input.val()); return false;})
-                                     
+
             box.append($("<div><div class='label'>Priviliges: </div></div>").append(priviliges_input));
-            
+
             var sendeTCRButton = $("<input type='button' value='Send Temporary Credential Request'/ >");
             sendeTCRButton.click(function() {model.sendeTCR(); return false;});
             box.append(sendeTCRButton);
@@ -265,7 +319,7 @@ var OAuthView = Backbone.View.extend({
             var model = this.model;
             var box = $("<div class='section'>");
             box.append("<div class='header'>Step 2. Let a user (resource owner) grant access to his Scrive account (Resource Owner Authorization)</div>");
-            
+
             box.append($("<div><div class='label'>Temporary credentials identifier (<span class='code'>oauth_token</span>): </div></div>").append($("<b>").text(model.token())))
             box.append($("<div><div class='label'>Temporary credentials secret (<span class='code'>oauth_token_secret</span>): </div></div>").append($("<b>").text(model.token_secret())))
 
@@ -309,15 +363,30 @@ var OAuthView = Backbone.View.extend({
                 container.append(this.FinalTokenSection());
             else {
                 if (model.shortcut()) {
-                    switchbutton = $("<input type='button' value='Use full OAuth'/ >");
-                    switchbutton.click(function() {model.set_shortcut(false); model.trigger("change"); return false;});
+                    switchbutton = $("<input type='button' value=' <- Use full OAuth'/ >");
+                    switchbutton.click(function() {model.set_shortcut(false, false); model.trigger("change"); return false;});
                     container.append(switchbutton);
+                    if (model.shortcut_with_personal_token())
+                    {
+                       switchbutton = $("<input type='button' value='Fill token values by hand'/ >");
+                       switchbutton.click(function() {model.set_shortcut(true, false); model.trigger("change"); return false;});
+                       container.append(switchbutton);
+                    }
+                    else
+                    {
+                       switchbutton = $("<input type='button' value='Get personal token using password'/ >");
+                       switchbutton.click(function() {model.set_shortcut(true, true); model.trigger("change"); return false;});
+                       container.append(switchbutton);
+                    }
                 } else {
                     switchbutton = $("<input type='button' value='Bypass OAuth and use Personal Credentials'/ >");
-                    switchbutton.click(function() {model.set_shortcut(true); model.trigger("change"); return false;});
+                    switchbutton.click(function() {model.set_shortcut(true, false); model.trigger("change"); return false;});
                     container.append(switchbutton);
                 }
-                if (model.shortcut()) {
+                if (model.shortcut() && model.shortcut_with_personal_token()) {
+                    container.append(this.personalTokenRequestSection());
+                }
+                else if (model.shortcut()) {
                     container.append(this.personalAccessSection());
                 } else {
                     container.append(this.TCRSection());
@@ -329,7 +398,7 @@ var OAuthView = Backbone.View.extend({
 
                 }
 
-            }    
+            }
             return this;
         }
 });

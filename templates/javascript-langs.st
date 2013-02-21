@@ -345,6 +345,7 @@ javascriptLocalisation =
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
               , wrongEmail : "$_emptyOrNotValidEmail()$"
+              , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
          }
          , emailBranding: "$_EmailBranding()$"
          , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
@@ -843,6 +844,14 @@ javascriptLocalisation =
               , createCompanyExplanation : "$_createCompanyExplanation()$"
               , createCompanyPreambule :   "$_createCompanyFormPreamble()$"
               , save : "$_SaveChanges()$"
+              , detailSaved : "$_flashMessageUserDetailsSaved()$"
+              , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
+              , invalidEmail : "$_flashMessageInvalidEmailFormat()$"
+              , emailAlreadyInUse : "$_flashCantChangeEmail()$"
+              , changeEmailMailSent1 : "$_flashMessageChangeEmailMailSent1()$"
+              , changeEmailMailSent2 : "$_flashMessageChangeEmailMailSent2()$"
+              , companyCreated : "$_flashMessageCompanyCreated()$"
+
             }
           , accountSecurity : {
                 name            : "$_HeadAccountSettings()$"

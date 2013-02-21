@@ -2,6 +2,7 @@ module Util.FlashUtil (
       module FlashMessage
     , Flashable(..)
     , addFlashM
+    , addFlashMsg
     , flashOperationFailed
     ) where
 

@@ -68,7 +68,8 @@ window.OAuthConfirationModel = Backbone.Model.extend({
   createAccount : function(email) {
     new Submit({
           method: "POST",
-          url: "/signup",
+          url: "/api/frontend/signup",
+          lang : Language.current(),
           email : email,
           ajax: true,
           ajaxsuccess: function(rs) {

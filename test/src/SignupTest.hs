@@ -4,7 +4,6 @@ import Control.Applicative
 import Data.Maybe
 import Happstack.Server
 import Test.Framework
-import Text.JSON
 
 import ActionQueue.Core
 import ActionQueue.UserAccountRequest
@@ -14,7 +13,6 @@ import DB hiding (query, update)
 import FlashMessage
 import MagicHash (MagicHash)
 import Mails.Model
-import Login
 import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Utils.Default
@@ -23,6 +21,7 @@ import TestKontra as T
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
+import User.API
 
 signupTests :: TestEnvSt -> Test
 signupTests env = testGroup "Signup" [
@@ -40,8 +39,8 @@ testSignupAndActivate = do
   ctx <- mkContext defaultValue
 
   -- enter the email to signup
-  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
+  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
+  UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- follow the signup link
   ctx2 <- followActivationLink ctx1 uarUserID uarToken
@@ -60,8 +59,8 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   ctx <- mkContext defaultValue
 
   -- enter the email to signup
-  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
+  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
+  UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account using the signup details
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
@@ -73,8 +72,8 @@ testAcceptTOSToActivate = do
   ctx <- mkContext defaultValue
 
   -- enter the email to signup
-  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
+  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
+  UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account without accepting the tos
   ctx3 <- activateAccount ctx1 uarUserID uarToken False "Andrzej" "Rybczak" "password12" "password12" Nothing
@@ -85,8 +84,8 @@ testNeedFirstNameToActivate = do
   ctx <- mkContext defaultValue
 
   -- enter the email to signup
-  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
+  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
+  UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account without entering passwords
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "" "Rybczak" "" "" Nothing
@@ -97,8 +96,8 @@ testNeedLastNameToActivate = do
   ctx <- mkContext defaultValue
 
   -- enter the email to signup
-  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
+  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
+  UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account without entering passwords
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "" "" "" Nothing
@@ -109,8 +108,8 @@ testNeedPasswordToActivate = do
   ctx <- mkContext defaultValue
 
   -- enter the email to signup
-  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
+  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
+  UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account without entering passwords
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "" "" Nothing
@@ -121,20 +120,20 @@ testPasswordsMatchToActivate = do
   ctx <- mkContext defaultValue
 
   -- enter the email to signup
-  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
+  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
+  UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account using mismatched passwords
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password21" Nothing
   assertAccountActivationFailed ctx3
 
-signupForAccount :: Context -> String -> TestEnv (JSValue, Context)
+signupForAccount :: Context -> String -> TestEnv Context
 signupForAccount ctx email = do
   req <- mkRequest POST [("email", inText email)]
-  runTestKontra req ctx $ signupPagePost
+  snd <$> (runTestKontra req ctx $ apiCallSignup)
 
-assertSignupSuccessful :: (JSValue, Context) -> TestEnv UserAccountRequest
-assertSignupSuccessful (_res, ctx) = do
+assertSignupSuccessful :: Context -> TestEnv UserAccountRequest
+assertSignupSuccessful ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
