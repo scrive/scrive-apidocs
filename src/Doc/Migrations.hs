@@ -155,6 +155,32 @@ dropTrustWeaverReferenceFromDocuments = Migration {
       kRunRaw "ALTER TABLE documents DROP COLUMN trust_weaver_reference"
 }
 
+moveRejectionInfoFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
+moveRejectionInfoFromDocumentsToSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 16
+  , mgrDo = do
+      kRunRaw $  "ALTER TABLE signatory_links"
+              <+> "ADD COLUMN rejection_time    TIMESTAMPTZ,"
+              <+> "ADD COLUMN rejection_reason  TEXT"
+      kRunRaw $   "UPDATE signatory_links"
+              <+> "   SET rejection_time = documents.rejection_time,"
+              <+> "       rejection_reason = documents.rejection_reason"
+              <+> "FROM documents"
+              <+> "WHERE documents.rejection_signatory_link_id = signatory_links.id"
+}
+
+dropRejectionInfoFromDocuments :: MonadDB m => Migration m
+dropRejectionInfoFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 17
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE documents"
+              <+> "DROP COLUMN rejection_time,"
+              <+> "DROP COLUMN rejection_reason,"
+              <+> "DROP COLUMN rejection_signatory_link_id"
+}
+
 dropCSVSignatoryIndexFromSignatoryLinks :: MonadDB m => Migration m
 dropCSVSignatoryIndexFromSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks

@@ -208,7 +208,9 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
   , signatorylinkstatusclass   :: StatusClass
-  , signatorylinksignredirecturl  :: Maybe String
+  , signatorylinksignredirecturl :: Maybe String
+  , signatorylinkrejectiontime   :: Maybe MinutesTime
+  , signatorylinkrejectionreason :: Maybe String
   } deriving (Eq, Ord, Show)
 
 instance HasDefaultValue SignatoryLink where
@@ -228,6 +230,8 @@ instance HasDefaultValue SignatoryLink where
                   , signatoryattachments         = []
                   , signatorylinkstatusclass     = SCDraft
                   , signatorylinksignredirecturl = Nothing
+                  , signatorylinkrejectiontime   = Nothing
+                  , signatorylinkrejectionreason = Nothing
                   }
 
 data CSVUpload = CSVUpload {
@@ -380,7 +384,6 @@ data Document = Document {
   , documentdeliverymethod         :: DeliveryMethod
   , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
   , documentsharing                :: DocumentSharing
-  , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, String)
   , documenttags                   :: S.Set DocumentTag
   , documentauthorattachments      :: [AuthorAttachment]
   , documentui                     :: DocumentUI
@@ -409,7 +412,6 @@ instance HasDefaultValue Document where
           , documentcancelationreason    = Nothing
           , documentinvitetime           = Nothing
           , documentsharing              = Private
-          , documentrejectioninfo        = Nothing
           , documenttags                 = S.empty
           , documentui                   = emptyDocumentUI
           , documentauthorattachments    = []

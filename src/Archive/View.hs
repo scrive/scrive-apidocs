@@ -107,9 +107,7 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl
-        reject = case documentrejectioninfo doc of
-          Just (rt, slid, _) | slid == signatorylinkid sl -> Just rt
-          _                                               -> Nothing
+        reject = signatorylinkrejectiontime sl
         open = maybereadinvite sl
 
 docForListCSV:: KontraTimeLocale -> Int -> Document -> [[String]]

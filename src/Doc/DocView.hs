@@ -212,9 +212,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
         Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
         _                                   -> False
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
-      rejectedDate = case documentrejectioninfo doc of
-        Just (rt, slid, _) | slid == signatorylinkid siglink -> Just rt
-        _                                                    -> Nothing
+      rejectedDate = signatorylinkrejectiontime siglink
 
 signatoryAttachmentJSON :: MonadDB m => SignatoryAttachment -> JSONGenT m ()
 signatoryAttachmentJSON sa = do

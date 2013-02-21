@@ -40,6 +40,8 @@ signLinkFromDetails' details attachments magichash =
                 , signatoryattachments = attachments
                 , signatorylinkstatusclass = SCDraft
                 , signatorylinksignredirecturl = Nothing
+                , signatorylinkrejectiontime = Nothing
+                , signatorylinkrejectionreason = Nothing
                 }
 
 signatoryLinkClearDetails :: SignatoryDetails -> SignatoryDetails

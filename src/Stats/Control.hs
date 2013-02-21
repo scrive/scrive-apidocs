@@ -549,21 +549,18 @@ addSignStatSignEvent doc sl =
 addSignStatRejectEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatRejectEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
-  in case documentrejectioninfo doc of
-    Just (signtime, slid, _) | slid == signatorylinkid sl -> do
+  in case signatorylinkrejectiontime sl of
+    Just rejecttime -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
-                                                          , ssSignatoryLinkID = signatorylinkid sl
-                                                          , ssTime            = signtime
-                                                          , ssQuantity        = SignStatReject
-                                                          , ssDocumentProcess = dp
-                                                          , ssCompanyID       = Nothing
-                                                          }
+                                                       , ssSignatoryLinkID = signatorylinkid sl
+                                                       , ssTime            = rejecttime
+                                                       , ssQuantity        = SignStatReject
+                                                       , ssDocumentProcess = dp
+                                                       , ssCompanyID       = Nothing
+                                                       }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReject
       return a
-    Just _ -> do
-      Log.stats $ "Cannot add reject stat because document is not rejected by this sl: " ++ show (signatorylinkid sl)
-      return False
     Nothing -> do
       Log.stats $ "Cannot add reject stat because document is not rejected: " ++ show (signatorylinkid sl)
       return False

@@ -125,6 +125,8 @@ kontraMigrations = [
   , addIPAddressMaskListToCompanies
   , dropTrustWeaverReferenceFromDocuments
   , dropCSVSignatoryIndexFromSignatoryLinks
+  , moveRejectionInfoFromDocumentsToSignatoryLinks
+  , dropRejectionInfoFromDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

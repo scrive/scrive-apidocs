@@ -464,6 +464,8 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , signatoryattachments   = []
                                       , signatorylinkstatusclass = SCDraft
                                       , signatorylinksignredirecturl = Nothing
+                                      , signatorylinkrejectiontime = Nothing
+                                      , signatorylinkrejectionreason = Nothing
                                       }
 
 blankUser :: User

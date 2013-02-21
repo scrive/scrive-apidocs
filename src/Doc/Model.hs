@@ -111,7 +111,6 @@ import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
 import Utils.Read
-import Utils.Tuples
 import IPAddress
 import Data.List hiding (tail, head)
 import qualified Data.Foldable as F
@@ -338,7 +337,7 @@ maxselect = "(SELECT max(greatest(signatory_links.sign_time"
             <> ", signatory_links.seen_time"
             <> ", signatory_links.read_invitation"
             <> ", documents.invite_time"
-            <> ", documents.rejection_time"
+            <> ", signatory_links.rejection_time"
             <> ", documents.mtime"
             <> ", documents.ctime"
             <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
@@ -458,6 +457,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
                          , checkEqualBy "signatoryfields" (sort . signatoryfields . signatorydetails)
+                         , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
+                         , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
@@ -476,7 +477,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentdeliverymethod" documentdeliverymethod
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
-                   , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
                    , checkEqualBy "documentui" documentui
@@ -504,9 +504,6 @@ documentsSelectors =
   , "documents.invite_ip"
   , "documents.invite_text"
   , "documents.cancelation_reason"
-  , "documents.rejection_time"
-  , "documents.rejection_signatory_link_id"
-  , "documents.rejection_reason"
   , "documents.mail_footer"
   , "documents.lang"
   , "documents.sharing"
@@ -524,8 +521,7 @@ fetchDocuments = kFold decoder []
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
-     invite_ip invite_text cancelationreason rejection_time
-     rejection_signatory_link_id rejection_reason mail_footer
+     invite_ip invite_text cancelationreason mail_footer
      lang sharing authentication_method delivery_method apicallback status_class
        = Document {
          documentid = did
@@ -550,9 +546,6 @@ fetchDocuments = kFold decoder []
        , documentdeliverymethod = delivery_method
        , documentcancelationreason = cancelationreason
        , documentsharing = sharing
-       , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
-           (Just t, Just sl, mr) -> Just (t, sl, fromMaybe "" mr)
-           _ -> Nothing
        , documenttags = S.empty
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
@@ -612,6 +605,9 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.deleted"
   sqlResult "signatory_links.really_deleted"
   sqlResult "signatory_links.sign_redirect_url"
+  sqlResult "signatory_links.rejection_time"
+  sqlResult "signatory_links.rejection_reason"
+
   sqlResult (statusClassCaseExpression <> SQL " AS status_class" [])
   sqlResult "signatory_attachments.file_id AS sigfileid"
   sqlResult "signatory_attachments.name AS signame"
@@ -635,7 +631,9 @@ fetchSignatoryLinks = do
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified signinfo_ocsp_response
      is_author is_partner csv_title csv_contents
-     deleted really_deleted signredirecturl status_class
+     deleted really_deleted signredirecturl
+     rejection_time rejection_reason
+     status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
       | docid /= document_id                    = (document_id, [link], M.insertWith' (++) docid links linksmap)
@@ -687,6 +685,8 @@ fetchSignatoryLinks = do
           , signatoryattachments = sigAtt
           , signatorylinkstatusclass = status_class
           , signatorylinksignredirecturl = signredirecturl
+          , signatorylinkrejectionreason = rejection_reason
+          , signatorylinkrejectiontime = rejection_time 
           }
 
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> DBEnv m [SignatoryLink]
@@ -718,6 +718,8 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
            sqlSetList "signinfo_ocsp_response" $ fmap signatureinfoocspresponse <$> signatorysignatureinfo <$> links
            sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
+           sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
+           sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
            sqlResult "id"
 
   (slids :: [SignatoryLinkID]) <- kFold (\acc slid -> slid : acc) []
@@ -959,7 +961,6 @@ insertDocumentAsIs document = do
                  , documentdeliverymethod
                  , documentcancelationreason
                  , documentsharing
-                 , documentrejectioninfo
                  , documenttags
                  , documentauthorattachments
                  , documentui
@@ -987,9 +988,6 @@ insertDocumentAsIs document = do
         sqlSet "authentication_method" documentauthenticationmethod
         sqlSet "delivery_method" documentdeliverymethod
         sqlSet "cancelation_reason" documentcancelationreason
-        sqlSet "rejection_time" $ fst3 `fmap` documentrejectioninfo
-        sqlSet "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
-        sqlSet "rejection_reason" $ thd3 `fmap` documentrejectioninfo
         sqlSet "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
@@ -1687,14 +1685,21 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m RejectDocum
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                                      sqlSet "status" Rejected
                                      sqlSet "mtime" time
-                                     sqlSet "rejection_time" time
-                                     sqlSet "rejection_reason" customtext
-                                     sqlSet "rejection_signatory_link_id" slid
                                      sqlFrom "signatory_links"
                                      sqlWhere "signatory_links.document_id = documents.id"
+
                                      sqlWhereDocumentIDIs docid
+                                     sqlWhereSignatoryLinkIDIs slid
                                      sqlWhereDocumentTypeIs (Signable undefined)
                                      sqlWhereDocumentStatusIs Pending
+
+    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+                                     sqlSet "rejection_time" time
+                                     sqlSet "rejection_reason" customtext
+                                     sqlFrom "documents"
+                                     sqlWhere "signatory_links.document_id = documents.id"
+                                     sqlWhereDocumentIDIs docid
+                                     sqlWhereSignatoryLinkIDIs slid
 
     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   RejectDocumentEvidence

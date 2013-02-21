@@ -453,8 +453,8 @@ recentDate :: Document -> MinutesTime
 recentDate doc =
   maximum $ [documentctime doc, documentmtime doc] ++
   (maybeToList $ signtime <$> documentinvitetime doc) ++
-  (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++
   concat (for (documentsignatorylinks doc) (\sl ->
        (maybeToList $ signtime <$> maybeseeninfo sl)
     ++ (maybeToList $ signtime <$> maybesigninfo sl)
+    ++ (maybeToList $ signatorylinkrejectiontime sl)
     ++ (maybeToList $ id       <$> maybereadinvite sl)))
