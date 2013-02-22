@@ -211,6 +211,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinksignredirecturl :: Maybe String
   , signatorylinkrejectiontime   :: Maybe MinutesTime
   , signatorylinkrejectionreason :: Maybe String
+  , signatorylinkauthenticationmethod   :: AuthenticationMethod
   } deriving (Eq, Ord, Show)
 
 instance HasDefaultValue SignatoryLink where
@@ -232,6 +233,7 @@ instance HasDefaultValue SignatoryLink where
                   , signatorylinksignredirecturl = Nothing
                   , signatorylinkrejectiontime   = Nothing
                   , signatorylinkrejectionreason = Nothing
+                  , signatorylinkauthenticationmethod = StandardAuthentication
                   }
 
 data CSVUpload = CSVUpload {
@@ -380,7 +382,6 @@ data Document = Document {
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
-  , documentauthenticationmethod   :: AuthenticationMethod
   , documentdeliverymethod         :: DeliveryMethod
   , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
   , documentsharing                :: DocumentSharing
@@ -407,7 +408,6 @@ instance HasDefaultValue Document where
           , documenttimeouttime          = Nothing
           , documentinvitetext           = ""
           , documentsealedfile           = Nothing
-          , documentauthenticationmethod = StandardAuthentication
           , documentdeliverymethod       = EmailDelivery
           , documentcancelationreason    = Nothing
           , documentinvitetime           = Nothing

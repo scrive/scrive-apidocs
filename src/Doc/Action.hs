@@ -68,7 +68,6 @@ logDocEvent name doc user extraProps = do
     MailProp   email,
     IPProp     ip,
     NameProp   fullname,
-    stringProp "Authentication" (show $ documentauthenticationmethod doc),
     stringProp "Delivery" (show $ documentdeliverymethod doc),
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),

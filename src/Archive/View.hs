@@ -81,9 +81,10 @@ docFieldsListForJSON tl crtime padqueue doc = do
                           Contract -> "contract"
                           Offer    -> "offer"
                           Order    -> "order"
-    J.value "authentication" $ case documentauthenticationmethod doc of
-      StandardAuthentication -> "standard"
-      ELegAuthentication  -> "eleg"
+    J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
+      [StandardAuthentication] -> "standard"
+      [ELegAuthentication]     -> "eleg"
+      _                        -> "mixed"
     J.value "delivery" $ case documentdeliverymethod doc of
       EmailDelivery -> "email"
       PadDelivery   -> "pad"
@@ -104,6 +105,9 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
     J.value "isauthor" $ "true" <| isAuthor sl |> "false" 
+    J.value "authentication" $ case signatorylinkauthenticationmethod sl of
+      StandardAuthentication -> "standard"
+      ELegAuthentication  -> "eleg"
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl

@@ -55,8 +55,10 @@ docStateTests env = testGroup "DocState" [
   testThat "SetDocumentLang adds to the log" env testSetDocumentLangEvidenceLog,
   testThat "SetDocumentTags adds to the log" env testSetDocumentTagsEvidenceLog,
   testThat "SetDocumentTitle adds to the log" env testSetDocumentTitleEvidenceLog,
+{-
   testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
   testThat "Set StandardAuthentication adds to the log" env testSetStandardAuthenticationEvidenceLog,
+-}
   testThat "Set PadDelivery adds to the log" env testSetPadDeliveryEvidenceLog,
   testThat "Set EmailDelivery adds to the log" env testSetEmailDeliveryEvidenceLog,
   testThat "SetInvitationDeliveryStatus adds to the log" env testSetInvitationDeliveryStatusEvidenceLog,
@@ -380,6 +382,7 @@ testSetDocumentTitleEvidenceLog = do
                     then loop doc
                     else randomUpdate $ \t->SetDocumentTitle (documentid doc) title (systemActor t)
 
+{-
 testSetElegitimationAuthenticationEvidenceLog :: TestEnv ()
 testSetElegitimationAuthenticationEvidenceLog = do
   author <- addNewRandomUser
@@ -401,6 +404,7 @@ testSetStandardAuthenticationEvidenceLog = do
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetStandardAuthenticationMethodEvidence) lg
+-}
 
 testSetPadDeliveryEvidenceLog :: TestEnv ()
 testSetPadDeliveryEvidenceLog = do
@@ -765,7 +769,7 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "Doc modification time" time (documentmtime doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
     assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
-    assertEqual "Uses email identification only" StandardAuthentication (documentauthenticationmethod doc)
+    assertBool "Uses email identification only" (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) (documentsignatorylinks doc))
     assertEqual "Doc has user's footer" (customfooter $ usersettings user) (documentmailfooter $ documentui doc)
     assertEqual "In preparation" Preparation (documentstatus doc)
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)

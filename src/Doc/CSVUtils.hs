@@ -40,17 +40,12 @@ data CleanCSVData = CleanCSVData
 {- |
     Looks up all the custom fields for the csv upload and returns their labels.
 -}
-getCSVCustomFields :: Document -> Either String [String]
-getCSVCustomFields doc@Document{ documentsignatorylinks } =
-  case filter (isJust . signatorylinkcsvupload) documentsignatorylinks of
-    [] -> Right []
-    [sl] ->
+getCSVCustomFields :: SignatoryLink -> Either String [String]
+getCSVCustomFields sl =
       case isAuthor sl of
-        True -> Left $ "getCSVCustomFields: signatory link #" ++ show (signatorylinkid sl) ++ " of document #" ++
-                show (documentid doc) ++ " cannot be both csvupload and author"
+        True -> Left $ "getCSVCustomFields: signatory link #" ++ show (signatorylinkid sl) ++ " cannot be both csvupload and author"
         False ->
           Right $ map sfValue . filter isFieldCustom . signatoryfields . signatorydetails $ sl
-    _ -> Left $ "getCSVCustomFields: only one signatory per document can be csv upload in document #" ++ show (documentid doc)
 
 {- |
     Cleans up csv contents. You get a list of all the problems alongside all the data

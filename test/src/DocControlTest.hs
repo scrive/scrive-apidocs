@@ -197,7 +197,6 @@ testNonLastPersonSigningADocumentRemainsPending = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
@@ -245,7 +244,6 @@ testLastPersonSigningADocumentClosesIt = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
             file
 

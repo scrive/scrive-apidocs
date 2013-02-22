@@ -46,12 +46,6 @@ documentJSONTests env = testGroup "Document JSON tests" [
     ],
   testProperty "does not have files"
     (\doc -> True ==> (isNothing (fromJSValueField "files" (jsonDocumentForSignatory doc) :: Maybe String))),
-  testProperty "authentication" $ \doc ->
-      let da = getFromDoc doc "authentication" :: Int in
-      disjoin
-      [ StandardAuthentication == documentauthenticationmethod doc  ==> 1 == da
-      , ELegAuthentication == documentauthenticationmethod doc   ==> 2 == da
-      ],
   testProperty "delivery" $ \doc ->
       let da = getFromDoc doc "delivery" :: Int in
       disjoin

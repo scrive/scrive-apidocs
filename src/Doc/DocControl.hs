@@ -582,23 +582,27 @@ handleIssueSend document timezone = do
 -}
 splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
 splitUpDocument doc = do
-  case (msum (signatorylinkcsvupload <$> documentsignatorylinks doc), getCSVCustomFields doc) of
-    (Just _, Left msg) -> do
-      Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
-      internalError
-    (Nothing, _) -> do
+  case find (isJust . signatorylinkcsvupload) (documentsignatorylinks doc) of
+    Nothing -> do
       Log.debug $ "splitUpDocument called on document without csvupload, that is ok"
       return $ Right [doc]
-    (Just csvupload, Right csvcustomfields) -> do
-      Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
-      case (cleanCSVContents (doc `allowsAuthMethod` ELegAuthentication) (length csvcustomfields) $ csvcontents csvupload) of
-        (_prob:_, _) -> do
-          addFlashM flashMessageInvalidCSV
-          Log.debug $ "splitUpDocument: back to document"
-          return $ Left $ LinkDesignDoc $ (documentid doc)
-        ([], CleanCSVData{csvbody}) -> do
-          actor <- guardJustM $ mkAuthorActor <$> getContext
-          Right <$> splitUpDocumentWorker doc actor csvbody
+    Just sl -> do
+      case (signatorylinkcsvupload sl, getCSVCustomFields sl) of
+        (_, Left msg) -> do
+          Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
+          internalError
+        (Just csvupload, Right csvcustomfields) -> do
+          Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
+          case (cleanCSVContents (signatorylinkauthenticationmethod sl == ELegAuthentication) (length csvcustomfields) $ csvcontents csvupload) of
+            (_prob:_, _) -> do
+               addFlashM flashMessageInvalidCSV
+               Log.debug $ "splitUpDocument: back to document"
+               return $ Left $ LinkDesignDoc $ (documentid doc)
+            ([], CleanCSVData{csvbody}) -> do
+               actor <- guardJustM $ mkAuthorActor <$> getContext
+               Right <$> splitUpDocumentWorker doc actor csvbody
+        _ -> error "Should never happen"
+
 
 splitUpDocumentWorker :: (MonadDB m, TemplatesMonad m, CryptoRNG m, MonadBase IO m)
                       => Document -> Actor -> [[String]] -> m [Document]

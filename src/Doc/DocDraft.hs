@@ -28,7 +28,6 @@ data DraftData = DraftData {
       title :: String
     , invitationmessage :: Maybe String
     , daystosign :: Int
-    , authentication :: AuthenticationMethod
     , delivery :: DeliveryMethod
     , signatories :: [SignatoryTMP]
     , lang :: Maybe Lang
@@ -77,7 +76,6 @@ instance FromJSValue DraftData where
         daystosign' <- fromJSValueField "daystosign"
         let minDaysToSign = 1
             maxDaysToSign = 90
-        authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         signatories' <-  fromJSValueField "signatories"
         lang' <- fromJSValueField "lang"
@@ -85,14 +83,13 @@ instance FromJSValue DraftData where
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
         process' <- fromJSValueField "process"
-        case (title', daystosign', authentication', delivery') of
-            (Just t, Just daystosign, Just a, Just d)
+        case (title', daystosign', delivery') of
+            (Just t, Just daystosign, Just d)
              | daystosign >= minDaysToSign && daystosign <= maxDaysToSign ->
                 return $ Just DraftData {
                                       title =  t
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign
-                                    , authentication = a
                                     , delivery = d
                                     , signatories = concat $ maybeToList $ signatories'
                                     , lang = lang'
@@ -114,7 +111,6 @@ applyDraftDataToDocument doc draft actor = do
                                     documenttitle = title draft
                                   , documentinvitetext = fromMaybe (documentinvitetext doc) $ invitationmessage draft
                                   , documentdaystosign = daystosign draft
-                                  , documentauthenticationmethod = authentication draft
                                   , documentdeliverymethod = delivery draft
                                   , documentlang = fromMaybe (documentlang doc) (lang draft)
                                   , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)

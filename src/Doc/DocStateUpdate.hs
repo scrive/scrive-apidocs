@@ -22,7 +22,6 @@ import Kontra
 import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
-import Doc.DocUtils
 import Doc.SignatoryLinkID
 import Control.Applicative
 import Doc.DocumentID
@@ -67,11 +66,11 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
     Left err -> return $ Left err
     Right olddoc -> do
      switchLang (getLang olddoc)
-     case olddoc `allowsAuthMethod` ELegAuthentication of
+     let Just sl' = getSigLinkFor olddoc slid
+     case signatorylinkauthenticationmethod sl' == ELegAuthentication of
       True -> return $ Left (DBActionNotAvailable "This document does not allow signing using email authentication.")
       False  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
-        let Just sl' = getSigLinkFor olddoc slid
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
           True <- dbUpdate $ UpdateFields did slid fields actor
@@ -93,10 +92,10 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
     Left err -> return $ Left err
     Right olddoc -> do
      switchLang (getLang olddoc)
-     case olddoc `allowsAuthMethod` ELegAuthentication of
+     let Just sl' = getSigLinkFor olddoc slid
+     case signatorylinkauthenticationmethod sl' == ELegAuthentication of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using eleg authentication.")
       True  -> do
-        let Just sl' = getSigLinkFor olddoc slid
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
           Log.debug "a"

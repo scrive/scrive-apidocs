@@ -51,7 +51,7 @@ import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSC
 import Data.Maybe
 import Text.JSON
-import Data.List (sortBy)
+import Data.List (sortBy, nub)
 import File.Model
 import DB
 import PadQueue.Model
@@ -152,7 +152,10 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "status" $ show $ documentstatus doc
       J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
-      J.value "authentication" $ authenticationJSON $ documentauthenticationmethod doc
+      J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
+                                   [StandardAuthentication] -> "standard"
+                                   [ELegAuthentication]     -> "eleg"
+                                   _                        -> "mixed"
       J.value "delivery" $ deliveryJSON $ documentdeliverymethod doc
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
@@ -205,6 +208,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
+    J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink
     when (not (isPreparation doc) && forauthor && forapi && documentdeliverymethod doc == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
@@ -224,7 +228,7 @@ signatoryAttachmentJSON sa = do
   J.value "file" $ fileJSON <$> mfile
 
 signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
-signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
+signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfObligatory} -> do
 
     case sfType of
@@ -242,7 +246,7 @@ signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signa
                                   sfObligatory sfPlacements
       CompanyFT             -> fieldJSON "standard" "sigco"     sfValue
                                   ((not $ null $ sfValue)  && (null sfPlacements) &&
-                                      (ELegAuthentication /= documentauthenticationmethod doc) &&
+                                      (ELegAuthentication /= signatorylinkauthenticationmethod sl) &&
                                       (not $ isPreparation doc))
                                   sfObligatory sfPlacements
       CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  sfValue
@@ -353,8 +357,8 @@ documentInfoFields  document  = do
   F.value "id" $ show $ documentid document
   F.value "documentid" $ show $ documentid document
   F.value "template" $  isTemplate document
-  F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
-  F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
+  -- F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
+  -- F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
   F.value "emaildeliveryselected" $ documentdeliverymethod document == EmailDelivery
   F.value "paddeliveryselected" $ documentdeliverymethod document == PadDelivery
   F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0

@@ -186,6 +186,7 @@ instance Arbitrary SignatoryLink where
     signinfo <- if isJust seeninfo
                 then arbitrary
                 else return Nothing
+
     return $ defaultValue { signatorylinkid            = slid
                           , signatorydetails           = sd
                           , signatorymagichash         = mh
@@ -269,7 +270,6 @@ instance Arbitrary Document where
                then arbitrary
                else return Preparation
     sls <- arbitrary
-    auth <- arbitrary
     delivery <- arbitrary
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
@@ -277,7 +277,6 @@ instance Arbitrary Document where
     return $ defaultValue  { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
-                           , documentauthenticationmethod = auth
                            , documentdeliverymethod = delivery
                            , documenttimeouttime = Just (TimeoutTime dtimeouttime)
                            , documentdaystosign = ddaystosign
@@ -466,6 +465,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , signatorylinksignredirecturl = Nothing
                                       , signatorylinkrejectiontime = Nothing
                                       , signatorylinkrejectionreason = Nothing
+                                      , signatorylinkauthenticationmethod = StandardAuthentication
                                       }
 
 blankUser :: User

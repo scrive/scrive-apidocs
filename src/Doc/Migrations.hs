@@ -181,6 +181,28 @@ dropRejectionInfoFromDocuments = Migration {
               <+> "DROP COLUMN rejection_signatory_link_id"
 }
 
+moveAuthenticationMethodFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
+moveAuthenticationMethodFromDocumentsToSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 17
+  , mgrDo = do
+      kRunRaw $   "ALTER TABLE signatory_links"
+              <+> "ADD COLUMN authentication_method         SMALLINT     NULL"
+      kRunRaw $   "UPDATE signatory_links"
+              <+> "   SET authentication_method = (SELECT authentication_method FROM documents WHERE documents.id = signatory_links.document_id)"
+      kRunRaw $   "ALTER TABLE signatory_links"
+              <+> "ALTER COLUMN authentication_method SET NOT NULL"
+}
+
+dropAuthenticationMethodFromDocuments :: MonadDB m => Migration m
+dropAuthenticationMethodFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 18
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE documents"
+              <+> "DROP COLUMN authentication_method"
+}
+
 dropCSVSignatoryIndexFromSignatoryLinks :: MonadDB m => Migration m
 dropCSVSignatoryIndexFromSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks

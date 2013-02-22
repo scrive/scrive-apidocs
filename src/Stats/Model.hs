@@ -597,8 +597,8 @@ docStatSignMethod status did apistring =
     qty =
       foldl1' (<+>) [
         "(CASE",
-        "  WHEN doc.authentication_method=1 AND delivery_method=2 THEN padqty",
-        "  WHEN doc.authentication_method=1 THEN emailqty",
+        "  WHEN sl.authentication_method=1 AND delivery_method=2 THEN padqty",
+        "  WHEN sl.authentication_method=1 THEN emailqty",
         "  ELSE elegqty ",
         "END)"]
     fromPart =

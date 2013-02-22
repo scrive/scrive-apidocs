@@ -59,7 +59,6 @@ module Doc.Model
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
   , SetDocumentUI(..)
-  , SetDocumentAuthenticationMethod(..)
   , SetDocumentDeliveryMethod(..)
   , SetDocumentProcess(..)
   , SetInvitationDeliveryStatus(..)
@@ -459,6 +458,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatoryfields" (sort . signatoryfields . signatorydetails)
                          , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
                          , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
+                         , checkEqualBy "signatorylinkauthenticationmethod" signatorylinkauthenticationmethod
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
@@ -473,7 +473,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
-                   , checkEqualBy "documentauthenticationmethod" documentauthenticationmethod
                    , checkEqualBy "documentdeliverymethod" documentdeliverymethod
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
@@ -507,7 +506,6 @@ documentsSelectors =
   , "documents.mail_footer"
   , "documents.lang"
   , "documents.sharing"
-  , "documents.authentication_method"
   , "documents.delivery_method"
   , "documents.api_callback_url"
   , documentStatusClassExpression
@@ -522,7 +520,7 @@ fetchDocuments = kFold decoder []
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text cancelationreason mail_footer
-     lang sharing authentication_method delivery_method apicallback status_class
+     lang sharing delivery_method apicallback status_class
        = Document {
          documentid = did
        , documenttitle = title
@@ -542,7 +540,6 @@ fetchDocuments = kFold decoder []
            Nothing -> Nothing
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
        , documentinvitetext = invite_text
-       , documentauthenticationmethod = authentication_method
        , documentdeliverymethod = delivery_method
        , documentcancelationreason = cancelationreason
        , documentsharing = sharing
@@ -607,6 +604,7 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.sign_redirect_url"
   sqlResult "signatory_links.rejection_time"
   sqlResult "signatory_links.rejection_reason"
+  sqlResult "signatory_links.authentication_method"
 
   sqlResult (statusClassCaseExpression <> SQL " AS status_class" [])
   sqlResult "signatory_attachments.file_id AS sigfileid"
@@ -633,6 +631,7 @@ fetchSignatoryLinks = do
      is_author is_partner csv_title csv_contents
      deleted really_deleted signredirecturl
      rejection_time rejection_reason
+     authentication_method
      status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
@@ -687,6 +686,7 @@ fetchSignatoryLinks = do
           , signatorylinksignredirecturl = signredirecturl
           , signatorylinkrejectionreason = rejection_reason
           , signatorylinkrejectiontime = rejection_time 
+          , signatorylinkauthenticationmethod = authentication_method
           }
 
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> DBEnv m [SignatoryLink]
@@ -720,6 +720,7 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
            sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
            sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
+           sqlSetList "authentication_method" $ signatorylinkauthenticationmethod <$> links
            sqlResult "id"
 
   (slids :: [SignatoryLinkID]) <- kFold (\acc slid -> slid : acc) []
@@ -957,7 +958,6 @@ insertDocumentAsIs document = do
                  , documenttimeouttime
                  , documentinvitetime
                  , documentinvitetext
-                 , documentauthenticationmethod
                  , documentdeliverymethod
                  , documentcancelationreason
                  , documentsharing
@@ -985,7 +985,6 @@ insertDocumentAsIs document = do
         sqlSet "invite_time" $ signtime `fmap` documentinvitetime
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
         sqlSet "invite_text" documentinvitetext
-        sqlSet "authentication_method" documentauthenticationmethod
         sqlSet "delivery_method" documentdeliverymethod
         sqlSet "cancelation_reason" documentcancelationreason
         sqlSet "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
@@ -1628,7 +1627,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentctime                = ctime
                 , documentmtime                = ctime
                 , documentauthorattachments    = []
-                , documentauthenticationmethod = StandardAuthentication
                 , documentdeliverymethod       = EmailDelivery
                 , documentui                   = (documentui defaultValue) { documentmailfooter = customfooter $ usersettings user }
                 }
@@ -2244,6 +2242,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
         actor
     return ()
 
+{-
+
+-- this as to be merged in equivalen for signatory link
+-- I cannot find it, find it later
+
 data SetDocumentAuthenticationMethod = SetDocumentAuthenticationMethod DocumentID AuthenticationMethod Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMethod Bool where
   update (SetDocumentAuthenticationMethod did auth actor) =
@@ -2255,6 +2258,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMe
         (value "authentication" (show auth) >> value "actor" (actorWho actor))
         (Just did)
         actor
+-}
 
 data SetDocumentDeliveryMethod = SetDocumentDeliveryMethod DocumentID DeliveryMethod Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod Bool where
@@ -2439,7 +2443,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
       update $ SetDocumentTitle did (documenttitle document) actor
     , update $ SetDaysToSign  did (documentdaystosign document) actor
     , update $ SetDocumentLang did (getLang document) actor
-    , update $ SetDocumentAuthenticationMethod did (documentauthenticationmethod document) actor
     , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
     , update $ SetInviteText did (documentinvitetext document) actor
     , update $ SetDocumentTags  did (documenttags document) actor
