@@ -17,6 +17,8 @@ class LoginHelper
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
     puts "just clicked email input"
     sleep 1
+    # sometimes there are leftovers from stored form data from before
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).click
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).send_keys password
@@ -24,6 +26,7 @@ class LoginHelper
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
     puts "just clicked email input"
     sleep 1
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
     (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
     (@h.wait_until { @driver.find_element :css => ".short-input-container a.login-button" }).click
     (@h.wait_until { @driver.find_element :css => "a.js-logout" })
