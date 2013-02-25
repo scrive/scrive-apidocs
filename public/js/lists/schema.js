@@ -53,7 +53,7 @@
         defaults: {
             sorting: new Sorting({ disabled: true }),
             textfiltering: new TextFiltering({ disabled: true}),
-            selectfiltering : [],                              
+            selectfiltering : [],
             paging: new Paging({ disabled: true }),
             options: [],
             actions: [],

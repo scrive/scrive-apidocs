@@ -1,5 +1,5 @@
 /* Section for signatories in sign view.
-   
+
    Usage:
     var docsig = new DocumentSignSignatories({document : doc});
     $('body').append(docsig.view().el);
@@ -8,7 +8,7 @@
 
 (function(window) {
 
-    
+
 var DocumentSignSignatoriesModel = Backbone.Model.extend({
     initialize: function(args) {
         var me = this;
@@ -52,8 +52,10 @@ var DocumentSignSignatoriesListView = Backbone.View.extend({
           return localization.signatoryMessage.rejected;
       else if (signatory.status() == 'opened')
           return localization.signatoryMessage.seen;
-      else if (signatory.status() == 'sent')
+      else if (signatory.status() == 'sent' && signatory.reachedBySignorder())
           return localization.signatoryMessage.other;
+      else if (signatory.status() == 'sent')
+          return localization.signatoryMessage.waiting;
       else
           return localization.signatoryMessage[signatory.status()];
   },
@@ -113,8 +115,10 @@ var DocumentSignSignatoryView = Backbone.View.extend({
           return localization.signatoryMessage.rejected;
       else if (signatory.status() == 'opened')
           return localization.signatoryMessage.seen;
-      else if (signatory.status() == 'sent')
+      else if (signatory.status() == 'sent' && signatory.reachedBySignorder())
           return localization.signatoryMessage.other;
+      else if (signatory.status() == 'sent')
+          return localization.signatoryMessage.waiting;
       else
           return localization.signatoryMessage[signatory.status()];
   },

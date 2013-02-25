@@ -236,7 +236,10 @@ window.DesignAuthorAttachmentsPopup = {
                             submit.addInputs(att.fileUpload().attr("name", name));
                           counter++;
                       });
-                      submit.sendAjax(function() {window.location.reload()},function() {window.location.reload();});
+                      submit.sendAjax(
+                        function() {window.location.reload()},
+                        function() {LoadingDialog.close(); new FlashMessage({color: "red", content: localization.authorattachments.invalidAttachments });}
+                      );
                   });
                   LoadingDialog.open();
                   return false;

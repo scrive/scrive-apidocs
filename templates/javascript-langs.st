@@ -108,6 +108,7 @@ javascriptLocalisation =
                        , waitingForSignature: "$_waitingForSignature()$"
                        , sentViewer: "$_signatoryMessageSentViewer()$"
                        , openedViewer: "$_signatoryMessageOpenedViewer()$"
+                       , waiting : "$_signatoryMessageWaiting()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"
@@ -260,6 +261,7 @@ javascriptLocalisation =
                 , storedInScrive: "$_updateAttachmentsDialogUpLoadSaved()$"
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
                 , selectedAttachments : "Selected attachments"
+                , invalidAttachments : "$_invalidAttachments()$"
             }
           , signatoryAttachments : {
                 addAttachment:      "$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$"

@@ -7,7 +7,6 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
   list : function() {
     if (this.get("list") == undefined)
       this.set({"list" : new KontraList({
-        name : "Templatesarchive table",
         loadOnInit : false,
         schema: new Schema({
               url: "/api/frontend/list",

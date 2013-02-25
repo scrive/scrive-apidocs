@@ -325,6 +325,9 @@ window.Signatory = Backbone.Model.extend({
     clearAttachments: function() {
         this.set({attachments: []});
     },
+    reachedBySignorder : function() {
+        return this.signorder() <= this.document().signorder();
+    },
     canSign: function() {
         var canSign = this.document().signingInProcess() &&
             this.signs() &&
@@ -338,7 +341,7 @@ window.Signatory = Backbone.Model.extend({
                  this.signorder() == this.document().signorder();
     },
     isViewer : function() {
-        return !this.author() && !this.canSign();
+        return !this.author() && !this.signs();
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {

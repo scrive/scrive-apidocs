@@ -59,7 +59,7 @@
             if (this.find(v) != undefined) {
                SessionStorage.set(this.get("namespace"), "select-filtering" + this.name(), this.find(v).value );
                this.set({"selected" : this.find(v)});
-            }   
+            }
             else
                 this.select("");
         },
@@ -146,7 +146,7 @@
             this.set({ namespace: namespace });
             var fssn = SessionStorage.get(namespace, "ajax-select-filtering-name" + this.name());
             var fssv = SessionStorage.get(namespace, "ajax-select-filtering-value" + this.name());
-            if (fssn == undefined || fssv == "") fssn = this.defaultName();  
+            if (fssn == undefined || fssv == "") fssn = this.defaultName();
             if (fssv == undefined) fssv = "";
             this.set({"options" : [{name : fssn, value : fssv}]});
             this.select(fssv);
@@ -154,7 +154,7 @@
     });
 
 
-  
+
   window.IntervalDoubleSelectFiltering = Backbone.Model.extend({
         defaults : {
             options: [{name : "", value : "<"}, {name : "", value : ">"}],
@@ -346,7 +346,7 @@
             $(this.el).append(this.select.view().el);
         }
     });
-    
+
 
     var IntervalDoubleSelectFilteringView = Backbone.View.extend({
         model: SelectFiltering,
@@ -372,7 +372,7 @@
             if (selectOptionsBottom[0].value == "<")
                 selectOptionsBottom.push(selectOptionsBottom.shift());
             selectOptionsBottom.reverse();
-            
+
             if (this.selectBottom != undefined)
                 this.selectBottom.clear();
             this.selectBottom = new Select({
