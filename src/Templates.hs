@@ -16,6 +16,7 @@ import Data.List (isSuffixOf)
 
 import Control.Monad.Trans
 import Control.Monad.Reader
+import Control.Monad.Base
 import System.Time
 
 import Utils.Default
@@ -77,6 +78,8 @@ renderLocalTemplate_ haslang name = renderLocalTemplate haslang name $ return ()
 
 instance CryptoRNG m => CryptoRNG (T.TemplatesT m) where
     getCryptoRNGState = T.TemplatesT $ ReaderT $ \_r -> getCryptoRNGState
+
+deriving instance (MonadBase IO m) => MonadBase IO (T.TemplatesT m)                        
 
 runTemplatesT :: (Functor m, Monad m) => (Lang, TL.GlobalTemplates) -> T.TemplatesT m a -> m a
 runTemplatesT (lang, ts) action = runReaderT (T.unTT action) (show lang, ts)

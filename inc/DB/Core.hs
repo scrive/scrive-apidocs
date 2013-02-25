@@ -146,6 +146,6 @@ instance (MonadDB m, Monoid w) => MonadDB (SW.WriterT w m) where
   getNexus     = lift getNexus
   localNexus f = SW.mapWriterT $ localNexus f
 
-instance MonadDB m => MonadDB (T.TemplatesT m) where
+instance (MonadBase IO (T.TemplatesT m), MonadDB m) => MonadDB (T.TemplatesT m) where
   getNexus = lift getNexus
   localNexus f (T.TemplatesT m) = T.TemplatesT $ ReaderT $ localNexus f . runReaderT m
