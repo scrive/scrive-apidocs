@@ -28,6 +28,9 @@
  *  an JSON object, drop current table content and fill in with
  *  fetched data. Checkout skrivapa.se/docs to see an example.
  *
+ *  In name parameter is provided, list will cache all filters and sorting, so they will stay the same when page reloads.
+ *  To disable this just set name to "" or skip it.
+ *
  *  There are some utils in ListUtils.hs to parse sorting, paging or
  *  searching.
  *
