@@ -111,7 +111,7 @@ class DocHelper
     puts "review attachment"
     @h.wait_until { (@driver.find_elements :css => ".s-review-sigattachment").length == uploaded + 1 }
     puts "Checking lenght"
-    (@h.wait_until { @driver.find_elements :css => ".s-review-sigattachment" })[uploaded].click
+    #(@h.wait_until { @driver.find_elements :css => ".s-review-sigattachment" })[uploaded].click
     puts "reviewed attachment"
   end
 

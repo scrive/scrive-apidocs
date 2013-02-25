@@ -124,13 +124,19 @@ describe "sign up on front page and modify account settings" do
 
     @h.emailhelper.follow_link_in_latest_mail_for new_email
 
-    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).click
-    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email
-    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).click
-    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='password']" }).send_keys new_password
-
-    (@h.wait_until { @h.driver.find_element :css => ".short-input-container a.login-button" }).click
-
+    sleep 1
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
+    puts "just clicked email input"
+    sleep 1
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).click
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='password']" }).send_keys password
+    # trying to get this click thing to work
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).click
+    puts "just clicked email input"
+    sleep 1
+    (@h.wait_until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
+    (@h.wait_until { @driver.find_element :css => ".short-input-container a.login-button" }).click
 
     @h.wait_until { @h.driver.find_element :css => "div.recovery-container" }
 
