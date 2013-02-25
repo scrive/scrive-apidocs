@@ -108,6 +108,7 @@ javascriptLocalisation =
                        , waitingForSignature: "$_waitingForSignature()$"
                        , sentViewer: "$_signatoryMessageSentViewer()$"
                        , openedViewer: "$_signatoryMessageOpenedViewer()$"
+                       , waiting : "$_signatoryMessageWaiting()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"

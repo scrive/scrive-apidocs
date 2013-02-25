@@ -34,7 +34,7 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   signatoryView : function(i)
   {
     if (i == undefined)  return this.get("currentSignview");
-    return this.signatoriesViews()[i];                                                  
+    return this.signatoriesViews()[i];
   },
   setCurrentSignview : function(sv) {
     this.set({currentSignview : sv});
@@ -58,7 +58,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle' style='width: 20px; vertical-align: top;' />");
           var middle2    = $("<div class='middle' />");
-          var middle3    = $("<div class='middle float-right' />");
+          var middle3    = $("<div class='middle float-right' style='white-space: nowrap;'/>");
           var statusicon = $("<div class='icon status' style='vertical-align: top; margin-top: 4px;' />").addClass(sigview.status());
           var status     = $("<div class='statustext' style='margin-bottom: 7px; margin-top: 3px; line-height: 13px; height: 100%; vertial-align: top;' />").addClass(sigview.status()).html(sigview.signatoryViewerySummary());
           var details    = $('<a class="details clickable" href="#" />').text(localization.docsignview.showDetails);
@@ -97,11 +97,11 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       if (this.model.hasDummy()) {
          td1.css("border-color","#ffffff");
          box2.append(this.model.signatoryView().el());
-      }   
+      }
       else if (this.model.hasList()) {
          box1.append(this.list());
          box2.append(this.model.signatoryView().el());
-         
+
       } else {
          box1.append(this.model.signatoryView(0).el());
          box2.append(this.model.signatoryView(1).el());

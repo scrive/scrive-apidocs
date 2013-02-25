@@ -41,6 +41,10 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
           return localization.signatoryMessage.rejected;
       else if (signatory.status() == 'opened')
           return localization.signatoryMessage.seen;
+      else if (signatory.status() == 'sent' && signatory.reachedBySignorder())
+          return localization.signatoryMessage.other;
+      else if (signatory.status() == 'sent')
+          return localization.signatoryMessage.waiting;
       else if (localization.signatoryMessage[signatory.status()] != undefined)
           return localization.signatoryMessage[signatory.status()];
       return localization.signatoryMessage["other"];
@@ -62,6 +66,7 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
           && !signatory.author()
           && signatory.signs()
+          && signatory.reachedBySignorder()
           && (signatory.document().signingInProcess() || signatory.document().closed())
           && !signatory.undeliveredEmail()
           && !signatory.document().padDelivery();
@@ -131,7 +136,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                 editText: localization.reminder.formOwnMessage,
                 rejectText: localization.cancel,
                 onAccept: function(customtext) {
-                    trackTimeout('Accept', 
+                    trackTimeout('Accept',
                                  {'Accept' : 'send reminder',
                                   'Signatory index' : signatory.signIndex()},
                                  function() {
@@ -159,12 +164,12 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                     size: "tiny",
                                     color: "blue",
                                     text: localization.send,
-                                    onClick: function() { 
+                                    onClick: function() {
                                         trackTimeout('Accept',
                                                      {'Signatory index':signatory.signIndex(),
                                                       'Accept' : 'change email'},
                                                      function() {
-                                                         signatory.changeEmail(input.val()).send(); 
+                                                         signatory.changeEmail(input.val()).send();
                                                      });
                                     }
                                     });
@@ -256,7 +261,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     },
   authorOptions : function() {
     var signatory = this.model.signatory();
-    var optionbox = $("<div class='optionbox'/>"); 
+    var optionbox = $("<div class='optionbox'/>");
     if (this.model.hasRemindOption())
       optionbox.append(this.remidenMailOption());
     if (this.model.hasChangeEmailOption())
@@ -266,7 +271,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     if (this.model.hasAddToPadQueueOption())
       optionbox.append(this.addToPadQueueOption());
     if (this.model.hasRemoveFromPadQueueOption())
-      optionbox.append(this.removeFromPadQueueOption());      
+      optionbox.append(this.removeFromPadQueueOption());
     return optionbox;
   },
   render: function() {

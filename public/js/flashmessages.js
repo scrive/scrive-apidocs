@@ -21,7 +21,7 @@ var FlashMessageModel = Backbone.Model.extend({
     else if (this.get("color") == "blue")
       return "success";
     else
-      return "success";  
+      return "success";
   }
 });
 
@@ -63,6 +63,6 @@ window.FlashMessage = function(args) {
         var view = new FlashMessageView({model : model, el : $("<div class='flash'/>")});
         $("body").append($(view.el));
         setTimeout(function() {$(view.el).addClass("active");},100);
-        setTimeout(function() {view.clear();},10000);
+        setTimeout(function() {view.clear();},100000);
 }
 });
