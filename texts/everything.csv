@@ -1121,3 +1121,4 @@ have an account please follow the account creation process. Free use of up to 5 
 "_phoneSubmitButtonLabel","OK","OK"
 "_phoneConfirmationText","Tack, en representant för Scrive kommer att ringa dig snart.","Thanks, someone from Scrive will call you soon!"
 "_startButtonLabel","Ta mig till tjänsten bara!","Just take me to the service!"
+"_invalidAttachments","Filtypen du valt stöds inte. Du kan tyvärr bara bifoga PDF-filer.","Sorry, this file format is not supported. Please select a .pdf file only."

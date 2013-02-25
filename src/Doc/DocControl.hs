@@ -924,14 +924,14 @@ handleSetAttachments did = do
                      case cres of
                        Left _ -> do
                          Log.debug $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
-                         return Nothing
+                         internalError
                        Right content' -> do
                          file <- dbUpdate $ NewFile filename content'
                          return (Just (fileid file))
                  Just (Input  (Right c)  _ _)  -> do
                       case maybeRead (BSL.toString c) of
                           Just fid -> (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
-                          Nothing -> return $ Nothing
+                          Nothing -> internalError
                  _ -> return Nothing
 
 handleParseCSV :: Kontrakcja m => m JSValue

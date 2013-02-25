@@ -261,6 +261,7 @@ javascriptLocalisation =
                 , storedInScrive: "$_updateAttachmentsDialogUpLoadSaved()$"
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
                 , selectedAttachments : "Selected attachments"
+                , invalidAttachments : "$_invalidAttachments()$"
             }
           , signatoryAttachments : {
                 addAttachment:      "$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$"
