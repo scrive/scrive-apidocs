@@ -21,6 +21,7 @@ module Doc.Model
   , DetachFile(..)
   , AttachSealedFile(..)
   , CancelDocument(..)
+  , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
@@ -1137,39 +1138,50 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bo
         sqlWhereEq "id" did
         sqlWhereEq "status" $ DocumentError undefined
 
-data CancelDocument = CancelDocument DocumentID CancelationReason Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m CancelDocument () where
-  update (CancelDocument did reason actor) = do
+data ELegAbortDocument = ELegAbortDocument DocumentID SignatoryLinkID String String String String Actor
+instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ELegAbortDocument () where
+  update (ELegAbortDocument did slid msg firstName lastName personNumber actor) = do
     let mtime = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
                  sqlSet "mtime" mtime
-                 sqlSet "cancelation_reason" reason
+                 sqlSet "cancelation_reason" (ELegDataMismatch msg slid firstName lastName personNumber)
                  sqlWhereDocumentIDIs did
                  sqlWhereDocumentTypeIs (Signable undefined)
                  sqlWhereDocumentStatusIs Pending
-    _ <- case reason of
-                ManualCancel -> update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    sl <- query $ GetSignatoryLinkByID did slid Nothing
+    let trips = [("First name",      getFirstName      sl, firstName)
+                ,("Last name",       getLastName       sl, lastName)
+                ,("Personal number", getPersonalNumber sl, personNumber)]
+        uneql = filter (\(_,a,b)->a/=b) trips
+        msg2 = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
+    _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+                    CancelDocumenElegEvidence
+                    (value "actor" (actorWho actor) >> value "msg" msg2 )
+                    (Just did)
+                    (Just slid)
+                    Nothing
+                    actor
+    return ()
+
+data CancelDocument = CancelDocument DocumentID Actor
+instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m CancelDocument () where
+  update (CancelDocument did actor) = do
+    let mtime = actorTime actor
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+                 sqlSet "status" Canceled
+                 sqlSet "mtime" mtime
+                 sqlSet "cancelation_reason" ManualCancel
+                 sqlWhereDocumentIDIs did
+                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereDocumentStatusIs Pending
+    _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   CancelDocumentEvidence
                   (value "actor" (actorWho actor))
                   (Just did)
                   Nothing
                   Nothing
                   actor
-                ELegDataMismatch _ sid fn ln num -> do
-                  sl <- query $ GetSignatoryLinkByID did sid Nothing
-                  let trips = [("First name",      getFirstName      sl, fn)
-                              ,("Last name",       getLastName       sl, ln)
-                              ,("Personal number", getPersonalNumber sl, num)]
-                      uneql = filter (\(_,a,b)->a/=b) trips
-                      msg = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
-                  update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                    CancelDocumenElegEvidence
-                    (value "actor" (actorWho actor) >> value "msg" msg )
-                    (Just did)
-                    (Just sid)
-                    Nothing
-                    actor
     return ()
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) String Actor

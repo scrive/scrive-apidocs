@@ -260,7 +260,7 @@ handleMismatch doc sid msg sfn sln spn = do
         let Just sl = getSigLinkFor doc sid
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
         Just newdoc <- runMaybeT $ do
-          dbUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn)
+          dbUpdate $ ELegAbortDocument (documentid doc) sid msg sfn sln spn
            (signatoryActor (ctxtime ctx)
            (ctxipnumber ctx)
            (maybesignatory sl)

@@ -249,7 +249,7 @@ apiCallCancel did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-  dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+  dbUpdate $ CancelDocument (documentid doc) actor
   newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
   lift $ postDocumentCanceledChange newdocument "api"
   newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did

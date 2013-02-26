@@ -73,7 +73,7 @@ handleDelete = do
               case (documentstatus doc) of
                   Pending -> if (isAuthor msl)
                                 then do
-                                   dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+                                   dbUpdate $ CancelDocument (documentid doc) actor
                                    doc' <- guardRightM' $ getDocByDocID (documentid doc)
                                    postDocumentCanceledChange doc' "web+archive"
                                 else do
@@ -111,7 +111,7 @@ handleCancel = do
       actor <- guardJustM $ mkAuthorActor <$> getContext
       if (documentstatus doc == Pending)
         then do
-           dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+           dbUpdate $ CancelDocument (documentid doc) actor
            doc' <- guardRightM' $ getDocByDocID $ docid
            postDocumentCanceledChange doc' "web+archive"
         else internalError
