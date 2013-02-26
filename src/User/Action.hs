@@ -56,8 +56,8 @@ handleAccountSetupFromSign document signatorylink = do
         IPProp (ctxipnumber ctx),
         TimeProp (ctxtime ctx),
         NameProp name,
-        someProp "First Name" $ getFirstName activateduser,
-        someProp "Last Name" $ getLastName activateduser,
+        FirstNameProp $ getFirstName activateduser,
+        LastNameProp $ getLastName activateduser,
         MailProp $ Email email,
         IPProp $ ctxipnumber ctx,
         someProp "Company Name" $ getValueOfType CompanyFT $ signatorydetails signatorylink] ++ 

@@ -479,8 +479,8 @@ handlePostSignSignup email fn ln = do
         someProp "Post-sign confirmation email" $ ctxtime ctx,
         someProp "Confirmation link" $ show l,
         NameProp (fn ++ " " ++ ln),
-        someProp "First Name" fn,
-        someProp "Last Name" ln,
+        FirstNameProp fn,
+        LastNameProp ln,
         IPProp $ ctxipnumber ctx
         ]
       return $ Just l
@@ -502,8 +502,8 @@ handlePostSignSignup email fn ln = do
             UserIDProp $ userid newuser,
             someProp "Post-sign confirmation email" $ ctxtime ctx,
             NameProp (fn ++ " " ++ ln),
-            someProp "First Name" fn,
-            someProp "Last Name" ln,
+            FirstNameProp fn,
+            LastNameProp ln,
             someProp "Confirmation link" $ show l,
             IPProp $ ctxipnumber ctx
             ]

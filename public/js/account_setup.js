@@ -120,8 +120,8 @@
               mixpanel.people.set({Phone : model.phone(),
                                    'Company name' : model.company(),
                                    'Position' : model.position(),
-                                   'First Name' : model.fstname(),
-                                   'Last Name' : model.sndname()});
+                                   '$first_name' : model.fstname(),
+                                   '$last_name' : model.sndname()});
               trackTimeout('Sign TOS', {}, function() {
                   window.location = resp.location;
               });
