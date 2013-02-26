@@ -118,7 +118,7 @@
           if (resp.ok === true) {
               mixpanel.alias(model.userid());
               mixpanel.people.set({Phone : model.phone(),
-                                   'Company name' : model.company(),
+                                   'Company Name' : model.company(),
                                    'Position' : model.position(),
                                    '$first_name' : model.fstname(),
                                    '$last_name' : model.sndname()});
