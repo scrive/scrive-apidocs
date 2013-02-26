@@ -129,6 +129,8 @@ kontraMigrations = [
   , dropRejectionInfoFromDocuments
   , moveAuthenticationMethodFromDocumentsToSignatoryLinks
   , dropAuthenticationMethodFromDocuments
+  , moveCancelationReasonFromDocumentsToSignatoryLinks
+  , dropCancelationReasonFromDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

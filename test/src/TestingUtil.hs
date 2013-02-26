@@ -466,6 +466,10 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , signatorylinkrejectiontime = Nothing
                                       , signatorylinkrejectionreason = Nothing
                                       , signatorylinkauthenticationmethod = StandardAuthentication
+                                      , signatorylinkelegdatamismatchmessage = Nothing
+                                      , signatorylinkelegdatamismatchfirstname = Nothing
+                                      , signatorylinkelegdatamismatchlastname = Nothing
+                                      , signatorylinkelegdatamismatchpersonalnumber = Nothing
                                       }
 
 blankUser :: User

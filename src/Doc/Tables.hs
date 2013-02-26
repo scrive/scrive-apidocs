@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 19
+  , tblVersion = 20
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -25,7 +25,6 @@ tableDocuments = tblTable {
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("cancelation_reason", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("sharing", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
@@ -53,7 +52,6 @@ tableDocuments = tblTable {
           <> ", csv_title                     TEXT             NULL"
           <> ", csv_contents                  TEXT             NULL"
           <> ", csv_signatory_index           INTEGER          NULL"
-          <> ", cancelation_reason            TEXT             NULL"
           <> ", sharing                       SMALLINT     NOT NULL"
           <> ", mail_footer                   TEXT             NULL"
           <> ", lang                          SMALLINT     NOT NULL"
@@ -119,7 +117,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 18
+  , tblVersion = 19
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -150,6 +148,10 @@ tableSignatoryLinks = tblTable {
        , ("rejection_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("rejection_reason", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("authentication_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("eleg_data_mismatch_message", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("eleg_data_mismatch_first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("eleg_data_mismatch_last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("eleg_data_mismatch_personal_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_links"
@@ -182,6 +184,10 @@ tableSignatoryLinks = tblTable {
           <> ", rejection_time                      TIMESTAMPTZ      NULL"
           <> ", rejection_reason                    TEXT             NULL"
           <> ", authentication_method               SMALLINT     NOT NULL"
+          <> ", eleg_data_mismatch_message          TEXT             NULL"
+          <> ", eleg_data_mismatch_first_name       TEXT             NULL"
+          <> ", eleg_data_mismatch_last_name        TEXT             NULL"
+          <> ", eleg_data_mismatch_personal_number  TEXT             NULL"
           <> ", CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
           <> ")"
         return TVRcreated

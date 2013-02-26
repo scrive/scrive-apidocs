@@ -5,8 +5,10 @@ module Doc.Migrations where
 import Control.Monad
 import Data.Int
 import Data.Monoid
+import Data.Maybe
 import Database.HDBC
 import Text.JSON
+import Text.JSON.FromJSValue
 
 import DB
 import DB.SQL2
@@ -202,6 +204,83 @@ dropAuthenticationMethodFromDocuments = Migration {
       kRunRaw $ "ALTER TABLE documents"
               <+> "DROP COLUMN authentication_method"
 }
+
+
+moveCancelationReasonFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
+moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 18
+  , mgrDo = do
+      kRunRaw $   "ALTER TABLE signatory_links"
+              <+> "ADD COLUMN eleg_data_mismatch_message          TEXT     NULL,"
+              <+> "ADD COLUMN eleg_data_mismatch_first_name       TEXT     NULL,"
+              <+> "ADD COLUMN eleg_data_mismatch_last_name        TEXT     NULL,"
+              <+> "ADD COLUMN eleg_data_mismatch_personal_number  TEXT     NULL"
+      _ <- kRun $ SQL "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE '%ELegDataMismatch%'" []
+
+      let fetch acc docid fieldsstr = v : acc
+             where
+               Ok value = decode fieldsstr
+               v = fromJSValue1 (value :: JSValue)
+               fromJSValue1 = do
+                 g <- fromJSValueField "ELegDataMismatch"
+                 case g of
+                   Just (JSArray [ JSString message
+                                 , slid
+                                 , JSString first_name
+                                 , JSString last_name
+                                 , JSString personal_number
+                                 ]) -> do
+                                -- this should be array of 5 elements:
+                                -- [message, slid, first_name, last_name, personal_number]
+                                return ( docid
+                                       , fromJust (fromJSValue slid), fromJSString message
+                                       , fromJSString first_name, fromJSString last_name
+                                       , fromJSString personal_number)
+                   _ -> error $ "Could not parse what is in ELegDataMismatch: " ++ fieldsstr ++ ", value is " ++ show g
+
+      values <- kFold fetch []
+      forM_ values $ \v@( did :: Integer, slid :: Integer, message :: String
+                        , first_name :: String, last_name :: String
+                        , personal_number :: String) -> do
+        r <- kRun $ sqlUpdate "signatory_links" $ do
+          sqlSet "eleg_data_mismatch_message" message
+          sqlSet "eleg_data_mismatch_first_name" first_name
+          sqlSet "eleg_data_mismatch_last_name" last_name
+          sqlSet "eleg_data_mismatch_personal_number" personal_number
+          sqlWhereEq "id" slid
+          sqlWhereEq "document_id" did
+        when (r /= 1) $
+          Log.debug $ "Migration failed at " ++ show v
+      kRun_ $ sqlUpdate "documents" $ do
+        sqlSet "cancelation_reason" SqlNull
+        sqlWhere "cancelation_reason = '\"ManualCancel\"'"
+      kRun_ $ sqlUpdate "documents" $ do
+        sqlSet "cancelation_reason" SqlNull
+        sqlWhereExists $ sqlSelect "signatory_links" $ do
+          sqlWhere "signatory_links.document_id = documents.id"
+          sqlWhere "signatory_links.eleg_data_mismatch_message IS NOT NULL"
+}
+
+dropCancelationReasonFromDocuments :: MonadDB m => Migration m
+dropCancelationReasonFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 19
+  , mgrDo = do
+      let fetch acc ids title eleg = (ids :: Integer, title :: String, eleg :: String) : acc
+      kRun_ $ sqlSelect "documents" $ do
+                 sqlResult "id, title, cancelation_reason"
+                 sqlWhere "cancelation_reason IS NOT NULL"
+      values <- kFold fetch []
+      mapM_ (\(a,b,c) -> Log.debug $ "ID: " ++ show a ++ " (" ++ b ++ "): " ++ c) $ values
+
+      --when (not (null values)) $
+      --     error "There are some useful cancelation_reason fields in documents still"
+
+      kRunRaw $ "ALTER TABLE documents"
+              <+> "DROP COLUMN cancelation_reason"
+}
+
 
 dropCSVSignatoryIndexFromSignatoryLinks :: MonadDB m => Migration m
 dropCSVSignatoryIndexFromSignatoryLinks = Migration {

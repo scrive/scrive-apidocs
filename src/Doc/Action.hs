@@ -180,16 +180,19 @@ postDocumentCanceledChange doc@Document{..} apistring = do
   _ <- addDocumentCancelStatEvents documentid apistring
   -- if canceled because of ElegDataMismatch, send out emails
   author <- getDocAuthor doc
-  maybe (return ())
-        (\r -> logDocEvent "Doc Canceled" doc author [reasonProp r])
-        (documentcancelationreason)
-  case documentcancelationreason of
-    Just reason | isELegDataMismatch reason -> do
+  let f sl = do
+        msg <- signatorylinkelegdatamismatchmessage sl
+        fn <- signatorylinkelegdatamismatchfirstname sl
+        ln <- signatorylinkelegdatamismatchlastname sl
+        pno <- signatorylinkelegdatamismatchpersonalnumber sl
+        return (msg,fn,ln,pno)
+  let issues = (catMaybes (map f (documentsignatorylinks)))
+  mapM_ (\r -> logDocEvent "Doc Canceled" doc author [reasonProp r]) issues
+
+  when (not (null issues)) $ do
       ctx <- getContext
       Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ documenttitle
       sendElegDataMismatchEmails ctx doc author
-    -- should we send cancelation emails?
-    _ -> return ()
   where
     reasonProp = stringProp "Reason" . show
 
@@ -249,12 +252,12 @@ sendElegDataMismatchEmails ctx document author = do
     let signlinks = [sl | sl <- documentsignatorylinks document
                         , isActivatedSignatory (documentcurrentsignorder document) sl
                         , not $ isAuthor sl]
-        Just (ELegDataMismatch msg badid _ _ _) = documentcancelationreason document
-        badsig = $(fromJust) $ find (\sl -> badid == signatorylinkid sl) (documentsignatorylinks document)
+        badsig = $(fromJust) $ find (isJust . signatorylinkelegdatamismatchmessage) (documentsignatorylinks document)
+        msg = $(fromJust) $ signatorylinkelegdatamismatchmessage badsig
         badname  = getFullName badsig
         bademail = getEmail badsig
-    forM_ signlinks $ sendDataMismatchEmailSignatory ctx document badid badname msg
-    sendDataMismatchEmailAuthor ctx document author badname bademail
+    forM_ signlinks $ sendDataMismatchEmailSignatory ctx document (signatorylinkid badsig) badname msg
+    sendDataMismatchEmailAuthor ctx document author (lines msg) badname bademail
 
 sendDataMismatchEmailSignatory :: Kontrakcja m => Context -> Document -> SignatoryLinkID -> String -> String -> SignatoryLink -> m ()
 sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
@@ -275,11 +278,11 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
                 isbad
         scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress sigdets]}
 
-sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> String -> String -> m ()
-sendDataMismatchEmailAuthor ctx document author badname bademail = do
+sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> [String] -> String -> String -> m ()
+sendDataMismatchEmailAuthor ctx document author messages badname bademail = do
     let authorname = getFullName $ $(fromJust) $ getAuthorSigLink document
         authoremail = getEmail $ $(fromJust) $ getAuthorSigLink document
-    mail <- mailMismatchAuthor ctx document authorname badname bademail (getLang author)
+    mail <- mailMismatchAuthor ctx document authorname messages badname bademail (getLang author)
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
 
 {- |

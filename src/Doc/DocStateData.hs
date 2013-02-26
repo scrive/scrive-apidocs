@@ -218,6 +218,10 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkrejectiontime   :: Maybe MinutesTime
   , signatorylinkrejectionreason :: Maybe String
   , signatorylinkauthenticationmethod   :: AuthenticationMethod
+  , signatorylinkelegdatamismatchmessage        :: Maybe String
+  , signatorylinkelegdatamismatchfirstname      :: Maybe String
+  , signatorylinkelegdatamismatchlastname       :: Maybe String
+  , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
   } deriving (Eq, Ord, Show)
 
 instance HasDefaultValue SignatoryLink where
@@ -240,6 +244,10 @@ instance HasDefaultValue SignatoryLink where
                   , signatorylinkrejectiontime   = Nothing
                   , signatorylinkrejectionreason = Nothing
                   , signatorylinkauthenticationmethod = StandardAuthentication
+                  , signatorylinkelegdatamismatchmessage = Nothing
+                  , signatorylinkelegdatamismatchfirstname = Nothing
+                  , signatorylinkelegdatamismatchlastname = Nothing
+                  , signatorylinkelegdatamismatchpersonalnumber = Nothing
                   }
 
 data CSVUpload = CSVUpload {
@@ -389,7 +397,6 @@ data Document = Document {
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
   , documentdeliverymethod         :: DeliveryMethod
-  , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
   , documentsharing                :: DocumentSharing
   , documenttags                   :: S.Set DocumentTag
   , documentauthorattachments      :: [AuthorAttachment]
@@ -415,7 +422,6 @@ instance HasDefaultValue Document where
           , documentinvitetext           = ""
           , documentsealedfile           = Nothing
           , documentdeliverymethod       = EmailDelivery
-          , documentcancelationreason    = Nothing
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documenttags                 = S.empty

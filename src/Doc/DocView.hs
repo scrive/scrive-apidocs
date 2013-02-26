@@ -10,7 +10,6 @@ module Doc.DocView (
   , flashMessageCSVSent
   , flashMessageInvalidCSV
   , flashRemindMailSent
-  , getDataMismatchMessage
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -196,7 +195,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "signs" $ isSignatory siglink
     J.value "author" $ isAuthor siglink
     J.value "saved" $ isJust . maybesignatory $ siglink
-    J.value "datamismatch" datamismatch
+    J.value "datamismatch" $ signatorylinkelegdatamismatchmessage siglink
     J.value "signdate" $ jsonDate $ signtime <$> maybesigninfo siglink
     J.value "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
     J.value "readdate" $ jsonDate $ maybereadinvite siglink
@@ -212,9 +211,6 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     when (not (isPreparation doc) && forauthor && forapi && documentdeliverymethod doc == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
-      datamismatch = case documentcancelationreason doc of
-        Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
-        _                                   -> False
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
       rejectedDate = signatorylinkrejectiontime siglink
 
@@ -382,7 +378,7 @@ documentStatusFields document = do
   F.value "preparation" $ documentstatus document == Preparation
   F.value "pending" $ documentstatus document == Pending
   F.value "cancel" $ (documentstatus document == Canceled
-      && documentcancelationreason document == Just ManualCancel)
+      && (all (not . isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
   F.value "timedout" $ documentstatus document == Timedout
   F.value "rejected" $ documentstatus document == Rejected
   F.value "signed" $ documentstatus document == Closed
@@ -391,13 +387,7 @@ documentStatusFields document = do
   -- currently it means: is the next turn for author to sign?
   F.value "awaitingauthor" $ canAuthorSignNow document
   F.value "datamismatch" $ (documentstatus document == Canceled
-      && case documentcancelationreason document of
-           Just (ELegDataMismatch _ _ _ _ _) -> True
-           _ -> False)
-
-getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
-getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
-getDataMismatchMessage _ = Nothing
+      && (any (isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
 
 -- This is temporary method used to see list of broken documents
 documentsToFixView :: TemplatesMonad m => [Document] -> m String

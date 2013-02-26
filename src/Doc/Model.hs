@@ -460,6 +460,10 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
                          , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
                          , checkEqualBy "signatorylinkauthenticationmethod" signatorylinkauthenticationmethod
+                         , checkEqualBy "signatorylinkelegdatamismatchmessage" signatorylinkelegdatamismatchmessage
+                         , checkEqualBy "signatorylinkelegdatamismatchfirstname" signatorylinkelegdatamismatchfirstname
+                         , checkEqualBy "signatorylinkelegdatamismatchlastname" signatorylinkelegdatamismatchlastname
+                         , checkEqualBy "signatorylinkelegdatamismatchpersonalnumber" signatorylinkelegdatamismatchpersonalnumber
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
@@ -475,7 +479,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
                    , checkEqualBy "documentdeliverymethod" documentdeliverymethod
-                   , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
@@ -503,7 +506,6 @@ documentsSelectors =
   , "documents.invite_time"
   , "documents.invite_ip"
   , "documents.invite_text"
-  , "documents.cancelation_reason"
   , "documents.mail_footer"
   , "documents.lang"
   , "documents.sharing"
@@ -520,7 +522,7 @@ fetchDocuments = kFold decoder []
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
-     invite_ip invite_text cancelationreason mail_footer
+     invite_ip invite_text mail_footer
      lang sharing delivery_method apicallback status_class
        = Document {
          documentid = did
@@ -542,7 +544,6 @@ fetchDocuments = kFold decoder []
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
        , documentinvitetext = invite_text
        , documentdeliverymethod = delivery_method
-       , documentcancelationreason = cancelationreason
        , documentsharing = sharing
        , documenttags = S.empty
        , documentauthorattachments = []
@@ -606,6 +607,10 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.rejection_time"
   sqlResult "signatory_links.rejection_reason"
   sqlResult "signatory_links.authentication_method"
+  sqlResult "signatory_links.eleg_data_mismatch_message"
+  sqlResult "signatory_links.eleg_data_mismatch_first_name"
+  sqlResult "signatory_links.eleg_data_mismatch_last_name"
+  sqlResult "signatory_links.eleg_data_mismatch_personal_number"
 
   sqlResult (statusClassCaseExpression <> SQL " AS status_class" [])
   sqlResult "signatory_attachments.file_id AS sigfileid"
@@ -633,6 +638,10 @@ fetchSignatoryLinks = do
      deleted really_deleted signredirecturl
      rejection_time rejection_reason
      authentication_method
+     eleg_data_mismatch_message
+     eleg_data_mismatch_first_name
+     eleg_data_mismatch_last_name
+     eleg_data_mismatch_personal_number
      status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
@@ -688,6 +697,10 @@ fetchSignatoryLinks = do
           , signatorylinkrejectionreason = rejection_reason
           , signatorylinkrejectiontime = rejection_time 
           , signatorylinkauthenticationmethod = authentication_method
+          , signatorylinkelegdatamismatchmessage = eleg_data_mismatch_message
+          , signatorylinkelegdatamismatchfirstname = eleg_data_mismatch_first_name
+          , signatorylinkelegdatamismatchlastname = eleg_data_mismatch_last_name
+          , signatorylinkelegdatamismatchpersonalnumber = eleg_data_mismatch_personal_number
           }
 
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> DBEnv m [SignatoryLink]
@@ -722,6 +735,10 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
            sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
            sqlSetList "authentication_method" $ signatorylinkauthenticationmethod <$> links
+           sqlSetList "eleg_data_mismatch_message" $ signatorylinkelegdatamismatchmessage <$> links
+           sqlSetList "eleg_data_mismatch_first_name" $ signatorylinkelegdatamismatchfirstname <$> links
+           sqlSetList "eleg_data_mismatch_last_name" $ signatorylinkelegdatamismatchlastname <$> links
+           sqlSetList "eleg_data_mismatch_personal_number" $ signatorylinkelegdatamismatchpersonalnumber <$> links
            sqlResult "id"
 
   (slids :: [SignatoryLinkID]) <- kFold (\acc slid -> slid : acc) []
@@ -960,7 +977,6 @@ insertDocumentAsIs document = do
                  , documentinvitetime
                  , documentinvitetext
                  , documentdeliverymethod
-                 , documentcancelationreason
                  , documentsharing
                  , documenttags
                  , documentauthorattachments
@@ -987,7 +1003,6 @@ insertDocumentAsIs document = do
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
         sqlSet "invite_text" documentinvitetext
         sqlSet "delivery_method" documentdeliverymethod
-        sqlSet "cancelation_reason" documentcancelationreason
         sqlSet "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
@@ -1145,10 +1160,22 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ELegAbortDo
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
                  sqlSet "mtime" mtime
-                 sqlSet "cancelation_reason" (ELegDataMismatch msg slid firstName lastName personNumber)
+
                  sqlWhereDocumentIDIs did
                  sqlWhereDocumentTypeIs (Signable undefined)
                  sqlWhereDocumentStatusIs Pending
+    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+                 sqlFrom "documents"
+                 sqlWhere "documents.id = signatory_links.document_id"
+                 sqlSet "eleg_data_mismatch_message" msg
+                 sqlSet "eleg_data_mismatch_first_name" firstName
+                 sqlSet "eleg_data_mismatch_last_name" firstName
+                 sqlSet "eleg_data_mismatch_personal_number" personNumber
+
+                 sqlWhereDocumentIDIs did
+                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereSignatoryLinkIDIs slid
+
     sl <- query $ GetSignatoryLinkByID did slid Nothing
     let trips = [("First name",      getFirstName      sl, firstName)
                 ,("Last name",       getLastName       sl, lastName)
@@ -1171,7 +1198,6 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m CancelDocum
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
                  sqlSet "mtime" mtime
-                 sqlSet "cancelation_reason" ManualCancel
                  sqlWhereDocumentIDIs did
                  sqlWhereDocumentTypeIs (Signable undefined)
                  sqlWhereDocumentStatusIs Pending

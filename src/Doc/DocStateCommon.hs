@@ -43,6 +43,10 @@ signLinkFromDetails' details attachments magichash =
                 , signatorylinkrejectiontime = Nothing
                 , signatorylinkrejectionreason = Nothing
                 , signatorylinkauthenticationmethod = StandardAuthentication
+                , signatorylinkelegdatamismatchmessage = Nothing
+                , signatorylinkelegdatamismatchfirstname = Nothing
+                , signatorylinkelegdatamismatchlastname = Nothing
+                , signatorylinkelegdatamismatchpersonalnumber = Nothing
                 }
 
 signatoryLinkClearDetails :: SignatoryDetails -> SignatoryDetails

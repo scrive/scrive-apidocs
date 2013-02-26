@@ -301,11 +301,10 @@ mailMismatchSignatory ctx document authoremail authorname doclink signame badnam
         F.value "doclink" doclink
         F.value "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing)
 
-mailMismatchAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> String -> String -> String -> a -> m Mail
-mailMismatchAuthor ctx document authorname badname bademail authorlang = do
-    let Just (ELegDataMismatch msg _ _ _ _) = documentcancelationreason document
+mailMismatchAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> String -> [String] -> String -> String -> a -> m Mail
+mailMismatchAuthor ctx document authorname badmessages badname bademail authorlang = do
     documentMail authorlang ctx document "mailMismatchAuthor" $ do
-        F.value "messages" $ concat $ map para $ lines msg
+        F.value "messages" $ concat $ map para $ badmessages
         F.value "authorname" authorname
         F.value "doclink" $ ctxhostpart ctx ++ (show $ LinkDesignDoc (documentid document))
         F.value "bademail" bademail

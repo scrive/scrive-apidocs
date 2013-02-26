@@ -409,7 +409,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   document <- guardRightM $ getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
 
-  let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+  let mMismatchMessage = msum (map signatorylinkelegdatamismatchmessage (documentsignatorylinks document))
   when (isAuthor (document, muser) && isCanceled document && isJust mMismatchMessage) $
     addFlash (OperationFailed, fromJust mMismatchMessage)
 
