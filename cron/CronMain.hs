@@ -38,8 +38,6 @@ import qualified Log (cron, withLogger, error)
 
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
-import ThirdPartyStats.Precog
-import Precog.Ingest (precogCredentials)
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -102,11 +100,7 @@ main = Log.withLogger $ do
     ""    -> Log.error "WARNING: no Mixpanel token present!" >> return Nothing
     token -> return $ Just $ processMixpanelEvent token
 
-  mprecog <- case (precogKey appConf, precogRootPath appConf) of
-    (key@(_:_), root@(_:_)) ->
-      return $ Just $ processPrecogEvent $ precogCredentials key root
-    _ ->
-      Log.error "WARNING: no Precog credentials!" >> return Nothing
+  let mprecog = Nothing -- Emergency fix for hardcoded wrong Precog host!
   
   t11 <- forkCron_ tg "Async Event Dispatcher" (10) . inDB $ do
     asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel, mprecog]) All
