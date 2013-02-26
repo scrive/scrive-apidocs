@@ -13,7 +13,7 @@ import DB.SQL2
 import Doc.Tables
 import qualified Log
 import Doc.DocumentID
-import Doc.DocStateCommon (blankDocument)
+import Utils.Default
 import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -38,7 +38,7 @@ setMandatoryExpirationTimeInDocument = Migration {
     --   All other documents => set days to sign to 0
     let pendingDaysToSign = 90
     timeout <- (pendingDaysToSign `daysAfter`) `liftM` getMinutesTime
-    kRun_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign blankDocument
+    kRun_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign defaultValue
         <+> "WHERE status =" <?> Preparation <+> "AND days_to_sign IS NULL"
     kRun_ $ "UPDATE documents SET days_to_sign =" <?> pendingDaysToSign
                            <+> ", timeout_time =" <?> timeout

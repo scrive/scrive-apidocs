@@ -7,16 +7,12 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.SignatoryLinkID
 import File.FileID (FileID)
-import Doc.DocumentID
 import qualified Log
 import KontraError (internalError)
 import MagicHash (MagicHash)
-import MinutesTime
-import Utils.Default
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import qualified Data.Set as S
 import Company.Model
 
 trueOrMessage :: Bool -> String -> Maybe String
@@ -64,40 +60,6 @@ emptySignatoryFields = [
         , sf EmailFT
         ]
     where sf t = SignatoryField t "" True []
-{- |
-    A blank document containing default values that need to be set before
-    saving.
--}
-blankDocument :: Document
-blankDocument =
-          Document
-          { documentid                   = unsafeDocumentID 0
-          , documenttitle                = ""
-          , documentsignatorylinks       = []
-          , documentfile                 = Nothing
-          , documentstatus               = Preparation
-          , documenttype                 = Signable Contract
-          , documentctime                = fromSeconds 0
-          , documentmtime                = fromSeconds 0
-          , documentdaystosign           = 14
-          , documenttimeouttime          = Nothing
-          , documentinvitetext           = ""
-          , documentsealedfile           = Nothing
-          -- , documenttrustweaverreference = Nothing
-          , documentauthenticationmethod = StandardAuthentication
-          , documentdeliverymethod       = EmailDelivery
-          , documentcancelationreason    = Nothing
-          , documentinvitetime           = Nothing
-          , documentsharing              = Private
-          , documentrejectioninfo        = Nothing
-          , documenttags                 = S.empty
-          , documentui                   = emptyDocumentUI
-          , documentauthorattachments    = []
-          -- , documentattachments          = []
-          , documentlang                 = defaultValue
-          , documentstatusclass          = SCDraft
-          , documentapicallbackurl       = Nothing
-          }
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] -> [String]
 checkResetSignatoryData doc sigs =

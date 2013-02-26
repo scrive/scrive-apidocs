@@ -59,6 +59,7 @@ import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
 import Utils.Read
+import Utils.Default
 import Control.Monad
 import qualified Data.Set as S
 
@@ -360,6 +361,35 @@ data Document = Document {
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
   } deriving (Eq, Ord, Show)
+
+
+instance HasDefaultValue Document where
+  defaultValue = Document
+          { documentid                   = unsafeDocumentID 0
+          , documenttitle                = ""
+          , documentsignatorylinks       = []
+          , documentfile                 = Nothing
+          , documentstatus               = Preparation
+          , documenttype                 = Signable Contract
+          , documentctime                = fromSeconds 0
+          , documentmtime                = fromSeconds 0
+          , documentdaystosign           = 14
+          , documenttimeouttime          = Nothing
+          , documentinvitetext           = ""
+          , documentsealedfile           = Nothing
+          , documentauthenticationmethod = StandardAuthentication
+          , documentdeliverymethod       = EmailDelivery
+          , documentcancelationreason    = Nothing
+          , documentinvitetime           = Nothing
+          , documentsharing              = Private
+          , documentrejectioninfo        = Nothing
+          , documenttags                 = S.empty
+          , documentui                   = emptyDocumentUI
+          , documentauthorattachments    = []
+          , documentlang                 = defaultValue
+          , documentstatusclass          = SCDraft
+          , documentapicallbackurl       = Nothing
+          }
 
 instance HasLang Document where
   getLang = documentlang

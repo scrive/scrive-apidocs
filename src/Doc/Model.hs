@@ -105,6 +105,7 @@ import Doc.Invariants
 import Data.Maybe hiding (fromJust)
 import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
+import Utils.Default
 import Utils.List
 import Utils.Monad
 import Utils.Monoid
@@ -1621,7 +1622,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                                                 }
                                 [] mh
 
-  let doc = blankDocument
+  let doc = defaultValue
                 { documenttitle                = title
                 , documentsignatorylinks       = authorlink : othersignatories
                 , documenttype                 = documenttype
@@ -1631,7 +1632,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentauthorattachments    = []
                 , documentauthenticationmethod = StandardAuthentication
                 , documentdeliverymethod       = EmailDelivery
-                , documentui                   = (documentui blankDocument) { documentmailfooter = customfooter $ usersettings user }
+                , documentui                   = (documentui defaultValue) { documentmailfooter = customfooter $ usersettings user }
                 }
 
   case invariantProblems ctime doc of

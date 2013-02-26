@@ -32,7 +32,6 @@ import FlashMessage
 import qualified Log
 import Doc.Model
 import Doc.DocStateData
-import Doc.DocStateCommon
 import ELegitimation.BankIDRequests
 import ELegitimation.ELegTransaction.Model
 import KontraError (internalError)
@@ -285,7 +284,7 @@ instance Arbitrary Document where
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
-    return $ blankDocument { documentstatus = dstatus
+    return $ defaultValue  { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
                            , documentauthenticationmethod = auth

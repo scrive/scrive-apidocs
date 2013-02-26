@@ -16,12 +16,17 @@ import MinutesTime
 import Utils.Enum
 import Utils.List
 import Utils.Read
+import Utils.Default
 
 import Happstack.Server
 
 data Lang = LANG_SV
           | LANG_EN
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
+
+instance HasDefaultValue Lang where
+  defaultValue = LANG_SV
+
 $(enumDeriveConvertible ''Lang)
 
 instance FromReqURI Lang where
