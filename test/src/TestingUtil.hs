@@ -186,22 +186,12 @@ instance Arbitrary SignatoryLink where
     signinfo <- if isJust seeninfo
                 then arbitrary
                 else return Nothing
-    return $ SignatoryLink { signatorylinkid            = slid
-                           , signatorydetails           = sd
-                           , signatorymagichash         = mh
-                           , maybesignatory             = Nothing
-                           , maybesigninfo              = signinfo
-                           , maybeseeninfo              = seeninfo
-                           , maybereadinvite            = Nothing
-                           , invitationdeliverystatus   = Unknown
-                           , signatorysignatureinfo     = Nothing
-                           , signatorylinkdeleted       = False
-                           , signatorylinkreallydeleted = False
-                           , signatorylinkcsvupload     = Nothing
-                           , signatoryattachments       = []
-                           , signatorylinkstatusclass   = SCDraft
-                           , signatorylinksignredirecturl = Nothing
-                           }
+    return $ defaultValue { signatorylinkid            = slid
+                          , signatorydetails           = sd
+                          , signatorymagichash         = mh
+                          , maybesigninfo              = signinfo
+                          , maybeseeninfo              = seeninfo
+                          }
 
 instance Arbitrary SignatureProvider where
   arbitrary = elements [ BankIDProvider
@@ -583,14 +573,6 @@ addNewRandomCompanyUser cid isadmin = do
   _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
   Just user <- dbQuery $ GetUserByID userid
   return user
-
-emptySignatoryDetails :: SignatoryDetails
-emptySignatoryDetails = SignatoryDetails
-    { signatoryfields = []
-    , signatorysignorder = SignOrder 1
-    , signatoryisauthor = False
-    , signatoryispartner = False
-    }
 
 data RandomDocumentAllows = RandomDocumentAllows
                           { randomDocumentAllowedTypes :: [DocumentType]

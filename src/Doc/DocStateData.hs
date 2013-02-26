@@ -185,6 +185,14 @@ instance Eq SignatoryDetails where
     SignatoryDetails {signatorysignorder=so2, signatoryfields=sf2, signatoryisauthor = isauthor2, signatoryispartner = ispartner2} =
       so1 == so2 && (sort sf2) == (sort sf1) && isauthor1 == isauthor2 && ispartner1 == ispartner2
 
+instance HasDefaultValue SignatoryDetails where
+  defaultValue = SignatoryDetails
+                 { signatorysignorder = SignOrder 1
+                 , signatoryfields    = []
+                 , signatoryisauthor  = False
+                 , signatoryispartner = False
+                 }
+
 data SignatoryLink = SignatoryLink {
     signatorylinkid            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
   , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
@@ -202,6 +210,25 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkstatusclass   :: StatusClass
   , signatorylinksignredirecturl  :: Maybe String
   } deriving (Eq, Ord, Show)
+
+instance HasDefaultValue SignatoryLink where
+  defaultValue =  SignatoryLink
+                  { signatorylinkid              = unsafeSignatoryLinkID 0
+                  , signatorydetails             = defaultValue
+                  , signatorymagichash           = unsafeMagicHash 0
+                  , maybesignatory               = Nothing
+                  , maybesigninfo                = Nothing
+                  , maybeseeninfo                = Nothing
+                  , maybereadinvite              = Nothing
+                  , invitationdeliverystatus     = Unknown
+                  , signatorysignatureinfo       = Nothing
+                  , signatorylinkdeleted         = False
+                  , signatorylinkreallydeleted   = False
+                  , signatorylinkcsvupload       = Nothing
+                  , signatoryattachments         = []
+                  , signatorylinkstatusclass     = SCDraft
+                  , signatorylinksignredirecturl = Nothing
+                  }
 
 data CSVUpload = CSVUpload {
     csvtitle :: String

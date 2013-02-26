@@ -13,6 +13,7 @@ import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import IPAddress
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Utils.Default
 import TestingUtil
 import TestKontra
 import DB.SQL2
@@ -1169,7 +1170,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [emptySignatoryDetails { signatoryisauthor = True }] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatoryisauthor = True }] (systemActor mt)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
   assert success
@@ -1183,7 +1184,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  success <- dbUpdate $ ResetSignatoryDetails a [emptySignatoryDetails { signatoryisauthor = True }] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails a [defaultValue { signatoryisauthor = True }] (systemActor mt)
   --assert
   assert $ not success
 
