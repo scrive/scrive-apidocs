@@ -603,7 +603,7 @@ handleSignStatsCSV = onlySalesOrAdmin $ do
 handleDocHistoryCSV :: Kontrakcja m => m CSV
 handleDocHistoryCSV = onlySalesOrAdmin $ do
   end <- ctxtime <$> getContext
-  let start = fromSeconds 0
+  let start = fromSeconds 1333256400
   stats <- dbQuery $ GetDocHistCSV start end
   return $ CSV { csvFilename = "dochist.csv"
                , csvHeader = ["documentid", "companyid", "doctype", "create", "send", "close", "reject", "cancel", "timeout"]
