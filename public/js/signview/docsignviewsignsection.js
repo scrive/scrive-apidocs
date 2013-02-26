@@ -169,7 +169,10 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                                 trackTimeout('Accept',
                                                              {'Accept' : 'reject document'},
                                                              function() {
-                                                                 document.currentSignatory().reject(customtext).send();
+                                                                 document.currentSignatory().reject(customtext).sendAjax(
+                                                                   function() {window.location.reload();},
+                                                                   function() {window.location.reload();}
+                                                                );
                                                              });
                                               }
                                             });

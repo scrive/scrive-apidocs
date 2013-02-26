@@ -466,10 +466,10 @@ getScreenshots = do
   now <- getMinutesTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"
   signing <- liftIO $ BS.readFile "test/screenshots/s2.jpg"
-  let mkss i = Just (now, Screenshot.T{ Screenshot.mimetype = "image/jpeg"
+  let mkss i = Just (now, Screenshot.Screenshot{ Screenshot.mimetype = "image/jpeg"
                                       , Screenshot.image = Binary i
                                       })
-  return $ SignatoryScreenshots.empty{ SignatoryScreenshots.first = mkss first_
+  return $ SignatoryScreenshots.emptySignatoryScreenshots{ SignatoryScreenshots.first = mkss first_
                                      , SignatoryScreenshots.signing = mkss signing
                                      }
 
@@ -565,7 +565,7 @@ testMarkDocumentSeenEvidenceLog  = do
   success <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   assert success
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
+  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   assertRaisesKontra (\SignatoryTokenDoesNotMatch {} -> True) $ do
     _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh (systemActor t)
@@ -636,7 +636,7 @@ testDeleteSigAttachmentAlreadySigned = do
   randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
 
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
+  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
     randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
 
@@ -750,9 +750,8 @@ testCloseDocumentEvidenceLog = do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   forM_ (documentsignatorylinks doc) $ \sl -> when (isSignatory sl) $ do
     void $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-    randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
-
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == CloseDocumentEvidence) lg
 
@@ -1578,7 +1577,7 @@ testSignDocumentNonSignableLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   let Just sl = getSigLinkFor doc author
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
-    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
 testSignDocumentSignableNotPendingLeft :: TestEnv ()
 testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
@@ -1586,7 +1585,7 @@ testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
   let Just sl = getSigLinkFor doc author
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
-    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
 testSignDocumentSignablePendingRight :: TestEnv ()
 testSignDocumentSignablePendingRight = doTimes 10 $ do
@@ -1595,8 +1594,7 @@ testSignDocumentSignablePendingRight = doTimes 10 $ do
   let Just sl = find (isSignatory &&^ (not . hasSigned)) (documentsignatorylinks doc)
   time <- rand 10 arbitrary
   _ <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
-  randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor time)
-
+  randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentNotLeft :: TestEnv ()
 testSignDocumentNotLeft = doTimes 10 $ do
@@ -1604,7 +1602,7 @@ testSignDocumentNotLeft = doTimes 10 $ do
   assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
     -- our machinery is broken here, baseline condition has only relations
     -- this should be ignored and properly return info about non existing document
-    randomUpdate $ \d sl mh si t -> SignDocument d sl mh si SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \d sl mh si t -> SignDocument d sl mh si SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
 testPreparationToPendingNotSignableLeft :: TestEnv ()
 testPreparationToPendingNotSignableLeft = doTimes 10 $ do
@@ -1835,7 +1833,6 @@ testCloseDocumentSignableButNotEverybodyHasSigned = doTimes 10 $ do
                                      (not . all (isSignatory =>>^ hasSigned) . documentsignatorylinks)
          }
   sa <- unSystemActor <$> rand 10 arbitrary
-
   assertRaisesKontra (\(SignatoryHasNotYetSigned {}) -> True) $ do
     randomUpdate $ CloseDocument (documentid doc) sa
 

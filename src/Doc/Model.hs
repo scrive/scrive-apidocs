@@ -116,7 +116,8 @@ import Data.List hiding (tail, head)
 import qualified Data.Foldable as F
 import qualified Data.Map as M
 import qualified Data.Set as S
-import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
+import Doc.SignatoryScreenshots
+import Doc.Screenshot
 import qualified Doc.Screenshot as Screenshot
 import Doc.Tables
 import Control.Applicative
@@ -942,11 +943,11 @@ insertSignatoryLinkFieldsAsAre fields = do
 
 
 insertSignatoryScreenshots :: MonadDB m
-                           => [(SignatoryLinkID, SignatoryScreenshots.T)] -> m Integer
+                           => [(SignatoryLinkID, SignatoryScreenshots)] -> m Integer
 insertSignatoryScreenshots l = do
-  let (slids, types, times, ss) = unzip4 $ [ (slid, "first",     t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.first) l ]
-                                        <> [ (slid, "signing",   t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.signing) l ]
-                                        <> [ (slid, "reference", t, s) | (slid,      (t, s)) <- map (second SignatoryScreenshots.reference) l ]
+  let (slids, types, times, ss) = unzip4 $ [ (slid, "first",     t, s) | (slid, Just (t, s)) <- map (second first) l ]
+                                        <> [ (slid, "signing",   t, s) | (slid, Just (t, s)) <- map (second signing) l ]
+                                        <> [ (slid, "reference", t, s) | (slid,      (t, s)) <- map (second reference) l ]
   if null slids then return 0 else
     kRun $ sqlInsert "signatory_screenshots" $ do
            sqlSetList "signatory_link_id" $ slids
@@ -956,7 +957,7 @@ insertSignatoryScreenshots l = do
            sqlSetList "image"             $ map Screenshot.image ss
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
-instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots.T)] where
+instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
     _ <- kRun $ sqlSelect "signatory_screenshots" $ do
                 sqlWhereIn "signatory_link_id" l
@@ -968,12 +969,12 @@ instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, Signa
                 sqlResult "mimetype"
                 sqlResult "image"
     let folder ((slid', s):a) slid ty time mt i | slid' == slid = (slid, mkss ty time mt i s):a
-        folder a slid ty time mt i = (slid, mkss ty time mt i SignatoryScreenshots.empty) : a
+        folder a slid ty time mt i = (slid, mkss ty time mt i emptySignatoryScreenshots) : a
 
-        mkss :: String -> MinutesTime -> String -> Binary -> SignatoryScreenshots.T -> SignatoryScreenshots.T
-        mkss "first"     time mt i s = s{ SignatoryScreenshots.first = Just (time, Screenshot.T mt i) }
-        mkss "signing"   time mt i s = s{ SignatoryScreenshots.signing = Just (time, Screenshot.T mt i) }
-        mkss "reference" time mt i s = s{ SignatoryScreenshots.reference = (time, Screenshot.T mt i) }
+        mkss :: String -> MinutesTime -> String -> Binary -> SignatoryScreenshots -> SignatoryScreenshots
+        mkss "first"     time mt i s = s{ first = Just (time, Screenshot mt i) }
+        mkss "signing"   time mt i s = s{ signing = Just (time, Screenshot mt i) }
+        mkss "reference" time mt i s = s{ reference = (time, Screenshot mt i) }
         mkss t           _    _  _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
     flip kFold [] folder
 
@@ -2017,7 +2018,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUnsavedDraft Boo
       sqlWhereIn "documents.id" dids
     return (result>0)
 
-data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) SignatoryScreenshots.T Actor
+data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) SignatoryScreenshots Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
   update (SignDocument docid slid mh msiginfo screenshots actor) = do
             let ipnumber = fromMaybe noIP $ actorIP actor

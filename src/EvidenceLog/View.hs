@@ -195,7 +195,7 @@ filterTags (a:rest) = a : (filterTags rest)
 filterTags [] = []
 
 -- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
-evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.T)] -> m String
+evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
 evidenceOfIntentHTML title l = do
   renderTemplate "evidenceOfIntent" $ do
     F.value "documenttitle" title

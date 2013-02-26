@@ -1,18 +1,26 @@
 module Doc.SignatoryScreenshots
-  ( T(..)
-  , empty
+  ( SignatoryScreenshots(..)
+  , emptySignatoryScreenshots
   ) where
 
-import qualified Doc.Screenshot as Screenshot
+import Doc.Screenshot
 import Doc.ReferenceScreenshot (referenceScreenshot)
-import MinutesTime (MinutesTime)
+import MinutesTime (MinutesTime,fromSeconds)
+import Text.JSON.FromJSValue
+import Utils.Tuples
 
-
-data T = T
-  { first     :: Maybe (MinutesTime, Screenshot.T)
-  , signing   :: Maybe (MinutesTime, Screenshot.T)
-  , reference :: (MinutesTime, Screenshot.T)
+data SignatoryScreenshots = SignatoryScreenshots
+  { first     :: Maybe (MinutesTime, Screenshot)
+  , signing   :: Maybe (MinutesTime, Screenshot)
+  , reference :: (MinutesTime, Screenshot)
   } deriving Show
 
-empty :: T
-empty = T Nothing Nothing referenceScreenshot
+emptySignatoryScreenshots :: SignatoryScreenshots
+emptySignatoryScreenshots = SignatoryScreenshots Nothing Nothing referenceScreenshot
+
+instance FromJSValue SignatoryScreenshots where
+  fromJSValueM = do
+    first <- fromJSValueField "first"
+    signing <- fromJSValueField "signing"
+    return $ Just $ SignatoryScreenshots (mapFst fromSeconds first) (mapFst fromSeconds signing) referenceScreenshot
+

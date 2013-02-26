@@ -71,7 +71,7 @@ prolongDocument doc = withUser $ \user -> do
    Sign a document with email identification (typical, non-eleg).
  -}
 
-signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.T
+signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots
                            -> m (Either DBError (Document, Document))
 signDocumentWithEmailOrPad did slid mh fields screenshots = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
@@ -96,7 +96,7 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
           Nothing  -> Left $ DBActionNotAvailable "Signing with email/pad failed"
           Just doc -> Right (doc, olddoc)
 
-signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatureInfo -> SignatoryScreenshots.T
+signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatureInfo -> SignatoryScreenshots.SignatoryScreenshots
                      -> m (Either DBError (Document, Document))
 signDocumentWithEleg did slid mh fields sinfo screenshots = do
   Context{ ctxtime, ctxipnumber } <- getContext
@@ -153,7 +153,7 @@ rejectDocumentWithChecks did slid mh customtext = do
 {- |
   The Author signs a document with security checks.
  -}
-authorSignDocument :: (Kontrakcja m) => Actor -> DocumentID -> Maybe SignatureInfo -> TimeZoneName -> SignatoryScreenshots.T -> m (Either DBError Document)
+authorSignDocument :: (Kontrakcja m) => Actor -> DocumentID -> Maybe SignatureInfo -> TimeZoneName -> SignatoryScreenshots.SignatoryScreenshots -> m (Either DBError Document)
 authorSignDocument actor did msigninfo timezone screenshots = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
@@ -202,7 +202,7 @@ setSigAttachments did sid sigatts = onlyAuthor did $ \_ -> do
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
  -}
-authorSignDocumentFinal :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> SignatoryScreenshots.T -> m (Either DBError Document)
+authorSignDocumentFinal :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> SignatoryScreenshots.SignatoryScreenshots -> m (Either DBError Document)
 authorSignDocumentFinal did msigninfo screenshots = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext

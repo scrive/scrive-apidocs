@@ -5,6 +5,7 @@ module Doc.API (
   , apiCallGet                 -- Exported for tests
   , apiCallUpdate              -- Exported for tests
   , apiCallReady               -- Exported for tests
+  , apiCallSign                -- Exported for tests
   ) where
 
 import Control.Monad.Trans.Maybe
@@ -79,6 +80,8 @@ import qualified PadQueue.API as PadQueue
 import Data.String.Utils (replace)
 import EvidenceLog.Control
 import Control.Exception.Lifted
+import Doc.DocControl
+import Utils.Tuples
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -95,6 +98,9 @@ versionedAPI _version = choice [
   dir "update"             $ hPostNoXTokenHttp $ toK1 $ apiCallUpdate,
   dir "ready"              $ hPostNoXTokenHttp $ toK1 $ apiCallReady,
   dir "cancel"             $ hPostNoXTokenHttp $ toK1 $ apiCallCancel,
+  dir "reject"             $ hPostNoXTokenHttp $ toK2 $ apiCallReject,
+  dir "sign"               $ hPostNoXTokenHttp $ toK2 $ apiCallSign,
+
   dir "remind"             $ hPostNoXTokenHttp $ toK1 $ apiCallRemind,
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
@@ -254,6 +260,81 @@ apiCallCancel did =  api $ do
   lift $ postDocumentCanceledChange newdocument "api"
   newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
   Accepted <$> documentJSON False True True Nothing Nothing newdocument'
+
+
+apiCallReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+apiCallReject did slid = api $ do
+  (mh,method) <- do
+    mh' <- dbQuery $ GetDocumentSessionToken slid
+    case mh' of
+      Just mh'' ->  return (mh'',"web")
+      Nothing -> do
+         mh'' <- lift $ readField "magichash"
+         case mh'' of
+           Nothing -> throwError $ serverError "Magic hash for signatory was not provided"
+           Just mh''' -> return (mh''',"api")
+  edoc <- lift $ getDocByDocIDSigLinkIDAndMagicHash did slid mh
+  case edoc of
+    Left _ -> throwError $ serverError "Can't find a document that matches signatory"
+    Right doc ->  do
+      ctx <- getContext
+      let Just sll = getSigLinkFor doc slid
+          actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sll) (getEmail sll) slid
+      customtext <- lift $ getCustomTextField "customtext"
+      lift $ switchLang (getLang doc)
+      True <- dbUpdate $ RejectDocument did slid customtext actor
+      Just doc' <- dbQuery $ GetDocumentByDocumentID did
+      let Just sl = getSigLinkFor doc' slid
+      _ <- addSignStatRejectEvent doc' sl
+      lift $ postDocumentRejectedChange doc' slid method
+      Accepted <$> (runJSONGenT $ return ())
+
+
+apiCallSign :: Kontrakcja m
+             => DocumentID      -- ^ The DocumentID of the document to sign
+             -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
+             -> m Response
+apiCallSign  did slid = api $ do
+  (mh,method) <- do
+    mh' <- dbQuery $ GetDocumentSessionToken slid
+    case mh' of
+      Just mh'' ->  return (mh'',"web")
+      Nothing -> do
+         mh'' <- lift $ readField "magichash"
+         case mh'' of
+           Nothing -> throwError $ serverError "Magic hash for signatory was not provided"
+           Just mh''' -> return (mh''',"api")
+  screenshots <- lift $ readScreenshots
+  fields <- do
+      eFieldsJSON <- lift $ getFieldJSON "fields"
+      case eFieldsJSON of
+           Nothing -> throwError $ serverError "No fields description provided or fields description is not a valid JSON array"
+           Just fieldsJSON -> do
+             mvalues <- withJSValue fieldsJSON $ fromJSValueCustomMany $ do
+                  ft <- fromJSValueM
+                  val <- fromJSValueField "value"
+                  return $ pairMaybe ft val
+             case mvalues of
+               Nothing -> throwError $ serverError "Fields description json has invalid format"
+               Just values -> return values
+
+  mprovider <- lift $ readField "eleg"
+  edoc <- case mprovider of
+           Nothing -> Right <$> lift (signDocumentWithEmailOrPad did slid mh fields screenshots)
+           Just provider -> lift $ handleSignWithEleg did slid mh fields screenshots provider
+  case edoc of
+    Right (Right (doc, olddoc)) -> do
+      lift $ postDocumentPendingChange doc olddoc method
+      udoc <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
+      lift $ handleAfterSigning udoc slid
+      siglink <- apiGuardJustM (serverError "Can find signatory after signing") $ return $ getSigLinkFor doc slid
+      case (signatorylinksignredirecturl siglink) of
+           Nothing -> Accepted <$> (runJSONGenT $ value "signed" True)
+           Just "" -> Accepted <$> (runJSONGenT $ value "signed" True)
+           Just s  -> Accepted <$> (runJSONGenT $ value "signed" True >> value "redirect" s)
+    Right (Left err) -> throwError $ serverError  $ "Error: DB action " ++ show err
+    Left msg ->  throwError $ serverError  $ "Error: " ++ msg
+
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
 apiCallRemind did =  api $ do
@@ -445,8 +526,7 @@ documentChangeMainFile docid = api $ do
   return ()
 
 
---documentView :: (Kontrakcja m) => DocumentID -> m Response
---documentView (_ :: DocumentID) = api $  undefined
+
 data SignatoryResource = SignatoryResource
 instance FromReqURI SignatoryResource where
     fromReqURI s = Just SignatoryResource <| s == "signatory" |> Nothing

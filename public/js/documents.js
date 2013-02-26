@@ -270,17 +270,23 @@ window.Document = Backbone.Model.extend({
             if (field.isClosed()) return;
             fields.push({name: field.name(), value: field.value(), type: field.type()});
         });
-        var url;
-        //        if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
-        //url = "/d/" + document.documentid();
-        //else
-        url = "/s/" + document.documentid() +  "/" + document.viewer().signatoryid();
         return new Submit({
             sign : "YES",
-            url : url,
+            url : "/api/frontend/sign/" + document.documentid() +  "/" + document.viewer().signatoryid(),
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),
-            fields: JSON.stringify(fields)
+            fields: JSON.stringify(fields),
+            ajax: true,
+            ajaxsuccess : function(rs) {
+              var resp = JSON.parse(rs);
+              if (resp.redirect != undefined && resp.redirect != "")
+                window.location = redirect;
+              else
+                window.location.reload();
+            },
+            ajaxerror : function() {
+              window.location.reload();
+            }
         });
     },
     sendByAuthor: function() {
