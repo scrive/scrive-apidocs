@@ -50,19 +50,6 @@ handleAccountSetupFromSign document signatorylink = do
       let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
       _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
       _ <- addUserSaveAfterSignStatEvent activateduser
-      let name = getFirstName activateduser ++ " " ++ getLastName activateduser
-      asyncLogEvent "User Activated" $ [
-        UserIDProp (userid activateduser),
-        IPProp (ctxipnumber ctx),
-        TimeProp (ctxtime ctx),
-        NameProp name,
-        FirstNameProp $ getFirstName activateduser,
-        LastNameProp $ getLastName activateduser,
-        MailProp $ Email email,
-        IPProp $ ctxipnumber ctx,
-        someProp "Company Name" $ getValueOfType CompanyFT $ signatorydetails signatorylink] ++ 
-        [someProp k v | SignatoryField{sfValue = v, sfType = CustomFT k _} <- signatoryfields (signatorydetails signatorylink)]
-                        
       return $ Just activateduser
     Nothing -> return Nothing
 
@@ -116,23 +103,6 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               logUserToContext $ Just tosuser
-              let name = getFullName tosuser
-                  email = getEmail tosuser
-              asyncLogEvent "User Activated" [UserIDProp (userid tosuser),
-                                              IPProp (ctxipnumber ctx),
-                                              TimeProp (ctxtime ctx),
-                                              NameProp name,
-                                              MailProp $ Email email,
-                                              someProp "Signup Method" (show signupmethod)]
-              asyncLogEvent SetUserProps  [UserIDProp (userid tosuser),
-                                           someProp "TOS Date" (ctxtime ctx),
-                                           NameProp name,
-                                           MailProp $ Email email,
-                                           someProp "Signup Method" (show signupmethod),
-                                           someProp "Last login" (ctxtime ctx),
-                                           someProp "Phone" phone,
-                                           someProp "Company Name" companyname,
-                                           someProp "Position" position]
               when (callme) $ phoneMeRequest (Just tosuser) phone
               return $ Just (tosuser, newdocs)
             else do
@@ -155,14 +125,6 @@ createUser email names mcompanyid lang = do
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
-      asyncLogEvent "Create User" [UserIDProp (userid user),
-                                   TimeProp (ctxtime ctx),
-                                   MailProp email,
-                                   IPProp (ctxipnumber ctx)]
-      asyncLogEvent SetUserProps [UserIDProp (userid user),
-                                  NameProp (getFullName user),
-                                  MailProp email,
-                                  someProp "Created" (ctxtime ctx)]
       return muser
     _ -> return muser
 
