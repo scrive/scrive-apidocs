@@ -240,8 +240,8 @@ apiCallSignup = api $ do
                 UserIDProp $ userid user,
                 someProp "Account confirmation email" $ ctxtime ctx,
                 NameProp (firstname ++ " " ++ lastname),
-                someProp "First Name" $ firstname,
-                someProp "Last Name" $ lastname,
+                FirstNameProp firstname,
+                LastNameProp lastname,
                 someProp "Confirmation link" $ show l
                 ]
           runJSONGenT $ value "sent" $ True

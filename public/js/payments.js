@@ -519,6 +519,7 @@
 
             form.find('div.contact_info').before(form.find('div.server_errors'));
 
+            
             var work = true;
             var handlechargeaccount = function(data) {
                 console.log(data);
@@ -580,6 +581,7 @@
                                       text:localization.payments.subscribe,
                                       icon: loadingicon,
                                       onClick: function() {
+                                          form.find('.coupon .check').click();
                                           view.validator.validate(function success() {
                                               //LoadingDialog.open(localization.payments.loading);
                                               loadingicon.css({display:'inline'});
@@ -673,6 +675,12 @@
             }
             form.find('.vat .title').text(localization.payments.vat25);
             form.find('.placeholder').remove();
+            var params = parseQueryString();
+            if(params.coupon) {
+                form.find('.coupon input').val(params.coupon);
+                form.find('.coupon .check').click();
+            }
+
         },
         render: function() {
             var view = this;
@@ -715,7 +723,7 @@
             view.validator = Recurly.buildSubscriptionForm({
                 target: view.element
                 , enableAddons: false
-                , enableCoupons: false
+                , enableCoupons: true
                 , planCode: model.currentPlan() || 'team'
                 , distinguishContactFromBillingInfo: false
                 , collectCompany: false

@@ -807,6 +807,8 @@ var DesignViewView = Backbone.View.extend({
              new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
             mixpanel.track('Error',
                            {Message: 'no document'});
+            $('.nofilediv').addClass('redborder');
+
              return false;
         }
         var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;

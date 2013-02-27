@@ -80,6 +80,8 @@ jsonProperty :: EventProperty -> (String, JSValue)
 jsonProperty (MailProp mail) = ("email", JSString $ toJSString $ unEmail mail)
 jsonProperty (IPProp ip)     = ("ip", JSString $ toJSString $ show ip)
 jsonProperty (NameProp name) = ("name", JSString $ toJSString name)
+jsonProperty (FirstNameProp name) = ("first_name", JSString $ toJSString name)
+jsonProperty (LastNameProp name) = ("last_name", JSString $ toJSString name)
 jsonProperty (TimeProp t)    = ("time", timeToJSON t)
 jsonProperty (UserIDProp _)  = error "User ID prop in the wrong place!"
 jsonProperty (DocIDProp did) = ("docid", showJSON (fromDocumentID did))
