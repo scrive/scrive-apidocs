@@ -155,8 +155,8 @@ handleSignup = do
                 UserIDProp $ userid newuser,
                 someProp "Account confirmation email" $ ctxtime ctx,
                 NameProp (fromMaybe "" mfirstname ++ " " ++ fromMaybe "" mlastname),
-                someProp "First Name" $ fromMaybe "" mfirstname,
-                someProp "Last Name" $ fromMaybe "" mlastname,
+                FirstNameProp $ fromMaybe "" mfirstname,
+                LastNameProp $ fromMaybe "" mlastname,
                 someProp "Confirmation link" $ show l
                 ]
               return $ Just (Email email, Just $ userid newuser)

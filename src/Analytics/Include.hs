@@ -107,6 +107,8 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Company Status") $ escapeHTML <$> companyStatus <$> aUser
     mnop (J.value "Company Name") $ join $ maybeS <$> escapeHTML <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
 
+    mnop (J.value "Signup Method") $ join $ maybeS <$> escapeHTML <$> show <$> usersignupmethod <$> aUser
+
     J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage
     J.value "Docs sent" aDocsSent

@@ -156,6 +156,19 @@ function readCookie(name) {
   return null;
 }
 
+function parseQueryString() {
+    var match,
+        urlParams = {},
+        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g,
+        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+        query  = window.location.search.substring(1);
+
+    while (match = search.exec(query))
+       urlParams[decode(match[1])] = decode(match[2]);
+    return urlParams;
+}
+
 /**
  * For Cross-Site Request Forgery (CSRF) Attacks
  * 1. Grab the cookie in Javascript, which protects

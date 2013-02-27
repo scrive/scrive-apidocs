@@ -73,7 +73,8 @@ logDocEvent name doc user extraProps = do
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),
     numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
-    numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc)]
+    numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
+    stringProp "Signup Method" (show $ usersignupmethod user)]
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
 postDocumentPreparationChange doc@Document{documenttitle} apistring = do
@@ -468,21 +469,6 @@ handlePostSignSignup email fn ln = do
       -- there is an existing user that hasn't been activated
       -- return the existing link
       l <- newUserAccountRequestLink lang (userid user) BySigning
-      asyncLogEvent "Send account confirmation email" [
-        UserIDProp $ userid user,
-        IPProp $ ctxipnumber ctx,
-        TimeProp $ ctxtime ctx,
-        someProp "Context" ("Post sign" :: String)
-        ]
-      asyncLogEvent SetUserProps [
-        UserIDProp $ userid user,
-        someProp "Post-sign confirmation email" $ ctxtime ctx,
-        someProp "Confirmation link" $ show l,
-        NameProp (fn ++ " " ++ ln),
-        someProp "First Name" fn,
-        someProp "Last Name" ln,
-        IPProp $ ctxipnumber ctx
-        ]
       return $ Just l
     (Nothing, Nothing) -> do
       -- this email address is new to the system, so create the user
@@ -492,21 +478,6 @@ handlePostSignSignup email fn ln = do
         Nothing -> return Nothing
         Just newuser -> do
           l <- newUserAccountRequestLink lang (userid newuser) BySigning
-          asyncLogEvent "Send account confirmation email" [
-            UserIDProp $ userid newuser,
-            IPProp $ ctxipnumber ctx,
-            TimeProp $ ctxtime ctx,
-            someProp "Context" ("Post sign" :: String)
-            ]
-          asyncLogEvent SetUserProps [
-            UserIDProp $ userid newuser,
-            someProp "Post-sign confirmation email" $ ctxtime ctx,
-            NameProp (fn ++ " " ++ ln),
-            someProp "First Name" fn,
-            someProp "Last Name" ln,
-            someProp "Confirmation link" $ show l,
-            IPProp $ ctxipnumber ctx
-            ]
           return $ Just l
     (_, _) -> return Nothing
 

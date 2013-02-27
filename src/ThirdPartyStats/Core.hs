@@ -154,6 +154,8 @@ data EventProperty
   | TimeProp      MinutesTime
   | DocIDProp     DocumentID
   | CompanyIDProp CompanyID
+  | FirstNameProp String
+  | LastNameProp  String
   | SomeProp      PropName PropValue
     deriving (Show, Eq)
 
@@ -168,6 +170,8 @@ instance Binary EventProperty where
   put (TimeProp t)        = putWord8 4   >> put t
   put (DocIDProp did)     = putWord8 5   >> put did
   put (CompanyIDProp cid) = putWord8 6   >> put cid
+  put (FirstNameProp n)   = putWord8 7   >> put n
+  put (LastNameProp n)    = putWord8 8   >> put n
   put (SomeProp name val) = putWord8 255 >> put name >> put val
   
   get = do
@@ -180,6 +184,8 @@ instance Binary EventProperty where
       4   -> TimeProp         <$> get
       5   -> DocIDProp        <$> get
       6   -> CompanyIDProp    <$> get
+      7   -> FirstNameProp    <$> get
+      8   -> LastNameProp     <$> get
       255 -> SomeProp         <$> get <*> get
       n   -> fail $ "Couldn't parse EventProperty constructor tag: " ++ show n
 
@@ -356,6 +362,8 @@ instance Arbitrary EventProperty where
       (1, MailProp <$> email),
       (1, IPProp . unsafeIPAddress <$> arbitrary),
       (1, NameProp <$> arbitrary),
+      (1, LastNameProp <$> arbitrary),
+      (1, FirstNameProp <$> arbitrary),
       (1, UserIDProp . unsafeUserID <$> arbitrary),
       (1, TimeProp . fromSeconds <$> arbitrary),
       (1, DocIDProp . unsafeDocumentID <$> arbitrary),
