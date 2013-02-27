@@ -17,7 +17,7 @@ data Screenshot = Screenshot {
 instance FromJSValue Screenshot where
   fromJSValue s = do
     (mt, i) <- RFC2397.decode =<< BS.fromString <$> fromJSValue s
-    if (mt `elem` ["Screenshot/jpeg", "image/png"])
+    if (mt `elem` ["image/jpeg", "image/png"])
       then Just $ Screenshot (BS.toString mt) (Binary i)
       else Nothing
 

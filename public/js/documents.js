@@ -271,7 +271,6 @@ window.Document = Backbone.Model.extend({
             fields.push({name: field.name(), value: field.value(), type: field.type()});
         });
         return new Submit({
-            sign : "YES",
             url : "/api/frontend/sign/" + document.documentid() +  "/" + document.viewer().signatoryid(),
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),

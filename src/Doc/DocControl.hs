@@ -371,8 +371,13 @@ readScreenshots :: Kontrakcja m => m SignatoryScreenshots.SignatoryScreenshots
 readScreenshots = do
   mss <- join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
   case mss of
-       Just ss -> return ss
-       _ -> internalError
+       Just ss -> do
+         v <- getFieldJSON "screenshots"
+         Log.debug $ "Screenshots json" ++ show v
+         Log.debug $ "Recieved screenshots " ++ show ss
+         return ss
+       _ -> do
+         internalError
 
 handleIssueSign :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
 handleIssueSign document timezone = do
