@@ -468,21 +468,6 @@ handlePostSignSignup email fn ln = do
       -- there is an existing user that hasn't been activated
       -- return the existing link
       l <- newUserAccountRequestLink lang (userid user) BySigning
-      asyncLogEvent "Send account confirmation email" [
-        UserIDProp $ userid user,
-        IPProp $ ctxipnumber ctx,
-        TimeProp $ ctxtime ctx,
-        someProp "Context" ("Post sign" :: String)
-        ]
-      asyncLogEvent SetUserProps [
-        UserIDProp $ userid user,
-        someProp "Post-sign confirmation email" $ ctxtime ctx,
-        someProp "Confirmation link" $ show l,
-        NameProp (fn ++ " " ++ ln),
-        FirstNameProp fn,
-        LastNameProp ln,
-        IPProp $ ctxipnumber ctx
-        ]
       return $ Just l
     (Nothing, Nothing) -> do
       -- this email address is new to the system, so create the user
@@ -492,21 +477,6 @@ handlePostSignSignup email fn ln = do
         Nothing -> return Nothing
         Just newuser -> do
           l <- newUserAccountRequestLink lang (userid newuser) BySigning
-          asyncLogEvent "Send account confirmation email" [
-            UserIDProp $ userid newuser,
-            IPProp $ ctxipnumber ctx,
-            TimeProp $ ctxtime ctx,
-            someProp "Context" ("Post sign" :: String)
-            ]
-          asyncLogEvent SetUserProps [
-            UserIDProp $ userid newuser,
-            someProp "Post-sign confirmation email" $ ctxtime ctx,
-            NameProp (fn ++ " " ++ ln),
-            FirstNameProp fn,
-            LastNameProp ln,
-            someProp "Confirmation link" $ show l,
-            IPProp $ ctxipnumber ctx
-            ]
           return $ Just l
     (_, _) -> return Nothing
 
