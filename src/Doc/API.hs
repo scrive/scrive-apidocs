@@ -82,6 +82,8 @@ import EvidenceLog.Control
 import Control.Exception.Lifted
 import Doc.DocControl
 import Utils.Tuples
+import Utils.Either
+import Doc.SignatoryScreenshots
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -269,7 +271,8 @@ apiCallReject did slid = api $ do
     case mh' of
       Just mh'' ->  return (mh'',"web")
       Nothing -> do
-         mh'' <- lift $ readField "magichash"
+         (user, _ , _) <- getAPIUser APIPersonal
+         mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwError $ serverError "Magic hash for signatory was not provided"
            Just mh''' -> return (mh''',"api")
@@ -295,16 +298,19 @@ apiCallSign :: Kontrakcja m
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
              -> m Response
 apiCallSign  did slid = api $ do
+  Log.debug $ "Ready to sign a docment " ++ show did ++ " for signatory " ++ show slid
   (mh,method) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
       Just mh'' ->  return (mh'',"web")
       Nothing -> do
-         mh'' <- lift $ readField "magichash"
+         (user, _ , _) <- getAPIUser APIPersonal
+         mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
-           Nothing -> throwError $ serverError "Magic hash for signatory was not provided"
+           Nothing -> throwError $ serverError "Can't perform this action. Not authorized."
            Just mh''' -> return (mh''',"api")
-  screenshots <- lift $ readScreenshots
+  Log.debug "We have magic hash for this operation"
+  screenshots <- lift $ (fromMaybe emptySignatoryScreenshots) <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
   fields <- do
       eFieldsJSON <- lift $ getFieldJSON "fields"
       case eFieldsJSON of
@@ -317,11 +323,12 @@ apiCallSign  did slid = api $ do
              case mvalues of
                Nothing -> throwError $ serverError "Fields description json has invalid format"
                Just values -> return values
-
   mprovider <- lift $ readField "eleg"
+  Log.debug $ "All parameters read and parsed"
   edoc <- case mprovider of
            Nothing -> Right <$> lift (signDocumentWithEmailOrPad did slid mh fields screenshots)
            Just provider -> lift $ handleSignWithEleg did slid mh fields screenshots provider
+  Log.debug $ "Signing done, result is " ++ show (isRight edoc)
   case edoc of
     Right (Right (doc, olddoc)) -> do
       lift $ postDocumentPendingChange doc olddoc method

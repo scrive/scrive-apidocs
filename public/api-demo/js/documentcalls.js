@@ -363,7 +363,8 @@ window.DownloadMainFileApiCall = ApiCall.extend({
 window.AddToPadQueueApiCall = ApiCall.extend({
         defaults: {
              name : "Add to padqueue API call",
-             documentid : LocalStorage.get("api","documentid")
+             documentid : LocalStorage.get("api","documentid"),
+             signatorylinkid : LocalStorage.get("api","signatorylinkid")
 
         },
         initialize: function (args) {
@@ -375,9 +376,9 @@ window.AddToPadQueueApiCall = ApiCall.extend({
             return this.set({"documentid" : documentid});
         },
         signatorylinkid : function() {return this.get("signatorylinkid");},
-        setSignatorylinkid : function(documentid) {
-            LocalStorage.set("api","signatorylinkid",documentid);
-            return this.set({"signatorylinkid" : documentid});
+        setSignatorylinkid : function(signatorylinkid) {
+            LocalStorage.set("api","signatorylinkid",signatorylinkid);
+            return this.set({"signatorylinkid" : signatorylinkid});
         },
 
         send : function() {
@@ -395,6 +396,91 @@ window.AddToPadQueueApiCall = ApiCall.extend({
             });
         }
 });
+
+window.RejectApiCall = ApiCall.extend({
+        defaults: {
+             name : "Reject document by signatory",
+             documentid : LocalStorage.get("api","documentid"),
+             signatorylinkid : LocalStorage.get("api","signatorylinkid")
+
+        },
+        initialize: function (args) {
+        },
+        isReject : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+            LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        signatorylinkid : function() {return this.get("signatorylinkid");},
+        setSignatorylinkid : function(signatorylinkid) {
+            LocalStorage.set("api","signatorylinkid",signatorylinkid);
+            return this.set({"signatorylinkid" : signatorylinkid});
+        },
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"reject/" + model.documentid() + "/" + model.signatorylinkid(), {
+                type: 'POST',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+window.SignApiCall = ApiCall.extend({
+        defaults: {
+             name : "Sign document by signatory",
+             documentid : LocalStorage.get("api","documentid"),
+             signatorylinkid : LocalStorage.get("api","signatorylinkid"),
+             fields : "[]"
+        },
+        initialize: function (args) {
+        },
+        isSign : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+            LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        signatorylinkid : function() {return this.get("signatorylinkid");},
+        setSignatorylinkid : function(signatorylinkid) {
+            LocalStorage.set("api","signatorylinkid",signatorylinkid);
+            return this.set({"signatorylinkid" : signatorylinkid});
+        },
+        fields : function() {return this.get("fields");},
+        setFields : function(fields) {
+            LocalStorage.set("api","fields",fields);
+            return this.set({"fields" : fields});
+        },
+
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"sign/" + model.documentid() + "/" + model.signatorylinkid(), {
+                type: 'POST',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                data : {
+                     fields : this.fields()
+                    },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+
+
+
 
 window.CreateFromFileApiCallView = Backbone.View.extend({
         initialize: function(args) {
@@ -727,5 +813,75 @@ window.AddToPadQueueApiCallView = Backbone.View.extend({
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
+
+window.RejectApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
+            signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                   .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+window.SignApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
+            signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
+            var fieldsInput = $("<input type='text'/>").val(model.fields());
+            fieldsInput.change(function() {model.setFields(fieldsInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                   .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div>Fields #: <BR/></div>").append(fieldsInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
 
 })(window);

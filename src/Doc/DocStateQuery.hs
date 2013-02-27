@@ -30,6 +30,7 @@ module Doc.DocStateQuery
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getDocByDocIDSigLinkIDAndMagicHash
+    , getMagicHashForDocumentSignatoryWithUser
     ) where
 
 import Control.Monad
@@ -44,7 +45,7 @@ import MagicHash
 import qualified Log
 import User.Model
 import Data.List
-
+import Util.SignatoryLinkUtils
 {- |
    Securely find a document by documentid for the author or within their company.
    User must be logged in (otherwise Left DBNotLoggedIn).
@@ -143,3 +144,24 @@ getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   case mdoc of
     Just doc -> return $ Right doc
     _        -> return $ Left DBResourceNotAvailable
+
+{- |
+   Get a magichash for given signatory. Only possible if give user is author
+ -}
+getMagicHashForDocumentSignatoryWithUser :: Kontrakcja m
+                                   => DocumentID
+                                   -> SignatoryLinkID
+                                   -> User
+                                   -> m (Maybe MagicHash)
+getMagicHashForDocumentSignatoryWithUser did sigid user = do
+   mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
+                                    ] [ DocumentFilterByDocumentID did
+                                      ]
+                                    [] (0,1))
+   case mdoc of
+     [doc] ->  case getMaybeSignatoryLink (doc,sigid) of
+                 Just sig -> if ((isAuthor (doc,user) && documentdeliverymethod doc == PadDelivery) || (isSigLinkFor user sig))
+                                then return $ Just $ signatorymagichash sig
+                                else return Nothing
+                 Nothing -> return Nothing
+     _ -> return Nothing

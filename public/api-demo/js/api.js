@@ -27,6 +27,8 @@ window.ApiCall = Backbone.Model.extend({
         isSignup : function() {return false;},
         isUpdateProfile : function() {return false;},
         isCheckClient : function() {return false;},
+        isReject : function() {return false;},
+        isSign : function() {return false;},
         name : function() {return this.get("name");},
         oauth : function() {return this.get("oauth");},
         authorization: function() { return this.oauth().authorizationForRequests();  },
@@ -59,6 +61,10 @@ window.ApiCallView = function(args) {
            return new DownloadMainFileApiCallView(args);
         else if (args.model.isAddToPadQueue())
            return new AddToPadQueueApiCallView(args);
+        else if (args.model.isReject())
+           return new RejectApiCallView(args);
+        else if (args.model.isSign())
+           return new SignApiCallView(args);
         else if (args.model.isGetProfile())
            return new GetProfileApiCallView(args);
         else if (args.model.isSetLanguage())

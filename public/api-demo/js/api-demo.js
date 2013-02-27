@@ -51,6 +51,8 @@ var ApiDemoView = Backbone.View.extend({
             var list  = $("<option value='l'>List</option>");
             var download  = $("<option value='dl'>Download file</option>");
             var addtopad  = $("<option value='pq'>Add to padqueue</option>");
+            var reject  = $("<option value='reject'>Reject</option>");
+            var sign  = $("<option value='sign'>Sign</option>");
             var profile  = $("<option value='gp'>Get profile</option>");
             var language  = $("<option value='sl'>Set language</option>");
             var password  = $("<option value='sp'>Set password</option>");
@@ -60,7 +62,7 @@ var ApiDemoView = Backbone.View.extend({
 
             select.append(none).append(createFromFile).append(createFromTemplate).append(update)
                   .append(ready).append(sendReminder).append(cancel).append(del).append(check)
-                  .append(list).append(download).append(addtopad)
+                  .append(list).append(download).append(addtopad).append(reject).append(sign)
                   .append($("<option>---------</option>"))
                   .append(profile).append(language).append(password).append(signup).append(updateprofile)
                   .append($("<option>---------</option>"))
@@ -88,6 +90,10 @@ var ApiDemoView = Backbone.View.extend({
                     download.attr("selected", "true");
                 else if (model.selectedApiCall().isAddToPadQueue())
                     addtopad.attr("selected", "true");
+                else if (model.selectedApiCall().isReject())
+                    reject.attr("selected", "true");
+                else if (model.selectedApiCall().isSign())
+                    sign.attr("selected", "true");
                 else if (model.selectedApiCall().isGetProfile())
                     profile.attr("selected", "true");
                 else if (model.selectedApiCall().isSetLanguage())
@@ -127,6 +133,10 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new DownloadMainFileApiCall({oauth : oauth}));
                 else if (select.val() == "pq")
                     model.setSelectedApiCall(new AddToPadQueueApiCall({oauth : oauth}));
+                else if (select.val() == "reject")
+                    model.setSelectedApiCall(new RejectApiCall({oauth : oauth}));
+                else if (select.val() == "sign")
+                    model.setSelectedApiCall(new SignApiCall({oauth : oauth}));
                 else if (select.val() == "gp")
                     model.setSelectedApiCall(new GetProfileApiCall({oauth : oauth}));
                 else if (select.val() == "sl")
