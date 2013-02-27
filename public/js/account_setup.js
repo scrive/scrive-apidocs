@@ -117,6 +117,7 @@
           var resp = JSON.parse(rs);
           if (resp.ok === true) {
               mixpanel.alias(resp.userid);
+              mixpanel.identify(resp.userid);
               mixpanel.people.set({Phone : model.phone(),
                                    'Company Name' : model.company(),
                                    'Position' : model.position(),
