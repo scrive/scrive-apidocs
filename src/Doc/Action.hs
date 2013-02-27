@@ -73,7 +73,8 @@ logDocEvent name doc user extraProps = do
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),
     numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
-    numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc)]
+    numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
+    stringProp "Signup Method" (show $ usersignupmethod user)]
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
 postDocumentPreparationChange doc@Document{documenttitle} apistring = do
