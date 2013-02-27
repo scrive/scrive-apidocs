@@ -78,6 +78,9 @@
     setCallme: function(callme) {
       this.set('callme', callme);
     },
+      signupMethod : function() {
+          return this.get('signupmethod');
+      },
     valid: function() {
       if (!this.accepted()) {
         var validator = this.tosValidator();
@@ -118,12 +121,15 @@
           if (resp.ok === true) {
               mixpanel.alias(resp.userid);
               mixpanel.identify(resp.userid);
-              mixpanel.people.set({Phone : model.phone(),
-                                   'Company Name' : model.company(),
-                                   'Position' : model.position(),
-                                   '$first_name' : model.fstname(),
-                                   '$last_name' : model.sndname(),
-                                   'TOS Date' : new Date()});
+              var ps = {Phone : model.phone(),
+                        'Company Name' : model.company(),
+                        'Position' : model.position(),
+                        '$first_name' : model.fstname(),
+                        '$last_name' : model.sndname(),
+                        'TOS Date' : new Date(),
+                        'Signup Method' : model.signupMethod()};
+              mixpanel.register(ps);
+              mixpanel.people.set(ps);
               trackTimeout('Sign TOS', {}, function() {
                   window.location = resp.location;
               });

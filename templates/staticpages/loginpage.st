@@ -76,6 +76,7 @@ accountSetupPage=
                                                   sndname: "$sndname$",
                                                   company : "$company$",
                                                   userid : "$userid$",
+                                                  signupmethod : "$signupmethod$",
                                                   companyFilled : $if(company)$true$else$false$endif$,
                                                   })
                                               .el());

@@ -442,7 +442,7 @@ handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m (Either Kontra
 handleAccountSetupGet uid token = handleAccountSetupGetWithMethod uid token AccountRequest
 
 handleAccountSetupGetWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m (Either KontraLink Response)
-handleAccountSetupGetWithMethod uid token _ = do
+handleAccountSetupGetWithMethod uid token sm = do
   ctx <- getContext
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
@@ -452,7 +452,8 @@ handleAccountSetupGetWithMethod uid token _ = do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
                                             F.value "userid"  $ show uid
-                                            F.value "company" $ companyname <$> companyinfo <$> mcompany))
+                                            F.value "company" $ companyname <$> companyinfo <$> mcompany
+                                            F.value "signupmethod" $ show sm))
     (Just _user, Just _) -> do
       -- this case looks impossible since we delete the account request upon signing up
       -- but may it happen if they sign tos in some other way?
