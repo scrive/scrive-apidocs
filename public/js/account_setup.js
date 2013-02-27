@@ -116,12 +116,13 @@
         ajaxsuccess: function(rs) {
           var resp = JSON.parse(rs);
           if (resp.ok === true) {
-              mixpanel.alias(model.userid());
+              mixpanel.alias(resp.userid);
               mixpanel.people.set({Phone : model.phone(),
                                    'Company Name' : model.company(),
                                    'Position' : model.position(),
                                    '$first_name' : model.fstname(),
-                                   '$last_name' : model.sndname()});
+                                   '$last_name' : model.sndname(),
+                                   'TOS Date' : new Date()});
               trackTimeout('Sign TOS', {}, function() {
                   window.location = resp.location;
               });

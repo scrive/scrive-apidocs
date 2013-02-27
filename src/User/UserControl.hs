@@ -485,6 +485,7 @@ handleAccountSetupPostWithMethod uid token sm = do
           runJSONGenT $ do
             value "ok" True
             value "location" $ show link
+            value "userid" $ show uid
               
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token AccountRequest
