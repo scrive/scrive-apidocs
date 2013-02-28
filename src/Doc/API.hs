@@ -33,7 +33,7 @@ import System.FilePath
 import Data.Maybe
 import qualified Data.String.Utils as String
 
-import qualified Data.ByteString as BS
+-- import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Util.Actor
 import Util.SignatoryLinkUtils
@@ -133,12 +133,12 @@ apiCallCreateFromFile = api $ do
         Right content -> return content
       content'' <- case mformat of
         Nothing -> return content'
-        Just format -> do
-          eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
-          case eres of
-            Left (LiveDocxIOError e) -> throwError $ serverError $ show e
-            Left (LiveDocxSoapError s)-> throwError $ serverError s
-            Right res -> return $ BSL.fromChunks [res]
+        Just _format -> return content' -- do
+          --eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+          --case eres of
+          --  Left (LiveDocxIOError e) -> throwError $ serverError $ show e
+          --  Left (LiveDocxSoapError s)-> throwError $ serverError s
+          --  Right res -> return $ BSL.fromChunks [res]
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
                      cres <- preCheckPDF (concatChunks content'')
                      case cres of
@@ -418,12 +418,12 @@ documentChangeMainFile docid = api $ do
         Right content -> return content
       content'' <- case mformat of
         Nothing -> return content'
-        Just format -> do
-          eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
-          case eres of
-            Left (LiveDocxIOError e) -> throwError $ serverError $ show e
-            Left (LiveDocxSoapError s)-> throwError $ serverError s
-            Right res -> return $ BSL.fromChunks [res]
+        Just _format -> return content' --do
+          --eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+          --case eres of
+            --Left (LiveDocxIOError e) -> throwError $ serverError $ show e
+            --Left (LiveDocxSoapError s)-> throwError $ serverError s
+            --Right res -> return $ BSL.fromChunks [res]
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
                      cres <- preCheckPDF (concatChunks content'')
                      case cres of
