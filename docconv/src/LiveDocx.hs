@@ -136,7 +136,7 @@ class HasXmlNamespace a where
   xmlNamespace :: a -> String
 
 liveDocxNamespace :: String
-liveDocxNamespace = "http://api.livedocx.com/1.2/mailmerge/"
+liveDocxNamespace = "http://api.livedocx.com/2.1/mailmerge/"
 
 data LogIn = LogIn String String
   deriving (Eq,Ord,Show,Read)
