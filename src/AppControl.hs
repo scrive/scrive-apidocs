@@ -174,6 +174,14 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     decodeBody (defaultBodyPolicy temp quota quota quota)
     session <- getCurrentSession
     ctx <- createContext session
+    -- commit is needed after getting session from the database
+    -- since session expiration date is updated while getting it,
+    -- which results in pgsql locking the row. then, if request
+    -- handler somehow gets stuck, transaction is left open for
+    -- some time, row remains locked and subsequent attempts to
+    -- refresh the page will fail, because they will try to
+    -- access/update session from a row that was previously locked.
+    kCommit
 
     (res, ctx') <- routeHandlers ctx
 
