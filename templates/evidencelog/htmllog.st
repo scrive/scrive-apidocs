@@ -129,7 +129,6 @@ htmlevidencelog=
         font-weight: normal;
         font-size: .8em;
         line-height: 1.4em;
-        text-align: justify;
         color: #333333;
         padding-top: 18px;
 
@@ -144,6 +143,11 @@ htmlevidencelog=
         font-style: italic;
         margin: 0px;
       }
+
+      .capitalize-first-letter:first-letter {
+         text-transform: uppercase;
+      }
+
     </style>
 
 </head>
@@ -163,7 +167,7 @@ htmlevidencelog=
      <tr>
        <td>$entry.time$</td>
        <td>$entry.ip$</td>
-       <td><div style="max-height:100px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
+       <td><div style="max-height:100px;overflow-y:auto;overflow-x:auto" class='capitalize-first-letter'>$entry.text:noescape()$</div></td>
      </tr>
     }$
 
