@@ -2025,7 +2025,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories actor) =
-    update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing)) signatories) actor)
+    update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing, StandardAuthentication)) signatories) actor)
 
 splitImage :: String -> Maybe (Int, Int, String)
 splitImage s = do
@@ -2036,7 +2036,7 @@ splitImage s = do
   w <- maybeRead ws
   h <- maybeRead hs
   return (w, h, is)
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] Actor
+data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
     mdocument <- query $ GetDocumentByDocumentID documentid
@@ -2050,11 +2050,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             kRun_ $ "DELETE FROM signatory_links WHERE document_id = " <?> documentid
 
             let mauthorsiglink = getAuthorSigLink document
-            siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl) -> do
+            siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl, authmethod) -> do
                      magichash <- lift random
                      let link' = (signLinkFromDetails' details atts magichash)
                                  {  signatorylinkcsvupload = mcsvupload
                                   , signatorylinksignredirecturl= msignredirecturl
+                                  , signatorylinkauthenticationmethod = authmethod
                                  }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
@@ -2063,7 +2064,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                      return link
             _r1 <- insertSignatoryLinksAsAre documentid siglinks
 
-            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _)-> sd) signatories)
+            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _, _)-> sd) signatories)
 
             forM_ (emailsOfRemoved old new) $ \eml ->
               update $ InsertEvidenceEvent
@@ -2140,7 +2141,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   actor
 
             Just newdocument <- query $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,a,_) -> a) signatories)
+            let moldcvsupload = msum (map (\(_,_,a,_,_) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 
             when (moldcvsupload /= mnewcsvupload) $ do

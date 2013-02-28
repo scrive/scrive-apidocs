@@ -115,6 +115,12 @@ data AuthenticationMethod = StandardAuthentication
                           | ELegAuthentication
   deriving (Eq, Ord, Show)
 
+instance FromJSValue AuthenticationMethod where
+  fromJSValue j = case fromJSValue j of
+    Just "standard" -> Just StandardAuthentication
+    Just "eleg"     -> Just ELegAuthentication
+    _               -> Nothing
+
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
                     | APIDelivery
