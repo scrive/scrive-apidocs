@@ -84,7 +84,8 @@ curl_exe :: String
 curl_exe = "curl"
 
 -- | This function executes curl as external program. Args are args.
-readCurl :: [String]                 -- ^ any arguments
+readCurl :: MonadIO m
+         => [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
-         -> IO (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = readProcessWithExitCode' curl_exe args input
+         -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
+readCurl args input = readProcessWithExitCode' curl_exe (["--max-time", "20"] ++ args) input
