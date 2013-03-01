@@ -85,7 +85,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
 
       var table = $("<table class='signatories-box' style='float: right;' />");
       var tbody = $("<tbody/>");
-      var tr = $("<tr style='min-height: 220px;'/>");
+      var tr = $("<tr style='height: 220px;'/>");
       var td1 = $("<td class='signatory-box' style='width: 300px;' />");
       var tdseparator = $("<td class='signatory-box-separator'/>");
       var td2 = $("<td class='signatory-box'/>")
