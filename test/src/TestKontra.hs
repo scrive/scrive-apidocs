@@ -95,7 +95,7 @@ instance MonadDB TestEnv where
   localNexus f = local (\st -> st { teNexus = f (teNexus st) })
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getLocalTemplates defaultValue
+  getTemplates = getTextTemplatesByColumn $ show (defaultValue :: Lang)
   getTextTemplatesByColumn langStr = do
     globaltemplates <- teGlobalTemplates <$> ask
     return $ TL.localizedVersion langStr globaltemplates

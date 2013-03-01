@@ -36,8 +36,7 @@ isIncluded (name, _) = not $ name `elem` excludedTemplates
 testValidXml :: Assertion
 testValidXml = do
   ts <- getAllTemplates
-  texts <- mapM getTextTemplates allLangs
-  _ <- mapM assertTemplateIsValidXML . filter isIncluded $ ts ++ concat texts
+  _ <- mapM assertTemplateIsValidXML . filter isIncluded $ ts
   assertSuccess
 
 assertTemplateIsValidXML :: (String, String) -> Assertion
@@ -56,8 +55,7 @@ testNoNestedP :: Assertion
 testNoNestedP = do
   langtemplates <- readGlobalTemplates
   ts <- getAllTemplates
-  texts <- forM allLangs getTextTemplates
-  let alltemplatenames = map fst (concat texts ++ ts)
+  let alltemplatenames = map fst ts
   _ <- forM allLangs $ \lang -> do
     let templates = localizedVersion lang langtemplates
     --ts <- getTextTemplates lang
