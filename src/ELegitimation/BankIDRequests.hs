@@ -10,6 +10,7 @@ module ELegitimation.BankIDRequests (
 
 import Data.Maybe
 import Data.Char
+import Data.List
 import Utils.Enum
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
@@ -20,11 +21,11 @@ import ELegitimation.SignatureProvider
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64
 
-data ImplStatus = ImplStatus { errorGroup            :: Int, 
-                               errorGroupDescription :: String, 
-                               errorCode             :: Int, 
+data ImplStatus = ImplStatus { errorGroup            :: Int,
+                               errorGroupDescription :: String,
+                               errorCode             :: Int,
                                errorCodeDescription  :: String
-                            } 
+                            }
 
 data GenerateChallengeRequest = GenerateChallengeRequest SignatureProvider String -- serviceid
 
@@ -220,7 +221,7 @@ verifySignature :: LogicaConfig
                 -> String
                 -> IO (Either ImplStatus (String, [(String, String)])) -- certificate and user attributes
 verifySignature LogicaConfig{..} provider tbs signature mnonce transactionID = do
-    eresponse <- 
+    eresponse <-
         makeSoapCallWithCA logicaEndpoint logicaCertFile
             "VerifySignature" $
             VerifySignatureRequest provider
@@ -317,7 +318,10 @@ instance XmlContent (CollectResponse) where
 mbiRequestSignature :: LogicaConfig -> String -> String -> IO (Either String (String, String))
 mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
   let personalnumbernormalized = filter isDigit personalnumber
-  eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumbernormalized (BS.toString $ Base64.encode $ BS.fromString uvd)
+  let personalnumbernormalizedwithyear =  if ("19" `isPrefixOf` personalnumbernormalized) -- This is ugly, but we will sooner change provider, then it will be a problem
+                                            then personalnumbernormalized
+                                            else "19" ++ personalnumbernormalized
+  eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumbernormalizedwithyear (BS.toString $ Base64.encode $ BS.fromString uvd)
   case eresponse of
     Left m -> return $ Left m
     Right (SignatureResponse tid oref) -> return $ Right (tid, oref)

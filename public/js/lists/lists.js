@@ -396,6 +396,7 @@
                         var text = cell.name();
                         if (schema.sorting().isSortable(cell.field())) {
                             var field = cell.field();
+                            h.addClass("sortable");
                             h.click(schema.sorting().sortOnFunction(field));
                             if (schema.sorting().isCurrent(cell.field())) {
                                 if (schema.sorting().isAsc()) {
