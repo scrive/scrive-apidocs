@@ -13,7 +13,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   apiURL: function() {
     var path = document.location.pathname.split("/");
-    return "/api/frontend/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + this.model.name() + "/file" + this.model.document().viewer().urlPart();
+    return "/api/frontend/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + encodeURIComponent(this.model.name()) + "/file" + this.model.document().viewer().urlPart();
   },
   removeButton: function() {
     var attachment = this.model;
@@ -136,7 +136,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     this.uploadElems.push($(upl.el));
     return upl.el;
 
-    
+
   },
   render: function() {
     $(this.el).empty();
@@ -158,7 +158,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
       tr.append($("<td class='file'>").append(self.signatoryAttachmentFile(attachment)));
       tbody.append(tr);
     });
-    
+
     container.append(table);
     container.append($("<div class='clearfix' />"));
 
