@@ -59,7 +59,7 @@ documentAPICallback = Action {
 
     evaluateDocumentCallback dac@DocumentAPICallback{..} = do
       Log.debug $ "Calling " ++ show dacURL ++ " (documentid = " ++ show dacDocumentID ++ ")..."
-      (exitcode, stdout, stderr) <- readProcessWithExitCode' "curl" [
+      (exitcode, stdout, stderr) <- readCurl [
           "-X", "POST"
         , "-d", "documentid=" ++ show dacDocumentID
         , dacURL
