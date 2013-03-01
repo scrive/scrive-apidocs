@@ -57,7 +57,7 @@
  enter your email address and Scrive will send you a new activation
  link immediately."
 "_activatePageViewNotValidLinkEmail","E-mail","E-mail"
-"_addattachmentlink","Lägg till/ta bort bilaga","Add/remove appendix"
+"_addattachmentlink","Lägg till/ta bort bilaga","Add/remove attachment"
 "_address","Adress","Address"
 "_addressFieldName","adress","address"
 "_and","och","and"
@@ -1122,3 +1122,4 @@ have an account please follow the account creation process. Free use of up to 5 
 "_phoneConfirmationText","Tack, en representant för Scrive kommer att ringa dig snart.","Thanks, someone from Scrive will call you soon!"
 "_startButtonLabel","Ta mig till tjänsten bara!","Just take me to the service!"
 "_invalidAttachments","Filtypen du valt stöds inte. Du kan tyvärr bara bifoga PDF-filer.","Sorry, this file format is not supported. Please select a .pdf file only."
+"_selectedAttachments","Utvalda bilagor","Selected attachments"
