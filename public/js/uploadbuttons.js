@@ -96,6 +96,11 @@ var UploadButtonView = Backbone.View.extend({
         this.render();
     },
     render: function () {
+        // check if IE < 9
+        var div = document.createElement('div');
+        div.innerHTML = '<!--[if lt IE 9]><i></i><![endif]-->';
+        var isIeLessThan9 = (div.getElementsByTagName('i').length == 1);
+
         var model = this.model;
         var button = model.button();
         if (!button) {
@@ -106,7 +111,14 @@ var UploadButtonView = Backbone.View.extend({
             fileinput.attr("accept",model.type());
         fileinput.attr("maxlength",model.maxlength());
         fileinput.attr("name",model.name());
+
+
         fileinput.css("width",(model.width() + 30)  + "px");
+        if (isIeLessThan9) {
+            // make input invisible
+            fileinput.css('filter', 'alpha(opacity=0)');
+        }
+
         var list = model.list();
         if (list == undefined) {
             list = $("<div style='display:none'/>");
