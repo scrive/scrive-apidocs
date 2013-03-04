@@ -121,6 +121,13 @@ instance FromJSValue AuthenticationMethod where
     Just "eleg"     -> Just ELegAuthentication
     _               -> Nothing
 
+instance FromJSValue DeliveryMethod where
+  fromJSValue j = case fromJSValue j of
+    Just "email" -> Just EmailDelivery
+    Just "pad"   -> Just PadDelivery
+    Just "api"   -> Just APIDelivery
+    _            -> Nothing
+
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
                     | APIDelivery

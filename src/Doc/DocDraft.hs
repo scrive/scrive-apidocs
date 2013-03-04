@@ -39,13 +39,6 @@ data DraftData = DraftData {
     } deriving Show
 
 
-instance FromJSValue DeliveryMethod where
-  fromJSValue j = case fromJSValue j of
-    Just "email" -> Just EmailDelivery
-    Just "pad"   -> Just PadDelivery
-    Just "api"   -> Just APIDelivery
-    _            -> Nothing
-
 instance FromJSValue DocumentProcess where
   fromJSValue j = fromJSValue j >>= maybeRead
 
