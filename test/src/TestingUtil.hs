@@ -435,7 +435,7 @@ arbEmail = do
   return $ n ++ "@" ++ d ++ ".com"
 
 signatoryLinkExample1 :: SignatoryLink
-signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
+signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
                                       , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
