@@ -228,8 +228,8 @@ apiCallReady did =  api $ do
                          _ -> Nothing
               apiGuardJustM (badInput "Given JSON does not represent valid READY parameters.") $
                 return $ fromJSValue json
-  when ((not $ all (isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) && documentdeliverymethod doc == EmailDelivery) $ do
-        throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email adress set."
+  when (not $ all ((/=EmailDelivery) . signatorylinkdeliverymethod ||^ isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
+        throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
   when (isNothing $ documentfile doc) $ do
         throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
   timezone <- lift $ mkTimeZoneName (timezonestring params)
@@ -260,8 +260,8 @@ apiCallRemind did =  api $ do
   ctx <- getContext
   (user, actor , _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
-  when (documentstatus doc /= Pending || documentdeliverymethod doc /= EmailDelivery) $ do
-        throwIO . SomeKontraException $ serverError "Can't send reminder for documents that are not pending or that don't have email delivery type"
+  when (documentstatus doc /= Pending) $ do
+        throwIO . SomeKontraException $ serverError "Can't send reminder for documents that are not pending"
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."

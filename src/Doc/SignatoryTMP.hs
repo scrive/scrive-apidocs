@@ -52,7 +52,8 @@ data SignatoryTMP = SignatoryTMP {
         attachments :: [SignatoryAttachment], -- Do not expose it as durring runtime this does not have email set
         csvupload :: Maybe CSVUpload,
         signredirecturl :: Maybe String,
-        authentication :: AuthenticationMethod
+        authentication :: AuthenticationMethod,
+        delivery :: DeliveryMethod
     } deriving (Show)
 
 instance HasFields SignatoryTMP where
@@ -71,6 +72,7 @@ emptySignatoryTMP = SignatoryTMP {
   , csvupload = Nothing
   , signredirecturl = Nothing
   , authentication = StandardAuthentication
+  , delivery = EmailDelivery
   }
 
 -- Basic operations
@@ -151,9 +153,9 @@ setSignredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
 setSignredirecturl rurl s = s {signredirecturl = rurl}
 
 toSignatoryDetails1 :: SignatoryTMP -> SignatoryDetails
-toSignatoryDetails1 sTMP = (\(x,_,_,_,_) -> x) (toSignatoryDetails2 sTMP)
+toSignatoryDetails1 sTMP = (\(x,_,_,_,_,_) -> x) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod)
+toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)
 toSignatoryDetails2 sTMP  =
     let sig = makeSignatory [] [] ""
                  (fold $ fstname sTMP)
@@ -165,13 +167,13 @@ toSignatoryDetails2 sTMP  =
                  (fold $ company sTMP)
                  (fold $ personalnumber sTMP)
                  (fold $ companynumber sTMP)
-    in withRolesAndAttsAndCSVAndAuth $ sig {
+    in withRolesAndAttsAndCSVAndAuthandDelivery $ sig {
             signatoryfields =  mergeFields (getAllFields sTMP)  (signatoryfields sig),
             signatorysignorder = signatorysignorder $ details sTMP }
   where
    mergeFields [] l = l
    mergeFields (f:fs) l = mergeFields fs (replaceField f l)
-   withRolesAndAttsAndCSVAndAuth x = (x, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP, authentication $ sTMP)
+   withRolesAndAttsAndCSVAndAuthandDelivery x = (x, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP, authentication $ sTMP, delivery $ sTMP)
 
 instance FromJSValue SignatoryTMP where
     fromJSValue = do
@@ -183,6 +185,7 @@ instance FromJSValue SignatoryTMP where
         csv <- fromJSValueField "csv"
         sredirecturl <- fromJSValueField "signsuccessredirect"
         authentication' <-  fromJSValueField "authentication"
+        delivery' <-  fromJSValueField "delivery"
         case (mfields) of
           (Just fields) ->
             return $ Just $
@@ -193,7 +196,9 @@ instance FromJSValue SignatoryTMP where
                 (setSignredirecturl $ sredirecturl) $
                 (map replaceField fields) $^^
                 (map addAttachment attachments) $^^
-                (emptySignatoryTMP { authentication = fromMaybe StandardAuthentication authentication' })
+                (emptySignatoryTMP { authentication = fromMaybe StandardAuthentication authentication'
+                                   , delivery = fromMaybe EmailDelivery delivery'
+                                   })
           _ -> return Nothing
 
 instance FromJSValue SignatoryField where

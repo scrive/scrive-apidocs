@@ -60,7 +60,6 @@ module Doc.Model
   , SetDocumentUnsavedDraft(..)
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
-  , SetDocumentDeliveryMethod(..)
   , SetDocumentProcess(..)
   , SetInvitationDeliveryStatus(..)
   , SetInviteText(..)
@@ -463,6 +462,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkelegdatamismatchfirstname" signatorylinkelegdatamismatchfirstname
                          , checkEqualBy "signatorylinkelegdatamismatchlastname" signatorylinkelegdatamismatchlastname
                          , checkEqualBy "signatorylinkelegdatamismatchpersonalnumber" signatorylinkelegdatamismatchpersonalnumber
+                         , checkEqualBy "signatorylinkdeliverymethod" signatorylinkdeliverymethod
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
@@ -477,7 +477,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
-                   , checkEqualBy "documentdeliverymethod" documentdeliverymethod
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
@@ -506,7 +505,6 @@ documentsSelectors =
   , "documents.invite_text"
   , "documents.lang"
   , "documents.sharing"
-  , "documents.delivery_method"
   , "documents.api_callback_url"
   , documentStatusClassExpression
   ]
@@ -519,8 +517,13 @@ fetchDocuments = kFold decoder []
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
+<<<<<<< HEAD
      invite_ip invite_text
      lang sharing delivery_method apicallback status_class
+=======
+     invite_ip invite_text mail_footer
+     lang sharing apicallback status_class
+>>>>>>> Delivery method now is supported for each signatory individually
        = Document {
          documentid = did
        , documenttitle = title
@@ -540,7 +543,6 @@ fetchDocuments = kFold decoder []
            Nothing -> Nothing
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
        , documentinvitetext = invite_text
-       , documentdeliverymethod = delivery_method
        , documentsharing = sharing
        , documenttags = S.empty
        , documentauthorattachments = []
@@ -607,6 +609,7 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.eleg_data_mismatch_first_name"
   sqlResult "signatory_links.eleg_data_mismatch_last_name"
   sqlResult "signatory_links.eleg_data_mismatch_personal_number"
+  sqlResult "signatory_links.delivery_method"
 
   sqlResult (statusClassCaseExpression <> SQL " AS status_class" [])
   sqlResult "signatory_attachments.file_id AS sigfileid"
@@ -638,6 +641,7 @@ fetchSignatoryLinks = do
      eleg_data_mismatch_first_name
      eleg_data_mismatch_last_name
      eleg_data_mismatch_personal_number
+     delivery_method
      status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
@@ -697,6 +701,7 @@ fetchSignatoryLinks = do
           , signatorylinkelegdatamismatchfirstname = eleg_data_mismatch_first_name
           , signatorylinkelegdatamismatchlastname = eleg_data_mismatch_last_name
           , signatorylinkelegdatamismatchpersonalnumber = eleg_data_mismatch_personal_number
+          , signatorylinkdeliverymethod = delivery_method
           }
 
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> m [SignatoryLink]
@@ -735,6 +740,7 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "eleg_data_mismatch_first_name" $ signatorylinkelegdatamismatchfirstname <$> links
            sqlSetList "eleg_data_mismatch_last_name" $ signatorylinkelegdatamismatchlastname <$> links
            sqlSetList "eleg_data_mismatch_personal_number" $ signatorylinkelegdatamismatchpersonalnumber <$> links
+           sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
            sqlResult "id"
 
   (slids :: [SignatoryLinkID]) <- kFold (\acc slid -> slid : acc) []
@@ -972,7 +978,6 @@ insertDocumentAsIs document = do
                  , documenttimeouttime
                  , documentinvitetime
                  , documentinvitetext
-                 , documentdeliverymethod
                  , documentsharing
                  , documenttags
                  , documentauthorattachments
@@ -997,7 +1002,6 @@ insertDocumentAsIs document = do
         sqlSet "invite_time" $ signtime `fmap` documentinvitetime
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
         sqlSet "invite_text" documentinvitetext
-        sqlSet "delivery_method" documentdeliverymethod
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
         mapM_ (sqlResult) documentsSelectors
@@ -1659,7 +1663,11 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentctime                = ctime
                 , documentmtime                = ctime
                 , documentauthorattachments    = []
+<<<<<<< HEAD
                 , documentdeliverymethod       = EmailDelivery
+=======
+                , documentui                   = (documentui defaultValue) { documentmailfooter = customfooter $ usersettings user }
+>>>>>>> Delivery method now is supported for each signatory individually
                 }
 
   case invariantProblems ctime doc of
@@ -2049,7 +2057,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories actor) =
-    update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing, StandardAuthentication)) signatories) actor)
+    update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing, StandardAuthentication, EmailDelivery)) signatories) actor)
 
 splitImage :: String -> Maybe (Int, Int, String)
 splitImage s = do
@@ -2060,7 +2068,7 @@ splitImage s = do
   w <- maybeRead ws
   h <- maybeRead hs
   return (w, h, is)
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod)] Actor
+data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
     mdocument <- query $ GetDocumentByDocumentID documentid
@@ -2074,12 +2082,13 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             kRun_ $ "DELETE FROM signatory_links WHERE document_id = " <?> documentid
 
             let mauthorsiglink = getAuthorSigLink document
-            siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl, authmethod) -> do
-                     magichash <- random
+            siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl, authmethod, deliverymethod) -> do
+                     magichash <- lift random
                      let link' = (signLinkFromDetails' details atts magichash)
                                  {  signatorylinkcsvupload = mcsvupload
                                   , signatorylinksignredirecturl= msignredirecturl
                                   , signatorylinkauthenticationmethod = authmethod
+                                  , signatorylinkdeliverymethod = deliverymethod
                                  }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
@@ -2088,7 +2097,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                      return link
             _r1 <- insertSignatoryLinksAsAre documentid siglinks
 
-            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _, _)-> sd) signatories)
+            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _, _, _)-> sd) signatories)
 
             forM_ (emailsOfRemoved old new) $ \eml ->
               update $ InsertEvidenceEvent
@@ -2165,7 +2174,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   actor
 
             Just newdocument <- query $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,a,_,_) -> a) signatories)
+            let moldcvsupload = msum (map (\(_,_,a,_,_,_) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 
             when (moldcvsupload /= mnewcsvupload) $ do
@@ -2301,19 +2310,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMe
         (Just did)
         actor
 -}
-
-data SetDocumentDeliveryMethod = SetDocumentDeliveryMethod DocumentID DeliveryMethod Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod Bool where
-  update (SetDocumentDeliveryMethod did del actor) =
-    updateOneWithEvidenceIfChanged did "delivery_method" del $ do
-      let evidence = case del of
-            EmailDelivery -> SetEmailDeliveryMethodEvidence
-            PadDelivery   -> SetPadDeliveryMethodEvidence
-            APIDelivery   -> SetAPIDeliveryMethodEvidence
-      return $ InsertEvidenceEvent evidence
-        (value "delivery" (show del) >> value "actor" (actorWho actor))
-        (Just did)
-        actor
 
 data SetDocumentProcess = SetDocumentProcess DocumentID DocumentProcess Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentProcess Bool where
@@ -2479,13 +2475,13 @@ instance MonadDB m => DBUpdate m SetSigAttachments () where
             sqlSet "description" signatoryattachmentdescription
             sqlSet "signatory_link_id" slid
 
-data UpdateDraft = UpdateDraft DocumentID  Document Actor
+data UpdateDraft = UpdateDraft DocumentID Document Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
   update (UpdateDraft did document actor) = and `liftM` sequence [
       update $ SetDocumentTitle did (documenttitle document) actor
     , update $ SetDaysToSign  did (documentdaystosign document) actor
     , update $ SetDocumentLang did (getLang document) actor
-    , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
+    -- , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
     , update $ SetInviteText did (documentinvitetext document) actor
     , update $ SetDocumentTags  did (documenttags document) actor
     , update $ SetDocumentAPICallbackURL did (documentapicallbackurl document)

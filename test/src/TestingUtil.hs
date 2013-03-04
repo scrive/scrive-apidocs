@@ -194,11 +194,13 @@ instance Arbitrary SignatoryLink where
                 then arbitrary
                 else return Nothing
 
+    delivery <- arbitrary
     return $ defaultValue { signatorylinkid            = slid
                           , signatorydetails           = sd
                           , signatorymagichash         = mh
                           , maybesigninfo              = signinfo
                           , maybeseeninfo              = seeninfo
+                          , signatorylinkdeliverymethod = delivery
                           }
 
 instance Arbitrary SignatureProvider where
@@ -277,14 +279,12 @@ instance Arbitrary Document where
                then arbitrary
                else return Preparation
     sls <- arbitrary
-    delivery <- arbitrary
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
     return $ defaultValue  { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
-                           , documentdeliverymethod = delivery
                            , documenttimeouttime = Just (TimeoutTime dtimeouttime)
                            , documentdaystosign = ddaystosign
                            }

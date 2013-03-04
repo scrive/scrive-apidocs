@@ -206,6 +206,28 @@ dropAuthenticationMethodFromDocuments = Migration {
               <+> "DROP COLUMN authentication_method"
 }
 
+moveDeliveryMethodFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
+moveDeliveryMethodFromDocumentsToSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 19
+  , mgrDo = do
+      kRunRaw $   "ALTER TABLE signatory_links"
+              <+> "ADD COLUMN delivery_method         SMALLINT     NULL"
+      kRunRaw $   "UPDATE signatory_links"
+              <+> "   SET delivery_method = (SELECT delivery_method FROM documents WHERE documents.id = signatory_links.document_id)"
+      kRunRaw $   "ALTER TABLE signatory_links"
+              <+> "ALTER COLUMN delivery_method SET NOT NULL"
+}
+
+dropDeliveryMethodFromDocuments :: MonadDB m => Migration m
+dropDeliveryMethodFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 21
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE documents"
+              <+> "DROP COLUMN delivery_method"
+}
+
 
 moveCancelationReasonFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
 moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {

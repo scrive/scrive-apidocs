@@ -45,13 +45,16 @@ documentJSONTests env = testGroup "Document JSON tests" [
     , isDocumentError doc          ==> 40 <= s && s <= 49
     ],
   testProperty "does not have files"
-    (\doc -> True ==> (isNothing (fromJSValueField "files" (jsonDocumentForSignatory doc) :: Maybe String))),
+    (\doc -> True ==> (isNothing (fromJSValueField "files" (jsonDocumentForSignatory doc) :: Maybe String)))
+{-
+ ,
   testProperty "delivery" $ \doc ->
       let da = getFromDoc doc "delivery" :: Int in
       disjoin
       [ EmailDelivery == documentdeliverymethod doc ==> 1 == da
       , PadDelivery == documentdeliverymethod doc   ==> 2 == da
       ]
+-}
  ]
 dcrTest :: TestEnv ()
 dcrTest = doTimes 100 $ do

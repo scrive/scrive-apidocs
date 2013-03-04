@@ -80,8 +80,8 @@ personFromSignatoryDetails boxImages details =
                 , Seal.fields = fieldsFromSignatory False [] boxImages details
                 }
 
-personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String) -> Fields m ()
-personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
+personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String) -> Fields m ()
+personFields _doc (person, signinfo,_seeninfo, _ , mprovider, delivery, _initials) = do
    F.value "personname" $ Seal.fullname person
    F.value "signip" $  formatIP (signipnumber signinfo)
    F.value "seenip" $  formatIP (signipnumber signinfo)
@@ -89,17 +89,18 @@ personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    F.value "bankid" $ mprovider == Just BankIDProvider
    F.value "nordea" $ mprovider == Just NordeaProvider
    F.value "telia"  $ mprovider == Just TeliaProvider
-   F.value "email"  $ documentdeliverymethod doc == EmailDelivery
-   F.value "pad"    $ documentdeliverymethod doc == PadDelivery
-   F.value "api"    $ documentdeliverymethod doc == APIDelivery
+   F.value "email"  $ delivery == EmailDelivery
+   F.value "pad"    $ delivery == PadDelivery
+   F.value "api"    $ delivery == APIDelivery
 
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString)
                           -> SignatoryLink
-                          -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)
+                          -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String)
 personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
                                                       , maybesigninfo = Just signinfo
                                                       , maybeseeninfo
                                                       , signatorysignatureinfo
+                                                      , signatorylinkdeliverymethod
                                                       }) =
   ((personFromSignatoryDetails boxImages signatorydetails)
      { Seal.emailverified    = True
@@ -111,6 +112,7 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
     , signinfo
     , isAuthor sl
     , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
+    , signatorylinkdeliverymethod
     , map head $ words $ getFullName signatorydetails
     )
   where fullnameverified = maybe False (\s -> signaturefstnameverified s
@@ -349,12 +351,12 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                         , not . signatoryispartner $ signatorydetails s
                     ]
 
-      persons = map (\(a,_,_,_,_,_) -> a) signatories
-      initialsx = map (\(_,_,_,_,_,a) -> a) signatories
+      persons = map (\(a,_,_,_,_,_,_) -> a) signatories
+      initialsx = map (\(_,_,_,_,_,_,a) -> a) signatories
       paddeddocid = pad0 20 (show docid)
 
       initials = intercalate ", " initialsx
-      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
+      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _, _)  = do
           seenDesc <- renderLocalTemplate document "_seenHistEntry" $ do
                         personFields document personInfo
                         documentInfoFields document
@@ -375,8 +377,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                     then [signEvent]
                     else [seenEvent,signEvent]
       invitationSentEntry =
-        if (sendMailsDuringSigning &&^ hasOtherSignatoriesThenAuthor) document
-           then case documentinvitetime document of
+        case documentinvitetime document of
                   Just (SignInfo time ipnumber) -> do
                     -- Here we need to sort signing signatories according to sign order,
                     -- then group them by sign order. Invitation to next group is sent
@@ -392,36 +393,41 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                           documentsignatorylinks $
                           document
 
-                    descs <- flip mapM sortedPeople $ \people ->
-                      renderLocalTemplate document "_invitationSentEntry" $ do
-                        partylist <- lift $ renderListTemplateNormal . map getSmartName $ people
-                        F.value "partyList" partylist
-                        documentInfoFields document
-                        documentAuthorInfo document
-                        case people of
-                          [person] -> do
-                            F.value "oneSignatory" True
-                            F.value "personname" $ getFullName person
-                          _ -> return ()
+                    descs <- flip mapM sortedPeople $ \people -> do
+                      let peopleWithEmailDelivery = filter ((==) EmailDelivery . signatorylinkdeliverymethod) people
+                      case peopleWithEmailDelivery of
+                        [] -> do
+                          -- everybody in this signatory order was Pad delivery or API delivery
+                          return Nothing
+                        _ -> do
+                          tmpl <- renderLocalTemplate document "_invitationSentEntry" $ do
+                            partylist <- lift $ renderListTemplateNormal . map getSmartName $ peopleWithEmailDelivery
+                            F.value "partyList" partylist
+                            documentInfoFields document
+                            documentAuthorInfo document
+                            case peopleWithEmailDelivery of
+                              [person] -> do
+                                F.value "oneSignatory" True
+                                F.value "personname" $ getFullName person
+                              _ -> return ()
+                          return (Just tmpl)
+
                     -- times is offset by one in position wrt
                     -- sortedPeople last element of times is actually
                     -- ignored here
                     let times = time : map (maximum . map (signtime . fromJust . maybesigninfo)) sortedPeople
-                    let mkEntry time' desc = Seal.HistEntry
+                    let mkEntry time' (Just desc) = Just $ Seal.HistEntry
                                             { Seal.histdate = show time'
                                             , Seal.histcomment = pureString desc
                                             , Seal.histaddress = "IP: " ++ show ipnumber
                                             }
-                    return $ zipWith mkEntry times descs
+                        mkEntry _ _ = Nothing
+                    return $ catMaybes $ zipWith mkEntry times descs
                   _ -> do
                     -- document does not have documentinvitetime, what
                     -- does it mean really?
                     return []
-          else do
-            -- either emails were not sent at all during document
-            -- signing or there was nobody to sent invitation to
-            return []
-      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
+      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_,_) -> c)) signatories)
       -- document fields
       lastHistEntry = do
                        desc <- renderLocalTemplate document "_lastHistEntry" (documentInfoFields document)

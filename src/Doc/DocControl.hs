@@ -154,8 +154,8 @@ handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  when (documentdeliverymethod document == PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
+  when (signatorylinkdeliverymethod signatorylink == PadDelivery) internalError
   muser <- User.Action.handleAccountSetupFromSign document signatorylink
   case muser of
     Just user -> runJSONGenT $ do
@@ -497,8 +497,6 @@ handleIssueSign document timezone = do
         mndocs <- mapM (forIndividual actor screenshots) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDuringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d True
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
@@ -553,8 +551,6 @@ handleIssueSend document timezone = do
         mndocs <- mapM (forIndividual user actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDuringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d False
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
@@ -574,13 +570,14 @@ handleIssueSend document timezone = do
           Left _ -> return ()
         return mndoc
 
-{- |
-    If the document has a multiple part this will pump csv values through it to create multiple docs, and then
-    save the original as a template if it isn't already.  This will make sure to clean the csv data.  It just returns
-    a list containing the original doc on it's own, if the doc hasn't got a multiple part.
-
-    I feel like this is quite dangerous to do all at once, maybe need a transaction?!
--}
+-- | If the document has a multiple part this will pump csv values
+-- through it to create multiple docs, and then save the original as a
+-- template if it isn't already.  This will make sure to clean the csv
+-- data.  It just returns a list containing the original doc on it's
+-- own, if the doc hasn't got a multiple part.
+--
+-- I feel like this is quite dangerous to do all at once, maybe need a
+-- transaction?!
 splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
 splitUpDocument doc = do
   case find (isJust . signatorylinkcsvupload) (documentsignatorylinks doc) of

@@ -253,10 +253,6 @@ isELegDataMismatch :: CancelationReason -> Bool
 isELegDataMismatch (ELegDataMismatch _ _ _ _ _) = True
 isELegDataMismatch _                            = False
 
-{- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
-sendMailsDuringSigning :: Document -> Bool
-sendMailsDuringSigning doc = (not $ documentdeliverymethod doc == PadDelivery) && (not $ documentdeliverymethod doc == APIDelivery)
-
 hasOtherSignatoriesThenAuthor :: Document -> Bool
 hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . isAuthor) $ documentsignatorylinks doc
 
@@ -268,7 +264,7 @@ hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . i
 -}
 isEligibleForReminder :: User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder user document@Document{documentstatus} siglink =
-       sendMailsDuringSigning document
+       signatorylinkdeliverymethod siglink == EmailDelivery
     && signatoryActivated
     && userIsAuthor
     && not isUserSignator

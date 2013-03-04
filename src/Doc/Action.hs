@@ -17,7 +17,6 @@ import Control.Logic
 import Crypto.RNG
 import Data.Char
 import DB
-import Utils.Monad
 import Doc.DocSeal
 import Doc.Model
 import Doc.DocInfo
@@ -67,7 +66,6 @@ logDocEvent name doc user extraProps = do
     MailProp   email,
     IPProp     ip,
     NameProp   fullname,
-    stringProp "Delivery" (show $ documentdeliverymethod doc),
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),
     numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
@@ -101,18 +99,11 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
                                       DocIDProp (documentid doc)]
   logDocEvent "Doc Sent" doc author []
 
-  edoc <- if (sendMailsDuringSigning document')
-             then sendInvitationEmails ctx document'
-             else return $ Right $ document'
-  case edoc of
-    Left _ -> do
-      _ <- addDocumentSendStatEvents (documentid document') apistring
-      forM_ (documentsignatorylinks document') $ \sl ->
-        addSignStatInviteEvent document' sl (ctxtime ctx)
-    Right doc2 -> do
-      _ <- addDocumentSendStatEvents (documentid doc2) apistring
-      forM_ (documentsignatorylinks doc2) $ \sl ->
-        addSignStatInviteEvent doc2 sl (ctxtime ctx)
+  sendInvitationEmails ctx document'
+
+  _ <- addDocumentSendStatEvents (documentid document') apistring
+  forM_ (documentsignatorylinks document') $ \sl ->
+    addSignStatInviteEvent document' sl (ctxtime ctx)
 
 postDocumentPendingChange :: Kontrakcja m => Document -> Document -> String -> m ()
 postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistring = do
@@ -146,8 +137,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
     _ -> when (documentcurrentsignorder doc /= documentcurrentsignorder olddoc) $ do
       ctx <- getContext
       Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-      when_ (sendMailsDuringSigning doc) $
-          sendInvitationEmails ctx doc
+      sendInvitationEmails ctx doc
       return ()
   where
     allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
@@ -166,8 +156,7 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
         (\user -> logDocEvent "Doc Rejected" doc user [])
         (ctxmaybeuser ctx)
   customMessage <- getCustomTextField "customtext"
-  when_ (sendMailsDuringSigning doc) $
-    sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
+  sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
   return ()
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> String -> m ()
@@ -320,16 +309,14 @@ sendDocumentErrorEmail document author = do
    Send emails to all of the invited parties.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendInvitationEmails :: Kontrakcja m => Context -> Document -> m (Either String Document)
+sendInvitationEmails :: Kontrakcja m => Context -> Document -> m ()
 sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
-                      , not $ hasSigned sl]
-  case signlinks of
-    [] -> return $ Left $ "Document " ++ show (documentid document) ++ " has no signatories. Cannot send invitation emails."
-    _ -> do
-      edocs <- forM signlinks (sendInvitationEmail1 ctx document)
-      return $ msum edocs
+                      , signatorylinkdeliverymethod sl == EmailDelivery
+                      , not $ hasSigned sl
+                      ]
+  forM_ signlinks (sendInvitationEmail1 ctx document)
 
 
 {- |
@@ -423,7 +410,9 @@ makeMailAttachments document = do
 sendRejectEmails :: Kontrakcja m => Maybe String -> Context -> Document -> SignatoryLink -> m ()
 sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
-                                 , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
+                                 , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl
+                                 , signatorylinkdeliverymethod sl == EmailDelivery || isAuthor sl
+                                 ]
   forM_ activatedSignatories $ \sl -> do
     mail <- mailDocumentRejected customMessage ctx document signalink False
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail {

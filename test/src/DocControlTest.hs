@@ -125,10 +125,7 @@ testSendingDocumentSendsInvites = do
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
     && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
-    && case documenttype d of
-          Signable _ -> True
-          _ -> False
-    && sendMailsDuringSigning d)
+    && isSignable d)
 
   req <- mkRequest POST [ ("send", inText "True")
                         , ("timezone", inText "Europe/Stockholm")
@@ -167,12 +164,9 @@ testSigningDocumentFromDesignViewSendsInvites = do
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
-    && case documenttype d of
-        Signable Contract -> True
-        _ -> False
+    && isSignable d
     && isSignatory (getAuthorSigLink d)
-    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
-    && sendMailsDuringSigning d)
+    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d))
 
   req <- mkRequest POST [ ("sign", inText "True")
                         , ("timezone", inText "Europe/Stockholm")
@@ -197,7 +191,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && documentdeliverymethod d == EmailDelivery)
+                     {- && documentdeliverymethod d == EmailDelivery -})
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
@@ -244,7 +238,7 @@ testLastPersonSigningADocumentClosesIt = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && documentdeliverymethod d == EmailDelivery)
+                     {- && documentdeliverymethod d == EmailDelivery -} )
             file
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }

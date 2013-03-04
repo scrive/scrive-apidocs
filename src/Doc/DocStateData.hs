@@ -227,6 +227,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkelegdatamismatchfirstname      :: Maybe String
   , signatorylinkelegdatamismatchlastname       :: Maybe String
   , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
+  , signatorylinkdeliverymethod         :: DeliveryMethod
   } deriving (Eq, Ord, Show)
 
 instance HasDefaultValue SignatoryLink where
@@ -253,6 +254,7 @@ instance HasDefaultValue SignatoryLink where
                   , signatorylinkelegdatamismatchfirstname = Nothing
                   , signatorylinkelegdatamismatchlastname = Nothing
                   , signatorylinkelegdatamismatchpersonalnumber = Nothing
+                  , signatorylinkdeliverymethod       = EmailDelivery
                   }
 
 data CSVUpload = CSVUpload {
@@ -393,7 +395,6 @@ data Document = Document {
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
-  , documentdeliverymethod         :: DeliveryMethod
   , documentsharing                :: DocumentSharing
   , documenttags                   :: S.Set DocumentTag
   , documentauthorattachments      :: [AuthorAttachment]
@@ -417,7 +418,6 @@ instance HasDefaultValue Document where
           , documenttimeouttime          = Nothing
           , documentinvitetext           = ""
           , documentsealedfile           = Nothing
-          , documentdeliverymethod       = EmailDelivery
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documenttags                 = S.empty

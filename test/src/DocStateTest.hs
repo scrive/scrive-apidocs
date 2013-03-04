@@ -59,8 +59,10 @@ docStateTests env = testGroup "DocState" [
   testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
   testThat "Set StandardAuthentication adds to the log" env testSetStandardAuthenticationEvidenceLog,
 -}
+{-
   testThat "Set PadDelivery adds to the log" env testSetPadDeliveryEvidenceLog,
   testThat "Set EmailDelivery adds to the log" env testSetEmailDeliveryEvidenceLog,
+-}
   testThat "SetInvitationDeliveryStatus adds to the log" env testSetInvitationDeliveryStatusEvidenceLog,
   testThat "SetInviteText adds to the log" env testSetInviteTextEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
@@ -405,6 +407,7 @@ testSetStandardAuthenticationEvidenceLog = do
   assertJust $ find (\e -> evType e == SetStandardAuthenticationMethodEvidence) lg
 -}
 
+{-
 testSetPadDeliveryEvidenceLog :: TestEnv ()
 testSetPadDeliveryEvidenceLog = do
   author <- addNewRandomUser
@@ -426,6 +429,7 @@ testSetEmailDeliveryEvidenceLog = do
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetEmailDeliveryMethodEvidence) lg
+-}
 
 testSetInvitationDeliveryStatusEvidenceLog :: TestEnv ()
 testSetInvitationDeliveryStatusEvidenceLog = do

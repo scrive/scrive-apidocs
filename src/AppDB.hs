@@ -137,6 +137,8 @@ kontraMigrations = [
   , addSignviewBrandingOptions
   , dropCustomFooterFromUsers
   , dropMailFooterFromDocuments
+  , moveDeliveryMethodFromDocumentsToSignatoryLinks
+  , dropDeliveryMethodFromDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

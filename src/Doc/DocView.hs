@@ -150,7 +150,11 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
                                    [StandardAuthentication] -> "standard"
                                    [ELegAuthentication]     -> "eleg"
                                    _                        -> "mixed"
-      J.value "delivery" $ deliveryJSON $ documentdeliverymethod doc
+      J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
+                                   [EmailDelivery]   -> "email"
+                                   [PadDelivery]     -> "pad"
+                                   [APIDelivery]     -> "api"
+                                   _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
       J.value "invitationmessage" $ documentinvitetext doc
@@ -181,11 +185,6 @@ authenticationJSON :: AuthenticationMethod -> JSValue
 authenticationJSON StandardAuthentication = toJSValue "standard"
 authenticationJSON ELegAuthentication     = toJSValue "eleg"
 
-deliveryJSON :: DeliveryMethod -> JSValue
-deliveryJSON EmailDelivery = toJSValue "email"
-deliveryJSON PadDelivery = toJSValue "pad"
-deliveryJSON APIDelivery = toJSValue "api"
-
 signatoryJSON :: (TemplatesMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
@@ -209,7 +208,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
     J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink
-    when (not (isPreparation doc) && forauthor && forapi && documentdeliverymethod doc == APIDelivery) $ do
+    when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
@@ -260,7 +259,7 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
                                   sfObligatory sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
-    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= documentdeliverymethod doc)))
+    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
@@ -354,11 +353,7 @@ documentInfoFields  document  = do
   F.value "id" $ show $ documentid document
   F.value "documentid" $ show $ documentid document
   F.value "template" $  isTemplate document
-  -- F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
-  -- F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
-  F.value "emaildeliveryselected" $ documentdeliverymethod document == EmailDelivery
-  F.value "paddeliveryselected" $ documentdeliverymethod document == PadDelivery
-  F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
+  F.value "hasanyattachments" $ not (null $ (documentauthorattachments document)) || not (null (concatMap signatoryattachments $ documentsignatorylinks document))
   documentStatusFields document
 
 documentAuthorInfo :: Monad m => Document -> Fields m ()

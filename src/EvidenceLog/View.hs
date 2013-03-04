@@ -46,7 +46,7 @@ eventsForLog _doc events =
         cleanerLog  = cleanUnimportantAfterSigning separatedLog
     in cleanerLog
 
-        
+
 eventJSValue :: (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> DocumentEvidenceEvent -> JSONGenT m ()
 eventJSValue tl doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
@@ -59,7 +59,7 @@ eventJSValue tl doc dee = do
                                          else case (getSmartName sl) of
                                                 "" -> renderTemplate_ "notNamedParty"
                                                 name -> return name
-                                Nothing -> case (evUserID dee) of                       
+                                Nothing -> case (evUserID dee) of
                                            Just uid -> if (isAuthor (doc,uid))
                                                         then authorName
                                                         else do
@@ -129,7 +129,7 @@ cleanUnimportantAfterSigning (e:es) = if ((     (evType e == SignatoryLinkVisite
                                 && ((isJust muid && evUserID e' == muid)
                                      || (isJust mslid && evSigLinkID e' == mslid)
                                     )) es')
-                                
+
 
 endOfHistoryEvent :: EvidenceEventType -> Bool
 endOfHistoryEvent  PreparationToPendingEvidence = True
@@ -161,9 +161,9 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
     F.value "affectedsignatory" $ getSmartName <$> siglink
     F.value "text" $ filterTags <$> evMessageText dee
     F.value "eleg" $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
-    F.value "pad"  $ documentdeliverymethod doc == PadDelivery
+    F.value "pad"  $ (\sl -> signatorylinkdeliverymethod sl == PadDelivery) <$> siglink
 
-showClockError :: Word8 -> Double -> String
+    showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
 
 -- | Generating text of Evidence log that is attachmed to PDF. It should be complete

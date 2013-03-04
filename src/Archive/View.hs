@@ -85,10 +85,11 @@ docFieldsListForJSON tl crtime padqueue doc = do
       [StandardAuthentication] -> "standard"
       [ELegAuthentication]     -> "eleg"
       _                        -> "mixed"
-    J.value "delivery" $ case documentdeliverymethod doc of
-      EmailDelivery -> "email"
-      PadDelivery   -> "pad"
-      APIDelivery   -> "api"
+    J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
+      [EmailDelivery] -> "email"
+      [PadDelivery]   -> "pad"
+      [APIDelivery]   -> "api"
+      _                        -> "mixed"
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
