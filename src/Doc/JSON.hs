@@ -89,6 +89,8 @@ instance SafeEnum DeliveryMethod where
     toSafeEnum 4 = Just MobileDelivery
     toSafeEnum _  = Nothing
 
+
+
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair
 jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe File -> JSValue
