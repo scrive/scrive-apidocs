@@ -36,7 +36,7 @@ import OurPrelude
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.MonadUtils

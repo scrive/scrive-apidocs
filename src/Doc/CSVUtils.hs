@@ -18,9 +18,9 @@ import Control.Logic
 import Doc.DocStateData
 import Doc.DocUtils
 import InputValidation
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.SignatoryLinkUtils
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 data CSVProblem = NumberNotValid       Int Int    | -- Row Cell
                   EmailNotValid        Int Int    | -- Row Cell

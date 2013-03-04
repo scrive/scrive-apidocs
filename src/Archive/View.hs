@@ -14,7 +14,7 @@ module Archive.View
 import Doc.DocStateData
 import FlashMessage
 import KontraLink
-import Templates.Templates
+import Text.StringTemplates.Templates
 import User.Model
 
 import Control.Applicative
@@ -32,7 +32,7 @@ import Text.JSON
 import Doc.DocUtils
 import PadQueue.Model
 import Text.JSON.Gen as J
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Data.String.Utils (strip)
 
 flashMessageSignableArchiveDone :: TemplatesMonad m => m FlashMessage

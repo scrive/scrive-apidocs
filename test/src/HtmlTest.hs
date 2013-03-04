@@ -11,9 +11,8 @@ import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
 import Control.Monad
 
-import Templates.TemplatesFiles
-import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion, renderTemplateMain)
-import Templates.TextTemplates
+import Templates
+import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
 import User.Lang
 import Static.Resources as SR
 import TestingUtil (assertRight)
@@ -36,9 +35,8 @@ isIncluded (name, _) = not $ name `elem` excludedTemplates
 
 testValidXml :: Assertion
 testValidXml = do
-  ts <- mapM getTemplates templatesFilesPath
-  texts <- mapM getTextTemplates allLangs
-  _ <- mapM assertTemplateIsValidXML . filter isIncluded $ concat ts ++ concat texts
+  ts <- getAllTemplates
+  _ <- mapM assertTemplateIsValidXML . filter isIncluded $ ts
   assertSuccess
 
 assertTemplateIsValidXML :: (String, String) -> Assertion
@@ -49,16 +47,15 @@ assertTemplateIsValidXML t =
 
 testNoUnecessaryDoubleDivs :: Assertion
 testNoUnecessaryDoubleDivs = do
-  templates <- mapM getTemplates templatesFilesPath
-  _ <- mapM assertNoUnecessaryDoubleDivs . filter isIncluded $ concat templates
+  templates <- getAllTemplates
+  _ <- mapM assertNoUnecessaryDoubleDivs $ filter isIncluded templates
   assertSuccess
 
 testNoNestedP :: Assertion
 testNoNestedP = do
   langtemplates <- readGlobalTemplates
-  ts <- mapM getTemplates templatesFilesPath
-  texts <- forM allLangs getTextTemplates
-  let alltemplatenames = map fst (concat texts ++ concat ts)
+  ts <- getAllTemplates
+  let alltemplatenames = map fst ts
   _ <- forM allLangs $ \lang -> do
     let templates = localizedVersion lang langtemplates
     --ts <- getTextTemplates lang

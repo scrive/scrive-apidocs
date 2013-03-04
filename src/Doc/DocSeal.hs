@@ -32,7 +32,8 @@ import Utils.IO
 import System.Directory
 import System.Exit
 import Kontra
-import Templates.Templates
+import Text.StringTemplates.Templates
+import Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -55,7 +56,7 @@ import Util.Actor
 import Control.Concurrent
 import Control.Monad.Trans.Maybe
 import Data.String.Utils
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Utils.Prelude
 import qualified Codec.Picture.Png as PNG

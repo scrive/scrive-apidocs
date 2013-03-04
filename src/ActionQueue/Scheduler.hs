@@ -16,7 +16,7 @@ import Doc.DocStateData
 import Doc.Model
 import MinutesTime
 import Stats.Control
-import Templates.TemplatesLoader
+import Templates
 import Util.Actor
 import qualified Log
 

@@ -21,8 +21,8 @@ import Util.Actor
 import Doc.SignatoryLinkID
 import Version
 import Doc.DocumentID
-import Templates.Templates
-import qualified Templates.Fields as F
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 import Control.Monad.Identity
 import Control.Monad.Trans
 

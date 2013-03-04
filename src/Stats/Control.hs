@@ -59,7 +59,7 @@ import User.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import qualified Log
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.UTF8 as BS

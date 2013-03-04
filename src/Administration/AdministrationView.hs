@@ -27,7 +27,7 @@ module Administration.AdministrationView(
           ) where
 
 import KontraLink
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Data.Maybe
 import User.UserView
 import User.Model
@@ -39,7 +39,7 @@ import Util.HasSomeCompanyInfo
 import Kontra
 import ScriveByMail.Model
 import ScriveByMail.View
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Payments.Model
 import Data.Functor
 import Control.Monad

@@ -3,7 +3,7 @@ module PadQueue.View (padQueueStateJSON, padQueuePage, padQueueStateJSONNotLogge
     where
 
 import Doc.DocStateData
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Control.Applicative
 import Text.JSON
 import Control.Logic

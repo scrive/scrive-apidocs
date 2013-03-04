@@ -29,8 +29,8 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Text.JSON.Gen as J
 import Text.JSON
-import qualified Templates.Fields as F
-import Templates.Templates
+import qualified Text.StringTemplates.Fields as F
+import Text.StringTemplates.Templates
 import Routing
 import Utils.HTTP
 import ThirdPartyStats.Core

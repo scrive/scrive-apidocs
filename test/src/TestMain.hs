@@ -21,7 +21,7 @@ import DB
 import DB.Checks
 import DB.SQLFunction
 import DB.PostgreSQL
-import Templates.TemplatesLoader
+import Templates (readGlobalTemplates)
 import TestKontra
 
 -- Note: if you add new testsuites here, please add them in a similar

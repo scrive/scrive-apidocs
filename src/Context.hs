@@ -8,7 +8,7 @@ import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
 import qualified Network.AWS.Authentication as AWS
-import Templates.TemplatesLoader
+import Templates
 import qualified MemCache
 import FlashMessage
 import Mails.MailsConfig

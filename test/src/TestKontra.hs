@@ -51,8 +51,9 @@ import Payments.Config (RecurlyConfig(..))
 import IPAddress
 import OurServerPart
 import Session.SessionID
-import Templates.Templates
-import Templates.TemplatesLoader
+import qualified Text.StringTemplates.TemplatesLoader as TL
+import Text.StringTemplates.Templates
+import Templates
 import qualified MemCache
 import User.Lang
 import Util.FinishWith
@@ -94,10 +95,10 @@ instance MonadDB TestEnv where
   localNexus f = local (\st -> st { teNexus = f (teNexus st) })
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getLocalTemplates defaultValue
-  getLocalTemplates lang = do
+  getTemplates = getTextTemplatesByColumn $ show (defaultValue :: Lang)
+  getTextTemplatesByColumn langStr = do
     globaltemplates <- teGlobalTemplates <$> ask
-    return $ localizedVersion lang globaltemplates
+    return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
   newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }

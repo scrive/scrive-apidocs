@@ -34,8 +34,9 @@ import KontraError
 import KontraMonad
 import Mails.MailsConfig
 import OurServerPart
-import Templates.Templates
-import Templates.TemplatesLoader
+import qualified Text.StringTemplates.TemplatesLoader as TL
+import Text.StringTemplates.Templates
+import Templates
 import User.Model
 import Utils.List
 import Utils.Monad
@@ -65,9 +66,9 @@ instance KontraMonad KontraPlus where
 
 instance TemplatesMonad KontraPlus where
   getTemplates = ctxtemplates <$> getContext
-  getLocalTemplates lang = do
-    Context{ctxglobaltemplates} <- getContext
-    return $ localizedVersion lang ctxglobaltemplates
+  getTextTemplatesByColumn langStr = do
+     Context{ctxglobaltemplates} <- getContext
+     return $ TL.localizedVersion langStr ctxglobaltemplates
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not MonadZero and WebMonad.

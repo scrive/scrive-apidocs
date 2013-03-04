@@ -9,7 +9,7 @@ module EvidenceLog.View (
 import Doc.DocStateData
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified Doc.Screenshot as Screenshot
-import Templates.Templates
+import Text.StringTemplates.Templates
 
 import Control.Applicative
 
@@ -17,7 +17,7 @@ import MinutesTime
 import Text.JSON
 
 import Text.JSON.Gen as J
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import EvidenceLog.Model
 import Utils.Prelude
 import Util.HasSomeUserInfo

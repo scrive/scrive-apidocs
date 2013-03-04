@@ -71,8 +71,8 @@ import Numeric
 import IPAddress
 import qualified Log (security)
 import Happstack.Fields hiding (getFields)
-import Templates.Templates
-import qualified Templates.Fields as F
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 import Util.FlashUtil
 import User.Model
 import Data.Monoid

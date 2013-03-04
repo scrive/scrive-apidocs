@@ -34,10 +34,10 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Log
 import Control.Monad.IO.Class
 import User.Utils
-import Templates.Templates
-import qualified Templates.Fields as F
 import Doc.Rendering
 import Utils.String
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do

@@ -27,7 +27,7 @@ import Utils.Monoid
 import OurServerPart
 import Session.Data hiding (session)
 import Session.Model
-import Templates.TemplatesLoader
+import Templates
 import User.Model
 import qualified Log (error, debug)
 import qualified FlashMessage as F

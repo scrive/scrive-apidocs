@@ -19,8 +19,8 @@ import Data.Maybe (listToMaybe, isJust)
 import Data.Functor
 import Util.Actor
 import EvidenceLog.Model
-import Templates.Templates
-import Templates.Fields
+import Text.StringTemplates.Templates
+import Text.StringTemplates.Fields
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 

@@ -31,9 +31,8 @@ import Mails.Model hiding (Mail)
 import Mails.SendMail
 import MinutesTime
 import Utils.Read
-import Templates.Templates
-import Templates.TemplatesUtils
-import Templates.Trans
+import Text.StringTemplates.Templates hiding (runTemplatesT)
+import Templates
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -41,7 +40,7 @@ import Doc.SignatoryLinkID
 import qualified Log
 import Util.Actor
 import Stats.Control
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent

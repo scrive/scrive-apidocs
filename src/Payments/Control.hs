@@ -27,10 +27,8 @@ import Crypto.RNG
 import Recurly
 import Recurly.JS
 import Recurly.Push
---import Templates.Templates
-import Templates.TemplatesLoader
+import Templates
 import User.Lang
-import Templates.Trans
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import User.Model

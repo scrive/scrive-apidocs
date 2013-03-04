@@ -24,9 +24,9 @@ import KontraLink
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
-import Templates.Templates
+import Text.StringTemplates.Templates
 import User.Lang
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import qualified Static.Resources as SR
