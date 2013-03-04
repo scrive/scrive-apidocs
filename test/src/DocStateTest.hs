@@ -1215,7 +1215,7 @@ testNotPreparationAttachCSVUploadAlwaysLeft :: TestEnv ()
 testNotPreparationAttachCSVUploadAlwaysLeft = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  doc <- addRandomDocumentWithAuthorAndCondition author ((not . isPreparation) &&^ (any isSignatory . documentsignatorylinks))
   slid <- rand 10 $ elements [signatorylinkid sl | sl <- documentsignatorylinks doc, isSignatory sl]
   --execute
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
