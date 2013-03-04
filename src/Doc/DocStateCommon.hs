@@ -14,6 +14,7 @@ import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Company.Model
+import Utils.Default
 
 trueOrMessage :: Bool -> String -> Maybe String
 trueOrMessage False s = Just s
@@ -25,7 +26,7 @@ signLinkFromDetails' :: SignatoryDetails
                      -> MagicHash
                      -> SignatoryLink
 signLinkFromDetails' details attachments magichash =
-  SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
+  defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                 , signatorydetails = signatoryLinkClearDetails details
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
