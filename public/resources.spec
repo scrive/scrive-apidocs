@@ -56,6 +56,7 @@ set systemPage
  less less/signview.less
  less less/attachmentview.less
  less less/verification.less
+ less less/designview/frame.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  js   libs/jquery-ui.min.js
