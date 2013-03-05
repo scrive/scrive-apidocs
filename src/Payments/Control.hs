@@ -38,7 +38,7 @@ import Happstack.Fields
 import Utils.Read
 import Utils.Either
 import Utils.IO
-import qualified Log (payments)
+import qualified Log (payments, MonadLog)
 import qualified Text.JSON.Gen as J
 import MinutesTime
 import Mails.SendMail
@@ -499,20 +499,20 @@ fromRecurlyPricePlan "form"         = FormPricePlan
 fromRecurlyPricePlan _              = TeamPricePlan
 
 -- factor out error logging
-pguard :: (MonadBase IO m, MonadIO m) => String -> Either String a -> m a
+pguard :: (MonadBase IO m, Log.MonadLog m) => String -> Either String a -> m a
 pguard _   (Right v) = return v
 pguard pre (Left msg) = do
   Log.payments $ pre ++ ": " ++ msg
   internalError
 
-pguardM :: (MonadBase IO m, MonadIO m) => String -> m (Either String a) -> m a
+pguardM :: (MonadBase IO m, Log.MonadLog m) => String -> m (Either String a) -> m a
 pguardM pre action = pguard pre =<< action
 
-pguard' :: (MonadBase IO m, MonadIO m) => String -> Maybe a -> m a
+pguard' :: (MonadBase IO m, Log.MonadLog m) => String -> Maybe a -> m a
 pguard' _ (Just v) = return v
 pguard' msg Nothing = do
   Log.payments msg
   internalError
 
-pguardM' :: (MonadBase IO m, MonadIO m) => String -> m (Maybe a) -> m a
+pguardM' :: (MonadBase IO m, Log.MonadLog m) => String -> m (Maybe a) -> m a
 pguardM' msg action = pguard' msg =<< action

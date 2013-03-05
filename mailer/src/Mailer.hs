@@ -12,11 +12,13 @@ import Happstack.Server
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB.Core
+import qualified Log
+import OurServerPart ()
 
 type InnerMailer = CryptoRNGT (DBT (ServerPartT IO))
 
 newtype Mailer a = Mailer { unMailer :: InnerMailer a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, MonadPlus, ServerMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, MonadPlus, ServerMonad, Log.MonadLog)
 
 instance MonadBaseControl IO Mailer where
   newtype StM Mailer a = StMailer { unStMailer :: StM InnerMailer a }

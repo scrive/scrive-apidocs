@@ -147,7 +147,7 @@ replaceSignatoryUser siglink user mcompany=
   newsl { maybesignatory = Just $ userid user }
 
 -- | Extract main file ID from document, assuming it has been set
-documentFileID :: (MonadIO m, MonadBase IO m) => Document -> m FileID
+documentFileID :: (MonadIO m, MonadBase IO m, Log.MonadLog m) => Document -> m FileID
 documentFileID doc =
     case documentfile doc of
       Nothing -> do
@@ -156,7 +156,7 @@ documentFileID doc =
       Just di -> return di
 
 -- | Extract main sealed file ID from document, assuming it has been set
-documentSealedFileID :: (MonadIO m, MonadBase IO m) => Document -> m FileID
+documentSealedFileID :: (MonadIO m, MonadBase IO m, Log.MonadLog m) => Document -> m FileID
 documentSealedFileID doc =
     case documentsealedfile doc of
       Nothing -> do

@@ -17,7 +17,7 @@ import qualified Log
 
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
-getFileContents :: (KontraMonad m, MonadIO m) => File -> m BS.ByteString
+getFileContents :: (KontraMonad m, MonadIO m, Log.MonadLog m) => File -> m BS.ByteString
 getFileContents file = do
   ctx <- getContext
   mcontent <- MemCache.get (fileid file) (ctxfilecache ctx)

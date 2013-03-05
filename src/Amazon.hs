@@ -103,7 +103,7 @@ exportFile _ _ = do
   Log.debug "No uploading to Amazon as bucket is ''"
   return False
 
-getFileContents :: MonadIO m => S3Action -> File -> m (Maybe BS.ByteString)
+getFileContents :: (MonadIO m, Log.MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
 getFileContents s3action File{..} = do
   mcontent <- liftIO $ getContent filestorage
   case mcontent of

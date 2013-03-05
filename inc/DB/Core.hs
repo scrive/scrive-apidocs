@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module DB.Core (
     DBT(..)
   , mapDBT
@@ -27,11 +28,12 @@ import qualified Text.StringTemplates.Templates as T
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB.Nexus
+import Log
 
 type InnerDBT = ReaderT Nexus
 
 newtype DBT m a = DBT { unDBT :: InnerDBT m a }
-  deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans, MonadLog)
 
 mapDBT :: (m a -> n b) -> DBT m a -> DBT n b
 mapDBT f m = withNexus $ \nex -> f (runDBT nex m)
@@ -94,11 +96,11 @@ instance WebMonad r m => WebMonad r (DBT m) where
 
 -- Class for accessing DBEnv object
 
-class (Functor m, MonadIO m, MonadBase IO m) => MonadDB m where
+class (Functor m, MonadIO m, MonadBase IO m, MonadLog m) => MonadDB m where
   getNexus   :: m Nexus
   localNexus :: (Nexus -> Nexus) -> m a -> m a
 
-instance (Functor m, MonadIO m, MonadBase IO m) => MonadDB (DBT m) where
+instance (Functor m, MonadIO m, MonadBase IO m, MonadLog m) => MonadDB (DBT m) where
   getNexus     = DBT ask
   localNexus f = DBT . local f . unDBT
 
@@ -149,3 +151,6 @@ instance (MonadDB m, Monoid w) => MonadDB (SW.WriterT w m) where
 instance (MonadBase IO (T.TemplatesT m), MonadDB m) => MonadDB (T.TemplatesT m) where
   getNexus = lift getNexus
   localNexus f (T.TemplatesT m) = T.TemplatesT $ ReaderT $ localNexus f . runReaderT m
+
+instance (MonadLog m) => MonadLog (T.TemplatesT m) where
+  logM a b c = lift $ logM a b c

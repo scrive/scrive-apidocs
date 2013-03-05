@@ -221,7 +221,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         return response
   where
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
-      Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
+      lift $ Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
       internalServerError $ toResponse ""
 
     routeHandlers ctx = runKontraPlus ctx $ do

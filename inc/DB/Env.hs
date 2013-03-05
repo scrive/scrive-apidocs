@@ -37,6 +37,7 @@ import Database.HDBC hiding (originalQuery)
 
 import Control.Monad.Trans.Control.Util
 import DB.Core
+import Log
 
 data DBEnvSt = DBEnvSt {
     dbStatement :: !(Maybe Statement)
@@ -49,7 +50,7 @@ type InnerDBEnv = StateT DBEnvSt
 -- database action, handle exceptions correctly, closes statement when it
 -- is not useful anymore, etc.
 newtype DBEnv m a = DBEnv { unDBEnv :: InnerDBEnv m a }
-  deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans, MonadLog)
 
 instance MonadTransControl DBEnv where
   newtype StT DBEnv a = StDBEnv { unStDBEnv :: StT InnerDBEnv a }

@@ -62,6 +62,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
 import System.Time
+import qualified Log
 
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
@@ -74,7 +75,7 @@ data TestEnvSt = TestEnvSt {
 type InnerTestEnv = ReaderT TestEnvSt IO
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
-  deriving (Applicative, Functor, Monad, MonadBase IO, MonadIO, MonadReader TestEnvSt)
+  deriving (Applicative, Functor, Monad, MonadBase IO, MonadIO, MonadReader TestEnvSt, Log.MonadLog)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
