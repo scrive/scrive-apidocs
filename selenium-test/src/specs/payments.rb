@@ -137,6 +137,7 @@ describe "subscribe with a credit card" do
     #(@h.wait_until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
     puts "blocking info should disappear"
+    sleep 3
     @h.driver.get(@h.ctx.createKontrakcjaURL "/newdocument")
     @h.wait_until { (@h.driver.find_element :css => ".blocking-info").text == ""}
 
