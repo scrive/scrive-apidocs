@@ -132,8 +132,6 @@ window.Field = Backbone.Model.extend({
             field.trigger("removed");
             field.off();
         });
-        if (this.isSignature())
-            this.set({"signature" : new Signature({field: this}, {silent : true})});
     },
     type : function() {
         return this.get("type");
@@ -144,11 +142,17 @@ window.Field = Backbone.Model.extend({
     value : function() {
         return this.get("value");
     },
+    valueTMP : function() {
+        return this.get("valueTMP");
+    },
     obligatory : function() {
         return this.get("obligatory");
     },
     setValue : function(value) {
         this.set({"value" : value});
+    },
+    setValueTMP : function(value) {
+        this.set({"valueTMP" : value});
     },
     setName : function(name) {
         return this.set({"name" : name});
@@ -178,7 +182,7 @@ window.Field = Backbone.Model.extend({
         else if (this.canBeIgnored())
             return true;
         else if (this.isSignature())
-            return (this.signature().hasImage() || this.placements().length == 0);
+            return (this.value() != "" || this.placements().length == 0);
         else if (this.isObligatory() && this.value() != "")
             return true;
 
@@ -301,9 +305,6 @@ window.Field = Backbone.Model.extend({
     },
     makeObligatory : function() {
         this.set({"obligatory":true}, {silent: true});
-    },
-    signature : function() {
-        return this.get("signature");
     },
     isReady: function(){
       return this.get("fresh") == false;

@@ -250,7 +250,7 @@ apiCallReady did =  api $ do
           Left reason -> throwIO . SomeKontraException $ serverError $ "Operation failed: " ++ show reason
 
 
-apiCallCancel :: Kontrakcja m => DocumentID -> m Response
+apiCallCancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallCancel did =  api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
@@ -264,7 +264,7 @@ apiCallCancel did =  api $ do
   Accepted <$> documentJSON False True True Nothing Nothing newdocument'
 
 
-apiCallReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+apiCallReject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
 apiCallReject did slid = api $ do
   (mh,method) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
@@ -274,18 +274,18 @@ apiCallReject did slid = api $ do
          (user, _ , _) <- getAPIUser APIPersonal
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
-           Nothing -> throwError $ serverError "Magic hash for signatory was not provided"
+           Nothing -> throwIO . SomeKontraException $ serverError "Magic hash for signatory was not provided"
            Just mh''' -> return (mh''',"api")
   edoc <- lift $ getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
-    Left _ -> throwError $ serverError "Can't find a document that matches signatory"
+    Left _ -> throwIO . SomeKontraException $ serverError "Can't find a document that matches signatory"
     Right doc ->  do
       ctx <- getContext
       let Just sll = getSigLinkFor doc slid
           actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sll) (getEmail sll) slid
       customtext <- lift $ getCustomTextField "customtext"
       lift $ switchLang (getLang doc)
-      True <- dbUpdate $ RejectDocument did slid customtext actor
+      dbUpdate $ RejectDocument did slid customtext actor
       Just doc' <- dbQuery $ GetDocumentByDocumentID did
       let Just sl = getSigLinkFor doc' slid
       _ <- addSignStatRejectEvent doc' sl
@@ -307,21 +307,21 @@ apiCallSign  did slid = api $ do
          (user, _ , _) <- getAPIUser APIPersonal
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
-           Nothing -> throwError $ serverError "Can't perform this action. Not authorized."
+           Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
            Just mh''' -> return (mh''',"api")
   Log.debug "We have magic hash for this operation"
   screenshots <- lift $ (fromMaybe emptySignatoryScreenshots) <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
   fields <- do
       eFieldsJSON <- lift $ getFieldJSON "fields"
       case eFieldsJSON of
-           Nothing -> throwError $ serverError "No fields description provided or fields description is not a valid JSON array"
+           Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
            Just fieldsJSON -> do
              mvalues <- withJSValue fieldsJSON $ fromJSValueCustomMany $ do
                   ft <- fromJSValueM
                   val <- fromJSValueField "value"
                   return $ pairMaybe ft val
              case mvalues of
-               Nothing -> throwError $ serverError "Fields description json has invalid format"
+               Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
                Just values -> return values
   mprovider <- lift $ readField "eleg"
   Log.debug $ "All parameters read and parsed"
@@ -339,8 +339,8 @@ apiCallSign  did slid = api $ do
            Nothing -> Accepted <$> (runJSONGenT $ value "signed" True)
            Just "" -> Accepted <$> (runJSONGenT $ value "signed" True)
            Just s  -> Accepted <$> (runJSONGenT $ value "signed" True >> value "redirect" s)
-    Right (Left err) -> throwError $ serverError  $ "Error: DB action " ++ show err
-    Left msg ->  throwError $ serverError  $ "Error: " ++ msg
+    Right (Left err) -> throwIO . SomeKontraException $ serverError  $ "Error: DB action " ++ show err
+    Left msg ->  throwIO . SomeKontraException $ serverError  $ "Error: " ++ msg
 
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response

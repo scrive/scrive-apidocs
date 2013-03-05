@@ -25,6 +25,11 @@ import EvidenceLog.Model
 import Version
 import Doc.SignatoryLinkID
 import MinutesTime
+import Utils.Read
+import Control.Applicative
+import Data.String.Utils
+import Utils.Prelude
+import Text.JSON as JSON
 
 default (SQL)
 
@@ -372,6 +377,105 @@ addObligatoryColumnToSignatoryLinkFields = Migration {
     -- Change CheckboxMandatoryFT to CheckboxFT and do not change obligatory (will stay true)
     kRunRaw "UPDATE signatory_link_fields SET type = 9 WHERE type = 10"
   }
+
+dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields :: MonadDB m => Migration m
+dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 2
+  , mgrDo = do
+    -- Normalize of fields jsons
+    kRun_ $ sqlSelect "signatory_link_fields" $ do
+                 sqlResult "id, placements"
+                 sqlWhere "placements != '[]'"
+    values <- kFold (\acc ids placements -> (ids :: Integer, placements :: String) : acc) []
+    forM_ values $ \(fid, placements) -> do
+       let placementsJSON = case (JSON.decode placements) of
+                               Ok js -> js
+                               _ -> JSNull
+       let (placements' :: [FieldPlacement]) = fromMaybe [] $ fromJSValueCustomMany parseFields placementsJSON
+       kRun $ sqlUpdate "signatory_link_fields" $ do
+          sqlSet "placements" placements'
+          sqlWhereEq "id" fid
+
+
+    -- Now clean checkboxes
+    kRun_ $ sqlSelect "signatory_link_fields" $ do
+                 sqlResult "id, placements"
+                 sqlWhereEq "type" (CheckboxFT undefined)
+    values' <- kFold (\acc ids placements -> (ids :: Integer, placements :: [FieldPlacement]) : acc) []
+    forM_ values' $ \(fid,  placements) -> do
+                 let placements' = for placements (\p -> if (placementwrel p > 0 || placementhrel p >0)
+                                                      then p
+                                                      else p {placementwrel = 12 / 943, placementhrel = 12 / 1335 }  )
+                 kRun_ $ sqlUpdate "signatory_link_fields" $ do
+                 sqlSet "placements" placements'
+                 sqlWhereEq "id" fid
+
+    -- Now clean images
+    kRun_ $ sqlSelect "signatory_link_fields" $ do
+                 sqlResult "id, value, placements"
+                 sqlWhereEq "type" (SignatureFT undefined)
+    values'' <- kFold (\acc ids value placements -> (ids :: Integer, value :: String, placements :: [FieldPlacement]) : acc) []
+    forM_ values'' $ \(fid, value, placements) -> do
+      case split "|" value of
+        [ws,hs,content] ->
+          case (maybeRead ws,maybeRead hs) of
+               (Just (w :: Int),Just (h :: Int)) -> do
+                 let placements' = for placements (\p -> if (placementwrel p > 0 || placementhrel p >0)
+                                                      then p
+                                                      else p {placementwrel = fromIntegral w / 943, placementhrel = fromIntegral h / 1335 }  )
+                 kRun_ $ sqlUpdate "signatory_link_fields" $ do
+                 sqlSet "placements" placements'
+                 sqlSet "value" content
+                 sqlWhereEq "id" fid
+               _ ->  kRun_ $ sqlUpdate "signatory_link_fields" $ do
+                        sqlSet "value" content
+                        sqlWhereEq "id" fid
+        _ -> return ()
+  }
+  where
+    parseFields :: JSValue -> Maybe FieldPlacement
+    parseFields js = msum $ fmap ($ js)
+                     [ do xrel       <- fromJSValueField "xrel"
+                          yrel       <- fromJSValueField "yrel"
+                          wrel       <- fromJSValueField "wrel"
+                          hrel       <- fromJSValueField "hrel"
+                          fsrel      <- fromJSValueField "fsrel"
+                          page       <- fromJSValueField "page"
+                          side       <- fromJSValueField "tip"
+                          return (FieldPlacement <$> xrel <*> yrel
+                                                 <*> wrel <*> hrel <*> fsrel
+                                                 <*> page <*> Just side)
+                     , do x          <- fromJSValueField "x"
+                          y          <- fromJSValueField "y"
+                          page       <- fromJSValueField "page"
+                          pagewidth  <- fromJSValueField "pagewidth"
+                          pageheight <- fromJSValueField "pageheight"
+                          side       <- fromJSValueField "tip"
+                          let xrel  = (/) <$> x <*> pagewidth
+                          let yrel  = (/) <$> y <*> pageheight
+                          let wrel  = Just 0
+                          let hrel  = Just 0
+                          let fsrel = Just 0
+                          return (FieldPlacement <$> xrel <*> yrel
+                                                 <*> wrel <*> hrel <*> fsrel
+                                                 <*> page <*> Just side)
+                     , do x          <- fromJSValueField "placementx"
+                          y          <- fromJSValueField "placementy"
+                          page       <- fromJSValueField "placementpage"
+                          pagewidth  <- fromJSValueField "placementpagewidth"
+                          pageheight <- fromJSValueField "placementpageheight"
+                          tipside    <- fromJSValueField "placementtipside"
+                          let xrel  = (/) <$> x <*> pagewidth
+                          let yrel  = (/) <$> y <*> pageheight
+                          let wrel  = Just 0
+                          let hrel  = Just 0
+                          let fsrel = Just 0
+                          return (FieldPlacement <$> xrel <*> yrel
+                                                 <*> wrel <*> hrel <*> fsrel
+                                                 <*> page <*> (Just $ Control.Monad.join $ maybeRead <$> tipside))
+                     ]
+
 
 splitIdentificationTypes :: MonadDB m => Migration m
 splitIdentificationTypes = Migration {

@@ -368,7 +368,7 @@ window.Signatory = Backbone.Model.extend({
     },
     anySignatureHasImageOrPlacement : function() {
       return _.any(this.signatures(), function (field) {
-           return field.signature().hasImage() || field.hasPlacements();
+           return field.value() != "" || field.hasPlacements();
        });
     },
     remind: function(customtext) {

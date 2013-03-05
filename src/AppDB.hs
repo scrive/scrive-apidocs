@@ -139,6 +139,7 @@ kontraMigrations = [
   , dropMailFooterFromDocuments
   , moveDeliveryMethodFromDocumentsToSignatoryLinks
   , dropDeliveryMethodFromDocuments
+  , dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

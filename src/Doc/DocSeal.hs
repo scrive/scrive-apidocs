@@ -57,13 +57,13 @@ import EvidenceLog.View
 import Util.Actor
 import Control.Concurrent
 import Control.Monad.Trans.Maybe
-import Data.String.Utils
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Utils.Prelude
 import qualified Codec.Picture.Png as PNG
+import qualified Codec.Picture.Jpg as JPG
 import qualified Codec.Picture.Saving as JPG
-import Utils.Either
+import qualified Codec.Picture.Types as Image
 
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
@@ -157,12 +157,8 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
-                 , Seal.image_w          = if placementwrel placement /= 0
-                                           then placementwrel placement
-                                           else 12 / 943
-                 , Seal.image_h          = if placementhrel placement /= 0
-                                           then placementhrel placement
-                                           else 12 / 1335
+                 , Seal.image_w          = placementwrel placement
+                 , Seal.image_h          = placementhrel placement
                  , Seal.internal_image_w = 24
                  , Seal.internal_image_h = 24
                  , Seal.includeInSummary = False
@@ -170,57 +166,58 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.keyColor         = Nothing
                  }
     fieldJPEGFromPlacement v placement =
-      case split "|" v of
-        [_,_,""] -> Nothing
-        [w,h,c] -> do
-          wi <- maybeRead w -- NOTE: Maybe monad usage
-          hi <- maybeRead h
-          let content = drop 1 $ dropWhile (\e -> e /= ',') c
-          let content' = if ("image/png" `isInfixOf` take 20 c)
-                         then BS.toString $ B64.encode $ JPG.imageToJpg 100 $ fromRight $ PNG.decodePng $ fromRight $ B64.decode $ BS.fromString content
-                         else content
-          Just $ Seal.FieldJPG
-                 { valueBase64           = content'
-                 , Seal.x                = placementxrel placement
-                 , Seal.y                = placementyrel placement
-                 , Seal.page             = placementpage placement
-                 , Seal.image_w          = if placementwrel placement /= 0
-                                           then placementwrel placement
-                                           else fromIntegral wi / 943
-                 , Seal.image_h          = if placementhrel placement /= 0
-                                           then placementhrel placement
-                                           else fromIntegral hi / 1335
-                 , Seal.internal_image_w = 4 * wi
-                 , Seal.internal_image_h = 4 * hi
-                 , Seal.includeInSummary = True
-                 , Seal.onlyForSummary   = False
-                 , Seal.keyColor         = Just (255,255,255) -- white is transparent
-                 }
-        _ -> Nothing
+          case (imageB64WithSizeFromValue v) of
+              Just (d,iw,ih)  -> Just $ Seal.FieldJPG
+                          { valueBase64           = d
+                          , Seal.x                = placementxrel placement
+                          , Seal.y                = placementyrel placement
+                          , Seal.page             = placementpage placement
+                          , Seal.image_w          = placementwrel placement
+                          , Seal.image_h          = placementhrel placement
+                          , Seal.internal_image_w = iw
+                          , Seal.internal_image_h = ih
+                          , Seal.includeInSummary = True
+                          , Seal.onlyForSummary   = False
+                          , Seal.keyColor         = Just (255,255,255) -- white is transparent
+                          }
+              _ -> Nothing
     fieldJPEGFromSignatureField v =
-      case split "|" v of
-        [_,_,""] -> Nothing
-        [w,h,c] -> do
-          wi <- maybeRead w -- NOTE: Maybe monad usage
-          hi <- maybeRead h
-          let content = drop 1 $ dropWhile (\e -> e /= ',') c
-          let content' = if ("image/png" `isInfixOf` take 20 c)
-                         then BS.toString $ B64.encode $ JPG.imageToJpg 100 $ fromRight $ PNG.decodePng $ fromRight $ B64.decode $ BS.fromString content
-                         else content
-          Just $ Seal.FieldJPG
-                 { valueBase64           = content'
+          case (imageB64WithSizeFromValue v) of
+              Just (d,iw,ih)  -> Just $ Seal.FieldJPG
+                 { valueBase64           = d
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
-                 , Seal.image_w          = fromIntegral wi / 943
-                 , Seal.image_h          = fromIntegral hi / 1335
-                 , Seal.internal_image_w = 4 * wi
-                 , Seal.internal_image_h = 4 * hi
+                 , Seal.image_w          = (fromRational $ toRational iw) / (fromRational $ toRational $ 4 * 943)
+                 , Seal.image_h          = (fromRational $ toRational ih) / (fromRational $ toRational $ 4 * 1335)
+                 , Seal.internal_image_w = iw
+                 , Seal.internal_image_h = ih
                  , Seal.includeInSummary = True
                  , Seal.onlyForSummary   = True
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
-        _ -> Nothing
+              _ -> Nothing
+    imageB64WithSizeFromValue v =
+        let content = drop 1 $ dropWhile (\e -> e /= ',') v
+            imageData img = BS.toString $ B64.encode  $ JPG.imageToJpg 100 img
+            dataWithSize img = case (img) of
+                                (Image.ImageY8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageYA8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageRGB8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageRGBA8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageYCbCr8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+            mjpegContent =  case (B64.decode $ BS.fromString content) of
+                              Right content' -> if ("image/png" `isInfixOf` take 20 v)
+                                                  then case (PNG.decodePng $ content') of
+                                                            Right img -> Just $ JPG.imageToJpg 100 img
+                                                            Left _ -> Nothing
+                                                  else Just $ content'
+                              Left _ -> Nothing
+        in case mjpegContent of
+             Just content' -> case (JPG.decodeJpeg $ content') of
+                                 Right jpg -> Just $ dataWithSize jpg
+                                 Left _ -> Nothing
+             Nothing -> Nothing
 
 
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]

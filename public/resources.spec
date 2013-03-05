@@ -103,7 +103,6 @@ set systemPage
  js   js/files.js
  js   js/process.js
  js   js/fields.js
- js   js/signature.js
  js   js/signatories.js
  js   js/documents.js
  js   js/takeScreenshot.js

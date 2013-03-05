@@ -56,9 +56,7 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
-import Utils.Read
 import Utils.Default
-import Control.Monad
 import qualified Data.Set as S
 
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
@@ -473,51 +471,17 @@ instance FromJSValue Double where
     fromJSValue _ = Nothing
 
 instance FromJSValue FieldPlacement where
-  -- Here we do three cases of json representation of FieldPlacement.
-  -- First one is new relative representation, second is old json
-  -- representation for javascript and ajax, third is database
-  -- representation. After ajax is changed and database is migrated
-  -- only first on representation should be left in place.
-  fromJSValue js = msum $ fmap ($ js)
-                     [ do xrel       <- fromJSValueField "xrel"
-                          yrel       <- fromJSValueField "yrel"
-                          wrel       <- fromJSValueField "wrel"
-                          hrel       <- fromJSValueField "hrel"
-                          fsrel      <- fromJSValueField "fsrel"
-                          page       <- fromJSValueField "page"
-                          side       <- fromJSValueField "tip"
-                          return (FieldPlacement <$> xrel <*> yrel
-                                                 <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> Just side)
-                     , do x          <- fromJSValueField "x"
-                          y          <- fromJSValueField "y"
-                          page       <- fromJSValueField "page"
-                          pagewidth  <- fromJSValueField "pagewidth"
-                          pageheight <- fromJSValueField "pageheight"
-                          side       <- fromJSValueField "tip"
-                          let xrel  = (/) <$> x <*> pagewidth
-                          let yrel  = (/) <$> y <*> pageheight
-                          let wrel  = Just 0
-                          let hrel  = Just 0
-                          let fsrel = Just 0
-                          return (FieldPlacement <$> xrel <*> yrel
-                                                 <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> Just side)
-                     , do x          <- fromJSValueField "placementx"
-                          y          <- fromJSValueField "placementy"
-                          page       <- fromJSValueField "placementpage"
-                          pagewidth  <- fromJSValueField "placementpagewidth"
-                          pageheight <- fromJSValueField "placementpageheight"
-                          tipside    <- fromJSValueField "placementtipside"
-                          let xrel  = (/) <$> x <*> pagewidth
-                          let yrel  = (/) <$> y <*> pageheight
-                          let wrel  = Just 0
-                          let hrel  = Just 0
-                          let fsrel = Just 0
-                          return (FieldPlacement <$> xrel <*> yrel
-                                                 <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> (Just $ join $ maybeRead <$> tipside))
-                     ]
+  fromJSValueM = do
+                  xrel       <- fromJSValueField "xrel"
+                  yrel       <- fromJSValueField "yrel"
+                  wrel       <- fromJSValueField "wrel"
+                  hrel       <- fromJSValueField "hrel"
+                  fsrel      <- fromJSValueField "fsrel"
+                  page       <- fromJSValueField "page"
+                  side       <- fromJSValueField "tip"
+                  return (FieldPlacement <$> xrel <*> yrel
+                                         <*> wrel <*> hrel <*> fsrel
+                                         <*> page <*> Just side)
 
 instance FromJSValue TipSide where
     fromJSValue js = case fromJSValue js of
