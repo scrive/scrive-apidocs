@@ -27,6 +27,7 @@ ignore  less/branding/contact.less
 ignore  less/branding/main.less
 ignore  libs/html5shiv.js
 ignore  css/fonts
+ignore js/designview/docdesignview.js
 
 set systemPage
  css css/calendar.css
@@ -134,7 +135,8 @@ set systemPage
  js   js/designview/signatorydesignview.js
  js   js/designview/signatoriesdesignview.js
  js   js/designview/docdesignviewpad.js
- js   js/designview/docdesignview.js
+ js   js/designview/docdesignview2.js
+ js   js/designview/documentstep.js
  js   js/designview/attachmentsdesignview.js
  js   js/mobilebankid.js
  js   js/bankid.js
