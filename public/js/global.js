@@ -19,8 +19,9 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
     });
 });
 
-window.trackTimeout = function(name, props, cb) {
+window.trackTimeout = function(name, props, cb, ms) {
     var called = false;
+    ms = ms || 300;
     mixpanel.track(name, props, function(e) {
         if(called)
             return;
@@ -32,7 +33,7 @@ window.trackTimeout = function(name, props, cb) {
             return;
         called = true;
         return cb(e);
-    }, 300);
+    }, ms);
 };
 
 window.createnewdocument = function(event) {
