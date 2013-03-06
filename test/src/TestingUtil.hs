@@ -91,6 +91,11 @@ instance Arbitrary Company where
       emptyCompanyUI = CompanyUI {
         companybarsbackground = Nothing
       , companybarstextcolour = Nothing
+      , companyemailheaderfont = Nothing
+      , companyemailfont = Nothing
+      , companyemailbordercolour = Nothing
+      , companyemailbuttoncolour = Nothing
+      , companyemailemailbackgroundcolour = Nothing
       , companylogo = Nothing
       }
 

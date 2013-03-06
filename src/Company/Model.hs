@@ -55,9 +55,14 @@ data CompanyInfo = CompanyInfo {
   } deriving (Eq, Ord, Show)
 
 data CompanyUI = CompanyUI {
-    companybarsbackground    :: Maybe String
-  , companybarstextcolour    :: Maybe String
-  , companylogo              :: Maybe Binary -- File with the logo
+    companybarsbackground             :: Maybe String
+  , companybarstextcolour             :: Maybe String
+  , companyemailheaderfont            :: Maybe String
+  , companyemailfont                  :: Maybe String
+  , companyemailbordercolour          :: Maybe String
+  , companyemailbuttoncolour          :: Maybe String
+  , companyemailemailbackgroundcolour :: Maybe String
+  , companylogo                       :: Maybe Binary -- File with the logo
 } deriving (Eq, Ord, Show)
 
 data CompanyFilter
@@ -175,6 +180,11 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
     kRun01 $ sqlUpdate "companies" $ do
       sqlSet "bars_background" $ companybarsbackground cui
       sqlSet "bars_textcolour" $ companybarstextcolour cui
+      sqlSet "email_headerfont" $ companyemailheaderfont cui
+      sqlSet "email_font" $ companyemailfont cui
+      sqlSet "email_bordercolour" $ companyemailbordercolour cui
+      sqlSet "email_buttoncolour" $ companyemailbuttoncolour cui
+      sqlSet "email_emailbackgroundcolour" $ companyemailemailbackgroundcolour cui
       sqlSet "logo" $ companylogo cui
       sqlWhereEq "id" cid
 
@@ -219,14 +229,20 @@ selectCompaniesSelectors = do
   sqlResult "companies.logo"
   sqlResult "companies.email_domain"
   sqlResult "companies.ip_address_mask_list"
+  sqlResult "companies.email_headerfont"
+  sqlResult "companies.email_font"
+  sqlResult "companies.email_bordercolour"
+  sqlResult "companies.email_buttoncolour"
+  sqlResult "companies.email_emailbackgroundcolour"
 
 
 fetchCompanies :: MonadDB m => DBEnv m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid eid name number address zip' city country
-      bars_background bars_textcolour logo email_domain
-      ip_address_mask_list = Company {
+      bars_background bars_textcolour logo email_domain ip_address_mask_list
+      email_headerfont email_font email_bordercolour email_buttoncolour
+      email_emailbackgroundcolour = Company {
         companyid = cid
       , companyexternalid = eid
       , companyinfo = CompanyInfo {
@@ -242,6 +258,11 @@ fetchCompanies = kFold decoder []
       , companyui = CompanyUI {
           companybarsbackground = bars_background
         , companybarstextcolour = bars_textcolour
+        , companyemailheaderfont = email_headerfont
+        , companyemailfont = email_font
+        , companyemailbordercolour = email_bordercolour
+        , companyemailbuttoncolour = email_buttoncolour
+        , companyemailemailbackgroundcolour = email_emailbackgroundcolour
         , companylogo = logo
         }
       } : acc

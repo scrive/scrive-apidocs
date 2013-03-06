@@ -122,6 +122,245 @@ window.CompanyBrandingColourView = Backbone.View.extend({
   }
 });
 
+window.CompanyBrandingHueColourView = Backbone.View.extend({
+  initialize: function(args) {
+    _.bindAll(this, 'render');
+    if (this.model) {
+      this.model.bind('change', this.render);
+      this.prerender();
+      this.render();
+    }
+  },
+  prerender: function() {
+    var model = this.model;
+    var self = this;
+    var checkboxbox = $("<div class='checkbox-box'/>");
+    this.checkbox = $("<div class='checkbox'/>");
+    this.checkbox.click(function() {
+        if (self.checkbox.attr("readonly") != undefined) return false;
+        if(!self.checkbox.hasClass("checked"))
+            mixpanel.track('Check ' + model.label().toLowerCase());
+        else
+            mixpanel.track('Uncheck ' + model.label().toLowerCase());
+        self.checkbox.toggleClass("checked");
+        model.setCustomised(!model.customised());
+    });
+    var checkboxlabel = $("<label />").append(model.label());
+
+    var input = $("<input type='text' class='float-left colour' />");;
+    input.bind("keyup change", function() {
+      model.setColour(input.val().trim());
+      self.render();
+    });
+    this.input = input;
+
+    this.display = $('<a href="#" style="text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 6px 10px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1; margin-left: 20px;">x</a>');
+    var colour = this.model.colour();
+    this.display.css({'background': 'hsl(' + colour + ', 30%, 35%)',
+                      'border': '2px solid hsl(' + colour + ', 30%, 23%)',
+                      '-webkit-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      '-moz-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      '-ms-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      '-o-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      'box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px'});
+
+    this.customdiv = $("<div />");
+    this.customdiv.append(this.input);
+    this.customdiv.append(this.display);
+
+    var container = $("<div/>");
+    container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));
+    container.append($("<div />").append(this.customdiv));
+
+
+    $(this.el).empty();
+    $(this.el).append(container);
+
+    return this;
+  },
+  render: function() {
+    if (this.model.customised()) {
+      this.checkbox.addClass("checked");
+      this.customdiv.show();
+    } else {
+      this.checkbox.removeClass("checked");
+      this.customdiv.hide();
+    }
+
+    var colour = this.model.colour();
+    if (this.input.val()!=colour && this.input[0] !== document.activeElement) {
+      this.input.val(colour);
+    }
+    this.display.css({'background': 'hsl(' + colour + ', 30%, 35%)',
+                      'border': '2px solid hsl(' + colour + ', 30%, 23%)',
+                      '-webkit-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      '-moz-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      '-ms-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      '-o-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
+                      'box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px'});
+
+    if (!this.model.editable()) {
+      this.checkbox.attr("readonly", "true");
+      this.input.attr("readonly", "true");
+    } else {
+      this.checkbox.removeAttr("readonly");
+      this.input.removeAttr("readonly");
+    }
+  }
+});
+
+window.CompanyBrandingFont = Backbone.Model.extend({
+  defaults: {
+    customised: false,
+    defaultfont: 'Helvetica Neue, Arial, sans-serif',
+    label: '',
+    editable: false
+  },
+  companyui: function() {
+    return this.get('companyui');
+  },
+  companybranding: function() {
+    return this.get('companybranding');
+  },
+  customised: function() {
+    return this.get('customised');
+  },
+  setCustomised: function(customised) {
+    this.set({ customised: customised });
+  },
+  companyuiAttribute: function() {
+    return this.get('companyuiattribute');
+  },
+  setFont: function(font) {
+    var tmp = {};
+    tmp[this.companyuiAttribute()] = font.trim();
+    this.companyui().set(tmp);
+    this.companybranding().trigger('change');
+  },
+  font: function() {
+    var font = this.companyui().get(this.companyuiAttribute());
+    if (this.customised() && font.length>0) {
+      return font;
+    } else {
+      return this.get('defaultfont');
+    }
+  },
+  label: function() {
+    return this.get('label');
+  },
+  editable: function() {
+    return this.get('editable');
+  }
+});
+
+window.CompanyBrandingFontView = Backbone.View.extend({
+  initialize: function(args) {
+    _.bindAll(this, 'render');
+    if (this.model) {
+      this.model.bind('change', this.render);
+      this.prerender();
+      this.render();
+    }
+  },
+  prerender: function() {
+    var model = this.model;
+    var self = this;
+    var checkboxbox = $("<div class='checkbox-box'/>");
+    this.checkbox = $("<div class='checkbox'/>");
+    this.checkbox.click(function() {
+        if (self.checkbox.attr('readonly') != undefined) return false;
+        if(!self.checkbox.hasClass('checked'))
+            mixpanel.track('Check ' + model.label().toLowerCase());
+        else
+            mixpanel.track('Uncheck ' + model.label().toLowerCase());
+        self.checkbox.toggleClass('checked');
+        model.setCustomised(!model.customised());
+    });
+    var checkboxlabel = $('<label />').append(model.label());
+
+    var makeOption = function(name, font) {
+      return {name: name,
+              value: font,
+              onSelect: function() {
+                model.setFont(font);
+                self.prerender();
+                self.render();
+              },
+              extraAttrs: {style: 'font-family: ' + font + ';'}
+             };
+    };
+
+    var fonts = {'default': 'Helvetica Neue, Arial, sans-serif',
+                 'Sans Serif': 'arial,helvetica,sans-serif',
+                 'Serif': 'times new roman,serif',
+                 'Wide': 'arial black,sans-serif',
+                 'Narrow': 'arial narrow,sans-serif',
+                 'Comic Sans MS': 'comic sans ms,sans-serif',
+                 'Courier New': 'courier new,monospace',
+                 'Garamond': 'garamond,serif',
+                 'Georgia': 'georgia,serif',
+                 'Tahoma': 'tahoma,sans-serif',
+                 'Trebuchet MS': 'trebuchet ms,sans-serif',
+                 'Verdana': 'verdana,sans-serif'};
+
+
+    var options = [];
+    for (var fontName in fonts) {
+      if (fonts.hasOwnProperty(fontName) && fonts[fontName] != model.font()) {
+        options.push(makeOption(fontName, fonts[fontName]));
+      }
+    }
+
+    var font_name = 'default';
+    $.each(fonts, function(name, font) {
+      if (font == model.font()) {
+        font_name = name;
+      }
+    });
+
+    this.select = new Select({name: font_name,
+                              extraNameAttrs: {style: 'font-family: ' + fonts[font_name] + ';'},
+                              textWidth: 120,
+                              expandOnHover: true,
+                              options: options
+                             });
+
+    this.customdiv = $('<div />').css({width: 220, 'margin-left': '30px'});
+    this.customdiv.append(this.select.view().el);
+
+    var container = $('<div/>');
+    container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));
+    container.append($('<div />').append(this.customdiv));
+
+    $(this.el).empty();
+    $(this.el).append(container);
+
+    return this;
+  },
+  render: function() {
+    if (this.model.customised()) {
+      this.checkbox.addClass('checked');
+      this.customdiv.show();
+    } else {
+      this.checkbox.removeClass('checked');
+      this.customdiv.hide();
+    }
+
+    // var font = this.model.font();
+    // if (this.input.val() != font && this.input[0] !== document.activeElement) {
+    //   this.input.val(font);
+    // }
+
+    if (!this.model.editable()) {
+      this.checkbox.attr('readonly', 'true');
+      // this.input.attr('readonly', 'true');
+    } else {
+      this.checkbox.removeAttr('readonly');
+      // this.input.removeAttr('readonly');
+    }
+  }
+});
+
 window.CompanyBrandingLogo = Backbone.Model.extend({
   defaults: {
     customised: false,
@@ -331,6 +570,16 @@ window.CompanyModel = Backbone.Model.extend({
           label: localization.customiseBackgroundColour,
           editable: companyui.editable()
         }),
+        emailbackgroundcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'emailbackgroundcolour',
+          customised: companyui.emailbackgroundcolour().trim()!="",
+          defaultcolour: "#FFFFFF",
+          colour: companyui.emailbackgroundcolour(),
+          label: localization.customiseEmailBackgroundColour,
+          editable: companyui.editable()
+        }),
         barstextcolour: new CompanyBrandingColour({
           companyui: companyui,
           companybranding: companybranding,
@@ -339,6 +588,44 @@ window.CompanyModel = Backbone.Model.extend({
           defaultcolour: "#333333",
           colour: companyui.barstextcolour(),
           label: localization.customiseTextColour,
+          editable: companyui.editable()
+        }),
+        headerfont: new CompanyBrandingFont({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'headerfont',
+          customised: companyui.headerfont() != '',
+          font: companyui.headerfont(),
+          label: localization.customiseHeaderFontLabel,
+          editable: companyui.editable()
+        }),
+        font: new CompanyBrandingFont({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'font',
+          customised: companyui.font() != '',
+          font: companyui.font(),
+          label: localization.customiseFontLabel,
+          editable: companyui.editable()
+        }),
+        bordercolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'bordercolour',
+          customised: companyui.bordercolour() != '',
+          defaultcolour: '#dee4ed',
+          colour: companyui.bordercolour(),
+          label: localization.customiseBorderColourLabel,
+          editable: companyui.editable()
+        }),
+        buttoncolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'buttoncolour',
+          customised: companyui.buttoncolour() != '',
+          defaultcolour: '215',
+          colour: companyui.buttoncolour(),
+          label: localization.customiseButtonColourLabel,
           editable: companyui.editable()
         }),
         editable: companyui.editable()
@@ -350,6 +637,21 @@ window.CompanyModel = Backbone.Model.extend({
     },
     barstextcolour: function() {
       return this.get("barstextcolour");
+    },
+    headerfont: function() {
+      return this.get('headerfont');
+    },
+    font: function() {
+      return this.get('font');
+    },
+    bordercolour: function() {
+      return this.get('bordercolour');
+    },
+    buttoncolour: function() {
+      return this.get('buttoncolour');
+    },
+    emailbackgroundcolour: function() {
+      return this.get('emailbackgroundcolour');
     },
     logo: function() {
       return this.get("logo");
@@ -376,6 +678,11 @@ window.CompanyModel = Backbone.Model.extend({
         country: this.get("country"),
         barsbackground: this.barsbackground().customised() ? this.barsbackground().colour() : "",
         barstextcolour: this.barstextcolour().customised() ? this.barstextcolour().colour() : "",
+        headerfont: this.headerfont().customised() ? this.headerfont().font() : "",
+        font: this.font().customised() ? this.font().font() : "",
+        bordercolour: this.bordercolour().customised() ? this.bordercolour().colour() : "",
+        buttoncolour: this.buttoncolour().customised() ? this.buttoncolour().colour() : "",
+        emailbackgroundcolour: this.emailbackgroundcolour().customised() ? this.emailbackgroundcolour().colour() : "",
         logochanged: logochanged,
         logo: logochanged ? logo.get('logo') : ''
       });
@@ -388,6 +695,11 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     this.model.companyui().bind('change', this.render);
     this.model.barsbackground().bind('change', this.render);
     this.model.barstextcolour().bind('change', this.render);
+    this.model.headerfont().bind('change', this.render);
+    this.model.font().bind('change', this.render);
+    this.model.bordercolour().bind('change', this.render);
+    this.model.buttoncolour().bind('change', this.render);
+    this.model.emailbackgroundcolour().bind('change', this.render);
     this.model.logo().bind('change', this.render);
     this.prerender();
     this.render();
@@ -395,17 +707,12 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
   prerender: function() {
     var company = this.model;
 
-    this.header = $("<div class='header' />");
-    this.headerrule = $("<hr />");
-    this.logo = $("<div class='logo' />");
-    this.header.append(this.logo);
-    this.header.append($("<div class='subject' />").append(localization.sampleEmailHeader));
-    this.header.append(this.headerrule);
-    this.header.append($("<div class='strapline' />").append(localization.sampleEmailSubheader));
+    this.container = $('<center><table style="width: 614px;"><tr><td><table><tr><td><img id="emailpreviewlogo" src="/img/logo_email.png" style="border: none; max-width:600px; margin-top: 50px; margin-bottom: 20px;" width="200" /></td></tr></table></td></tr><tr><td><table class="emailpreviewbordercolour emailpreviewbackgroundcolour" border="0" cellpadding="0" cellspacing="0" width="600" style="border: 4px solid #dee4ed; border-top: auto; background-color: #FFFFFF"><tr><td></td></tr><tr><td><table class="emailpreviewborderbottomcolour" border="0" cellpadding="40" cellspacing="0"width="600" style="border-bottom-color: #dee4ed; border-bottom-width: 1px; border-bottom-style: solid"><tr><td class="emailpreviewbackgroundcolour" style="background-color: #fff"><table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td><div><span id="emailpreviewsubject" class="emailpreviewheaderfont" style="color: #364963; display: block; font-family: Helvetica Neue, Arial, sans-serif; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">SUBJECT</span><a style="text-decoration: none;" href="#"><span class="emailpreviewheaderfont" style="color: #7a94b8; display: block; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">Powered by Scrive</span></a></div></td></tr></table></td></tr></table><table class="emailpreviewborderbottomcolour" border="0" cellpadding="0" cellspacing="40" width="600" style="border-bottom-color: #dee4ed; border-bottom-width: 1px; border-bottom-style: solid"><tr><td><table border="0" cellspacing="0" width="100%"><tr><td><div class="emailpreviewfont" style="color: #333; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; line-height: 150%; text-align: left"><div class="emailpreviewbordercolour" style="float: left; margin-right: 32px; border:1px solid #dee4ed;"><img src="/img/document.png" style="border: none; max-width:150px;"/></div><div style="float: right; width: 330px;"><div id="emailpreviewcontent">CONTENT</div><br/><br/><a id="emailpreviewbutton" href="" style="background: hsl(215, 30%, 35%); border: 2px solid hsl(215, 30%, 23%); -webkit-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -moz-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -ms-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -o-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 12px 20px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1">Button</a></div></div></td></tr></table></td></tr></table></td></tr><tr><td><table class="emailpreviewbackgroundcolour" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #fff; border-top: 0"><tr><td valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td><br /><div id="emailpreviewfooter" style="color: #999; font-family: Helvetica Neue, Arial, sans-serif; font-style: italic; font-size: 13px; line-height: 125%; text-align: justify; padding: 0 40px">FOOTER</div><br /></td></tr></table></td></tr></table></td></tr></table><br /></td></tr></table></center>');
 
-    this.container = $("<div class='sample' />");
-    this.container.append(this.header);
-    this.container.append($("<div class='content' />").append(localization.sampleEmailContent));
+    this.container.find('#emailpreviewsubject').text(localization.sampleEmailHeader);
+    this.container.find('#emailpreviewcontent').text(localization.sampleEmailContent);
+    this.container.find('#emailpreviewbutton').text(localization.sampleEmailButtonLabel);
+    this.container.find('#emailpreviewfooter').text(localization.sampleEmailFooter);
 
     $(this.el).empty();
     $(this.el).append(this.container);
@@ -413,8 +720,9 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     return this;
   },
   renderLogoWithSrc: function(logourl, logoChanged) {
-    console.log("rendering logo with src " + logourl);
-    var img = $("<img />");
+
+    var img = $('#emailpreviewlogo');
+
     if (logoChanged) {
       img.attr('src', logourl);
     } else {
@@ -422,13 +730,8 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
       img.attr("src", src + "?time=" + (new Date()).getTime());
     }
 
-    this.logo.empty();
-    this.logo.append(img);
-
     img.hide();
     img.fadeIn();
-
-    return this.logo;
   },
   render: function() {
     var company = this.model;
@@ -437,19 +740,44 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     var logoChanged = company.logo().logoChanged();
     var bbcolour = company.barsbackground().colour();
     var btcolour = company.barstextcolour().colour();
+    var bordercolour = company.bordercolour().colour();
+    var font = company.font().font();
+    var headerfont = company.headerfont().font();
+    var buttoncolour = company.buttoncolour().colour();
+    var emailbackgroundcolour = company.emailbackgroundcolour().colour();
 
     this.renderLogoWithSrc(logourl, logoChanged);
-    if (company.logo().loading()) {
-      this.header.css("background-color", "transparent");
-    } else {
-      this.header.css("background-color", bbcolour);
-    }
-    this.headerrule.css("background-color", btcolour);
-    this.header.css("color", btcolour);
+
+    this.container.find('.emailpreviewborderbottomcolour').css('border-bottom-color', bordercolour);
+    this.container.find('.emailpreviewbordercolour').css('border', '1px solid ' + bordercolour);
+    this.container.find('.emailpreviewbackgroundcolour').css('background-color', bbcolour);
+    this.container.find('.emailpreviewheaderfont').css('font-family', headerfont);
+    this.container.find('.emailpreviewfont').css('font-family', font);
+    this.container.find('.emailpreviewfont').css('color', btcolour);
+    this.container.css('background-color', emailbackgroundcolour);
+
+    this.container.find('#emailpreviewbutton').css({'background': 'hsl(' + buttoncolour + ', 30%, 35%)',
+                                                    'border': '2px solid hsl(' + buttoncolour + ', 30%, 23%)',
+                                                    '-webkit-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                                    '-moz-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                                    '-ms-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                                    '-o-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                                    'box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px'});
+
+    // if (company.logo().loading()) {
+    //   this.header.css("background-color", "transparent");
+    // } else {
+    //   this.header.css("background-color", bbcolour);
+    // }
 
     if (!company.logo().customised() &&
           !company.barsbackground().customised() &&
-          !company.barstextcolour().customised()) {
+          !company.barstextcolour().customised() &&
+          !company.headerfont().customised() &&
+          !company.font().customised() &&
+          !company.bordercolour().customised() &&
+          !company.buttoncolour().customised() &&
+          !company.emailbackgroundcolour().customised() ) {
       this.container.hide();
     } else {
       this.container.show();
@@ -473,6 +801,36 @@ window.CompanyBrandingView = Backbone.View.extend({
   createBarstextcolourElems: function() {
     return new CompanyBrandingColourView({
       model: this.model.barstextcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createHeaderFontElems: function() {
+    return new CompanyBrandingFontView({
+      model: this.model.headerfont(),
+      el: $("<div />")
+    }).el;
+  },
+  createFontElems: function() {
+    return new CompanyBrandingFontView({
+      model: this.model.font(),
+      el: $("<div />")
+    }).el;
+  },
+  createBorderColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.bordercolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createButtonColourElems: function() {
+    return new CompanyBrandingHueColourView({
+      model: this.model.buttoncolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createEmailBackgroundElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.emailbackgroundcolour(),
       el: $("<div />")
     }).el;
   },
@@ -529,13 +887,33 @@ window.CompanyBrandingView = Backbone.View.extend({
     var tr2 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(btcstuff));
     tablebody.append(tr2);
 
-    var logostuff = this.createLogoElems();
-    var tr3 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(logostuff));
+    var hfstuff = this.createHeaderFontElems();
+    var tr3 = $("<tr/>").append($("<td colspan='2' class='row' />").append(hfstuff));
     tablebody.append(tr3);
 
-    var samplestuff = this.createSampleElems();
-    var tr4 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(samplestuff));
+    var fstuff = this.createFontElems();
+    var tr4 = $("<tr/>").append($("<td colspan='2' class='row' />").append(fstuff));
     tablebody.append(tr4);
+
+    var bcstuff = this.createBorderColourElems();
+    var tr5 = $("<tr/>").append($("<td colspan='2' class='row' />").append(bcstuff));
+    tablebody.append(tr5);
+
+    var btcstuff = this.createButtonColourElems();
+    var tr6 = $("<tr/>").append($("<td colspan='2' class='row' />").append(btcstuff));
+    tablebody.append(tr6);
+
+    var emailbackgroundstuff = this.createEmailBackgroundElems();
+    var tr7 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(emailbackgroundstuff));
+    tablebody.append(tr7);
+
+    var logostuff = this.createLogoElems();
+    var tr8 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(logostuff));
+    tablebody.append(tr8);
+
+    var samplestuff = this.createSampleElems();
+    var tr9 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(samplestuff));
+    tablebody.append(tr9);
 
     var col = $("<div class='col' />");
     col.append(header);

@@ -66,6 +66,11 @@ test_updateCompanyUI = do
   let cui = companyui {
     companybarsbackground = Just "blue"
   , companybarstextcolour = Just "green"
+  , companyemailheaderfont = Just "Helvetica Neue, Arial, sans-serif"
+  , companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
+  , companyemailbordercolour = Just "#dee4ed"
+  , companyemailbuttoncolour = Just "215"
+  , companyemailemailbackgroundcolour = Just "#0f0"
   , companylogo = Nothing
   }
   res <- dbUpdate $ UpdateCompanyUI cid cui

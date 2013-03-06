@@ -247,6 +247,11 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.country"
   <> ", c.bars_background"
   <> ", c.bars_textcolour"
+  <> ", c.email_headerfont"
+  <> ", c.email_font"
+  <> ", c.email_bordercolour"
+  <> ", c.email_buttoncolour"
+  <> ", c.email_emailbackgroundcolour"
   <> ", c.logo"
   <> ", email_domain"
   <> ", ip_address_mask_list"
@@ -268,9 +273,9 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
      email lang customfooter company_name company_number is_free cid eid
-     name number address zip' city country bars_background bars_textcolour logo 
-     email_domain ip_address_mask
-     inviter_id invite_time invite_type
+     name number address zip' city country bars_background bars_textcolour
+     email_headerfont email_font email_bordercolour email_buttoncolour
+     email_emailbackgroundcolour logo email_domain ip_address_mask inviter_id invite_time invite_type
      = (
        User {
            userid = uid
@@ -314,6 +319,11 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
               , companyui = CompanyUI {
                   companybarsbackground = bars_background
                 , companybarstextcolour = bars_textcolour
+                , companyemailheaderfont = email_headerfont
+                , companyemailfont = email_font
+                , companyemailbordercolour = email_bordercolour
+                , companyemailbuttoncolour = email_buttoncolour
+                , companyemailemailbackgroundcolour = email_emailbackgroundcolour
                 , companylogo = logo
                 }
               }

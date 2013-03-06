@@ -63,7 +63,8 @@ scheduleEmailSendout MailsConfig{..} mail@Mail{..} = do
 
 wrapHTML :: String -> String
 wrapHTML body = concat [
-    "<html>"
+    "<!DOCTYPE html PUBLIC \"-//W4C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+  , "<html>"
   , "<head>"
   , "<meta http-equiv='content-type' content='text/html; charset=utf-8'/>"
   , "</head>"

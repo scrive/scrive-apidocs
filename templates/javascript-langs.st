@@ -7,6 +7,13 @@ javascriptLocalisation =
   window.localization =
         {      code : "$_code()$"
              , welcomeback : "$_welcomeback()$"
+             , customiseHeaderFontLabel : "$_customiseHeaderFontLabel()$"
+             , customiseFontLabel : "$_customiseFontLabel()$"
+             , customiseBorderColourLabel : "$_customiseBorderColourLabel()$"
+             , customiseButtonColourLabel : "$_customiseButtonColourLabel()$"
+             , customiseEmailBackgroundColour : "$_customiseEmailBackgroundColourLabel()$"
+             , sampleEmailButtonLabel : "$_sampleEmailButtonLabel()$"
+             , sampleEmailFooter : "$_sampleEmailFooter()$"
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"

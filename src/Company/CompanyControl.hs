@@ -79,6 +79,11 @@ companyUiFromJSON :: JSValue -> CompanyUI -> Either String CompanyUI
 companyUiFromJSON jsv cui = maybe (Left "Unable to parse JSON!") Right $ do
   jsonbb <- fromJSValueField "barsbackground" jsv
   jsonbtc <- fromJSValueField "barstextcolour" jsv
+  jsonhf <- fromJSValueField "headerfont" jsv
+  jsonf <- fromJSValueField "font" jsv
+  jsonbc <- fromJSValueField "bordercolour" jsv
+  jsonbtnc <- fromJSValueField "buttoncolour" jsv
+  jsonbgc <- fromJSValueField "emailbackgroundcolour" jsv
   jsonlogochanged <- fromJSValueField "logochanged" jsv
   jsonlogo <- fromJSValueField "logo" jsv
   let logo = if jsonlogochanged then
@@ -88,6 +93,11 @@ companyUiFromJSON jsv cui = maybe (Left "Unable to parse JSON!") Right $ do
   return CompanyUI {
     companybarsbackground = maybeS jsonbb
   , companybarstextcolour = maybeS jsonbtc
+  , companyemailheaderfont = maybeS jsonhf
+  , companyemailfont = maybeS jsonf
+  , companyemailbordercolour = maybeS jsonbc
+  , companyemailbuttoncolour = maybeS jsonbtnc
+  , companyemailemailbackgroundcolour = maybeS jsonbgc
   , companylogo = logo
   }
   where
@@ -104,6 +114,11 @@ handleGetCompanyJSON :: Kontrakcja m => Maybe CompanyID -> m JSValue
 handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, company) -> runJSONGenT $ do
     value "barsbackground" $ fromMaybe "" $ companybarsbackground $ companyui $ company
     value "barstextcolour" $ fromMaybe "" $ companybarstextcolour $ companyui $ company
+    value "headerfont" $ fromMaybe "" $ companyemailheaderfont $ companyui $ company
+    value "font" $ fromMaybe "" $ companyemailfont $ companyui $ company
+    value "bordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui $ company
+    value "buttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui $ company
+    value "emailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui $ company
     value "logo" $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company
     value "editable" editable
     value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)

@@ -37,6 +37,7 @@ mailMailAPIConfirm ctx document siglink = do
                  Just time -> renderLocalTemplate document "timetosigninfo" $ do
                                   F.value "time" $ show time
                  Nothing -> return ""
+        F.value "loginlink" $ show $ LinkLogin (documentlang document) NotLogged
         F.valueM "partnersinfo" $ do
              renderLocalListTemplate document $ map getSmartName $ partyList document
         F.valueM "whohadsignedinfo" $ do
@@ -65,8 +66,9 @@ mailMailApiDelayAdmin ctx adminemail email delayid key expires =
     F.value "expires" $ showDateDMY expires
 
 mailMailApiDelayUser :: TemplatesMonad m => Context -> String -> m Mail
-mailMailApiDelayUser _ctx email =
+mailMailApiDelayUser ctx email =
   kontramail "mailMailAPIDelayUser" $ do
+    F.value "ctxhostpart" $ ctxhostpart ctx
     F.value "email" email
 
 mailAPIInfoFields :: Monad m => MailAPIInfo -> Fields m ()

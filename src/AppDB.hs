@@ -131,6 +131,7 @@ kontraMigrations = [
   , dropAuthenticationMethodFromDocuments
   , moveCancelationReasonFromDocumentsToSignatoryLinks
   , dropCancelationReasonFromDocuments
+  , addNewCompanyBrandingOptions
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

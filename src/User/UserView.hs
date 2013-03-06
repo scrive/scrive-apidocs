@@ -96,6 +96,11 @@ companyUIJson company editable = runJSONGenT $ do
     value "logo" $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company
     value "barsbackground" $ fromMaybe "" $ companybarsbackground $ companyui $ company
     value "barstextcolour" $ fromMaybe "" $ companybarstextcolour $ companyui $ company
+    value "headerfont" $ fromMaybe "" $ companyemailheaderfont $ companyui $ company
+    value "font" $ fromMaybe "" $ companyemailfont $ companyui $ company
+    value "bordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui $ company
+    value "buttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui $ company
+    value "emailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui $ company
     value "editable" editable
 
 companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> Bool -> m JSValue
@@ -193,8 +198,10 @@ resetPasswordMail :: TemplatesMonad m => String -> User -> KontraLink -> m Mail
 resetPasswordMail hostname user setpasslink = do
   kontramail "passwordChangeLinkMail" $ do
     F.value "personname"   $ getFullName user
+    F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ hostname
+    F.value "langenglish"  $ getLang user == LANG_EN
 
 newUserMail :: TemplatesMonad m => String -> String -> String -> KontraLink -> m Mail
 newUserMail hostpart emailaddress personname activatelink = do
@@ -219,7 +226,7 @@ mailEmailChangeRequest hostpart user newemail link = do
   kontramail "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
-    F.value "hostpart" $ hostpart
+    F.value "ctxhostpart" $ hostpart
     F.value "link" $ show link
 
 -------------------------------------------------------------------------------

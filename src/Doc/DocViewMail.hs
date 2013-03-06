@@ -76,6 +76,7 @@ remindMailNotSigned :: (MonadDB m, TemplatesMonad m)
                     -> m Mail
 remindMailNotSigned forMail customMessage ctx document signlink = do
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document)
+        authorname = getAuthorName document
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         F.valueM "header" $ do
@@ -83,6 +84,8 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                          then remindMailNotSignedStandardHeader document signlink
                          else return $ fromJust customMessage
             makeEditable "customtext" header
+        F.value "authorname" authorname
+        F.value "recipientname" $ getSmartName signlink
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "partners" $ map getSmartName $ partyList document
         F.value "partnerswhosigned" $ map getSmartName $ partySignedList document
@@ -162,10 +165,12 @@ mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
                      -> Context
                      -> Document
                      -> SignatoryLink
+                     -> Maybe SignatoryLink
                      -> m Mail
-mailDocumentRejected customMessage ctx document rejector = do
+mailDocumentRejected customMessage ctx document rejector mrecipient = do
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         F.value "rejectorName" $ getSmartName rejector
+        F.value "recipientName" $ maybe "" getSmartName mrecipient
         F.valueM "footer" $ defaultFooter ctx
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
@@ -177,9 +182,10 @@ mailDocumentRejectedContent :: (MonadDB m, TemplatesMonad m)
                             -> Context
                             -> Document
                             -> SignatoryLink
+                            -> Maybe SignatoryLink
                             -> m String
-mailDocumentRejectedContent customMessage ctx  document rejector =
-     content <$> mailDocumentRejected customMessage ctx document rejector
+mailDocumentRejectedContent customMessage ctx  document rejector mrecipient =
+     content <$> mailDocumentRejected customMessage ctx document rejector mrecipient
 
 mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentErrorForAuthor ctx document authorlang = do
@@ -229,7 +235,9 @@ mailInvitation forMail
                                      F.value "creatorname" creatorname
                                      F.value "personname" personname
                                      F.value "documenttitle" $ documenttitle
-                         else return documentinvitetext
+                         else renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
+                                     F.value "creatorname" creatorname
+                                     F.value "custommessage" documentinvitetext
             makeEditable "customtext" header
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "link" $ case msiglink of
@@ -262,6 +270,7 @@ mailInvitationContent  forMail ctx invitationto document msiglink = do
 mailDocumentClosed :: (MonadDB m, TemplatesMonad m) => Context -> Document -> Maybe KontraLink -> SignatoryLink -> m Mail
 mailDocumentClosed ctx document l sl = do
    partylist <- renderLocalListTemplate document $ map getSmartName $ partyList document
+   let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
         F.valueM "footer" $ mailFooterForDocument ctx document
@@ -270,16 +279,19 @@ mailDocumentClosed ctx document l sl = do
         F.value "doclink" $ if isAuthor sl
                             then (++) (ctxhostpart ctx) $ show $ LinkIssueDoc (documentid document)
                             else (++) (ctxhostpart ctx) $ show $ LinkSignDoc document sl
+        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just sl) mainfile
 
-mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
-mailDocumentAwaitingForAuthor ctx document authorlang = do
+mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> SignatoryLink -> m Mail
+mailDocumentAwaitingForAuthor ctx document authorlang signatoryLink = do
     signatories <- renderLocalListTemplate authorlang $ map getSmartName $ partySignedList document
+    let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang ctx document "mailDocumentAwaitingForAuthor" $ do
         F.value "authorname" $ getSmartName $ fromJust $ getAuthorSigLink document
         F.value "documentlink" $ (ctxhostpart ctx) ++ show (LinkSignDoc document $ fromJust $ getAuthorSigLink document)
         F.value "partylist" signatories
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.valueM "footer" $ mailFooterForDocument ctx document
+        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signatoryLink) mainfile
 
 mailMismatchSignatory :: (MonadDB m, TemplatesMonad m)
                       => Context
@@ -376,5 +388,10 @@ companyBrandFields :: Monad m => Company -> Fields m ()
 companyBrandFields company = do
   F.value "barsbackground"  $ companybarsbackground $ companyui company
   F.value "barstextcolour" $ companybarstextcolour $ companyui company
+  F.value "font"  $ companyemailfont $ companyui company
+  F.value "headerfont"  $ companyemailheaderfont $ companyui company
+  F.value "bordercolour"  $ companyemailbordercolour $ companyui company
+  F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui company
+  F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company
   F.value "logo" $ isJust $ companylogo $ companyui company
   F.value "logoLink" $ show $ LinkCompanyLogo $ companyid company

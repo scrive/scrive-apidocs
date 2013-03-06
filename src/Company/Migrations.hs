@@ -82,3 +82,16 @@ addDefaultEmptyStringsToSomeColumnsInCompaniesTable =
     <> " ALTER city SET DEFAULT '',"
     <> " ALTER country SET DEFAULT ''"
   }
+
+addNewCompanyBrandingOptions :: MonadDB m => Migration m
+addNewCompanyBrandingOptions =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 7
+  , mgrDo = do
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_bordercolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_headerfont TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_font TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_buttoncolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_emailbackgroundcolour TEXT NULL"
+  }

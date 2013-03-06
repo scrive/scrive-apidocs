@@ -360,7 +360,7 @@ sendInvitationEmail1 ctx document authorsiglink =
   if (isSignatory authorsiglink)
      then do
         -- send invitation to sign to author when it is his turn to sign
-        mail <- mailDocumentAwaitingForAuthor ctx document (getLang document)
+        mail <- mailDocumentAwaitingForAuthor ctx document (getLang document) authorsiglink
         scheduleEmailSendout (ctxmailsconfig ctx) $
           mail { to = [getMailAddress authorsiglink] }
         return $ Right document
@@ -426,7 +426,7 @@ sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
-    mail <- mailDocumentRejected customMessage ctx document signalink
+    mail <- mailDocumentRejected customMessage ctx document signalink $ Just sl
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
       to = [getMailAddress sl]
     }

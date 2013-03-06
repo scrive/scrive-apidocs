@@ -71,7 +71,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                     Log.debug $ signemail ++ " == " ++ email
                     runTemplatesT (getLang doc, templates) $ case ev of
                       SG_Opened -> handleOpenedInvitation doc signlinkid email muid
-                      SG_Delivered _ -> handleDeliveredInvitation mc doc signlinkid
+                      SG_Delivered _ -> handleDeliveredInvitation (host, mc) doc signlinkid
                       -- we send notification that email is reported deferred after
                       -- fifth attempt has failed - this happens after ~10 minutes
                       -- from sendout
@@ -83,7 +83,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                     Log.debug $ signemail ++ " == " ++ email
                     runTemplatesT (getLang doc, templates) $ case ev of
                       MG_Opened -> handleOpenedInvitation doc signlinkid email muid
-                      MG_Delivered -> handleDeliveredInvitation mc doc signlinkid
+                      MG_Delivered -> handleDeliveredInvitation (host, mc) doc signlinkid
                       MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid
                       MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid
                       _ -> return ()
@@ -104,13 +104,13 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
         then Log.error $ "Couldn't delete email #" ++ show mid
         else Log.debug $ "Deleted email #" ++ show mid
 
-handleDeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => MailsConfig -> Document -> SignatoryLinkID -> m ()
-handleDeliveredInvitation mc doc signlinkid = do
+handleDeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
+handleDeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       -- send it only if email was reported deferred earlier
       when (invitationdeliverystatus signlink == Deferred) $ do
-        mail <- mailDeliveredInvitation doc signlink
+        mail <- mailDeliveredInvitation hostpart doc signlink
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
         }
@@ -142,7 +142,7 @@ handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
       success <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
       when success $ do
         Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-        mail <- mailDeferredInvitation hostpart d
+        mail <- mailDeferredInvitation hostpart d sl
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink d]
         }
@@ -161,16 +161,19 @@ handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
       }
     Nothing -> return ()
 
-mailDeliveredInvitation :: TemplatesMonad m =>  Document -> SignatoryLink -> m Mail
-mailDeliveredInvitation doc signlink =
+mailDeliveredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
+mailDeliveredInvitation hostpart doc signlink =
   kontramail "invitationMailDeliveredAfterDeferred" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "email" $ getEmail signlink
     F.value "documenttitle" $ documenttitle doc
+    F.value "ctxhostpart" hostpart
 
-mailDeferredInvitation :: TemplatesMonad m => String -> Document -> m Mail
-mailDeferredInvitation hostpart doc = kontramail "invitationMailDeferred" $ do
+mailDeferredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
+mailDeferredInvitation hostpart doc sl = kontramail "invitationMailDeferred" $ do
   F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+  F.value "counterpartname" $ getFullName sl
+  F.value "counterpartemail" $ getEmail sl
   F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
   F.value "ctxhostpart" hostpart
 
@@ -180,5 +183,6 @@ mailUndeliveredInvitation hostpart doc signlink =
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
+    F.value "name" $ getFullName signlink
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" hostpart

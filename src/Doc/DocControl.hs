@@ -892,7 +892,7 @@ prepareEmailPreview docid slid = do
              Just mh <- dbQuery $ GetDocumentSessionToken slid
              Just doc <- dbQuery $ GetDocumentByDocumentID docid
              Just sl <- return $ getSigLinkFor doc (slid,mh)
-             mailDocumentRejectedContent Nothing ctx  doc sl
+             mailDocumentRejectedContent Nothing ctx  doc sl Nothing
          "invite" -> do
              Right doc <- getDocByDocID docid
              mailInvitationContent False ctx Sign doc Nothing

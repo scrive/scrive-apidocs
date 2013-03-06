@@ -10,7 +10,12 @@ window.CompanyUI = Backbone.Model.extend({
       this.set({
         logo: args.logo,
         barsbackground: args.barsbackground,
-        barstextcolour: args.barstextcolour
+        barstextcolour: args.barstextcolour,
+        bordercolour: args.bordercolour,
+        headerfont: args.headerfont,
+        font: args.font,
+        buttoncolour: args.buttoncolour,
+        emailbackgroundcolour: args.emailbackgroundcolour
       }, {silent: true});
     }
   },
@@ -26,6 +31,21 @@ window.CompanyUI = Backbone.Model.extend({
   barsbackground: function() {
     return this.get('barsbackground');
   },
+  bordercolour: function() {
+    return this.get('bordercolour');
+  },
+  headerfont: function() {
+    return this.get('headerfont');
+  },
+  font: function() {
+    return this.get('font');
+  },
+  buttoncolour: function() {
+    return this.get('buttoncolour');
+  },
+  emailbackgroundcolour: function() {
+    return this.get('emailbackgroundcolour');
+  },
   editable: function() {
     return this.get('editable');
   },
@@ -34,6 +54,11 @@ window.CompanyUI = Backbone.Model.extend({
       editable: args.editable,
       barsbackground: args.barsbackground,
       barstextcolour: args.barstextcolour,
+      bordercolour: args.bordercolour,
+      headerfont: args.headerfont,
+      font: args.font,
+      buttoncolour: args.buttoncolour,
+      emailbackgroundcolour: args.emailbackgroundcolour,
       logo: args.logo,
       ready: true
     };

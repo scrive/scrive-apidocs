@@ -20,6 +20,11 @@ tableCompanies = tblTable {
        , ("bars_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_domain", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("ip_address_mask_list", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_bordercolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_headerfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_font", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_buttoncolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_emailbackgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
@@ -36,6 +41,11 @@ tableCompanies = tblTable {
           <> ", bars_textcolour TEXT       NULL"
           <> ", email_domain    TEXT       NULL"
           <> ", ip_address_mask_list    TEXT       NULL"
+          <> ", email_bordercolour TEXT    NULL"
+          <> ", email_headerfont   TEXT    NULL"
+          <> ", email_font         TEXT    NULL"
+          <> ", email_buttoncolour TEXT    NULL"
+          <> ", email_emailbackgroundcolour TEXT    NULL"
           <> ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           <> ")"
         return TVRcreated

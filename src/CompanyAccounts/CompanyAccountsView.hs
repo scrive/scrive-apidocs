@@ -36,6 +36,7 @@ mailNewCompanyUserInvite hostpart invited inviter company link =
     basicCompanyInviteFields invited inviter company
     basicLinkFields hostpart link
     F.object "companybrand" $ companyBrandFields company
+    F.value "creatorname" $ getSmartName inviter
 
 
 mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
