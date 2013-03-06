@@ -715,13 +715,15 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
 
 
 
-
+/* This thing can work with either field as a model */
 
 window.SignaturePlacementViewForDrawing = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear);
         this.model.bind('change', this.render);
+        this.height = args.height;
+        this.width = args.width;
         this.render();
     },
     clear: function() {
@@ -730,16 +732,17 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
     },
     render: function() {
             var view = this;
-            var placement = this.model;
-            var signatory = this.model.field().signatory();
+            var field = this.model;
             var box = $(this.el);
-            var width =  placement.wrel() * box.parent().parent().width();
-            var height = placement.hrel() * box.parent().parent().height();
+            var width =  this.width;
+            var height = this.height;
+            var image = field.value();
             box.empty();
             box.attr("style","");
             box.addClass('signatureBox').addClass('forDrawing');
-            if (placement.field().value() == "")
+            if (image == "")
             {
+                console.log("Place for drawing - rendering no value")
                 box.removeClass('withImage');
                 var bwidth = 253;
                 var bheight = 48;
@@ -768,6 +771,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.append(button);
             }
             else {
+                console.log("Place for drawing - rendering with value")
                 box.addClass('withImage');
                 var img = $("<img alt=''/>");
                 img.css("width",width);
@@ -776,10 +780,10 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 img.attr("height",height);
                 box.css("width",width);
                 box.css("height",height);
-                img.attr('src',placement.field().value());
+                img.attr('src',image);
                 box.append(img);
             }
-            box.click(function() {new SignatureDrawerPopup({field: placement.field(), width: width, height: height})});
+            box.click(function() {new SignatureDrawerPopup({field: field, width: width, height: height})});
             return this;
     }
 });
@@ -929,6 +933,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         $(this.el).remove();
     },
     render: function() {
+        console.log("Rendering placement");
         var placement = this.model;
         var field = placement.field();
         var signatory = field.signatory();
@@ -940,7 +945,11 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         this.updatePosition();
 
         if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current() && !signatory.document().readOnlyView()) {
-            place.append(new SignaturePlacementViewForDrawing({model: placement}).el);
+            place.append(new SignaturePlacementViewForDrawing({
+                                                                model: placement.field(),
+                                                                width : placement.wrel() * place.parent().width(),
+                                                                height : placement.hrel() * place.parent().height()
+                                                              }).el);
         }
         else if (document.preparation()) {
             var placementView = $(new SignaturePlacementView({model: placement, resizable : true}).el);
