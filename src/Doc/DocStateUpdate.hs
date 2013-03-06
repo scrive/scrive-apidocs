@@ -86,7 +86,7 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
         Context{ ctxtime, ctxipnumber } <- getContext
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
-          True <- dbUpdate $ UpdateFields did slid fields actor
+          True <- dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh Nothing screenshots actor
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           let Just sl = getSigLinkFor doc slid
@@ -112,7 +112,7 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
           Log.debug "a"
-          True <- dbUpdate $ UpdateFields did slid fields actor
+          True <- dbUpdate $ UpdateFieldsForSigning did slid fields actor
           Log.debug "b"
           dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
           Log.debug "c"

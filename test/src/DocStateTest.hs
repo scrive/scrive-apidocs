@@ -69,7 +69,7 @@ docStateTests env = testGroup "DocState" [
   testThat "SignableFromDocumentIDWithUpdatedAuthor adds to the log" env testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog,
   testThat "TemplateFromDocument adds to the log" env testTemplateFromDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
-  testThat "UpdateFields adds to the log" env testUpdateFieldsEvidenceLog,
+  testThat "UpdateFieldsForSigning adds to the log" env testUpdateFieldsEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
   testThat "SetDocumentUnsavedDraft and filtering based on unsaved_draft works" env testSetDocumentUnsavedDraft,
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
@@ -525,14 +525,14 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
   case sf of
    (f:_) -> do
         v <-  rand 10 arbitrary
-        success <- randomUpdate $ \t->UpdateFields (documentid doc) (signatorylinkid sl) [(sfType f,v)] (systemActor t)
+        success <- randomUpdate $ \t->UpdateFieldsForSigning (documentid doc) (signatorylinkid sl) [(sfType f,v)] (systemActor t)
         lg <- dbQuery $ GetEvidenceLog (documentid doc)
         case success of
                 True ->
-                    assertBool "if UpdateFields did change document it should add to the evidence (or not affect anything) " $
+                    assertBool "if UpdateFieldsForSigning did change document it should add to the evidence (or not affect anything) " $
                         (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))
                 False ->
-                    assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
+                    assertEqual "if UpdateFieldsForSigning did not change any rows it should not add to the evidence" Nothing
                         (find (\e -> evType e == UpdateFieldsEvidence) lg)
    _ -> return ()
 

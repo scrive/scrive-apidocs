@@ -71,7 +71,7 @@ module Doc.Model
   , TimeoutDocument(..)
   , PostReminderSend(..)
   , AddSignatoryLinkVisitedEvidence(..)
-  , UpdateFields(..)
+  , UpdateFieldsForSigning(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
   , SetDocumentModificationDate(..)
@@ -110,7 +110,6 @@ import Utils.List
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
-import Utils.Read
 import IPAddress
 import Data.List hiding (tail, head)
 import qualified Data.Foldable as F
@@ -2073,6 +2072,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
   update (ResetSignatoryDetails documentid signatories actor) =
     update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing, StandardAuthentication, EmailDelivery)) signatories) actor)
 
+<<<<<<< HEAD
 splitImage :: String -> Maybe (Int, Int, String)
 splitImage s = do
   let ws = takeWhile (/= '|') s
@@ -2082,6 +2082,7 @@ splitImage s = do
   w <- maybeRead ws
   h <- maybeRead hs
   return (w, h, is)
+
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
@@ -2136,10 +2137,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   (do value "email" eml
                       value "fieldtype" $ show (sfType changedfield)
                       case sfType changedfield of
-                        SignatureFT _ -> case splitImage $ sfValue changedfield of
-                          Just (_w,_h,"") -> return ()
-                          Just (_w,_h,i)  -> value "signature" i
-                          Nothing -> return ()
+                        SignatureFT _                               ->  value "signature" (sfValue changedfield)
                         CheckboxFT   _ | sfValue changedfield == "" -> value "unchecked" True
                         CheckboxFT   _                              -> value "checked" True
                         _                                           -> value "value" $ sfValue changedfield
@@ -2168,10 +2166,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   (do value "email" eml
                       value "fieldtype" $ show (sfType changedfield)
                       case sfType changedfield of
-                        SignatureFT _ -> case splitImage $ sfValue changedfield of
-                          Just (_,_,"") -> return ()
-                          Just (_,_,i)  -> value "signature" i
-                          Nothing -> return ()
+                        SignatureFT _                               -> value "signature" (sfValue changedfield)
                         CheckboxFT   _ | sfValue changedfield == "" -> value "unchecked" True
                         CheckboxFT   _                              -> value "checked" True
                         _                                           -> value "value" $ sfValue changedfield
@@ -2376,9 +2371,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
 
      return ()
 
-data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
-  update (UpdateFields did slid fields actor) = do
+data UpdateFieldsForSigning = UpdateFieldsForSigning DocumentID SignatoryLinkID [(FieldType, String)] Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSigning Bool where
+  update (UpdateFieldsForSigning did slid fields actor) = do
     -- Document has to be in Pending state
     -- signatory could not have signed already
     (eml :: String) <- $fromJust `liftM` getOne
@@ -2398,6 +2393,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                    sqlWhereEq "signatory_link_id" slid
                    sqlWhereEq "custom_name" custom_name
                    sqlWhereEq "type" fieldtype
+                   sqlWhereAny $ do
+                       sqlWhereAll $ do
+                         sqlWhereEq "value" (""::String)
+                         sqlWhereIn "type" [CustomFT undefined undefined, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT]
+                       sqlWhereIn "type" [CheckboxFT undefined,SignatureFT undefined]
                    sqlWhereExists $ sqlSelect "documents" $ do
                      sqlWhere "signatory_links.id = signatory_link_id"
                      sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
@@ -2410,11 +2410,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                (do value "email" eml
                    value "fieldtype" (show fieldtype)
                    case fieldtype of
-                        SignatureFT _ -> case splitImage fvalue of
-                          Just (_,_,"") -> return ()
-                          Just (_,_,i)  -> do
-                            value "signature" i
-                          Nothing -> return ()
+                        SignatureFT _                 ->  value "signature" fvalue
                         CheckboxFT   _ | fvalue == "" -> value "unchecked" True
                         CheckboxFT   _                -> value "checked" True
                         _                             -> value "value" $ fvalue
