@@ -3,6 +3,7 @@
 module Doc.Migrations where
 
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Int
 import Data.Monoid
 import Data.Maybe
@@ -29,7 +30,7 @@ default (SQL)
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
-setMandatoryExpirationTimeInDocument :: MonadDB m => Migration m
+setMandatoryExpirationTimeInDocument :: (MonadDB m, MonadIO m) => Migration m
 setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 12
@@ -761,7 +762,7 @@ moveAttachmentsFromDocumentsToAttachments =
          Log.debug  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
   }
 
-removeOldDocumentLog :: MonadDB m => Migration m
+removeOldDocumentLog :: (MonadDB m, MonadIO m) => Migration m
 removeOldDocumentLog =
   Migration
   { mgrTable = tableDocuments

@@ -22,7 +22,6 @@ module Company.Model (
   ) where
 
 import Data.Typeable
-
 import DB
 import DB.SQL2
 import Company.CompanyID
@@ -236,7 +235,7 @@ selectCompaniesSelectors = do
   sqlResult "companies.email_emailbackgroundcolour"
 
 
-fetchCompanies :: MonadDB m => DBEnv m [Company]
+fetchCompanies :: MonadDB m => m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid eid name number address zip' city country

@@ -76,7 +76,7 @@ selectCompanyInvitesSQL = "SELECT"
   <> "  FROM companyinvites ci"
   <> " "
 
-fetchCompanyInvites :: MonadDB m => DBEnv m [CompanyInvite]
+fetchCompanyInvites :: MonadDB m => m [CompanyInvite]
 fetchCompanyInvites = kFold decoder []
   where
     decoder acc email fstname sndname cid = CompanyInvite {

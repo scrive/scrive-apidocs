@@ -120,7 +120,7 @@ handleDeliveredInvitation (hostpart, mc) doc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleOpenedInvitation :: (MonadDB m, TemplatesMonad m) => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
+handleOpenedInvitation :: (MonadDB m, TemplatesMonad m, MonadIO m) => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation doc signlinkid email muid = do
   now  <- getMinutesTime
   success <- dbUpdate $ MarkInvitationRead (documentid doc) signlinkid

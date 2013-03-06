@@ -12,6 +12,7 @@ import qualified Control.Exception.Lifted as E
 import DB
 import TestingUtil
 import TestKontra
+import Control.Monad.State.Class
 
 sqlUtilsTests :: TestEnvSt -> Test
 sqlUtilsTests env = testGroup "SQLUtils" [
@@ -23,8 +24,13 @@ sqlUtilsTests env = testGroup "SQLUtils" [
   , testThat "fetcher cannot parse row"                env sqlTestFetcherUserConvertError
   ]
 
-injectStatement :: [[SqlValue]] -> DBEnv TestEnv (IORef ([[SqlValue]], Bool))
-injectStatement results = withDBEnvSt $ \s -> do
+runDeepTest :: DBT TestEnv () -> TestEnv ()
+runDeepTest action = do
+  nex <- getNexus
+  runDBT nex (DBEnvSt Nothing []) $ action
+
+injectStatement :: [[SqlValue]] -> DBT TestEnv (IORef ([[SqlValue]], Bool))
+injectStatement results = DBT $ do
   r <- liftIO $ newIORef (results, False)
   let st = Statement {
           execute = error "execute not defined"
@@ -39,7 +45,8 @@ injectStatement results = withDBEnvSt $ \s -> do
         , HDBC.originalQuery = "original query"
         , describeResult = error "describeResult not defined"
         }
-  return (r, s { dbStatement = Just st })
+  modify (\s -> s { dbStatement = Just st })
+  return r
 
 data A = A Int String Double
        deriving (Eq, Ord, Show, Read, Typeable)
@@ -53,7 +60,7 @@ decodeANonZero acc i s d = if i == 0
   else A i s d : acc
 
 sqlTestFetcherProperData :: TestEnv ()
-sqlTestFetcherProperData = runDBEnv $ do
+sqlTestFetcherProperData = runDeepTest $ do
   k <- injectStatement [[SqlInt64 123, SqlString "abc", SqlDouble 1.23]]
   v <- kFold decodeA []
   assertEqual "result" [A 123 "abc" 1.23] v
@@ -62,7 +69,7 @@ sqlTestFetcherProperData = runDBEnv $ do
   assertEqual "read all rows" True (null r)
 
 sqlTestFetcherProperDataManyRows :: TestEnv ()
-sqlTestFetcherProperDataManyRows = runDBEnv $ do
+sqlTestFetcherProperDataManyRows = runDeepTest $ do
   k <- injectStatement [ [SqlInt64 1, SqlString "a", SqlDouble 1.23]
                        , [SqlInt64 2, SqlString "b", SqlDouble 2.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
@@ -77,7 +84,7 @@ sqlTestFetcherProperDataManyRows = runDBEnv $ do
   assertEqual "read all rows" True (null r)
 
 sqlTestFetcherRowTooShort :: TestEnv ()
-sqlTestFetcherRowTooShort = runDBEnv $ do
+sqlTestFetcherRowTooShort = runDeepTest $ do
   k <- injectStatement [ [SqlInt64 1, SqlString "a", SqlDouble 1.23]
                        , [SqlInt64 2, SqlString "b"]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
@@ -93,7 +100,7 @@ sqlTestFetcherRowTooShort = runDBEnv $ do
   assertEqual "read all rows" False (null r)
 
 sqlTestFetcherRowTooLong :: TestEnv ()
-sqlTestFetcherRowTooLong = runDBEnv $ do
+sqlTestFetcherRowTooLong = runDeepTest $ do
   k <- injectStatement [ [SqlInt64 1, SqlString "a", SqlDouble 1.23]
                        , [SqlInt64 2, SqlString "b", SqlDouble 1.23, SqlDouble 1.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
@@ -109,7 +116,7 @@ sqlTestFetcherRowTooLong = runDBEnv $ do
   assertEqual "read all rows" False (null r)
 
 sqlTestFetcherConvertError :: TestEnv ()
-sqlTestFetcherConvertError = runDBEnv $ do
+sqlTestFetcherConvertError = runDeepTest $ do
   k <- injectStatement [ [SqlInt64 1, SqlString "a", SqlDouble 1.23]
                        , [SqlString "b", SqlString "b", SqlDouble 1.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
@@ -126,7 +133,7 @@ sqlTestFetcherConvertError = runDBEnv $ do
 
 
 sqlTestFetcherUserConvertError :: TestEnv ()
-sqlTestFetcherUserConvertError = runDBEnv $ do
+sqlTestFetcherUserConvertError = runDeepTest $ do
   k <- injectStatement [ [SqlInt64 1, SqlString "a", SqlDouble 1.23]
                        , [SqlInt64 0, SqlString "b", SqlDouble 1.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]

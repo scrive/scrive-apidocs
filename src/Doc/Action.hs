@@ -12,6 +12,7 @@ module Doc.Action (
 
 import Control.Applicative
 import Control.Monad.Trans.Maybe
+import Control.Monad.IO.Class
 import Control.Logic
 import Crypto.RNG
 import Data.Char
@@ -402,7 +403,7 @@ sendClosedEmails document = do
              , attachments = mailattachments
              }
 
-makeMailAttachments :: (KontraMonad m, MonadDB m) => Document -> m [(String, BS.ByteString)]
+makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, BS.ByteString)]
 makeMailAttachments document = do
   let mainfile = documentsealedfile document `mplus` documentfile document
   let

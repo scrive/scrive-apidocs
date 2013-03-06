@@ -5,7 +5,6 @@ module ELegitimation.ELegTransaction.Model (
   ) where
 
 import Control.Monad
-import Control.Monad.Trans
 import Data.Data
 import Data.Monoid
 
@@ -73,7 +72,7 @@ instance (CryptoRNG m, KontraMonad m, MonadDB m) => DBUpdate m MergeELegTransact
 data GetELegTransaction = GetELegTransaction String
 instance (KontraMonad m, MonadDB m) => DBQuery m GetELegTransaction (Maybe ELegTransaction) where
   query (GetELegTransaction tid) = do
-    sid <- ctxsessionid `liftM` lift getContext
+    sid <- ctxsessionid `liftM` getContext
     _ <- kRun $ selectTransactionsSQL <> SQL "WHERE id = ? AND session_id = ?" [
         toSql tid
       , toSql sid
@@ -98,7 +97,7 @@ selectTransactionsSQL = "SELECT" <+> selectors <+> "FROM eleg_transactions "
       , "oref"
       ]
 
-fetchTransactions :: MonadDB m => DBEnv m [ELegTransaction]
+fetchTransactions :: MonadDB m => m [ELegTransaction]
 fetchTransactions = kFold decoder []
   where
     decoder acc tid nonce tbs encoded_tbs slid did token status

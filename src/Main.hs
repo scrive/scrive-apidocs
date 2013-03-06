@@ -66,7 +66,7 @@ main = Log.withLogger $ do
 
   withPostgreSQL (dbConfig appConf) $ do
     performDBChecks Log.server kontraTables kontraMigrations
-    runDBEnv $ defineMany kontraFunctions
+    defineMany kontraFunctions
 
   startSystem appGlobals appConf
 

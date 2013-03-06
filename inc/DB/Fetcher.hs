@@ -4,20 +4,11 @@ module DB.Fetcher (
   , kFold2
   ) where
 
-import Control.Monad
-import Control.Monad.IO.Class
 import Data.Convertible
-import Data.Maybe
 import Data.Monoid
-import Database.HDBC hiding (originalQuery)
-import qualified Control.Exception as E
-import qualified Database.HDBC as HDBC
-
+import Database.HDBC
 import DB.Core
-import DB.Env
 import DB.Exception
-import DB.Functions
-import DB.SQL
 
 class Fetcher a r where
   apply :: Int -> [SqlValue] -> a -> Either SQLError r
@@ -56,36 +47,6 @@ instance Fetcher r r where
 -- (usually it's not neccessary since compiler will be able to infer them,
 -- but if it won't, you have to expect quite ugly error message about
 -- missing instances).
-kFold :: MonadDB m => Fetcher v a => (a -> v) -> a -> DBEnv m a
+kFold :: MonadDB m => Fetcher v a => (a -> v) -> a -> m a
 kFold decoder !init_acc =
   kFold2 (\acc row -> apply 0 row (decoder acc)) init_acc
-
-
-kFold2 :: MonadDB m => (a -> [SqlValue] -> Either SQLError a) -> a -> DBEnv m a
-kFold2 decoder !init_acc = do
-  res <- withDBEnvSt $ \s@DBEnvSt{..} -> (, s) `liftM` case dbStatement of
-    Nothing -> return (Right init_acc, undefined, undefined)
-    Just st -> (, st, dbValues) `liftM` liftIO (worker st init_acc)
-  case res of
-    (Right acc, _, _) -> return acc
-    (Left err, st, values) -> do
-      kFinish
-      liftIO $ E.throwIO err { originalQuery = SQL (unsafeFromString (HDBC.originalQuery st)) values }
-  where
-    worker st !acc = do
-      mrow <- fetchRow st
-      case mrow of
-        Nothing -> return $ Right acc
-        Just row ->
-          case decoder acc row of
-            Right acc' -> worker st acc'
-            Left err@CannotConvertSqlValue{position = pos} -> do
-              column <- liftIO $ getColumnNames st
-                >>= return . fromMaybe "" . listToMaybe . drop pos
-              return $ Left CannotConvertSqlValue {
-                  originalQuery = mempty
-                , columnName    = column
-                , position      = position err
-                , convertError  = convertError err
-                }
-            Left err -> return $ Left err

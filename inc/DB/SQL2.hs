@@ -192,11 +192,10 @@ module DB.SQL2
 import DB.SQL
 import DB.Core
 import DB.Functions hiding (sql)
-import DB.Env
+
 import DB.Fetcher
 import DB.Exception
 import Control.Monad.State
-import Control.Monad.Base
 import Data.List (transpose)
 import Data.Monoid
 import Database.HDBC hiding (run)
@@ -954,7 +953,7 @@ kWhyNot will be resurrected when we get a row identity concept.
 -}
 
 {-
-kWhyNot :: (SqlTurnIntoSelect s, MonadDB m) => s -> DBEnv m [[SomeKontraException]]
+kWhyNot :: (SqlTurnIntoSelect s, MonadDB m) => s -> m [[SomeKontraException]]
 kWhyNot cmd = do
   let newSelect = sqlTurnIntoWhyNotSelect cmd
   if null (sqlSelectResult newSelect)
@@ -1004,7 +1003,7 @@ instance Show SomeKontraException where
 --
 -- (In the second case your original query should have succedded
 -- also. File a bug report if this is not the case.)
-kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> DBEnv m [SomeKontraException]
+kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> m [SomeKontraException]
 kWhyNot1 cmd = do
   let newSelect = sqlTurnIntoWhyNotSelect cmd
   case sqlSelectResult newSelect of
@@ -1050,8 +1049,8 @@ decodeListOfExceptionsFromWhere fullquery conds excepts sqlvalues =
            [matchUpExceptionWithValues (SqlWhyNot (\_ -> return (DBBaseLineConditionIsFalse fullquery)) []
                                                     : enumerateWhyNotExceptions conds) sqlvalues]
 
-kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, MonadBase IO m)
-                   => s -> DBEnv m ()
+kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
+                   => s -> m ()
 kRun1OrThrowWhyNot sqlcommand = do
   success <- kRun01 sqlcommand
   when (not success) $ do
@@ -1062,14 +1061,14 @@ kRun1OrThrowWhyNot sqlcommand = do
         -- This case should not really happen due to how we handle
         -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
         -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-        throwIO $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+        kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
       (ex:_) -> do
         -- Lets throw first exception on the list. It should be the
         -- most generic one.
-        throwIO ex
+        kThrow ex
 
-kRunAndFetch1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, MonadBase IO m, Fetcher v [a])
-                           => ([a] -> v) -> s -> DBEnv m a
+kRunAndFetch1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, Fetcher v [a])
+                           => ([a] -> v) -> s -> m a
 kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
   kRun_ sqlcommand
   results <- kFold decoder []
@@ -1082,13 +1081,13 @@ kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
             -- This case should not really happen due to how we handle
             -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
             -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-            throwIO $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+            kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
         (ex:_) -> do
             -- Lets throw first exception on the list. It should be the
             -- most generic one.
-            throwIO ex
+            kThrow ex
     [r] -> return r
-    _ -> liftIO $ throwIO TooManyObjects { originalQuery = mempty
-                                         , tmoExpected = 1
-                                         , tmoGiven = fromIntegral $ length results
-                                         }
+    _ -> kThrow TooManyObjects { originalQuery = mempty
+                               , tmoExpected = 1
+                               , tmoGiven = fromIntegral $ length results
+                               }

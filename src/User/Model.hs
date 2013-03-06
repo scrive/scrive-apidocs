@@ -413,7 +413,7 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-checkIfUserExists :: MonadDB m => UserID -> DBEnv m Bool
+checkIfUserExists :: MonadDB m => UserID -> m Bool
 checkIfUserExists uid = checkIfAnyReturned
   $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
 
@@ -447,7 +447,7 @@ selectUsersSelectorsList =
 selectUsersSelectors :: SQL
 selectUsersSelectors = sqlConcatComma (map raw selectUsersSelectorsList)
 
-fetchUsers :: MonadDB m => DBEnv m [User]
+fetchUsers :: MonadDB m => m [User]
 fetchUsers = kFold decoder []
   where
     -- Note: this function gets users in reversed order, but all queries

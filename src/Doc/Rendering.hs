@@ -69,7 +69,7 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: (KontraMonad m, MonadDB m)
+convertPdfToJpgPages :: (KontraMonad m, MonadDB m, MonadIO m)
                      => FileID
                      -> Int
                      -> m JpegPages

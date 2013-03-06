@@ -10,7 +10,6 @@ module File.Model (
     ) where
 
 import Control.Applicative
-import Control.Monad.Trans
 import Data.Monoid
 import Database.HDBC
 
@@ -32,7 +31,7 @@ instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
 data NewFile = NewFile String Binary
 instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile File where
   update (NewFile filename content) = do
-    Right aes <- lift $ mkAESConf <$> randomBytes 32 <*> randomBytes 16
+    Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
     kRun_ $ sqlInsert "files" $ do
         sqlSet "name" filename
         sqlSet "content" $ aesEncrypt aes `binApp` content
@@ -77,7 +76,7 @@ instance MonadDB m => DBUpdate m SetChecksum Bool where
 data SetContentToMemoryAndEncryptIt = SetContentToMemoryAndEncryptIt FileID Binary
 instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m SetContentToMemoryAndEncryptIt Bool where
   update (SetContentToMemoryAndEncryptIt fid content) = do
-    Right aes <- lift $ mkAESConf <$> randomBytes 32 <*> randomBytes 16
+    Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
     kRun01 $ sqlUpdate "files" $ do
         sqlSet "content" $ aesEncrypt aes `binApp` content
         sqlSet "size" $ BS.length $ unBinary content
@@ -100,7 +99,7 @@ filesSelectors = [
   , "aes_iv"
   ]
 
-fetchFiles :: MonadDB m => DBEnv m [File]
+fetchFiles :: MonadDB m => m [File]
 fetchFiles = kFold decoder []
   where
     decoder acc fid fname content amazon_bucket

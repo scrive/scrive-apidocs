@@ -266,7 +266,7 @@ testMany (args, ts) = Log.withLogger $ do
   templates <- readGlobalTemplates
   withPostgreSQL pgconf $ do
     performDBChecks Log.debug kontraTables kontraMigrations
-    runDBEnv $ defineMany kontraFunctions
+    defineMany kontraFunctions
     nex <- getNexus
     active_tests <- liftIO . atomically $ newTVar (True, 0)
     rejected_documents <- liftIO . atomically $ newTVar 0

@@ -8,7 +8,7 @@ module Session.Model (
   ) where
 
 import Control.Monad
-import Control.Monad.Trans
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Happstack.Server hiding (Session)
@@ -30,19 +30,19 @@ import qualified Log
 -- its id (needed when document ticket/eleg transaction needs to be
 -- inserted into the database, but current session is temporary), also
 -- modifying Context to carry modified id.
-getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m) => DBEnv m SessionID
+getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadIO m) => m SessionID
 getNonTempSessionID = do
-  sid <- ctxsessionid `liftM` lift getContext
+  sid <- ctxsessionid `liftM` getContext
   if sid == tempSessionID
     then do
       new_sid <- insertEmptySession
-      lift . modifyContext $ \ctx -> ctx { ctxsessionid = new_sid }
+      modifyContext $ \ctx -> ctx { ctxsessionid = new_sid }
       return new_sid
     else return sid
   where
     insertEmptySession = do
-      token <- lift random
-      csrf_token <- lift random
+      token <- random
+      csrf_token <- random
       expires <- sessionNowModifier `liftM` getMinutesTime
       update (NewAction session expires (Nothing, Nothing, token, csrf_token))
         >>= return . sesID
@@ -59,7 +59,7 @@ getCurrentSession = withDataFn currentSessionInfoCookie $ \msc -> case msc of
       Nothing  -> emptySession
   Nothing -> emptySession
 
-updateSession :: (FilterMonad Response m, MonadDB m, ServerMonad m)
+updateSession :: (FilterMonad Response m, MonadDB m, ServerMonad m, MonadIO m)
               => Session -> Session -> m ()
 updateSession old_ses ses = do
   case sesID ses == tempSessionID of
@@ -113,5 +113,5 @@ getSession sid token = runMaybeT $ do
 -- because this way we can be sure that newest session will always end
 -- up in the database.
 deleteSuperfluousUserSessions :: MonadDB m => UserID -> m Integer
-deleteSuperfluousUserSessions uid = runDBEnv $ do
+deleteSuperfluousUserSessions uid = do
   kRun $ SQL "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? ORDER BY expires DESC OFFSET 4)" [toSql uid]

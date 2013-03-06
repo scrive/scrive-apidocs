@@ -48,7 +48,7 @@ main = Log.withLogger $ do
 
   withPostgreSQL (dbConfig appConf) $ do
     performDBChecks Log.cron kontraTables kontraMigrations
-    runDBEnv $ defineMany kontraFunctions
+    defineMany kontraFunctions
 
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   rng <- newCryptoRNGState

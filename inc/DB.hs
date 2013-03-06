@@ -4,7 +4,6 @@ module DB (
   , module DB.Binary
   , module DB.Core
   , module DB.Derive
-  , module DB.Env
   , module DB.Exception
   , module DB.Fetcher
   , module DB.Functions
@@ -19,7 +18,6 @@ import Database.HDBC.SqlValue
 import DB.Binary
 import DB.Core
 import DB.Derive
-import DB.Env
 import DB.Exception
 import DB.Fetcher
 import DB.Functions

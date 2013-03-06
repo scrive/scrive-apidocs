@@ -1,7 +1,7 @@
 module ForkAction (forkAction) where
 
+import Control.Monad.IO.Class
 import Control.Concurrent.MVar
-import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Database.HDBC
 import Numeric
@@ -43,7 +43,7 @@ showDiffTime clock1 clock2 = showFFloat (Just 2) (fromIntegral (diffClockTimeMil
 allActions :: MVar (Map.Map Int ForkedAction)
 allActions = unsafePerformIO $ newMVar Map.empty
 
-forkAction :: (MonadBaseControl IO m, MonadDB m) => String -> m () -> m ()
+forkAction :: (MonadBaseControl IO m, MonadDB m, MonadIO m) => String -> m () -> m ()
 forkAction title action = do
   nex <- kClone
   _ <- C.fork $ flip E.finally (liftIO $ disconnect nex) $ localNexus (const nex) $ do

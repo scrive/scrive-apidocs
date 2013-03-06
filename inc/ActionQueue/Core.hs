@@ -9,7 +9,6 @@ module ActionQueue.Core (
 
 import Data.Monoid
 import Data.Typeable
-
 import DB
 import MinutesTime
 
@@ -19,7 +18,7 @@ data Action idx t con n = Action {
   , qaSelectFields    :: [SQL]
   , qaIndexField      :: SQL
   , qaExpirationDelay :: RawSQL
-  , qaDecode          :: MonadDB m => DBEnv m [t]
+  , qaDecode          :: MonadDB m => m [t]
   , qaUpdateSQL       :: t -> SQL
   , qaEvaluateExpired :: t -> n ()
   }

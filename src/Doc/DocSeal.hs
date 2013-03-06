@@ -293,7 +293,7 @@ findOutAttachmentDesc document = do
                  , fileAttachedBy = attachedByText
                  }
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m) => String -> [SignatoryLink] -> m Seal.SealAttachment
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
@@ -318,7 +318,7 @@ sealSpecFromDocument boxImages hostpart document elog content inputpath outputpa
   evidenceDoc <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/evidenceDocumentation.html"
   sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -509,7 +509,7 @@ presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath 
             }
 
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
              => Document
              -> m (Either String Document)
 sealDocument document = do
@@ -526,7 +526,7 @@ sealDocument document = do
       return $ Left msg
 
 
-sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
                  => Document
                  -> File
                  -> m (Either String Document)
@@ -595,7 +595,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
 
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)

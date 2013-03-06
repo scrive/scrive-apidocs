@@ -24,7 +24,6 @@ import Doc.DocumentID
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 import Control.Monad.Identity
-import Control.Monad.Trans
 
 
 data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAffectedSignatoryAndMsg
@@ -55,7 +54,7 @@ eventTextTemplateName e =  (show e) ++ "Text"
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid maslid mmsg actor) = do
-   text <- lift $ renderTemplateI (eventTextTemplateName event) $ textFields
+   text <- renderTemplateI (eventTextTemplateName event) $ textFields
    kRun01 $ sqlInsert "evidence_log" $ do
       sqlSet "document_id" mdid
       sqlSet "time" $ actorTime actor
@@ -75,7 +74,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool wh
       
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyDocuments () where
   update (InsertEvidenceEventForManyDocuments event textFields dids actor) = do
-   texts <- lift $ forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
+   texts <- forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
    kRun_ $ sqlInsert "evidence_log" $ do
       sqlSetList "document_id" dids
       sqlSet "time" $ actorTime actor
@@ -146,11 +145,11 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
           , evMessageText = emsg
           } : acc
 
-copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> DBEnv m ()
+copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> m ()
 copyEvidenceLogToNewDocument fromdoc todoc = do
   copyEvidenceLogToNewDocuments fromdoc [todoc]
 
-copyEvidenceLogToNewDocuments :: MonadDB m => DocumentID -> [DocumentID] -> DBEnv m ()
+copyEvidenceLogToNewDocuments :: MonadDB m => DocumentID -> [DocumentID] -> m ()
 copyEvidenceLogToNewDocuments fromdoc todocs = do
   kRun_ $ "INSERT INTO evidence_log ("
     <> "  document_id"

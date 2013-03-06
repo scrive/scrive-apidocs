@@ -7,6 +7,7 @@ module AppDB (
 import DB.Core
 import DB.Model
 import DB.SQLFunction
+import Control.Monad.IO.Class
 
 import ActionQueue.Tables
 import Company.Tables
@@ -47,7 +48,7 @@ kontraFunctions = [
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
 -- disjoint with kontrakcja, so it can be done that way).
-kontraMigrations :: MonadDB m => [Migration m]
+kontraMigrations :: (MonadDB m, MonadIO m) => [Migration m]
 kontraMigrations = [
     addRegionToUserSettings
   , addServiceAndCompanyToStats

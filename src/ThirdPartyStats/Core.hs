@@ -270,7 +270,6 @@ asyncProcessEvents process numEvts = do
 
     -- Delete all events with a sequence number less than or equal to lastEvt.
     deleteEvents lastEvt = do
-        runDBEnv $ do
           _ <- kRun $ sqlDelete (tblName tableAsyncEventQueue) $ do
                       sqlWhere $ SQL "sequence_number <= ?" [toSql lastEvt]
           return ()
@@ -278,7 +277,6 @@ asyncProcessEvents process numEvts = do
     -- Fetch events from database and turn them into a pair of
     -- (events, highest sequence number in fetched list).
     fetchEvents = do
-        runDBEnv $ do
             _ <- kRun_ $ sqlSelect (tblName tableAsyncEventQueue) $ do
                 sqlResult "sequence_number"
                 sqlResult "event"
@@ -299,7 +297,7 @@ asyncProcessEvents process numEvts = do
 --   constructor, whereas others may be arbitrarily named using `someProp`.
 asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> m ()
 asyncLogEvent name props = do
-    _ <- runDBEnv $ kRun $ mkSQL INSERT tableAsyncEventQueue serializedEvent
+    kRun_ $ mkSQL INSERT tableAsyncEventQueue serializedEvent
     return ()
   where
     serializedEvent = [sql "event" . mkBinary $ AsyncEvent name props]

@@ -452,7 +452,7 @@ handleIssueShowPost :: Kontrakcja m => DocumentID -> m (Either KontraLink JSValu
 handleIssueShowPost docid = do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
-  timezone <- getDataFnM (look "timezone") >>= (runDBEnv . mkTimeZoneName)
+  timezone <- getDataFnM (look "timezone") >>= (mkTimeZoneName)
   unless (isAuthor (document, muser)) internalError -- still need this because others can read document
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "send"

@@ -39,7 +39,7 @@ testNewSessionInsertion = do
   doTimes 12 $ do
     (msess, _) <- insertNewSession uid
     assertBool "session successfully taken from the database" (isJust msess)
-  Just (user_sessions::Int) <- runDBEnv . getOne
+  Just (user_sessions::Int) <- getOne
     $ SQL "SELECT COUNT(*) FROM sessions WHERE user_id = ?" [toSql uid]
   assertEqual "there are only 5 sessions for one user" 5 user_sessions
 
@@ -58,7 +58,7 @@ testSessionUpdate = do
 testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = doTimes 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
-  Just (tokens::Int) <- runDBEnv $ getOne $ SQL "SELECT COUNT(*) FROM document_session_tokens WHERE session_id = ?" [toSql $ ctxsessionid ctx]
+  Just (tokens::Int) <- getOne $ SQL "SELECT COUNT(*) FROM document_session_tokens WHERE session_id = ?" [toSql $ ctxsessionid ctx]
   assertEqual "token successfully inserted into the database" 1 tokens
 
 testDocumentTicketReinsertion :: TestEnv ()
@@ -99,7 +99,7 @@ insertNewSession uid = do
   -- FIXME: this sucks, but there is no way to get id of newly inserted
   -- session and modifying normal code to get access to it seems like
   -- a bad idea
-  Just sid <- runDBEnv $ getOne $ SQL "SELECT id FROM sessions ORDER BY id DESC LIMIT 1" []
+  Just sid <- getOne $ SQL "SELECT id FROM sessions ORDER BY id DESC LIMIT 1" []
   msess <- getSession sid (sesToken sess)
   return (msess, ctx)
 

@@ -18,6 +18,7 @@ import DB.SQL2
 import Doc.API.Callback.Tables
 import Doc.DocumentID
 import Doc.DocStateData
+import Control.Monad.IO.Class
 
 import Utils.IO
 import MinutesTime
@@ -91,7 +92,7 @@ documentAPICallback = Action {
           return ()
 
 
-triggerAPICallbackIfThereIsOne :: MonadDB m => Document -> m ()
+triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadIO m) => Document -> m ()
 triggerAPICallbackIfThereIsOne doc = do
       case (documentapicallbackurl doc) of
         Nothing -> return () 

@@ -117,7 +117,7 @@ selectDocStatEventsSQL = SQL ("SELECT "
  <> " ") []
 
 
-fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
+fetchDocStats :: MonadDB m => m [DocStatEvent]
 fetchDocStats = kFold decoder []
   where
     decoder acc uid time quantity amount documentid
@@ -266,7 +266,7 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   []
 
 
-fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => DBEnv m [(User, Maybe Company, Maybe InviteInfo)]
+fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => m [(User, Maybe Company, Maybe InviteInfo)]
 fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
@@ -342,7 +342,7 @@ selectUserIDAndStatsSQL (q1, q2) = SQL ("SELECT "
   [toSql q1, toSql q2]
 
 
-fetchUserIDAndStats :: MonadDB m => DBEnv m (M.Map UserID [(MinutesTime, DocStatQuantity, Int)])
+fetchUserIDAndStats :: MonadDB m => m (M.Map UserID [(MinutesTime, DocStatQuantity, Int)])
 fetchUserIDAndStats = kFold decoder M.empty
   where
     decoder acc uid time quantity amount =
@@ -414,7 +414,7 @@ selectUserStatEventsSQL = SQL ("SELECT"
  <> "  FROM user_stat_events e"
  <> " ") []
 
-fetchUserStats :: MonadDB m => DBEnv m [UserStatEvent]
+fetchUserStats :: MonadDB m => m [UserStatEvent]
 fetchUserStats = kFold decoder []
   where
     decoder acc uid time quantity amount companyid = UserStatEvent {
@@ -480,7 +480,7 @@ selectSignStatEventsSQL = SQL ("SELECT"
  <> "  FROM sign_stat_events e"
  <> " ") []
 
-fetchSignStats :: MonadDB m => DBEnv m [SignStatEvent]
+fetchSignStats :: MonadDB m => m [SignStatEvent]
 fetchSignStats = kFold decoder []
   where
     decoder acc docid slid time quantity

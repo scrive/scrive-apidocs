@@ -83,9 +83,8 @@ module Doc.Model
   , GetSignatoriesByEmail(..)
   ) where
 
-import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Base
+import Control.Monad.IO.Class
 import DB
 import MagicHash
 import Crypto.RNG
@@ -137,8 +136,6 @@ import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
 import Control.Monad.State.Class
 import Company.Model
-import Control.Exception.Lifted
-
 
 
 
@@ -517,7 +514,7 @@ documentsSelectors =
   ]
 
 
-fetchDocuments :: MonadDB m => DBEnv m [Document]
+fetchDocuments :: MonadDB m => m [Document]
 fetchDocuments = kFold decoder []
   where
     -- Note: this function gets documents in reversed order, but all queries
@@ -625,7 +622,7 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
 selectSignatoryLinksSQL :: SQL
 selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <+> ""
 
-fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
+fetchSignatoryLinks :: MonadDB m => m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
   sigs <- kFold decoder (nulldocid, [], M.empty)
   return $ (\(d, l, m) -> M.insertWith' (++) d l m) sigs
@@ -705,7 +702,7 @@ fetchSignatoryLinks = do
           , signatorylinkelegdatamismatchpersonalnumber = eleg_data_mismatch_personal_number
           }
 
-insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> DBEnv m [SignatoryLink]
+insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> m [SignatoryLink]
 insertSignatoryLinksAsAre _documentid [] = return []
 insertSignatoryLinksAsAre documentid links = do
   _ <- kRun $ sqlInsert "signatory_links" $ do
@@ -777,7 +774,7 @@ signatoryAttachmentsSelectors = intercalate ", "
   , "description"
   ]
 
-fetchSignatoryAttachments :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryAttachment])
+fetchSignatoryAttachments :: MonadDB m => m (M.Map SignatoryLinkID [SignatoryAttachment])
 fetchSignatoryAttachments = kFold decoder M.empty
   where
     decoder acc signatory_link_id file_id name description =
@@ -798,14 +795,14 @@ documentTagsSelectors = sqlConcatComma [
 selectDocumentTagsSQL :: SQL
 selectDocumentTagsSQL = "SELECT" <+> documentTagsSelectors <+> "FROM document_tags "
 
-fetchDocumentTags :: MonadDB m => DBEnv m (M.Map DocumentID (S.Set DocumentTag))
+fetchDocumentTags :: MonadDB m => m (M.Map DocumentID (S.Set DocumentTag))
 fetchDocumentTags = kFold decoder M.empty
   where
     decoder acc document_id name v =
       M.insertWith' S.union document_id
          (S.singleton $ DocumentTag name v) acc
 
-insertDocumentTagsAsAre :: MonadDB m => DocumentID -> [DocumentTag] -> DBEnv m [DocumentTag]
+insertDocumentTagsAsAre :: MonadDB m => DocumentID -> [DocumentTag] -> m [DocumentTag]
 insertDocumentTagsAsAre _documentid [] = return []
 insertDocumentTagsAsAre documentid tags = do
   _ <- kRun $ sqlInsert "document_tags" $ do
@@ -829,7 +826,7 @@ authorAttachmentsSelectors = sqlConcatComma [
 selectAuthorAttachmentsSQL :: SQL
 selectAuthorAttachmentsSQL = "SELECT" <+> authorAttachmentsSelectors <+> "FROM author_attachments "
 
-fetchAuthorAttachments :: MonadDB m => DBEnv m (M.Map DocumentID [AuthorAttachment])
+fetchAuthorAttachments :: MonadDB m => m (M.Map DocumentID [AuthorAttachment])
 fetchAuthorAttachments = kFold decoder M.empty
   where
     decoder acc document_id file_id =
@@ -837,7 +834,7 @@ fetchAuthorAttachments = kFold decoder M.empty
         authorattachmentfile = file_id
       }] acc
 
-insertAuthorAttachmentsAsAre :: MonadDB m => DocumentID -> [AuthorAttachment] -> DBEnv m [AuthorAttachment]
+insertAuthorAttachmentsAsAre :: MonadDB m => DocumentID -> [AuthorAttachment] -> m [AuthorAttachment]
 insertAuthorAttachmentsAsAre _documentid [] = return []
 insertAuthorAttachmentsAsAre documentid attachments = do
   _ <- kRun $ sqlInsert "author_attachments" $ do
@@ -851,7 +848,7 @@ insertAuthorAttachmentsAsAre documentid attachments = do
 
 insertSignatoryAttachmentsAsAre :: MonadDB m
                                 => [(SignatoryLinkID,[SignatoryAttachment])]
-                                -> DBEnv m (M.Map SignatoryLinkID [SignatoryAttachment])
+                                -> m (M.Map SignatoryLinkID [SignatoryAttachment])
 insertSignatoryAttachmentsAsAre attachments | all (null . snd) attachments = return M.empty
 insertSignatoryAttachmentsAsAre attachments = do
   _ <- kRun $ sqlInsert "signatory_attachments" $ do
@@ -882,7 +879,7 @@ selectSignatoryLinkFieldsSQL = "SELECT"
   <+> sqlConcatComma signatoryLinkFieldsSelectors
   <+> "FROM signatory_link_fields "
 
-fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
+fetchSignatoryLinkFields :: MonadDB m => m (M.Map SignatoryLinkID [SignatoryField])
 fetchSignatoryLinkFields = kFold decoder M.empty
   where
     decoder acc slid xtype custom_name is_author_filled v obligatory placements =
@@ -902,7 +899,7 @@ fetchSignatoryLinkFields = kFold decoder M.empty
 
 insertSignatoryLinkFieldsAsAre :: MonadDB m
                                => [(SignatoryLinkID,[SignatoryField])]
-                               -> DBEnv m (M.Map SignatoryLinkID [SignatoryField])
+                               -> m (M.Map SignatoryLinkID [SignatoryField])
 insertSignatoryLinkFieldsAsAre fields | all (null . snd) fields = return M.empty
 insertSignatoryLinkFieldsAsAre fields = do
   let getCustomName field = case sfType field of
@@ -928,7 +925,7 @@ insertSignatoryLinkFieldsAsAre fields = do
 
 
 insertSignatoryScreenshots :: MonadDB m
-                           => [(SignatoryLinkID, SignatoryScreenshots.T)] -> DBEnv m Integer
+                           => [(SignatoryLinkID, SignatoryScreenshots.T)] -> m Integer
 insertSignatoryScreenshots l = do
   let (slids, types, times, ss) = unzip4 $ [ (slid, "first",     t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.first) l ]
                                         <> [ (slid, "signing",   t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.signing) l ]
@@ -964,7 +961,7 @@ instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, Signa
     flip kFold [] folder
 
 
-insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
+insertDocumentAsIs :: MonadDB m => Document -> m (Maybe Document)
 insertDocumentAsIs document = do
     let Document { documenttitle
                  , documentsignatorylinks
@@ -1024,7 +1021,7 @@ insertDocumentAsIs document = do
         assertEqualDocuments document newdocument
         return (Just newdocument)
 
-insertNewDocument :: MonadDB m => Document -> DBEnv m Document
+insertNewDocument :: (MonadDB m, MonadIO m) => Document -> m Document
 insertNewDocument doc = do
   now <- getMinutesTime
   let docWithTime = doc {documentmtime  = now, documentctime = now}
@@ -1034,7 +1031,7 @@ insertNewDocument doc = do
     Nothing -> error "insertNewDocument failed for some reason"
 
 -- Create new document based on existing one
-newFromDocumentID :: MonadDB m => (Document -> Document) -> DocumentID -> DBEnv m (Maybe Document)
+newFromDocumentID :: (MonadDB m, MonadIO m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
 newFromDocumentID f docid = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
@@ -1043,7 +1040,7 @@ newFromDocumentID f docid = do
         Log.error $ "Document " ++ show docid ++ " does not exist"
         return Nothing
 
-newFromDocument :: MonadDB m => (Document -> Document) -> Document -> DBEnv m (Maybe Document)
+newFromDocument :: (MonadDB m, MonadIO m) => (Document -> Document) -> Document -> m (Maybe Document)
 newFromDocument f doc = do
   Just `liftM` insertNewDocument (f doc)
 
@@ -1053,7 +1050,7 @@ instance MonadDB m => DBQuery m CheckIfDocumentExists Bool where
     checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ?" [toSql did]
 
 data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ArchiveDocument () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
   update (ArchiveDocument uid did _actor) = do
     kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSet "deleted" True
@@ -1156,7 +1153,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bo
         sqlWhereEq "status" $ DocumentError undefined
 
 data ELegAbortDocument = ELegAbortDocument DocumentID SignatoryLinkID String String String String Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ELegAbortDocument () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ELegAbortDocument () where
   update (ELegAbortDocument did slid msg firstName lastName personNumber actor) = do
     let mtime = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
@@ -1194,7 +1191,7 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ELegAbortDo
     return ()
 
 data CancelDocument = CancelDocument DocumentID Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m CancelDocument () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument () where
   update (CancelDocument did actor) = do
     let mtime = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
@@ -1213,7 +1210,7 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m CancelDocum
     return ()
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) String Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered () where
   update (ChangeSignatoryEmailWhenUndelivered did slid muser email actor) = do
       oldemail <- kRunAndFetch1OrThrowWhyNot (\acc (m :: String) -> acc ++ [m]) $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
@@ -1300,7 +1297,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
    
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m DeleteSigAttachment () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () where
   update (DeleteSigAttachment did slid fid actor) = do
     let decode acc email saname = acc ++ [(email,saname)]
     (email::String,saname::String) <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_attachments" $ do
@@ -1330,7 +1327,7 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSig
 
 data DocumentFromSignatoryDataV = DocumentFromSignatoryDataV DocumentID
                                   [(String,String,String,String,String,String,[String])] Actor
-instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryDataV [Document] where
+instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m DocumentFromSignatoryDataV [Document] where
   update (DocumentFromSignatoryDataV docid csvdata actor) = do
     mdocument <- query $ GetDocumentByDocumentID docid
     case mdocument of
@@ -1340,7 +1337,7 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSig
       Just document -> do
         let sigs = length (documentsignatorylinks document)
         mds <- forM csvdata $ \csvdata1 -> do
-          mhs <- lift $ replicateM sigs random
+          mhs <- replicateM sigs random
           md <- newFromDocument (toNewDoc csvdata1 mhs) document
           return $ $fromJust md
         copyEvidenceLogToNewDocuments docid (map documentid mds)
@@ -1381,10 +1378,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
                 actor
     return ()
 
-selectDocuments :: MonadDB m => SqlSelect -> DBEnv m [Document]
+selectDocuments :: MonadDB m => SqlSelect -> m [Document]
 selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit Nothing sqlquery
 
-selectDocumentsWithSoftLimit :: MonadDB m => Maybe Int -> SqlSelect -> DBEnv m (Int,[Document])
+selectDocumentsWithSoftLimit :: MonadDB m => Maybe Int -> SqlSelect -> m (Int,[Document])
 selectDocumentsWithSoftLimit softlimit sqlquery = do
     allDocumentsCount <- case softlimit of
       Nothing -> do
@@ -1443,7 +1440,7 @@ instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
       >>= return . fromMaybe S.empty
 
 data GetSignatoryLinkByID = GetSignatoryLinkByID DocumentID SignatoryLinkID (Maybe MagicHash)
-instance (MonadDB m, MonadBase IO m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
+instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
   query (GetSignatoryLinkByID did slid mmh) = do
     let queryx = selectSignatoryLinksX $ do
                   sqlWhereDocumentIDIs did
@@ -1471,11 +1468,11 @@ instance (MonadDB m, MonadBase IO m) => DBQuery m GetSignatoryLinkByID Signatory
               -- This case should not really happen due to how we handle
               -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
               -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-              throwIO $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand queryx)
+              kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand queryx)
            (ex:_) -> do
               -- Lets throw first exception on the list. It should be the
               -- most generic one.
-              throwIO ex
+              kThrow ex
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
@@ -1573,7 +1570,7 @@ instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] 
       sqlLimit (fromIntegral size)
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m MarkDocumentSeen Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
   update (MarkDocumentSeen did slid mh actor) = do
         -- have to make sure slid and mh match to record log; sorry for inefficiency -EN
         sig <- query $ GetSignatoryLinkByID did slid (Just mh)
@@ -1605,7 +1602,7 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m MarkDocumen
         return success
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID (Maybe String) Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m AddInvitationEvidence Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool where
   update (AddInvitationEvidence docid slid mmsg actor) = do
         sig <- query $ GetSignatoryLinkByID docid slid Nothing
         let eml = getEmail sig
@@ -1619,7 +1616,7 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m AddInvitati
         return True
 
 data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m MarkInvitationRead Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool where
   update (MarkInvitationRead did slid actor) = do
         sig <- query $ GetSignatoryLinkByID did slid Nothing
         let time = actorTime actor
@@ -1640,16 +1637,16 @@ data NewDocument = NewDocument User String DocumentType Int Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (Maybe Document) where
   update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
-  magichash <- lift random
+  magichash <- random
 
-  authorDetails <- lift $ signatoryDetailsFromUser user (True, True)
+  authorDetails <- signatoryDetailsFromUser user (True, True)
   let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
   let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user }
 
   othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
-                        mh <- lift random
+                        mh <- random
                         return $ signLinkFromDetails'
                                 SignatoryDetails
                                                 { signatorysignorder = SignOrder 2
@@ -1716,7 +1713,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool w
     return (result>0)
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m RejectDocument () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where
   update (RejectDocument docid slid customtext actor) = do
     let time = actorTime actor
     sig <- query $ GetSignatoryLinkByID docid slid Nothing
@@ -1782,7 +1779,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
       let signatoriesDetails = map (\x -> (signatorydetails x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
       newSignLinks <- forM signatoriesDetails $ \(details, linkid, atts) -> do
-                           magichash <- lift random
+                           magichash <- random
                            return $ (signLinkFromDetails' details atts magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
@@ -1954,7 +1951,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUI Bool where
         sqlWhereEq "id" did
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
-instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m SetInvitationDeliveryStatus Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
   update (SetInvitationDeliveryStatus did slid status actor) = do
     let decode acc st = acc ++ [st]
     old_status <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_links" $ do
@@ -2092,7 +2089,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
 
             let mauthorsiglink = getAuthorSigLink document
             siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl, authmethod) -> do
-                     magichash <- lift random
+                     magichash <- random
                      let link' = (signLinkFromDetails' details atts magichash)
                                  {  signatorylinkcsvupload = mcsvupload
                                   , signatorylinksignredirecturl= msignredirecturl
@@ -2206,7 +2203,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDetailsForTest SignatoryLink where
   update (SignLinkFromDetailsForTest details) = do
-      magichash <- lift random
+      magichash <- random
 
       let link = signLinkFromDetails' details
                         [] magichash
@@ -2214,7 +2211,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
       return link
 
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User DocumentID Actor
-instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Maybe Document) where
+instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Maybe Document) where
   update (SignableFromDocumentIDWithUpdatedAuthor user docid actor) = do
           mcompany <- maybe (return Nothing) (query . GetCompany) (usercompany user)
           let replaceAuthorSigLink sl
@@ -2562,7 +2559,7 @@ instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLin
 
 -- Update utilities
 
-updateWithEvidence' :: (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => DBEnv m Bool -> Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
+updateWithEvidence' :: (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => m Bool -> Table -> SQL -> m evidence -> m Bool
 updateWithEvidence' testChanged t u mkEvidence = do
   changed <- testChanged
   success <- kRun01 $ "UPDATE" <+> raw (tblName t) <+> "SET" <+> u
@@ -2573,11 +2570,11 @@ updateWithEvidence' testChanged t u mkEvidence = do
 
 
 
-updateWithEvidence ::  (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
+updateWithEvidence ::  (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => Table -> SQL -> m evidence -> m Bool
 updateWithEvidence = updateWithEvidence' (return True)
 
 updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
-                               => DocumentID -> SQL -> a -> DBEnv m evidence -> DBEnv m Bool
+                               => DocumentID -> SQL -> a -> m evidence -> m Bool
 updateOneWithEvidenceIfChanged did col new =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
@@ -2585,7 +2582,7 @@ updateOneWithEvidenceIfChanged did col new =
     tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
 
 updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
-                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m evidence -> DBEnv m Bool
+                                       => DocumentID -> SQL -> a -> MinutesTime -> m evidence -> m Bool
 updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)

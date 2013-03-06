@@ -48,7 +48,7 @@ sqlAttachmentResults = do
   sqlResult "shared"
   sqlResult "deleted"
 
-fetchAttachments :: MonadDB m => DBEnv m [Attachment]
+fetchAttachments :: MonadDB m => m [Attachment]
 fetchAttachments = kFold decoder []
   where
     decoder acc aid title ctime mtime file_id user_id shared deleted =

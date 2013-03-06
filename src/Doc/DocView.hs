@@ -123,7 +123,7 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m) => Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
     ctx <- getContext
     file <- documentfileM doc

@@ -232,7 +232,7 @@ apiCallReady did =  api $ do
         throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email adress set."
   when (isNothing $ documentfile doc) $ do
         throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
-  timezone <- lift $ runDBEnv $ mkTimeZoneName (timezonestring params)
+  timezone <- lift $ mkTimeZoneName (timezonestring params)
   mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
   case mndoc of
           Right newdocument -> do
