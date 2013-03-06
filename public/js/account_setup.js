@@ -132,7 +132,7 @@
               mixpanel.people.set(ps);
               trackTimeout('Sign TOS', {}, function() {
                   window.location = resp.location;
-              });
+              }, 1000);
           } else if (resp.error == 'already_active') {
             new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
           } else if (resp.error == 'reload') {
@@ -321,6 +321,7 @@
   });
 
   window.AccountSetup = function(args) {
+      mixpanel.track('Visit account setup');
     var model = new AccountSetupModel(args);
     var view =  new AccountSetupView({model: model, el: $("<div class='short-input-section account-setup'/>")});
     this.el = function() {return $(view.el);}
