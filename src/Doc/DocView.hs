@@ -65,6 +65,7 @@ import BrandedDomains
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 
+
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
