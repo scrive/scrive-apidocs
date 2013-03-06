@@ -242,9 +242,8 @@ localizationsFromFile path = do
   let template = unlines $ tail $ filter (not . ("#" `isPrefixOf`)) $ lines langsTemplate
       node = parse template path
       Right (NN top) = node
-      JSSourceElementsTop [NN vars, _] = top
-      JSVariables _ [NN vardecl] _ = vars
-      JSVarDecl _ [_, NN obj] = vardecl
+      JSSourceElementsTop (NN vars: _) = top
+      JSExpression [_, _, NN obj] = vars
       JSObjectLiteral _ props _ = obj
   case propsToLocalization "localization" props of
     Left e -> hPutStrLn stderr e >> exitFailure
