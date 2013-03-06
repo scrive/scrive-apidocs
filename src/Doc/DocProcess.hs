@@ -75,9 +75,6 @@ data DocProcessInfo =
   , processflashmessagerestarted :: String
   , processflashmessageprolonged :: String
 
-  -- process specific modal templates
-  , processmodalsendconfirmation :: String
-
   -- process specific seal information
   , processsealingtext :: String
   , processlasthisentry :: String
@@ -112,9 +109,6 @@ contractProcess =
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageContractRestarted"
   , processflashmessageprolonged = "flashMessageContractProlonged"
-
-  -- process specific modal templates
-  , processmodalsendconfirmation = "modalContractCreated"
 
   -- process specific seal information
   , processsealingtext = "contractsealingtexts"
@@ -151,9 +145,6 @@ offerProcess =
   , processflashmessagerestarted = "flashMessageOfferRestarted"
   , processflashmessageprolonged = "flashMessageOfferProlonged"
 
-  -- process specific modal templates
-  , processmodalsendconfirmation = "modalOfferCreated"
-
   -- process specific seal information
   , processsealingtext = "offersealingtexts"
   , processlasthisentry = "offerLastHistEntry"
@@ -189,9 +180,6 @@ orderProcess =
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageOrderRestarted"
   , processflashmessageprolonged = "flashMessageOrderProlonged"
-
-  -- process specific modal templates
-  , processmodalsendconfirmation = "modalOrderCreated"
 
   -- process specific seal information
   , processsealingtext = "ordersealingtexts"

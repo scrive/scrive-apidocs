@@ -17,7 +17,6 @@ module Doc.DocView (
   , mailDocumentRemind
   , mailInvitation
   , modalRejectedView
-  , modalSendConfirmationView
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
@@ -62,17 +61,6 @@ import Analytics.Include
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
-
-modalSendConfirmationView :: TemplatesMonad m => Document -> Bool -> m FlashMessage
-modalSendConfirmationView document authorWillSign = do
-  partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
-  toModal <$> (renderTemplateForProcess document processmodalsendconfirmation $ do
-    F.value "signedAndCompleted" $ all (hasSigned) $ filter isSignatory $ documentsignatorylinks document
-    F.value "partyListButAuthor" partylist
-    F.value "signatory" . listToMaybe $ map getSmartName $ partyList document
-    F.value "willBeSigned" (authorWillSign && (not $ hasOtherSignatoriesThenAuthor document))
-    F.value "signedByAuthor" $ hasSigned $ getAuthorSigLink document
-    documentInfoFields document)
 
 
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
