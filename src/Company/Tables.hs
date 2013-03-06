@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})

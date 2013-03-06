@@ -87,7 +87,7 @@ addNewCompanyBrandingOptions :: MonadDB m => Migration m
 addNewCompanyBrandingOptions =
   Migration {
     mgrTable = tableCompanies
-  , mgrFrom = 7
+  , mgrFrom = 8
   , mgrDo = do
       kRunRaw "ALTER TABLE companies ADD COLUMN email_bordercolour TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_headerfont TEXT NULL"
