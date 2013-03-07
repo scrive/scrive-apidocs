@@ -401,7 +401,8 @@ window.RejectApiCall = ApiCall.extend({
         defaults: {
              name : "Reject document by signatory",
              documentid : LocalStorage.get("api","documentid"),
-             signatorylinkid : LocalStorage.get("api","signatorylinkid")
+             signatorylinkid : LocalStorage.get("api","signatorylinkid"),
+             customtext : ""
 
         },
         initialize: function (args) {
@@ -417,12 +418,20 @@ window.RejectApiCall = ApiCall.extend({
             LocalStorage.set("api","signatorylinkid",signatorylinkid);
             return this.set({"signatorylinkid" : signatorylinkid});
         },
+        customtext : function() {return this.get("customtext");},
+        setCustomtext : function(customtext) {
+             return this.set({"customtext" : customtext});
+        },
+
         send : function() {
             var model = this;
             $.ajax(Scrive.apiUrl()+"reject/" + model.documentid() + "/" + model.signatorylinkid(), {
                 type: 'POST',
                 cache: false,
                 headers : { authorization : model.authorization() },
+                data : {
+                     customtext : this.customtext()
+                    },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -832,10 +841,26 @@ window.RejectApiCallView = Backbone.View.extend({
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
             var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
             signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
+
+            var customTextImput = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px;width:300px;'/>").html(model.customtext());
+            customTextImput.tinymce({
+                      script_url: '/tiny_mce/tiny_mce.js',
+                      theme: "advanced",
+                      theme_advanced_toolbar_location: "top",
+                      theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
+                      theme_advanced_buttons2: "",
+                      convert_urls: false,
+                      theme_advanced_toolbar_align: "middle",
+                      plugins: "noneditable,paste",
+                      valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
+            });
+
+
             var button = $("<input type='button' value='Send request'/>");
-            button.click(function() {model.send(); return false;});
+            button.click(function() {model.setCustomtext(customTextImput.val()); model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
                    .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div>Custom text (empty == Ignore): <BR/></div>").append(customTextImput))
                    .append($("<div/>").append(button));
             this.render();
         },
