@@ -654,8 +654,8 @@ docStatSignMethod status did apistring =
                        DocStatEmailSignatureReject,
                        DocStatElegSignatureReject,
                        signatoryCount,
-                       "doc.rejection_time IS NOT NULL",
-                       "doc.rejection_time")
+                       "sl.rejection_time IS NOT NULL",
+                       "sl.rejection_time")
         DocTimeout -> (DocStatPadSignatureTimeout,
                        DocStatEmailSignatureTimeout,
                        DocStatElegSignatureTimeout,
@@ -697,8 +697,8 @@ docStatCancel =
 docStatReject :: StatQuery
 docStatReject =
     genericStatEvent DocStatReject
-                     "doc.rejection_time"
-                     "doc.rejection_time IS NOT NULL"
+                     "sl.rejection_time"
+                     "sl.rejection_time IS NOT NULL"
 
 -- | Record a "doc created" stat.
 docStatCreate :: StatQuery
