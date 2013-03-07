@@ -187,6 +187,7 @@ docStateTests env = testGroup "DocState" [
   testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" env testNoDocumentResetSignatoryDetailsAlwaysLeft,
   testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" env testNotPreparationResetSignatoryDetailsAlwaysLeft,
   testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" env testPreparationResetSignatoryDetailsAlwaysRight,
+  testThat "ResetSignatoryDetails2 works as expected" env testPreparationResetSignatoryDetails2Works,
   testThat "when I call attachcsvupload with a doc that does not exist, always returns left" env testNoDocumentAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" env testNotPreparationAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload and the csvindex is the author, return left" env testPreparationAttachCSVUploadAuthorIndexLeft,
@@ -1190,6 +1191,31 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   --assert
   assert success
   assertInvariants ndoc
+
+testPreparationResetSignatoryDetails2Works :: TestEnv ()
+testPreparationResetSignatoryDetails2Works = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  mt <- rand 10 arbitrary
+  --execute
+  let newData1 = (defaultValue { signatoryisauthor = True },[],Nothing, Nothing, StandardAuthentication, EmailDelivery)
+  success1 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData1] (systemActor mt)
+  assert success1
+  Just ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc1))
+  assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc1))
+
+  let newData2 = (defaultValue { signatoryisauthor = True },[],Nothing, Nothing, ELegAuthentication, PadDelivery)
+  success2 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData2] (systemActor mt)
+  assert success2
+  Just ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  assertEqual "Proper delivery method set" [PadDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc2))
+  assertEqual "Proper authentication method set" [ELegAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc2))
+
+  --assert
+  assertInvariants ndoc1
+  assertInvariants ndoc2
 
 testNoDocumentResetSignatoryDetailsAlwaysLeft :: TestEnv ()
 testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
