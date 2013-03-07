@@ -63,7 +63,6 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     var checkboxbox = $("<div class='checkbox-box'/>");
     this.checkbox = $("<div class='checkbox'/>");
     this.checkbox.click(function() {
-        if (self.checkbox.attr("readonly") != undefined) return false;
         if(!self.checkbox.hasClass("checked"))
             mixpanel.track('Check ' + model.label().toLowerCase());
         else
@@ -111,14 +110,6 @@ window.CompanyBrandingColourView = Backbone.View.extend({
       this.input.val(colour);
     }
     this.display.css("background-color", colour);
-
-    if (!this.model.editable()) {
-      this.checkbox.attr("readonly", "true");
-      this.input.attr("readonly", "true");
-    } else {
-      this.checkbox.removeAttr("readonly");
-      this.input.removeAttr("readonly");
-    }
   }
 });
 
@@ -137,7 +128,6 @@ window.CompanyBrandingHueColourView = Backbone.View.extend({
     var checkboxbox = $("<div class='checkbox-box'/>");
     this.checkbox = $("<div class='checkbox'/>");
     this.checkbox.click(function() {
-        if (self.checkbox.attr("readonly") != undefined) return false;
         if(!self.checkbox.hasClass("checked"))
             mixpanel.track('Check ' + model.label().toLowerCase());
         else
@@ -154,7 +144,8 @@ window.CompanyBrandingHueColourView = Backbone.View.extend({
     });
     this.input = input;
 
-    this.display = $('<a href="#" style="text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 6px 10px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1; margin-left: 20px;">x</a>');
+    this.display = $('<a href="#" class="hue-display" onclick="return false" />').text('x');
+
     var colour = this.model.colour();
     this.display.css({'background': 'hsl(' + colour + ', 30%, 35%)',
                       'border': '2px solid hsl(' + colour + ', 30%, 23%)',
@@ -198,14 +189,6 @@ window.CompanyBrandingHueColourView = Backbone.View.extend({
                       '-ms-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
                       '-o-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
                       'box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px'});
-
-    if (!this.model.editable()) {
-      this.checkbox.attr("readonly", "true");
-      this.input.attr("readonly", "true");
-    } else {
-      this.checkbox.removeAttr("readonly");
-      this.input.removeAttr("readonly");
-    }
   }
 });
 
@@ -268,7 +251,6 @@ window.CompanyBrandingFontView = Backbone.View.extend({
     var checkboxbox = $("<div class='checkbox-box'/>");
     this.checkbox = $("<div class='checkbox'/>");
     this.checkbox.click(function() {
-        if (self.checkbox.attr('readonly') != undefined) return false;
         if(!self.checkbox.hasClass('checked'))
             mixpanel.track('Check ' + model.label().toLowerCase());
         else
@@ -344,19 +326,6 @@ window.CompanyBrandingFontView = Backbone.View.extend({
     } else {
       this.checkbox.removeClass('checked');
       this.customdiv.hide();
-    }
-
-    // var font = this.model.font();
-    // if (this.input.val() != font && this.input[0] !== document.activeElement) {
-    //   this.input.val(font);
-    // }
-
-    if (!this.model.editable()) {
-      this.checkbox.attr('readonly', 'true');
-      // this.input.attr('readonly', 'true');
-    } else {
-      this.checkbox.removeAttr('readonly');
-      // this.input.removeAttr('readonly');
     }
   }
 });
@@ -465,7 +434,6 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     var checkboxbox = $("<div class='checkbox-box'/>");
     this.checkbox = $("<div class='checkbox'/>");
     this.checkbox.click(function() {
-        if (self.checkbox.attr("readonly") != undefined) return false;
         if(!self.checkbox.hasClass("checked"))
             mixpanel.track('Check ' + model.label().toLowerCase());
         else
@@ -558,7 +526,7 @@ window.CompanyModel = Backbone.Model.extend({
           logo: companyui.logo(),
           label: localization.customiseLogo,
           editable: companyui.editable(),
-          url: ''//this.url,
+          url: ''
         }),
         barsbackground: new CompanyBrandingColour({
           companyui: companyui,
@@ -707,12 +675,70 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
   prerender: function() {
     var company = this.model;
 
-    this.container = $('<center><table style="width: 614px;"><tr><td><table><tr><td><img id="emailpreviewlogo" src="/img/logo_email.png" style="border: none; max-width:600px; margin-top: 50px; margin-bottom: 20px;" width="200" /></td></tr></table></td></tr><tr><td><table class="emailpreviewbordercolour emailpreviewbackgroundcolour" border="0" cellpadding="0" cellspacing="0" width="600" style="border: 4px solid #dee4ed; border-top: auto; background-color: #FFFFFF"><tr><td></td></tr><tr><td><table class="emailpreviewborderbottomcolour" border="0" cellpadding="40" cellspacing="0"width="600" style="border-bottom-color: #dee4ed; border-bottom-width: 1px; border-bottom-style: solid"><tr><td class="emailpreviewbackgroundcolour" style="background-color: #fff"><table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td><div><span id="emailpreviewsubject" class="emailpreviewheaderfont" style="color: #364963; display: block; font-family: Helvetica Neue, Arial, sans-serif; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">SUBJECT</span><a style="text-decoration: none;" href="#"><span class="emailpreviewheaderfont" style="color: #7a94b8; display: block; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">Powered by Scrive</span></a></div></td></tr></table></td></tr></table><table class="emailpreviewborderbottomcolour" border="0" cellpadding="0" cellspacing="40" width="600" style="border-bottom-color: #dee4ed; border-bottom-width: 1px; border-bottom-style: solid"><tr><td><table border="0" cellspacing="0" width="100%"><tr><td><div class="emailpreviewfont" style="color: #333; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; line-height: 150%; text-align: left"><div class="emailpreviewbordercolour" style="float: left; margin-right: 32px; border:1px solid #dee4ed;"><img src="/img/document.png" style="border: none; max-width:150px;"/></div><div style="float: right; width: 330px;"><div id="emailpreviewcontent">CONTENT</div><br/><br/><a id="emailpreviewbutton" href="" style="background: hsl(215, 30%, 35%); border: 2px solid hsl(215, 30%, 23%); -webkit-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -moz-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -ms-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -o-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 12px 20px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1">Button</a></div></div></td></tr></table></td></tr></table></td></tr><tr><td><table class="emailpreviewbackgroundcolour" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #fff; border-top: 0"><tr><td valign="top"><table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td><br /><div id="emailpreviewfooter" style="color: #999; font-family: Helvetica Neue, Arial, sans-serif; font-style: italic; font-size: 13px; line-height: 125%; text-align: justify; padding: 0 40px">FOOTER</div><br /></td></tr></table></td></tr></table></td></tr></table><br /></td></tr></table></center>');
+    this.logo = $('<img id="emailpreviewlogo" src="/img/logo_email.png" width="200" />');
+    var logorow = $('<tr/>').append($('<td/>').append($('<table/>').append($('<tr/>').append($('<td/>').append(this.logo)))));
 
-    this.container.find('#emailpreviewsubject').text(localization.sampleEmailHeader);
-    this.container.find('#emailpreviewcontent').text(localization.sampleEmailContent);
-    this.container.find('#emailpreviewbutton').text(localization.sampleEmailButtonLabel);
-    this.container.find('#emailpreviewfooter').text(localization.sampleEmailFooter);
+    this.subjectspan = $('<span id="emailpreviewsubject"/>').text(localization.sampleEmailHeader);
+    this.poweredbyscrivespan = $('<span id="emailpreviewpoweredbyscrive"/>').text('Powered by Scrive');
+    var poweredbyscrive = $('<a style="text-decoration: none;" href="#" onclick="return false"/>').append(this.poweredbyscrivespan);
+    var headercontent = $('<div/>').append(this.subjectspan).append(poweredbyscrive);
+    var headersubtable = $('<table border="0" cellpadding="0" cellspacing="0" width="100%"/>');
+    headersubtable.append($('<tr/>').append($('<td/>').append(headercontent)));
+    this.headersubtablecell = $('<td id="emailpreviewheadersubtablecell"/>').append(headersubtable);
+    this.headertable = $('<table id="emailpreviewheadertable" border="0" cellpadding="40" cellspacing="0"width="600"/>');
+    this.headertable.append($('<tr/>').append(this.headersubtablecell));
+
+    var previewtextcontent = $('<div id="emailpreviewcontent"/>').text(localization.sampleEmailContent);
+    this.emailpreviewbutton = $('<a href="#" onclick="return false" id="emailpreviewbutton"/>').text(localization.sampleEmailButtonLabel);
+    var divcontent = $('<div id="divcontent"/>');
+    divcontent.append(previewtextcontent);
+    divcontent.append($('<br/>'));
+    divcontent.append($('<br/>'));
+    divcontent.append(this.emailpreviewbutton);
+
+    var documentpreview = $('<img id="documentpreview" src="/img/document.png"/>');
+    this.documentpreviewdiv = $('<div id="documentpreviewdiv"/>');
+    this.documentpreviewdiv.append(documentpreview);
+
+    this.documentcontent = $('<div id="documentcontent"/>');
+    this.documentcontent.append(this.documentpreviewdiv);
+    this.documentcontent.append(divcontent);
+
+    var contentsubtable = $('<table border="0" cellspacing="0" width="100%"/>');
+    contentsubtable.append($('<tr/>').append($('<td/>').append(this.documentcontent)));
+
+    this.contenttable = $('<table id="contenttable" border="0" cellpadding="0" cellspacing="40" width="600"/>');
+    this.contenttable.append($('<tr/>').append($('<td/>').append(contentsubtable)));
+
+    var contentmainrow = $('<tr/>').append($('<td/>').append(this.headertable).append(this.contenttable));
+
+    var emailpreviewfooter = $('<div id="emailpreviewfooter"/>').text(localization.sampleEmailFooter);
+    var emailpreviewfootercell = $('<td/>');
+    emailpreviewfootercell.append($('<br/>'));
+    emailpreviewfootercell.append(emailpreviewfooter);
+    emailpreviewfootercell.append($('<br/>'));
+
+    var emailpreviewfootersubtable = $('<table border="0" cellpadding="0" cellspacing="0" width="100%"/>');
+    emailpreviewfootersubtable.append($('<tr/>').append(emailpreviewfootercell));
+
+    this.emailpreviewfootertable = $('<table id="emailpreviewfootertable" border="0" cellpadding="0" cellspacing="0" width="600"/>');
+    this.emailpreviewfootertable.append($('<tr/>').append($('<td valign="top"/>').append(emailpreviewfootersubtable)));
+
+    var footerrow = $('<tr/>').append($('<td/>').append(this.emailpreviewfootertable));
+
+    this.maincontenttable = $('<table id="maincontenttable" border="0" cellpadding="0" cellspacing="0" width="600"/>');
+    this.maincontenttable.append($('<tr/>').append($('<td/>')));
+    this.maincontenttable.append(contentmainrow);
+    this.maincontenttable.append(footerrow);
+
+    var maincontentrow = $('<tr/>').append($('<td/>').append(this.maincontenttable));
+
+    var maintable = $('<table id="maintable"/>');
+    maintable.append(logorow);
+    maintable.append(maincontentrow);
+
+    this.container = $('<center/>');
+    this.container.append(maintable);
 
     $(this.el).empty();
     $(this.el).append(this.container);
@@ -721,7 +747,7 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
   },
   renderLogoWithSrc: function(logourl, logoChanged) {
 
-    var img = $('#emailpreviewlogo');
+    var img = this.logo;
 
     if (logoChanged) {
       img.attr('src', logourl);
@@ -748,27 +774,26 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
 
     this.renderLogoWithSrc(logourl, logoChanged);
 
-    this.container.find('.emailpreviewborderbottomcolour').css('border-bottom-color', bordercolour);
-    this.container.find('.emailpreviewbordercolour').css('border', '1px solid ' + bordercolour);
-    this.container.find('.emailpreviewbackgroundcolour').css('background-color', bbcolour);
-    this.container.find('.emailpreviewheaderfont').css('font-family', headerfont);
-    this.container.find('.emailpreviewfont').css('font-family', font);
-    this.container.find('.emailpreviewfont').css('color', btcolour);
+    this.headertable.css('border-bottom-color', bordercolour);
+    this.contenttable.css('border-bottom-color', bordercolour);
+    this.maincontenttable.css('border', '1px solid ' + bordercolour);
+    this.documentpreviewdiv.css('border', '1px solid ' + bordercolour);
+    this.maincontenttable.css('background-color', bbcolour);
+    this.headersubtablecell.css('background-color', bbcolour);
+    this.emailpreviewfootertable.css('background-color', bbcolour);
+    this.subjectspan.css('font-family', headerfont);
+    this.poweredbyscrivespan.css('font-family', headerfont);
+    this.documentcontent.css('font-family', font);
+    this.documentcontent.css('color', btcolour);
     this.container.css('background-color', emailbackgroundcolour);
 
-    this.container.find('#emailpreviewbutton').css({'background': 'hsl(' + buttoncolour + ', 30%, 35%)',
-                                                    'border': '2px solid hsl(' + buttoncolour + ', 30%, 23%)',
-                                                    '-webkit-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                                    '-moz-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                                    '-ms-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                                    '-o-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                                    'box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px'});
-
-    // if (company.logo().loading()) {
-    //   this.header.css("background-color", "transparent");
-    // } else {
-    //   this.header.css("background-color", bbcolour);
-    // }
+    this.emailpreviewbutton.css({'background': 'hsl(' + buttoncolour + ', 30%, 35%)',
+                                 'border': '2px solid hsl(' + buttoncolour + ', 30%, 23%)',
+                                 '-webkit-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                 '-moz-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                 '-ms-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                 '-o-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
+                                 'box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px'});
 
     if (!company.logo().customised() &&
           !company.barsbackground().customised() &&

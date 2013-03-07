@@ -343,7 +343,7 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
       Document { documentid } = document
-  mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)
+  mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink) False
   -- ?? Do we need to read in the contents? -EN
   -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
   scheduleEmailSendout (ctxmailsconfig ctx) $
@@ -360,7 +360,7 @@ sendInvitationEmail1 ctx document authorsiglink =
   if (isSignatory authorsiglink)
      then do
         -- send invitation to sign to author when it is his turn to sign
-        mail <- mailDocumentAwaitingForAuthor ctx document (getLang document) authorsiglink
+        mail <- mailDocumentAwaitingForAuthor ctx document $ getLang document
         scheduleEmailSendout (ctxmailsconfig ctx) $
           mail { to = [getMailAddress authorsiglink] }
         return $ Right document
@@ -370,7 +370,7 @@ sendInvitationEmail1 ctx document authorsiglink =
 -}
 sendReminderEmail :: Kontrakcja m => Maybe String -> Context -> Actor -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx actor doc siglink = do
-  mail <- mailDocumentRemind custommessage ctx doc siglink
+  mail <- mailDocumentRemind custommessage ctx doc siglink False
   mailattachments <- makeMailAttachments doc
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
       to = [getMailAddress siglink]
@@ -426,7 +426,7 @@ sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
-    mail <- mailDocumentRejected customMessage ctx document signalink $ Just sl
+    mail <- mailDocumentRejected customMessage ctx document signalink False
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
       to = [getMailAddress sl]
     }

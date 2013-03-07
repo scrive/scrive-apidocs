@@ -887,15 +887,16 @@ prepareEmailPreview docid slid = do
          "remind" -> do
              Right doc <- getDocByDocID docid
              Just sl <- return $ getSigLinkFor doc slid
-             mailDocumentRemindContent  Nothing ctx doc sl
+             mailDocumentRemindContent  Nothing ctx doc sl True
          "reject" -> do
              Just mh <- dbQuery $ GetDocumentSessionToken slid
              Just doc <- dbQuery $ GetDocumentByDocumentID docid
              Just sl <- return $ getSigLinkFor doc (slid,mh)
-             mailDocumentRejectedContent Nothing ctx  doc sl Nothing
+             x :: String <- mailDocumentRejectedContent Nothing ctx  doc sl True
+             return x
          "invite" -> do
              Right doc <- getDocByDocID docid
-             mailInvitationContent False ctx Sign doc Nothing
+             mailInvitationContent False ctx Sign doc Nothing True
          _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
 

@@ -52,20 +52,22 @@ mailDocumentRemind :: (MonadDB m, TemplatesMonad m)
                    -> Context
                    -> Document
                    -> SignatoryLink
+                   -> Bool
                    -> m Mail
-mailDocumentRemind cm c d s = case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm c d s
-  _                                       -> remindMailSigned    True cm c d s
+mailDocumentRemind cm c d s ispreview = case s of
+  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm c d s ispreview
+  _                                       -> remindMailSigned    True cm c d s ispreview
 
 mailDocumentRemindContent :: (MonadDB m, TemplatesMonad m)
                           => Maybe String
                           -> Context
                           -> Document
                           -> SignatoryLink
+                          -> Bool
                           -> m String
-mailDocumentRemindContent cm c d s = case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSignedContent False cm c d s
-  _                                       -> remindMailSignedContent False cm c d s
+mailDocumentRemindContent cm c d s ispreview = case s of
+  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSignedContent False cm c d s ispreview
+  _                                       -> remindMailSignedContent False cm c d s ispreview
 
 remindMailNotSigned :: (MonadDB m, TemplatesMonad m)
                     => Bool
@@ -73,8 +75,9 @@ remindMailNotSigned :: (MonadDB m, TemplatesMonad m)
                     -> Context
                     -> Document
                     -> SignatoryLink
+                    -> Bool
                     -> m Mail
-remindMailNotSigned forMail customMessage ctx document signlink = do
+remindMailNotSigned forMail customMessage ctx document signlink ispreview = do
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document)
         authorname = getAuthorName document
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
@@ -85,7 +88,6 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                          else return $ fromJust customMessage
             makeEditable "customtext" header
         F.value "authorname" authorname
-        F.value "recipientname" $ getSmartName signlink
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "partners" $ map getSmartName $ partyList document
         F.value "partnerswhosigned" $ map getSmartName $ partySignedList document
@@ -104,6 +106,7 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
         F.value "nojavascriptmagic" $ True
         F.value "javascriptmagic" $ False
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
+        F.value "ispreview" ispreview
 
 
 remindMailSigned :: (MonadDB m, TemplatesMonad m)
@@ -112,12 +115,14 @@ remindMailSigned :: (MonadDB m, TemplatesMonad m)
                  -> Context
                  -> Document
                  -> SignatoryLink
+                 -> Bool
                  -> m Mail
-remindMailSigned _forMail customMessage ctx document signlink = do
+remindMailSigned _forMail customMessage ctx document signlink ispreview = do
     sheader <- remindMailSignedStandardHeader document signlink
     documentMailWithDocLang ctx document "remindMailSigned" $ do
             F.valueM "header" $ makeEditable "customtext" $ fromMaybe sheader customMessage
             F.valueM "footer" $ mailFooterForDocument ctx document
+            F.value "ispreview" ispreview
 
 
 remindMailNotSignedContent :: (MonadDB m, TemplatesMonad m)
@@ -126,9 +131,10 @@ remindMailNotSignedContent :: (MonadDB m, TemplatesMonad m)
                            -> Context
                            -> Document
                            -> SignatoryLink
+                           -> Bool
                            -> m String
-remindMailNotSignedContent forMail customMessage ctx document signlink =
-    content <$> remindMailNotSigned forMail customMessage ctx document signlink
+remindMailNotSignedContent forMail customMessage ctx document signlink ispreview =
+    content <$> remindMailNotSigned forMail customMessage ctx document signlink ispreview
 
 remindMailSignedContent :: (MonadDB m, TemplatesMonad m)
                         => Bool
@@ -136,16 +142,17 @@ remindMailSignedContent :: (MonadDB m, TemplatesMonad m)
                         -> Context
                         -> Document
                         -> SignatoryLink
+                        -> Bool
                         -> m String
-remindMailSignedContent forMail customMessage ctx document signlink = do
-    content <$> remindMailSigned forMail customMessage ctx document signlink
+remindMailSignedContent forMail customMessage ctx document signlink ispreview = do
+    content <$> remindMailSigned forMail customMessage ctx document signlink ispreview
 
 remindMailSignedStandardHeader :: TemplatesMonad m
                                => Document
                                -> SignatoryLink
                                -> m String
 remindMailSignedStandardHeader document signlink =
-    renderLocalTemplateForProcess document processmailsignedstandardheader $ do
+    renderLocalTemplate document "remindMailSignedStandardHeader" $ do
         F.value "documenttitle" $ documenttitle document
         F.value "author" $ getAuthorName document
         F.value "personname" $ getSmartName signlink
@@ -165,15 +172,16 @@ mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
                      -> Context
                      -> Document
                      -> SignatoryLink
-                     -> Maybe SignatoryLink
+                     -> Bool
                      -> m Mail
-mailDocumentRejected customMessage ctx document rejector mrecipient = do
+mailDocumentRejected customMessage ctx document rejector ispreview = do
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         F.value "rejectorName" $ getSmartName rejector
-        F.value "recipientName" $ maybe "" getSmartName mrecipient
         F.valueM "footer" $ defaultFooter ctx
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
+        F.value "loginlink" $ show $ LinkLogin (getLang document) NotLogged
+        F.value "ispreview" ispreview
 
 
 
@@ -182,10 +190,10 @@ mailDocumentRejectedContent :: (MonadDB m, TemplatesMonad m)
                             -> Context
                             -> Document
                             -> SignatoryLink
-                            -> Maybe SignatoryLink
+                            -> Bool
                             -> m String
-mailDocumentRejectedContent customMessage ctx  document rejector mrecipient =
-     content <$> mailDocumentRejected customMessage ctx document rejector mrecipient
+mailDocumentRejectedContent customMessage ctx  document rejector ispreview =
+     content <$> mailDocumentRejected customMessage ctx document rejector ispreview
 
 mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentErrorForAuthor ctx document authorlang = do
@@ -210,12 +218,14 @@ mailInvitation :: (MonadDB m, TemplatesMonad m)
                -> InvitationTo
                -> Document
                -> Maybe SignatoryLink
+               -> Bool
                -> m Mail
 mailInvitation forMail
                ctx
                invitationto
                document@Document{documentinvitetext, documenttitle }
-               msiglink = do
+               msiglink
+               ispreview = do
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let personname = maybe "" getSmartName msiglink
@@ -255,6 +265,7 @@ mailInvitation forMail
         F.value "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
                         (signatoryattachmentname sa, getSmartName link)
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
+        F.value "ispreview" ispreview
 
 
 mailInvitationContent :: (MonadDB m, TemplatesMonad m)
@@ -263,14 +274,15 @@ mailInvitationContent :: (MonadDB m, TemplatesMonad m)
                       -> InvitationTo
                       -> Document
                       -> Maybe SignatoryLink
+                      -> Bool
                       -> m String
-mailInvitationContent  forMail ctx invitationto document msiglink = do
-     content <$> mailInvitation forMail ctx invitationto document msiglink
+mailInvitationContent  forMail ctx invitationto document msiglink ispreview = do
+     content <$> mailInvitation forMail ctx invitationto document msiglink ispreview 
 
 mailDocumentClosed :: (MonadDB m, TemplatesMonad m) => Context -> Document -> Maybe KontraLink -> SignatoryLink -> m Mail
 mailDocumentClosed ctx document l sl = do
    partylist <- renderLocalListTemplate document $ map getSmartName $ partyList document
-   let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
+   let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document)
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
         F.valueM "footer" $ mailFooterForDocument ctx document
@@ -281,8 +293,8 @@ mailDocumentClosed ctx document l sl = do
                             else (++) (ctxhostpart ctx) $ show $ LinkSignDoc document sl
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just sl) mainfile
 
-mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> SignatoryLink -> m Mail
-mailDocumentAwaitingForAuthor ctx document authorlang signatoryLink = do
+mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
+mailDocumentAwaitingForAuthor ctx document authorlang = do
     signatories <- renderLocalListTemplate authorlang $ map getSmartName $ partySignedList document
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang ctx document "mailDocumentAwaitingForAuthor" $ do
@@ -291,7 +303,7 @@ mailDocumentAwaitingForAuthor ctx document authorlang signatoryLink = do
         F.value "partylist" signatories
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.valueM "footer" $ mailFooterForDocument ctx document
-        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signatoryLink) mainfile
+        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile
 
 mailMismatchSignatory :: (MonadDB m, TemplatesMonad m)
                       => Context
@@ -312,6 +324,7 @@ mailMismatchSignatory ctx document authoremail authorname doclink signame badnam
         F.value "authoremail" authoremail
         F.value "doclink" doclink
         F.value "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing)
+        F.value "loginlink" $ show $ LinkLogin (getLang document) NotLogged
 
 mailMismatchAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> String -> [String] -> String -> String -> a -> m Mail
 mailMismatchAuthor ctx document authorname badmessages badname bademail authorlang = do
@@ -321,6 +334,7 @@ mailMismatchAuthor ctx document authorname badmessages badname bademail authorla
         F.value "doclink" $ ctxhostpart ctx ++ (show $ LinkDesignDoc (documentid document))
         F.value "bademail" bademail
         F.value "badname" badname
+        F.value "loginlink" $ show $ LinkLogin (getLang authorlang) NotLogged
 
 -- helpers
 

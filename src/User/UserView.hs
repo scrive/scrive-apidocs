@@ -201,7 +201,6 @@ resetPasswordMail hostname user setpasslink = do
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ hostname
-    F.value "langenglish"  $ getLang user == LANG_EN
 
 newUserMail :: TemplatesMonad m => String -> String -> String -> KontraLink -> m Mail
 newUserMail hostpart emailaddress personname activatelink = do

@@ -98,18 +98,18 @@ sendDocumentMails mailTo author = do
                               m <- fst <$> (runTestKontra req ctx $ mg)
                               validMail (s ++ " "++ show doctype) m
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
-        checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
+        checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl) False
         -- DELIVERY MAILS
         checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc sl
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
         checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxhostpart ctx) doc sl
         --remind mails
-        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
+        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl False
         --reject mail
-        checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl Nothing
+        checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl False
         -- awaiting author email
         when (doctype == Contract) $ do
-          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang) sl
+          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
         randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
@@ -117,7 +117,7 @@ sendDocumentMails mailTo author = do
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl
         -- Reminder after send
-        checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
+        checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc) False
   kCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"

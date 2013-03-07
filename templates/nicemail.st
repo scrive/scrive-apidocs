@@ -1,10 +1,10 @@
 nicemail=
 <center style="background-color: $nicemailemailbackgroundcolour()$;">
-  <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable" style="height: 100%; margin: 0; padding: 0; width: 100%">
+  <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable" style="height: 100%; margin: 0; padding: 0; width: 100%;">
     <tr>
       <td align="center" valign="top">
         <!-- // Begin Template Header \\ -->
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="background-color: transparent; border-bottom: 0; padding: 24px 0 8px">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="background-color: transparent; border-bottom: 0; padding: 24px 0 8px;">
           <tr>
             <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
               <!-- // Begin Module: Standard Header Image \\ -->
@@ -18,7 +18,7 @@ nicemail=
 
     <tr>
       <td align="center" valign="top">
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-color: $nicemailbgcolour()$">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-color: $nicemailbgcolour()$;">
           <tr>
             <td></td>
           </tr>
@@ -27,10 +27,10 @@ nicemail=
             <td align="center" valign="top">
               <!-- // Begin Template Body Top \\ -->
 
-              <table border="0" cellpadding="40" cellspacing="0"width="600" id="templateTop" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid">
+              <table border="0" cellpadding="40" cellspacing="0"width="600" id="templateTop" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid;">
                 <tr>
                   <td valign="top" class="topContent">
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" $if(ispreview)$style="border-collapse: separate; border-spacing: $borderspacing()$"$endif$>
                       <tr>
                         <td valign="top">
                           <div>
@@ -50,7 +50,7 @@ nicemail=
                 </tr>
               </table><!-- // Begin Template Body \\ -->
 
-              <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid">
+              <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid; $if(ispreview)$border-collapse: separate; border-spacing: $borderspacing()$$endif$">
                 <tr>
                   <td valign="top" class="bodyContent" style="background-color: $nicemailbgcolour()$">
                     <!-- // Begin Module: Standard Content \\ -->
@@ -95,7 +95,7 @@ nicemail=
             <td align="center" valign="top">
               <!-- // Begin Template Footer \\ -->
 
-              <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="background-color: $nicemailbgcolour()$; border-top: 0">
+              <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="background-color: $nicemailbgcolour()$; border-top: 0;">
                 <tr>
                   <td valign="top" class="footerContent">
                     <!-- // Begin Module: Standard Footer \\ -->
@@ -127,7 +127,9 @@ nicemail=
   </table>
 </center>
 ######
-nicemailbgcolour=$if(!service.barsbackground)$$if(!companybrand.barsbackground)$#FFFFFF$else$$companybrand.barsbackground$$endif$$else$$service.barsbackground$$endif$
+borderspacing=40px 30px
+######
+nicemailbgcolour=$if(!companybrand.barsbackground)$#FFFFFF$else$$companybrand.barsbackground$$endif$
 #####
 nicemailfgcolour=$if(!companybrand.barstextcolour)$#333333$else$$companybrand.barstextcolour$$endif$
 #####

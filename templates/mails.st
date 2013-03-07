@@ -60,11 +60,7 @@ mailOfferClosed=
     $footer:noescape()$
 ####
 mailOfferClosedMainP =
-    $if(!service)$
       $_mailOfferClosedContentOfferAccepted()$
-    $else$
-      $_mailOfferClosedContentOfferAcceptedWithService()$
-    $endif$
     <br/>
     <br/>
     $_mailOfferClosedContentAttached()$ $mailClosedSignup()$
@@ -74,16 +70,11 @@ mailOrderClosed=
     $nicemail(
         mailheader = _mailDocumentClosedTitleOrder();
         mailp1 = mailContractClosedMainP();
-        mailp2 = regards();
-        mailp2 = footer
+        mailp2 = regards()
     )$
 ####
 mailOrderClosedMainP=
-      $if(!service)$
         $_mailOrderClosedContentViewed()$
-      $else$
-        $_mailOrderClosedContentViewedWithService()$
-      $endif$
       <br/>
       <br/>
       $_mailOrderClosedContentAttached()$ $mailClosedSignup()$
@@ -201,11 +192,7 @@ mailInvitationToSignContractP1=
     )$
 ###
 mailInvitationToSignContractIntructions=
-    $if(sign)$
     $nicebutton(link=link; text=_mailReviewOnlineDocument())$
-    $else$
-    $nicebutton(link=link; text=_mailReviewOnlineDocument())$
-    $endif$
 ####
 mailInvitationToSignOffer=
      $mailInvitationTitleOffer()$
@@ -234,11 +221,7 @@ mailInvitationToSignOfferP1=
     )$
 ###
 mailInvitationToSignOfferIntructions=
-    $if(sign)$
     $nicebutton(link=link; text=_mailReviewOnlineDocument())$
-    $else$
-    $nicebutton(link=link; text=_mailReviewOnlineDocument())$
-    $endif$
 ###
 mailInvitationToSignOrder=
     $mailInvitationTitleOrder()$
@@ -267,18 +250,10 @@ mailInvitationToSignOrderP1=
     )$
 ###
 mailInvitationToSignOrderIntructions=
-    $if(sign)$
     $nicebutton(link=link; text=_mailReviewOnlineDocument())$
-    $else$
-    $nicebutton(link=link; text=_mailReviewOnlineDocument())$
-    $endif$    
 ####
 mailInvitationToSignContractDefaultHeader=
-    $if(!service)$
       $_mailInvitationToSignContractDefaultHeader()$
-    $else$
-      $_mailInvitationToSignContractDefaultHeaderWithService()$
-    $endif$
 ####
 mailInvitationToSignOfferDefaultHeader=
     $_mailInvitationToSignOfferDefaultHeader()$
@@ -289,11 +264,7 @@ mailInvitationToSignOrderDefaultHeader=
 mailInvitationToViewDefaultHeader=
     $_hi()$ <strong>$personname$</strong>,
     <br/><br/>
-    $if(!service)$
      $_mailInvitationToViewDefaultHeader()$
-    $else$
-     $_mailInvitationToViewDefaultHeaderWithService()$
-    $endif$
 ###
 mailInvitationCustomInvitationHeader=
 $_mailInvitationCustomInvitationHeader()$:
@@ -307,7 +278,7 @@ $custommessage$
 ###
 ###
 remindMailSigned=
-    $_remindMailSignedTitle$
+    $_remindMailSignedTitle()$
     $nicemail(
         mailheader= _remindMailSignedTitle();
         mailp1 = remindMailSignedP()
@@ -326,24 +297,16 @@ remindMailSignedStandardHeader=
 $_hi()$ <strong>$personname$</strong>,
 <br/>
 <br/>
-$if(!service)$
   $_remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
   <br/>
   $_remindMailSignedContractStandardHeaderSendRequest2()$
-$else$
-  $_remindMailSignedContractStandardHeaderSendRequestWithService()$
-$endif$
 ####
 remindMailSignedOfferStandardHeader=
 $_hi()$ <strong>$personname$</strong>,
 <br/>
 <br/>
-$if(!service)$
   $_remindMailSignedOfferStandardHeaderSendRequest()$
-$else$
-  $_remindMailSignedOfferStandardHeaderSendRequestWithService()$
-$endif$
 <br/>
 <br/>
 $regards()$
@@ -352,11 +315,7 @@ remindMailSignedOrderStandardHeader=
 $_hi()$ <strong>$personname$</strong>,
 <br/>
 <br/>
-$if(!service)$
   $_remindMailSignedOrderStandardHeaderSendRequest()$
-$else$
-  $_remindMailSignedOrderStandardHeaderSendRequestWithService()$
-$endif$
 <br/>
 <br/>
 $regards()$
@@ -587,11 +546,7 @@ passwordChangeLinkMailMainP=
 $_hi()$ <strong>$personname$</strong>,
 <br/>
 <br/>
-$if(langenglish)$
 $_passwordChangeLinkMailContentBody()$
-$else$
-$_passwordChangeLinkMailContentBody()$: <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-$endif$
 <br/>
 <br/>
 $_passwordChangeLinkMailContentBody2()$
@@ -661,7 +616,7 @@ mailTakeoverPrivateUserInviteP=
   <ul>
     $_mailTakeoverPrivateUserInviteContentInstructionSecond()$
   </ul>
-  $_mailTakeoverPrivateUserInviteContentLink()$: <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a>
+  $_mailTakeoverPrivateUserInviteContentLink()$ $_mailTakeoverPrivateUserInviteContentInstructionThird()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a>
 ####
 mailRequestChangeEmail=
   $_mailRequestChangeEmailTitle()$
@@ -925,7 +880,7 @@ mailMailAPIDelayUser=
         mailheader= "Scrive By Mail";
         mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
         mailp2 = "We were unable to immediately process the mail you sent us and therefore have not forwarded the document to anyone.";
-        mailp3 = "At this point in time, there is no account associated with this email address. We have contacted the Company Account administrators and asked them to confirm the creation of your new account. Upon creation on your account, we will continue processing the document. If you have not received an invitation within three days, please contact the administrator of the Company Account.";
+        mailp3 = "At this point in time, there is no account associated with this email address. We have contacted the Company Account administrators and asked them to confirm the creation of your new account. Upon creation of your account, we will continue processing the document. If you have not received an invitation within three days, please contact the administrator of the Company Account.";
         mailp4 = "Thanks for using Scrive by Mail"
     )$
 #####
