@@ -5,9 +5,8 @@ module Doc.SignatoryScreenshots
 
 import Doc.Screenshot
 import Doc.ReferenceScreenshot (referenceScreenshot)
-import MinutesTime (MinutesTime,fromSeconds)
+import MinutesTime (MinutesTime,parseMinutesTimeRealISO)
 import Text.JSON.FromJSValue
-import Utils.Tuples
 
 data SignatoryScreenshots = SignatoryScreenshots
   { first     :: Maybe (MinutesTime, Screenshot)
@@ -22,5 +21,9 @@ instance FromJSValue SignatoryScreenshots where
   fromJSValueM = do
     first <- fromJSValueField "first"
     signing <- fromJSValueField "signing"
-    return $ Just $ SignatoryScreenshots (mapFst fromSeconds first) (mapFst fromSeconds signing) referenceScreenshot
-
+    return $ Just $ SignatoryScreenshots (withISO first) (withISO signing) referenceScreenshot
+   where
+    withISO Nothing = Nothing
+    withISO (Just (m,v)) = case (parseMinutesTimeRealISO m) of
+                               Nothing -> Nothing
+                               Just m' -> Just (m',v)

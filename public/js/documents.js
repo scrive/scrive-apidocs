@@ -252,7 +252,7 @@ window.Document = Backbone.Model.extend({
         }
         window.takeScreenshot(
             function(canvas) {
-                var shot = [ new Date().getTime()/1000, canvas.toDataURL("image/jpeg",0.7) ];
+                var shot = [ new Date().toISOString(), canvas.toDataURL("image/jpeg",0.7) ];
                 if (first)
                     document.get("screenshots").first = shot;
                 else

@@ -134,7 +134,6 @@ window.ReadyApiCall = ApiCall.extend({
             form.attr('action', Scrive.apiUrl()+"ready/" + model.documentid());
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val('{ "timezone": "Europe/Stockholm" }'));
-//            var formData = new FormData(form[0]);
             $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
                 type: 'POST',
                 data : {json : '{ "timezone": "Europe/Stockholm" }'},
@@ -447,6 +446,8 @@ window.SignApiCall = ApiCall.extend({
              name : "Sign document by signatory",
              documentid : LocalStorage.get("api","documentid"),
              signatorylinkid : LocalStorage.get("api","signatorylinkid"),
+             screenshotFirst : "",
+             screenshotSigning : "",
              fields : "[]"
         },
         initialize: function (args) {
@@ -462,6 +463,17 @@ window.SignApiCall = ApiCall.extend({
             LocalStorage.set("api","signatorylinkid",signatorylinkid);
             return this.set({"signatorylinkid" : signatorylinkid});
         },
+        screenshotFirst : function() {return this.get("screenshotFirst");},
+        setScreenshotFirst : function(screenshotFirst) {
+            LocalStorage.set("api","screenshotFirst",screenshotFirst);
+            return this.set({"screenshotFirst" : screenshotFirst});
+        },
+        screenshotSigning : function() {return this.get("screenshotSigning");},
+        setScreenshotSigning : function(screenshotSigning) {
+            LocalStorage.set("api","screenshotSigning",screenshotSigning);
+            return this.set({"screenshotSigning" : screenshotSigning});
+        },
+
         fields : function() {return this.get("fields");},
         setFields : function(fields) {
             LocalStorage.set("api","fields",fields);
@@ -475,6 +487,7 @@ window.SignApiCall = ApiCall.extend({
                 cache: false,
                 headers : { authorization : model.authorization() },
                 data : {
+                     screenshots : JSON.stringify({first : [new Date().toISOString(),this.screenshotFirst()] , signing : [new Date().toISOString(),this.screenshotSigning()] }),
                      fields : this.fields()
                     },
                 success : function(res) {
@@ -886,16 +899,28 @@ window.SignApiCallView = Backbone.View.extend({
             var boxLeft  = $("<div class='left-box'>");
             this.boxRight = $("<div class='right-box'>");
             box.append(this.boxRight).append(boxLeft);
+
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+
             var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
             signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
-            var fieldsInput = $("<input type='text'/>").val(model.fields());
+
+            var screenshotFirstInput = $("<input type='text'/>").val(model.screenshotFirst());
+            screenshotFirstInput.change(function() {model.setScreenshotFirst(screenshotFirstInput.val()); return false;})
+
+            var screenshotSigningInput = $("<input type='text'/>").val(model.screenshotSigning());
+            screenshotSigningInput.change(function() {model.setScreenshotSigning(screenshotSigningInput.val()); return false;})
+
+            var fieldsInput = $("<textarea class='json-text-area'>"+model.fields()+"</textarea>")
             fieldsInput.change(function() {model.setFields(fieldsInput.val()); return false;})
+
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
                    .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div>First screenshot : <BR/></div>").append(screenshotFirstInput))
+                   .append($("<div>Signing screenshot : <BR/></div>").append(screenshotSigningInput))
                    .append($("<div>Fields #: <BR/></div>").append(fieldsInput))
                    .append($("<div/>").append(button));
             this.render();

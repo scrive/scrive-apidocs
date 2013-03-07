@@ -28,6 +28,7 @@ module MinutesTime
        , formatMinutesTime
        , parseMinutesTimeUTC
        , parseMinutesTimeISO
+       , parseMinutesTimeRealISO
        , parseMinutesTime
        , monthsBefore
        , daysBefore
@@ -84,6 +85,9 @@ formatMinutesTimeISO = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M
 
 parseMinutesTimeISO :: String -> Maybe MinutesTime
 parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S %Z"
+
+parseMinutesTimeRealISO :: String -> Maybe MinutesTime
+parseMinutesTimeRealISO = parseMinutesTime "%Y-%m-%dT%H:%M:%S%QZ"
 
 parseMinutesTimeUTC :: String -> Maybe MinutesTime
 parseMinutesTimeUTC = parseMinutesTime "%Y-%m-%d %H:%M:%S"
