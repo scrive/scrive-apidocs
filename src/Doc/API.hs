@@ -290,7 +290,7 @@ apiCallReject did slid = api $ do
       let Just sl = getSigLinkFor doc' slid
       _ <- addSignStatRejectEvent doc' sl
       lift $ postDocumentRejectedChange doc' slid method
-      Accepted <$> (runJSONGenT $ return ())
+      Accepted <$> (runJSONGenT $ value "rejected" True)
 
 
 apiCallSign :: Kontrakcja m
