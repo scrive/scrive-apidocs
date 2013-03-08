@@ -738,7 +738,7 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     maintable.append(logorow);
     maintable.append(maincontentrow);
 
-    this.container = $('<center/>');
+    this.container = $('<center class="mail-sample"/>');
     this.container.append(maintable);
 
     $(this.el).empty();
