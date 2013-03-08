@@ -445,20 +445,21 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     });
     var checkboxlabel = $("<label />").append(model.label());
 
-    this.upload = UploadButton.init({
-      width: 150,
-      name: "logo",
-      color: "blue",
-      size: "tiny",
-      text: localization.selectImageLabel,
-      submitOnUpload: true,
-      showLoadingDialog: false,
-      type: "image/png",
-      submit: model.serializeLogo()
-    }).input();
+    this.upload = UploadButton.init({color: 'blue',
+                                     size: 'tiny',
+                                     text: localization.selectImageLabel,
+                                     width: 150,
+                                     name: 'logo',
+                                     maxlength: 2,
+                                     onAppend: function(input, title, multifile) {
+                                       var submit = model.serializeLogo();
+                                       submit.addInputs(input);
+                                       submit.send();
+                                     }
+                                    });
 
     this.customdiv = $("<div />");
-    this.customdiv.append($("<div class='logocustomise' />").append(this.upload));
+    this.customdiv.append($("<div class='logocustomise' />").append(this.upload.input()));
 
     var container = $("<div/>");
     container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));
