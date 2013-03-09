@@ -16,7 +16,7 @@ class DocHelper
 
   def uploadContract
     puts "Creating document"
-    (@h.wait_until { @driver.find_element :css => ".js-create-document" }).click
+    @driver.navigate().to(@ctx.createKontrakcjaURL "/newdocument")
     puts "Uploading PDF"
     (@h.wait_until { @driver.find_element :css => ".document-pages input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
