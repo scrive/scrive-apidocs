@@ -33,6 +33,7 @@ import ScriveByMail.Model
 import qualified ScriveByMail.Action as MailAPI
 import ThirdPartyStats.Core
 import Crypto.RNG
+import MinutesTime
 
 handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign document signatorylink = do
@@ -89,6 +90,12 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
               _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
+
+              ds <- dbQuery $ GetSignatoriesByEmail (Email $ getEmail actvuser) (14 `daysBefore` ctxtime ctx)
+              
+              forM_ ds $ \(d, s) -> do
+                let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (Just $ userid actvuser) (getEmail actvuser) s
+                dbUpdate $ SaveDocumentForUser d actvuser s actor
 
               mdelays <- dbQuery $ GetMailAPIDelaysForEmail (getEmail actvuser) (ctxtime ctx)
               newdocs <- case mdelays of
