@@ -79,6 +79,7 @@ module Doc.Model
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   , GetDocsSent(..)
+  , GetSignatoriesByEmail(..)
   ) where
 
 import Control.Monad.Trans
@@ -2522,6 +2523,22 @@ instance MonadDB m => DBQuery m GetDocsSent Int where
                "AND documents.status <> ? ")
             [toSql uid, toSql $ Signable undefined, toSql Preparation]
     kFold (+) 0
+
+-- | Get the signatories that belong to this email that were viewed or signed
+--   since time
+data GetSignatoriesByEmail = GetSignatoriesByEmail Email MinutesTime
+instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLinkID)] where
+  query (GetSignatoriesByEmail email time) = do
+    kRun_ $ "SELECT DISTINCT signatory_links.document_id, signatory_links.id " <+>
+            "FROM signatory_links " <+>
+            "JOIN signatory_link_fields ON (signatory_link_fields.signatory_link_id = signatory_links.id " <+>
+            "                           AND signatory_link_fields.type = " <?> EmailFT <+>
+            "                           AND signatory_link_fields.value = " <?> email <+>
+            "                              )" <+>
+            "WHERE sign_time > " <?> time <+>
+            "   OR seen_time > " <?> time
+    kFold f []
+    where f acc did slid = (did, slid) : acc
 
 -- Update utilities
 
