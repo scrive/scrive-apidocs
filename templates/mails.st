@@ -12,7 +12,7 @@ mailDocumentAwaitingForAuthor=
     $nicemail(
         mailheader= _mailDocumentAwaitingForAuthorTitle();
         mailp1 = _mailDocumentAwaitingForAuthorContentSignedBy();
-        mailp2 = nicebutton(link=link; text=_mailReviewOnlineDocument());
+        mailp2 = nicebutton(link=documentlink; text=_mailReviewOnlineDocument());
         mailp3 = footer;
         footer = legalparagraph()
     )$
