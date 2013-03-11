@@ -160,7 +160,7 @@ getMagicHashForDocumentSignatoryWithUser did sigid user = do
                                     [] (0,1))
    case mdoc of
      [doc] ->  case getMaybeSignatoryLink (doc,sigid) of
-                 Just sig -> if ((isAuthor (doc,user) && documentdeliverymethod doc == PadDelivery) || (isSigLinkFor user sig))
+                 Just sig -> if ((isAuthor (doc,user) && signatorylinkdeliverymethod  sig == PadDelivery) || (isSigLinkFor user sig))
                                 then return $ Just $ signatorymagichash sig
                                 else return Nothing
                  Nothing -> return Nothing

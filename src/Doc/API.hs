@@ -84,6 +84,7 @@ import Doc.DocControl
 import Utils.Tuples
 import Utils.Either
 import Doc.SignatoryScreenshots
+import Doc.Conditions
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -196,6 +197,8 @@ apiCallUpdate did = api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+  when (documentstatus doc /= Preparation) $ do
+        throwIO . SomeKontraException $ (conflictError "Document is not a draft or template")
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
   jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
@@ -225,6 +228,9 @@ apiCallReady did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+  when (documentstatus doc /= Preparation || isTemplate doc) $ do
+        throwIO . SomeKontraException $ (conflictError "Document is not a draft")
+
   let defaultParams = ReadyParams { timezonestring = "Europe/Stockholm" }
   mjsons <- lift $ getDataFn' (look "json")
   params <- case mjsons of
@@ -257,6 +263,8 @@ apiCallCancel did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+  when (documentstatus doc /= Pending ) $ do
+        throwIO . SomeKontraException $ (conflictError "Document is not pending")
   dbUpdate $ CancelDocument (documentid doc) actor
   newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
   lift $ postDocumentCanceledChange newdocument "api"
@@ -285,7 +293,9 @@ apiCallReject did slid = api $ do
           actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sll) (getEmail sll) slid
       customtext <- lift $ getCustomTextField "customtext"
       lift $ switchLang (getLang doc)
-      dbUpdate $ RejectDocument did slid customtext actor
+      lift $ (dbUpdate $ RejectDocument did slid customtext actor)
+          `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
+          `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
       Just doc' <- dbQuery $ GetDocumentByDocumentID did
       let Just sl = getSigLinkFor doc' slid
       _ <- addSignStatRejectEvent doc' sl
@@ -325,9 +335,11 @@ apiCallSign  did slid = api $ do
                Just values -> return values
   mprovider <- lift $ readField "eleg"
   Log.debug $ "All parameters read and parsed"
-  edoc <- case mprovider of
-           Nothing -> Right <$> lift (signDocumentWithEmailOrPad did slid mh fields screenshots)
-           Just provider -> lift $ handleSignWithEleg did slid mh fields screenshots provider
+  edoc <- lift $ (case mprovider of
+            Nothing -> Right <$> (signDocumentWithEmailOrPad did slid mh fields screenshots)
+            Just provider -> handleSignWithEleg did slid mh fields screenshots provider)
+              `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
+              `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
   Log.debug $ "Signing done, result is " ++ show (isRight edoc)
   case edoc of
     Right (Right (doc, olddoc)) -> do

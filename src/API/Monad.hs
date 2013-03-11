@@ -13,6 +13,8 @@ module API.Monad (
                  serverError',
                  noAvailableYet,
                  noAvailableYet',
+                 conflictError,
+                 conflictError',
                  apiGuard,
                  apiGuard',
                  apiGuardL,
@@ -79,6 +81,7 @@ data APIError = BadInput           String
               | ActionNotAvailable String
               | ServerError        String
               | NoAvailableYet     String
+              | ConflictError      String
               deriving (Show, Eq, Typeable)
 
 instance KontraException APIError
@@ -92,6 +95,7 @@ instance ToJSValue APIError where
   toJSValue (ServerError msg) = jsonError 500 $ value "message" msg
   toJSValue (ActionNotAvailable msg) = jsonError 500 $ value "message" msg
   toJSValue (NoAvailableYet msg) = jsonError 420 $ value "message" msg
+  toJSValue (ConflictError msg) = jsonError 409 $ value "message" msg
 
 
 badInput :: String -> APIError
@@ -124,11 +128,18 @@ serverError = ServerError
 serverError' :: APIError
 serverError' = serverError "An internal server error occurred which could not be resolved."
 
+
 noAvailableYet:: String -> APIError
 noAvailableYet = NoAvailableYet
 
 noAvailableYet':: APIError
 noAvailableYet' = noAvailableYet "Resource is not yet available"
+
+conflictError :: String -> APIError
+conflictError = ConflictError
+
+conflictError' :: APIError
+conflictError' = conflictError "An internal server error occurred which could not be resolved."
 
 -- Define what we can respond from an API call
 class ToAPIResponse a where

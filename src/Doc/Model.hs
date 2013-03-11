@@ -1749,6 +1749,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where
                                      sqlSet "rejection_reason" customtext
                                      sqlFrom "documents"
                                      sqlWhere "signatory_links.document_id = documents.id"
+                                     sqlWhereSignatoryIsPartner
+                                     sqlWhereSignatoryHasNotSigned
                                      sqlWhereDocumentIDIs docid
                                      sqlWhereSignatoryLinkIDIs slid
                                      sqlWhereSignatoryHasNotSigned

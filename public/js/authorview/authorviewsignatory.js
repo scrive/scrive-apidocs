@@ -69,7 +69,7 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
           && signatory.reachedBySignorder()
           && (signatory.document().signingInProcess() || signatory.document().closed())
           && !signatory.undeliveredEmail()
-          && !signatory.document().padDelivery();
+          && !signatory.padDelivery();
  },
  hasChangeEmailOption: function() {
    var signatory = this.signatory();
@@ -83,7 +83,7 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
    return    signatory.document().currentViewerIsAuthor()
           && signatory.document().signingInProcess()
           && signatory.canSign()
-          && signatory.document().padDelivery()
+          && signatory.padDelivery()
  },
  hasGiveForSigningOnThisDeviceOption : function() {
    return this.hasPadOptions() && this.signatory().author() && BrowserInfo.isPadDevice()

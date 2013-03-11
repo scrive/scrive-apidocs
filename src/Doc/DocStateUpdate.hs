@@ -3,7 +3,6 @@ module Doc.DocStateUpdate
     , prolongDocument
     , signDocumentWithEmailOrPad
     , signDocumentWithEleg
-    , rejectDocumentWithChecks
     , authorSignDocument
     , authorSendDocument
     , setSigAttachments
@@ -126,29 +125,6 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
         return $ case mdoc of
           Nothing -> Left $ DBActionNotAvailable "Signing with Eleg failed"
           Just doc -> Right (doc, olddoc)
-
-{- |
-   Reject a document with security checks.
- -}
-rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe String -> m (Either DBError Document)
-rejectDocumentWithChecks did slid mh customtext = do
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
-  case edoc of
-    Left err -> return $ Left err
-    Right olddocument -> do
-      switchLang (getLang olddocument)
-      Context{ ctxtime, ctxipnumber } <- getContext
-      let Just sll = getSigLinkFor olddocument slid
-      let sa = signatoryActor ctxtime ctxipnumber (maybesignatory sll) (getEmail sll) slid
-      mdoc <- runMaybeT $ do
-        dbUpdate $ RejectDocument did slid customtext sa
-        Just doc <- dbQuery $ GetDocumentByDocumentID did
-        let Just sl = getSigLinkFor doc slid
-        _ <- addSignStatRejectEvent doc sl
-        return doc
-      return $ case mdoc of
-        Nothing  -> Left $ DBActionNotAvailable "rejectDocumentWithChecks failed"
-        Just doc -> Right doc
 
 {- |
   The Author signs a document with security checks.

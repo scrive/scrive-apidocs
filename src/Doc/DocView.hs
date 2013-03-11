@@ -196,6 +196,11 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
     J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink
+    J.value "delivery" $ case signatorylinkdeliverymethod siglink of
+                             EmailDelivery   -> "email"
+                             PadDelivery     -> "pad"
+                             APIDelivery     -> "api"
+
     when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where

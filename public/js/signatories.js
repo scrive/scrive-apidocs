@@ -76,7 +76,9 @@ window.Signatory = Backbone.Model.extend({
         signorder: 1,
         csv: undefined,
         saved: false,
-        ispadqueue : false
+        ispadqueue : false,
+        authentication: "standard",
+        delivery: "email"
     },
 
     initialize: function(args) {
@@ -370,6 +372,21 @@ window.Signatory = Backbone.Model.extend({
       return _.any(this.signatures(), function (field) {
            return field.value() != "" || field.hasPlacements();
        });
+    },
+    standardAuthentication: function() {
+          return this.get("authentication") == "standard";
+    },
+    elegAuthentication: function() {
+          return this.get("authentication") == "eleg";
+    },
+    emailDelivery: function() {
+          return this.get("delivery") == "email";
+    },
+    padDelivery : function() {
+          return this.get("delivery") == "pad";
+    },
+    apiDelivery : function() {
+          return this.get("delivery") == "api";
     },
     remind: function(customtext) {
         return new Submit({

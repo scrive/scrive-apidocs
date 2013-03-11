@@ -187,6 +187,7 @@ module DB.SQL2
 
   , KontraException(..)
   , SomeKontraException(..)
+  , catchKontra
   , DBBaseLineConditionIsFalse(..)
   )
   where
@@ -207,6 +208,7 @@ import Control.Exception.Lifted
 import Control.Applicative
 import Data.Maybe
 import qualified Text.JSON.Gen as JSON
+import Control.Monad.Trans.Control
 
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)
@@ -983,6 +985,11 @@ class (Show e, Typeable e, JSON.ToJSValue e) => KontraException e where
   toKontraException = SomeKontraException
   fromKontraException :: SomeKontraException -> Maybe e
   fromKontraException (SomeKontraException e) = cast e
+
+catchKontra :: (MonadBaseControl IO m, KontraException e) => m a -> (e -> m a) -> m a
+catchKontra m f = m `Control.Exception.Lifted.catch` (\e -> case fromKontraException e of
+                                         Just ke -> f ke
+                                         Nothing -> throw e)
 
 
 data SomeKontraException = forall e. (Show e, KontraException e) => SomeKontraException e

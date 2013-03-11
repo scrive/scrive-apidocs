@@ -112,7 +112,23 @@ window.Document = Backbone.Model.extend({
         // author does not sign at all
         signorder = 1;
       }
-      var nsig = new Signatory({"document": document, signs: true, signorder: signorder});
+      var nsigdelivery, nsigauth;
+      if (document.standardAuthentication())
+          nsigauth = "standard";
+      if (document.elegAuthentication())
+          nsigauth = "eleg";
+      if (document.emailDelivery())
+          nsigdelivery = "email";
+      if (document.padDelivery())
+          nsigdelivery = "pad";
+      if (document.apiDelivery())
+          nsigdelivery = "api";
+
+      var nsig = new Signatory({"document": document,
+                                 signs: true,
+                                 signorder: signorder,
+                                 authentication : nsigauth,
+                                 delivery: nsigdelivery});
       signatories[signatories.length] = nsig;
       document.set({"signatories": signatories});
       this.fixSignorder();
@@ -415,7 +431,7 @@ window.Document = Backbone.Model.extend({
     standardAuthentication: function() {
           return this.get("authentication") == "standard";
     },
-    elegAuthentication: function() {
+    elegAuthentication : function() {
           return this.get("authentication") == "eleg";
     },
     emailDelivery: function() {
