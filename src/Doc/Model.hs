@@ -1737,6 +1737,7 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m RejectDocum
                                      sqlWhere "signatory_links.document_id = documents.id"
                                      sqlWhereDocumentIDIs docid
                                      sqlWhereSignatoryLinkIDIs slid
+                                     sqlWhereSignatoryHasNotSigned
 
     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   RejectDocumentEvidence
