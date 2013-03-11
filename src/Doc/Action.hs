@@ -368,7 +368,6 @@ sendReminderEmail custommessage ctx actor doc siglink = do
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
     dbUpdate $ PostReminderSend doc siglink custommessage actor
-  _ <- dbUpdate $ SetDocumentModificationDate (documentid doc) (ctxtime ctx)
   triggerAPICallbackIfThereIsOne doc
   return siglink
 

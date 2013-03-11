@@ -399,6 +399,7 @@ data Document = Document {
   , documentlang                   :: Lang
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
+  , documentobjectversion          :: Int
   } deriving (Eq, Ord, Show)
 
 
@@ -423,6 +424,7 @@ instance HasDefaultValue Document where
           , documentlang                 = defaultValue
           , documentstatusclass          = SCDraft
           , documentapicallbackurl       = Nothing
+          , documentobjectversion        = 0
           }
 
 instance HasLang Document where

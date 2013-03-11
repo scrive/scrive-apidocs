@@ -52,7 +52,7 @@ pageArchive user mt = renderTemplate "pageDocumentsList" $ do
                     F.value "isadmin" $ useriscompanyadmin user && isJust (usercompany user)
                     F.value "month" $ mtMonth mt
                     F.value "year" $ mtYear mt
-                        
+
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do
   let link = case getSigLinkFor doc user of
@@ -94,10 +94,11 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
+    J.value "objectversion" $ documentobjectversion doc
 
 signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
 signatoryFieldsListForJSON tl crtime padqueue doc sl = do
-    J.value "id" $ show $ signatorylinkid sl 
+    J.value "id" $ show $ signatorylinkid sl
     J.value "status" $ show $ signatorylinkstatusclass sl
     J.value "name" $ case strip (getCompanyName sl) of
                        "" -> getSmartName sl
@@ -105,7 +106,7 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
     J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
-    J.value "isauthor" $ "true" <| isAuthor sl |> "false" 
+    J.value "isauthor" $ "true" <| isAuthor sl |> "false"
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
       StandardAuthentication -> "standard"
       ELegAuthentication  -> "eleg"
@@ -118,7 +119,7 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
 docForListCSV:: KontraTimeLocale -> Int -> Document -> [[String]]
 docForListCSV ktl agr doc = map (signatoryForListCSV ktl agr doc) $ [Nothing] <| null interestingLinks |> map Just interestingLinks
     where interestingLinks = filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
-          
+
 signatoryForListCSV:: KontraTimeLocale ->  Int -> Document -> (Maybe SignatoryLink) -> [String]
 signatoryForListCSV ktl _agr doc msl = [
               ("'" ++ show (documentid doc) ++ "'") -- Exel trick

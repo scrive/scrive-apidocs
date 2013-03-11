@@ -133,6 +133,7 @@ module DB.SQL2
   , sqlRightJoinOn
   , sqlFullJoinOn
   , sqlSet
+  , sqlSetInc
   , sqlSetList
   , sqlSetCmd
   , sqlSetCmdList
@@ -657,6 +658,9 @@ sqlSetCmdList name as = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++
 
 sqlSet :: (MonadState v m, SqlSet v, Convertible a SqlValue) => RawSQL -> a -> m ()
 sqlSet name a = sqlSetCmd name (sqlParam a)
+
+sqlSetInc :: (MonadState v m, SqlSet v) => RawSQL -> m ()
+sqlSetInc name = sqlSetCmd name $ SQL (unsafeFromString $ unRawSQL name ++ " + 1") []
 
 sqlSetList :: (MonadState SqlInsert m, Convertible a SqlValue) => RawSQL -> [a] -> m ()
 sqlSetList name as = sqlSetCmdList name (map sqlParam as)

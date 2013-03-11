@@ -74,11 +74,11 @@ module Doc.Model
   , UpdateFieldsForSigning(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
-  , SetDocumentModificationDate(..)
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   , GetDocsSent(..)
   , GetSignatoriesByEmail(..)
+  , CheckDocumentObjectVersionIs(..)
   ) where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -515,6 +515,7 @@ documentsSelectors =
   , "documents.lang"
   , "documents.sharing"
   , "documents.api_callback_url"
+  , "documents.object_version"
   , documentStatusClassExpression
   ]
 
@@ -526,13 +527,8 @@ fetchDocuments = kFold decoder []
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
-<<<<<<< HEAD
      invite_ip invite_text
-     lang sharing delivery_method apicallback status_class
-=======
-     invite_ip invite_text mail_footer
-     lang sharing apicallback status_class
->>>>>>> Delivery method now is supported for each signatory individually
+     lang sharing apicallback objectversion status_class
        = Document {
          documentid = did
        , documenttitle = title
@@ -558,6 +554,7 @@ fetchDocuments = kFold decoder []
        , documentlang = lang
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
+       , documentobjectversion = objectversion
        } : acc
 
 documentStatusClassExpression :: SQL
@@ -1109,28 +1106,24 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload () where
 data AttachFile = AttachFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where
   update (AttachFile did fid a) = do
-    let time = actorTime a
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-      sqlSet "mtime" time
       sqlSet "file_id" fid
       -- FIXME: check if file actually exists
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Preparation
-
     f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
     _ <- update $ InsertEvidenceEvent
         AttachFileEvidence
         (value "actor" (actorWho a) >> value "filename" (filename f))
         (Just did)
         a
+    updateMTimeAndObjectVersion did (actorTime a)
     return ()
 
 data DetachFile = DetachFile DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
   update (DetachFile did a) = do
-    let time = actorTime a
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-      sqlSet "mtime" time
       sqlSet "file_id" SqlNull
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Preparation
@@ -1139,14 +1132,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
         (value "actor" (actorWho a))
         (Just did)
         a
+    updateMTimeAndObjectVersion did (actorTime a)
     return ()
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
   update (AttachSealedFile did fid actor) = do
-    let time = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-      sqlSet "mtime" time
       sqlSet "sealed_file_id" fid
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Closed
@@ -1155,6 +1147,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
         (value "actor"(actorWho actor))
         (Just did)
         actor
+    updateMTimeAndObjectVersion did (actorTime actor)
     return ()
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
@@ -1168,14 +1161,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bo
 data ELegAbortDocument = ELegAbortDocument DocumentID SignatoryLinkID String String String String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ELegAbortDocument () where
   update (ELegAbortDocument did slid msg firstName lastName personNumber actor) = do
-    let mtime = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
-                 sqlSet "mtime" mtime
-
                  sqlWhereDocumentIDIs did
                  sqlWhereDocumentTypeIs (Signable undefined)
                  sqlWhereDocumentStatusIs Pending
+
     kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
                  sqlFrom "documents"
                  sqlWhere "documents.id = signatory_links.document_id"
@@ -1201,15 +1192,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ELegAbortDocument () where
                     (Just slid)
                     Nothing
                     actor
+    updateMTimeAndObjectVersion did (actorTime actor)
     return ()
 
 data CancelDocument = CancelDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument () where
   update (CancelDocument did actor) = do
-    let mtime = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
-                 sqlSet "mtime" mtime
                  sqlWhereDocumentIDIs did
                  sqlWhereDocumentTypeIs (Signable undefined)
                  sqlWhereDocumentStatusIs Pending
@@ -1220,6 +1210,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument () where
                   Nothing
                   Nothing
                   actor
+    updateMTimeAndObjectVersion did (actorTime actor)
     return ()
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) String Actor
@@ -1244,6 +1235,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
           (value "oldemail" oldemail >> value "newemail" email >> value "actor" (actorWho actor))
           (Just did)
           actor
+      updateMTimeAndObjectVersion did (actorTime actor)
       return ()
 
 data PreparationToPending = PreparationToPending DocumentID Actor (Maybe TimeZoneName)
@@ -1272,7 +1264,6 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
             withTimeZone dstTz $ do
               kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                 sqlSet "status" Pending
-                sqlSet "mtime" time
                 sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
                             <+> "+ (interval '1 day') * documents.days_to_sign"
                 sqlWhereDocumentIDIs docid
@@ -1287,16 +1278,14 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
                 >> value "timeouttime" (formatMinutesTimeUTC tot))
                 (Just docid)
                 actor
-              return ()
+              updateMTimeAndObjectVersion docid (actorTime actor)
             return ()
 
 data CloseDocument = CloseDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
   update (CloseDocument docid actor) = do
-    let time = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Closed
-                 sqlSet "mtime" time
                  sqlWhereDocumentIDIs docid
                  sqlWhereDocumentTypeIs $ Signable undefined
                  sqlWhereDocumentStatusIs Pending
@@ -1306,6 +1295,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
                 (value "actor" (actorWho actor))
                 (Just docid)
                 actor
+    updateMTimeAndObjectVersion docid (actorTime actor)
     return ()
 
 
@@ -1677,11 +1667,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentctime                = ctime
                 , documentmtime                = ctime
                 , documentauthorattachments    = []
-<<<<<<< HEAD
-                , documentdeliverymethod       = EmailDelivery
-=======
-                , documentui                   = (documentui defaultValue) { documentmailfooter = customfooter $ usersettings user }
->>>>>>> Delivery method now is supported for each signatory individually
                 }
 
   case invariantProblems ctime doc of
@@ -1735,7 +1720,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where
     sig <- query $ GetSignatoryLinkByID docid slid Nothing
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                                      sqlSet "status" Rejected
-                                     sqlSet "mtime" time
                                      sqlFrom "signatory_links"
                                      sqlWhere "signatory_links.document_id = documents.id"
 
@@ -1762,6 +1746,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where
                   Nothing
                   customtext
                   actor
+    updateMTimeAndObjectVersion docid (actorTime actor)
     return ()
 
 data RestartDocument = RestartDocument Document Actor
@@ -1923,7 +1908,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime () wh
 data SetInviteText = SetInviteText DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
   update (SetInviteText did text actor) = do
-    updateOneAndMtimeWithEvidenceIfChanged did "invite_text" text (actorTime actor) $ do
+    updateOneWithEvidenceIfChanged did "invite_text" text $ do
       return $ InsertEvidenceEvent
         SetInvitationTextEvidence
         (value "text" text >> value "actor" (actorWho actor))
@@ -1933,7 +1918,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
 data SetDaysToSign = SetDaysToSign DocumentID Int Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
   update (SetDaysToSign did days actor) = do
-    updateOneAndMtimeWithEvidenceIfChanged did "days_to_sign" days (actorTime actor) $ do
+    updateOneWithEvidenceIfChanged did "days_to_sign" days $ do
       return $ InsertEvidenceEvent
         SetDaysToSignEvidence
         (value "days" (show  days) >> value "actor" (actorWho actor))
@@ -1943,7 +1928,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
 data SetDocumentTitle = SetDocumentTitle DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
   update (SetDocumentTitle did doctitle actor) = do
-    updateOneAndMtimeWithEvidenceIfChanged did "title" doctitle (actorTime actor) $ do
+    updateOneWithEvidenceIfChanged did "title" doctitle $ do
       return $ InsertEvidenceEvent
         SetDocumentTitleEvidence
         (value "title" doctitle >> value "actor" (actorWho actor))
@@ -1953,12 +1938,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
 data SetDocumentLang = SetDocumentLang DocumentID Lang Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLang Bool where
   update (SetDocumentLang did lang actor) = do
-    updateOneAndMtimeWithEvidenceIfChanged did "lang" lang (actorTime actor) $ do
+    updateOneWithEvidenceIfChanged did "lang" lang $ do
       return $ InsertEvidenceEvent
         SetDocumentLangEvidence
         (value "local" (show lang) >> value "actor" (actorWho actor))
         (Just did)
         actor
+
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
@@ -2067,6 +2053,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
                 (Just docid)
                 actor
             _ <- insertSignatoryScreenshots [(slid, screenshots)]
+            updateMTimeAndObjectVersion docid (actorTime actor)
             return ()
 
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
@@ -2272,10 +2259,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument () whe
 data TimeoutDocument = TimeoutDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
   update (TimeoutDocument did actor) = do
-    let time = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "status" Timedout
-       sqlSet "mtime" time
        sqlWhereDocumentIDIs did
        sqlWhereDocumentTypeIs (Signable undefined)
        sqlWhereDocumentStatusIs Pending
@@ -2284,6 +2269,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
         (value "actor" (actorWho actor))
         (Just did)
         actor
+    updateMTimeAndObjectVersion did (actorTime actor)
     return ()
 
 data ProlongDocument = ProlongDocument DocumentID Actor
@@ -2370,7 +2356,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
           (Just $ signatorylinkid sl)
           mmsg
           actor
-
+     updateMTimeAndObjectVersion (documentid doc) (actorTime actor)
      return ()
 
 data UpdateFieldsForSigning = UpdateFieldsForSigning DocumentID SignatoryLinkID [(FieldType, String)] Actor
@@ -2497,14 +2483,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
     , update $ SetInviteText did (documentinvitetext document) actor
     , update $ SetDocumentTags  did (documenttags document) actor
     , update $ SetDocumentAPICallbackURL did (documentapicallbackurl document)
+    , updateMTimeAndObjectVersion did (actorTime actor) >> return True
     ]
-
-data SetDocumentModificationDate = SetDocumentModificationDate DocumentID MinutesTime
-instance MonadDB m => DBUpdate m SetDocumentModificationDate Bool where
-  update (SetDocumentModificationDate did time) = do
-    kRun01 $ sqlUpdate "documents" $ do
-               sqlSet "mtime" time
-               sqlWhereEq "id" did
 
 data GetDocsSentBetween = GetDocsSentBetween UserID MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocsSentBetween Int where
@@ -2550,6 +2530,20 @@ instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLin
     kFold f []
     where f acc did slid = (did, slid) : acc
 
+
+data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int
+instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
+  query (CheckDocumentObjectVersionIs did ov) = do
+    res <- kWhyNot1 $ sqlSelect "documents" $ do
+       sqlResult "1"
+       sqlWhereDocumentObjectVersionIs ov
+       sqlWhereEq "documents.id" did
+    case res of
+         [] -> return ()
+         (e:_) -> throw e
+
+
+
 -- Update utilities
 
 updateWithEvidence' :: (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => m Bool -> Table -> SQL -> m evidence -> m Bool
@@ -2574,10 +2568,10 @@ updateOneWithEvidenceIfChanged did col new =
                       <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
 
-updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
-                                       => DocumentID -> SQL -> a -> MinutesTime -> m evidence -> m Bool
-updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
-  updateWithEvidence'
-    (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
-                      <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
-    tableDocuments ("mtime =" <?> mtime <+> "," <+> col <+> "=" <?> new <+> "WHERE id =" <?> did)
+updateMTimeAndObjectVersion :: (MonadDB m)  => DocumentID -> MinutesTime -> DBEnv m ()
+updateMTimeAndObjectVersion did mtime = do
+  kRun_ $ sqlUpdate "documents" $ do
+       sqlSetInc "object_version"
+       sqlSet "mtime" mtime
+       sqlWhereEq "id" did
+

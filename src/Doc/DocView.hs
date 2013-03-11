@@ -153,6 +153,7 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
                                     J.value "name"  n
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
+      J.value "objectversion" $ documentobjectversion doc
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
                                     then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))

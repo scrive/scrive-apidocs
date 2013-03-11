@@ -166,7 +166,7 @@ apiCallCreateFromFile = api $ do
     Just file -> do
       dbUpdate $ AttachFile (documentid doc) (fileid file) actor
       return ()
-  let doc' = doc{ documentfile = fileid `fmap` mfile }
+  doc' <- apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID (documentid doc)
   _ <- lift $ addDocumentCreateStatEvents (documentid doc) "web"
   Created <$> documentJSON False True True Nothing Nothing doc'
 
@@ -194,6 +194,7 @@ apiCallCreateFromTemplate did =  api $ do
 
 apiCallUpdate :: Kontrakcja m => DocumentID -> m Response
 apiCallUpdate did = api $ do
+  checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocCreate
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
@@ -223,6 +224,7 @@ instance FromJSValue ReadyParams where
 
 apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do
+  checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
@@ -258,6 +260,7 @@ apiCallReady did =  api $ do
 
 apiCallCancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallCancel did =  api $ do
+  checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
@@ -274,6 +277,7 @@ apiCallCancel did =  api $ do
 
 apiCallReject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
 apiCallReject did slid = api $ do
+  checkObjectVersionIfProvided did
   (mh,method) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
@@ -308,6 +312,7 @@ apiCallSign :: Kontrakcja m
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
              -> m Response
 apiCallSign  did slid = api $ do
+  checkObjectVersionIfProvided did
   Log.debug $ "Ready to sign a docment " ++ show did ++ " for signatory " ++ show slid
   (mh,method) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
@@ -634,3 +639,12 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
 
   return $ jsonSigAttachmentWithFile sigattach' Nothing
+
+
+checkObjectVersionIfProvided ::  (Kontrakcja m) => DocumentID -> APIMonad m ()
+checkObjectVersionIfProvided did = lift $ do
+    mov <- readField "objectversion"
+    case mov of
+        Just ov -> dbQuery $ CheckDocumentObjectVersionIs did ov
+        Nothing -> return ()
+  `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")

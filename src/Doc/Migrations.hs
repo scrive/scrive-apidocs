@@ -233,6 +233,15 @@ dropDeliveryMethodFromDocuments = Migration {
               <+> "DROP COLUMN delivery_method"
 }
 
+addObjectVersionToDocuments :: MonadDB m => Migration m
+addObjectVersionToDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 22
+  , mgrDo = do
+      kRunRaw $   "ALTER TABLE documents"
+              <+> "ADD COLUMN object_version BIGINT NOT NULL DEFAULT 0"
+}
+
 
 moveCancelationReasonFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
 moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {

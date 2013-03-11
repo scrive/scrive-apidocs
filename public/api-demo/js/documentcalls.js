@@ -75,6 +75,7 @@ window.UpdateApiCall = ApiCall.extend({
         defaults: {
             name : "Update API call",
             json : "{}",
+            objectversion : "",
             documentid : LocalStorage.get("api","documentid")
         },
         initialize: function (args) {
@@ -85,6 +86,11 @@ window.UpdateApiCall = ApiCall.extend({
             LocalStorage.set("api","documentid",documentid);
             return this.set({"documentid" : documentid});
         },
+        objectversion : function() {return this.get("objectversion");},
+        setObjectversion : function(objectversion) {
+            return this.set({"objectversion" : objectversion});
+        },
+
         json : function() {return this.get("json");},
         setJson : function(json) {return this.set({"json" : json});},
         send : function() {
@@ -98,7 +104,7 @@ window.UpdateApiCall = ApiCall.extend({
             //var formData = new FormData(form[0]);
             $.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
                 type: 'POST',
-                data:{json:model.json()},
+                data:{json:model.json(), objectversion : this.objectversion()},
                 //data: formData,
                 cache: false,
                 headers : { authorization : model.authorization() },
@@ -124,7 +130,10 @@ window.ReadyApiCall = ApiCall.extend({
             LocalStorage.set("api","documentid",documentid);
             return this.set({"documentid" : documentid});
         },
-
+        objectversion : function() {return this.get("objectversion");},
+        setObjectversion : function(objectversion) {
+            return this.set({"objectversion" : objectversion});
+        },
         initialize: function (args) {
         },
         isReady : function() {return true;},
@@ -136,7 +145,7 @@ window.ReadyApiCall = ApiCall.extend({
             form.append($("<input type='hidden' name='json'/>").val('{ "timezone": "Europe/Stockholm" }'));
             $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
                 type: 'POST',
-                data : {json : '{ "timezone": "Europe/Stockholm" }'},
+                data : {json : '{ "timezone": "Europe/Stockholm" }' , objectversion : model.objectversion()},
                 cache: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
@@ -184,12 +193,17 @@ window.SendReminderApiCall = ApiCall.extend({
 window.CancelApiCall = ApiCall.extend({
         defaults: {
             name : "Cancel API call",
-            documentid : LocalStorage.get("api","documentid")
+            documentid : LocalStorage.get("api","documentid"),
+            objectversion : ""
         },
         documentid : function() {return this.get("documentid");},
         setDocumentid : function(documentid) {
             LocalStorage.set("api","documentid",documentid);
             return this.set({"documentid" : documentid});
+        },
+        objectversion : function() {return this.get("objectversion");},
+        setObjectversion : function(objectversion) {
+            return this.set({"objectversion" : objectversion});
         },
 
         initialize: function (args) {
@@ -200,8 +214,7 @@ window.CancelApiCall = ApiCall.extend({
             $.ajax(Scrive.apiUrl()+"cancel/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
-                contentType: false,
-                processData: false,
+                data : {objectversion : model.objectversion()},
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -421,7 +434,10 @@ window.RejectApiCall = ApiCall.extend({
         setCustomtext : function(customtext) {
              return this.set({"customtext" : customtext});
         },
-
+        objectversion : function() {return this.get("objectversion");},
+        setObjectversion : function(objectversion) {
+            return this.set({"objectversion" : objectversion});
+        },
         send : function() {
             var model = this;
             $.ajax(Scrive.apiUrl()+"reject/" + model.documentid() + "/" + model.signatorylinkid(), {
@@ -429,7 +445,8 @@ window.RejectApiCall = ApiCall.extend({
                 cache: false,
                 headers : { authorization : model.authorization() },
                 data : {
-                     customtext : this.customtext()
+                     customtext : this.customtext(),
+                     objectversion : model.objectversion()
                     },
                 success : function(res) {
                     model.setResult(res);
@@ -479,7 +496,10 @@ window.SignApiCall = ApiCall.extend({
             LocalStorage.set("api","fields",fields);
             return this.set({"fields" : fields});
         },
-
+        objectversion : function() {return this.get("objectversion");},
+        setObjectversion : function(objectversion) {
+            return this.set({"objectversion" : objectversion});
+        },
         send : function() {
             var model = this;
             $.ajax(Scrive.apiUrl()+"sign/" + model.documentid() + "/" + model.signatorylinkid(), {
@@ -488,7 +508,8 @@ window.SignApiCall = ApiCall.extend({
                 headers : { authorization : model.authorization() },
                 data : {
                      screenshots : JSON.stringify({first : [new Date().toISOString(),this.screenshotFirst()] , signing : [new Date().toISOString(),this.screenshotSigning()] }),
-                     fields : this.fields()
+                     fields : this.fields(),
+                     objectversion : model.objectversion()
                     },
                 success : function(res) {
                     model.setResult(res);
@@ -576,11 +597,18 @@ window.UpdateApiCallView = Backbone.View.extend({
             box.append(this.boxRight).append(boxLeft);
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+
+            var objectversionInput = $("<input type='text'/>").val(model.objectversion());
+            objectversionInput.change(function() {model.setObjectversion(objectversionInput.val()); return false;})
+
             var jsontextarea = $("<textarea class='json-text-area'>"+model.json()+"</textarea>");
             jsontextarea.change(function() {model.setJson(jsontextarea.val()); return false;})
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
-            boxLeft.append($("<div>Document # : <BR/></div>").append(documentidInput)).append($("<div>JSON : <BR/></div>").append(jsontextarea)).append($("<div/>").append(button));
+            boxLeft.append($("<div>Document # : <BR/></div>").append(documentidInput))
+                   .append($("<div>Object version (optional) : <BR/></div>").append(objectversionInput))
+                   .append($("<div>JSON : <BR/></div>").append(jsontextarea))
+                   .append($("<div/>").append(button));
             this.render();
         },
         render : function() {
@@ -606,9 +634,15 @@ window.ReadyApiCallView = Backbone.View.extend({
             box.append(this.boxRight).append(boxLeft);
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+
+            var objectversionInput = $("<input type='text'/>").val(model.objectversion());
+            objectversionInput.change(function() {model.setObjectversion(objectversionInput.val()); return false;})
+
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
-            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput)).append($("<div/>").append(button));
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                               .append($("<div>Object version (optional): <BR/></div>").append(objectversionInput))
+                               .append($("<div/>").append(button));
             this.render();
         },
         render : function() {
@@ -664,9 +698,15 @@ window.CancelApiCallView = Backbone.View.extend({
             box.append(this.boxRight).append(boxLeft);
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+
+            var objectversionInput = $("<input type='text'/>").val(model.objectversion());
+            objectversionInput.change(function() {model.setObjectversion(objectversionInput.val()); return false;})
+
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
-            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput)).append($("<div/>").append(button));
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                                           .append($("<div>Object version (optional) : <BR/></div>").append(objectversionInput))
+                                           .append($("<div/>").append(button));
             this.render();
         },
         render : function() {
@@ -854,7 +894,8 @@ window.RejectApiCallView = Backbone.View.extend({
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
             var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
             signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
-
+            var objectversionInput = $("<input type='text'/>").val(model.objectversion());
+            objectversionInput.change(function() {model.setObjectversion(objectversionInput.val()); return false;})
             var customTextImput = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px;width:300px;'/>").html(model.customtext());
             customTextImput.tinymce({
                       script_url: '/tiny_mce/tiny_mce.js',
@@ -873,6 +914,7 @@ window.RejectApiCallView = Backbone.View.extend({
             button.click(function() {model.setCustomtext(customTextImput.val()); model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
                    .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div>Object version (optional) : <BR/></div>").append(objectversionInput))
                    .append($("<div>Custom text (empty == Ignore): <BR/></div>").append(customTextImput))
                    .append($("<div/>").append(button));
             this.render();
@@ -906,6 +948,9 @@ window.SignApiCallView = Backbone.View.extend({
             var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
             signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
 
+            var objectversionInput = $("<input type='text'/>").val(model.objectversion());
+            objectversionInput.change(function() {model.setObjectversion(objectversionInput.val()); return false;})
+
             var screenshotFirstInput = $("<input type='text'/>").val(model.screenshotFirst());
             screenshotFirstInput.change(function() {model.setScreenshotFirst(screenshotFirstInput.val()); return false;})
 
@@ -919,8 +964,9 @@ window.SignApiCallView = Backbone.View.extend({
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
                    .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
-                   .append($("<div>First screenshot : <BR/></div>").append(screenshotFirstInput))
-                   .append($("<div>Signing screenshot : <BR/></div>").append(screenshotSigningInput))
+                   .append($("<div>Object version (optional) : <BR/></div>").append(objectversionInput))
+                   .append($("<div>First screenshot (optional) : <BR/></div>").append(screenshotFirstInput))
+                   .append($("<div>Signing screenshot (optional) : <BR/></div>").append(screenshotSigningInput))
                    .append($("<div>Fields #: <BR/></div>").append(fieldsInput))
                    .append($("<div/>").append(button));
             this.render();
