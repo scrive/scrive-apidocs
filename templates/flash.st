@@ -32,6 +32,12 @@ flashMessageOfferRestarted=$_flashMessageOfferRestarted()$
 ###
 flashMessageOrderRestarted=$_flashMessageOrderRestarted()$
 ###
+flashMessageContractProlonged=$_flashMessageContractProlonged()$
+###
+flashMessageOfferProlonged=$_flashMessageOfferProlonged()$
+###
+flashMessageOrderProlonged=$_flashMessageOrderProlonged()$
+###
 flashMessageUserPasswordChanged=
 	$_flashMessageUserPasswordChanged()$
 

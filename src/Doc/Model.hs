@@ -49,6 +49,7 @@ module Doc.Model
   , ResetSignatoryDetails(..)
   , ResetSignatoryDetails2(..)
   , RestartDocument(..)
+  , ProlongDocument(..)
   , RestoreArchivedDocument(..)
   , SaveDocumentForUser(..)
   , SaveSigAttachment(..)
@@ -2278,6 +2279,24 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
        sqlWhereDocumentStatusIs Pending
     _ <- update $ InsertEvidenceEvent
         TimeoutDocumentEvidence
+        (value "actor" (actorWho actor))
+        (Just did)
+        actor
+    return ()
+
+data ProlongDocument = ProlongDocument DocumentID Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
+  update (ProlongDocument did actor) = do
+    let time = actorTime actor
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+       sqlSet "status" Pending
+       sqlSet "mtime" time
+       sqlSetCmd "timeout_time" "now() + (interval '1 day')"
+       sqlWhereDocumentIDIs did
+       sqlWhereDocumentTypeIs (Signable undefined)
+       sqlWhereDocumentStatusIs Timedout
+    _ <- update $ InsertEvidenceEvent
+        ProlongDocumentEvidence
         (value "actor" (actorWho actor))
         (Just did)
         actor

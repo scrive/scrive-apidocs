@@ -6,6 +6,7 @@ module Doc.DocView (
   , flashAuthorSigned
   , flashDocumentDraftSaved
   , flashDocumentRestarted
+  , flashDocumentProlonged
   , flashDocumentTemplateSaved
   , flashMessageCSVSent
   , flashMessageInvalidCSV
@@ -97,6 +98,10 @@ flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentRestarted document = do
   toFlashMsg OperationDone <$> (renderTemplateForProcess document processflashmessagerestarted $ documentInfoFields document)
 
+flashDocumentProlonged :: TemplatesMonad m => Document -> m FlashMessage
+flashDocumentProlonged document = do
+  toFlashMsg OperationDone <$> (renderTemplateForProcess document processflashmessageprolonged $ documentInfoFields document)
+
 flashRemindMailSent :: TemplatesMonad m => SignatoryLink -> m FlashMessage
 flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
   toFlashMsg OperationDone <$> (renderTemplate (template_name maybesigninfo) $ do
@@ -173,6 +178,7 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
         J.value "author" $ authorJSON mauthor mcompany
         J.value "process" $ show $ toDocumentProcess (documenttype doc)
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
+        J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
         J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
         J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
 

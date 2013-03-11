@@ -66,6 +66,8 @@ SaveDocumentForUserEvidenceText=
 ###
 RestartDocumentEvidenceText=Cancelled transaction $did$ restarted by $actor$.
 ###
+ProlongDocumentEvidenceText=Document $did$ prolonged by $actor$
+###
 ReallyDeleteDocumentEvidenceText=
 ###
 NewDocumentEvidenceText=New transaction “$title$” started by $actor$.

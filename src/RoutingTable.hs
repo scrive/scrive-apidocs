@@ -113,6 +113,7 @@ staticRoutes = choice
      , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
      -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
      , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
+     , dir "prolong" $ hPost $ toK1 $ DocControl.handleProlong
 
      , dir "pages"  $ hGet $ toK2 $ DocControl.showPage
      -- HTMP emails can have embedded preview image

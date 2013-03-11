@@ -29,6 +29,7 @@ module Doc.DocControl(
     , handleResend
     , handleChangeSignatoryEmail
     , handleRestart
+    , handleProlong
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -729,6 +730,13 @@ handleRestart docid = withUserPost $ do
   doc2 <- guardRightM $ restartDocument doc
   addFlashM $ flashDocumentRestarted doc2
   return $ LinkIssueDoc (documentid doc2)
+
+handleProlong :: Kontrakcja m => DocumentID -> m KontraLink
+handleProlong docid = withUserPost $ do
+  doc <- guardRightM $ getDocByDocID docid
+  guardRightM $ prolongDocument doc
+  addFlashM $ flashDocumentProlonged doc
+  return $ LinkIssueDoc (documentid doc)
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do

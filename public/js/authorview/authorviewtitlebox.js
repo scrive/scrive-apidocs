@@ -17,8 +17,14 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   canBeRestarted : function() {
     return (this.document().canberestarted() && this.document().currentViewerIsAuthor());
   },
+  canBeProlonged : function() {
+    return (this.document().canbeprolonged() && this.document().currentViewerIsAuthor());
+  },
   restart : function() {
     this.document().restart().send();
+  },
+  prolong : function() {
+    this.document().prolong().send();
   },
   canBeWithdrawn : function() {
     return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
@@ -78,6 +84,21 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           return;
           mixpanel.track('Click restart button');
         model.restart();
+      }
+    }).input();
+  },
+  prolongButton : function() {
+    var model = this.model;
+    var document = this.model.document();
+    return Button.init({
+      color: "green",
+      size: "small",
+      text: document.process().processLocalization().prolongbuttontext,
+      onClick: function() {
+        if (alreadyClicked(this))
+          return;
+          mixpanel.track('Click prolong button');
+        model.prolong();
       }
     }).input();
   },
@@ -196,6 +217,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       var buttonbox = $("<div class='buttonbox'/>");
       if (this.model.canBeRestarted())
         buttonbox.append(this.restartButton());
+      if (this.model.canBeProlonged())
+        buttonbox.append(this.prolongButton());
       if (this.model.canBeWithdrawn())
         buttonbox.append(this.withdrawnButton());
       if (this.model.canGoToSignView())

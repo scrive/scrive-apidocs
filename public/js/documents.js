@@ -188,9 +188,18 @@ window.Document = Backbone.Model.extend({
     canberestarted: function() {
         return this.get("canberestarted");
     },
+    canbeprolonged: function() {
+        return this.get("canbeprolonged");
+    },
     restart: function() {
           return new Submit({
               url: "/restart/" + this.documentid(),
+              method: "POST"
+          });
+    },
+    prolong: function() {
+          return new Submit({
+              url: "/prolong/" + this.documentid(),
               method: "POST"
           });
     },
@@ -603,6 +612,7 @@ window.Document = Backbone.Model.extend({
        lang: new Lang({lang : args.lang}),
        infotext: args.infotext,
        canberestarted: args.canberestarted,
+       canbeprolonged: args.canbeprolonged,
        canbecanceled: args.canbecanceled,
        canseeallattachments: args.canseeallattachments,
        status: args.status,

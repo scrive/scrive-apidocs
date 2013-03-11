@@ -74,6 +74,7 @@ data DocProcessInfo =
 
   -- process specific flash message templates
   , processflashmessagerestarted :: String
+  , processflashmessageprolonged :: String
 
   -- process specific modal templates
   , processmodalsendconfirmation :: String
@@ -112,6 +113,7 @@ contractProcess =
 
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageContractRestarted"
+  , processflashmessageprolonged = "flashMessageContractProlonged"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalContractCreated"
@@ -150,6 +152,7 @@ offerProcess =
 
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageOfferRestarted"
+  , processflashmessageprolonged = "flashMessageOfferProlonged"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalOfferCreated"
@@ -189,6 +192,7 @@ orderProcess =
 
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageOrderRestarted"
+  , processflashmessageprolonged = "flashMessageOrderProlonged"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalOrderCreated"

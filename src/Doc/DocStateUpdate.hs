@@ -1,5 +1,6 @@
 module Doc.DocStateUpdate
     ( restartDocument
+    , prolongDocument
     , signDocumentWithEmailOrPad
     , signDocumentWithEleg
     , rejectDocumentWithChecks
@@ -52,6 +53,18 @@ restartDocument doc = withUser $ \user -> do
       case mnewdoc of
         Nothing -> return $ Left DBResourceNotAvailable
         Just doc' -> return $ Right doc'
+    else return $ Left DBResourceNotAvailable
+
+{- |
+   Securely
+ -}
+prolongDocument :: Kontrakcja m => Document -> m (Either DBError ())
+prolongDocument doc = withUser $ \user -> do
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  if isSigLinkFor user $ getAuthorSigLink doc
+    then do
+      dbUpdate $ ProlongDocument (documentid doc) actor
+      return (Right ())
     else return $ Left DBResourceNotAvailable
 
 {- |
