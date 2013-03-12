@@ -2536,8 +2536,7 @@ instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
   query (CheckDocumentObjectVersionIs did ov) = do
     res <- kWhyNot1 $ sqlSelect "documents" $ do
        sqlResult "1"
-       sqlWhereDocumentObjectVersionIs ov
-       sqlWhereEq "documents.id" did
+       sqlWhereDocumentObjectVersionIs did ov
     case res of
          [] -> return ()
          (e:_) -> throw e

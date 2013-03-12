@@ -245,6 +245,6 @@ instance ToJSValue DocumentObjectVersionDoesNotMatch where
 instance KontraException DocumentObjectVersionDoesNotMatch
 
 sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
-                                 => Int -> m ()
-sqlWhereDocumentObjectVersionIs object_version = sqlWhereE DocumentObjectVersionDoesNotMatch $
-  "documents.object_version = " <?> object_version
+                                 => DocumentID -> Int -> m ()
+sqlWhereDocumentObjectVersionIs did object_version = sqlWhereE DocumentObjectVersionDoesNotMatch $
+ ("documents.object_version = " <?> object_version)  <+> ("AND documents.id = " <?> did)
