@@ -365,8 +365,15 @@ var DocumentSignViewView = Backbone.View.extend({
       $(this.el).append("<div class='clearfix'/>");
       $(this.el).append("<div class='spacer40'/>");
     },
+    setBackgroundColour: function() {
+      var color = this.model.document().signviewbackgroundcolour();
+      if (color) {
+        $('div.signview').css('background-color', color);
+      }
+    },
     render: function() {
      var view = this;
+     this.setBackgroundColour();
      this.container.children().detach();
      if (!this.model.isReady())
      {

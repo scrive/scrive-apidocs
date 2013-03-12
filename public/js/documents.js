@@ -534,14 +534,35 @@ window.Document = Backbone.Model.extend({
     currentSignatoryCanSign: function() {
       return this.currentSignatory() && this.currentSignatory().canSign();
     },
-    logo: function() {
-        return this.get("logo");
+    signviewlogo: function() {
+      return this.get('signviewlogo');
     },
-    barsbackgroundcolor: function() {
-        return this.get("barsbackgroundcolor");
+    signviewtextcolour: function() {
+      return this.get('signviewtextcolour');
     },
-    barsbackgroundtextcolor: function() {
-        return this.get("barsbackgroundtextcolor");
+    signviewtextfont: function() {
+      return this.get('signviewtextfont');
+    },
+    signviewfootertextcolour: function() {
+      return this.get('signviewfootertextcolour');
+    },
+    signviewfootertextfont: function() {
+      return this.get('signviewfootertextfont');
+    },
+    signviewheadertextcolour: function() {
+      return this.get('signviewheadertextcolour');
+    },
+    signviewheadertextfont: function() {
+      return this.get('signviewheadertextfont');
+    },
+    signviewheaderbackgroundcolour: function() {
+      return this.get('signviewheaderbackgroundcolour');
+    },
+    signviewfooterbackgroundcolour: function() {
+      return this.get('signviewfooterbackgroundcolour');
+    },
+    signviewbackgroundcolour: function() {
+      return this.get('signviewbackgroundcolour');
     },
     authoruser: function() {
         return this.get("authoruser");
@@ -613,9 +634,16 @@ window.Document = Backbone.Model.extend({
        template: args.template,
        daystosign: args.daystosign,
        invitationmessage: args.invitationmessage,
-       logo: args.logo,
-       barsbackgroundcolor: args.barsbackgroundcolor,
-       barsbackgroundtextcolor: args.barsbackgroundtextcolor,
+       signviewlogo: args.signviewlogo,
+       signviewtextcolour: args.signviewtextcolour,
+       signviewtextfont: args.signviewtextfont,
+       signviewfootertextcolour: args.signviewfootertextcolour,
+       signviewfootertextfont: args.signviewfootertextfont,
+       signviewheadertextcolour: args.signviewheadertextcolour,
+       signviewheadertextfont: args.signviewheadertextfont,
+       signviewheaderbackgroundcolour: args.signviewheaderbackgroundcolour,
+       signviewfooterbackgroundcolour: args.signviewfooterbackgroundcolour,
+       signviewbackgroundcolour: args.signviewbackgroundcolour,
        ready: true
      };
     }

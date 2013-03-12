@@ -8,58 +8,105 @@ window.CompanyUI = Backbone.Model.extend({
       this.fetch();
     } else {
       this.set({
-        logo: args.logo,
-        barsbackground: args.barsbackground,
-        barstextcolour: args.barstextcolour,
-        bordercolour: args.bordercolour,
-        headerfont: args.headerfont,
-        font: args.font,
-        buttoncolour: args.buttoncolour,
-        emailbackgroundcolour: args.emailbackgroundcolour
+        emailheaderfont: args.companyemailheaderfont,
+        emailfont: args.companyemailfont,
+        emailbordercolour: args.companyemailbordercolour,
+        emailbuttoncolour: args.companyemailbuttoncolour,
+        emailemailbackgroundcolour: args.companyemailemailbackgroundcolour,
+        emailbackgroundcolour: args.companyemailbackgroundcolour,
+        emailtextcolour: args.companyemailtextcolour,
+        emaillogo: args.companyemaillogo,
+        signviewlogo: args.companysignviewlogo,
+        signviewtextcolour: args.companysignviewtextcolour,
+        signviewtextfont: args.companysignviewtextfont,
+        signviewfootertextcolour: args.companysignviewfootertextcolour,
+        signviewfootertextfont: args.companysignviewfootertextfont,
+        signviewheadertextcolour: args.companysignviewheadertextcolour,
+        signviewheadertextfont: args.companysignviewheadertextfont,
+        signviewheaderbackgroundcolour: args.companysignviewheaderbackgroundcolour,
+        signviewfooterbackgroundcolour: args.companysignviewfooterbackgroundcolour,
+        signviewbackgroundcolour: args.companysignviewbackgroundcolour
       }, {silent: true});
     }
   },
-  logo: function() {
-    return this.get('logo');
+  emailheaderfont: function() {
+    return this.get('emailheaderfont');
   },
-  barstextcolour: function() {
-    return this.get('barstextcolour');
+  emailfont: function() {
+    return this.get('emailfont');
   },
-  setBarstextcolour: function(color) {
-    this.set({barstextcolour: colour.trim()});
+  emailbordercolour: function() {
+    return this.get('emailbordercolour');
   },
-  barsbackground: function() {
-    return this.get('barsbackground');
+  emailbuttoncolour: function() {
+    return this.get('emailbuttoncolour');
   },
-  bordercolour: function() {
-    return this.get('bordercolour');
-  },
-  headerfont: function() {
-    return this.get('headerfont');
-  },
-  font: function() {
-    return this.get('font');
-  },
-  buttoncolour: function() {
-    return this.get('buttoncolour');
+  emailemailbackgroundcolour: function() {
+    return this.get('emailemailbackgroundcolour');
   },
   emailbackgroundcolour: function() {
     return this.get('emailbackgroundcolour');
+  },
+  emailtextcolour: function() {
+    return this.get('emailtextcolour');
+  },
+  emaillogo: function() {
+    return this.get('emaillogo');
+  },
+  signviewlogo: function() {
+    return this.get('signviewlogo');
+  },
+  signviewtextcolour: function() {
+    return this.get('signviewtextcolour');
+  },
+  signviewtextfont: function() {
+    return this.get('signviewtextfont');
+  },
+  signviewfootertextcolour: function() {
+    return this.get('signviewfootertextcolour');
+  },
+  signviewfootertextfont: function() {
+    return this.get('signviewfootertextfont');
+  },
+  signviewheadertextcolour: function() {
+    return this.get('signviewheadertextcolour');
+  },
+  signviewheadertextfont: function() {
+    return this.get('signviewheadertextfont');
+  },
+  signviewheaderbackgroundcolour: function() {
+    return this.get('signviewheaderbackgroundcolour');
+  },
+  signviewfooterbackgroundcolour: function() {
+    return this.get('signviewfooterbackgroundcolour');
+  },
+  signviewbackgroundcolour: function() {
+    return this.get('signviewbackgroundcolour');
   },
   editable: function() {
     return this.get('editable');
   },
   parse: function(args) {
     return {
+      emailheaderfont: args.companyemailheaderfont,
+      emailfont: args.companyemailfont,
+      emailbordercolour: args.companyemailbordercolour,
+      emailbuttoncolour: args.companyemailbuttoncolour,
+      emailemailbackgroundcolour: args.companyemailemailbackgroundcolour,
+      emailbackgroundcolour: args.companyemailbackgroundcolour,
+      emailtextcolour: args.companyemailtextcolour,
+      emaillogo: args.companyemaillogo,
+      signviewlogo: args.companysignviewlogo,
+      signviewtextcolour: args.companysignviewtextcolour,
+      signviewtextfont: args.companysignviewtextfont,
+      signviewfootertextcolour: args.companysignviewfootertextcolour,
+      signviewfootertextfont: args.companysignviewfootertextfont,
+      signviewheadertextcolour: args.companysignviewheadertextcolour,
+      signviewheadertextfont: args.companysignviewheadertextfont,
+      signviewheaderbackgroundcolour: args.companysignviewheaderbackgroundcolour,
+      signviewfooterbackgroundcolour: args.companysignviewfooterbackgroundcolour,
+      signviewbackgroundcolour: args.companysignviewbackgroundcolour,
       editable: args.editable,
-      barsbackground: args.barsbackground,
-      barstextcolour: args.barstextcolour,
-      bordercolour: args.bordercolour,
-      headerfont: args.headerfont,
-      font: args.font,
-      buttoncolour: args.buttoncolour,
-      emailbackgroundcolour: args.emailbackgroundcolour,
-      logo: args.logo,
       ready: true
     };
   }

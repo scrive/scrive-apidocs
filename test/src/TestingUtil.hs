@@ -89,14 +89,24 @@ instance Arbitrary Company where
                      }
     where
       emptyCompanyUI = CompanyUI {
-        companybarsbackground = Nothing
-      , companybarstextcolour = Nothing
-      , companyemailheaderfont = Nothing
-      , companyemailfont = Nothing
-      , companyemailbordercolour = Nothing
-      , companyemailbuttoncolour = Nothing
-      , companyemailemailbackgroundcolour = Nothing
-      , companylogo = Nothing
+          companyemailheaderfont = Nothing
+        , companyemailfont = Nothing
+        , companyemailbordercolour = Nothing
+        , companyemailbuttoncolour = Nothing
+        , companyemailemailbackgroundcolour = Nothing
+        , companyemailbackgroundcolour = Nothing
+        , companyemailtextcolour = Nothing
+        , companyemaillogo = Nothing
+        , companysignviewlogo = Nothing
+        , companysignviewtextcolour = Nothing
+        , companysignviewtextfont = Nothing
+        , companysignviewfootertextcolour = Nothing
+        , companysignviewfootertextfont = Nothing
+        , companysignviewheadertextcolour = Nothing
+        , companysignviewheadertextfont = Nothing
+        , companysignviewheaderbackgroundcolour = Nothing
+        , companysignviewfooterbackgroundcolour = Nothing
+        , companysignviewbackgroundcolour = Nothing
       }
 
 instance Arbitrary CompanyID where

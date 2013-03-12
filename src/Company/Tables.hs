@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 9
+  , tblVersion = 10
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -15,9 +15,6 @@ tableCompanies = tblTable {
        , ("zip", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("city", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       , ("bars_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_domain", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("ip_address_mask_list", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_bordercolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -25,6 +22,19 @@ tableCompanies = tblTable {
        , ("email_font", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_buttoncolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_emailbackgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("signview_logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("signview_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_textfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_footertextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_footertextfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_headertextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_headertextfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_headerbackgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_footerbackgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
@@ -36,9 +46,6 @@ tableCompanies = tblTable {
           <> ", zip             TEXT   NOT NULL DEFAULT ''"
           <> ", city            TEXT   NOT NULL DEFAULT ''"
           <> ", country         TEXT   NOT NULL DEFAULT ''"
-          <> ", bars_background TEXT       NULL"
-          <> ", logo            BYTEA      NULL"
-          <> ", bars_textcolour TEXT       NULL"
           <> ", email_domain    TEXT       NULL"
           <> ", ip_address_mask_list    TEXT       NULL"
           <> ", email_bordercolour TEXT    NULL"
@@ -46,6 +53,19 @@ tableCompanies = tblTable {
           <> ", email_font         TEXT    NULL"
           <> ", email_buttoncolour TEXT    NULL"
           <> ", email_emailbackgroundcolour TEXT    NULL"
+          <> ", email_backgroundcolour TEXT    NULL"
+          <> ", email_textcolour TEXT    NULL"
+          <> ", email_logo BYTEA      NULL"
+          <> ", signview_logo BYTEA      NULL"
+          <> ", signview_textcolour TEXT NULL"
+          <> ", signview_textfont TEXT NULL"
+          <> ", signview_footertextcolour TEXT NULL"
+          <> ", signview_footertextfont TEXT NULL"
+          <> ", signview_headertextcolour TEXT NULL"
+          <> ", signview_headertextfont TEXT NULL"
+          <> ", signview_headerbackgroundcolour TEXT NULL"
+          <> ", signview_footerbackgroundcolour TEXT NULL"
+          <> ", signview_backgroundcolour TEXT NULL"
           <> ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           <> ")"
         return TVRcreated

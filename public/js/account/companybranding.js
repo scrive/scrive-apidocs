@@ -521,109 +521,234 @@ window.CompanyModel = Backbone.Model.extend({
       var companybranding = this;
       var companyui = this.companyui();
       this.set({
-        logo: new CompanyBrandingLogo({
+        emaillogo: new CompanyBrandingLogo({
           companyui: companyui,
-          customised: companyui.logo().trim()!="",
-          logo: companyui.logo(),
+          customised: companyui.emaillogo().trim() != '',
+          logo: companyui.emaillogo(),
           label: localization.customiseLogo,
           editable: companyui.editable(),
           url: ''
-        }),
-        barsbackground: new CompanyBrandingColour({
-          companyui: companyui,
-          companybranding: companybranding,
-          companyuiattribute: 'barsbackground',
-          customised: companyui.barsbackground().trim()!="",
-          defaultcolour: "#FFFFFF",
-          colour: companyui.barsbackground(),
-          label: localization.customiseBackgroundColour,
-          editable: companyui.editable()
         }),
         emailbackgroundcolour: new CompanyBrandingColour({
           companyui: companyui,
           companybranding: companybranding,
           companyuiattribute: 'emailbackgroundcolour',
-          customised: companyui.emailbackgroundcolour().trim()!="",
+          customised: companyui.emailbackgroundcolour().trim() != '',
           defaultcolour: "#FFFFFF",
           colour: companyui.emailbackgroundcolour(),
+          label: localization.customiseBackgroundColour,
+          editable: companyui.editable()
+        }),
+        emailemailbackgroundcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'emailemailbackgroundcolour',
+          customised: companyui.emailemailbackgroundcolour().trim() != '',
+          defaultcolour: "#FFFFFF",
+          colour: companyui.emailemailbackgroundcolour(),
           label: localization.customiseEmailBackgroundColour,
           editable: companyui.editable()
         }),
-        barstextcolour: new CompanyBrandingColour({
+        emailtextcolour: new CompanyBrandingColour({
           companyui: companyui,
           companybranding: companybranding,
-          companyuiattribute: 'barstextcolour',
-          customised: companyui.barstextcolour().trim()!="",
+          companyuiattribute: 'emailtextcolour',
+          customised: companyui.emailtextcolour().trim() != '',
           defaultcolour: "#333333",
-          colour: companyui.barstextcolour(),
+          colour: companyui.emailtextcolour(),
           label: localization.customiseTextColour,
           editable: companyui.editable()
         }),
-        headerfont: new CompanyBrandingFont({
+        emailheaderfont: new CompanyBrandingFont({
           companyui: companyui,
           companybranding: companybranding,
-          companyuiattribute: 'headerfont',
-          customised: companyui.headerfont() != '',
-          font: companyui.headerfont(),
+          companyuiattribute: 'emailheaderfont',
+          customised: companyui.emailheaderfont() != '',
+          font: companyui.emailheaderfont(),
           label: localization.customiseHeaderFontLabel,
           editable: companyui.editable()
         }),
-        font: new CompanyBrandingFont({
+        emailfont: new CompanyBrandingFont({
           companyui: companyui,
           companybranding: companybranding,
-          companyuiattribute: 'font',
-          customised: companyui.font() != '',
-          font: companyui.font(),
+          companyuiattribute: 'emailfont',
+          customised: companyui.emailfont() != '',
+          font: companyui.emailfont(),
           label: localization.customiseFontLabel,
           editable: companyui.editable()
         }),
-        bordercolour: new CompanyBrandingColour({
+        emailbordercolour: new CompanyBrandingColour({
           companyui: companyui,
           companybranding: companybranding,
-          companyuiattribute: 'bordercolour',
-          customised: companyui.bordercolour() != '',
+          companyuiattribute: 'emailbordercolour',
+          customised: companyui.emailbordercolour() != '',
           defaultcolour: '#dee4ed',
-          colour: companyui.bordercolour(),
+          colour: companyui.emailbordercolour(),
           label: localization.customiseBorderColourLabel,
           editable: companyui.editable()
         }),
-        buttoncolour: new CompanyBrandingColour({
+        emailbuttoncolour: new CompanyBrandingColour({
           companyui: companyui,
           companybranding: companybranding,
-          companyuiattribute: 'buttoncolour',
-          customised: companyui.buttoncolour() != '',
+          companyuiattribute: 'emailbuttoncolour',
+          customised: companyui.emailbuttoncolour() != '',
           defaultcolour: '215',
-          colour: companyui.buttoncolour(),
+          colour: companyui.emailbuttoncolour(),
           label: localization.customiseButtonColourLabel,
+          editable: companyui.editable()
+        }),
+        signviewlogo: new CompanyBrandingLogo({
+          companyui: companyui,
+          customised: companyui.signviewlogo().trim() != '',
+          logo: companyui.signviewlogo(),
+          label: localization.customiseLogo,
+          editable: companyui.editable(),
+          url: ''
+        }),
+        signviewtextcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewtextcolour',
+          customised: companyui.signviewtextcolour().trim() != '',
+          defaultcolour: "#333333",
+          colour: companyui.signviewtextcolour(),
+          label: localization.customiseTextColour,
+          editable: companyui.editable()
+        }),
+        signviewtextfont: new CompanyBrandingFont({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewtextfont',
+          customised: companyui.signviewtextfont() != '',
+          font: companyui.signviewtextfont(),
+          label: localization.customiseFontLabel,
+          editable: companyui.editable()
+        }),
+        signviewfootertextcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewfootertextcolour',
+          customised: companyui.signviewfootertextcolour().trim() != '',
+          defaultcolour: "#333333",
+          colour: companyui.signviewfootertextcolour(),
+          label: localization.customiseSignViewFooterTextColourLabel,
+          editable: companyui.editable()
+        }),
+        signviewfootertextfont: new CompanyBrandingFont({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewfootertextfont',
+          customised: companyui.signviewfootertextfont() != '',
+          font: companyui.signviewfootertextfont(),
+          label: localization.customiseSignViewFooterTextFontLabel,
+          editable: companyui.editable()
+        }),
+        signviewheadertextcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewheadertextcolour',
+          customised: companyui.signviewheadertextcolour().trim() != '',
+          defaultcolour: "#333333",
+          colour: companyui.signviewheadertextcolour(),
+          label: localization.customiseSignViewHeaderTextColourLabel,
+          editable: companyui.editable()
+        }),
+        signviewheadertextfont: new CompanyBrandingFont({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewheadertextfont',
+          customised: companyui.signviewheadertextfont() != '',
+          font: companyui.signviewheadertextfont(),
+          label: localization.customiseSignViewHeaderTextFontLabel,
+          editable: companyui.editable()
+        }),
+        signviewheaderbackgroundcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewheaderbackgroundcolour',
+          customised: companyui.signviewheaderbackgroundcolour().trim() != '',
+          defaultcolour: "#FFFFFF",
+          colour: companyui.signviewheaderbackgroundcolour(),
+          label: localization.customiseSignViewHeaderBackgroundColour,
+          editable: companyui.editable()
+        }),
+        signviewfooterbackgroundcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewfooterbackgroundcolour',
+          customised: companyui.signviewfooterbackgroundcolour().trim() != '',
+          defaultcolour: "#FFFFFF",
+          colour: companyui.signviewfooterbackgroundcolour(),
+          label: localization.customiseSignViewFooterBackgroundColour,
+          editable: companyui.editable()
+        }),
+        signviewbackgroundcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'signviewbackgroundcolour',
+          customised: companyui.signviewbackgroundcolour().trim() != '',
+          defaultcolour: "#FFFFFF",
+          colour: companyui.signviewbackgroundcolour(),
+          label: localization.customiseSignViewBackgroundColour,
           editable: companyui.editable()
         }),
         editable: companyui.editable()
       }, {silent: true});
       this.trigger("reset");
     },
-    barsbackground: function() {
-      return this.get("barsbackground");
+    emailheaderfont: function() {
+      return this.get('emailheaderfont');
     },
-    barstextcolour: function() {
-      return this.get("barstextcolour");
+    emailfont: function() {
+      return this.get('emailfont');
     },
-    headerfont: function() {
-      return this.get('headerfont');
+    emailbordercolour: function() {
+      return this.get('emailbordercolour');
     },
-    font: function() {
-      return this.get('font');
+    emailbuttoncolour: function() {
+      return this.get('emailbuttoncolour');
     },
-    bordercolour: function() {
-      return this.get('bordercolour');
-    },
-    buttoncolour: function() {
-      return this.get('buttoncolour');
+    emailemailbackgroundcolour: function() {
+      return this.get('emailemailbackgroundcolour');
     },
     emailbackgroundcolour: function() {
       return this.get('emailbackgroundcolour');
     },
-    logo: function() {
-      return this.get("logo");
+    emailtextcolour: function() {
+      return this.get('emailtextcolour');
+    },
+    emaillogo: function() {
+      return this.get('emaillogo');
+    },
+    signviewlogo: function() {
+      return this.get('signviewlogo');
+    },
+    signviewtextcolour: function() {
+      return this.get('signviewtextcolour');
+    },
+    signviewtextfont: function() {
+      return this.get('signviewtextfont');
+    },
+    signviewfootertextcolour: function() {
+      return this.get('signviewfootertextcolour');
+    },
+    signviewfootertextfont: function() {
+      return this.get('signviewfootertextfont');
+    },
+    signviewheadertextcolour: function() {
+      return this.get('signviewheadertextcolour');
+    },
+    signviewheadertextfont: function() {
+      return this.get('signviewheadertextfont');
+    },
+    signviewheaderbackgroundcolour: function() {
+      return this.get('signviewheaderbackgroundcolour');
+    },
+    signviewfooterbackgroundcolour: function() {
+      return this.get('signviewfooterbackgroundcolour');
+    },
+    signviewbackgroundcolour: function() {
+      return this.get('signviewbackgroundcolour');
     },
     ready: function() {
       if (this._companyui) {
@@ -636,8 +761,10 @@ window.CompanyModel = Backbone.Model.extend({
       return this.get("editable");
     },
     toJSON: function() {
-      var logo = this.logo();
-      var logochanged = logo.logoChanged();
+      var emaillogo = this.emaillogo();
+      var emaillogochanged = emaillogo.logoChanged();
+      var signviewlogo = this.signviewlogo();
+      var signviewlogochanged = signviewlogo.logoChanged();
       return ({
         id: this.get("id"),
         name: this.get("name"),
@@ -645,15 +772,26 @@ window.CompanyModel = Backbone.Model.extend({
         zip: this.get("zip"),
         city: this.get("city"),
         country: this.get("country"),
-        barsbackground: this.barsbackground().customised() ? this.barsbackground().colour() : "",
-        barstextcolour: this.barstextcolour().customised() ? this.barstextcolour().colour() : "",
-        headerfont: this.headerfont().customised() ? this.headerfont().font() : "",
-        font: this.font().customised() ? this.font().font() : "",
-        bordercolour: this.bordercolour().customised() ? this.bordercolour().colour() : "",
-        buttoncolour: this.buttoncolour().customised() ? this.buttoncolour().colour() : "",
-        emailbackgroundcolour: this.emailbackgroundcolour().customised() ? this.emailbackgroundcolour().colour() : "",
-        logochanged: logochanged,
-        logo: logochanged ? logo.get('logo') : ''
+        companyemailheaderfont: this.emailheaderfont().customised() ? this.emailheaderfont().font() : '',
+        companyemailfont: this.emailfont().customised() ? this.emailfont().font() : '',
+        companyemailbordercolour: this.emailbordercolour().customised() ? this.emailbordercolour().colour() : '',
+        companyemailbuttoncolour: this.emailbuttoncolour().customised() ? this.emailbuttoncolour().colour() : '',
+        companyemailemailbackgroundcolour: this.emailemailbackgroundcolour().customised() ? this.emailemailbackgroundcolour().colour() : '',
+        companyemailbackgroundcolour: this.emailbackgroundcolour().customised() ? this.emailbackgroundcolour().colour() : '',
+        companyemailtextcolour: this.emailtextcolour().customised() ? this.emailtextcolour().colour() : '',
+        companysignviewtextcolour: this.signviewtextcolour().customised() ? this.signviewtextcolour().colour() : '',
+        companysignviewtextfont: this.signviewtextfont().customised() ? this.signviewtextfont().font() : '',
+        companysignviewfootertextcolour: this.signviewfootertextcolour().customised() ? this.signviewfootertextcolour().colour() : '',
+        companysignviewfootertextfont: this.signviewfootertextfont().customised() ? this.signviewfootertextfont().font() : '',
+        companysignviewheadertextcolour: this.signviewheadertextcolour().customised() ? this.signviewheadertextcolour().colour() : '',
+        companysignviewheadertextfont: this.signviewheadertextfont().customised() ? this.signviewheadertextfont().font() : '',
+        companysignviewheaderbackgroundcolour: this.signviewheaderbackgroundcolour().customised() ? this.signviewheaderbackgroundcolour().colour() : '',
+        companysignviewfooterbackgroundcolour: this.signviewfooterbackgroundcolour().customised() ? this.signviewfooterbackgroundcolour().colour() : '',
+        companysignviewbackgroundcolour: this.signviewbackgroundcolour().customised() ? this.signviewbackgroundcolour().colour() : '',
+        emaillogochanged: emaillogochanged,
+        signviewlogochanged: signviewlogochanged,
+        companyemaillogo: emaillogochanged ? emaillogo.get('logo') : '',
+        companysignviewlogo: signviewlogochanged ? signviewlogo.get('logo') : ''
       });
     }
 });
@@ -661,15 +799,15 @@ window.CompanyModel = Backbone.Model.extend({
 window.CompanyBrandingSampleView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
-    this.model.companyui().bind('change', this.render);
-    this.model.barsbackground().bind('change', this.render);
-    this.model.barstextcolour().bind('change', this.render);
-    this.model.headerfont().bind('change', this.render);
-    this.model.font().bind('change', this.render);
-    this.model.bordercolour().bind('change', this.render);
-    this.model.buttoncolour().bind('change', this.render);
+    this.model.emailheaderfont().bind('change', this.render);
+    this.model.emailfont().bind('change', this.render);
+    this.model.emailbordercolour().bind('change', this.render);
+    this.model.emailbuttoncolour().bind('change', this.render);
+    this.model.emailemailbackgroundcolour().bind('change', this.render);
     this.model.emailbackgroundcolour().bind('change', this.render);
-    this.model.logo().bind('change', this.render);
+    this.model.emailtextcolour().bind('change', this.render);
+    this.model.emaillogo().bind('change', this.render);
+    this.model.companyui().bind('change', this.render);
     this.prerender();
     this.render();
   },
@@ -763,15 +901,15 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
   render: function() {
     var company = this.model;
 
-    var logourl = company.logo().logo();
-    var logoChanged = company.logo().logoChanged();
-    var bbcolour = company.barsbackground().colour();
-    var btcolour = company.barstextcolour().colour();
-    var bordercolour = company.bordercolour().colour();
-    var font = company.font().font();
-    var headerfont = company.headerfont().font();
-    var buttoncolour = company.buttoncolour().colour();
-    var emailbackgroundcolour = company.emailbackgroundcolour().colour();
+    var logourl = company.emaillogo().logo();
+    var logoChanged = company.emaillogo().logoChanged();
+    var bbcolour = company.emailbackgroundcolour().colour();
+    var btcolour = company.emailtextcolour().colour();
+    var bordercolour = company.emailbordercolour().colour();
+    var font = company.emailfont().font();
+    var headerfont = company.emailheaderfont().font();
+    var buttoncolour = company.emailbuttoncolour().colour();
+    var emailbackgroundcolour = company.emailemailbackgroundcolour().colour();
 
     this.renderLogoWithSrc(logourl, logoChanged);
 
@@ -796,14 +934,14 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
                                  '-o-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
                                  'box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px'});
 
-    if (!company.logo().customised() &&
-          !company.barsbackground().customised() &&
-          !company.barstextcolour().customised() &&
-          !company.headerfont().customised() &&
-          !company.font().customised() &&
-          !company.bordercolour().customised() &&
-          !company.buttoncolour().customised() &&
-          !company.emailbackgroundcolour().customised() ) {
+    if (!company.emaillogo().customised() &&
+          !company.emailbackgroundcolour().customised() &&
+          !company.emailtextcolour().customised() &&
+          !company.emailheaderfont().customised() &&
+          !company.emailfont().customised() &&
+          !company.emailbordercolour().customised() &&
+          !company.emailbuttoncolour().customised() &&
+          !company.emailemailbackgroundcolour().customised() ) {
       this.container.hide();
     } else {
       this.container.show();
@@ -818,57 +956,117 @@ window.CompanyBrandingView = Backbone.View.extend({
     this.model.bind("change:ready", this.render);
     this.render();
   },
-  createBarsbackgroundElems: function() {
-    return new CompanyBrandingColourView({
-      model: this.model.barsbackground(),
-      el: $("<div />")
-    }).el;
-  },
-  createBarstextcolourElems: function() {
-    return new CompanyBrandingColourView({
-      model: this.model.barstextcolour(),
-      el: $("<div />")
-    }).el;
-  },
-  createHeaderFontElems: function() {
-    return new CompanyBrandingFontView({
-      model: this.model.headerfont(),
-      el: $("<div />")
-    }).el;
-  },
-  createFontElems: function() {
-    return new CompanyBrandingFontView({
-      model: this.model.font(),
-      el: $("<div />")
-    }).el;
-  },
-  createBorderColourElems: function() {
-    return new CompanyBrandingColourView({
-      model: this.model.bordercolour(),
-      el: $("<div />")
-    }).el;
-  },
-  createButtonColourElems: function() {
-    return new CompanyBrandingHueColourView({
-      model: this.model.buttoncolour(),
-      el: $("<div />")
-    }).el;
-  },
-  createEmailBackgroundElems: function() {
+  createEmailbackgroundColourElems: function() {
     return new CompanyBrandingColourView({
       model: this.model.emailbackgroundcolour(),
       el: $("<div />")
     }).el;
   },
-  createLogoElems: function() {
+  createEmailTextColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.emailtextcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createEmailHeaderFontElems: function() {
+    return new CompanyBrandingFontView({
+      model: this.model.emailheaderfont(),
+      el: $("<div />")
+    }).el;
+  },
+  createEmailFontElems: function() {
+    return new CompanyBrandingFontView({
+      model: this.model.emailfont(),
+      el: $("<div />")
+    }).el;
+  },
+  createEmailBorderColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.emailbordercolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createEmailButtonColourElems: function() {
+    return new CompanyBrandingHueColourView({
+      model: this.model.emailbuttoncolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createEmailEmailBackgroundElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.emailemailbackgroundcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createEmailLogoElems: function() {
     return new CompanyBrandingLogoView({
-      model: this.model.logo(),
+      model: this.model.emaillogo(),
       el: $("<div />")
     }).el;
   },
   createSampleElems: function() {
     return new CompanyBrandingSampleView({
       model: this.model,
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewLogoElems: function() {
+    return new CompanyBrandingLogoView({
+      model: this.model.signviewlogo(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewHeaderTextColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.signviewheadertextcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewHeaderTextFontElems: function() {
+    return new CompanyBrandingFontView({
+      model: this.model.signviewheadertextfont(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewFooterTextColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.signviewfootertextcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewFooterTextFontElems: function() {
+    return new CompanyBrandingFontView({
+      model: this.model.signviewfootertextfont(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewTextColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.signviewtextcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewTextFontElems: function() {
+    return new CompanyBrandingFontView({
+      model: this.model.signviewtextfont(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewHeaderBackgroundColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.signviewheaderbackgroundcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewFooterBackgroundColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.signviewfooterbackgroundcolour(),
+      el: $("<div />")
+    }).el;
+  },
+  createSignViewBackgroundColourElems: function() {
+    return new CompanyBrandingColourView({
+      model: this.model.signviewbackgroundcolour(),
       el: $("<div />")
     }).el;
   },
@@ -884,8 +1082,7 @@ window.CompanyBrandingView = Backbone.View.extend({
           new Submit({
               method: "POST",
               url: company.submiturl,
-              company: JSON.stringify(company),
-              islogo: company.logo().customised()
+              company: JSON.stringify(company)
           }).send();
       }
     }).input();
@@ -897,43 +1094,44 @@ window.CompanyBrandingView = Backbone.View.extend({
       return this;
     }
 
-    var header = $("<div class='account-header' />").text(localization.emailBranding);
+    var emailheader = $("<div class='account-header' />").text(localization.emailBranding);
+    var signviewheader = $("<div class='account-header' />").text(localization.signviewBranding);
 
-    var body = $("<div class='account-body' />");
+    var emailbody = $("<div class='account-body' />");
     var table = $("<table />");
-    body.append(table);
+    emailbody.append(table);
     var tablebody = $("<tbody />");
     table.append(tablebody);
 
-    var bbstuff = this.createBarsbackgroundElems();
+    var bbstuff = this.createEmailbackgroundColourElems();
     var tr1 = $("<tr/>").append($("<td colspan='2' class='row' />").append(bbstuff));
     tablebody.append(tr1);
 
-    var btcstuff = this.createBarstextcolourElems();
+    var btcstuff = this.createEmailTextColourElems();
     var tr2 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(btcstuff));
     tablebody.append(tr2);
 
-    var hfstuff = this.createHeaderFontElems();
+    var hfstuff = this.createEmailHeaderFontElems();
     var tr3 = $("<tr/>").append($("<td colspan='2' class='row' />").append(hfstuff));
     tablebody.append(tr3);
 
-    var fstuff = this.createFontElems();
+    var fstuff = this.createEmailFontElems();
     var tr4 = $("<tr/>").append($("<td colspan='2' class='row' />").append(fstuff));
     tablebody.append(tr4);
 
-    var bcstuff = this.createBorderColourElems();
+    var bcstuff = this.createEmailBorderColourElems();
     var tr5 = $("<tr/>").append($("<td colspan='2' class='row' />").append(bcstuff));
     tablebody.append(tr5);
 
-    var btcstuff = this.createButtonColourElems();
+    var btcstuff = this.createEmailButtonColourElems();
     var tr6 = $("<tr/>").append($("<td colspan='2' class='row' />").append(btcstuff));
     tablebody.append(tr6);
 
-    var emailbackgroundstuff = this.createEmailBackgroundElems();
+    var emailbackgroundstuff = this.createEmailEmailBackgroundElems();
     var tr7 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(emailbackgroundstuff));
     tablebody.append(tr7);
 
-    var logostuff = this.createLogoElems();
+    var logostuff = this.createEmailLogoElems();
     var tr8 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(logostuff));
     tablebody.append(tr8);
 
@@ -941,9 +1139,57 @@ window.CompanyBrandingView = Backbone.View.extend({
     var tr9 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(samplestuff));
     tablebody.append(tr9);
 
+    var signviewbody = $("<div class='account-body' />");
+    var signviewtable = $("<table />");
+    signviewbody.append(signviewtable);
+    var signviewtablebody = $("<tbody />");
+    signviewtable.append(signviewtablebody);
+
+    var signviewlogostuff = this.createSignViewLogoElems();
+    var signviewtr1 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewlogostuff));
+    signviewtablebody.append(signviewtr1);
+
+    var signviewheadertextcolourstuff = this.createSignViewHeaderTextColourElems();
+    var signviewtr2 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewheadertextcolourstuff));
+    signviewtablebody.append(signviewtr2);
+
+    var signviewheadertextfontstuff = this.createSignViewHeaderTextFontElems();
+    var signviewtr3 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewheadertextfontstuff));
+    signviewtablebody.append(signviewtr3);
+
+    var signviewfootertextcolourstuff = this.createSignViewFooterTextColourElems();
+    var signviewtr4 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewfootertextcolourstuff));
+    signviewtablebody.append(signviewtr4);
+
+    var signviewfootertextfontstuff = this.createSignViewFooterTextFontElems();
+    var signviewtr5 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewfootertextfontstuff));
+    signviewtablebody.append(signviewtr5);
+
+    var signviewtextcolourstuff = this.createSignViewTextColourElems();
+    var signviewtr6 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewtextcolourstuff));
+    signviewtablebody.append(signviewtr6);
+
+    var signviewtextfontstuff = this.createSignViewTextFontElems();
+    var signviewtr7 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewtextfontstuff));
+    signviewtablebody.append(signviewtr7);
+
+    var signviewheaderbackgroundcolourstuff = this.createSignViewHeaderBackgroundColourElems();
+    var signviewtr8 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewheaderbackgroundcolourstuff));
+    signviewtablebody.append(signviewtr8);
+
+    var signviewfooterbackgroundcolourstuff = this.createSignViewFooterBackgroundColourElems();
+    var signviewtr9 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewfooterbackgroundcolourstuff));
+    signviewtablebody.append(signviewtr9);
+
+    var signviewbackgroundcolourstuff = this.createSignViewBackgroundColourElems();
+    var signviewtr10 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewbackgroundcolourstuff));
+    signviewtablebody.append(signviewtr10);
+
     var col = $("<div class='col' />");
-    col.append(header);
-    col.append(body);
+    col.append(emailheader);
+    col.append(emailbody);
+    col.append(signviewheader);
+    col.append(signviewbody);
 
     var container = $("<div class='tab-content companybranding' />");
     container.append(col);

@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
-{-# OPTIONS_GHC -fcontext-stack=50 #-}
+{-# OPTIONS_GHC -fcontext-stack=60 #-}
 module Stats.Model
        (
          DocStatEvent(..),
@@ -245,14 +245,24 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.zip"
   <> ", c.city"
   <> ", c.country"
-  <> ", c.bars_background"
-  <> ", c.bars_textcolour"
   <> ", c.email_headerfont"
   <> ", c.email_font"
   <> ", c.email_bordercolour"
   <> ", c.email_buttoncolour"
   <> ", c.email_emailbackgroundcolour"
-  <> ", c.logo"
+  <> ", c.email_backgroundcolour"
+  <> ", c.email_textcolour"
+  <> ", c.email_logo"
+  <> ", c.signview_logo"
+  <> ", c.signview_textcolour"
+  <> ", c.signview_textfont"
+  <> ", c.signview_footertextcolour"
+  <> ", c.signview_footertextfont"
+  <> ", c.signview_headertextcolour"
+  <> ", c.signview_headertextfont"
+  <> ", c.signview_headerbackgroundcolour"
+  <> ", c.signview_footerbackgroundcolour"
+  <> ", c.signview_backgroundcolour"
   <> ", email_domain"
   <> ", ip_address_mask_list"
   -- InviteInfo:
@@ -273,9 +283,14 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
      email lang customfooter company_name company_number is_free cid eid
-     name number address zip' city country bars_background bars_textcolour
-     email_headerfont email_font email_bordercolour email_buttoncolour
-     email_emailbackgroundcolour logo email_domain ip_address_mask inviter_id invite_time invite_type
+     name number address zip' city country email_headerfont email_font
+     email_bordercolour email_buttoncolour email_emailbackgroundcolour
+     email_backgroundcolour email_textcolour email_logo signview_logo
+     signview_textcolour signview_textfont signview_footertextcolour
+     signview_footertextfont signview_headertextcolour signview_headertextfont
+     signview_headerbackgroundcolour signview_footerbackgroundcolour
+     signview_backgroundcolour email_domain ip_address_mask inviter_id
+     invite_time invite_type
      = (
        User {
            userid = uid
@@ -317,14 +332,24 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companyipaddressmasklist = maybe [] $(read) ip_address_mask
                 }
               , companyui = CompanyUI {
-                  companybarsbackground = bars_background
-                , companybarstextcolour = bars_textcolour
-                , companyemailheaderfont = email_headerfont
+                  companyemailheaderfont = email_headerfont
                 , companyemailfont = email_font
                 , companyemailbordercolour = email_bordercolour
                 , companyemailbuttoncolour = email_buttoncolour
                 , companyemailemailbackgroundcolour = email_emailbackgroundcolour
-                , companylogo = logo
+                , companyemailbackgroundcolour = email_backgroundcolour
+                , companyemailtextcolour = email_textcolour
+                , companyemaillogo = email_logo
+                , companysignviewlogo = signview_logo
+                , companysignviewtextcolour = signview_textcolour
+                , companysignviewtextfont = signview_textfont
+                , companysignviewfootertextcolour = signview_footertextcolour
+                , companysignviewfootertextfont = signview_footertextfont
+                , companysignviewheadertextcolour = signview_headertextcolour
+                , companysignviewheadertextfont = signview_headertextfont
+                , companysignviewheaderbackgroundcolour = signview_headerbackgroundcolour
+                , companysignviewfooterbackgroundcolour = signview_footerbackgroundcolour
+                , companysignviewbackgroundcolour = signview_backgroundcolour
                 }
               }
             _ -> Nothing

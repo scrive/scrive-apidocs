@@ -400,12 +400,12 @@ documentMail haslang ctx doc mailname otherfields = do
 
 companyBrandFields :: Monad m => Company -> Fields m ()
 companyBrandFields company = do
-  F.value "barsbackground"  $ companybarsbackground $ companyui company
-  F.value "barstextcolour" $ companybarstextcolour $ companyui company
+  F.value "barsbackground"  $ companyemailbackgroundcolour $ companyui company
+  F.value "barstextcolour" $ companyemailtextcolour $ companyui company
   F.value "font"  $ companyemailfont $ companyui company
   F.value "headerfont"  $ companyemailheaderfont $ companyui company
   F.value "bordercolour"  $ companyemailbordercolour $ companyui company
   F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui company
   F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company
-  F.value "logo" $ isJust $ companylogo $ companyui company
-  F.value "logoLink" $ show $ LinkCompanyLogo $ companyid company
+  F.value "logo" $ isJust $ companyemaillogo $ companyui company
+  F.value "logoLink" $ show $ LinkCompanySignViewLogo $ companyid company

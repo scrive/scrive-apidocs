@@ -41,7 +41,8 @@ data KontraLink
     | LinkArchive
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
-    | LinkCompanyLogo CompanyID
+    | LinkCompanySignViewLogo CompanyID
+    | LinkCompanyEmailLogo CompanyID      
     | LinkChangeUserEmail UserID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
@@ -98,7 +99,8 @@ instance Show KontraLink where
     showsPrec _ (LinkAccount) = (++) "/account"
     showsPrec _ (LinkAccountCompany Nothing) = (++) "/account#company"
     showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/branding/" ++ show cid
-    showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
+    showsPrec _ (LinkCompanySignViewLogo cid) = (++) $ "/account/company/signview/" ++ show cid
+    showsPrec _ (LinkCompanyEmailLogo cid) = (++) $ "/account/company/email/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts) = (++) $ "/account#users"

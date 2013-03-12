@@ -364,7 +364,7 @@ handleSignShow documentid
 
       ctx <- getContext
       ad <- getAnalyticsData
-      content <- pageDocumentSignView ctx document' invitedlink ad
+      content <- pageDocumentSignView ctx document' invitedlink ad backgroundColour
       simpleHtmlResonseClrFlash content
     Nothing -> do
       -- There is not magic hash in session. It may mean that the

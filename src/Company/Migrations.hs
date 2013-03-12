@@ -95,3 +95,37 @@ addNewCompanyBrandingOptions =
       kRunRaw "ALTER TABLE companies ADD COLUMN email_buttoncolour TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_emailbackgroundcolour TEXT NULL"
   }
+
+addSignviewBrandingOptions :: MonadDB m => Migration m
+addSignviewBrandingOptions =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 9
+  , mgrDo = do
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_backgroundcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_textcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_logo BYTEA NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_logo BYTEA NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_textcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_textfont TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_footertextcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_footertextfont TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_headertextcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_headertextfont TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_headerbackgroundcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_footerbackgroundcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_backgroundcolour TEXT NULL"
+
+      kRunRaw "UPDATE companies SET signview_headerbackgroundcolour = bars_background"
+      kRunRaw "UPDATE companies SET signview_footerbackgroundcolour = bars_background"
+      kRunRaw "UPDATE companies SET signview_footertextcolour = bars_textcolour"
+      kRunRaw "UPDATE companies SET signview_headertextcolour = bars_textcolour"
+      kRunRaw "UPDATE companies SET signview_logo = logo"
+      kRunRaw "UPDATE companies SET email_textcolour = bars_textcolour"
+      kRunRaw "UPDATE companies SET email_emailbackgroundcolour = bars_background"
+      kRunRaw "UPDATE companies SET email_logo = logo"
+
+      kRunRaw "ALTER TABLE companies DROP COLUMN bars_background"
+      kRunRaw "ALTER TABLE companies DROP COLUMN bars_textcolour"
+      kRunRaw "ALTER TABLE companies DROP COLUMN logo"
+  }
