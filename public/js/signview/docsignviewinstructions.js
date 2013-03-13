@@ -66,7 +66,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
     if (textfont) {
       elem.css('font-family', textfont);
-    }    
+    }
   },
   render: function() {
     var document = this.model.document();

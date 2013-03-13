@@ -23,18 +23,24 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
-  authorAttachmentDesc: function(attachment) {
+  authorAttachmentDesc: function(attachment, labelCss) {
     var container = $("<div class='item' />");
     container.append($("<div class='icon' />"));
     var label = $("<div class='label' />");
-    label.append($("<div class='name' />").text(attachment.name()));
+    var name = $("<div class='name' />");
+    name.css(labelCss);
+    label.append(name.text(attachment.name()));
     container.append(label);
     container.append($("<div class='clearfix' />"));
     return container;
   },
-  authorAttachmentFile: function(attachment) {
+  authorAttachmentFile: function(attachment, labelCss) {
     var container = $("<div class='item' />");
-    var button = Button.init({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', onClick: function() {
+    var labelstyle = '';
+    for (var key in labelCss) {
+      labelstyle += key + ': ' + labelCss[key] + ' !important; ';
+    }
+    var button = Button.init({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', labelstyle: labelstyle, onClick: function() {
                         window.open(attachment.downloadLink(), '_blank');
                         }});
     container.append(button.input());
@@ -50,7 +56,21 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='authorattachments' />");
-    container.append($("<h2/>").text(this.model.title()));
+
+    var document = this.model.document();
+    var textcolour = document.signviewtextcolour();
+    var textfont = document.signviewtextfont();
+    var labelCss = {};
+
+    var header = $("<h2/>");
+    if (textcolour) {
+      labelCss['color'] = textcolour;
+    }
+    if (textfont) {
+      labelCss['font-family'] = textfont;
+    }
+    header.css(labelCss);
+    container.append(header.text(this.model.title()));
 
     var table = $("<table class='list'/>");
     var tbody = $("<tbody/>");
@@ -58,8 +78,8 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     _.each(this.model.document().authorattachments(), function(attachment) {
       var tr = $("<tr/>")
 
-      tr.append($("<td class='desc'>").append(self.authorAttachmentDesc(attachment)));
-      tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment)));
+      tr.append($("<td class='desc'>").append(self.authorAttachmentDesc(attachment, labelCss)));
+      tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment, labelCss)));
       tbody.append(tr);
     });
 

@@ -949,6 +949,134 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
   }
 });
 
+window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
+  initialize: function(args) {
+    _.bindAll(this, 'render');
+    this.model.signviewlogo().bind('change', this.render);
+    this.model.signviewtextcolour().bind('change', this.render);
+    this.model.signviewtextfont().bind('change', this.render);
+    this.model.signviewfootertextcolour().bind('change', this.render);
+    this.model.signviewfootertextfont().bind('change', this.render);
+    this.model.signviewheadertextcolour().bind('change', this.render);
+    this.model.signviewheadertextfont().bind('change', this.render);
+    this.model.signviewheaderbackgroundcolour().bind('change', this.render);
+    this.model.signviewfooterbackgroundcolour().bind('change', this.render);
+    this.model.signviewbackgroundcolour().bind('change', this.render);
+    this.model.companyui().bind('change', this.render);
+    this.prerender();
+    this.render();
+  },
+  prerender: function() {
+    var company = this.model;
+
+    this.logo = $('<img src="/img/logo_email.png"/>');
+    var leftheader = $('<div style="float: left;"/>');
+    leftheader.append(this.logo);
+    this.rightheader = $('<div style="float: right; margin-right: 50px; margin-top: 50px;"/>');
+    this.rightheader.text('HEADER TEXT'); // TODO localization
+    this.header = $('<div style="min-height: 150px; width: 100%;"/>');
+    this.header.append(leftheader).append(this.rightheader).append($('<div style="clear:both;"/>'));
+
+    this.contentheader = $('<div style="height: 50px; text-align: center; border-bottom-width: 1px; border-bottom-color: #eee; border-bottom-style: solid;"/>');
+    this.contentheader.html('WELCOME JOHN SMITH<br/>Due date 2013-01-01'); // TODO localization
+    var documentpic = $('<img src="/img/document_example.png" style="width: 350px;"/>');
+    var document = $('<div style="margin-left: 30px;"/>');
+    document.append(documentpic);
+    var rejectbuttoncontainer = $('<div style="float: left;"/>');
+    var rejectbutton = Button.init({size: 'small',
+                                    color: 'red',
+                                    shape: "rounded",
+                                    width: 150,
+                                    text: 'Reject document',
+                                    onClick: function() {}});
+    rejectbuttoncontainer.append(rejectbutton.input());
+    var signbuttoncontainer = $('<div style="float: right;"/>');
+    var signbutton = Button.init({size: 'small',
+                                  color: 'blue',
+                                  shape: "rounded",
+                                  width: 150,
+                                  text: 'Sign document',
+                                  onClick: function() {}});
+    signbuttoncontainer.append(signbutton.input());
+    var buttonsdiv = $('<div style="height: 50px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;"/>');
+    buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
+    var contentcontent = $('<div style="height: 600px; width: 80%; background-color: #fff;"/>');
+    contentcontent.append(this.contentheader).append(document).append(buttonsdiv);
+    var contentpadding = $('<div style="height: 50px; width: 100%;"/>');
+    this.content = $('<div style="height: 700px; width: 100%; "/>');
+    this.content.append(contentpadding).append(contentcontent);
+
+    this.footercontent = $('<div style="text-align: center;"/>');
+    this.footercontent.text('FOOTER TEXT'); // TODO localization
+    this.footer = $('<div style="height: 100px; width: 100%; padding-top: 50px;"/>');
+    this.footer.append(this.footercontent);
+
+    this.container = $('<center class="mail-sample"/>');
+    this.container.append(this.header).append(this.content).append(this.footer);
+
+    $(this.el).empty();
+    $(this.el).append(this.container);
+
+    return this;
+  },
+  renderLogoWithSrc: function(logourl, logoChanged) {
+
+    var img = this.logo;
+
+    if (logoChanged) {
+      img.attr('src', logourl);
+    } else {
+      var src = location.protocol + "//" + location.host + logourl
+      img.attr("src", src + "?time=" + (new Date()).getTime());
+    }
+
+    img.hide();
+    img.fadeIn();
+  },
+  render: function() {
+    var company = this.model;
+
+    var logourl = company.signviewlogo().logo();
+    var logoChanged = company.signviewlogo().logoChanged();
+    var signviewtextcolour = company.signviewtextcolour().colour();
+    var signviewtextfont = company.signviewtextfont().font();
+    var signviewfootertextcolour = company.signviewfootertextcolour().colour();
+    var signviewfootertextfont = company.signviewfootertextfont().font();
+    var signviewheadertextcolour = company.signviewheadertextcolour().colour();
+    var signviewheadertextfont = company.signviewheadertextfont().font();
+    var signviewheaderbackgroundcolour = company.signviewheaderbackgroundcolour().colour();
+    var signviewfooterbackgroundcolour = company.signviewfooterbackgroundcolour().colour();
+    var signviewbackgroundcolour = company.signviewbackgroundcolour().colour();
+
+    this.renderLogoWithSrc(logourl, logoChanged);
+
+    this.header.css('background-color', signviewheaderbackgroundcolour);
+    this.rightheader.css('color', signviewheadertextcolour);
+    this.rightheader.css('font-family', signviewheadertextfont);
+    this.footer.css('background-color', signviewfooterbackgroundcolour);
+    this.footercontent.css('color', signviewfootertextcolour);
+    this.footercontent.css('font-family', signviewfootertextfont);
+    this.content.css('background-color', signviewbackgroundcolour);
+    this.contentheader.css('color', signviewtextcolour);
+    this.contentheader.css('font-family', signviewtextfont);
+
+    if (!company.signviewlogo().customised() &&
+        !company.signviewtextcolour().customised() &&
+        !company.signviewtextfont().customised() &&
+        !company.signviewfootertextcolour().customised() &&
+        !company.signviewfootertextfont().customised() &&
+        !company.signviewheadertextcolour().customised() &&
+        !company.signviewheadertextfont().customised() &&
+        !company.signviewheaderbackgroundcolour().customised() &&
+        !company.signviewfooterbackgroundcolour().customised() &&
+        !company.signviewbackgroundcolour().customised()) {
+      this.container.hide();
+    } else {
+      this.container.show();
+    }
+  }
+});
+
 window.CompanyBrandingView = Backbone.View.extend({
   model: CompanyModel,
   initialize: function(args) {
@@ -1070,6 +1198,12 @@ window.CompanyBrandingView = Backbone.View.extend({
       el: $("<div />")
     }).el;
   },
+  createSignViewSampleElems: function() {
+    return new CompanyBrandingSignViewSampleView({
+      model: this.model,
+      el: $("<div />")
+    }).el;
+  },
   createSaveButton: function() {
     var company = this.model;
     return Button.init({
@@ -1184,6 +1318,10 @@ window.CompanyBrandingView = Backbone.View.extend({
     var signviewbackgroundcolourstuff = this.createSignViewBackgroundColourElems();
     var signviewtr10 = $("<tr/>").append($("<td colspan='2' class='row' />").append(signviewbackgroundcolourstuff));
     signviewtablebody.append(signviewtr10);
+
+    var samplestuff = this.createSignViewSampleElems();
+    var tr11 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(samplestuff));
+    signviewtablebody.append(tr11);
 
     var col = $("<div class='col' />");
     col.append(emailheader);

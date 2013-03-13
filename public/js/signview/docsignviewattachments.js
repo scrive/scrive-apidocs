@@ -9,6 +9,10 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.model.bind('change', this.render);
     this.model.view = this;
+    this.labelstyle = '';
+    for (var key in args.labelCss) {
+      this.labelstyle += key + ': ' + args.labelCss[key] + ' !important; ';
+    }
     this.render();
   },
   apiURL: function() {
@@ -18,7 +22,8 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   removeButton: function() {
     var attachment = this.model;
     var deleteurl = this.apiURL();
-    var button = Button.init({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
+    var labelstyle = this.labelstyle;
+    var button = Button.init({color: "red", text: localization.deletePDF, size:'tiny', labelstyle: labelstyle, onClick: function() {
             attachment.loading();
             $.ajax(deleteurl, {
               type: 'DELETE',
@@ -38,6 +43,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   uploadButton: function() {
     var attachment = this.model;
     var uploadurl = this.apiURL();
+    var labelstyle = this.labelstyle;
     return UploadButton.init({
       width: 120,
       size : 'tiny',
@@ -45,6 +51,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       text: localization.signatoryAttachmentUploadButton,
       submitOnUpload: true,
       showLoadingDialog: false,
+      labelstyle: labelstyle, 
       onClick: function() {
         return true;
       },
@@ -83,7 +90,8 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   reviewButton: function() {
       var model = this.model;
-      var button = Button.init({color: "green", text: localization.reviewPDF, size:'tiny', cssClass : 's-review-sigattachment', onClick: function() {
+      var labelstyle = this.labelstyle;
+      var button = Button.init({color: "green", text: localization.reviewPDF, size:'tiny', cssClass : 's-review-sigattachment', labelstyle: labelstyle, onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
           }});
       return button;
@@ -122,16 +130,21 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     this.uploadElems = [];
     this.render();
   },
-  signatoryAttachmentDescription: function(attachment) {
+  signatoryAttachmentDescription: function(attachment, labelCss) {
     var container = $("<div class='item' />");
-    container.append($("<div class='name' />").text(attachment.name()));
-    container.append($("<div class='description' />").text(attachment.description()));
+    var name = $("<div class='name' />");
+    var desc = $("<div class='description' />");
+    name.css(labelCss);
+    desc.css(labelCss);
+    container.append(name.text(attachment.name()));
+    container.append(desc.text(attachment.description()));
     return container;
   },
-  signatoryAttachmentFile: function(attachment) {
+  signatoryAttachmentFile: function(attachment, labelCss) {
     var upl = new SignatoryAttachmentUploadView({
       model: attachment,
-      el: $("<div/>")
+      el: $("<div/>"),
+      labelCss: labelCss
     });
     this.uploadElems.push($(upl.el));
     return upl.el;
@@ -146,16 +159,30 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
       return this;
     }
 
+    var document = this.model.signatories()[0].document()
+    var textcolour = document.signviewtextcolour();
+    var textfont = document.signviewtextfont();
+    var labelCss = {};
+
+    var header = $("<h2/>");
+    if (textcolour) {
+      labelCss['color'] = textcolour;
+    }
+    if (textfont) {
+      labelCss['font-family'] = textfont;
+    }
 
     var container = $("<div class='signatoryattachments' />");
-    container.append($("<h2/>").text(this.title == undefined ? localization.requestedAttachments : this.title));
+    var header = $("<h2/>");
+    header.css(labelCss);
+    container.append(header.text(this.title == undefined ? localization.requestedAttachments : this.title));
     var table = $("<table class='list'/>");
     var tbody = $("<tbody/>");
     table.append(tbody);
     _.each(this.model.currentSignatory().attachments(), function(attachment) {
       var tr = $("<tr/>")
-      tr.append($("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment)));
-      tr.append($("<td class='file'>").append(self.signatoryAttachmentFile(attachment)));
+      tr.append($("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment, labelCss)));
+      tr.append($("<td class='file'>").append(self.signatoryAttachmentFile(attachment, labelCss)));
       tbody.append(tr);
     });
 

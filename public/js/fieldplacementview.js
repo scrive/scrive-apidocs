@@ -733,8 +733,21 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.width(this.signature.width());
                 box.height(this.signature.height());
 
+                var textholder = $("<span class='text'/>");
+
                 var button = $("<div class='placesignaturebutton'/>");
-                button.append($("<span class='text'/>").text(localization.signature.placeYour));
+                var document = signatory.document();
+                var textcolour = document.signviewtextcolour();
+                var textfont = document.signviewtextfont();
+
+                if (textcolour) {
+                  textholder.css('color', textcolour);
+                }
+                if (textfont) {
+                  textholder.css('font-family', textfont);
+                }
+
+                button.append(textholder.text(localization.signature.placeYour));
 
                 if (this.signature.width() > bwidth) {
                     button.css("margin-left", Math.floor((this.signature.width() - bwidth) / 2) + "px");

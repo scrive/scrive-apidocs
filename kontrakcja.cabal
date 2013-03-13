@@ -498,33 +498,3 @@ Executable kontrakcja-test
               TypeOperators,
               TypeSynonymInstances,
               UndecidableInstances
-
-Executable test
-  Buildable: False
-  ghc-options: -rtsopts
-
-  Hs-source-dirs: . inc misc test/src src pdfseal/inc mailer/inc docconv/src docconv/test/src
-
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults -fcontext-stack=34
-
-  Main-is: test.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              OverloadedStrings,
-              PatternGuards,
-              RankNTypes,
-              RecordWildCards,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TupleSections,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances

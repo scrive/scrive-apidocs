@@ -21,6 +21,9 @@ var DocumentSignSignatoriesModel = Backbone.Model.extend({
     document: function() {
         return this.get('document');
     },
+    textstyle: function() {
+        return this.get('textstyle');
+    },
     signatories: function() {
         var signatories = this.document().signatories();
         var current = _.find  (signatories, function(s) { return  s.current(); });
@@ -70,6 +73,8 @@ var DocumentSignSignatoriesListView = Backbone.View.extend({
           if(index === 0)
               sigdiv.addClass('first');
           var name       = $("<div class='name' />").text(signatory.nameOrEmail());
+debugger;
+          name.css(sigbox.textstyle());
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle' />");
           var middle2    = $("<div class='middle' style='min-width:100px'/>");
@@ -98,6 +103,7 @@ var DocumentSignSignatoryView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.model.bind('change', this.render);
+    this.textstyle = args.textstyle;
     this.render();
   },
   signatorySummary: function() {
@@ -139,7 +145,9 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       var signatory = this.model;
       var titleinfo = $('<div class="titleinfo spacing" />');
       var name      = $('<div class="name" />').text(signatory.name());
+      name.css(this.textstyle);
       var company   = $('<div class="company" />').text(signatory.company());
+      company.css(this.textstyle);
       titleinfo.append(name).append(company);
       box.append(titleinfo);
 
@@ -148,6 +156,7 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       var face    = $('<div class="face" />');
 
       var numspace = $('<div class="details" />');
+      numspace.css(this.textstyle);
       var orgnumtext = signatory.companynumber().trim();
       var orgnum = null;
       if( orgnumtext ) {
@@ -194,8 +203,11 @@ var DocumentSignSignatoriesView = Backbone.View.extend({
       var box = $(this.el);
       box.empty();
       box.addClass('section').addClass('signatories').addClass('spacing');
+      box.css(this.model.textstyle());
 
-      box.append($("<h2 />").text(localization.docsignview.signatoriesTitle));
+      var header = $("<h2 />");
+      header.css(this.model.textstyle());
+      box.append(header.text(localization.docsignview.signatoriesTitle));
       var box1 = $('<div class="column spacing" />');
       var box2 = $('<div class="column spacing" />');
 
@@ -207,13 +219,13 @@ var DocumentSignSignatoriesView = Backbone.View.extend({
 
       if(signatories.length > 2) {
           box1.append(new DocumentSignSignatoriesListView({model : this.model}).el);
-          box2.append(new DocumentSignSignatoryView({model : this.model.currentSignatory()}).el);
+          box2.append(new DocumentSignSignatoryView({model : this.model.currentSignatory(), textstyle: this.model.textstyle()}).el);
       } else if (signatories.length === 2) {
-          box1.append(new DocumentSignSignatoryView({model : this.model.signatories()[0]}).el);
-          box2.append(new DocumentSignSignatoryView({model : this.model.signatories()[1]}).el);
+          box1.append(new DocumentSignSignatoryView({model : this.model.signatories()[0], textstyle: this.model.textstyle()}).el);
+          box2.append(new DocumentSignSignatoryView({model : this.model.signatories()[1], textstyle: this.model.textstyle()}).el);
       } else if (signatories.length === 1) {
           box1.css("border-color","#ffffff");
-          box2.append(new DocumentSignSignatoryView({model : this.model.signatories()[0]}).el);
+          box2.append(new DocumentSignSignatoryView({model : this.model.signatories()[0], textstyle: this.model.textstyle()}).el);
       }
       return this;
   }
@@ -221,7 +233,7 @@ var DocumentSignSignatoriesView = Backbone.View.extend({
 
 
 window.DocumentSignSignatories = function(args){
-        var model = new DocumentSignSignatoriesModel({document:args.document});
+        var model = new DocumentSignSignatoriesModel({document:args.document, textstyle: args.textstyle});
         var view  = new DocumentSignSignatoriesView({model: model });
         return {
               model    : function()    { return model;}

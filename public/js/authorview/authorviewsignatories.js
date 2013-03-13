@@ -81,7 +81,9 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       box.children().detach();
       box.addClass('section').addClass('signatories').addClass('spacing');
 
-      box.append($("<h2 style='width: 100px;' />").text(localization.authorview.signatoriesTitle));
+      var header = $("<h2 style='width: 100px;' />");
+      header.css(this.model.textstyle());
+      box.append(header.text(localization.authorview.signatoriesTitle));
 
       var table = $("<table class='signatories-box' style='float: right;' />");
       var tbody = $("<tbody/>");

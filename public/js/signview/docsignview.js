@@ -139,9 +139,21 @@ var DocumentSignViewModel = Backbone.Model.extend({
         return this.get('signsection');
   },
   signatoriessection : function() {
+       var document = this.document();
+       var textcolour = document.signviewtextcolour();
+       var textfont = document.signviewtextfont();
+       var textstyle = {};
+
+       if (textcolour) {
+         textstyle['color'] = textcolour;
+       }
+       if (textfont) {
+         textstyle['font-family'] = textfont;
+       }
+
        if (this.get("signatoriessection") != undefined)
             return this.get('signatoriessection');
-       this.set({'signatoriessection' : new DocumentSignSignatories({document:this.document()}) }, {silent : true} );
+       this.set({'signatoriessection' : new DocumentSignSignatories({document:this.document(), textstyle: textstyle}) }, {silent : true} );
        return this.signatoriessection();
   },
   signatoryattachmentsection : function() {
@@ -173,8 +185,20 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.get('authorattachmentssection');
   },
   extradetailssection : function() {
+      var document = this.document();
+      var textcolour = document.signviewtextcolour();
+      var textfont = document.signviewtextfont();
+      var textstyle = {};
+
+      if (textcolour) {
+        textstyle['color'] = textcolour;
+      }
+      if (textfont) {
+        textstyle['font-family'] = textfont;
+      }
+
       if (this.get("extradetailssection") == undefined)
-        this.set({'extradetailssection' :  new DocumentSignExtraDetailsSection({model: this.document().currentSignatory()}) }, {silent : true});
+        this.set({'extradetailssection' :  new DocumentSignExtraDetailsSection({model: this.document().currentSignatory(), textstyle: textstyle}) }, {silent : true});
       return this.get('extradetailssection');
   },
   mainfile : function() {
@@ -246,6 +270,17 @@ var DocumentSignViewModel = Backbone.Model.extend({
         return this.get('signtask');
   },
   filltasks : function() {
+     var document = this.document();
+     var textcolour = document.signviewtextcolour();
+     var textfont = document.signviewtextfont();
+     var arrowLabelCss = {};
+
+     if (textcolour) {
+       arrowLabelCss['color'] = textcolour;
+     }
+     if (textfont) {
+       arrowLabelCss['font-family'] = textfont;
+     }
      if (this.get("filltasks") == undefined) {
         var tasks = [];
         _.each(this.mainfile().model.placements(), function(placement) {
@@ -278,7 +313,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                        {Label : placement.field().name()});
                     },
                     tipSide : placement.tip(),
-                    label: placement.field().isCheckbox() ? localization.checkHere : localization.writeHere
+                    label: placement.field().isCheckbox() ? localization.checkHere : localization.writeHere,
+                    labelCss: arrowLabelCss
                 });
                 placement.field().bind("change", function() { task.update();});
                 placement.field().bind("reset", function() {task.update();});
