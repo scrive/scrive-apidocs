@@ -126,9 +126,9 @@ window.Field = Backbone.Model.extend({
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
-        this.bind("change",function() {
-            field.signatory().document().trigger("change:signatories");
-        });
+        //this.bind("change",function() {
+        //    field.signatory().document().trigger("change:signatories");
+        //});
         args.signatory.bind("removed",function() {
             field.trigger("removed");
             field.off();

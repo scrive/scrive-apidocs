@@ -1,0 +1,112 @@
+@import 'util.less';
+
+/// @DRAGGABLES ///
+
+.design-view-action-document-draggables {
+    .box-sizing(border-box);
+    height: 64px;
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+}
+
+.design-view-action-document-draggables-arrow {
+    .box-sizing(border-box);
+    display: inline-block;
+    height: 100%;
+}
+
+.design-view-action-document-draggables-arrow-img {
+    margin-top: -30px;
+}
+
+.design-view-action-document-draggables-instructions {
+    .box-sizing(border-box);
+    display: inline-block;
+    height: 100%;
+    width: 90px;
+    position: relative;
+}
+
+.design-view-action-document-draggables-instructions-text {
+    .box-sizing(border-box);
+    text-align: right;
+    .center-vh(100%, 2em);
+}
+
+@draggable-width: 133px;
+@draggable-background: #ddd;
+
+.design-view-action-document-draggables-checkbox {
+    .box-sizing(border-box);
+    height: 100%;
+    width: @draggable-width;
+    display: inline-block;
+    position: relative;
+    margin: 0 0 0 5px;
+}
+
+.design-view-action-document-draggables-checkbox-wrapper {
+    .box-sizing(border-box);
+    .center-vh(100%, 56px);
+    background-color: @draggable-background;
+}
+
+.design-view-action-document-draggables-checkbox-text {
+    .box-sizing(border-box);
+    .center-vh(100%, 33px);
+}
+
+.design-view-action-document-draggables-checkbox-icon {
+    vertical-align: middle;
+}
+
+.design-view-action-document-draggables-signature {
+    .box-sizing(border-box);
+    height: 100%;
+    display: inline-block;
+    position: relative;
+    width: @draggable-width;
+    margin: 0 0 0 5px;
+}
+
+.design-view-action-document-draggables-signature-wrapper {
+    .box-sizing(border-box);
+    .center-vh(100%, 56px);
+    background-color: @draggable-background;
+}
+
+.design-view-action-document-draggables-signature-text {
+    .box-sizing(border-box);
+    .center-vh(100%, 33px);
+}
+
+.design-view-action-document-draggables-signature-icon {
+    vertical-align: middle;
+}
+
+
+.design-view-action-document-draggables-textbox {
+    .box-sizing(border-box);
+    height: 100%;
+    display: inline-block;
+    position: relative;
+    width: @draggable-width;
+    margin: 0 0 0 5px;
+}
+
+.design-view-action-document-draggables-textbox-wrapper {
+    .box-sizing(border-box);
+    .center-vh(100%, 56px);
+    background-color: @draggable-background;
+}
+
+.design-view-action-document-draggables-textbox-text {
+    .box-sizing(border-box);
+    .center-vh(100%, 33px);
+}
+
+
+.design-view-action-document-draggables-textbox-icon {
+    vertical-align: middle;
+}
+

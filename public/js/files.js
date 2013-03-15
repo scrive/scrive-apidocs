@@ -372,6 +372,7 @@ window.KontraFile = {
         }
         this.view = new FileView({
             model: this.model,
+            addFields: args.addFields || false,
             el : $("<div class='document-pages'/>")
         });
         return this;

@@ -25,6 +25,7 @@ ignore  less/branding/tooltip.less
 ignore  less/branding/checkbox.less
 ignore  less/branding/contact.less
 ignore  less/branding/main.less
+ignore  less/designview/util.less
 ignore  libs/html5shiv.js
 ignore  css/fonts
 ignore js/designview/docdesignview.js
@@ -57,6 +58,8 @@ set systemPage
  less less/attachmentview.less
  less less/verification.less
  less less/designview/frame.less
+ less less/designview/participants.less
+ less less/designview/editdocument.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  js   libs/jquery-ui.min.js
@@ -136,6 +139,8 @@ set systemPage
  js   js/designview/signatorydesignview.js
  js   js/designview/signatoriesdesignview.js
  js   js/designview/docdesignviewpad.js
+ js   js/designview/participants.js
+ js   js/designview/editdocument.js
  js   js/designview/docdesignview2.js
  js   js/designview/documentstep.js
  js   js/designview/attachmentsdesignview.js

@@ -112,27 +112,10 @@ var SignatoriesDesignView = Backbone.View.extend({
         box.children().detach();
         box.addClass('signatoriesbox');
         var document = this.model.document();
-        if (document.signatories().length == 1)
-        {
-            var s1view = new SignatoryDesign({signatory: document.signatories()[0], documentdesignview : this.model.documentdesignview()});
-            box.append(s1view.el);
-            box.append($("<div class='sigview dummy'/>"));
-        }
-        else if (document.signatories().length == 2)
-        {
-            var s1view = new SignatoryDesign({signatory: document.signatories()[0], documentdesignview : this.model.documentdesignview()});
-            var s2view = new SignatoryDesign({signatory: document.signatories()[1], documentdesignview : this.model.documentdesignview()});
-            box.append(s1view.el);
-            box.append(s2view.el);
+        box.append(this.signatoriesList());
+        var sview = new SignatoryDesign({signatory: this.current, documentdesignview : this.model.documentdesignview()});
+        box.append(sview.el);
 
-        }
-        else
-        {
-           box.append(this.signatoriesList());
-           var sview = new SignatoryDesign({signatory: this.current, documentdesignview : this.model.documentdesignview()});
-           box.append(sview.el);
-
-        }
         box.append(this.addRemoveSignatoryBox());
         return this;
     },
