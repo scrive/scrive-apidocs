@@ -46,6 +46,7 @@ set systemPage
  less less/tabs.less
  less less/archive.less
  less less/account.less
+ less less/companybranding.less
  less less/signaturedrawer.less
  less less/paddeviceview.less
  less less/createfromtemplate.less
@@ -155,7 +156,10 @@ set systemPage
  js   js/account/securitysettings.js
  js   js/account/mailapisettings.js
  js   js/account/companyaccounts.js
- js   js/account/companybranding.js
+ js   js/account/companybranding/companybrandingutils.js
+ js   js/account/companybranding/companybrandingemail.js
+ js   js/account/companybranding/companybrandingsignview.js
+ js   js/account/companybranding/companybranding.js
  js   js/account/account.js
  js   js/blocking.js
  js   js/oauth.js
