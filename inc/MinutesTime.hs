@@ -4,7 +4,6 @@ module MinutesTime
        , asInt
        , fromSeconds
        , fromMinutes
-       , getMinutesTime
        , minutesAfter
        , minutesBefore
        , parseMinutesTimeDMY
@@ -40,7 +39,6 @@ module MinutesTime
        , fromClockTime
        ) where
 
-import Control.Monad.IO.Class
 import Data.Char
 import Data.Convertible
 import Data.Time
@@ -164,10 +162,6 @@ showDateAbbrev locale current time
 
 showDateForHistory :: KontraTimeLocale -> MinutesTime -> String
 showDateForHistory locale time = formatMinutesTime locale "%Y-%m-%d %H:%M:%S" time
-
--- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
-getMinutesTime :: MonadIO m => m MinutesTime
-getMinutesTime = liftIO $ (return . fromClockTime) =<< getClockTime
 
 -- | Convert 'ClockTime' to 'MinutesTime'. Uses just seconds, picoseconds are ignored.
 fromClockTime :: ClockTime -> MinutesTime

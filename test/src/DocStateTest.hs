@@ -459,7 +459,7 @@ testSetInviteTextEvidenceLog = do
                     then loop doc
                     else randomUpdate $ \t -> SetInviteText (documentid doc) i (systemActor t)
 
-getScreenshots :: MonadIO m => m SignatoryScreenshots.T
+getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.T
 getScreenshots = do
   now <- getMinutesTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"
@@ -1049,7 +1049,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   -- execute
-  now <- liftIO $ getMinutesTime
+  now <- getMinutesTime
   let aa = authorActor now noIP (userid author) (getEmail author)
   mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
   -- assert
@@ -1060,7 +1060,7 @@ testDocumentCanBeCreatedAndFetchedByID :: TestEnv ()
 testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  now <- liftIO $ getMinutesTime
+  now <- getMinutesTime
   let aa = authorActor now noIP (userid author) (getEmail author)
   mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
   let doc = case mdoc of

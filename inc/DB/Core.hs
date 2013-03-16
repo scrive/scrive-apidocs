@@ -41,6 +41,8 @@ import qualified Control.Exception.Lifted as E
 import DB.SQL (RawSQL, SQL(..), unRawSQL, unsafeFromString)
 import DB.Exception
 import Data.Maybe
+import System.Time (getClockTime)
+import MinutesTime
 
 data DBEnvSt = DBEnvSt {
     dbStatement :: !(Maybe Statement)
@@ -167,6 +169,7 @@ class (Functor m, {- MonadIO m, MonadBase IO m, -} MonadLog m) => MonadDB m wher
   kDescribeTable :: RawSQL -> m [(String, SqlColDesc)]
   kFold2     :: (a -> [SqlValue] -> Either SQLError a) -> a -> m a
   kThrow     :: (E.Exception e) => e -> m a
+  getMinutesTime :: m MinutesTime
 
 getQuery :: Statement -> RawSQL
 getQuery = unsafeFromString . Database.HDBC.originalQuery
@@ -177,6 +180,7 @@ instance (Functor m, MonadIO m, MonadBase IO m, MonadLog m) => MonadDB (DBT m) w
   kCommit      = DBT $ ask >>= liftIO . commit
   kRollback    = DBT $ ask >>= liftIO . rollback
   kClone       = DBT $ ask >>= liftIO . clone
+  getMinutesTime = DBT $ liftIO $ (return . fromClockTime) =<< getClockTime
   kRunSQL sqlquery@(SQL query' values) =
     (kFinish >>) $ DBT $ do
       conn <- ask
@@ -244,6 +248,7 @@ instance MonadDB m => MonadDB (CryptoRNGT m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance (MonadDB m) => MonadDB (ReaderT r m) where
   getNexus     = lift getNexus
@@ -257,6 +262,7 @@ instance (MonadDB m) => MonadDB (ReaderT r m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance MonadDB m => MonadDB (ContT r m) where
   getNexus     = lift getNexus
@@ -270,6 +276,7 @@ instance MonadDB m => MonadDB (ContT r m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance (Error e, MonadDB m) => MonadDB (ErrorT e m) where
   getNexus     = lift getNexus
@@ -283,6 +290,7 @@ instance (Error e, MonadDB m) => MonadDB (ErrorT e m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance MonadDB m => MonadDB (IdentityT m) where
   getNexus     = lift getNexus
@@ -296,6 +304,7 @@ instance MonadDB m => MonadDB (IdentityT m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance MonadDB m => MonadDB (ListT m) where
   getNexus     = lift getNexus
@@ -309,6 +318,7 @@ instance MonadDB m => MonadDB (ListT m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance MonadDB m => MonadDB (MaybeT m) where
   getNexus     = lift getNexus
@@ -322,6 +332,7 @@ instance MonadDB m => MonadDB (MaybeT m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance MonadDB m => MonadDB (SS.StateT s m) where
   getNexus     = lift getNexus
@@ -335,6 +346,7 @@ instance MonadDB m => MonadDB (SS.StateT s m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance MonadDB m => MonadDB (LS.StateT s m) where
   getNexus     = lift getNexus
@@ -348,6 +360,7 @@ instance MonadDB m => MonadDB (LS.StateT s m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance (MonadDB m, Monoid w) => MonadDB (LW.WriterT w m) where
   getNexus     = lift getNexus
@@ -361,6 +374,7 @@ instance (MonadDB m, Monoid w) => MonadDB (LW.WriterT w m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance (MonadDB m, Monoid w) => MonadDB (SW.WriterT w m) where
   getNexus     = lift getNexus
@@ -374,6 +388,7 @@ instance (MonadDB m, Monoid w) => MonadDB (SW.WriterT w m) where
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance (MonadBase IO (T.TemplatesT m), MonadDB m) => MonadDB (T.TemplatesT m) where
   getNexus = lift getNexus
@@ -387,6 +402,7 @@ instance (MonadBase IO (T.TemplatesT m), MonadDB m) => MonadDB (T.TemplatesT m) 
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
+  getMinutesTime = lift getMinutesTime
 
 instance (MonadLog m) => MonadLog (T.TemplatesT m) where
   logM a b c = lift $ logM a b c

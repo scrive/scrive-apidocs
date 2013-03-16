@@ -45,7 +45,6 @@ import DB
 import GuardTime (GuardTimeConf(..))
 import Kontra
 import Mails.MailsConfig
-import MinutesTime
 import Utils.Default
 import Payments.Config (RecurlyConfig(..))
 import IPAddress
@@ -103,6 +102,7 @@ instance MonadDB TestEnv where
   kDescribeTable   = TestEnv . kDescribeTable
   kFold2 decoder init_acc = TestEnv (kFold2 decoder init_acc)
   kThrow       = TestEnv . kThrow
+  getMinutesTime = TestEnv $ getMinutesTime
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByColumn $ show (defaultValue :: Lang)
@@ -227,10 +227,10 @@ mkRequestWithHeaders method vars headers = liftIO $ do
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
   globaltemplates <- teGlobalTemplates <$> ask
+  time <- getMinutesTime
   liftIO $ do
     docs <- MemCache.new JpegPages.pagesCount 500
     memcache <- MemCache.new BS.length 52428800
-    time <- getMinutesTime
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = "http://testkontra.fake"

@@ -265,7 +265,7 @@ createNewUserByAdmin email names custommessage mcompanydata lang = do
                  return ()
                Nothing -> return ()
              let fullname = composeFullName names
-             now <- liftIO $ getMinutesTime
+             now <- getMinutesTime
              _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newUserAccountRequestLink (ctxlang ctx) (userid user) ByAdmin
              mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink custommessage

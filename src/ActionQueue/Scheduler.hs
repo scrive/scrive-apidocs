@@ -14,7 +14,6 @@ import AppConf
 import DB hiding (update, query)
 import Doc.DocStateData
 import Doc.Model
-import MinutesTime
 import Stats.Control
 import Templates
 import Util.Actor
