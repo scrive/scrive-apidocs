@@ -88,7 +88,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     }
 
     // Background color of top bar
-    if((this.useStandardBranding() || document.signviewheaderbackgroundcolour() == undefined)) {
+    if((this.useStandardBranding() || document.signviewbarscolour() == undefined)) {
       if (this.usedStandardColorsBars != true) {
         maindiv.css('background-image', '');
         maindiv.css('background-color', '');
@@ -98,13 +98,13 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     else {
       if (this.usedStandardColorsBars != false) {
         maindiv.css('background-image', 'none');
-        maindiv.css('background-color', document.signviewheaderbackgroundcolour());
+        maindiv.css('background-color', document.signviewbarscolour());
         this.usedStandardColorsBars = false;
       }
     }
 
     // Text color in header
-    if((this.useStandardBranding() || document.signviewheadertextcolour() == undefined)) {
+    if((this.useStandardBranding() || document.signviewbarstextcolour() == undefined)) {
       if (this.usedStandardColorsTexts != true) {
         maindiv.css("color", '');
         if (this.sender != undefined) this.sender.css("color", '');
@@ -113,14 +113,14 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     }
     else {
       if (this.usedStandardColorsTexts != false) {
-        maindiv.css("color", document.signviewheadertextcolour());
-        if (this.sender != undefined) this.sender.css("color", document.signviewheadertextcolour());
+        maindiv.css("color", document.signviewbarstextcolour());
+        if (this.sender != undefined) this.sender.css("color", document.signviewbarstextcolour());
         this.usedStandardColorsTexts = false;
       }
     }
 
     // Text font in header
-    if((this.useStandardBranding() || document.signviewheadertextfont() == undefined)) {
+    if((this.useStandardBranding() || document.signviewtextfont() == undefined)) {
       if (this.usedStandardTextsFonts != true) {
         maindiv.css('font-family', '');
         if (this.sender != undefined) this.sender.css('font-family', '');
@@ -129,8 +129,8 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     }
     else {
       if (this.usedStandardTextsFonts != false) {
-        maindiv.css('font-family', document.signviewheadertextfont());
-        if (this.sender != undefined) this.sender.css('font-family', document.signviewheadertextfont());
+        maindiv.css('font-family', document.signviewtextfont());
+        if (this.sender != undefined) this.sender.css('font-family', document.signviewtextfont());
         this.usedStandardTextsFonts = false;
       }
     }
@@ -209,7 +209,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     maindiv.css("display","block");
 
    // Background color of top bar
-    if((this.useStandardBranding() || document.signviewfooterbackgroundcolour() == undefined)) {
+    if((this.useStandardBranding() || document.signviewbarscolour() == undefined)) {
       if (this.useStandardBranding != true) {
         maindiv.css('background-image', '');
         maindiv.css('background-color', '');
@@ -219,13 +219,13 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     else {
       if (this.useStandardBranding != false) {
         maindiv.css('background-image', 'none');
-        maindiv.css('background-color', document.signviewfooterbackgroundcolour());
+        maindiv.css('background-color', document.signviewbarscolour());
         this.usedStandardColorsBars = false;
       }
     }
 
     // Text color in footer
-    if((this.useStandardBranding() || document.signviewfootertextcolour() == undefined)) {
+    if((this.useStandardBranding() || document.signviewbarstextcolour() == undefined)) {
       if (this.usedStandardColorsTexts != true) {
         maindiv.css("color", '');
         this.usedStandardColorsTexts = true;
@@ -233,13 +233,13 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     }
     else  {
       if (this.usedStandardColorsTexts != false) {
-        maindiv.css("color", document.signviewfootertextcolour());
+        maindiv.css("color", document.signviewbarstextcolour());
         this.usedStandardColorsTexts = false;
       }
     }
 
     // Text font in footer
-    if((this.useStandardBranding() || document.signviewfootertextfont() == undefined)) {
+    if((this.useStandardBranding() || document.signviewtextfont() == undefined)) {
       if (this.usedStandardTextsFonts != true) {
         maindiv.css('font-family', '');
         this.usedStandardTextsFonts = true;
@@ -247,12 +247,12 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     }
     else  {
       if (this.usedStandardTextsFonts != false) {
-        maindiv.css('font-family', document.signviewfootertextfont());
+        maindiv.css('font-family', document.signviewtextfont());
         this.usedStandardTextsFonts = false;
       }
     }
 
-    if(document.signviewfooterbackgroundcolour() != undefined) {
+    if(document.signviewbarscolour() != undefined) {
       if (this.usedStandardDescription != true ) {
         var pbstext = $("<span class='text' />").text("Powered by Scrive");
         this.pbs.empty().append(pbstext);

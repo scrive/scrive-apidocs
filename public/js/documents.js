@@ -241,7 +241,7 @@ window.Document = Backbone.Model.extend({
         function callDone() {
             if (done) done();
         }
-        window.takeScreenshot( 
+        window.takeScreenshot(
             function(canvas) {
                 var shot = [ new Date().getTime()/1000, canvas.toDataURL("image/jpeg",0.7) ];
                 if (first)
@@ -543,23 +543,11 @@ window.Document = Backbone.Model.extend({
     signviewtextfont: function() {
       return this.get('signviewtextfont');
     },
-    signviewfootertextcolour: function() {
-      return this.get('signviewfootertextcolour');
+    signviewbarscolour: function() {
+      return this.get('signviewbarscolour');
     },
-    signviewfootertextfont: function() {
-      return this.get('signviewfootertextfont');
-    },
-    signviewheadertextcolour: function() {
-      return this.get('signviewheadertextcolour');
-    },
-    signviewheadertextfont: function() {
-      return this.get('signviewheadertextfont');
-    },
-    signviewheaderbackgroundcolour: function() {
-      return this.get('signviewheaderbackgroundcolour');
-    },
-    signviewfooterbackgroundcolour: function() {
-      return this.get('signviewfooterbackgroundcolour');
+    signviewbarstextcolour: function() {
+      return this.get('signviewbarstextcolour');
     },
     signviewbackgroundcolour: function() {
       return this.get('signviewbackgroundcolour');
@@ -637,12 +625,8 @@ window.Document = Backbone.Model.extend({
        signviewlogo: args.signviewlogo,
        signviewtextcolour: args.signviewtextcolour,
        signviewtextfont: args.signviewtextfont,
-       signviewfootertextcolour: args.signviewfootertextcolour,
-       signviewfootertextfont: args.signviewfootertextfont,
-       signviewheadertextcolour: args.signviewheadertextcolour,
-       signviewheadertextfont: args.signviewheadertextfont,
-       signviewheaderbackgroundcolour: args.signviewheaderbackgroundcolour,
-       signviewfooterbackgroundcolour: args.signviewfooterbackgroundcolour,
+       signviewbarscolour: args.signviewbarscolour,
+       signviewbarstextcolour: args.signviewbarstextcolour,
        signviewbackgroundcolour: args.signviewbackgroundcolour,
        ready: true
      };

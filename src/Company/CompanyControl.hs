@@ -68,7 +68,7 @@ handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
       then do
         rawcompanyjson <- guardJustM $ getField "company"
         companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
-        jsoncui <- companyUiFromJSON companyjson (companyui company)
+        jsoncui <- companyUiFromJSON companyjson
         Log.debug $ "using json " ++ (show $ jsoncui)
         return jsoncui
       else
@@ -77,8 +77,8 @@ handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   _ <- dbUpdate $ UpdateCompanyUI (companyid company) cui
   return $ LinkAccountCompany mcid
 
-companyUiFromJSON :: Kontrakcja m => JSValue -> CompanyUI -> m CompanyUI
-companyUiFromJSON jsv cui = withJSValue jsv $ do
+companyUiFromJSON :: Kontrakcja m => JSValue ->  m CompanyUI
+companyUiFromJSON jsv = withJSValue jsv $ do
   jsoncompanyemailheaderfont <- fromJSValueField "companyemailheaderfont"
   jsoncompanyemailfont <- fromJSValueField "companyemailfont"
   jsoncompanyemailbordercolour <- fromJSValueField "companyemailbordercolour"
@@ -93,17 +93,6 @@ companyUiFromJSON jsv cui = withJSValue jsv $ do
   jsoncompanysignviewbarscolour <- fromJSValueField "companysignviewbarscolour"
   jsoncompanysignviewbarstextcolour <- fromJSValueField "companysignviewbarstextcolour"
   jsoncompanysignviewbackgroundcolour <- fromJSValueField "companysignviewbackgroundcolour"
-  jsonsignviewlogochanged <- fromJSValueField "signviewlogochanged"
-  jsonemaillogochanged <- fromJSValueField "emaillogochanged"
-
-  let signviewlogo = if (Just True == jsonsignviewlogochanged) then
-                         (Binary . B64.decodeLenient) <$> BS.fromString <$> jsoncompanysignviewlogo
-                     else
-                         companysignviewlogo cui
-      emaillogo = if (Just True == jsonemaillogochanged) then
-                      (Binary . B64.decodeLenient) <$> BS.fromString <$> jsoncompanyemaillogo
-                  else
-                      companyemaillogo cui
   return $ CompanyUI {
     companyemailheaderfont = maybeS jsoncompanyemailheaderfont
   , companyemailfont = maybeS jsoncompanyemailfont
@@ -112,8 +101,8 @@ companyUiFromJSON jsv cui = withJSValue jsv $ do
   , companyemailemailbackgroundcolour = maybeS jsoncompanyemailemailbackgroundcolour
   , companyemailbackgroundcolour = maybeS jsoncompanyemailbackgroundcolour
   , companyemailtextcolour = maybeS jsoncompanyemailtextcolour
-  , companyemaillogo = emaillogo
-  , companysignviewlogo = signviewlogo
+  , companyemaillogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',') <$> maybeS jsoncompanyemaillogo
+  , companysignviewlogo = (Binary . B64.decodeLenient) <$> BS.fromString <$>  drop 1 <$> dropWhile ((/=) ',')  <$> maybeS jsoncompanysignviewlogo
   , companysignviewtextcolour = maybeS jsoncompanysignviewtextcolour
   , companysignviewtextfont = maybeS jsoncompanysignviewtextfont
   , companysignviewbarscolour = maybeS jsoncompanysignviewbarscolour
@@ -145,8 +134,8 @@ handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, compan
     value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui company
     value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui company
     value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui company
-    value "companyemaillogo" $ maybe "" (const $ show $ LinkCompanyEmailLogo $ companyid company) $ companyemaillogo $ companyui $ company
-    value "companysignviewlogo" $ maybe "" (const $ show $ LinkCompanySignViewLogo $ companyid company) $ companysignviewlogo $ companyui $ company
+    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui $ company)
+    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui $ company)
     value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui company
     value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui company
     value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui company

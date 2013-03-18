@@ -251,10 +251,6 @@ selectCompaniesSelectors = do
   sqlResult "companies.signview_textfont"
   sqlResult "companies.signview_barscolour"
   sqlResult "companies.signview_barstextcolour"
-  sqlResult "companies.signview_headertextcolour"
-  sqlResult "companies.signview_headertextfont"
-  sqlResult "companies.signview_headerbackgroundcolour"
-  sqlResult "companies.signview_footerbackgroundcolour"
   sqlResult "companies.signview_backgroundcolour"
 
 

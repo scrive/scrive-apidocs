@@ -19,12 +19,8 @@ window.CompanyUI = Backbone.Model.extend({
         signviewlogo: args.companysignviewlogo,
         signviewtextcolour: args.companysignviewtextcolour,
         signviewtextfont: args.companysignviewtextfont,
-        signviewfootertextcolour: args.companysignviewfootertextcolour,
-        signviewfootertextfont: args.companysignviewfootertextfont,
-        signviewheadertextcolour: args.companysignviewheadertextcolour,
-        signviewheadertextfont: args.companysignviewheadertextfont,
-        signviewheaderbackgroundcolour: args.companysignviewheaderbackgroundcolour,
-        signviewfooterbackgroundcolour: args.companysignviewfooterbackgroundcolour,
+        signviewbarscolour: args.companysignviewbarscolour,
+        signviewbarstextcolour: args.companysignviewbarstextcolour,
         signviewbackgroundcolour: args.companysignviewbackgroundcolour
       }, {silent: true});
     }
@@ -62,23 +58,11 @@ window.CompanyUI = Backbone.Model.extend({
   signviewtextfont: function() {
     return this.get('signviewtextfont');
   },
-  signviewfootertextcolour: function() {
-    return this.get('signviewfootertextcolour');
+  signviewbarstextcolour: function() {
+    return this.get('signviewbarstextcolour');
   },
-  signviewfootertextfont: function() {
-    return this.get('signviewfootertextfont');
-  },
-  signviewheadertextcolour: function() {
-    return this.get('signviewheadertextcolour');
-  },
-  signviewheadertextfont: function() {
-    return this.get('signviewheadertextfont');
-  },
-  signviewheaderbackgroundcolour: function() {
-    return this.get('signviewheaderbackgroundcolour');
-  },
-  signviewfooterbackgroundcolour: function() {
-    return this.get('signviewfooterbackgroundcolour');
+  signviewbarscolour: function() {
+    return this.get('signviewbarscolour');
   },
   signviewbackgroundcolour: function() {
     return this.get('signviewbackgroundcolour');
@@ -99,12 +83,8 @@ window.CompanyUI = Backbone.Model.extend({
       signviewlogo: args.companysignviewlogo,
       signviewtextcolour: args.companysignviewtextcolour,
       signviewtextfont: args.companysignviewtextfont,
-      signviewfootertextcolour: args.companysignviewfootertextcolour,
-      signviewfootertextfont: args.companysignviewfootertextfont,
-      signviewheadertextcolour: args.companysignviewheadertextcolour,
-      signviewheadertextfont: args.companysignviewheadertextfont,
-      signviewheaderbackgroundcolour: args.companysignviewheaderbackgroundcolour,
-      signviewfooterbackgroundcolour: args.companysignviewfooterbackgroundcolour,
+      signviewbarscolour: args.companysignviewbarscolour,
+      signviewbarstextcolour: args.companysignviewbarstextcolour,
       signviewbackgroundcolour: args.companysignviewbackgroundcolour,
       editable: args.editable,
       ready: true
@@ -158,7 +138,7 @@ window.Company = Backbone.Model.extend({
   hasMailApi : function() {
      return this.mailapi() != undefined;
   }
-  
+
 });
 
 })(window);

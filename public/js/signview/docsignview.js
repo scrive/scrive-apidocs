@@ -404,7 +404,7 @@ var DocumentSignViewView = Backbone.View.extend({
     setBackgroundColour: function() {
       var color = this.model.document().signviewbackgroundcolour();
       if (color) {
-        $('div.signview').css('background-color', color);
+        $('.signview').css('background-image','none').css('background-color', color);
       }
     },
     render: function() {

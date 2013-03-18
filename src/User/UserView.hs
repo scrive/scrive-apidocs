@@ -63,7 +63,9 @@ import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic
-
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Base64 as B64
+import DB
 showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
 showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
@@ -93,8 +95,8 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
 
 companyUIJson :: Monad m => Company -> Bool -> m JSValue
 companyUIJson company editable = runJSONGenT $ do
-    value "companyemaillogo" $ maybe "" (const $ show $ LinkCompanyEmailLogo $ companyid company) $ companyemaillogo $ companyui $ company
-    value "companysignviewlogo" $ maybe "" (const $ show $ LinkCompanySignViewLogo $ companyid company) $ companysignviewlogo $ companyui $ company
+    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui $ company)
+    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui $ company)
     value "companyemailheaderfont" $ fromMaybe "" $ companyemailheaderfont $ companyui $ company
     value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui $ company
     value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui $ company
