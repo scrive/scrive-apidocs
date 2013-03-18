@@ -58,7 +58,7 @@ test_settingUIWithHandlePostCompany = do
   logo <- liftIO $ BS.readFile "public/img/email-logo.png"
   let logo64 = BS.unpack $ B64.encode logo
 
-  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailheaderfont\":\"font1\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewfootertextcolour\":\"color6\",\"companysignviewfootertextfont\":\"font4\",\"companysignviewheadertextcolour\":\"color7\",\"companysignviewheadertextfont\":\"font5\",\"companysignviewheaderbackgroundcolour\":\"color8\",\"companysignviewfooterbackgroundcolour\":\"color9\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"" ++ logo64 ++ "\",\"companysignviewlogo\":\"" ++ logo64 ++ "\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
+  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailheaderfont\":\"font1\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewbarscolour\":\"color6\",\"companysignviewbarstextcolour\":\"color7\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"" ++ logo64 ++ "\",\"companysignviewlogo\":\"" ++ logo64 ++ "\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
   (res1, _ctx') <- runTestKontra req1 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res1)
@@ -68,21 +68,17 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Email border colour was set" (Just "color1") $ companyemailbordercolour $ companyui newcompany1
   assertEqual "Email button colour was set" (Just "color2") $ companyemailbuttoncolour $ companyui newcompany1
   assertEqual "Email email background was set" (Just "color3") $ companyemailemailbackgroundcolour $ companyui newcompany1
-  assertEqual "Email background was set" (Just "color11") $ companyemailbackgroundcolour $ companyui newcompany1              
+  assertEqual "Email background was set" (Just "color11") $ companyemailbackgroundcolour $ companyui newcompany1
   assertEqual "Email text colour was set" (Just "color4") $ companyemailtextcolour $ companyui newcompany1
   assertBool "Email logo file was set" $ isJust $ companyemaillogo $ companyui newcompany1
   assertBool "Signview logo file was set" $ isJust $ companysignviewlogo $ companyui newcompany1
   assertEqual "Signview text colour was set" (Just "color5") $ companysignviewtextcolour $ companyui newcompany1
   assertEqual "Signview text font was set" (Just "font3") $ companysignviewtextfont $ companyui newcompany1
-  assertEqual "Signview footer text colour was set" (Just "color6") $ companysignviewfootertextcolour $ companyui newcompany1
-  assertEqual "Signview footer text font was set" (Just "font4") $ companysignviewfootertextfont $ companyui newcompany1
-  assertEqual "Signview header text colour was set" (Just "color7") $ companysignviewheadertextcolour $ companyui newcompany1
-  assertEqual "Signview header text font was set" (Just "font5") $ companysignviewheadertextfont $ companyui newcompany1
-  assertEqual "Signview header background colour was set" (Just "color8") $ companysignviewheaderbackgroundcolour $ companyui newcompany1
-  assertEqual "Signview footer background colour was set" (Just "color9") $ companysignviewfooterbackgroundcolour $ companyui newcompany1
+  assertEqual "Signview bars colour was set" (Just "color6") $ companysignviewbarscolour $ companyui newcompany1
+  assertEqual "Signview bars text color was set" (Just "font7") $ companysignviewbarstextcolour $ companyui newcompany1
   assertEqual "Signview background colour was set" (Just "color10") $ companysignviewbackgroundcolour $ companyui newcompany1
 
-  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailheaderfont\":\"\",\"companyemailfont\":\"\",\"companyemailbordercolour\":\"\",\"companyemailbuttoncolour\":\"\",\"companyemailemailbackgroundcolour\":\"\",\"companyemailbackgroundcolour\":\"\",\"companyemailtextcolour\":\"\",\"companysignviewtextcolour\":\"\",\"companysignviewtextfont\":\"\",\"companysignviewfootertextcolour\":\"\",\"companysignviewfootertextfont\":\"\",\"companysignviewheadertextcolour\":\"\",\"companysignviewheadertextfont\":\"\",\"companysignviewheaderbackgroundcolour\":\"\",\"companysignviewfooterbackgroundcolour\":\"\",\"companysignviewbackgroundcolour\":\"\",\"companyemaillogo\":\"\",\"companysignviewlogo\":\"\",\"companyemaillogochanged\":\"false\",\"companysignviewlogochanged\":\"false\"}")]
+  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailheaderfont\":\"\",\"companyemailfont\":\"\",\"companyemailbordercolour\":\"\",\"companyemailbuttoncolour\":\"\",\"companyemailemailbackgroundcolour\":\"\",\"companyemailbackgroundcolour\":\"\",\"companyemailtextcolour\":\"\",\"companysignviewtextcolour\":\"\",\"companysignviewtextfont\":\"\",\"companysignviewbarscolour\":\"\",\"companysignviewbarstextcolour\":\"\",\"companysignviewbackgroundcolour\":\"\",\"companyemaillogo\":\"\",\"companysignviewlogo\":\"\",\"companyemaillogochanged\":\"false\",\"companysignviewlogochanged\":\"false\"}")]
   (res2, _ctx') <- runTestKontra req2 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res2)
@@ -93,21 +89,17 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Email border colour reset" Nothing $ companyemailbordercolour $ companyui newcompany2
   assertEqual "Email button colour reset" Nothing $ companyemailbuttoncolour $ companyui newcompany2
   assertEqual "Email email background reset" Nothing $ companyemailemailbackgroundcolour $ companyui newcompany2
-  assertEqual "Email background reset" Nothing $ companyemailbackgroundcolour $ companyui newcompany2              
+  assertEqual "Email background reset" Nothing $ companyemailbackgroundcolour $ companyui newcompany2
   assertEqual "Email text colour reset" Nothing $ companyemailtextcolour $ companyui newcompany2
   assertEqual "Signview text colour reset" Nothing $ companysignviewtextcolour $ companyui newcompany2
   assertEqual "Signview text font reset" Nothing $ companysignviewtextfont $ companyui newcompany2
-  assertEqual "Signview footer text colour reset" Nothing $ companysignviewfootertextcolour $ companyui newcompany2
-  assertEqual "Signview footer text font reset" Nothing $ companysignviewfootertextfont $ companyui newcompany2
-  assertEqual "Signview header text colour reset" Nothing $ companysignviewheadertextcolour $ companyui newcompany2
-  assertEqual "Signview header text font reset" Nothing $ companysignviewheadertextfont $ companyui newcompany2
-  assertEqual "Signview header background colour reset" Nothing $ companysignviewheaderbackgroundcolour $ companyui newcompany2
-  assertEqual "Signview footer background colour reset" Nothing $ companysignviewfooterbackgroundcolour $ companyui newcompany2
+  assertEqual "Signview bars colour reset" Nothing $ companysignviewbarscolour $ companyui newcompany2
+  assertEqual "Signview bars text colour reset" Nothing $ companysignviewbarstextcolour $ companyui newcompany2
   assertEqual "Signview background colour reset" Nothing $ companysignviewbackgroundcolour $ companyui newcompany2
   assertEqual "Email logo still intact" (companyemaillogo $ companyui newcompany1) (companyemaillogo $ companyui newcompany2)
   assertEqual "Signview logo still intact" (companysignviewlogo $ companyui newcompany1) (companysignviewlogo $ companyui newcompany2)
 
-  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailheaderfont\":\"font1\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewfootertextcolour\":\"color6\",\"companysignviewfootertextfont\":\"font4\",\"companysignviewheadertextcolour\":\"color7\",\"companysignviewheadertextfont\":\"font5\",\"companysignviewheaderbackgroundcolour\":\"color8\",\"companysignviewfooterbackgroundcolour\":\"color9\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"\",\"companysignviewlogo\":\"\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
+  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailheaderfont\":\"font1\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewbarscolour\":\"color6\",\"companysignviewbarstextcolour\":\"color7\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"\",\"companysignviewlogo\":\"\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
   (res3, _ctx') <- runTestKontra req3 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res3)
@@ -121,12 +113,8 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Email text colour was set" (Just "color4") $ companyemailtextcolour $ companyui newcompany3
   assertEqual "Signview text colour was set" (Just "color5") $ companysignviewtextcolour $ companyui newcompany3
   assertEqual "Signview text font was set" (Just "font3") $ companysignviewtextfont $ companyui newcompany3
-  assertEqual "Signview footer text colour was set" (Just "color6") $ companysignviewfootertextcolour $ companyui newcompany3
-  assertEqual "Signview footer text font was set" (Just "font4") $ companysignviewfootertextfont $ companyui newcompany3
-  assertEqual "Signview header text colour was set" (Just "color7") $ companysignviewheadertextcolour $ companyui newcompany3
-  assertEqual "Signview header text font was set" (Just "font5") $ companysignviewheadertextfont $ companyui newcompany3
-  assertEqual "Signview header background colour was set" (Just "color8") $ companysignviewheaderbackgroundcolour $ companyui newcompany3
-  assertEqual "Signview footer background colour was set" (Just "color9") $ companysignviewfooterbackgroundcolour $ companyui newcompany3
+  assertEqual "Signview bars  colour was set" (Just "color6") $ companysignviewbarscolour $ companyui newcompany3
+  assertEqual "Signview bars text colour was set" (Just "color7") $ companysignviewbarstextcolour $ companyui newcompany3
   assertEqual "Signview background colour was set" (Just "color10") $ companysignviewbackgroundcolour $ companyui newcompany3
   assertEqual "Email logo file reset" Nothing $ companyemaillogo $ companyui newcompany3
   assertEqual "Signview logo file reset" Nothing $ companysignviewlogo $ companyui newcompany3

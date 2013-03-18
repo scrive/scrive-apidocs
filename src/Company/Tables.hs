@@ -28,12 +28,8 @@ tableCompanies = tblTable {
        , ("signview_logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        , ("signview_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("signview_textfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_footertextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_footertextfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_headertextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_headertextfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_headerbackgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_footerbackgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_barscolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("signview_barstextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("signview_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
@@ -59,12 +55,8 @@ tableCompanies = tblTable {
           <> ", signview_logo BYTEA      NULL"
           <> ", signview_textcolour TEXT NULL"
           <> ", signview_textfont TEXT NULL"
-          <> ", signview_footertextcolour TEXT NULL"
-          <> ", signview_footertextfont TEXT NULL"
-          <> ", signview_headertextcolour TEXT NULL"
-          <> ", signview_headertextfont TEXT NULL"
-          <> ", signview_headerbackgroundcolour TEXT NULL"
-          <> ", signview_footerbackgroundcolour TEXT NULL"
+          <> ", signview_barscolour TEXT NULL"
+          <> ", signview_barstextcolour TEXT NULL"
           <> ", signview_backgroundcolour TEXT NULL"
           <> ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           <> ")"

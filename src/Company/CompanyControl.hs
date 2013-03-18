@@ -2,7 +2,7 @@ module Company.CompanyControl (
     handlePostCompany
   , handleGetCompanyJSON
   , handleCompanySignViewLogo
-  , handleCompanyEmailLogo  
+  , handleCompanyEmailLogo
   , routes
   , adminRoutes
   , withCompanyAdmin
@@ -33,7 +33,7 @@ import Routing (hGet, hPost, toK0, toK1)
 import User.Utils
 import Util.MonadUtils
 import qualified Log
-import Text.JSON.Gen 
+import Text.JSON.Gen
 
 routes :: Route (KontraPlus Response)
 routes = choice
@@ -68,7 +68,7 @@ handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
       then do
         rawcompanyjson <- guardJustM $ getField "company"
         companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
-        jsoncui <- guardRight $ companyUiFromJSON companyjson $ companyui company
+        jsoncui <- companyUiFromJSON companyjson (companyui company)
         Log.debug $ "using json " ++ (show $ jsoncui)
         return jsoncui
       else
@@ -77,38 +77,34 @@ handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   _ <- dbUpdate $ UpdateCompanyUI (companyid company) cui
   return $ LinkAccountCompany mcid
 
-companyUiFromJSON :: JSValue -> CompanyUI -> Either String CompanyUI
-companyUiFromJSON jsv cui = maybe (Left "Unable to parse JSON!") Right $ do
-  jsoncompanyemailheaderfont <- fromJSValueField "companyemailheaderfont" jsv
-  jsoncompanyemailfont <- fromJSValueField "companyemailfont" jsv
-  jsoncompanyemailbordercolour <- fromJSValueField "companyemailbordercolour" jsv
-  jsoncompanyemailbuttoncolour <- fromJSValueField "companyemailbuttoncolour" jsv
-  jsoncompanyemailemailbackgroundcolour <- fromJSValueField "companyemailemailbackgroundcolour" jsv
-  jsoncompanyemailbackgroundcolour <- fromJSValueField "companyemailbackgroundcolour" jsv
-  jsoncompanyemailtextcolour <- fromJSValueField "companyemailtextcolour" jsv
-  jsoncompanyemaillogo <- fromJSValueField "companyemaillogo" jsv
-  jsoncompanysignviewlogo <- fromJSValueField "companysignviewlogo" jsv
-  jsoncompanysignviewtextcolour <- fromJSValueField "companysignviewtextcolour" jsv
-  jsoncompanysignviewtextfont <- fromJSValueField "companysignviewtextfont" jsv
-  jsoncompanysignviewfootertextcolour <- fromJSValueField "companysignviewfootertextcolour" jsv
-  jsoncompanysignviewfootertextfont <- fromJSValueField "companysignviewfootertextfont" jsv
-  jsoncompanysignviewheadertextcolour <- fromJSValueField "companysignviewheadertextcolour" jsv
-  jsoncompanysignviewheadertextfont <- fromJSValueField "companysignviewheadertextfont" jsv
-  jsoncompanysignviewheaderbackgroundcolour <- fromJSValueField "companysignviewheaderbackgroundcolour" jsv
-  jsoncompanysignviewfooterbackgroundcolour <- fromJSValueField "companysignviewfooterbackgroundcolour" jsv
-  jsoncompanysignviewbackgroundcolour <- fromJSValueField "companysignviewbackgroundcolour" jsv
-  jsonsignviewlogochanged <- fromJSValueField "signviewlogochanged" jsv
-  jsonemaillogochanged <- fromJSValueField "emaillogochanged" jsv
+companyUiFromJSON :: Kontrakcja m => JSValue -> CompanyUI -> m CompanyUI
+companyUiFromJSON jsv cui = withJSValue jsv $ do
+  jsoncompanyemailheaderfont <- fromJSValueField "companyemailheaderfont"
+  jsoncompanyemailfont <- fromJSValueField "companyemailfont"
+  jsoncompanyemailbordercolour <- fromJSValueField "companyemailbordercolour"
+  jsoncompanyemailbuttoncolour <- fromJSValueField "companyemailbuttoncolour"
+  jsoncompanyemailemailbackgroundcolour <- fromJSValueField "companyemailemailbackgroundcolour"
+  jsoncompanyemailbackgroundcolour <- fromJSValueField "companyemailbackgroundcolour"
+  jsoncompanyemailtextcolour <- fromJSValueField "companyemailtextcolour"
+  jsoncompanyemaillogo <- fromJSValueField "companyemaillogo"
+  jsoncompanysignviewlogo <- fromJSValueField "companysignviewlogo"
+  jsoncompanysignviewtextcolour <- fromJSValueField "companysignviewtextcolour"
+  jsoncompanysignviewtextfont <- fromJSValueField "companysignviewtextfont"
+  jsoncompanysignviewbarscolour <- fromJSValueField "companysignviewbarscolour"
+  jsoncompanysignviewbarstextcolour <- fromJSValueField "companysignviewbarstextcolour"
+  jsoncompanysignviewbackgroundcolour <- fromJSValueField "companysignviewbackgroundcolour"
+  jsonsignviewlogochanged <- fromJSValueField "signviewlogochanged"
+  jsonemaillogochanged <- fromJSValueField "emaillogochanged"
 
-  let signviewlogo = if jsonsignviewlogochanged then
-                         fmap (Binary . B64.decodeLenient) $ maybeS jsoncompanysignviewlogo
+  let signviewlogo = if (Just True == jsonsignviewlogochanged) then
+                         (Binary . B64.decodeLenient) <$> BS.fromString <$> jsoncompanysignviewlogo
                      else
                          companysignviewlogo cui
-      emaillogo = if jsonemaillogochanged then
-                      fmap (Binary . B64.decodeLenient) $ maybeS jsoncompanyemaillogo
+      emaillogo = if (Just True == jsonemaillogochanged) then
+                      (Binary . B64.decodeLenient) <$> BS.fromString <$> jsoncompanyemaillogo
                   else
                       companyemaillogo cui
-  return CompanyUI {
+  return $ CompanyUI {
     companyemailheaderfont = maybeS jsoncompanyemailheaderfont
   , companyemailfont = maybeS jsoncompanyemailfont
   , companyemailbordercolour = maybeS jsoncompanyemailbordercolour
@@ -120,17 +116,13 @@ companyUiFromJSON jsv cui = maybe (Left "Unable to parse JSON!") Right $ do
   , companysignviewlogo = signviewlogo
   , companysignviewtextcolour = maybeS jsoncompanysignviewtextcolour
   , companysignviewtextfont = maybeS jsoncompanysignviewtextfont
-  , companysignviewfootertextcolour = maybeS jsoncompanysignviewfootertextcolour
-  , companysignviewfootertextfont = maybeS jsoncompanysignviewfootertextfont
-  , companysignviewheadertextcolour = maybeS jsoncompanysignviewheadertextcolour
-  , companysignviewheadertextfont = maybeS jsoncompanysignviewheadertextfont
-  , companysignviewheaderbackgroundcolour = maybeS jsoncompanysignviewheaderbackgroundcolour
-  , companysignviewfooterbackgroundcolour = maybeS jsoncompanysignviewfooterbackgroundcolour
+  , companysignviewbarscolour = maybeS jsoncompanysignviewbarscolour
+  , companysignviewbarstextcolour = maybeS jsoncompanysignviewbarstextcolour
   , companysignviewbackgroundcolour = maybeS jsoncompanysignviewbackgroundcolour
   }
   where
-    maybeS ""  = Nothing
-    maybeS str = Just str
+    maybeS (Just "")  = Nothing
+    maybeS str = str
 
 handleCompanyLogo :: Kontrakcja m => (CompanyUI -> Maybe Binary) -> CompanyID -> m Response
 handleCompanyLogo field cid = do
@@ -157,12 +149,8 @@ handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, compan
     value "companysignviewlogo" $ maybe "" (const $ show $ LinkCompanySignViewLogo $ companyid company) $ companysignviewlogo $ companyui $ company
     value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui company
     value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui company
-    value "companysignviewfootertextcolour" $ fromMaybe "" $ companysignviewfootertextcolour $ companyui company
-    value "companysignviewfootertextfont" $ fromMaybe "" $ companysignviewfootertextfont $ companyui company
-    value "companysignviewheadertextcolour" $ fromMaybe "" $ companysignviewheadertextcolour $ companyui company
-    value "companysignviewheadertextfont" $ fromMaybe "" $ companysignviewheadertextfont $ companyui company
-    value "companysignviewheaderbackgroundcolour" $ fromMaybe "" $ companysignviewheaderbackgroundcolour $ companyui company
-    value "companysignviewfooterbackgroundcolour" $ fromMaybe "" $ companysignviewfooterbackgroundcolour $ companyui company
+    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui company
+    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui company
     value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui company
     value "editable" editable
     value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)

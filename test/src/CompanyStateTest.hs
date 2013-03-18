@@ -70,17 +70,13 @@ test_updateCompanyUI = do
   , companyemailbuttoncolour = Just "215"
   , companyemailemailbackgroundcolour = Just "#0f0"
   , companyemailbackgroundcolour = Just "blue"
-  , companyemailtextcolour = Just "green" 
+  , companyemailtextcolour = Just "green"
   , companyemaillogo = Nothing
   , companysignviewlogo = Nothing
   , companysignviewtextcolour = Nothing
   , companysignviewtextfont = Nothing
-  , companysignviewfootertextcolour = Nothing
-  , companysignviewfootertextfont = Nothing
-  , companysignviewheadertextcolour = Nothing
-  , companysignviewheadertextfont = Nothing
-  , companysignviewheaderbackgroundcolour = Nothing
-  , companysignviewfooterbackgroundcolour = Nothing
+  , companysignviewbarscolour = Nothing
+  , companysignviewbarstextcolour = Nothing
   , companysignviewbackgroundcolour = Nothing
   }
   res <- dbUpdate $ UpdateCompanyUI cid cui

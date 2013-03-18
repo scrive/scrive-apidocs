@@ -100,12 +100,8 @@ instance Arbitrary Company where
         , companysignviewlogo = Nothing
         , companysignviewtextcolour = Nothing
         , companysignviewtextfont = Nothing
-        , companysignviewfootertextcolour = Nothing
-        , companysignviewfootertextfont = Nothing
-        , companysignviewheadertextcolour = Nothing
-        , companysignviewheadertextfont = Nothing
-        , companysignviewheaderbackgroundcolour = Nothing
-        , companysignviewfooterbackgroundcolour = Nothing
+        , companysignviewbarscolour = Nothing
+        , companysignviewbarstextcolour = Nothing
         , companysignviewbackgroundcolour = Nothing
       }
 

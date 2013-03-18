@@ -104,12 +104,8 @@ companyUIJson company editable = runJSONGenT $ do
     value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui $ company
     value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui $ company
     value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui $ company
-    value "companysignviewfootertextcolour" $ fromMaybe "" $ companysignviewfootertextcolour $ companyui $ company
-    value "companysignviewfootertextfont" $ fromMaybe "" $ companysignviewfootertextfont $ companyui $ company
-    value "companysignviewheadertextcolour" $ fromMaybe "" $ companysignviewheadertextcolour $ companyui $ company
-    value "companysignviewheadertextfont" $ fromMaybe "" $ companysignviewheadertextfont $ companyui $ company
-    value "companysignviewheaderbackgroundcolour" $ fromMaybe "" $ companysignviewheaderbackgroundcolour $ companyui $ company
-    value "companysignviewfooterbackgroundcolour" $ fromMaybe "" $ companysignviewfooterbackgroundcolour $ companyui $ company
+    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui $ company
+    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui $ company
     value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui $ company
     value "editable" editable
 

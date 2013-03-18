@@ -66,12 +66,8 @@ data CompanyUI = CompanyUI {
   , companysignviewlogo :: Maybe Binary
   , companysignviewtextcolour :: Maybe String
   , companysignviewtextfont :: Maybe String
-  , companysignviewfootertextcolour :: Maybe String
-  , companysignviewfootertextfont :: Maybe String
-  , companysignviewheadertextcolour :: Maybe String
-  , companysignviewheadertextfont :: Maybe String
-  , companysignviewheaderbackgroundcolour :: Maybe String
-  , companysignviewfooterbackgroundcolour :: Maybe String
+  , companysignviewbarscolour :: Maybe String
+  , companysignviewbarstextcolour :: Maybe String
   , companysignviewbackgroundcolour :: Maybe String
 } deriving (Eq, Ord, Show)
 
@@ -199,12 +195,8 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
       sqlSet "signview_logo" $ companysignviewlogo cui
       sqlSet "signview_textcolour" $ companysignviewtextcolour cui
       sqlSet "signview_textfont" $ companysignviewtextfont cui
-      sqlSet "signview_footertextcolour" $ companysignviewfootertextcolour cui
-      sqlSet "signview_footertextfont" $ companysignviewfootertextfont cui
-      sqlSet "signview_headertextcolour" $ companysignviewheadertextcolour cui
-      sqlSet "signview_headertextfont" $ companysignviewheadertextfont cui
-      sqlSet "signview_headerbackgroundcolour" $ companysignviewheaderbackgroundcolour cui
-      sqlSet "signview_footerbackgroundcolour" $ companysignviewfooterbackgroundcolour cui
+      sqlSet "signview_barscolour" $ companysignviewbarscolour cui
+      sqlSet "signview_barstextcolour" $ companysignviewbarstextcolour cui
       sqlSet "signview_backgroundcolour" $ companysignviewbackgroundcolour cui
       sqlWhereEq "id" cid
 
@@ -251,14 +243,14 @@ selectCompaniesSelectors = do
   sqlResult "companies.email_bordercolour"
   sqlResult "companies.email_buttoncolour"
   sqlResult "companies.email_emailbackgroundcolour"
-  sqlResult "companies.email_backgroundcolour"            
+  sqlResult "companies.email_backgroundcolour"
   sqlResult "companies.email_textcolour"
   sqlResult "companies.email_logo"
   sqlResult "companies.signview_logo"
   sqlResult "companies.signview_textcolour"
   sqlResult "companies.signview_textfont"
-  sqlResult "companies.signview_footertextcolour"
-  sqlResult "companies.signview_footertextfont"
+  sqlResult "companies.signview_barscolour"
+  sqlResult "companies.signview_barstextcolour"
   sqlResult "companies.signview_headertextcolour"
   sqlResult "companies.signview_headertextfont"
   sqlResult "companies.signview_headerbackgroundcolour"
@@ -273,9 +265,7 @@ fetchCompanies = kFold decoder []
       email_domain ip_address_mask_list email_headerfont email_font
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
-      signview_textfont signview_footertextcolour signview_footertextfont
-      signview_headertextcolour signview_headertextfont
-      signview_headerbackgroundcolour signview_footerbackgroundcolour
+      signview_textfont signview_barscolour signview_barstextcolour
       signview_backgroundcolour = Company {
         companyid = cid
       , companyexternalid = eid
@@ -301,12 +291,8 @@ fetchCompanies = kFold decoder []
         , companysignviewlogo = signview_logo
         , companysignviewtextcolour = signview_textcolour
         , companysignviewtextfont = signview_textfont
-        , companysignviewfootertextcolour = signview_footertextcolour
-        , companysignviewfootertextfont = signview_footertextfont
-        , companysignviewheadertextcolour = signview_headertextcolour
-        , companysignviewheadertextfont = signview_headertextfont
-        , companysignviewheaderbackgroundcolour = signview_headerbackgroundcolour
-        , companysignviewfooterbackgroundcolour = signview_footerbackgroundcolour
+        , companysignviewbarscolour = signview_barscolour
+        , companysignviewbarstextcolour = signview_barstextcolour
         , companysignviewbackgroundcolour = signview_backgroundcolour
         }
       } : acc
