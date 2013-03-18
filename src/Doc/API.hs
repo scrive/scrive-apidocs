@@ -166,7 +166,7 @@ apiCallCreateFromFile = api $ do
     Just file -> do
       dbUpdate $ AttachFile (documentid doc) (fileid file) actor
       return ()
-  doc' <- apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID (documentid doc)
+  doc' <- apiGuardL  (forbidden "Access to file is forbiden")  $ dbQuery $ GetDocumentByDocumentID (documentid doc)
   _ <- lift $ addDocumentCreateStatEvents (documentid doc) "web"
   Created <$> documentJSON False True True Nothing Nothing doc'
 
