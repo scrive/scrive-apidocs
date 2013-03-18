@@ -27,7 +27,7 @@ sqlUtilsTests env = testGroup "SQLUtils" [
 runDeepTest :: DBT TestEnv () -> TestEnv ()
 runDeepTest action = do
   nex <- getNexus
-  runDBT nex (DBEnvSt Nothing []) $ action
+  runDBT nex (DBEnvSt Nothing [] Nothing) $ action
 
 injectStatement :: [[SqlValue]] -> DBT TestEnv (IORef ([[SqlValue]], Bool))
 injectStatement results = DBT $ do

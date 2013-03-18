@@ -81,7 +81,7 @@ runTestEnv st m = do
   can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
   when can_be_run $ do
     atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
-    E.finally (runDBT (teNexus st) (DBEnvSt Nothing []) $ ununTestEnv st $ withTestDB m) $ do
+    E.finally (runDBT (teNexus st) (DBEnvSt Nothing [] Nothing) $ ununTestEnv st $ withTestDB m) $ do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
@@ -123,7 +123,7 @@ runTestKontraHelper rq ctx tk = do
   nex <- getNexus
   rng <- getCryptoRNGState
   mres <- liftIO . ununWebT $ runServerPartT
-    (runOurServerPartT . runDBT nex (DBEnvSt Nothing []) . runCryptoRNGT rng $
+    (runOurServerPartT . runDBT nex (DBEnvSt Nothing [] Nothing) . runCryptoRNGT rng $
       runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
