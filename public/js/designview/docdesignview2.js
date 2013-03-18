@@ -306,10 +306,14 @@ var DesignViewDocumentView = Backbone.View.extend({
     },
     removeDocumentButton: function() {
         var view = this;
+        var doc = view.model;
         var div = $('<div />');
         div.addClass('design-view-document-remove-button-wrapper');
         div.append(view.removeDocumentButtonLabel());
         div.append(view.removeDocumentButtonIcon());
+        div.click(function() {
+            
+        });
         return div;
     },
     removeDocumentButtonIcon: function() {

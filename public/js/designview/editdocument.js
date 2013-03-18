@@ -101,6 +101,11 @@
             return div;
         },
         text: function() {
+            var view      = this;
+            var viewmodel = view.model;
+            var doc       = viewmodel.document();
+            var author    = doc.author();
+
             var div = $('<div />');
             div.addClass('design-view-action-document-draggables-textbox');
             var wra = $('<div />');
@@ -111,6 +116,10 @@
             var img = $('<img />');
             img.addClass('design-view-action-document-draggables-textbox-icon');
             img.attr('src', '/img/textbox.png');
+
+            if(author) {
+                draggebleField(div, author.newField("standard"));
+            }
 
             div.append(
                 wra.append(
