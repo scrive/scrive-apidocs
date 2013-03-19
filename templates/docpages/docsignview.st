@@ -22,12 +22,15 @@ $doctype()$
         $flashmessages()$
         <div class="body-container">
           <script>
-  
+
               jQuery(function(){
                   var docview = new DocumentSignView({
                       id:"$documentid$"
                       $if(usestandardheaders)$
                       ,  ignoredoclang : true
+                      ,  usebranding : false
+                      $else$
+                      ,  usebranding : true
                       $endif$
                       $if(siglinkid)$
                       , viewer : new DocumentViewer({
@@ -41,7 +44,7 @@ $doctype()$
                 $endif$
                 jQuery(".body-container").replaceWith(docview.view.el);
               });
-  
+
               mixpanel.register({
                 Context : 'Sign view',
                 DocumentID : "$documentid$",
@@ -50,7 +53,7 @@ $doctype()$
               mixpanel.people.set({
                'Last document sign view' : new Date()
               });
-  
+
          </script>
         </div>
       </div>

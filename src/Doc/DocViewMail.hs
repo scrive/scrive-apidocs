@@ -235,20 +235,23 @@ mailInvitation forMail
         F.value "nojavascriptmagic" $ forMail
         F.value "javascriptmagic" $ not forMail
         F.valueM "header" $ do
-            header <- if null documentinvitetext
-                         then if isSignatory msiglink || not forMail
-                                 then renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
+            if null documentinvitetext
+                then if isSignatory msiglink || not forMail
+                                 then do
+                                   res <-  renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
                                      F.value "creatorname" $ creatorname
                                      F.value "personname" $ Just personname <| personname /= "" |> Nothing
                                      F.value "documenttitle" $ documenttitle
-                                 else renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
+                                   makeEditable "customtext" res
+                                 else do
+                                   res <- renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
                                      F.value "creatorname" creatorname
                                      F.value "personname" personname
                                      F.value "documenttitle" $ documenttitle
-                         else renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
+                                   makeEditable "customtext" res
+                else renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
                                      F.value "creatorname" creatorname
-                                     F.value "custommessage" documentinvitetext
-            makeEditable "customtext" header
+                                     F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "link" $ case msiglink of
           Just siglink -> makeFullLink ctx $ show (LinkSignDoc document siglink)
@@ -277,7 +280,7 @@ mailInvitationContent :: (MonadDB m, TemplatesMonad m)
                       -> Bool
                       -> m String
 mailInvitationContent  forMail ctx invitationto document msiglink ispreview = do
-     content <$> mailInvitation forMail ctx invitationto document msiglink ispreview 
+     content <$> mailInvitation forMail ctx invitationto document msiglink ispreview
 
 mailDocumentClosed :: (MonadDB m, TemplatesMonad m) => Context -> Document -> Maybe KontraLink -> SignatoryLink -> m Mail
 mailDocumentClosed ctx document l sl = do
@@ -400,10 +403,9 @@ documentMail haslang ctx doc mailname otherfields = do
 
 companyBrandFields :: Monad m => Company -> Fields m ()
 companyBrandFields company = do
-  F.value "barsbackground"  $ companyemailbackgroundcolour $ companyui company
-  F.value "barstextcolour" $ companyemailtextcolour $ companyui company
+  F.value "background"  $ companyemailbackgroundcolour $ companyui company
+  F.value "textcolor" $ companyemailtextcolour $ companyui company
   F.value "font"  $ companyemailfont $ companyui company
-  F.value "headerfont"  $ companyemailheaderfont $ companyui company
   F.value "bordercolour"  $ companyemailbordercolour $ companyui company
   F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui company
   F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company

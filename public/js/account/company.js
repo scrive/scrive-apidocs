@@ -8,7 +8,6 @@ window.CompanyUI = Backbone.Model.extend({
       this.fetch();
     } else {
       this.set({
-        emailheaderfont: args.companyemailheaderfont,
         emailfont: args.companyemailfont,
         emailbordercolour: args.companyemailbordercolour,
         emailbuttoncolour: args.companyemailbuttoncolour,
@@ -24,9 +23,6 @@ window.CompanyUI = Backbone.Model.extend({
         signviewbackgroundcolour: args.companysignviewbackgroundcolour
       }, {silent: true});
     }
-  },
-  emailheaderfont: function() {
-    return this.get('emailheaderfont');
   },
   emailfont: function() {
     return this.get('emailfont');
@@ -72,7 +68,6 @@ window.CompanyUI = Backbone.Model.extend({
   },
   parse: function(args) {
     return {
-      emailheaderfont: args.companyemailheaderfont,
       emailfont: args.companyemailfont,
       emailbordercolour: args.companyemailbordercolour,
       emailbuttoncolour: args.companyemailbuttoncolour,

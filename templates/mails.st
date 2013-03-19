@@ -270,9 +270,7 @@ mailInvitationCustomInvitationHeader=
 $_mailInvitationCustomInvitationHeader()$:
 <br/>
 <br/>
-<i>"
-$custommessage$
-"</i>
+<i>$custommessage:noescape()$</i>
 ###
 ### Reminding mails - SIGNED
 ###

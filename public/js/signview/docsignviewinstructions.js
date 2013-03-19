@@ -60,11 +60,11 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var document = this.model.document();
     var textcolour = document.signviewtextcolour();
     var textfont = document.signviewtextfont();
-    
-    if (textcolour) {
+
+    if (this.model.usebranding() && textcolour) {
       elem.css('color', textcolour);
     }
-    if (textfont) {
+    if (this.model.usebranding() && textfont) {
       elem.css('font-family', textfont);
     }
   },
@@ -80,7 +80,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
        document.currentSignatory().canSign() &&
        !document.currentSignatory().author()) {
       var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
-      this.styleText(headline);  
+      this.styleText(headline);
       container.append(headline.text(this.welcomeText()));
     }
 

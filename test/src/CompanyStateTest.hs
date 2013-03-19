@@ -64,8 +64,7 @@ test_updateCompanyUI :: TestEnv ()
 test_updateCompanyUI = do
   Company{companyid = cid, companyui} <- addTestCompany ""
   let cui = companyui {
-    companyemailheaderfont = Just "Helvetica Neue, Arial, sans-serif"
-  , companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
+    companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
   , companyemailbordercolour = Just "#dee4ed"
   , companyemailbuttoncolour = Just "215"
   , companyemailemailbackgroundcolour = Just "#0f0"

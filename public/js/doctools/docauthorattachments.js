@@ -6,7 +6,9 @@
 
 var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   defaults : {
-     title  : localization.authorAttachmentBoxHeader
+     title  : localization.authorAttachmentBoxHeader,
+     textcolor : undefined,
+     textfont : undefined
   },
   initialize: function (args) {
   },
@@ -14,10 +16,16 @@ var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
      return this.get("document");
   },
   title : function() {
-     return this.get("title")
+     return this.get("title");
+  },
+  textcolor : function() {
+     return this.get("textcolor");
+  },
+  textfont : function() {
+     return this.get("textfont");
   }
 });
-  
+
 var DocumentAuthorAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
@@ -46,7 +54,7 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     container.append(button.input());
     return container;
   },
-  
+
   render: function() {
     var self = this;
     $(this.el).empty();
@@ -58,16 +66,14 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     var container = $("<div class='authorattachments' />");
 
     var document = this.model.document();
-    var textcolour = document.signviewtextcolour();
-    var textfont = document.signviewtextfont();
     var labelCss = {};
 
     var header = $("<h2/>");
-    if (textcolour) {
-      labelCss['color'] = textcolour;
+    if (this.model.textcolour()) {
+      labelCss['color'] = this.model.textcolour();
     }
-    if (textfont) {
-      labelCss['font-family'] = textfont;
+    if (this.model.textfont()) {
+      labelCss['font-family'] = this.model.textfont();
     }
     header.css(labelCss);
     container.append(header.text(this.model.title()));

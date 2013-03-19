@@ -90,7 +90,6 @@ addNewCompanyBrandingOptions =
   , mgrFrom = 8
   , mgrDo = do
       kRunRaw "ALTER TABLE companies ADD COLUMN email_bordercolour TEXT NULL"
-      kRunRaw "ALTER TABLE companies ADD COLUMN email_headerfont TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_font TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_buttoncolour TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_emailbackgroundcolour TEXT NULL"
@@ -118,6 +117,7 @@ addSignviewBrandingOptions =
       kRunRaw "UPDATE companies SET email_emailbackgroundcolour = bars_background"
       kRunRaw "UPDATE companies SET email_logo = logo"
 
+      kRunRaw "ALTER TABLE companies DROP COLUMN bars_background"
       kRunRaw "ALTER TABLE companies DROP COLUMN bars_background"
       kRunRaw "ALTER TABLE companies DROP COLUMN bars_textcolour"
       kRunRaw "ALTER TABLE companies DROP COLUMN logo"

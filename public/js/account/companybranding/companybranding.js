@@ -73,7 +73,6 @@ window.CompanyBrandingModel = Backbone.Model.extend({
         zip: this.get("zip"),
         city: this.get("city"),
         country: this.get("country"),
-        companyemailheaderfont: this.emailBranding().emailheaderfont().customised() ? this.emailBranding().emailheaderfont().font() : '',
         companyemailfont: this.emailBranding().emailfont().customised() ? this.emailBranding().emailfont().font() : '',
         companyemailbordercolour: this.emailBranding().emailbordercolour().customised() ? this.emailBranding().emailbordercolour().colour() : '',
         companyemailbuttoncolour: this.emailBranding().emailbuttoncolour().customised() ? this.emailBranding().emailbuttoncolour().colour() : '',

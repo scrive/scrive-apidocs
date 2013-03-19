@@ -30,6 +30,7 @@ ignore  css/fonts
 
 set systemPage
  css css/calendar.css
+ css css/colorpicker.css
  less less/utils.less
  less less/branding/index.less
  less less/document-pages.less
@@ -60,6 +61,7 @@ set systemPage
  js   libs/jquery.MultiFile.js
  js   libs/jquery.hashchange.js
  jsx  tiny_mce/jquery.tinymce.js
+ js   libs/colorpicker.js
  js   libs/json2.js
  js   libs/jstz.min.js
  js   libs/underscore.js

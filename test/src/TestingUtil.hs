@@ -89,8 +89,7 @@ instance Arbitrary Company where
                      }
     where
       emptyCompanyUI = CompanyUI {
-          companyemailheaderfont = Nothing
-        , companyemailfont = Nothing
+          companyemailfont = Nothing
         , companyemailbordercolour = Nothing
         , companyemailbuttoncolour = Nothing
         , companyemailemailbackgroundcolour = Nothing

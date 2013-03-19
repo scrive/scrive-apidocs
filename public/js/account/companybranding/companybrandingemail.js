@@ -34,11 +34,6 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
           colour: companyui.emailtextcolour(),
           label: localization.companyBranding.customiseTextColour
         }),
-        emailheaderfont: new CompanyBrandingFont({
-          customised: companyui.emailheaderfont() != '',
-          font: companyui.emailheaderfont(),
-          label: localization.companyBranding.customiseHeaderFontLabel
-        }),
         emailfont: new CompanyBrandingFont({
           customised: companyui.emailfont() != '',
           font: companyui.emailfont(),
@@ -52,7 +47,7 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
         }),
         emailbuttoncolour: new CompanyBrandingColour({
           customised: companyui.emailbuttoncolour() != '',
-          defaultcolour: '215',
+          defaultcolour: '#3E5474',
           colour: companyui.emailbuttoncolour(),
           label: localization.companyBranding.customiseButtonColourLabel
         })
@@ -60,9 +55,6 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
     },
     companyui : function() {
       return this.get("companyui");
-    },
-    emailheaderfont: function() {
-      return this.get('emailheaderfont');
     },
     emailfont: function() {
       return this.get('emailfont');
@@ -134,10 +126,10 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
 
     var contentmainrow = $('<tr/>').append($('<td/>').append(this.headertable).append(this.contenttable));
 
-    var emailpreviewfooter = $('<div class="emailpreviewfooter"/>').text(localization.companyBranding.sampleEmailFooter);
+    this.emailpreviewfooter = $('<div class="emailpreviewfooter"/>').text(localization.companyBranding.sampleEmailFooter);
     var emailpreviewfootercell = $('<td/>');
     emailpreviewfootercell.append($('<br/>'));
-    emailpreviewfootercell.append(emailpreviewfooter);
+    emailpreviewfootercell.append(this.emailpreviewfooter);
     emailpreviewfootercell.append($('<br/>'));
 
     var emailpreviewfootersubtable = $('<table border="0" cellpadding="0" cellspacing="0" width="100%"/>');
@@ -169,13 +161,12 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
   },
   bindChanges : function() {
       var self = this;
-      this.model.emailheaderfont().onChange(function(font) {self.changeHeaderFont(font);});
       this.model.emailfont().onChange(function(font) {self.changeFont(font);});
       this.model.emailbordercolour().onChange(function(colour) {self.changeBorderColour(colour);});
-      this.model.emailbuttoncolour().onChange(function(colour) {self.changeButtonColour(colour);});
+      this.model.emailbuttoncolour().onChange(function(colour,customised) {self.changeButtonColour(colour,customised);});
       this.model.emailemailbackgroundcolour().onChange(function(colour) {self.changeEmailBackgroundColour(colour);});
       this.model.emailbackgroundcolour().onChange(function(colour) {self.changeBBColour(colour);});
-      this.model.emailtextcolour().onChange(function(colour) {self.changeBTColour(colour);});;
+      this.model.emailtextcolour().onChange(function(colour,customised) {self.changeBTColour(colour,customised);});;
       this.model.emaillogo().onChange(function(logo) {self.changeLogo(logo);});
   },
   changeLogo : function(logo) {
@@ -188,8 +179,18 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.headersubtablecell.css('background-color', bbcolour);
     this.emailpreviewfootertable.css('background-color', bbcolour);
   },
-  changeBTColour: function(btcolour) {
+  changeBTColour: function(btcolour,customised) {
     this.documentcontent.css('color', btcolour);
+    if (customised) {
+      this.subjectspan.css('color', btcolour);
+      this.poweredbyscrivespan.css('color', btcolour);
+      this.emailpreviewfooter.css('color', btcolour);
+    }
+    else {
+      this.subjectspan.css('color', '');
+      this.poweredbyscrivespan.css('color', '');
+      this.emailpreviewfooter.css('color', '');
+    }
   },
   changeBorderColour : function(bordercolour) {
     this.headertable.css('border-bottom-color', bordercolour);
@@ -198,20 +199,29 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.documentpreviewdiv.css('border', '1px solid ' + bordercolour);
   },
   changeFont : function(font) {
+    this.subjectspan.css('font-family', font);
+    this.poweredbyscrivespan.css('font-family', font);
     this.documentcontent.css('font-family', font);
+    this.emailpreviewfooter.css('font-family', font);
   },
-  changeHeaderFont : function(headerfont) {
-    this.subjectspan.css('font-family', headerfont);
-    this.poweredbyscrivespan.css('font-family', headerfont);
-  },
-  changeButtonColour : function(buttoncolour) {
-    this.emailpreviewbutton.css({'background': 'hsl(' + buttoncolour + ', 30%, 35%)',
-                                 'border': '2px solid hsl(' + buttoncolour + ', 30%, 23%)',
-                                 '-webkit-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                 '-moz-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                 '-ms-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                 '-o-box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px',
-                                 'box-shadow': 'inset hsl(' + buttoncolour + ', 30%, 60%) 0 0 0 1px'});
+  changeButtonColour : function(buttoncolour,customised) {
+    if (customised) {
+      this.emailpreviewbutton.css('background',  buttoncolour)
+                           .css('border', '2px solid '+ buttoncolour)
+                           .css('-webkit-box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px')
+                           .css('-moz-box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px')
+                           .css('-ms-box-shadow', 'inset ' +' #CCCCCC' + ' 0 0 0 1px')
+                           .css('-o-box-shadow','inset ' + '#CCCCCC' + ', 0 0 0 1px')
+                           .css('box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px');
+    } else {
+    this.emailpreviewbutton.css({'background': 'hsl(215 , 30%, 35%)',
+                                 'border': '2px solid hsl(215, 30%, 23%)',
+                                 '-webkit-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
+                                 '-moz-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
+                                 '-ms-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
+                                 '-o-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
+                                 'box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px'});
+    }
   },
   changeEmailBackgroundColour : function(emailbackgroundcolour) {
     this.container.css('background-color', emailbackgroundcolour);
@@ -219,11 +229,10 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
   render: function() {
     this.changeLogo(this.model.emaillogo().logo());
     this.changeBBColour(this.model.emailbackgroundcolour().colour());
-    this.changeBTColour(this.model.emailtextcolour().colour());
+    this.changeBTColour(this.model.emailtextcolour().colour(),this.model.emailtextcolour().customised());
     this.changeBorderColour(this.model.emailbordercolour().colour());
     this.changeFont(this.model.emailfont().font());
-    this.changeHeaderFont(this.model.emailheaderfont().font());
-    this.changeButtonColour(this.model.emailbuttoncolour().colour());
+    this.changeButtonColour(this.model.emailbuttoncolour().colour(),this.model.emailtextcolour().customised());
     this.changeEmailBackgroundColour(this.model.emailemailbackgroundcolour().colour());
   }
 });
@@ -245,7 +254,6 @@ window.CompanyBrandingEmailView = Backbone.View.extend({
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.emaillogo().el()));
 
-    options.append($("<div class='option' style='display:block'/>").append(this.model.emailheaderfont().el()));
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.emailfont().el()));
 
@@ -273,7 +281,6 @@ window.CompanyBrandingEmail = function(args) {
     return {
       refresh: function() {view.render();},
       el : function() { return $(view.el); },
-      emailheaderfont: function() {   return model.emailheaderfont() },
       emailfont: function() {   return model.emailfont() },
       emailbordercolour: function() {   return model.emailbordercolour() },
       emailbuttoncolour: function() {   return model.emailbuttoncolour() },

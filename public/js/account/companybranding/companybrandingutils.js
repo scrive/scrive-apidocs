@@ -69,10 +69,28 @@ var CompanyBrandingColourView = Backbone.View.extend({
 
     this.display = $("<div class='colourdisplay' />");
     this.display.css("background-color", model.colour());
+    this.colourpicker = $("<div style='display:none'/>");
+    self.colourpicker.ColorPicker({
+      flat: true,
+      color: '#00ff00',
+      onChange: function(hsb, hex, rgb) {
+          model.setColour("#" + hex);
+        }
+      });
+    var widt = false;
+    this.display.click( function() {
+      if (!widt) self.colourpicker.ColorPickerSetColor(self.model.colour());
+      self.colourpicker.css('display', widt ? 'none' : 'block');
+        widt = !widt;
+    });
+
+
 
     this.customdiv = $("<div />");
     this.customdiv.append(this.input);
     this.customdiv.append(this.display);
+    this.customdiv.append(this.colourpicker);
+
 
     var container = $("<div/>");
     container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));

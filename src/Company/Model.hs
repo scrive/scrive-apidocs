@@ -56,7 +56,6 @@ data CompanyInfo = CompanyInfo {
 
 data CompanyUI = CompanyUI {
     companyemailbordercolour :: Maybe String
-  , companyemailheaderfont :: Maybe String
   , companyemailfont :: Maybe String
   , companyemailbuttoncolour :: Maybe String
   , companyemailemailbackgroundcolour :: Maybe String
@@ -185,7 +184,6 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
   update (UpdateCompanyUI cid cui) = do
     kRun01 $ sqlUpdate "companies" $ do
       sqlSet "email_bordercolour" $ companyemailbordercolour cui
-      sqlSet "email_headerfont" $ companyemailheaderfont cui
       sqlSet "email_font" $ companyemailfont cui
       sqlSet "email_buttoncolour" $ companyemailbuttoncolour cui
       sqlSet "email_emailbackgroundcolour" $ companyemailemailbackgroundcolour cui
@@ -238,7 +236,6 @@ selectCompaniesSelectors = do
   sqlResult "companies.country"
   sqlResult "companies.email_domain"
   sqlResult "companies.ip_address_mask_list"
-  sqlResult "companies.email_headerfont"
   sqlResult "companies.email_font"
   sqlResult "companies.email_bordercolour"
   sqlResult "companies.email_buttoncolour"
@@ -258,7 +255,7 @@ fetchCompanies :: MonadDB m => DBEnv m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid eid name number address zip' city country
-      email_domain ip_address_mask_list email_headerfont email_font
+      email_domain ip_address_mask_list email_font
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
       signview_textfont signview_barscolour signview_barstextcolour
@@ -276,8 +273,7 @@ fetchCompanies = kFold decoder []
         , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
         }
       , companyui = CompanyUI {
-          companyemailheaderfont = email_headerfont
-        , companyemailfont = email_font
+          companyemailfont = email_font
         , companyemailbordercolour = email_bordercolour
         , companyemailbuttoncolour = email_buttoncolour
         , companyemailemailbackgroundcolour = email_emailbackgroundcolour

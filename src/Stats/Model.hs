@@ -245,7 +245,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.zip"
   <> ", c.city"
   <> ", c.country"
-  <> ", c.email_headerfont"
   <> ", c.email_font"
   <> ", c.email_bordercolour"
   <> ", c.email_buttoncolour"
@@ -279,7 +278,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
      email lang customfooter company_name company_number is_free cid eid
-     name number address zip' city country email_headerfont email_font
+     name number address zip' city country email_font
      email_bordercolour email_buttoncolour email_emailbackgroundcolour
      email_backgroundcolour email_textcolour email_logo signview_logo
      signview_textcolour signview_textfont signview_barscolour
@@ -326,8 +325,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companyipaddressmasklist = maybe [] $(read) ip_address_mask
                 }
               , companyui = CompanyUI {
-                  companyemailheaderfont = email_headerfont
-                , companyemailfont = email_font
+                  companyemailfont = email_font
                 , companyemailbordercolour = email_bordercolour
                 , companyemailbuttoncolour = email_buttoncolour
                 , companyemailemailbackgroundcolour = email_emailbackgroundcolour

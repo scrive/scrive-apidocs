@@ -45,8 +45,7 @@ testBrandedDocumentMails mailTo = do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
-        companyemailheaderfont = Just "Helvetica Neue, Arial, sans-serif"
-      , companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
+        companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
       , companyemailbordercolour = Just "#dee4ed"
       , companyemailbuttoncolour = Just "215"
       , companyemailemailbackgroundcolour = Just "#0f0"

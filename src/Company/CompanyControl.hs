@@ -79,7 +79,6 @@ handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
 
 companyUiFromJSON :: Kontrakcja m => JSValue ->  m CompanyUI
 companyUiFromJSON jsv = withJSValue jsv $ do
-  jsoncompanyemailheaderfont <- fromJSValueField "companyemailheaderfont"
   jsoncompanyemailfont <- fromJSValueField "companyemailfont"
   jsoncompanyemailbordercolour <- fromJSValueField "companyemailbordercolour"
   jsoncompanyemailbuttoncolour <- fromJSValueField "companyemailbuttoncolour"
@@ -94,8 +93,7 @@ companyUiFromJSON jsv = withJSValue jsv $ do
   jsoncompanysignviewbarstextcolour <- fromJSValueField "companysignviewbarstextcolour"
   jsoncompanysignviewbackgroundcolour <- fromJSValueField "companysignviewbackgroundcolour"
   return $ CompanyUI {
-    companyemailheaderfont = maybeS jsoncompanyemailheaderfont
-  , companyemailfont = maybeS jsoncompanyemailfont
+    companyemailfont = maybeS jsoncompanyemailfont
   , companyemailbordercolour = maybeS jsoncompanyemailbordercolour
   , companyemailbuttoncolour = maybeS jsoncompanyemailbuttoncolour
   , companyemailemailbackgroundcolour = maybeS jsoncompanyemailemailbackgroundcolour
@@ -127,7 +125,6 @@ handleCompanyEmailLogo = handleCompanyLogo companyemaillogo
 
 handleGetCompanyJSON :: Kontrakcja m => Maybe CompanyID -> m JSValue
 handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, company) -> runJSONGenT $ do
-    value "companyemailheaderfont" $ fromMaybe "" $ companyemailheaderfont $ companyui company
     value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui company
     value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui company
     value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui company

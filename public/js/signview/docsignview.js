@@ -9,7 +9,8 @@
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
     justsaved: false,
-    ignoredoclang : false
+    ignoredoclang : false,
+    usebranding : true
   },
   initialize : function(args){
       var model = this;
@@ -31,6 +32,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   ignoredoclang : function() {
        return this.get("ignoredoclang") == true;
+  },
+  usebranding : function() {
+       return this.get("usebranding");
   },
   justSaved: function() {
     return this.get('justsaved');
@@ -144,10 +148,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
        var textfont = document.signviewtextfont();
        var textstyle = {};
 
-       if (textcolour) {
+       if (textcolour && this.usebranding()) {
          textstyle['color'] = textcolour;
        }
-       if (textfont) {
+       if (textfont  && this.usebranding()) {
          textstyle['font-family'] = textfont;
        }
 
@@ -179,7 +183,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             el: $("<div class='section spacing'/>"),
                             title: (this.document().currentSignatory().attachments().length > 1) ?
                                     localization.docsignview.authorAttachmentsTitleForLots :
-                                    localization.docsignview.authorAttachmentsTitleForOne
+                                    localization.docsignview.authorAttachmentsTitleForOne,
+                            textcolour : this.usebranding() ? this.document().signviewtextcolour() : undefined,
+                            textfont : this.usebranding() ? this.document().signviewtextcolour() : undefined
                         })
         }, {silent : true});
       return this.get('authorattachmentssection');
@@ -190,10 +196,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var textfont = document.signviewtextfont();
       var textstyle = {};
 
-      if (textcolour) {
+      if (textcolour && this.usebranding()) {
         textstyle['color'] = textcolour;
       }
-      if (textfont) {
+      if (textfont && this.usebranding()) {
         textstyle['font-family'] = textfont;
       }
 
@@ -275,10 +281,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
      var textfont = document.signviewtextfont();
      var arrowLabelCss = {};
 
-     if (textcolour) {
-       arrowLabelCss['color'] = textcolour;
-     }
-     if (textfont) {
+     if (textfont  && this.usebranding()) {
        arrowLabelCss['font-family'] = textfont;
      }
      if (this.get("filltasks") == undefined) {
@@ -403,7 +406,7 @@ var DocumentSignViewView = Backbone.View.extend({
     },
     setBackgroundColour: function() {
       var color = this.model.document().signviewbackgroundcolour();
-      if (color) {
+      if (color && this.model.usebranding()) {
         $('.signview').css('background-image','none').css('background-color', color);
       }
     },
@@ -474,7 +477,8 @@ var DocumentSignViewView = Backbone.View.extend({
 window.DocumentSignView = function(args){
         this.model = new DocumentSignViewModel( {
                         document : new Document({ id: args.id, viewer: args.viewer }),
-                        ignoredoclang : args.ignoredoclang
+                        ignoredoclang : args.ignoredoclang,
+                        usebranding : args.usebranding
                     });
         this.view = new DocumentSignViewView({
                         model: this.model,
