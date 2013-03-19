@@ -44,6 +44,7 @@ createExternalSender name program createargs = Sender { senderName = name, sendM
     send mail@Mail{..} = do
       content <- assembleContent mail
       liftIO $ do
+        Log.mailingServer $ "Curl call: " ++ show (program, createargs mail)
         (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
         let receivers = intercalate ", " (map addrEmail mailTo)
         case code of
@@ -75,9 +76,9 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
            then [] else
            [ "--user"
            , smtpUser config ++ ":" ++ smtpPassword config
-           , smtpAddr config
            ]) ++
-      [ "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
+      [ smtpAddr config
+      , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 
 createLocalSender :: SenderConfig -> Sender
