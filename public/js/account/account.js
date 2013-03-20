@@ -177,7 +177,7 @@ var AccountView = Backbone.View.extend({
                   , account.noCompany() || account.companyAdmin() ? [account.subscriptionTab()] : []
                 ])
        });
-       container.append(tabs.view.el);
+       container.append(tabs.el());
        return this;
     }
 });

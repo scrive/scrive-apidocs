@@ -236,12 +236,10 @@ window.KontraTabs = function(args){
             self.model.activate(tab);
           });
         });
-        return {
-              model    : this.model
-            , view     : this.view
-            , next     : function()    { this.model.activateNext();}
-            , activate : function(tab) { this.model.activate(tab);}
-         };
+
+        return {el: function() {return self.view.el;},
+                next: function() {self.model.activateNext();},
+                activate: function(tab) {self.model.activate(tab);}};
 };
 
 

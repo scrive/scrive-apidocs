@@ -1070,7 +1070,7 @@ var DesignViewView = Backbone.View.extend({
                   })
                 ]
         });
-        this.contrainer.append(BlockingInfo.el()).append($(this.tabs.view.el));
+        this.contrainer.append(BlockingInfo.el()).append(this.tabs.el());
 
         new ScrollFixer({object : designbody1.add(designbody2)});
     }
