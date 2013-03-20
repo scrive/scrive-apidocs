@@ -4,7 +4,6 @@ import Control.Applicative
 import Control.Monad.Trans (liftIO)
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import Text.JSON
 import Text.JSON.FromJSValue
 import Test.Framework
 import qualified Data.ByteString.Base64 as B64
@@ -16,7 +15,6 @@ import CompanyAccounts.Model
 import Context
 import DB
 import Utils.Default
-import Utils.Either
 import Redirect
 import TestingUtil
 import TestKontra as T
@@ -37,17 +35,8 @@ test_handleGetCompanyJSON = do
 
   req <- mkRequest GET []
   (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON Nothing
-
-  let ejsonemailemailbackgroundcolour = getemailemailbackgroundcolourFromJSON jsv
-  assertBool "Able to get emailemailbackgroundcolour from json" (isRight ejsonemailemailbackgroundcolour)
-
-  let (Right jsonemailemailbackgroundcolour) = ejsonemailemailbackgroundcolour
-  assertEqual "JSON emailemailbackgroundcolour matches company id" (fromJust $ companyemailemailbackgroundcolour $ companyui company) jsonemailemailbackgroundcolour
-  where
-    getemailemailbackgroundcolourFromJSON :: JSValue -> Either String String
-    getemailemailbackgroundcolourFromJSON jsv = maybe (Left "Unable to parse JSON!") Right $ do
-      (x :: String) <- fromJSValueField "emailemailbackgroundcolour" jsv
-      return x
+  (ejsonemailemailbackgroundcolour :: Maybe String) <- withJSValue jsv $ fromJSValueField "companyemailemailbackgroundcolour"
+  assertEqual "JSON companyemailemailbackgroundcolour matches company id"  (fromMaybe "" $ companyemailemailbackgroundcolour $ companyui company) (fromMaybe "" ejsonemailemailbackgroundcolour)
 
 test_settingUIWithHandlePostCompany :: TestEnv ()
 test_settingUIWithHandlePostCompany = do
@@ -55,7 +44,7 @@ test_settingUIWithHandlePostCompany = do
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
-  logo <- liftIO $ BS.readFile "public/img/email-logo.png"
+  logo <- liftIO $ BS.readFile "public/img/logo_email.png"
   let logo64 = BS.unpack $ B64.encode logo
 
   req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewbarscolour\":\"color6\",\"companysignviewbarstextcolour\":\"color7\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"" ++ logo64 ++ "\",\"companysignviewlogo\":\"" ++ logo64 ++ "\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
@@ -74,10 +63,10 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Signview text colour was set" (Just "color5") $ companysignviewtextcolour $ companyui newcompany1
   assertEqual "Signview text font was set" (Just "font3") $ companysignviewtextfont $ companyui newcompany1
   assertEqual "Signview bars colour was set" (Just "color6") $ companysignviewbarscolour $ companyui newcompany1
-  assertEqual "Signview bars text color was set" (Just "font7") $ companysignviewbarstextcolour $ companyui newcompany1
+  assertEqual "Signview bars text color was set" (Just "color7") $ companysignviewbarstextcolour $ companyui newcompany1
   assertEqual "Signview background colour was set" (Just "color10") $ companysignviewbackgroundcolour $ companyui newcompany1
 
-  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"\",\"companyemailbordercolour\":\"\",\"companyemailbuttoncolour\":\"\",\"companyemailemailbackgroundcolour\":\"\",\"companyemailbackgroundcolour\":\"\",\"companyemailtextcolour\":\"\",\"companysignviewtextcolour\":\"\",\"companysignviewtextfont\":\"\",\"companysignviewbarscolour\":\"\",\"companysignviewbarstextcolour\":\"\",\"companysignviewbackgroundcolour\":\"\",\"companyemaillogo\":\"\",\"companysignviewlogo\":\"\",\"companyemaillogochanged\":\"false\",\"companysignviewlogochanged\":\"false\"}")]
+  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"\",\"companyemailbordercolour\":\"\",\"companyemailbuttoncolour\":\"\",\"companyemailemailbackgroundcolour\":\"\",\"companyemailbackgroundcolour\":\"\",\"companyemailtextcolour\":\"\",\"companysignviewtextcolour\":\"\",\"companysignviewtextfont\":\"\",\"companysignviewbarscolour\":\"\",\"companysignviewbarstextcolour\":\"\",\"companysignviewbackgroundcolour\":\"\"}")]
   (res2, _ctx') <- runTestKontra req2 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res2)
@@ -94,8 +83,6 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Signview bars colour reset" Nothing $ companysignviewbarscolour $ companyui newcompany2
   assertEqual "Signview bars text colour reset" Nothing $ companysignviewbarstextcolour $ companyui newcompany2
   assertEqual "Signview background colour reset" Nothing $ companysignviewbackgroundcolour $ companyui newcompany2
-  assertEqual "Email logo still intact" (companyemaillogo $ companyui newcompany1) (companyemaillogo $ companyui newcompany2)
-  assertEqual "Signview logo still intact" (companysignviewlogo $ companyui newcompany1) (companysignviewlogo $ companyui newcompany2)
 
   req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewbarscolour\":\"color6\",\"companysignviewbarstextcolour\":\"color7\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"\",\"companysignviewlogo\":\"\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
   (res3, _ctx') <- runTestKontra req3 ctx $ handlePostCompany Nothing >>= sendRedirect

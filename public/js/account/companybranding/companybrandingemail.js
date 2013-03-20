@@ -102,7 +102,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.headertable = $('<table class="emailpreviewheadertable" border="0" cellpadding="40" cellspacing="0"width="600"/>');
     this.headertable.append($('<tr/>').append(this.headersubtablecell));
 
-    var previewtextcontent = $('<div class="emailpreviewcontent"/>').text(localization.companyBranding.sampleEmailContent);
+    var previewtextcontent = $('<div class="emailpreviewcontent"/>').append(localization.companyBranding.sampleEmailContent);
     this.emailpreviewbutton = $('<a href="#" onclick="return false" class="emailpreviewbutton"/>').text(localization.companyBranding.sampleEmailButtonLabel);
     var divcontent = $('<div class="divcontent"/>');
     divcontent.append(previewtextcontent);
