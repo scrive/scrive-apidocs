@@ -7,7 +7,7 @@
 var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   defaults : {
      title  : localization.authorAttachmentBoxHeader,
-     textcolor : undefined,
+     textcolour : undefined,
      textfont : undefined
   },
   initialize: function (args) {
@@ -18,8 +18,8 @@ var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   title : function() {
      return this.get("title");
   },
-  textcolor : function() {
-     return this.get("textcolor");
+  textcolour : function() {
+     return this.get("textcolour");
   },
   textfont : function() {
      return this.get("textfont");
@@ -44,11 +44,7 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
   },
   authorAttachmentFile: function(attachment, labelCss) {
     var container = $("<div class='item' />");
-    var labelstyle = '';
-    for (var key in labelCss) {
-      labelstyle += key + ': ' + labelCss[key] + ' !important; ';
-    }
-    var button = Button.init({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', labelstyle: labelstyle, onClick: function() {
+    var button = Button.init({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', onClick: function() {
                         window.open(attachment.downloadLink(), '_blank');
                         }});
     container.append(button.input());

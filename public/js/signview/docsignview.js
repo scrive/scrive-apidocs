@@ -185,7 +185,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                     localization.docsignview.authorAttachmentsTitleForLots :
                                     localization.docsignview.authorAttachmentsTitleForOne,
                             textcolour : this.usebranding() ? this.document().signviewtextcolour() : undefined,
-                            textfont : this.usebranding() ? this.document().signviewtextcolour() : undefined
+                            textfont : this.usebranding() ? this.document().signviewtextfont() : undefined
                         })
         }, {silent : true});
       return this.get('authorattachmentssection');

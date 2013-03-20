@@ -22,8 +22,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   removeButton: function() {
     var attachment = this.model;
     var deleteurl = this.apiURL();
-    var labelstyle = this.labelstyle;
-    var button = Button.init({color: "red", text: localization.deletePDF, size:'tiny', labelstyle: labelstyle, onClick: function() {
+    var button = Button.init({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
             attachment.loading();
             $.ajax(deleteurl, {
               type: 'DELETE',
@@ -43,7 +42,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   uploadButton: function() {
     var attachment = this.model;
     var uploadurl = this.apiURL();
-    var labelstyle = this.labelstyle;
     return UploadButton.init({
       width: 120,
       size : 'tiny',
@@ -51,7 +49,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       text: localization.signatoryAttachmentUploadButton,
       submitOnUpload: true,
       showLoadingDialog: false,
-      labelstyle: labelstyle, 
       onClick: function() {
         return true;
       },
@@ -90,8 +87,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   reviewButton: function() {
       var model = this.model;
-      var labelstyle = this.labelstyle;
-      var button = Button.init({color: "green", text: localization.reviewPDF, size:'tiny', cssClass : 's-review-sigattachment', labelstyle: labelstyle, onClick: function() {
+      var button = Button.init({color: "green", text: localization.reviewPDF, size:'tiny', cssClass : 's-review-sigattachment', onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
           }});
       return button;

@@ -32,6 +32,17 @@ window.CompanyBrandingModel = Backbone.Model.extend({
     ready : function() {
         return (this.user() != undefined && this.user().ready()) || this._companyui != undefined;
     },
+    refresh : function() {
+      if (this.user() != undefined) {
+          this.user().set({"ready" : false});
+          this.user().fetch({cache: false});
+      }
+      else if (this._companyui != undefined) {
+          this.user().set({"ready" : false});
+          this._companyui.fetch({cache: false});
+      }
+      this.reset();
+    },
     user : function() {
       return this.get("user");
     },
@@ -95,6 +106,7 @@ window.CompanyBrandingView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, "render");
     this.model.bind("change:ready", this.render);
+    this.model.bind("reset", this.render);
     this.render();
   },
   saveButton: function() {
@@ -116,7 +128,7 @@ window.CompanyBrandingView = Backbone.View.extend({
     if (!model.ready()) {
       return this;
     }
-    $(this.el).empty();
+    $(this.el).children().detach();
     var container = $("<div class='tab-content companybranding' />");
     $(this.el).append(container);
     var tabs = new KontraTabs({
@@ -147,7 +159,7 @@ window.CompanyBranding = function(args) {
     var model = new CompanyBrandingModel(args);
     var view = new CompanyBrandingView({ model: model, el:$("<div class='tab-container account'/>") });
     return {
-      refresh: function() {view.render();},
+      refresh: function() {model.refresh();},
       el : function() { return $(view.el); }
     };
 };

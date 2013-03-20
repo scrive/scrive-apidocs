@@ -73,7 +73,6 @@ var DocumentSignSignatoriesListView = Backbone.View.extend({
           if(index === 0)
               sigdiv.addClass('first');
           var name       = $("<div class='name' />").text(signatory.nameOrEmail());
-debugger;
           name.css(sigbox.textstyle());
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle' />");
