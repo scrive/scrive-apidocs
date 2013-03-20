@@ -21,7 +21,6 @@ module Doc.DocView (
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
-  , documentsToFixView
   , documentJSON
   , gtVerificationPage
   ) where
@@ -390,16 +389,6 @@ documentStatusFields document = do
   F.value "awaitingauthor" $ canAuthorSignNow document
   F.value "datamismatch" $ (documentstatus document == Canceled
       && (any (isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
-
--- This is temporary method used to see list of broken documents
-documentsToFixView :: TemplatesMonad m => [Document] -> m String
-documentsToFixView docs = do
-    renderTemplate "documentsToFixView" $ do
-        F.objects "documents" $ for docs $ \doc -> do
-            F.value "title" $ documenttitle doc
-            F.value "id" $ show $ documentid doc
-            F.value "involved" $ map getEmail  $ documentsignatorylinks doc
-            F.value "cdate" $  show $ documentctime doc
 
 -- Page for GT verification
 gtVerificationPage :: TemplatesMonad m => m String
