@@ -117,6 +117,7 @@ addSignviewBrandingOptions =
       kRunRaw "UPDATE companies SET email_backgroundcolour = bars_background"
       kRunRaw "UPDATE companies SET email_logo = logo"
 
+      kRunRaw "ALTER TABLE companies DROP COLUMN IF EXISTS email_headerfont"
       kRunRaw "ALTER TABLE companies DROP COLUMN bars_background"
       kRunRaw "ALTER TABLE companies DROP COLUMN bars_textcolour"
       kRunRaw "ALTER TABLE companies DROP COLUMN logo"
