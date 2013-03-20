@@ -112,7 +112,7 @@ addSignviewBrandingOptions =
       kRunRaw "ALTER TABLE companies ADD COLUMN signview_backgroundcolour TEXT NULL"
 
       kRunRaw "UPDATE companies SET signview_barscolour = bars_background"
-      kRunRaw "UPDATE companies SET signview_barstextcolour = bars_background"
+      kRunRaw "UPDATE companies SET signview_barstextcolour = bars_textcolour"
       kRunRaw "UPDATE companies SET signview_logo = logo"
       kRunRaw "UPDATE companies SET email_emailbackgroundcolour = bars_background"
       kRunRaw "UPDATE companies SET email_logo = logo"
