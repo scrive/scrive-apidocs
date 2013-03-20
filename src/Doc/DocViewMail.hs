@@ -334,7 +334,6 @@ mailMismatchAuthor ctx document authorname badmessages badname bademail authorla
     documentMail authorlang ctx document "mailMismatchAuthor" $ do
         F.value "messages" $ concat $ map para $ badmessages
         F.value "authorname" authorname
-        F.value "doclink" $ ctxhostpart ctx ++ (show $ LinkDesignDoc (documentid document))
         F.value "bademail" bademail
         F.value "badname" badname
         F.value "loginlink" $ show $ LinkLogin (getLang authorlang) NotLogged

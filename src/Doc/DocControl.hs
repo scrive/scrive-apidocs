@@ -598,7 +598,7 @@ splitUpDocument doc = do
             (_prob:_, _) -> do
                addFlashM flashMessageInvalidCSV
                Log.debug $ "splitUpDocument: back to document"
-               return $ Left $ LinkDesignDoc $ (documentid doc)
+               return $ Left $ LinkIssueDoc $ (documentid doc)
             ([], CleanCSVData{csvbody}) -> do
                actor <- guardJustM $ mkAuthorActor <$> getContext
                Right <$> splitUpDocumentWorker doc actor csvbody

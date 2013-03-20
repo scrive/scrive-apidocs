@@ -200,4 +200,3 @@ pageAttachment' Attachment{attachmentid, attachmenttitle} =
       F.value "id" $ show attachmentid
       F.value "title" attachmenttitle
       F.value "editable" $ True
-      F.value "renamelink" $ show $ LinkRenameAttachment attachmentid
