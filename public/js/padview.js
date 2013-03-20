@@ -78,6 +78,7 @@ window.PadQueueView = Backbone.View.extend({
         var padqueue = this.model;
         var doc =  new DocumentSignView({
                     id: padqueue.documentid(),
+                    usebranding : true,
                     viewer : new DocumentViewer({
                         signatoryid : padqueue.signatorylinkid()
                       })

@@ -250,7 +250,7 @@ window.Document = Backbone.Model.extend({
         function callDone() {
             if (done) done();
         }
-        window.takeScreenshot( 
+        window.takeScreenshot(
             function(canvas) {
                 var shot = [ new Date().getTime()/1000, canvas.toDataURL("image/jpeg",0.7) ];
                 if (first)
@@ -543,14 +543,23 @@ window.Document = Backbone.Model.extend({
     currentSignatoryCanSign: function() {
       return this.currentSignatory() && this.currentSignatory().canSign();
     },
-    logo: function() {
-        return this.get("logo");
+    signviewlogo: function() {
+      return this.get('signviewlogo');
     },
-    barsbackgroundcolor: function() {
-        return this.get("barsbackgroundcolor");
+    signviewtextcolour: function() {
+      return this.get('signviewtextcolour');
     },
-    barsbackgroundtextcolor: function() {
-        return this.get("barsbackgroundtextcolor");
+    signviewtextfont: function() {
+      return this.get('signviewtextfont');
+    },
+    signviewbarscolour: function() {
+      return this.get('signviewbarscolour');
+    },
+    signviewbarstextcolour: function() {
+      return this.get('signviewbarstextcolour');
+    },
+    signviewbackgroundcolour: function() {
+      return this.get('signviewbackgroundcolour');
     },
     authoruser: function() {
         return this.get("authoruser");
@@ -623,9 +632,12 @@ window.Document = Backbone.Model.extend({
        template: args.template,
        daystosign: args.daystosign,
        invitationmessage: args.invitationmessage,
-       logo: args.logo,
-       barsbackgroundcolor: args.barsbackgroundcolor,
-       barsbackgroundtextcolor: args.barsbackgroundtextcolor,
+       signviewlogo: args.signviewlogo,
+       signviewtextcolour: args.signviewtextcolour,
+       signviewtextfont: args.signviewtextfont,
+       signviewbarscolour: args.signviewbarscolour,
+       signviewbarstextcolour: args.signviewbarstextcolour,
+       signviewbackgroundcolour: args.signviewbackgroundcolour,
        ready: true
      };
     }

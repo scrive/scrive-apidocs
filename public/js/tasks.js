@@ -48,6 +48,7 @@ window.PageTask = Backbone.Model.extend({
     onDeactivate : function() {return false;},
     tipSide : "right",
     label:"",
+    labelCss: {},
     hasDirectArrow : true
   },
   initialize: function(args) {
@@ -69,6 +70,9 @@ window.PageTask = Backbone.Model.extend({
   },
   label : function() {
     return this.get("label");
+  },
+  labelCss : function() {
+    return this.get('labelCss');
   },
   tipSide : function() {
     return this.get("tipSide");
@@ -158,6 +162,7 @@ var PageTasksArrowView = Backbone.View.extend({
             return Arrow.init({       type: task.tipSide() != "right" ? 'point-left' : 'point-right'
                                     , point : $(task.el())
                                    , text : task.label()
+                                   , labelCss: task.labelCss()
                               });
         }
         else if ((elbottom + bottommargin) > scrollbottom)

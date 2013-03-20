@@ -8,58 +8,80 @@ window.CompanyUI = Backbone.Model.extend({
       this.fetch();
     } else {
       this.set({
-        logo: args.logo,
-        barsbackground: args.barsbackground,
-        barstextcolour: args.barstextcolour,
-        bordercolour: args.bordercolour,
-        headerfont: args.headerfont,
-        font: args.font,
-        buttoncolour: args.buttoncolour,
-        emailbackgroundcolour: args.emailbackgroundcolour
+        emailfont: args.companyemailfont,
+        emailbordercolour: args.companyemailbordercolour,
+        emailbuttoncolour: args.companyemailbuttoncolour,
+        emailemailbackgroundcolour: args.companyemailemailbackgroundcolour,
+        emailbackgroundcolour: args.companyemailbackgroundcolour,
+        emailtextcolour: args.companyemailtextcolour,
+        emaillogo: args.companyemaillogo,
+        signviewlogo: args.companysignviewlogo,
+        signviewtextcolour: args.companysignviewtextcolour,
+        signviewtextfont: args.companysignviewtextfont,
+        signviewbarscolour: args.companysignviewbarscolour,
+        signviewbarstextcolour: args.companysignviewbarstextcolour,
+        signviewbackgroundcolour: args.companysignviewbackgroundcolour
       }, {silent: true});
     }
   },
-  logo: function() {
-    return this.get('logo');
+  emailfont: function() {
+    return this.get('emailfont');
   },
-  barstextcolour: function() {
-    return this.get('barstextcolour');
+  emailbordercolour: function() {
+    return this.get('emailbordercolour');
   },
-  setBarstextcolour: function(color) {
-    this.set({barstextcolour: colour.trim()});
+  emailbuttoncolour: function() {
+    return this.get('emailbuttoncolour');
   },
-  barsbackground: function() {
-    return this.get('barsbackground');
-  },
-  bordercolour: function() {
-    return this.get('bordercolour');
-  },
-  headerfont: function() {
-    return this.get('headerfont');
-  },
-  font: function() {
-    return this.get('font');
-  },
-  buttoncolour: function() {
-    return this.get('buttoncolour');
+  emailemailbackgroundcolour: function() {
+    return this.get('emailemailbackgroundcolour');
   },
   emailbackgroundcolour: function() {
     return this.get('emailbackgroundcolour');
+  },
+  emailtextcolour: function() {
+    return this.get('emailtextcolour');
+  },
+  emaillogo: function() {
+    return this.get('emaillogo');
+  },
+  signviewlogo: function() {
+    return this.get('signviewlogo');
+  },
+  signviewtextcolour: function() {
+    return this.get('signviewtextcolour');
+  },
+  signviewtextfont: function() {
+    return this.get('signviewtextfont');
+  },
+  signviewbarstextcolour: function() {
+    return this.get('signviewbarstextcolour');
+  },
+  signviewbarscolour: function() {
+    return this.get('signviewbarscolour');
+  },
+  signviewbackgroundcolour: function() {
+    return this.get('signviewbackgroundcolour');
   },
   editable: function() {
     return this.get('editable');
   },
   parse: function(args) {
     return {
+      emailfont: args.companyemailfont,
+      emailbordercolour: args.companyemailbordercolour,
+      emailbuttoncolour: args.companyemailbuttoncolour,
+      emailemailbackgroundcolour: args.companyemailemailbackgroundcolour,
+      emailbackgroundcolour: args.companyemailbackgroundcolour,
+      emailtextcolour: args.companyemailtextcolour,
+      emaillogo: args.companyemaillogo,
+      signviewlogo: args.companysignviewlogo,
+      signviewtextcolour: args.companysignviewtextcolour,
+      signviewtextfont: args.companysignviewtextfont,
+      signviewbarscolour: args.companysignviewbarscolour,
+      signviewbarstextcolour: args.companysignviewbarstextcolour,
+      signviewbackgroundcolour: args.companysignviewbackgroundcolour,
       editable: args.editable,
-      barsbackground: args.barsbackground,
-      barstextcolour: args.barstextcolour,
-      bordercolour: args.bordercolour,
-      headerfont: args.headerfont,
-      font: args.font,
-      buttoncolour: args.buttoncolour,
-      emailbackgroundcolour: args.emailbackgroundcolour,
-      logo: args.logo,
       ready: true
     };
   }
@@ -111,7 +133,7 @@ window.Company = Backbone.Model.extend({
   hasMailApi : function() {
      return this.mailapi() != undefined;
   }
-  
+
 });
 
 })(window);

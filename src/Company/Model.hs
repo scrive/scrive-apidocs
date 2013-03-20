@@ -54,14 +54,19 @@ data CompanyInfo = CompanyInfo {
   } deriving (Eq, Ord, Show)
 
 data CompanyUI = CompanyUI {
-    companybarsbackground             :: Maybe String
-  , companybarstextcolour             :: Maybe String
-  , companyemailheaderfont            :: Maybe String
-  , companyemailfont                  :: Maybe String
-  , companyemailbordercolour          :: Maybe String
-  , companyemailbuttoncolour          :: Maybe String
+    companyemailbordercolour :: Maybe String
+  , companyemailfont :: Maybe String
+  , companyemailbuttoncolour :: Maybe String
   , companyemailemailbackgroundcolour :: Maybe String
-  , companylogo                       :: Maybe Binary -- File with the logo
+  , companyemailbackgroundcolour :: Maybe String
+  , companyemailtextcolour :: Maybe String
+  , companyemaillogo :: Maybe Binary
+  , companysignviewlogo :: Maybe Binary
+  , companysignviewtextcolour :: Maybe String
+  , companysignviewtextfont :: Maybe String
+  , companysignviewbarscolour :: Maybe String
+  , companysignviewbarstextcolour :: Maybe String
+  , companysignviewbackgroundcolour :: Maybe String
 } deriving (Eq, Ord, Show)
 
 data CompanyFilter
@@ -177,14 +182,19 @@ data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
 instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
   update (UpdateCompanyUI cid cui) = do
     kRun01 $ sqlUpdate "companies" $ do
-      sqlSet "bars_background" $ companybarsbackground cui
-      sqlSet "bars_textcolour" $ companybarstextcolour cui
-      sqlSet "email_headerfont" $ companyemailheaderfont cui
-      sqlSet "email_font" $ companyemailfont cui
       sqlSet "email_bordercolour" $ companyemailbordercolour cui
+      sqlSet "email_font" $ companyemailfont cui
       sqlSet "email_buttoncolour" $ companyemailbuttoncolour cui
       sqlSet "email_emailbackgroundcolour" $ companyemailemailbackgroundcolour cui
-      sqlSet "logo" $ companylogo cui
+      sqlSet "email_backgroundcolour" $ companyemailbackgroundcolour cui
+      sqlSet "email_textcolour" $ companyemailtextcolour cui
+      sqlSet "email_logo" $ companyemaillogo cui
+      sqlSet "signview_logo" $ companysignviewlogo cui
+      sqlSet "signview_textcolour" $ companysignviewtextcolour cui
+      sqlSet "signview_textfont" $ companysignviewtextfont cui
+      sqlSet "signview_barscolour" $ companysignviewbarscolour cui
+      sqlSet "signview_barstextcolour" $ companysignviewbarstextcolour cui
+      sqlSet "signview_backgroundcolour" $ companysignviewbackgroundcolour cui
       sqlWhereEq "id" cid
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID ExternalCompanyID
@@ -223,25 +233,32 @@ selectCompaniesSelectors = do
   sqlResult "companies.zip"
   sqlResult "companies.city"
   sqlResult "companies.country"
-  sqlResult "companies.bars_background"
-  sqlResult "companies.bars_textcolour"
-  sqlResult "companies.logo"
   sqlResult "companies.email_domain"
   sqlResult "companies.ip_address_mask_list"
-  sqlResult "companies.email_headerfont"
   sqlResult "companies.email_font"
   sqlResult "companies.email_bordercolour"
   sqlResult "companies.email_buttoncolour"
   sqlResult "companies.email_emailbackgroundcolour"
+  sqlResult "companies.email_backgroundcolour"
+  sqlResult "companies.email_textcolour"
+  sqlResult "companies.email_logo"
+  sqlResult "companies.signview_logo"
+  sqlResult "companies.signview_textcolour"
+  sqlResult "companies.signview_textfont"
+  sqlResult "companies.signview_barscolour"
+  sqlResult "companies.signview_barstextcolour"
+  sqlResult "companies.signview_backgroundcolour"
 
 
 fetchCompanies :: MonadDB m => m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid eid name number address zip' city country
-      bars_background bars_textcolour logo email_domain ip_address_mask_list
-      email_headerfont email_font email_bordercolour email_buttoncolour
-      email_emailbackgroundcolour = Company {
+      email_domain ip_address_mask_list email_font
+      email_bordercolour email_buttoncolour email_emailbackgroundcolour
+      email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
+      signview_textfont signview_barscolour signview_barstextcolour
+      signview_backgroundcolour = Company {
         companyid = cid
       , companyexternalid = eid
       , companyinfo = CompanyInfo {
@@ -255,13 +272,18 @@ fetchCompanies = kFold decoder []
         , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
         }
       , companyui = CompanyUI {
-          companybarsbackground = bars_background
-        , companybarstextcolour = bars_textcolour
-        , companyemailheaderfont = email_headerfont
-        , companyemailfont = email_font
+          companyemailfont = email_font
         , companyemailbordercolour = email_bordercolour
         , companyemailbuttoncolour = email_buttoncolour
         , companyemailemailbackgroundcolour = email_emailbackgroundcolour
-        , companylogo = logo
+        , companyemailbackgroundcolour = email_backgroundcolour
+        , companyemailtextcolour = email_textcolour
+        , companyemaillogo = email_logo
+        , companysignviewlogo = signview_logo
+        , companysignviewtextcolour = signview_textcolour
+        , companysignviewtextfont = signview_textfont
+        , companysignviewbarscolour = signview_barscolour
+        , companysignviewbarstextcolour = signview_barstextcolour
+        , companysignviewbackgroundcolour = signview_backgroundcolour
         }
       } : acc

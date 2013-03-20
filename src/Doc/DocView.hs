@@ -133,15 +133,6 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
     mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
-    let logo  = if (isJust mcompany && isJust (companylogo $ companyui (fromJust mcompany)))
-                  then show <$> LinkCompanyLogo <$> companyid <$> mcompany
-                  else Nothing
-    let bbc  = if (isJust mcompany && isJust (companybarsbackground $ companyui (fromJust mcompany)))
-                  then companybarsbackground $ companyui (fromJust mcompany)
-                  else Nothing
-    let bbtc  = if (isJust mcompany && isJust (companybarstextcolour $ companyui (fromJust mcompany)))
-                  then companybarstextcolour $ companyui (fromJust mcompany)
-                  else Nothing
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
@@ -172,9 +163,14 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
       when (not $ forapi) $ do
-        J.value "logo" logo
-        J.value "barsbackgroundcolor" bbc
-        J.value "barsbackgroundtextcolor" bbtc
+        J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
+                                    then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
+                                    else Nothing
+        J.value "signviewtextcolour" $ companysignviewtextcolour . companyui =<< mcompany
+        J.value "signviewtextfont" $ companysignviewtextfont . companyui =<< mcompany
+        J.value "signviewbarscolour" $ companysignviewbarscolour . companyui =<<  mcompany
+        J.value "signviewbarstextcolour" $ companysignviewbarstextcolour . companyui  =<< mcompany
+        J.value "signviewbackgroundcolour" $ companysignviewbackgroundcolour . companyui  =<< mcompany
         J.value "author" $ authorJSON mauthor mcompany
         J.value "process" $ show $ toDocumentProcess (documenttype doc)
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])

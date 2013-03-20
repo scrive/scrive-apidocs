@@ -4,7 +4,6 @@ import Control.Applicative
 import Control.Monad.Trans (liftIO)
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import Text.JSON
 import Text.JSON.FromJSValue
 import Test.Framework
 import qualified Data.ByteString.Base64 as B64
@@ -16,7 +15,6 @@ import CompanyAccounts.Model
 import Context
 import DB
 import Utils.Default
-import Utils.Either
 import Redirect
 import TestingUtil
 import TestKontra as T
@@ -37,17 +35,8 @@ test_handleGetCompanyJSON = do
 
   req <- mkRequest GET []
   (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON Nothing
-
-  let ejsoncompanybarsbackground = getcompanybarsbackgroundFromJSON jsv
-  assertBool "Able to get companybarsbackground from json" (isRight ejsoncompanybarsbackground)
-
-  let (Right jsoncompanybarsbackground) = ejsoncompanybarsbackground
-  assertEqual "JSON companybarsbackground matches company id" (fromJust $ companybarsbackground $ companyui company) jsoncompanybarsbackground
-  where
-    getcompanybarsbackgroundFromJSON :: JSValue -> Either String String
-    getcompanybarsbackgroundFromJSON jsv = maybe (Left "Unable to parse JSON!") Right $ do
-      (x :: String) <- fromJSValueField "barsbackground" jsv
-      return x
+  (ejsonemailemailbackgroundcolour :: Maybe String) <- withJSValue jsv $ fromJSValueField "companyemailemailbackgroundcolour"
+  assertEqual "JSON companyemailemailbackgroundcolour matches company id"  (fromMaybe "" $ companyemailemailbackgroundcolour $ companyui company) (fromMaybe "" ejsonemailemailbackgroundcolour)
 
 test_settingUIWithHandlePostCompany :: TestEnv ()
 test_settingUIWithHandlePostCompany = do
@@ -55,50 +44,65 @@ test_settingUIWithHandlePostCompany = do
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
-  logo <- liftIO $ BS.readFile "public/img/email-logo.png"
+  logo <- liftIO $ BS.readFile "public/img/logo_email.png"
   let logo64 = BS.unpack $ B64.encode logo
 
-  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\",\"headerfont\":\"arial\",\"font\":\"arial\",\"bordercolour\":\"red\",\"buttoncolour\":\"red\",\"emailbackgroundcolour\":\"red\",\"logochanged\":true,\"logo\":\"" ++ logo64 ++ "\"}")]
+  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewbarscolour\":\"color6\",\"companysignviewbarstextcolour\":\"color7\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"" ++ logo64 ++ "\",\"companysignviewlogo\":\"" ++ logo64 ++ "\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
   (res1, _ctx') <- runTestKontra req1 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res1)
   Just newcompany1 <- dbQuery $ GetCompany (companyid company)
-  assertEqual "Background colour was set" (Just "green") (companybarsbackground $ companyui newcompany1)
-  assertEqual "Text colour was set" (Just "yellow") (companybarstextcolour $ companyui newcompany1)
-  assertEqual "Header font was set" (Just "arial") (companyemailheaderfont $ companyui newcompany1)
-  assertEqual "Font was set" (Just "arial") (companyemailfont $ companyui newcompany1)
-  assertEqual "Border colour was set" (Just "red") (companyemailbordercolour $ companyui newcompany1)
-  assertEqual "Button colour was set" (Just "red") (companyemailbuttoncolour $ companyui newcompany1)
-  assertEqual "Email background colour was set" (Just "red") (companyemailemailbackgroundcolour $ companyui newcompany1)
-  assertBool "File was set" $ isJust (companylogo $ companyui newcompany1)
+  assertEqual "Email font was set" (Just "font2") $ companyemailfont $ companyui newcompany1
+  assertEqual "Email border colour was set" (Just "color1") $ companyemailbordercolour $ companyui newcompany1
+  assertEqual "Email button colour was set" (Just "color2") $ companyemailbuttoncolour $ companyui newcompany1
+  assertEqual "Email email background was set" (Just "color3") $ companyemailemailbackgroundcolour $ companyui newcompany1
+  assertEqual "Email background was set" (Just "color11") $ companyemailbackgroundcolour $ companyui newcompany1
+  assertEqual "Email text colour was set" (Just "color4") $ companyemailtextcolour $ companyui newcompany1
+  assertBool "Email logo file was set" $ isJust $ companyemaillogo $ companyui newcompany1
+  assertBool "Signview logo file was set" $ isJust $ companysignviewlogo $ companyui newcompany1
+  assertEqual "Signview text colour was set" (Just "color5") $ companysignviewtextcolour $ companyui newcompany1
+  assertEqual "Signview text font was set" (Just "font3") $ companysignviewtextfont $ companyui newcompany1
+  assertEqual "Signview bars colour was set" (Just "color6") $ companysignviewbarscolour $ companyui newcompany1
+  assertEqual "Signview bars text color was set" (Just "color7") $ companysignviewbarstextcolour $ companyui newcompany1
+  assertEqual "Signview background colour was set" (Just "color10") $ companysignviewbackgroundcolour $ companyui newcompany1
 
-  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"\",\"barstextcolour\":\"\",\"headerfont\":\"\",\"font\":\"\",\"bordercolour\":\"\",\"buttoncolour\":\"\",\"emailbackgroundcolour\":\"\",\"logochanged\":false,\"logo\":\"\"}")]
+  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"\",\"companyemailbordercolour\":\"\",\"companyemailbuttoncolour\":\"\",\"companyemailemailbackgroundcolour\":\"\",\"companyemailbackgroundcolour\":\"\",\"companyemailtextcolour\":\"\",\"companysignviewtextcolour\":\"\",\"companysignviewtextfont\":\"\",\"companysignviewbarscolour\":\"\",\"companysignviewbarstextcolour\":\"\",\"companysignviewbackgroundcolour\":\"\"}")]
   (res2, _ctx') <- runTestKontra req2 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res2)
   Just newcompany2 <- dbQuery $ GetCompany (companyid company)
-  assertEqual "Background colour reset" Nothing (companybarsbackground $ companyui newcompany2)
-  assertEqual "Text colour reset" Nothing (companybarstextcolour $ companyui newcompany2)
-  assertEqual "Header font reset" Nothing (companyemailheaderfont $ companyui newcompany2)
-  assertEqual "Font reset" Nothing (companyemailfont $ companyui newcompany2)
-  assertEqual "Border colour reset" Nothing (companyemailbordercolour $ companyui newcompany2)
-  assertEqual "Button colour reset" Nothing (companyemailbuttoncolour $ companyui newcompany2)
-  assertEqual "Email background colour reset" Nothing (companyemailemailbackgroundcolour $ companyui newcompany2)
-  assertEqual "File still intact" (companylogo $ companyui newcompany1) (companylogo $ companyui newcompany2)
 
-  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"blue\",\"barstextcolour\":\"pink\",\"headerfont\":\"arial\",\"font\":\"arial\",\"bordercolour\":\"red\",\"buttoncolour\":\"red\",\"emailbackgroundcolour\":\"red\",\"logochanged\":true,\"logo\":\"\"}")]
+  assertEqual "Email font reset" Nothing $ companyemailfont $ companyui newcompany2
+  assertEqual "Email border colour reset" Nothing $ companyemailbordercolour $ companyui newcompany2
+  assertEqual "Email button colour reset" Nothing $ companyemailbuttoncolour $ companyui newcompany2
+  assertEqual "Email email background reset" Nothing $ companyemailemailbackgroundcolour $ companyui newcompany2
+  assertEqual "Email background reset" Nothing $ companyemailbackgroundcolour $ companyui newcompany2
+  assertEqual "Email text colour reset" Nothing $ companyemailtextcolour $ companyui newcompany2
+  assertEqual "Signview text colour reset" Nothing $ companysignviewtextcolour $ companyui newcompany2
+  assertEqual "Signview text font reset" Nothing $ companysignviewtextfont $ companyui newcompany2
+  assertEqual "Signview bars colour reset" Nothing $ companysignviewbarscolour $ companyui newcompany2
+  assertEqual "Signview bars text colour reset" Nothing $ companysignviewbarstextcolour $ companyui newcompany2
+  assertEqual "Signview background colour reset" Nothing $ companysignviewbackgroundcolour $ companyui newcompany2
+
+  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"companyemailfont\":\"font2\",\"companyemailbordercolour\":\"color1\",\"companyemailbuttoncolour\":\"color2\",\"companyemailemailbackgroundcolour\":\"color3\",\"companyemailbackgroundcolour\":\"color11\",\"companyemailtextcolour\":\"color4\",\"companysignviewtextcolour\":\"color5\",\"companysignviewtextfont\":\"font3\",\"companysignviewbarscolour\":\"color6\",\"companysignviewbarstextcolour\":\"color7\",\"companysignviewbackgroundcolour\":\"color10\",\"companyemaillogo\":\"\",\"companysignviewlogo\":\"\",\"companyemaillogochanged\":\"true\",\"companysignviewlogochanged\":\"true\"}")]
   (res3, _ctx') <- runTestKontra req3 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res3)
   Just newcompany3 <- dbQuery $ GetCompany (companyid company)
-  assertEqual "Background colour was set" (Just "blue") (companybarsbackground $ companyui newcompany3)
-  assertEqual "Text colour was set" (Just "pink") (companybarstextcolour $ companyui newcompany3)
-  assertEqual "Header font was set" (Just "arial") (companyemailheaderfont $ companyui newcompany3)
-  assertEqual "Font was set" (Just "arial") (companyemailfont $ companyui newcompany3)
-  assertEqual "Border colour was set" (Just "red") (companyemailbordercolour $ companyui newcompany3)
-  assertEqual "Button colour was set" (Just "red") (companyemailbuttoncolour $ companyui newcompany3)
-  assertEqual "Email background colour was set" (Just "red") (companyemailemailbackgroundcolour $ companyui newcompany1)
-  assertEqual "File reset" Nothing (companylogo $ companyui newcompany3)
+  assertEqual "Email font was set" (Just "font2") $ companyemailfont $ companyui newcompany3
+  assertEqual "Email border colour was set" (Just "color1") $ companyemailbordercolour $ companyui newcompany3
+  assertEqual "Email button colour was set" (Just "color2") $ companyemailbuttoncolour $ companyui newcompany3
+  assertEqual "Email email background was set" (Just "color3") $ companyemailemailbackgroundcolour $ companyui newcompany3
+  assertEqual "Email background was set" (Just "color11") $ companyemailbackgroundcolour $ companyui newcompany3
+  assertEqual "Email text colour was set" (Just "color4") $ companyemailtextcolour $ companyui newcompany3
+  assertEqual "Signview text colour was set" (Just "color5") $ companysignviewtextcolour $ companyui newcompany3
+  assertEqual "Signview text font was set" (Just "font3") $ companysignviewtextfont $ companyui newcompany3
+  assertEqual "Signview bars  colour was set" (Just "color6") $ companysignviewbarscolour $ companyui newcompany3
+  assertEqual "Signview bars text colour was set" (Just "color7") $ companysignviewbarstextcolour $ companyui newcompany3
+  assertEqual "Signview background colour was set" (Just "color10") $ companysignviewbackgroundcolour $ companyui newcompany3
+  assertEqual "Email logo file reset" Nothing $ companyemaillogo $ companyui newcompany3
+  assertEqual "Signview logo file reset" Nothing $ companysignviewlogo $ companyui newcompany3
+
 
 test_handleCompanyLogo :: TestEnv ()
 test_handleCompanyLogo = do
@@ -107,14 +111,14 @@ test_handleCompanyLogo = do
   ctx <- mkContext defaultValue
 
   req <- mkRequest GET []
-  (res, _ctx') <- runTestKontra req ctx $ handleCompanyLogo (companyid company)
+  (res, _ctx') <- runTestKontra req ctx $ handleCompanyEmailLogo (companyid company)
 
   assertEqual "Response code is 200" 200 (rsCode res)
 
 addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
 addNewAdminUserAndCompany fstname sndname email = do
   company <- addNewCompany
-  _ <- dbUpdate $ UpdateCompanyUI (companyid company) (companyui company){companybarsbackground = Just "#abcdef"}
+  _ <- dbUpdate $ UpdateCompanyUI (companyid company) (companyui company){companyemailbackgroundcolour = Just "#abcdef"}
   Just user <- addNewCompanyUser fstname sndname email (companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   Just updateduser <- dbQuery $ GetUserByID (userid user)

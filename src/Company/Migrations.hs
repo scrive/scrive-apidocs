@@ -90,8 +90,35 @@ addNewCompanyBrandingOptions =
   , mgrFrom = 8
   , mgrDo = do
       kRunRaw "ALTER TABLE companies ADD COLUMN email_bordercolour TEXT NULL"
-      kRunRaw "ALTER TABLE companies ADD COLUMN email_headerfont TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_font TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_buttoncolour TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN email_emailbackgroundcolour TEXT NULL"
+  }
+
+addSignviewBrandingOptions :: MonadDB m => Migration m
+addSignviewBrandingOptions =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 9
+  , mgrDo = do
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_backgroundcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_textcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN email_logo BYTEA NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_logo BYTEA NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_textcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_textfont TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_barscolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_barstextcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN signview_backgroundcolour TEXT NULL"
+
+      kRunRaw "UPDATE companies SET signview_barscolour = bars_background"
+      kRunRaw "UPDATE companies SET signview_barstextcolour = bars_background"
+      kRunRaw "UPDATE companies SET signview_logo = logo"
+      kRunRaw "UPDATE companies SET email_emailbackgroundcolour = bars_background"
+      kRunRaw "UPDATE companies SET email_logo = logo"
+
+      kRunRaw "ALTER TABLE companies DROP COLUMN IF EXISTS email_headerfont"
+      kRunRaw "ALTER TABLE companies DROP COLUMN bars_background"
+      kRunRaw "ALTER TABLE companies DROP COLUMN bars_textcolour"
+      kRunRaw "ALTER TABLE companies DROP COLUMN logo"
   }

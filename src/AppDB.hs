@@ -133,6 +133,7 @@ kontraMigrations = [
   , moveCancelationReasonFromDocumentsToSignatoryLinks
   , dropCancelationReasonFromDocuments
   , addNewCompanyBrandingOptions
+  , addSignviewBrandingOptions
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

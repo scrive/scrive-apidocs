@@ -118,7 +118,9 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       rejectText: "Cancel",
 	  editText : "Edit",
       acceptColor : "green",
-      onEdit: function() {}
+      onEdit: function() {},
+      textfont : undefined,
+      textcolor : undefined
   },
   initialize : function() {
   },
@@ -136,6 +138,12 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   },
   rejectText: function() {
        return this.get("rejectText");
+  },
+  textfont: function() {
+      return this.get("textfont");
+  },
+  textcolor: function() {
+      return this.get("textcolor");
   },
   editText: function() {
        return this.get("editText");
@@ -172,6 +180,10 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
+       if (model.textcolor())
+         title.css("color",model.textcolor());
+       if (model.textfont())
+         title.css("font-family",model.textfont());
        title.append(this.model.title());
        header.append(title);
        header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
@@ -190,6 +202,10 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        cancelOption.text(this.model.rejectText());
 	   this.editOption = $("<label class='clickable edit float-left' style='margin-left:10px;'/>");
        this.editOption.text(this.model.editText());
+       if (model.textfont()) {
+         cancelOption.css("font-family",model.textfont());
+         this.editOption.css("font-family",model.textfont());
+       }
        footer.append(cancelOption);
 	   footer.append(this.editOption);
        var accept = Button.init({color:model.acceptColor(),

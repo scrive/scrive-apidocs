@@ -9,6 +9,7 @@
 
 window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    initialize : function(args){
+      this.textstyle = args.textstyle;
       this.render();
    },
    emailInputAvaible : function() {
@@ -107,7 +108,9 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
        var document = this.model;
        var box = $(this.el).addClass('section').addClass('spacing').addClass('extradetails');
        var header = $("<h2 class='title'/>").text(localization.docsignview.filladitionfields);
+       header.css(this.textstyle);
        var description = $("<div class='column spacing descriptionbox'/>").text(localization.docsignview.filladitionfieldsdescription);
+       description.css(this.textstyle);
        this.fillBox = $("<div class='column spacing fillbox'/>");
        if (this.fstNameInputAvaible())
         this.fillBox.append(this.fstNameInput());

@@ -74,7 +74,7 @@ var ButtonView = Backbone.View.extend({
     },
     render: function () {
         $(this.el).addClass(this.model.color());
-        
+
         $(this.el).addClass("button");
         if (this.model.size() == "tiny")
             $(this.el).addClass("button-small");
@@ -91,15 +91,15 @@ var ButtonView = Backbone.View.extend({
             $(this.el).addClass("button-round");
             if (BrowserInfo.isIE9orLower())
               $(this.el).css("filter","none"); // CSS filter is in conflict with border-radius in IE9. Older IE does not support it anyway.
-        }    
+        }
 
         var label = $("<div class='label'/>").text(this.model.text());
+        if (this.model.labelstyle() != undefined)
+            $(this.el).attr("style",this.model.labelstyle());
         if (this.model.width() != undefined)
             $(this.el).css("width",this.model.width() - (2*Button.borderWidth(this.model.size())) - (2* Button.labelPadding(this.model.size()))+ "px");
         label.append(this.model.icon());
         $(this.el).append(label);
-        if (this.model.labelstyle() != undefined)
-            $(this.el).attr("style",this.model.labelstyle());
         return this;
     },
     clicked: function(){

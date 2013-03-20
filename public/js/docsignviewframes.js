@@ -52,6 +52,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         this.usedStandardLogo = undefined;
         this.usedStandardColorsBars = undefined;
         this.usedStandardColorsTexts = undefined;
+        this.usedStandardTextsFonts = undefined;
         this.usedStandardDescription = undefined;
   },
   render: function() {
@@ -68,7 +69,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     // Setting logo
 
 
-    if((this.useStandardBranding() || document.logo() == undefined)) {
+    if((this.useStandardBranding() || document.signviewlogo() == undefined)) {
        if (this.usedStandardLogo != true) {
          maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
          this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
@@ -80,14 +81,14 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         maindiv.removeClass('withstandardlogo').addClass('withcustomlogo');
         var img = $("<img class='logo'></img>");
         img.load(function(){  view.refresh();  });
-        img.attr('src',document.logo());
+        img.attr('src',document.signviewlogo());
         this.logowrapper.empty().append(img);
         this.usedStandardLogo = false;
       }
     }
 
     // Background color of top bar
-    if((this.useStandardBranding() || document.barsbackgroundcolor() == undefined)) {
+    if((this.useStandardBranding() || document.signviewbarscolour() == undefined)) {
       if (this.usedStandardColorsBars != true) {
         maindiv.css('background-image', '');
         maindiv.css('background-color', '');
@@ -97,13 +98,13 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     else {
       if (this.usedStandardColorsBars != false) {
         maindiv.css('background-image', 'none');
-        maindiv.css('background-color', document.barsbackgroundcolor());
+        maindiv.css('background-color', document.signviewbarscolour());
         this.usedStandardColorsBars = false;
       }
     }
 
     // Text color in header
-    if((this.useStandardBranding() || document.barsbackgroundtextcolor() == undefined)) {
+    if((this.useStandardBranding() || document.signviewbarstextcolour() == undefined)) {
       if (this.usedStandardColorsTexts != true) {
         maindiv.css("color", '');
         if (this.sender != undefined) this.sender.css("color", '');
@@ -112,9 +113,25 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     }
     else {
       if (this.usedStandardColorsTexts != false) {
-        maindiv.css("color", document.barsbackgroundtextcolor());
-        if (this.sender != undefined) this.sender.css("color", document.barsbackgroundtextcolor());
+        maindiv.css("color", document.signviewbarstextcolour());
+        if (this.sender != undefined) this.sender.css("color", document.signviewbarstextcolour());
         this.usedStandardColorsTexts = false;
+      }
+    }
+
+    // Text font in header
+    if((this.useStandardBranding() || document.signviewtextfont() == undefined)) {
+      if (this.usedStandardTextsFonts != true) {
+        maindiv.css('font-family', '');
+        if (this.sender != undefined) this.sender.css('font-family', '');
+        this.usedStandardTextsFonts = true;
+      }
+    }
+    else {
+      if (this.usedStandardTextsFonts != false) {
+        maindiv.css('font-family', document.signviewtextfont());
+        if (this.sender != undefined) this.sender.css('font-family', document.signviewtextfont());
+        this.usedStandardTextsFonts = false;
       }
     }
 
@@ -177,6 +194,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
         maindiv.append(this.content);
         this.usedStandardColorsBars = undefined;
         this.usedStandardColorsTexts = undefined;
+        this.usedStandardTextsFonts = undefined;
         this.usedStandardDescription = undefined;
   },
   render: function() {
@@ -191,7 +209,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     maindiv.css("display","block");
 
    // Background color of top bar
-    if((this.useStandardBranding() || document.barsbackgroundcolor() == undefined)) {
+    if((this.useStandardBranding() || document.signviewbarscolour() == undefined)) {
       if (this.useStandardBranding != true) {
         maindiv.css('background-image', '');
         maindiv.css('background-color', '');
@@ -201,13 +219,13 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     else {
       if (this.useStandardBranding != false) {
         maindiv.css('background-image', 'none');
-        maindiv.css('background-color', document.barsbackgroundcolor());
+        maindiv.css('background-color', document.signviewbarscolour());
         this.usedStandardColorsBars = false;
       }
     }
 
-    // Text color in header
-    if((this.useStandardBranding() || document.barsbackgroundtextcolor() == undefined)) {
+    // Text color in footer
+    if((this.useStandardBranding() || document.signviewbarstextcolour() == undefined)) {
       if (this.usedStandardColorsTexts != true) {
         maindiv.css("color", '');
         this.usedStandardColorsTexts = true;
@@ -215,12 +233,26 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     }
     else  {
       if (this.usedStandardColorsTexts != false) {
-        maindiv.css("color", document.barsbackgroundtextcolor());
+        maindiv.css("color", document.signviewbarstextcolour());
         this.usedStandardColorsTexts = false;
       }
     }
 
-    if(document.barsbackgroundcolor() != undefined) {
+    // Text font in footer
+    if((this.useStandardBranding() || document.signviewtextfont() == undefined)) {
+      if (this.usedStandardTextsFonts != true) {
+        maindiv.css('font-family', '');
+        this.usedStandardTextsFonts = true;
+      }
+    }
+    else  {
+      if (this.usedStandardTextsFonts != false) {
+        maindiv.css('font-family', document.signviewtextfont());
+        this.usedStandardTextsFonts = false;
+      }
+    }
+
+    if(document.signviewbarscolour() != undefined) {
       if (this.usedStandardDescription != true ) {
         var pbstext = $("<span class='text' />").text("Powered by Scrive");
         this.pbs.empty().append(pbstext);

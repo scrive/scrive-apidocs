@@ -8,7 +8,7 @@ nicemail=
           <tr>
             <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
               <!-- // Begin Module: Standard Header Image \\ -->
-              <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 50px; margin-bottom: 20px;" id="headerImage campaign-icon" width="200" />
+              <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 50px; margin-bottom: 20px;" id="headerImage campaign-icon" />
               <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
@@ -34,11 +34,11 @@ nicemail=
                       <tr>
                         <td valign="top">
                           <div>
-                            <span class="h1" style="color: #364963; display: block; font-family: $nicemailheaderfont()$; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">
+                            <span class="h1" style="color: $if(!companybrand.textcolor)$#364963$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">
                               $if(mailheader)$ $mailheader$ $endif$
                             </span>
                             <a style="text-decoration: none;" href="$ctxhostpart$">
-                              <span class="h3" style="color: #7a94b8; display: block; font-family: $nicemailheaderfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">
+                              <span class="h3" style="color: $if(!companybrand.textcolor)$#7a94b8$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">
                                 $_poweredByScrive()$
                               </span>
                             </a>
@@ -105,7 +105,7 @@ nicemail=
 
                         <td colspan="2" valign="top">
                           <br />
-                          <div style="color: #999; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 125%; text-align: justify; padding: 0 40px">
+                          <div style="color: $if(!companybrand.textcolor)$#999999$else$$companybrand.textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 125%; text-align: justify; padding: 0 40px">
                             $footer:noescape()$
                           </div>
 
@@ -129,19 +129,16 @@ nicemail=
 ######
 borderspacing=40px 30px
 ######
-nicemailbgcolour=$if(!companybrand.barsbackground)$#FFFFFF$else$$companybrand.barsbackground$$endif$
+nicemailbgcolour=$if(!companybrand.background)$#FFFFFF$else$$companybrand.background$$endif$
 #####
-nicemailfgcolour=$if(!companybrand.barstextcolour)$#333333$else$$companybrand.barstextcolour$$endif$
+nicemailfgcolour=$if(!companybrand.textcolor)$#333333$else$$companybrand.textcolor$$endif$
 #####
 nicemaillogo=$if(!companybrand.logo)$$ctxhostpart$/img/logo_email.png$else$$ctxhostpart$$companybrand.logoLink$$endif$
 #####
 nicemailbordercolour=$if(!companybrand.bordercolour)$#dee4ed$else$$companybrand.bordercolour$$endif$
 #####
-nicemailheaderfont=$if(!companybrand.headerfont)$Helvetica Neue, Arial, sans-serif$else$$companybrand.headerfont$$endif$
-#####
 nicemailfont=$if(!companybrand.font)$Helvetica Neue, Arial, sans-serif$else$$companybrand.font$$endif$
 #####
-nicemailbuttoncolour=$if(!companybrand.buttoncolour)$215$else$$companybrand.buttoncolour$$endif$
 #####
 nicemailemailbackgroundcolour=$if(!companybrand.emailbackgroundcolour)$#fff$else$$companybrand.emailbackgroundcolour$$endif$
 #####
@@ -159,6 +156,13 @@ $if(l)$
 $endif$
 ####
 nicebutton=
-<a href="$link$" class="button-blue" style="background: hsl($nicemailbuttoncolour()$, 30%, 35%); border: 2px solid hsl($nicemailbuttoncolour()$, 30%, 23%); -webkit-box-shadow: inset hsl($nicemailbuttoncolour()$, 30%, 60%) 0 0 0 1px; -moz-box-shadow: inset hsl($nicemailbuttoncolour()$, 30%, 60%) 0 0 0 1px; -ms-box-shadow: inset hsl($nicemailbuttoncolour()$, 30%, 60%) 0 0 0 1px; -o-box-shadow: inset hsl($nicemailbuttoncolour()$, 30%, 60%) 0 0 0 1px; box-shadow: inset hsl($nicemailbuttoncolour()$, 30%, 60%) 0 0 0 1px; text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 12px 20px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1">
+<a href="$link$" class="button-blue" style="
+    $if(!companybrand.buttoncolour)$
+     background: hsl(215, 30%, 35%); border: 2px solid hsl(215, 30%, 23%); -webkit-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -moz-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -ms-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -o-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px;
+    $else$
+     background: $companybrand.buttoncolour$; border: 2px solid $companybrand.buttoncolour$; -webkit-box-shadow: #CCCCCC 0 0 0 1px; -moz-box-shadow: inset #CCCCCC 0 0 0 1px; -ms-box-shadow: inset #CCCCCC 0 0 0 1px; -o-box-shadow: inset #CCCCCC 0 0 0 1px; box-shadow: inset #CCCCCC 0 0 0 1px;
+    $endif$
+    text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 12px 20px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1
+">
   $text$
 </a>

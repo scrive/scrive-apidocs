@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
-{-# OPTIONS_GHC -fcontext-stack=50 #-}
+{-# OPTIONS_GHC -fcontext-stack=60 #-}
 module Stats.Model
        (
          DocStatEvent(..),
@@ -186,13 +186,13 @@ instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
                      "       cancel.time, " <>
                      "       timeout.time " <>
                      "FROM (SELECT DISTINCT document_id, company_id, type, process FROM doc_stat_events WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?) AS ds " <>
-                     "LEFT JOIN doc_stat_events AS creat   ON (ds.document_id = creat.document_id   AND creat.quantity = ?)" <>                     
+                     "LEFT JOIN doc_stat_events AS creat   ON (ds.document_id = creat.document_id   AND creat.quantity = ?)" <>
                      "LEFT JOIN doc_stat_events AS send    ON (ds.document_id = send.document_id    AND send.quantity = ?)" <>
                      "LEFT JOIN doc_stat_events AS close   ON (ds.document_id = close.document_id   AND close.quantity = ?)" <>
                      "LEFT JOIN doc_stat_events AS reject  ON (ds.document_id = reject.document_id  AND reject.quantity = ?)" <>
                      "LEFT JOIN doc_stat_events AS cancel  ON (ds.document_id = cancel.document_id  AND cancel.quantity = ?)" <>
                      "LEFT JOIN doc_stat_events AS timeout ON (ds.document_id = timeout.document_id AND timeout.quantity = ?)" <>
-                     "ORDER BY ds.document_id DESC") [toSql start, 
+                     "ORDER BY ds.document_id DESC") [toSql start,
                                                       toSql end,
                                                       toSql DocStatCreate,
                                                       toSql DocStatSend,
@@ -245,14 +245,19 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.zip"
   <> ", c.city"
   <> ", c.country"
-  <> ", c.bars_background"
-  <> ", c.bars_textcolour"
-  <> ", c.email_headerfont"
   <> ", c.email_font"
   <> ", c.email_bordercolour"
   <> ", c.email_buttoncolour"
   <> ", c.email_emailbackgroundcolour"
-  <> ", c.logo"
+  <> ", c.email_backgroundcolour"
+  <> ", c.email_textcolour"
+  <> ", c.email_logo"
+  <> ", c.signview_logo"
+  <> ", c.signview_textcolour"
+  <> ", c.signview_textfont"
+  <> ", c.signview_barscolour"
+  <> ", c.signview_barstextcolour"
+  <> ", c.signview_backgroundcolour"
   <> ", email_domain"
   <> ", ip_address_mask_list"
   -- InviteInfo:
@@ -273,9 +278,12 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
      email lang customfooter company_name company_number is_free cid eid
-     name number address zip' city country bars_background bars_textcolour
-     email_headerfont email_font email_bordercolour email_buttoncolour
-     email_emailbackgroundcolour logo email_domain ip_address_mask inviter_id invite_time invite_type
+     name number address zip' city country email_font
+     email_bordercolour email_buttoncolour email_emailbackgroundcolour
+     email_backgroundcolour email_textcolour email_logo signview_logo
+     signview_textcolour signview_textfont signview_barscolour
+     signview_barstextcolour signview_backgroundcolour email_domain ip_address_mask inviter_id
+     invite_time invite_type
      = (
        User {
            userid = uid
@@ -317,14 +325,19 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companyipaddressmasklist = maybe [] $(read) ip_address_mask
                 }
               , companyui = CompanyUI {
-                  companybarsbackground = bars_background
-                , companybarstextcolour = bars_textcolour
-                , companyemailheaderfont = email_headerfont
-                , companyemailfont = email_font
+                  companyemailfont = email_font
                 , companyemailbordercolour = email_bordercolour
                 , companyemailbuttoncolour = email_buttoncolour
                 , companyemailemailbackgroundcolour = email_emailbackgroundcolour
-                , companylogo = logo
+                , companyemailbackgroundcolour = email_backgroundcolour
+                , companyemailtextcolour = email_textcolour
+                , companyemaillogo = email_logo
+                , companysignviewlogo = signview_logo
+                , companysignviewtextcolour = signview_textcolour
+                , companysignviewtextfont = signview_textfont
+                , companysignviewbarscolour = signview_barscolour
+                , companysignviewbarstextcolour = signview_barstextcolour
+                , companysignviewbackgroundcolour = signview_backgroundcolour
                 }
               }
             _ -> Nothing
@@ -532,18 +545,18 @@ instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
                      "       link.time, " <>
                      "       sign.time, " <>
                      "       reject.time, " <>
-                     "       del.time, " <>                     
-                     "       purge.time " <>                                          
+                     "       del.time, " <>
+                     "       purge.time " <>
                      "FROM (SELECT DISTINCT document_id, signatory_link_id, company_id, document_process FROM sign_stat_events WHERE sign_stat_events.time > ? AND sign_stat_events.time <= ?) AS ss " <>
-                     "LEFT JOIN sign_stat_events AS invite   ON (ss.document_id = invite.document_id   AND invite.quantity  = ? AND ss.signatory_link_id = invite.signatory_link_id )" <>                     
-                     "LEFT JOIN sign_stat_events AS receive  ON (ss.document_id = receive.document_id  AND receive.quantity = ? AND ss.signatory_link_id = receive.signatory_link_id )" <>                                          
+                     "LEFT JOIN sign_stat_events AS invite   ON (ss.document_id = invite.document_id   AND invite.quantity  = ? AND ss.signatory_link_id = invite.signatory_link_id )" <>
+                     "LEFT JOIN sign_stat_events AS receive  ON (ss.document_id = receive.document_id  AND receive.quantity = ? AND ss.signatory_link_id = receive.signatory_link_id )" <>
                      "LEFT JOIN sign_stat_events AS open     ON (ss.document_id = open.document_id     AND open.quantity    = ? AND ss.signatory_link_id = open.signatory_link_id )" <>
                      "LEFT JOIN sign_stat_events AS link     ON (ss.document_id = link.document_id     AND link.quantity    = ? AND ss.signatory_link_id = link.signatory_link_id )" <>
                      "LEFT JOIN sign_stat_events AS sign     ON (ss.document_id = sign.document_id     AND sign.quantity    = ? AND ss.signatory_link_id = sign.signatory_link_id )" <>
                      "LEFT JOIN sign_stat_events AS reject   ON (ss.document_id = reject.document_id   AND reject.quantity  = ? AND ss.signatory_link_id = reject.signatory_link_id )" <>
                      "LEFT JOIN sign_stat_events AS del      ON (ss.document_id = del.document_id      AND del.quantity     = ? AND ss.signatory_link_id = del.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS purge    ON (ss.document_id = purge.document_id    AND purge.quantity   = ? AND ss.signatory_link_id = purge.signatory_link_id )" <>                     
-                     "ORDER BY ss.document_id DESC, ss.signatory_link_id DESC") [toSql start, 
+                     "LEFT JOIN sign_stat_events AS purge    ON (ss.document_id = purge.document_id    AND purge.quantity   = ? AND ss.signatory_link_id = purge.signatory_link_id )" <>
+                     "ORDER BY ss.document_id DESC, ss.signatory_link_id DESC") [toSql start,
                                                       toSql end,
                                                       toSql SignStatInvite,
                                                       toSql SignStatReceive,
@@ -572,7 +585,7 @@ data StatEvt
   = DocClosed
   | DocPending
   | DocCancel
-  | DocReject 
+  | DocReject
   | DocTimeout
     deriving Eq
 
@@ -632,7 +645,7 @@ docStatSignMethod status did apistring =
           [toSql emailQty] <+>
       SQL "JOIN (SELECT CAST(? AS SMALLINT) AS elegqty) AS elegtbl ON TRUE"
           [toSql elegQty]
-    
+
     selectCondition =
       SQL "WHERE doc.id = ? AND " [did'] <+> docStatusCondition
     did' = toSql did

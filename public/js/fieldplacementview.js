@@ -105,7 +105,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                      * placement. Refactor this later to in place
                      * update.
                      */
-                    mixpanel.track('Drag field to new page', {fieldname:field.name(), 
+                    mixpanel.track('Drag field to new page', {fieldname:field.name(),
                                                               signatory:field.signatory().signIndex(),
                                                               documentid:field.signatory().document().documentid()});
                     placement.remove();
@@ -124,7 +124,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                 }
             }
             else {
-                mixpanel.track('Drag field', {fieldname:field.name(), 
+                mixpanel.track('Drag field', {fieldname:field.name(),
                                               signatory:field.signatory().signIndex(),
                                               documentid:field.signatory().document().documentid()});
                 var newPlacement = new FieldPlacement({
@@ -336,7 +336,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top) {
                   self.input.focus();
                }
-               
+
           }
           return false;
         }
@@ -347,9 +347,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
           var maxWidth = (1 - placement.xrel()) * parent.width() - 36;
           if (maxWidth < width) width = maxWidth;
           if (width < 30) width = 30;
-                                                   
+
         }
-        
+
         place.empty();
         var box = $("<div class='inlineEditing'/>").width(width+24);
         this.input = $("<input type='text'/>").val(field.value()).width(width+5).attr("placeholder",field.nicetext());
@@ -383,16 +383,16 @@ var TextPlacementPlacedView = Backbone.View.extend({
                   if (view.input.val() != "") {
                       accept();
                       return false;
-                  }    
+                  }
         });
         if (this.input.hasClass("grayed") && $.browser.msie) {
                       this.input.val("");
                       this.input.removeClass("grayed");
         }
-                    
+
         if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top && self.input != undefined) {
                    self.input.focus();
-        }           
+        }
         return false;
     },
     render: function() {
@@ -497,7 +497,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
      return this.nameinput;
     },
     obligatoryOption : function() {
-      
+
         var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
         var checkbox = $("<div class='checkbox'>");
         var label = $("<label/>").text(localization.designview.checkboxes.obligatory);
@@ -733,8 +733,12 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.width(this.signature.width());
                 box.height(this.signature.height());
 
+                var textholder = $("<span class='text'/>");
+
                 var button = $("<div class='placesignaturebutton'/>");
-                button.append($("<span class='text'/>").text(localization.signature.placeYour));
+                var document = signatory.document();
+
+                button.append(textholder.text(localization.signature.placeYour));
 
                 if (this.signature.width() > bwidth) {
                     button.css("margin-left", Math.floor((this.signature.width() - bwidth) / 2) + "px");

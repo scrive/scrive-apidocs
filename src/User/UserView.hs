@@ -63,7 +63,9 @@ import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic
-
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Base64 as B64
+import DB
 showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
 showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
@@ -93,14 +95,19 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
 
 companyUIJson :: Monad m => Company -> Bool -> m JSValue
 companyUIJson company editable = runJSONGenT $ do
-    value "logo" $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company
-    value "barsbackground" $ fromMaybe "" $ companybarsbackground $ companyui $ company
-    value "barstextcolour" $ fromMaybe "" $ companybarstextcolour $ companyui $ company
-    value "headerfont" $ fromMaybe "" $ companyemailheaderfont $ companyui $ company
-    value "font" $ fromMaybe "" $ companyemailfont $ companyui $ company
-    value "bordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui $ company
-    value "buttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui $ company
-    value "emailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui $ company
+    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui $ company)
+    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui $ company)
+    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui $ company
+    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui $ company
+    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui $ company
+    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui $ company
+    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui $ company
+    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui $ company
+    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui $ company
+    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui $ company
+    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui $ company
+    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui $ company
+    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui $ company
     value "editable" editable
 
 companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> Bool -> m JSValue
