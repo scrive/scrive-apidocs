@@ -151,8 +151,6 @@ data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
   | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags (warning: this is ALL tags)
-  | DocumentFilterMinChangeTime MinutesTime   -- ^ Where mtime is at least the one specified
-  | DocumentFilterMaxChangeTime MinutesTime   -- ^ Where mtime is at most the one specified
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByDelivery DeliveryMethod   -- ^ Only documents that use selected delivery method
@@ -168,6 +166,7 @@ data DocumentFilter
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
+  | DocumentFilterByModificationTimeAfter MinutesTime -- ^ That were modified after given time
   deriving Show
 
 -- | Document security domain.
@@ -329,18 +328,6 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
       sqlWhere "signatory_links.is_author"
       sqlWhereNotEq "documents.status" Preparation
 
-
-
-maxselect :: SQL
-maxselect = "(SELECT max(greatest(signatory_links.sign_time"
-            <> ", signatory_links.seen_time"
-            <> ", signatory_links.read_invitation"
-            <> ", documents.invite_time"
-            <> ", signatory_links.rejection_time"
-            <> ", documents.mtime"
-            <> ", documents.ctime"
-            <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
-
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
   sqlWhereIn "documents.status" statuses
@@ -348,10 +335,18 @@ documentFilterToSQL (DocumentFilterByStatusClass statuses) = do
   -- I think here we can use the result that we define on select
   -- check this one out later
   sqlWhereIn documentStatusClassExpression statuses
-documentFilterToSQL (DocumentFilterMinChangeTime ctime) = do
-  sqlWhere (maxselect <+> ">=" <?> ctime)
-documentFilterToSQL (DocumentFilterMaxChangeTime ctime) = do
-  sqlWhere (maxselect <+> "<=" <?> ctime)
+
+documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
+  sqlWhere ("(SELECT max(greatest(signatory_links.sign_time"
+            <> ", signatory_links.seen_time"
+            <> ", signatory_links.read_invitation"
+            <> ", documents.invite_time"
+            <> ", signatory_links.rejection_time"
+            <> ", documents.mtime"
+            <> ", documents.ctime"
+            <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
+            <+> ">=" <?> mtime)
+
 documentFilterToSQL (DocumentFilterByProcess processes) = do
   if null ([minBound..maxBound] \\ processes)
     then sqlWhere "TRUE"
@@ -1064,7 +1059,7 @@ instance MonadDB m => DBQuery m CheckIfDocumentExists Bool where
 data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
   update (ArchiveDocument uid did _actor) = do
-    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+    kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSet "deleted" True
 
         sqlWhereExists $ sqlSelect "users" $ do
@@ -1800,7 +1795,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
 data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument () where
   update (RestoreArchivedDocument user did actor) = do
-    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+    kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
 
       sqlSet "deleted" False
 

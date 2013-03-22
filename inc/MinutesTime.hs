@@ -51,6 +51,7 @@ import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
 import Text.Printf
 import System.IO.Unsafe
 import Data.Binary
+import Control.Monad
 
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
@@ -86,7 +87,7 @@ parseMinutesTimeISO :: String -> Maybe MinutesTime
 parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S %Z"
 
 parseMinutesTimeRealISO :: String -> Maybe MinutesTime
-parseMinutesTimeRealISO = parseMinutesTime "%Y-%m-%dT%H:%M:%S%QZ"
+parseMinutesTimeRealISO s = (parseMinutesTime "%Y-%m-%dT%H:%M:%S%QZ" s) `mplus` (parseMinutesTime "%Y-%m-%dT%H:%M:%S%Q%z" s)
 
 parseMinutesTimeUTC :: String -> Maybe MinutesTime
 parseMinutesTimeUTC = parseMinutesTime "%Y-%m-%d %H:%M:%S"

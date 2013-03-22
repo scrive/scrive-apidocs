@@ -184,6 +184,7 @@ module DB.SQL2
   , kWhyNot1
   , DBExceptionCouldNotParseValues(..)
   , kRun1OrThrowWhyNot
+  , kRunManyOrThrowWhyNot
   , kRunAndFetch1OrThrowWhyNot
 
   , KontraException(..)
@@ -1066,6 +1067,17 @@ decodeListOfExceptionsFromWhere fullquery conds excepts sqlvalues =
   return $ excepts ++
            [matchUpExceptionWithValues (SqlWhyNot (\_ -> return (DBBaseLineConditionIsFalse fullquery)) []
                                                     : enumerateWhyNotExceptions conds) sqlvalues]
+
+kRunManyOrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
+                   => s -> m ()
+kRunManyOrThrowWhyNot sqlcommand = do
+  success <- kRun sqlcommand
+  when (success == 0) $ do
+    listOfExceptions <- kWhyNot1 sqlcommand
+    case listOfExceptions of
+      [] -> kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+      (ex:_) -> kThrow ex
+
 
 kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
                    => s -> m ()

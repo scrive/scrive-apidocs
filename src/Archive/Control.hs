@@ -55,6 +55,7 @@ import Control.Monad.Identity
 import Text.JSON.String (runGetJSON)
 import Doc.DocDraft()
 import Data.String.Utils (splitWs)
+import MinutesTime
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
@@ -192,7 +193,9 @@ jsonDocumentsList = do
                                     (((Nothing ,Just to'),""):_) -> [DocumentFilterByMonthYearTo to']
                                     (((Just from',Nothing),""):_)   -> [DocumentFilterByMonthYearFrom from']
                                     _ -> []
-
+      fltSpec ("mtime", tostr) = case parseMinutesTimeRealISO tostr of
+                                    Just mtime -> [DocumentFilterByModificationTimeAfter mtime]
+                                    _ -> []
       fltSpec ("sender", tostr) = case reads tostr of
                                     ((suid,""):_) -> [DocumentFilterByAuthor suid]
                                     _ -> []

@@ -74,6 +74,8 @@ docFieldsListForJSON padqueue doc = do
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ formatMinutesTimeRealISO (documentmtime doc)
+    J.value "ctime" $ formatMinutesTimeRealISO (documentmtime doc)
+    J.value "timeouttime" $ formatMinutesTimeRealISO <$> unTimeoutTime <$> documenttimeouttime doc
     J.value "type" $ case documenttype doc of
                         Template _ -> "template"
                         Signable _ -> "signable"
@@ -110,6 +112,10 @@ signatoryFieldsListForJSON padqueue doc sl = do
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
       StandardAuthentication -> "standard"
       ELegAuthentication  -> "eleg"
+    J.value "delivery" $ case signatorylinkdeliverymethod sl of
+      EmailDelivery -> "email"
+      PadDelivery   -> "pad"
+      APIDelivery   -> "api"
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl
