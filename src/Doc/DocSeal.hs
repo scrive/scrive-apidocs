@@ -24,7 +24,9 @@ import Doc.Rendering
 import File.Storage
 import Doc.DocView
 import Doc.DocUtils
+import qualified HostClock.Model as HC
 import IPAddress
+import MinutesTime (daysBefore)
 import Utils.Directory
 import Utils.Read
 import Utils.String
@@ -308,21 +310,23 @@ sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m)
                      -> String
                      -> Document
                      -> [DocumentEvidenceEvent]
+                     -> HC.ClockErrorStatistics
                      -> BS.ByteString
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument boxImages hostpart document elog content inputpath outputpath = do
+sealSpecFromDocument boxImages hostpart document elog ces content inputpath outputpath = do
   additionalAttachments <- findOutAttachmentDesc document
   sigVerFile <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/verification.html"
   evidenceDoc <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/evidenceDocumentation.html"
-  sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
+  sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
 
 sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
                      -> [DocumentEvidenceEvent]
+                     -> HC.ClockErrorStatistics
                      -> BS.ByteString
                      -> String
                      -> String
@@ -330,7 +334,7 @@ sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m)
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile evidenceDoc =
+sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments sigVerFile evidenceDoc =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
 
@@ -450,7 +454,7 @@ sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputp
       -- Log.debug ("read texts: " ++ show readtexts)
 
       -- Creating HTML Evidence Log
-      htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog
+      htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog ces
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "EvidenceLog.html"
                                                    , Seal.mimeType = Nothing
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
@@ -525,6 +529,12 @@ sealDocument document = do
       Log.debug $ msg
       return $ Left msg
 
+collectClockErrorStatistics :: MonadDB m => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
+collectClockErrorStatistics [] = return $ HC.ClockErrorStatistics Nothing Nothing Nothing 0 0
+collectClockErrorStatistics elog = do
+  let endtime   = maximum (map evTime elog)
+      starttime = minimum (map evTime elog) `min` (1 `daysBefore` endtime)
+  dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
 sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
                  => Document
@@ -534,6 +544,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
   withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
     Context{ctxhostpart, ctxtime, ctxgtconf} <- getContext
     elog <- dbQuery $ GetEvidenceLog documentid
+    ces <- collectClockErrorStatistics elog
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
@@ -541,7 +552,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
-    config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog content tmpin tmpout
+    config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog ces content tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000

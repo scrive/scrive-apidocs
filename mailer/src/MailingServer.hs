@@ -43,11 +43,11 @@ main = Log.withLogger $ do
          dbconf = mscDBConfig conf
      msender <- newMVar sender
      withCronJobs
-       ([ forkCron_ "Dispatcher" 5 $ dispatcher rng sender msender dbconf
-        , forkCron_ "Cleaner" (60*60*24) $ cleaner rng dbconf
+       ([ forkCron_ True "Dispatcher" 5 $ dispatcher rng sender msender dbconf
+        , forkCron_ True "Cleaner" (60*60*24) $ cleaner rng dbconf
         ] ++
         case mscSlaveSender conf of
-          Just slave -> [ forkCron "ServiceAvailabilityChecker" 0
+          Just slave -> [ forkCron True "ServiceAvailabilityChecker" 0
                             (serviceAvailabilityChecker rng dbconf (sender, createSender slave) msender) ]
           Nothing    -> []) $ \_ -> do
       waitForTermination

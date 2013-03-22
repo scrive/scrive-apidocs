@@ -45,7 +45,8 @@ tableEvidenceLog = tblTable {
        ("affected_signatory_link_id", SqlColDesc { colType  = SqlBigIntT
                                         , colNullable = Just True}),
        ("message_text",      SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just True})] -> return TVRvalid
+                                        , colNullable = Just True})
+       ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE evidence_log ("
           <> "  id            BIGSERIAL   NOT NULL"

@@ -60,8 +60,8 @@ tableDocuments = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "file_id" "files" "id")
-                     , (tblForeignKeyColumn "sealed_file_id" "files" "id") ]
+  , tblForeignKeys =  [ tblForeignKeyColumn "file_id" "files" "id"
+                      , tblForeignKeyColumn "sealed_file_id" "files" "id" ]
   }
 
 tableAuthorAttachments :: Table

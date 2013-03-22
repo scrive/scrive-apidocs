@@ -11,8 +11,10 @@ module EvidenceLog.Model (
   , copyEvidenceLogToNewDocuments
   ) where
 
+import Control.Applicative ((<$>), (<*>))
 import DB
 import DB.SQL2
+import qualified HostClock.Model as HC
 import IPAddress
 import MinutesTime
 import Data.Typeable
@@ -24,7 +26,6 @@ import Doc.DocumentID
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 import Control.Monad.Identity
-
 
 data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAffectedSignatoryAndMsg
                            EvidenceEventType      -- A code for the event
@@ -68,7 +69,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
       sqlSet "api_user" $ actorAPIString actor
       sqlSet "affected_signatory_link_id" $ maslid
       sqlSet "message_text" $ mmsg
-            
+
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields mdid actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid Nothing Nothing actor)
       
@@ -90,6 +91,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyD
 data DocumentEvidenceEvent = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
   , evTime       :: MinutesTime
+  , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
   , evText       :: String
   , evType       :: EvidenceEventType
   , evVersionID  :: String
@@ -109,7 +111,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
   query (GetEvidenceLog docid) = do
     _ <- kRun $ SQL ("SELECT "
       <> "  document_id"
-      <> ", time"
+      <> ", evidence_log.time"
       <> ", text"
       <> ", event_type"
       <> ", version_id"
@@ -121,17 +123,21 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", api_user"
       <> ", affected_signatory_link_id"
       <> ", message_text"
-      <> "  FROM evidence_log "
+      <> ", host_clock.time"
+      <> ", host_clock.clock_offset"
+      <> ", host_clock.clock_frequency"
+      <> "  FROM evidence_log LEFT JOIN host_clock ON host_clock.time = (SELECT max(host_clock.time) FROM host_clock WHERE host_clock.time <= evidence_log.time)"
       <> "  WHERE document_id = ?"
-      <> "  ORDER BY time DESC, id DESC") [
+      <> "  ORDER BY id DESC") [
         toSql docid
       ]
     kFold fetchEvidenceLog []
     where
-      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg =
+      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg hctime offset frequency =
         DocumentEvidenceEvent {
             evDocumentID = did'
           , evTime       = tm
+          , evClockErrorEstimate = HC.ClockErrorEstimate <$> hctime <*> offset <*> frequency
           , evText       = txt
           , evType       = tp
           , evVersionID  = vid

@@ -25,8 +25,9 @@ data WorkerState = Waiting | Running
 data Command = Continue | Finish
   deriving Eq
 
--- | Given an action f and a number of seconds t, cron will execute
--- f every t seconds with the first execution t seconds after cron is called.
+-- | Given an action f and a number of seconds t, cron will execute f
+-- every t seconds.  A flag determines if the first execution starts
+-- immediately, or after t seconds.
 --
 -- Returned value should be used for ordering given action to stop executing
 -- by passing it to stopCron. After that you can call wait on passed ThreadGroup
@@ -36,8 +37,9 @@ data Command = Continue | Finish
 -- call to stopCron issued when action is running, but within interruptible section
 -- will interrupt the action immediately (this is particurarly useful when action
 -- has to block for a period of time and it's safe to interrupt it in such state).
-forkCron :: String -> Integer -> ((forall a. IO a -> IO a) -> IO ()) -> TG.ThreadGroup -> IO CronInfo
-forkCron name seconds action tg = do
+forkCron :: Bool -- ^ If True, wait t seconds before starting the action.
+         -> String -> Integer -> ((forall a. IO a -> IO a) -> IO ()) -> TG.ThreadGroup -> IO CronInfo
+forkCron waitfirst name seconds action tg = do
   vars@(ctrl, _) <- atomically ((,) <$> newTVar (Waiting, Continue) <*> newTVar False)
   _ <- forkIO $ controller vars
   return $ CronInfo ctrl
@@ -45,9 +47,11 @@ forkCron name seconds action tg = do
     controller (ctrl, int) = do
       (wid, _) <- TG.forkIO tg worker
       let (times::Int, rest::Int) = fromInteger *** fromInteger $ (seconds * 1000000) `divMod` (fromIntegral(maxBound::Int)::Integer)
-      let loop = do
+      let wait = do
             replicateM_ times $ threadDelay maxBound
             threadDelay rest
+            start
+          start = do
             -- start worker...
             atomically . modifyTVar' ctrl $ first (const Running)
             -- ... and wait until it's done (unless it's in interruptible
@@ -64,8 +68,8 @@ forkCron name seconds action tg = do
                 -- mark thread as not running, so STM transaction
                 -- in release function can pass
                 atomically $ modifyTVar' ctrl $ first (const Waiting)
-              False -> loop
-      loop
+              False -> wait
+      if waitfirst then wait else start
       where
         release :: IO a -> IO a
         release m = do
@@ -92,8 +96,8 @@ forkCron name seconds action tg = do
 
 -- | Same as forkCron, but there is no way to make parts
 -- of passed action interruptible
-forkCron_ :: String -> Integer -> IO () -> TG.ThreadGroup -> IO CronInfo
-forkCron_ name seconds action = forkCron name seconds (const action)
+forkCron_ :: Bool -> String -> Integer -> IO () -> TG.ThreadGroup -> IO CronInfo
+forkCron_ waitfirst name seconds action = forkCron waitfirst name seconds (const action)
 
 -- | Stops given cron thread. Use that before calling wait with appropriate
 -- ThreadGroup object.

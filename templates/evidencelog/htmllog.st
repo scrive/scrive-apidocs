@@ -158,19 +158,30 @@ htmlevidencelog=
 
 <table>
     <tr>
-        <td class="top" style="border-bottom: solid 1px #666; width:170px;"><em>Time</em></td>
-        <td class="topt" style="border-bottom: solid 1px #666; width:170px;"><em>IP</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:120px;"><em>Time</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:70px;"><em>Clock Error <br/>Estimate Age</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:70px;"><em>IP Address</em></td>
         <td class="top" style="border-bottom: solid 1px #666; width:170px;"><em>Event</em></td>
     </tr>
 
     $entries:{entry|
      <tr>
        <td>$entry.time$</td>
+       <td>$entry.hce_age$</td>
        <td>$entry.ip$</td>
        <td><div class='capitalize-first-letter'>$entry.text:noescape()$</div></td>
      </tr>
     }$
 
+</table>
+<p/>
+For a time period including the lifetime of the document and at least 24 hours long, Scrive recorded the following statistics for the offset between Scrive system clocks and reference time:
+<table>
+   <tr><td style="width: 220px;">Maximum offset</td><td>$ce_max$</td></tr>
+   <tr><td>Sample mean</td><td>$ce_mean$</td></tr>
+   <tr><td>Sample standard deviation</td><td>$ce_std_dev$</td></tr>
+   <tr><td>Number of collected offset samples</td><td>$ce_collected$</td></tr>
+   <tr><td>Number of failed collection attempts</td><td>$ce_missed$</td></tr>
 </table>
 </body>
 </html>

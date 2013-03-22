@@ -3,6 +3,7 @@ module AppConf (
   ) where
 
 import Configuration
+import HostClock.System (defaultNtpServers)
 import User.Model
 import Mails.MailsConfig
 import Data.Word
@@ -43,6 +44,7 @@ data AppConf = AppConf {
   , precogKey          :: String                       -- ^ API key for Precog
   , precogRootPath     :: String                       -- ^ API root path for Precog
   , precogPathPrefix   :: PrecogPrefix                 -- ^ Dev/Staging/Prod prefix for Precog. MAKE SURE THIS IS SET CORRECTLY DEPENDING ON WHETHER YOU'RE DEPLOING ON PROD, STAGING OR DEV! (You can see this is important because I'm using all caps!)
+  , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -83,6 +85,7 @@ instance Configuration AppConf where
     -- production, or our Precog data will get mixed up in an exceedingly
     -- annoying way!
     , precogPathPrefix   = Dev
+    , ntpServers         = defaultNtpServers
     }
   confOptions = [
   {-

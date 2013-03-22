@@ -17,6 +17,7 @@ import Doc.Tables
 import Doc.Migrations
 import Doc.API.Callback.Tables
 import Doc.Tokens.Tables
+import HostClock.Tables
 import User.Migrations
 import User.Tables
 import User.History.Tables
@@ -178,4 +179,5 @@ kontraTables = [
   , tableDocumentSessionTokens
   , tableELegTransactions
   , tableAsyncEventQueue
+  , tableHostClock
   ] ++ mailerTables

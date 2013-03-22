@@ -166,6 +166,7 @@ module DB.SQL2
   , sqlWhereAll
 
   , SqlResult
+  , SqlSet
   , SqlFrom
   , SqlWhere
   , SqlOrderBy

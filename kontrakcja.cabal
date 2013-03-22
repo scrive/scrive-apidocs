@@ -166,6 +166,7 @@ Executable kontrakcja-server
   Build-depends: cryptohash == 0.7.5
   Build-depends: Crypto == 4.2.*
   Build-depends: DRBG == 0.2.3
+  Build-depends: Decimal == 0.2.3
   Build-depends: HDBC == 2.3.1.1
   Build-depends: HDBC-postgresql == 2.3.2.1.1
   Build-depends: HPDF == 1.4.2

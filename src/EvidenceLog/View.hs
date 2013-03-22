@@ -24,8 +24,11 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
+import Data.Decimal (realFracToDecimal)
 import Data.Maybe
 import Data.List
+import Data.Word (Word8)
+import qualified HostClock.Model as HC
 import User.Model
 import DB
 import Control.Logic
@@ -159,14 +162,26 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
     F.value "text" $ filterTags <$> evMessageText dee
     F.value "eleg" $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
     F.value "pad"  $ documentdeliverymethod doc == PadDelivery
-    
--- | Generating text of Evidence log that is attachmed to PDF. It should be compleate
-htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
-htmlDocFromEvidenceLog title elog = do
+
+showClockError :: Word8 -> Double -> String
+showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
+
+-- | Generating text of Evidence log that is attachmed to PDF. It should be complete
+htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> HC.ClockErrorStatistics -> m String
+htmlDocFromEvidenceLog title elog ces = do
   renderTemplate "htmlevidencelog" $ do
     F.value "documenttitle" title
+    F.value "ce_max"       $ showClockError 1 <$> HC.max ces
+    F.value "ce_mean"      $ showClockError 1 <$> HC.mean ces
+    F.value "ce_std_dev"   $ showClockError 1 <$> HC.std_dev ces
+    F.value "ce_collected" $ HC.collected ces
+    F.value "ce_missed"    $ HC.missed ces
     F.objects "entries" $ for (filter (not . htmlSkipedEvidenceType . evType) elog) $ \entry -> do
       F.value "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
+                       ++ maybe "" (\e -> " ±" ++ showClockError 0 e)
+                                   (HC.maxClockError (evTime entry) <$> evClockErrorEstimate entry)
+      F.value "hce_age" $ maybe "" (\t -> show ((toSeconds (evTime entry) - toSeconds t) `div` 60) ++ " minutes")
+                                   (HC.time <$> evClockErrorEstimate entry)
       F.value "ip"   $ show <$> evIP4 entry
       F.value "text" $ evText entry
 
