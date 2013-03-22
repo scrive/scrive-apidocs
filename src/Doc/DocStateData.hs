@@ -311,7 +311,18 @@ data DocumentStatus = Preparation
                     | Timedout
                     | Rejected
                     | DocumentError String
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord)
+
+
+{- Used by API -}
+instance Show DocumentStatus where
+  show Preparation = "Preparation"
+  show Pending = "Pending"
+  show Closed  = "Closed"
+  show Canceled  = "Canceled"
+  show Timedout  = "Timedout"
+  show Rejected = "Rejected"
+  show (DocumentError _) = "DocumentError"
 
 data DocumentProcess = Contract | Offer | Order
   deriving (Eq, Ord, Show, Read, Bounded, Enum)

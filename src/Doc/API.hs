@@ -110,6 +110,7 @@ versionedAPI _version = choice [
   dir "list"               $ hGetAllowHttp $ apiCallList,
   dir "evidencelog"        $ hGetAllowHttp $ apiCallEvidenceLog,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallDownloadMainFile,
+  dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallDownloadFile,
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
   dir "mainfile" $ hPostNoXTokenHttp $ toK1 $ documentChangeMainFile,
@@ -497,6 +498,35 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
     where
       respondWithPDF contents = do
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+        return res2
+
+
+apiCallDownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
+apiCallDownloadFile did fileid _nameForBrowser = api $ do
+  (msid :: Maybe SignatoryLinkID) <- lift $ readField "signatorylinkid"
+  mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
+  doc <- do
+           case (msid, mmh) of
+            (Just sid, Just mh) -> apiGuardL  (forbidden "Access to document is forbiden.") $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+            _ ->  do
+                  (user, _actor, external) <- getAPIUser APIDocCheck
+                  if (external)
+                    then do
+                      ctx <- getContext
+                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+                      res <- apiGuardL  (forbidden "Access to document is forbiden.")  $ getDocByDocID did
+                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+                      return res;
+                    else apiGuardL  (forbidden "Access to document is forbiden.")  $ getDocByDocID did
+  let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
+                      (authorattachmentfile <$> documentauthorattachments doc) ++
+                      (catMaybes $ Prelude.map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
+  if (all (/= fileid) allfiles)
+     then throwIO . SomeKontraException $ forbidden "Access to file is forbiden."
+     else do
+        content <- getFileIDContents fileid
+        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
         return res2
 

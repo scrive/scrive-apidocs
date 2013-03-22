@@ -40,4 +40,5 @@ apiCallCheckClient = api $ do
     runJSONGenT $ do
       value "valid" True
       value "valid_until" JSNull
+      value "upgrade_url" JSNull
 

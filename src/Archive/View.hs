@@ -69,6 +69,7 @@ docFieldsListForJSON padqueue doc = do
     J.value "id" $ show $ documentid doc
     J.value "title" $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
+    J.value "state"  $ show $ documentstatus doc
     J.value "party" $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc
     J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)

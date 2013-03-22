@@ -19,6 +19,7 @@ window.ApiCall = Backbone.Model.extend({
         isDelete : function() {return false;},
         isGet : function() {return false;},
         isList : function() {return false;},
+        isDownloadFile : function() {return false;},
         isDownloadMainFile : function() {return false;},
         isAddToPadQueue : function() {return false;},
         isGetProfile : function() {return false;},
@@ -57,6 +58,8 @@ window.ApiCallView = function(args) {
            return new GetApiCallView(args);
         else if (args.model.isList())
            return new ListApiCallView(args);
+        else if (args.model.isDownloadFile())
+           return new DownloadFileApiCallView(args);
         else if (args.model.isDownloadMainFile())
            return new DownloadMainFileApiCallView(args);
         else if (args.model.isAddToPadQueue())

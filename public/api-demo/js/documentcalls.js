@@ -372,6 +372,41 @@ window.DownloadMainFileApiCall = ApiCall.extend({
         }
 });
 
+window.DownloadFileApiCall = ApiCall.extend({
+        defaults: {
+             name : "Download file API call",
+             documentid : LocalStorage.get("api","documentid"),
+             fileid : LocalStorage.get("api","fileid")
+        },
+        initialize: function (args) {
+        },
+        isDownloadFile : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+             LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        fileid : function() {return this.get("fileid");},
+        setFileid : function(fileid) {
+             LocalStorage.set("api","fileid",fileid);
+            return this.set({"fileid" : fileid});
+        },
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"downloadfile/" + model.documentid() + "/" + model.fileid() + "/filename.pdf", {
+                type: 'GET',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
 window.AddToPadQueueApiCall = ApiCall.extend({
         defaults: {
              name : "Add to padqueue API call",
@@ -842,6 +877,40 @@ window.DownloadMainFileApiCallView = Backbone.View.extend({
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
+
+window.DownloadFileApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var fileidInput = $("<input type='text'/>").val(model.fileid());
+            fileidInput.change(function() {model.setFileid(fileidInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                   .append($("<div>File #: <BR/></div>").append(fileidInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
 
 window.AddToPadQueueApiCallView = Backbone.View.extend({
         initialize: function(args) {

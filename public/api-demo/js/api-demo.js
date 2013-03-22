@@ -50,6 +50,7 @@ var ApiDemoView = Backbone.View.extend({
             var check = $("<option value='c'>Get</option>");
             var list  = $("<option value='l'>List</option>");
             var download  = $("<option value='dl'>Download file</option>");
+            var downloadmf  = $("<option value='dlmf'>Download document file</option>");
             var addtopad  = $("<option value='pq'>Add to padqueue</option>");
             var reject  = $("<option value='reject'>Reject</option>");
             var sign  = $("<option value='sign'>Sign</option>");
@@ -62,7 +63,7 @@ var ApiDemoView = Backbone.View.extend({
 
             select.append(none).append(createFromFile).append(createFromTemplate).append(update)
                   .append(ready).append(sendReminder).append(cancel).append(del).append(check)
-                  .append(list).append(download).append(addtopad).append(reject).append(sign)
+                  .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(sign)
                   .append($("<option>---------</option>"))
                   .append(profile).append(language).append(password).append(signup).append(updateprofile)
                   .append($("<option>---------</option>"))
@@ -86,8 +87,10 @@ var ApiDemoView = Backbone.View.extend({
                     check.attr("selected", "true");
                 else if (model.selectedApiCall().isList())
                     list.attr("selected", "true");
-                else if (model.selectedApiCall().isDownloadMainFile())
+                else if (model.selectedApiCall().isDownloadFile())
                     download.attr("selected", "true");
+                else if (model.selectedApiCall().isDownloadMainFile())
+                    downloadmf.attr("selected", "true");
                 else if (model.selectedApiCall().isAddToPadQueue())
                     addtopad.attr("selected", "true");
                 else if (model.selectedApiCall().isReject())
@@ -130,6 +133,8 @@ var ApiDemoView = Backbone.View.extend({
                 else if (select.val() == "l")
                     model.setSelectedApiCall(new ListApiCall({oauth : oauth}));
                 else if (select.val() == "dl")
+                    model.setSelectedApiCall(new DownloadFileApiCall({oauth : oauth}));
+                else if (select.val() == "dlmf")
                     model.setSelectedApiCall(new DownloadMainFileApiCall({oauth : oauth}));
                 else if (select.val() == "pq")
                     model.setSelectedApiCall(new AddToPadQueueApiCall({oauth : oauth}));
