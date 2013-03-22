@@ -5,6 +5,7 @@ module Attachment.Control
   , handleRename
   , handleShow
   , handleDelete
+  , handleDownloadAttachment
   , jsonAttachment
   , jsonAttachmentsList
   )
@@ -38,6 +39,10 @@ import Doc.Rendering
 import Utils.String
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
+import File.Storage
+import File.Model
+import qualified Data.Map as Map
+import qualified Data.ByteString.UTF8 as BS
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -62,6 +67,31 @@ handleDelete = do
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
     _ <- guardRightM' $ dbUpdate $ DeleteAttachments (userid user) attids actor
     J.runJSONGenT $ return ()
+
+-- | This handler downloads a file by file id. As specified in
+-- handlePageOfDocument rules of access need to be obeyd. This handler
+-- download file as is.
+handleDownloadAttachment :: Kontrakcja m => AttachmentID -> FileID -> String -> m Response
+handleDownloadAttachment attid fid _nameForBrowser = do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+                                            , AttachmentsOfAuthorDeleteValue (userid user) True
+                                            , AttachmentsOfAuthorDeleteValue (userid user) False
+                                            ]
+                                            [ AttachmentFilterByID [attid]
+                                            , AttachmentFilterByFileID [fid]
+                                            ]
+                                            []
+                                            (0,1)
+  case atts of
+       [att] -> getFileIDContents (attachmentfile att) >>= respondWithPDF
+       _ -> internalError
+  where
+    respondWithPDF contents = do
+      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+          res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+      return res2
+
 
 handleCreateNew :: Kontrakcja m => m JSValue
 handleCreateNew = do

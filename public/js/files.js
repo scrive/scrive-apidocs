@@ -44,8 +44,11 @@ window.File = Backbone.Model.extend({
         var name = this.name();
         if (name.toLowerCase().indexOf(".pdf", name.length - 4) == -1)
           name = name + ".pdf";
-        if( this.fileid()!==undefined ) {
-            link = "/download/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
+        if( this.fileid()!==undefined && this.attachmentid()!==undefined ) {
+            link = "/a/download/" + this.attachmentid() + "/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
+        }
+        if( this.fileid()!==undefined && this.documentid()!==undefined ) {
+            link = "/api/frontend/downloadfile/" + this.documentid() + "/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         else if( this.documentid()!==undefined ) {
             link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(name) + this.queryPart();

@@ -8,7 +8,6 @@ module Doc.DocControl(
     -- Top level handlers
     , handleNewDocument
     , showCreateFromTemplate
-    , handleDownloadFile
     , handleSignShow
     , handleSignShowSaveMagicHash
     , splitUpDocumentWorker
@@ -62,7 +61,6 @@ import Crypto.RNG
 import Attachment.Model
 import InputValidation
 import File.Model
-import File.Storage
 import Kontra
 import KontraLink
 import MagicHash
@@ -727,20 +725,6 @@ checkFileAccessWith fid msid mmh mdid mattid =
            when (length atts /= 1) $
                 internalError
     _ -> internalError
-
--- | This handler downloads a file by file id. As specified in
--- handlePageOfDocument rules of access need to be obeyd. This handler
--- download file as is.
-handleDownloadFile :: Kontrakcja m => FileID -> String -> m Response
-handleDownloadFile fid _nameForBrowser = do
-  checkFileAccess fid
-  content <- getFileIDContents fid
-  respondWithPDF content
-  where
-    respondWithPDF contents = do
-      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-          res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-      return res2
 
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
 handleDeleteSigAttach docid siglinkid = do

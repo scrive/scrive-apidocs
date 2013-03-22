@@ -484,13 +484,9 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
                     else apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID did
 
   content <- case documentstatus doc of
-                Closed -> do
-                  -- Here we should actually respond with a redirect
-                  -- that waits for file to appear. Hopefully nobody
-                  -- clicks download that fast.
-                  case (documentsealedfile doc) of
-                       Just _ -> lift $ documentSealedFileID doc >>= getFileIDContents
-                       Nothing -> throwIO . SomeKontraException $ noAvailableYet "Sealed file is not ready yet, please try later"
+                Closed -> case (documentsealedfile doc) of
+                            Just fileid -> getFileIDContents fileid
+                            Nothing ->  throwIO . SomeKontraException $ noAvailableYet "Not ready, please try later"
                 _ -> do
                   sourceFile <- (lift $ documentFileID doc) >>= apiGuardJustM  (serverError "No file") . dbQuery . GetFileByFileID
                   apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile

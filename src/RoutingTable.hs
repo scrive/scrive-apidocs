@@ -54,10 +54,6 @@ staticRoutes = choice
      , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
      , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
-     -- Only download function | unified for author and signatories
-     , dir "download"                     $ hGet  $ toK2 $ DocControl.handleDownloadFile
-
-
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
 
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
@@ -79,6 +75,8 @@ staticRoutes = choice
      , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
      , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
+     , dir "a" $ dir "download"    $ hGet  $ toK3 $ AttachmentControl.handleDownloadAttachment
+
 
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
 
