@@ -993,6 +993,7 @@ insertDocumentAsIs document = do
                  , documenttags
                  , documentauthorattachments
                  , documentlang
+                 , documentobjectversion
                  } = document
         process = toDocumentProcess documenttype
 
@@ -1015,6 +1016,7 @@ insertDocumentAsIs document = do
         sqlSet "invite_text" documentinvitetext
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
+        sqlSet "object_version" documentobjectversion
         mapM_ (sqlResult) documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
@@ -2061,17 +2063,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
   update (ResetSignatoryDetails documentid signatories actor) =
     update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing, StandardAuthentication, EmailDelivery)) signatories) actor)
 
-<<<<<<< HEAD
-splitImage :: String -> Maybe (Int, Int, String)
-splitImage s = do
-  let ws = takeWhile (/= '|') s
-      hs = takeWhile (/= '|') s'
-      is = dropWhile (== '|') $ dropWhile (/= '|') s'
-      s' = dropWhile (== '|') $ dropWhile (/= '|') s
-  w <- maybeRead ws
-  h <- maybeRead hs
-  return (w, h, is)
-
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
@@ -2087,7 +2078,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
 
             let mauthorsiglink = getAuthorSigLink document
             siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl, authmethod, deliverymethod) -> do
-                     magichash <- lift random
+                     magichash <- random
                      let link' = (signLinkFromDetails' details atts magichash)
                                  {  signatorylinkcsvupload = mcsvupload
                                   , signatorylinksignredirecturl= msignredirecturl
@@ -2539,12 +2530,10 @@ instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
        sqlWhereDocumentObjectVersionIs did ov
     case res of
          [] -> return ()
-         (e:_) -> throw e
-
+         (e:_) -> kThrow e
 
 
 -- Update utilities
-
 updateWithEvidence' :: (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => m Bool -> Table -> SQL -> m evidence -> m Bool
 updateWithEvidence' testChanged t u mkEvidence = do
   changed <- testChanged
@@ -2567,7 +2556,7 @@ updateOneWithEvidenceIfChanged did col new =
                       <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
 
-updateMTimeAndObjectVersion :: (MonadDB m)  => DocumentID -> MinutesTime -> DBEnv m ()
+updateMTimeAndObjectVersion :: (MonadDB m)  => DocumentID -> MinutesTime -> m ()
 updateMTimeAndObjectVersion did mtime = do
   kRun_ $ sqlUpdate "documents" $ do
        sqlSetInc "object_version"

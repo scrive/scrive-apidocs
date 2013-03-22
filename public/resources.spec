@@ -76,6 +76,7 @@ set systemPage
  js   js/storage.js
  js   js/utils/browserinfo.js
  js   js/utils/language.js
+ js   js/utils/time.js
  js   js/loading.js
  js   js/arrows.js
  js   js/flashmessages.js

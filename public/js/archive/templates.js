@@ -30,7 +30,10 @@ window.TemplatesListDefinition = function(archive) { return {
                          return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
                   }}),
 
-        new Cell({name: localization.archive.templates.columns.time, width:"150px", field:"time"}),
+        new Cell({name: localization.archive.templates.columns.time, width:"150px", field:"time", special: "rendered",
+                  rendering: function(time) {
+                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                  }}),
         new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
                   rendering: function(value, idx, model) {
                          var res= $("<div/>");

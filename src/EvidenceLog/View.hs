@@ -33,8 +33,8 @@ import User.Model
 import DB
 import Control.Logic
 -- | Evidence log for web page - short and simplified texts
-eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> [DocumentEvidenceEvent] -> m [JSValue]
-eventsJSListFromEvidenceLog tl doc dees = mapM (J.runJSONGenT . eventJSValue tl doc) $ eventsForLog doc dees
+eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
+eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) $ eventsForLog doc dees
 
 
 eventsForLog :: Document -> [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
@@ -47,10 +47,10 @@ eventsForLog _doc events =
     in cleanerLog
 
 
-eventJSValue :: (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> DocumentEvidenceEvent -> JSONGenT m ()
-eventJSValue tl doc dee = do
+eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent -> JSONGenT m ()
+eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
-    J.value "time"  $ showDateForHistory tl (evTime dee)
+    J.value "time"  $ showDateForHistory (evTime dee)
     J.valueM "party" $ if (systemEvents $ evType dee)
                           then return "Scrive"
                           else case (getSigLinkFor doc $ evSigLinkID dee) of

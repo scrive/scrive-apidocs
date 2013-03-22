@@ -18,7 +18,10 @@ window.AttachmentsListDefinition = function(archive) {
                          return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
                   }}),
         new Cell({name: localization.archive.attachments.columns.attachment, width:"600px", field:"title",  special: "link"}),
-        new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time"})
+        new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time", special: "rendered",
+                  rendering: function(time) {
+                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                  }})
         ],
     actions : [
         new ListAction({

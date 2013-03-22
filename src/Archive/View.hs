@@ -53,19 +53,19 @@ pageArchive user mt = renderTemplate "pageDocumentsList" $ do
                     F.value "month" $ mtMonth mt
                     F.value "year" $ mtYear mt
 
-docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
-docForListJSON tl crtime user padqueue doc = do
+docForListJSON :: TemplatesMonad m => User -> PadQueue ->  Document -> m JSValue
+docForListJSON user padqueue doc = do
   let link = case getSigLinkFor doc user of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do
-    J.object "fields" $ docFieldsListForJSON tl crtime padqueue doc
-    J.objects "subfields" $ map (signatoryFieldsListForJSON tl crtime padqueue doc) (filter sigFilter (documentsignatorylinks doc))
+    J.object "fields" $ docFieldsListForJSON padqueue doc
+    J.objects "subfields" $ map (signatoryFieldsListForJSON padqueue doc) (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
 
-docFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime ->  PadQueue -> Document -> JSONGenT m ()
-docFieldsListForJSON tl crtime padqueue doc = do
+docFieldsListForJSON :: TemplatesMonad m => PadQueue -> Document -> JSONGenT m ()
+docFieldsListForJSON padqueue doc = do
     J.value "id" $ show $ documentid doc
     J.value "title" $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
@@ -73,7 +73,7 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
-    J.value "time" $ showDateAbbrev tl crtime (documentmtime doc)
+    J.value "time" $ formatMinutesTimeRealISO (documentmtime doc)
     J.value "type" $ case documenttype doc of
                         Template _ -> "template"
                         Signable _ -> "signable"
@@ -96,14 +96,14 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
     J.value "objectversion" $ documentobjectversion doc
 
-signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
-signatoryFieldsListForJSON tl crtime padqueue doc sl = do
+signatoryFieldsListForJSON :: TemplatesMonad m => PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
+signatoryFieldsListForJSON padqueue doc sl = do
     J.value "id" $ show $ signatorylinkid sl
     J.value "status" $ show $ signatorylinkstatusclass sl
     J.value "name" $ case strip (getCompanyName sl) of
                        "" -> getSmartName sl
                        _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
-    J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
+    J.value "time" $ fromMaybe "" $ formatMinutesTimeRealISO <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
     J.value "isauthor" $ "true" <| isAuthor sl |> "false"
@@ -116,12 +116,12 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
         reject = signatorylinkrejectiontime sl
         open = maybereadinvite sl
 
-docForListCSV:: KontraTimeLocale -> Int -> Document -> [[String]]
-docForListCSV ktl agr doc = map (signatoryForListCSV ktl agr doc) $ [Nothing] <| null interestingLinks |> map Just interestingLinks
+docForListCSV::  Int -> Document -> [[String]]
+docForListCSV agr doc = map (signatoryForListCSV agr doc) $ [Nothing] <| null interestingLinks |> map Just interestingLinks
     where interestingLinks = filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
 
-signatoryForListCSV:: KontraTimeLocale ->  Int -> Document -> (Maybe SignatoryLink) -> [String]
-signatoryForListCSV ktl _agr doc msl = [
+signatoryForListCSV::  Int -> Document -> (Maybe SignatoryLink) -> [String]
+signatoryForListCSV _agr doc msl = [
               ("'" ++ show (documentid doc) ++ "'") -- Exel trick
             , documenttitle doc
             , show $ documentstatusclass doc
@@ -138,7 +138,7 @@ signatoryForListCSV ktl _agr doc msl = [
             , fromMaybe  "" $ getCompanyNumber <$> msl
             ] ++ (map sfValue $ sortBy fieldNameSort customFields)
     where
-        csvTime = formatMinutesTime ktl "%Y-%m-%d %H:%M"
+        csvTime = formatMinutesTime "%Y-%m-%d %H:%M"
         customFields = filter isCustom  $ concat $ maybeToList $ signatoryfields <$> signatorydetails <$> msl
         fieldNameSort sf1 sf2 = case (sfType sf1, sfType sf2) of
                                   (CustomFT n1 _, CustomFT n2 _) -> compare n1 n2

@@ -173,7 +173,6 @@ jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do
   Log.debug $ "Long list " ++ (show $ map fromEnum [SCDraft,SCCancelled,SCRejected,SCTimedout,SCError,SCDeliveryProblem,SCSent,SCDelivered,SCRead,SCOpened,SCSigned])
   user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
-  lang <- ctxlang <$> getContext
   doctype <- getField' "documentType"
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
@@ -213,13 +212,12 @@ jsonDocumentsList = do
       pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
   Log.debug $ "Filtering with " ++ show filters
-  cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
        Just "csv" -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0,-1)
-          let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..] allDocs
+          let docsCSVs = concat $ zipWith docForListCSV  [1..] allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeader
                               , csvContent = docsCSVs
@@ -231,7 +229,7 @@ jsonDocumentsList = do
                                 , pageSize   = docsPageSize
                                 , listLength = allDocsCount
                                 }
-          docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ list docs
+          docsJSONs <- mapM (docForListJSON user padqueue) $ list docs
           return $ Right $ runJSONGen $ do
               value "list" docsJSONs
               value "paging" $ pagingParamsJSON docs
