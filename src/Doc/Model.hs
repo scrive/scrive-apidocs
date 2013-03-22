@@ -104,6 +104,7 @@ import Control.Logic
 import Doc.DocStateData
 import Doc.Invariants
 import Data.Maybe hiding (fromJust)
+import Data.Char (toLower)
 import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
 import Utils.Default
@@ -1954,6 +1955,8 @@ data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID Signat
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
   update (SetInvitationDeliveryStatus did slid status actor) = do
     let decode acc st = acc ++ [st]
+        lowercase "" = ""
+        lowercase (c:cs) = toLower c: cs
     old_status <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
         sqlJoin "signatory_links AS signatory_links_old"
@@ -1973,7 +1976,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
     when_ (changed) $
       update $ InsertEvidenceEvent
         SetInvitationDeliveryStatusEvidence
-        (value "email" email >> value "status" (show status) >> value "actor" (actorWho actor))
+        (value "email" email >> value "status" (lowercase $ show status) >> value "actor" (actorWho actor))
         (Just did)
         actor
     when_ (changed && status == Delivered) $
