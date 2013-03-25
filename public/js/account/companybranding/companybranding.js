@@ -73,8 +73,11 @@ window.CompanyBrandingModel = Backbone.Model.extend({
           new Submit({
               method: "POST",
               url: self.submiturl,
-              company: JSON.stringify(self.toJSON())
-          }).sendAjax(function() { LoadingDialog.close();});
+              company: JSON.stringify(self.toJSON()),
+              ajaxsuccess: function () {
+                LoadingDialog.close();
+              }
+          }).sendAjax();
     },
     toJSON: function() {
       return ({

@@ -484,8 +484,10 @@ var CompanyBrandingLogoView = Backbone.View.extend({
                                      maxlength: 2,
                                      onAppend: function(input, title, multifile) {
                                        var submit = model.serializeLogo();
-                                       submit.addInputs(input);
-                                       submit.send();
+                                       submit.addInputs($(input).attr("name", "logo"));
+                                       setTimeout(function() {
+                                          submit.sendAjax();
+                                       },10);
                                      }
                                     });
 
