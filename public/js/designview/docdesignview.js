@@ -1017,7 +1017,7 @@ var DesignViewView = Backbone.View.extend({
                                     document.makeTemplate();
                                     document.save();
                                     document.afterSave(function() {
-                                        new Submit().send();
+                                         window.location.reload();
                                     });
                                 }});
 
