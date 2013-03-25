@@ -191,7 +191,7 @@ var TextTypeSetterView = Backbone.View.extend({
         return Button.init({color:"green",
                             size: "tiny",
                             text: localization.designview.textFields.done,
-                            style: "position: relative;  z-index: 107;",
+                            style: "position: relative;  z-index: 107;margin-top: 4px;",
                             onClick : function() {
 
                                 var done = field.name() != undefined && field.name() != "";
@@ -546,7 +546,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         return Button.init({color:"green",
                             size: "tiny",
                             text: localization.designview.checkboxes.done,
-                            style: "position: relative;  z-index: 107;",
+                            style: "position: relative;  z-index: 107;margin-top: 4px;",
                             onClick : function() {
 
                                 var done = field.name() != undefined && field.name() != "";

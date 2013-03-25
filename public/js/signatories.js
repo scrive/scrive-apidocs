@@ -106,7 +106,7 @@ window.Signatory = Backbone.Model.extend({
         });
 
         this.bind("change", function() {signatory.document().trigger("change:signatories")});
-
+        this.bind("change:role", function() {signatory.document().trigger("change:signatories-roles")});
     },
     document: function() {
         return this.get("document");
