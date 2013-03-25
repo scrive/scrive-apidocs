@@ -13,7 +13,6 @@ mailDocumentAwaitingForAuthor=
         mailheader= _mailDocumentAwaitingForAuthorTitle();
         mailp1 = _mailDocumentAwaitingForAuthorContentSignedBy();
         mailp2 = nicebutton(link=documentlink; text=_mailReviewOnlineDocument());
-        mailp3 = footer;
         footer = legalparagraph()
     )$
 #####
@@ -36,7 +35,7 @@ mailContractClosed=
         mailheader = _mailDocumentClosedTitleContract();
         mailp1 = mailContractClosedMainP();
         mailp2 = regards();
-        mailp3 = footer
+        footer = footer
     )$
 
 ####
@@ -55,9 +54,8 @@ mailOfferClosed=
         mailheader = _mailDocumentClosedTitleOffer();
         mailp1 = mailContractClosedMainP();
         mailp2 = regards();
-        mailp3 = footer
+        footer = footer
     )$
-    $footer:noescape()$
 ####
 mailOfferClosedMainP =
       $_mailOfferClosedContentOfferAccepted()$
@@ -70,7 +68,8 @@ mailOrderClosed=
     $nicemail(
         mailheader = _mailDocumentClosedTitleOrder();
         mailp1 = mailContractClosedMainP();
-        mailp2 = regards()
+        mailp2 = regards();
+        footer = footer
     )$
 ####
 mailOrderClosedMainP=
@@ -333,7 +332,11 @@ remindMailNotSignedOffer=
     )$
 ###
 remindMailNotSignedOfferP1=
-$_remindMailNotSignedOfferBody()$
+$if(custommessage)$
+  $custommessage:noescape()$
+$else$
+      <div class="editable" name="custommessage">$_remindMailNotSignedOfferBody()$</div>
+$endif$
 <br/>
 <br/>
 $nicebutton(link=link; text=_mailReviewOnlineDocument())$
@@ -347,11 +350,14 @@ remindMailNotSignedOrder=
     )$
 ###
 remindMailNotSignedOrderP1=
-$_remindMailNotSignedOrderBody()$
+$if(custommessage)$
+  $custommessage:noescape()$
+$else$
+      <div class="editable" name="custommessage">$_remindMailNotSignedOrderBody()$</div>
+$endif$
 <br/>
 <br/>
 $nicebutton(link=link; text=_mailReviewOnlineDocument())$
-
 ###
 ###
 ###  NEW USER MAIN
