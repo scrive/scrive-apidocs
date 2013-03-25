@@ -56,7 +56,7 @@ window.MailView = Backbone.View.extend({
         var editablePart = $(".editable", content);
         var textarea = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
         textarea.css("width", this.model.editWidth() + "px");
-        var wrapper = $("<div/>").append(textarea);
+        var wrapper = $("<div style='margin-bottom:12px;'/>").append(textarea);
         editablePart.replaceWith(wrapper);
         setTimeout( function() {
            view.editor = textarea.tinymce({

@@ -67,7 +67,6 @@ data DocProcessInfo =
   , processmailreject :: String
   , processmailinvitationtosign :: String
   , processmailinvitationtosigndefaultheader :: String
-  , processmailnotsignedstandardheader :: String
   , processmailremindnotsigned :: String
   , processmailconfirmbymailapi :: String
   , processwhohadsignedinfoformail :: String
@@ -106,7 +105,6 @@ contractProcess =
   , processmailreject = "mailRejectContractMail"
   , processmailinvitationtosign = "mailInvitationToSignContract"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
-  , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
   , processmailremindnotsigned = "remindMailNotSignedContract"
   , processmailconfirmbymailapi = "mailMailAPIConfirmContract"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
@@ -145,7 +143,6 @@ offerProcess =
   , processmailreject = "mailRejectOfferMail"
   , processmailinvitationtosign = "mailInvitationToSignOffer"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
-  , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
   , processmailremindnotsigned= "remindMailNotSignedOffer"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOffer"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
@@ -185,7 +182,6 @@ orderProcess =
   , processmailreject = "mailRejectOrderMail"
   , processmailinvitationtosign = "mailInvitationToSignOrder"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
-  , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
   , processmailremindnotsigned = "remindMailNotSignedOrder"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOrder"
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"

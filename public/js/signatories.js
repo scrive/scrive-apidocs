@@ -417,7 +417,7 @@ window.Signatory = Backbone.Model.extend({
                 document: this.document(),
                 signatory: this,
                 type: "remind",
-                editWidth: (this.canSign() && !this.hasSigned()) ? 300 : undefined
+                editWidth: (this.canSign() && !this.hasSigned()) ? 300 : 540
         });
     },
     rejectMail: function() {

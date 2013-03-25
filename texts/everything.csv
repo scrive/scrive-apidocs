@@ -553,20 +553,11 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på <a href=""$link$"">den här länken</a><br/>        2.
  Granska online<br/>        3. Signera (eller avvisa)<br/>
          4. Färdig <BR/> $footer:noescape()$","<i>To continue</i><br/>        1. Click <a href=""$link$"">this link</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done <BR/> $footer:noescape()$"
-"_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte signerat eller avvisat
- dokument <strong>$documenttitle$</strong> ännu.","<strong>$author$</strong> would like to remind you that you haven't
-signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInstruction","1. Klicka på <a href=""$link$"">den här länken</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
  avvisa)<br/>        4. Färdig","1. Click <a href=""$link$"">this link</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
  return)<br/>        4. Done"
-"_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
- offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
- offerten genom att följa instruktionerna nedan.","<strong>$author$</strong> would like to remind you that you haven't confirmed or returned the offer  <strong>$documenttitle$</strong> yet. To do so:"
-"_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
- ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
- genom att följa instruktionerna nedan.","<strong>$author$</strong> would like to remind you that you haven't confirmed or returned the order <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedTitleContract","Påminnelse att e-signera avtal: $documenttitle$","Reminder to e-sign contract: $documenttitle$"
 "_remindMailNotSignedTitleOffer","Påminnelse att e-signera offert: $documenttitle$","Reminder to e-sign offer: $documenttitle$"
 "_remindMailNotSignedTitleOrder","Påminnelse att e-signera orderbekräftelse: $documenttitle$","Reminder to e-sign order confirmation: $documenttitle$"

@@ -82,12 +82,8 @@ remindMailNotSigned forMail customMessage ctx document signlink ispreview = do
         authorname = getAuthorName document
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
-        F.valueM "header" $ do
-            header <- if isNothing customMessage
-                         then remindMailNotSignedStandardHeader document signlink
-                         else return $ fromJust customMessage
-            makeEditable "customtext" header
-        F.value "authorname" authorname
+        F.value  "custommessage" customMessage
+        F.value  "authorname" authorname
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "partners" $ map getSmartName $ partyList document
         F.value "partnerswhosigned" $ map getSmartName $ partySignedList document
@@ -153,16 +149,6 @@ remindMailSignedStandardHeader :: TemplatesMonad m
                                -> m String
 remindMailSignedStandardHeader document signlink =
     renderLocalTemplate document "remindMailSignedStandardHeader" $ do
-        F.value "documenttitle" $ documenttitle document
-        F.value "author" $ getAuthorName document
-        F.value "personname" $ getSmartName signlink
-
-remindMailNotSignedStandardHeader :: TemplatesMonad m
-                                  => Document
-                                  -> SignatoryLink
-                                  -> m String
-remindMailNotSignedStandardHeader document signlink =
-    renderLocalTemplateForProcess document processmailnotsignedstandardheader $ do
         F.value "documenttitle" $ documenttitle document
         F.value "author" $ getAuthorName document
         F.value "personname" $ getSmartName signlink
@@ -409,4 +395,4 @@ companyBrandFields company = do
   F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui company
   F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company
   F.value "logo" $ isJust $ companyemaillogo $ companyui company
-  F.value "logoLink" $ show $ LinkCompanySignViewLogo $ companyid company
+  F.value "logoLink" $ show $ LinkCompanyEmailLogo $ companyid company

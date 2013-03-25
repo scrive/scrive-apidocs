@@ -83,57 +83,41 @@ mailOrderClosedMainP=
 ####
 mailRejectContractMail=
       $_mailRejectMailTitleContract()$
-$if(customMessage)$
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
         mailp1 = mailRejectMailContentHeader();
+        mailspacing1 = "";
         mailp2 = _mailRejectMailContentRejected();
         footer = null
       )$
-$else$
-      $nicemail(
-        mailheader = _mailRejectMailTitleContract();
-        mailp1 = _mailRejectMailContentRejected();
-        footer = null
-      )$
-$endif$
 ####
 mailRejectOfferMail=
       $_mailRejectMailTitleOffer()$
-$if(customMessage)$
       $nicemail(
         mailheader = _mailRejectMailTitleOffer();
         mailp1 = mailRejectMailContentHeader();
+        mailspacing1 = "";
         mailp2 = _mailRejectMailContentRejected();
         footer = null
       )$
-$else$
-      $nicemail(
-        mailheader = _mailRejectMailTitleOffer();
-        mailp1 = _mailRejectMailContentRejected();
-        footer = null
-      )$
-$endif$
 ###
 mailRejectOrderMail=
       $_mailRejectMailTitleOrder()$
-$if(customMessage)$
-    $nicemail(
+      $nicemail(
         mailheader = _mailRejectMailTitleOrder();
         mailp1 = mailRejectMailContentHeader();
+        mailspacing1 = "";
         mailp2 = _mailRejectMailContentRejected();
         footer = null
       )$
-$else$
-    $nicemail(
-        mailheader = _mailRejectMailTitleOrder();
-        mailp1 = _mailRejectMailContentRejected();
-        footer = null
-      )$
-$endif$
+
 ###
 mailRejectMailContentHeader=
-$customMessage:noescape()$
+$if(customMessage)$
+  $customMessage:noescape()$ <BR/>
+$else$
+  <div class="editable" name="custommessage"></div>
+$endif$
 ####
 #### INVITATION MAILS
 ####
@@ -321,25 +305,6 @@ $regards()$
 ###
 ### Reminding mails - NOT SIGNED
 ###
-###
-remindMailNotSignedContractStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailNotSignedContractStandardHeaderRemind()$</p>
-    </span>
-#####
-remindMailNotSignedOfferStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailNotSignedOfferStandardHeaderRemind()$</p>
-    </span>
-#####
-remindMailNotSignedOrderStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailNotSignedOrderStandardHeaderRemind()$</p>
-    </span>
-#####
 remindMailNotSignedContract=
     $_remindMailNotSignedTitleContract()$
 
@@ -350,7 +315,11 @@ remindMailNotSignedContract=
     )$
 #####
 remindMailNotSignedContractP1=
-$_remindMailNotSignedContractBody()$
+$if(custommessage)$
+  $custommessage:noescape()$
+$else$
+      <div class="editable" name="custommessage">$_remindMailNotSignedContractBody()$</div>
+$endif$
 <br/>
 <br/>
 $nicebutton(link=link; text=_mailReviewOnlineDocument())$

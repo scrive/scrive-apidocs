@@ -68,7 +68,7 @@ wrapHTML body = concat [
   , "<head>"
   , "<meta http-equiv='content-type' content='text/html; charset=utf-8'/>"
   , "</head>"
-  , "<body style='background-color: #f5f5f5;'>"
+  , "<body style='padding:0px;margin:0px;'>"
   , body
   , "</body>"
   , "</html>"
