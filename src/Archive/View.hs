@@ -75,7 +75,7 @@ docFieldsListForJSON padqueue doc = do
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ formatMinutesTimeRealISO (documentmtime doc)
-    J.value "ctime" $ formatMinutesTimeRealISO (documentmtime doc)
+    J.value "ctime" $ formatMinutesTimeRealISO (documentctime doc)
     J.value "timeouttime" $ formatMinutesTimeRealISO <$> unTimeoutTime <$> documenttimeouttime doc
     J.value "type" $ case documenttype doc of
                         Template _ -> "template"
