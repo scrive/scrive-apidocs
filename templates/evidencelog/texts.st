@@ -121,10 +121,11 @@ RemoveFieldEvidenceText=
 The field "$fieldtype$" for the signatory ($email$) was removed by $actor$.
 ###
 AddFieldEvidenceText=
-The field "$fieldtype$" for the signatory ($email$) was $if(checked)$added pre-checked$elseif(unchecked)$added unchecked$elseif(value)$filled with "$value$"$else$added$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates: $placements:{p |(page=$p.page$, x=$p.x$, y=$p.y$)}; separator=","$.$endif$
+<<<<<<< HEAD
+The field "$fieldtype$" for the signatory ($email$) was $if(checked)$added pre-checked$elseif(unchecked)$added unchecked$elseif(value)$filled with "$value$"$else$added$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates: $placements:{p |(page=$p.page$, x=$p.xrel$$, y=$p.yrel$)}; separator=","$.$endif$
 ###
 ChangeFieldEvidenceText=
-The field "$fieldtype$" for the signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed$else$changed$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates: $placements:{p |(page=$p.page$, x=$p.x$, y=$p.y$)}; separator=","$.$endif$ $if(signature)$ <BR/><img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$endif$
+The field "$fieldtype$" for the signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed$else$changed$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates: $placements:{p |(page=$p.page$, x=$p.xrel$$, y=$p.yrel$)}; separator=","$.$endif$ $if(signature)$ <BR/><img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$endif$
 ###
 ResetSignatoryDetailsEvidenceText=DO NOT USE!
 ###
