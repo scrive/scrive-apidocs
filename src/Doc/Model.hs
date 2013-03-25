@@ -1367,7 +1367,7 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m Docu
          | isJust (signatorylinkcsvupload sl) = (pumpData csvdata1 sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
          | otherwise = sl { signatorymagichash = mh }
      pumpData (fstname,sndname,email,company,personalnumber,companynumber,fieldvalues) siglink =
-       replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
+       replaceSignatoryData siglink fstname sndname email "" company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where

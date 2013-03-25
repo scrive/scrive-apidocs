@@ -252,6 +252,9 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
       EmailFT               -> fieldJSON "standard" "email"     sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
+      MobileFT              -> fieldJSON "standard" "mobile"    sfValue
+                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       PersonalNumberFT      -> fieldJSON "standard" "sigpersnr" sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
@@ -279,6 +282,7 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
     ftOrder EmailFT _ = LT
+    ftOrder MobileFT _ = LT
     ftOrder CompanyFT _ = LT
     ftOrder PersonalNumberFT _ = LT
     ftOrder CompanyNumberFT _ = LT

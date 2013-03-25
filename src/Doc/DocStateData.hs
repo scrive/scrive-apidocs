@@ -149,6 +149,7 @@ data FieldType = FirstNameFT
                | CustomFT String Bool -- label filledbyauthor
                | SignatureFT String
                | CheckboxFT String
+               | MobileFT
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data SignatoryField = SignatoryField

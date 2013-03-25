@@ -30,30 +30,35 @@ class HasSomeUserInfo a where
   getFirstName      :: a -> String
   getLastName       :: a -> String
   getPersonalNumber :: a -> String
+  getMobile         :: a -> String
 
 instance HasSomeUserInfo UserInfo where
   getEmail          = strip . unEmail . useremail
   getFirstName      = userfstname
   getLastName       = usersndname
   getPersonalNumber = userpersonalnumber
+  getMobile         = usermobile
 
 instance HasSomeUserInfo User where
   getEmail          = strip . unEmail . useremail . userinfo
   getFirstName      = userfstname         . userinfo
   getLastName       = usersndname         . userinfo
   getPersonalNumber = userpersonalnumber  . userinfo
+  getMobile         = usermobile          . userinfo
 
 instance HasSomeUserInfo SignatoryDetails where
   getEmail          = strip . getValueOfType EmailFT
   getFirstName      = getValueOfType FirstNameFT
   getLastName       = getValueOfType LastNameFT
   getPersonalNumber = getValueOfType PersonalNumberFT
+  getMobile         = getValueOfType MobileFT
 
 instance HasSomeUserInfo SignatoryLink where
   getEmail          = strip . getEmail          . signatorydetails
   getFirstName      = getFirstName      . signatorydetails
   getLastName       = getLastName       . signatorydetails
   getPersonalNumber = getPersonalNumber . signatorydetails
+  getMobile         = getMobile         . signatorydetails
 
 {- |
    Given a SignatoryLink, returns a tuple containing the name and the email address.

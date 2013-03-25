@@ -209,6 +209,7 @@ signatoryDetailsFromUser user (is_author, is_partner) = do
         [ toSF FirstNameFT $ getFirstName user
         , toSF LastNameFT $ getLastName user
         , toSF EmailFT $ getEmail user
+        , toSF MobileFT $ getMobile user
         , toSF CompanyFT $ getCompanyName (user, mcompany)
         , toSF PersonalNumberFT $ getPersonalNumber user
         , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
@@ -341,6 +342,7 @@ makeSignatory ::[(String, String, FieldPlacement)]
                 -> String
                 -> String
                 -> String
+                -> String
                 -> SignOrder
                 -> Bool
                 -> Bool
@@ -348,12 +350,13 @@ makeSignatory ::[(String, String, FieldPlacement)]
                 -> String
                 -> String
                 -> SignatoryDetails
-makeSignatory pls fds sid sfn  ssn  se  sso sauthor spartner sc  spn  scn = SignatoryDetails {
+makeSignatory pls fds sid sfn  ssn  se sm sso sauthor spartner sc  spn  scn = SignatoryDetails {
     signatorysignorder = sso
   , signatoryfields = [
       sf FirstNameFT sfn "fstname"
     , sf LastNameFT ssn "sndname"
     , sf EmailFT se "email"
+    , sf MobileFT sm "mobile"
     , sf CompanyFT sc "company"
     , sf PersonalNumberFT spn "personalnumber"
     , sf CompanyNumberFT scn "companynumber"

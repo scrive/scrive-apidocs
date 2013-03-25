@@ -929,6 +929,7 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
               FirstNameFT      -> "sigfstname"
               LastNameFT       -> "sigsndname"
               EmailFT          -> "sigemail"
+              MobileFT         -> "sigmobile"
               CompanyFT        -> "sigco"
               PersonalNumberFT -> "sigpersnr"
               CompanyNumberFT  -> "sigcompnr"

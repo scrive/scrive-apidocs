@@ -21,6 +21,8 @@ module Doc.SignatoryTMP (
     , setCompanynumber
     , email
     , setEmail
+    , mobile
+    , setMobile
     , makeAuthor
     , makePartner
     , customField
@@ -98,6 +100,12 @@ company = nothingIfEmpty . getCompanyName . details
 setCompany:: String -> SignatoryTMP -> SignatoryTMP
 setCompany = replaceFieldValue CompanyFT
 
+mobile::SignatoryTMP -> Maybe String
+mobile = nothingIfEmpty . getMobile . details
+
+setMobile:: String -> SignatoryTMP -> SignatoryTMP
+setMobile = replaceFieldValue MobileFT
+
 personalnumber::SignatoryTMP -> Maybe String
 personalnumber = nothingIfEmpty . getPersonalNumber . details
 
@@ -161,6 +169,7 @@ toSignatoryDetails2 sTMP  =
                  (fold $ fstname sTMP)
                  (fold $ sndname sTMP)
                  (fold $ email sTMP)
+                 (fold $ mobile sTMP)
                  (signOrder sTMP)
                  (signatoryisauthor $ details sTMP)
                  (signatoryispartner $ details sTMP)
@@ -233,6 +242,7 @@ instance FromJSValue FieldType where
          ("standard",  Just "fstname")    -> Just $ FirstNameFT
          ("standard",  Just "sndname")    -> Just $ LastNameFT
          ("standard",  Just "email")      -> Just $ EmailFT
+         ("standard",  Just "mobile")     -> Just $ MobileFT
          ("standard",  Just "sigpersnr")  -> Just $ PersonalNumberFT
          ("standard",  Just "sigco")      -> Just $ CompanyFT
          ("standard",  Just "sigcompnr")  -> Just $ CompanyNumberFT

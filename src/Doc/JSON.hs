@@ -146,6 +146,7 @@ sfFromJSON (name, jsv) =
     obl = maybe True id (fromJSValueField "obligatory" jsv)
     tp  = case name of
             "email"      -> EmailFT
+            "mobile"     -> MobileFT
             "fstname"    -> FirstNameFT
             "sndname"    -> LastNameFT
             "company"    -> CompanyFT
