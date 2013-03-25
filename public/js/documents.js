@@ -308,7 +308,7 @@ window.Document = Backbone.Model.extend({
               url: "/api/frontend/update/" + this.documentid(),
               method: "POST",
               json: JSON.stringify(this.draftData())
-          }));
+          }), function(ec) {if (ec == 403) window.location.reload()});
     },
     afterSave: function(f) {
          this.get("saveQueue").finishWith(f);
