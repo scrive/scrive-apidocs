@@ -167,18 +167,18 @@ evidenceOfIntent=
 <body class="en legal article ct full">
 <h1>Evidence of Intent </h1>
 
-<p>The following screen shots show the signing environments of
+<p>The following screenshots show the signing environments of
    the respective signing parties. Each time stamp reflects
    the clock of the client, and may be different from the
    server clock. </p>
 <p> At any point in time, the signing service maintains a
-    screen shot of a <em>reference sign view</em> showing a
+    screenshot of a <em>reference sign view</em> showing a
    standard document at the moment it is being signed.  The
-    reference sign view shot illustrates what the signing
+    reference sign view screenshot illustrates what the signing
     environment is supposed to look like for clients at the
     moment of signing, which is helpful for cases when
     clients' signing environments were unable to provide
-    accurate screen shots.</p>
+    accurate screenshots.</p>
 
 <table>
     <tr>
@@ -192,7 +192,7 @@ evidenceOfIntent=
                   <td>$entry.first.time$</td>
                   <td>$entry.ip$</td>
                   <td class="column3">
-                    <a href="$entry.first.image$">$entry.signatory$ opened the sign view</a>.
+                    <a href="$entry.first.image$">$entry.signatory$ opened the document in signing view</a>.
                   </td>
                 </tr>
                 $endif$
@@ -203,7 +203,7 @@ evidenceOfIntent=
                     $if(entry.signing.image)$<a href="$entry.signing.image$">$entry.signatory$ signed the document</a>.
                     $else$                                                   $entry.signatory$ signed the document.
                     $endif$
-                    Corresponding <a href="$entry.reference.image$">reference sign view</a>, created $entry.reference.time$.
+                    The corresponding <a href="$entry.reference.image$">signing view reference</a> was created at $entry.reference.time$.
                   </td>
                 </tr>
               }$
@@ -212,3 +212,4 @@ evidenceOfIntent=
 </body>
 </html>
 ###
+

@@ -7,7 +7,7 @@ RemoveDocumentAttachmentEvidenceText=The attachment “$name$” was deleted by 
 ###
 AddDocumentAttachmentEvidenceText=The attachment “$name$” was uploaded by $actor$.
 ###
-PendingToAwaitingAuthorEvidenceText=$actor$ emailed the notification to the author ($email$) indicating that all other parties have signed the document and that the author is next to sign.
+PendingToAwaitingAuthorEvidenceText=$actor$ emailed a notification to the author ($email$) indicating that all other parties have signed the document and that the author is next to sign.
 ###
 UpdateFieldsEvidenceText=
 The field "$fieldtype$" for the signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed$else$changed$endif$ by $actor$. $if(signature)$<BR/><img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$endif$
@@ -34,7 +34,7 @@ SignDocumentEvidenceText=The document was signed by $actor$ $if(!eleg)$ by click
         $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style="white-space:pre">$ocsp$</div></p>$endif$
     $endif$
 ###
-SetInvitationDeliveryStatusEvidenceText=$actor$ reported that the email invitation-to-sign (sent to $email$) was $status$.
+SetInvitationDeliveryStatusEvidenceText=$actor$ reported that the email invitation to sign (sent to $email$) was $status$.
 ###
 SetDocumentUIEvidenceText=
 ###
@@ -46,7 +46,7 @@ SetDocumentAdvancedFunctionalityEvidenceText=
 ###
 RemoveDaysToSignEvidenceText=The signing due date was deactivated by $actor$.
 ###
-SetDaysToSignEvidenceText=The signing due date was set by $actor$ to $mdays$ days from sending the invitation.
+SetDaysToSignEvidenceText=The signing due date was set by $actor$ to "$mdays$ days" from sending the invitation.
 ###
 SetInvitationTextEvidenceText=The invitation text was changed to “$text$” by $actor$.
 ###
@@ -58,40 +58,40 @@ RemoveSignatoryCompanyEvidenceText=
 ###
 SetSignatoryCompanyEvidenceText=
 ###
-SetDocumentTagsEvidenceText=The document tags were set to $tags$ by $actor$.
+SetDocumentTagsEvidenceText=The document tags were set to "$tags$" by $actor$.
 ###
 SaveSigAttachmentEvidenceText=The attachment “$name$” was uploaded by $actor$.
 ###
 SaveDocumentForUserEvidenceText=
 ###
-RestartDocumentEvidenceText=The cancelled transaction $did$ was restarted by $actor$.
+RestartDocumentEvidenceText=The cancelled transaction "$did$" was restarted by $actor$.
 ###
 ReallyDeleteDocumentEvidenceText=
 ###
 NewDocumentEvidenceText=The new transaction “$title$” was started by $actor$.
 ###
-MarkInvitationReadEvidenceText=$actor$ reported that the email invitation-to-sign (sent to $email$) was opened.
+MarkInvitationReadEvidenceText=$actor$ reported that the email invitation to sign (sent to $email$) was opened.
 ###
 CloseDocumentEvidenceText=$actor$ closed the transaction to further modifications after all signatories signed.
 ###
-ChangeSignatoryEmailWhenUndeliveredEvidenceText=$actor$ changed the email address for the signatory from $oldemail$ to $newemail$.
+ChangeSignatoryEmailWhenUndeliveredEvidenceText=$actor$ changed the email address for the signatory from "$oldemail$" to "$newemail$".
 ###
 ChangeMainfileEvidenceText=$actor$ replaced “$oldfilename$” with “$newfilename$”.
 ###
 CancelDocumenElegEvidenceText=$actor$ cancelled the transaction due to the mismatch of signatory information with the e-legitimation data received from the e-legitimation provider. Reason: $msg$.
 ###
-CancelDocumentEvidenceText=The transaction was cancelled and the invitation-to-sign was withdrawn by $actor$.
+CancelDocumentEvidenceText=The transaction was cancelled and the invitation to sign was withdrawn by $actor$.
 ###
 AttachFileEvidenceText=The file "$filename$" was uploaded by $actor$.
 ###
 AttachSealedFileEvidenceText=The transaction verification page, evidence log, and evidence documentation was appended by $actor$. The document was digitally signed and stored in the database by $actor$.
 ###
-PreparationToPendingEvidenceText=$actor$ locked the document from author editing and set the due date to $timeouttime$ UTC.
+PreparationToPendingEvidenceText=$actor$ locked the document from author editing and set the due date to "$timeouttime$ UTC".
 $if(timezone)$ $actor$ provided the time zone $timezone$.$endif$
 ###
 DeleteSigAttachmentEvidenceText=The attachment “$name$” for the signatory ($email$) was deleted by $actor$ .
 ###
-AuthorUsesCSVEvidenceText=The transaction was created by $actor$ as part of a mass send-out from transaction $did$.
+AuthorUsesCSVEvidenceText=The transaction was created by $actor$ as part of a mass send-out from transaction "$did$".
 ###
 ErrorDocumentEvidenceText=The following error occurred: $errmsg$. Signing was disabled by $actor$.
 ###
@@ -101,13 +101,13 @@ RejectDocumentEvidenceText=$actor$ clicked the reject button.
 ###
 SetDocumentInviteTimeEvidenceText=The signing period was started by $actor$.
 ###
-SetDocumentTimeoutTimeEvidenceText=The signing due date was set to $time$ UTC by $actor$.
+SetDocumentTimeoutTimeEvidenceText=The signing due date was set to "$time$ UTC" by $actor$.
 ###
 RestoreArchivedDocumentEvidenceText=
 ###
 InvitationEvidenceText=An invitation to sign was sent to $email$ by $actor$.
 ###
-SignableFromDocumentIDWithUpdatedAuthorEvidenceText=The transaction was started from template $did$ by $actor$.
+SignableFromDocumentIDWithUpdatedAuthorEvidenceText=The transaction was started from template "$did$" by $actor$.
 ###
 ArchiveDocumentEvidenceText=
 ###
@@ -121,16 +121,16 @@ RemoveFieldEvidenceText=
 The field "$fieldtype$" for the signatory ($email$) was removed by $actor$.
 ###
 AddFieldEvidenceText=
-The field "$fieldtype$" for the signatory ($email$) was $if(checked)$added pre-checked$elseif(unchecked)$added unchecked$elseif(value)$filled with "$value$"$else$added$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates $placements:{p |(page=$p.page$, x=$p.x$, y=$p.y$)}; separator=","$.$endif$
+The field "$fieldtype$" for the signatory ($email$) was $if(checked)$added pre-checked$elseif(unchecked)$added unchecked$elseif(value)$filled with "$value$"$else$added$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates: $placements:{p |(page=$p.page$, x=$p.x$, y=$p.y$)}; separator=","$.$endif$
 ###
 ChangeFieldEvidenceText=
-The field "$fieldtype$" for the signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed$else$changed$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates $placements:{p |(page=$p.page$, x=$p.x$, y=$p.y$)}; separator=","$.$endif$ $if(signature)$ <BR/><img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$endif$
+The field "$fieldtype$" for the signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed$else$changed$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates: $placements:{p |(page=$p.page$, x=$p.x$, y=$p.y$)}; separator=","$.$endif$ $if(signature)$ <BR/><img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$endif$
 ###
 ResetSignatoryDetailsEvidenceText=DO NOT USE!
 ###
 AdminOnlySaveForUserEvidenceText=
 ###
-SignableFromDocumentEvidenceText=The transaction was started from template $did$ by $actor$.
+SignableFromDocumentEvidenceText=The transaction was started from template "$did$" by $actor$.
 ###
 TemplateFromDocumentEvidenceText=The transaction was converted to a template by $actor$.
 ###
@@ -138,7 +138,7 @@ AttachCSVUploadEvidenceText=$actor$ defined the party by uploading the CSV file 
 ###
 SendToPadDeviceText=$actor$ sent the transaction for signing by signatory ($email$) to the pad device.
 ####
-RemovedFromPadDeviceText=$actor$ removed the transaction for signing by signatory ($email$) from the pad device.
+RemovedFromPadDeviceText=$actor$ removed the transaction for signing by the signatory ($email$) from the pad device.
 ###
 SetStandardAuthenticationMethodEvidenceText=$actor$ indicated the requirement of the standard authentication method only for all signatories.
 ###
@@ -154,7 +154,7 @@ ResealedPDFText=$actor$ requested the document be resealed.
 ###
 ReminderSendText= A reminder was sent. $name$’s mail delivery details were cleared.
 ###
-SetDocumentProcessEvidenceText= The document process was set to $process$.
+SetDocumentProcessEvidenceText= The document process was set to "$process$".
 ###
 DetachFileEvidenceText=The main file was detached by $actor$.
 ###
