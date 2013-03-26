@@ -60,6 +60,7 @@ set systemPage
  less less/designview/frame.less
  less less/designview/participants.less
  less less/designview/editdocument.less
+ less less/designview/documentview.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  js   libs/jquery-ui.min.js
@@ -78,6 +79,7 @@ set systemPage
  js   libs/moment.min.js
  js   libs/iso8601.min.js
  js   libs/html2canvas.js
+ js   libs/spin.js
  js   js/global.js
  js   js/storage.js
  js   js/utils/browserinfo.js
@@ -141,6 +143,7 @@ set systemPage
  js   js/designview/docdesignviewpad.js
  js   js/designview/participants.js
  js   js/designview/editdocument.js
+ js   js/designview/documentview.js
  js   js/designview/docdesignview2.js
  js   js/designview/documentstep.js
  js   js/designview/attachmentsdesignview.js

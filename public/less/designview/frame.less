@@ -1,5 +1,14 @@
 @import 'util.less';
 
+// hide the page footer in design view
+body.designview > footer {
+    display: none;
+}
+
+body.designview .mainContainer {
+    margin-bottom: 0;
+}
+
 .design-view-frame {
     .box-sizing(border-box);
     border: 1px solid #ccc;
@@ -94,7 +103,7 @@
     .box-sizing(border-box);
     margin-top: 1px;
     overflow: auto;
-    min-height: 400px;
+    min-height: 300px;
     padding-top: 60px;    // room for the remove doc buttons
     padding-bottom: 60px; // room for the button bar
     position: relative;
@@ -116,6 +125,7 @@
     position: absolute;
     top: 0;
     right: 35px;
+    cursor: pointer;
 }
 
 .design-view-document-remove-button-label {
@@ -159,6 +169,7 @@
     bottom: 0;
     left: 0;
     position: absolute;
+    position: fixed;
 }
 
 .design-view-button-bar-inner {
@@ -171,9 +182,6 @@
     background: white;
 }
 
-.design-view-button-bar-fixed {
-    position: fixed;
-}
 
 .design-view-button1 {
     .box-sizing(border-box);
@@ -182,6 +190,7 @@
     border-right: 1px solid #ccc;
     height: 100%;
     position: relative;
+    cursor: pointer;
 }
 
 .design-view-button1-text {
@@ -200,6 +209,7 @@
     border-right: 1px solid #ccc;
     height: 100%;
     position: relative;
+    cursor: pointer;
 }
 
 .design-view-button2-text {
@@ -219,6 +229,7 @@
     border-left: 1px solid #ccc;
     height: 100%;
     position: relative;
+    cursor: pointer;
 }
 
 .design-view-button3-text {

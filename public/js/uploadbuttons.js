@@ -29,6 +29,7 @@ var UploadButtonModel = Backbone.Model.extend({
       labelstyle: '',
       button : null,
       width: 200,
+      height: 66,
       maxlength : 1,
       submitOnUpload : false,
       size : "small",
@@ -38,6 +39,9 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   width : function(){
        return this.get("width");
+  },
+  height : function(){
+       return this.get("height");
   },
   text: function() {
        return this.get("text");
@@ -114,6 +118,7 @@ var UploadButtonView = Backbone.View.extend({
 
 
         fileinput.css("width",(model.width() + 30)  + "px");
+        fileinput.css("height", (model.height()) + "px");
 
         if (BrowserInfo.isIE8orLower()) {
             // make input invisible

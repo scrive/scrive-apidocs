@@ -1,0 +1,128 @@
+@import 'util.less';
+
+.design-view-document-buttons {
+    .box-sizing(border-box);
+
+    position: relative;
+    min-height: 300px;
+    height: 100%;
+}
+
+.design-view-document-buttons-inner {
+    .box-sizing(border-box);
+    .center-vh(100%, 200px);
+    text-align: center;
+}
+
+.design-view-document-buttons-title {
+    .box-sizing(border-box);
+    margin: auto;
+    font-size: 20px;
+}
+
+.design-view-document-buttons-buttons {
+    .box-sizing(border-box);
+    margin: 16px auto;
+}
+
+
+
+.design-view-document-buttons-upload-button {
+    .box-sizing(border-box);
+    width: 140px;
+    height: 140px;
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+
+    cursor: pointer;
+
+    .multiFileInput {
+        position:absolute;
+        z-index:10;
+        top:-30;
+        left:0;
+        right:0;
+        bottom:0;
+        -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+        filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+        opacity: 0;
+        cursor: pointer;
+    }
+
+}
+
+.design-view-document-buttons-upload-button-circle {
+    zoom: 1;
+    filter: alpha(opacity=25);
+    opacity: 0.25;
+}
+
+.design-view-document-buttons-upload-button-label {
+    .box-sizing(border-box);
+    .center-vh(80px, 2em);
+    text-align: center;
+    font-size: 20px;
+    line-height: 1em;
+}
+
+.design-view-document-buttons-upload-button-line1 {
+    
+}
+
+
+// the little "or" in the middle
+.design-view-document-buttons-or-text {
+    display: inline-block;
+    margin: 0 16px;
+}
+
+
+
+.design-view-document-buttons-avtal-button {
+    .box-sizing(border-box);
+    width: 140px;
+    height: 140px;
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+}
+
+.design-view-document-buttons-avtal-button-circle {
+    zoom: 1;
+    filter: alpha(opacity=25);
+    opacity: 0.25;
+}
+
+.design-view-document-buttons-avtal-button-label {
+    .box-sizing(border-box);
+    font-size: 20px;
+    line-height: 1em;
+    .center-vh(100%, 2em);
+    text-align: center;
+}
+
+.design-view-document-buttons-avtal-button-line1 {
+    font-size: 20px;
+    line-height: 1em;
+}
+
+.design-view-document-buttons-avtal-button-line2 {
+    font-style: italic;
+    font-size: 14px;
+    font-weight: 200;
+}
+
+.design-view-document-loading {
+    .box-sizing(border-box);
+    .center-vh(120px, 120px);
+    z-index: 1;
+}
+
+.design-view-document-loading-inner {
+    // need to recenter the wheel because the center
+    // is at the top left corner
+    position:relative;
+    top:50%;
+    left:50%;
+}
