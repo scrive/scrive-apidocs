@@ -124,6 +124,11 @@ instance FromJSValue DeliveryMethod where
     Just "api"   -> Just APIDelivery
     Just "mobile"-> Just MobileDelivery
     _            -> Nothing
+    
+instance ToJSValue DeliveryMethod where
+  toJSValue EmailDelivery = toJSValue "email"
+  toJSValue PadDelivery   = toJSValue "pad"
+  toJSValue APIDelivery   = toJSValue "api"
 
 data DeliveryMethod = EmailDelivery
                     | PadDelivery

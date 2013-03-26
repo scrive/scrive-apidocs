@@ -565,6 +565,24 @@ window.Signatory = Backbone.Model.extend({
               signsuccessredirect : this.signsuccessredirect()
 
         };
+    },
+    delivery: function() {
+        return this.get('delivery');
+    },
+    setDelivery: function(d) {
+        // TODO: check values of d
+        // email, pad, api
+        this.set({delivery:d});
+        return this;
+    },
+    authentication: function() {
+        return this.get('authentication');
+    },
+    setAuthentication: function(a) {
+        // TODO: check values of a
+        // standard, eleg
+        this.set({authentication:a});
+        return this;
     }
 
 });

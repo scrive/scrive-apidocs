@@ -204,6 +204,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
     J.value "undeliveredInvitation" $ invitationdeliverystatus siglink == Undelivered
     J.value "deliveredInvitation" $ invitationdeliverystatus siglink == Delivered
+    J.value "delivery" $ signatorylinkdeliverymethod siglink
     J.value "signs" $ isSignatory siglink
     J.value "author" $ isAuthor siglink
     J.value "saved" $ isJust . maybesignatory $ siglink
