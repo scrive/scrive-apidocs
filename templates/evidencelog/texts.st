@@ -164,3 +164,5 @@ InvitationUndeliveredText = The invitation was not delivered.
 ###
 SignatoryLinkVisitedText = The link for signing the document was visited by $name$.
 ###
+ProlongDocumentEvidenceText=Document $did$ prolonged by $actor$
+#####
