@@ -121,7 +121,6 @@ RemoveFieldEvidenceText=
 The field "$fieldtype$" for the signatory ($email$) was removed by $actor$.
 ###
 AddFieldEvidenceText=
-<<<<<<< HEAD
 The field "$fieldtype$" for the signatory ($email$) was $if(checked)$added pre-checked$elseif(unchecked)$added unchecked$elseif(value)$filled with "$value$"$else$added$endif$ by $actor$.$if(hasplacements)$ This field was placed onto the document at the following coordinates: $placements:{p |(page=$p.page$, x=$p.xrel$$, y=$p.yrel$)}; separator=","$.$endif$
 ###
 ChangeFieldEvidenceText=
