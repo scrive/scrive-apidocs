@@ -155,7 +155,8 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
       }
       else setTimeout(scaleWhenComplete,5);
     }
-    setTimeout(scaleWhenComplete,5);
+    if (!BrowserInfo.isIE8orLower()) //Scaling inlined images with css properties fails in IE
+      setTimeout(scaleWhenComplete,5);
 
   },
   changeTextColor : function(signviewtextcolour) {

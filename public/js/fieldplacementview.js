@@ -832,10 +832,12 @@ var SignaturePlacementView = Backbone.View.extend({
                 box.append(img);
             }
             box.resizable("destroy");
-            if (this.resizable)
-                box.resizable({resize : function(e, ui) {
+            if (this.resizable) {
+                box.resizable({stop : function(e, ui) {
                            view.signature.setSize(ui.size.width,ui.size.height);
                         }});
+                $(".ui-resizable-se",box).css("z-index","0");
+            }
             return this;
     }
 });
