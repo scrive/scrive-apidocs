@@ -37,7 +37,7 @@ nicemail=
                             <span class="h1" style="color: $if(!companybrand.textcolor)$#364963$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">
                               $if(mailheader)$ $mailheader$ $endif$
                             </span>
-                            <a style="text-decoration: none;" href="$ctxhostpart$">
+                            <a style="text-decoration: none;" href="$ctxhostpart$" class="notclickableinpreview">
                               <span class="h3" style="color: $if(!companybrand.textcolor)$#7a94b8$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">
                                 $_poweredByScrive()$
                               </span>
@@ -156,7 +156,7 @@ $if(l)$
 $endif$
 ####
 nicebutton=
-<a href="$link$" class="button-blue" style="
+<a href="$link$" class="button-blue notclickableinpreview" style="
     $if(!companybrand.buttoncolour)$
      background: hsl(215, 30%, 35%); border: 2px solid hsl(215, 30%, 23%); -webkit-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -moz-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -ms-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -o-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px;
     $else$

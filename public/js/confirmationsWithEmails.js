@@ -98,6 +98,9 @@ window.MailView = Backbone.View.extend({
                   container.append(mail.content());
              else
                   container.append(this.editableMailContent());
+            container.find('.notclickableinpreview').click(function() {
+              return false;
+            });
         }
         return this;
     },
