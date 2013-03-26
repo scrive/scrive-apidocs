@@ -2346,7 +2346,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
      return ()
 
 data UpdateFieldsForSigning = UpdateFieldsForSigning DocumentID SignatoryLinkID [(FieldType, String)] Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSigning Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSigning () where
   update (UpdateFieldsForSigning did slid fields actor) = do
     -- Document has to be in Pending state
     -- signatory could not have signed already
@@ -2394,9 +2394,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSigning Bool
                actor
           return (r :: Integer)
 
-    updatedRows <- forM fields $ \(ft, v) -> updateValue ft v
-    -- We don't want to affect too many rows
-    return $ sum updatedRows <= fromIntegral (length fields)
+    _ <- forM fields $ \(ft, v) -> updateValue ft v
+    return $ ()
 
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool where

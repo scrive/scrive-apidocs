@@ -195,7 +195,6 @@ apiCallCreateFromTemplate did =  api $ do
 
 apiCallUpdate :: Kontrakcja m => DocumentID -> m Response
 apiCallUpdate did = api $ do
-  checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocCreate
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
@@ -209,6 +208,7 @@ apiCallUpdate did = api $ do
                                                                                _ -> Nothing
   Log.debug $ "Document " ++ show did ++ " updated with JSON:" ++ encode json
   draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValue json
+  when (draftIsChangingDocument draftData doc) (checkObjectVersionIfProvided did) -- If we will change document, then we want to be sure that object version is ok.
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
   triggerAPICallbackIfThereIsOne newdocument
   Ok <$> documentJSON False True True Nothing Nothing newdocument
@@ -225,55 +225,58 @@ instance FromJSValue ReadyParams where
 
 apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do
-  checkObjectVersionIfProvided did
   (user, actor, _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
-  when (not $ (auid == userid user)) $ do
-        throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-  when (documentstatus doc /= Preparation || isTemplate doc) $ do
-        throwIO . SomeKontraException $ (conflictError "Document is not a draft")
+  if (documentstatus doc == Pending && not (any hasSigned $ documentsignatorylinks doc))
+   then Accepted <$> documentJSON False True True Nothing Nothing doc
+   else do
+    checkObjectVersionIfProvided did
+    when (not $ (auid == userid user)) $ do
+          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+    when (documentstatus doc /= Preparation || isTemplate doc) $ do
+          throwIO . SomeKontraException $ (conflictError "Document is not a draft")
 
-  let defaultParams = ReadyParams { timezonestring = "Europe/Stockholm" }
-  mjsons <- lift $ getDataFn' (look "json")
-  params <- case mjsons of
-            Nothing -> return defaultParams
-            Just jsons -> do
-              json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $
-                       case decode jsons of
-                         J.Ok js -> Just js
-                         _ -> Nothing
-              apiGuardJustM (badInput "Given JSON does not represent valid READY parameters.") $
-                return $ fromJSValue json
-  when (not $ all ((/=EmailDelivery) . signatorylinkdeliverymethod ||^ isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
-        throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
-  when (isNothing $ documentfile doc) $ do
-        throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
-  timezone <- lift $ mkTimeZoneName (timezonestring params)
-  mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
-  case mndoc of
-          Right newdocument -> do
-              lift $ postDocumentPreparationChange newdocument "web"
-              newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
-              Accepted <$> documentJSON False True True Nothing Nothing newdocument'
-          Left reason -> throwIO . SomeKontraException $ serverError $ "Operation failed: " ++ show reason
+    let defaultParams = ReadyParams { timezonestring = "Europe/Stockholm" }
+    mjsons <- lift $ getDataFn' (look "json")
+    params <- case mjsons of
+              Nothing -> return defaultParams
+              Just jsons -> do
+                json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $
+                        case decode jsons of
+                          J.Ok js -> Just js
+                          _ -> Nothing
+                apiGuardJustM (badInput "Given JSON does not represent valid READY parameters.") $
+                  return $ fromJSValue json
+    when (not $ all ((/=EmailDelivery) . signatorylinkdeliverymethod ||^ isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
+          throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
+    when (isNothing $ documentfile doc) $ do
+          throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
+    timezone <- lift $ mkTimeZoneName (timezonestring params)
+    mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
+    case mndoc of
+            Right newdocument -> do
+                lift $ postDocumentPreparationChange newdocument "web"
+                newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+                Accepted <$> documentJSON False True True Nothing Nothing newdocument'
+            Left reason -> throwIO . SomeKontraException $ serverError $ "Operation failed: " ++ show reason
 
 
 apiCallCancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallCancel did =  api $ do
-  checkObjectVersionIfProvided did
-  (user, actor, _) <- getAPIUser APIDocSend
-  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
-  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
-  when (not $ (auid == userid user)) $ do
-        throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-  when (documentstatus doc /= Pending ) $ do
-        throwIO . SomeKontraException $ (conflictError "Document is not pending")
-  dbUpdate $ CancelDocument (documentid doc) actor
-  newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
-  lift $ postDocumentCanceledChange newdocument "api"
-  newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
-  Accepted <$> documentJSON False True True Nothing Nothing newdocument'
+    checkObjectVersionIfProvided did
+    (user, actor, _) <- getAPIUser APIDocSend
+    doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+    auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+    when (not $ (auid == userid user)) $ do
+          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+    when (documentstatus doc /= Pending ) $ do
+          throwIO . SomeKontraException $ (conflictError "Document is not pending")
+    dbUpdate $ CancelDocument (documentid doc) actor
+    newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
+    lift $ postDocumentCanceledChange newdocument "api"
+    newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
+    Accepted <$> documentJSON False True True Nothing Nothing newdocument'
 
 
 apiCallReject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response

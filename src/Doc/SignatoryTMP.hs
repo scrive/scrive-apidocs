@@ -30,7 +30,7 @@ module Doc.SignatoryTMP (
     , isAuthorTMP
     , isSignatoryTMP
     , getAttachments
-
+    , signatoryTMPIsChangingSignatoryLink
 ) where
 
 import Control.Logic
@@ -250,3 +250,13 @@ instance FromJSValue CSVUpload  where
                         , csvcontents = rs
                         }
              _ -> return Nothing
+
+
+signatoryTMPIsChangingSignatoryLink :: SignatoryTMP -> SignatoryLink -> Bool
+signatoryTMPIsChangingSignatoryLink SignatoryTMP{..} SignatoryLink{..} =
+        (details /= signatorydetails)
+     || (attachments /= signatoryattachments)
+     || (csvupload /= signatorylinkcsvupload)
+     || (signredirecturl /= signatorylinksignredirecturl)
+     || (authentication /= signatorylinkauthenticationmethod)
+     || (delivery /= signatorylinkdeliverymethod)

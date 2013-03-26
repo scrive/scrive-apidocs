@@ -85,7 +85,7 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
         Context{ ctxtime, ctxipnumber } <- getContext
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
-          True <- dbUpdate $ UpdateFieldsForSigning did slid fields actor
+          dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh Nothing screenshots actor
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           let Just sl = getSigLinkFor doc slid
@@ -110,17 +110,11 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
       True  -> do
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
-          Log.debug "a"
-          True <- dbUpdate $ UpdateFieldsForSigning did slid fields actor
-          Log.debug "b"
+          dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
-          Log.debug "c"
           Just doc <- dbQuery $ GetDocumentByDocumentID did
-          Log.debug "d"
           let Just sl = getSigLinkFor doc slid
-          Log.debug "e"
           _ <- addSignStatSignEvent doc sl
-          Log.debug "f"
           return doc
         return $ case mdoc of
           Nothing -> Left $ DBActionNotAvailable "Signing with Eleg failed"
