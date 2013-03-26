@@ -1155,3 +1155,6 @@ have an account please follow the account creation process. Free use of up to 5 
 "_nameTooLong","may contain up to 100 characters.","may contain up to 100 characters."
 "_firstNameField","First name","First name"
 "_lastNameField","Last name","Last name"
+"_companyNumberInvalidChars","Company number may only contain letters, digits and dash symbol.","Company number may only contain letters, digits and dash symbol."
+"_companyNumberTooShort","Company number must be at least 4 characters long.","Company number must be at least 4 characters long."
+"_companyNumberTooLong","Company number must be at most 50 characters long.","Company number must be at most 50 characters long."

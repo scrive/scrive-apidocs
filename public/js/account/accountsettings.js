@@ -184,8 +184,29 @@ var AccountSettingsModel = Backbone.Model.extend({
       companycountry :  this.companycountry()
     }).send();
   },
+  valid: function() {
+    var number = this.companynumber();
+    var message = null;
+    var validCharsRegex = /^[a-zA-Z0-9-]*$/;
+    if (number.length > 0 && number.length < 4) {
+      message = localization.validation.companyNumberTooShort;
+    } else if (number.length > 50) {
+      message = localization.validation.companyNumberTooLong;
+    } else if (number.match(validCharsRegex) === null) {
+      message = localization.validation.companyNumberInvalidChars;
+    }
+    if (message !== null) {
+      new FlashMessage({content: message, color: "red"});
+      return false;
+    } else {
+      return true;
+    }
+  },
   save : function() {
     var self  = this;
+    if (!self.valid()) {
+      return;
+    }
     this.updateProfile(function() {
       new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue"});
       self.refresh();
