@@ -254,10 +254,13 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       -- error notification
       peerip <- do
         rq <- askRq
-        -- FIXME: we should read some headers from upstream proxy, if any
-        let peerhost = case getHeader "x-real-ip" rq of
-              Just name -> BS.toString name
-              Nothing -> fst (rqPeer rq)
+        -- First, we look for x-forwarded-for, which a proxy might insert
+        -- Then, we look for x-real-ip, which nginx might insert
+        let peerhost :: HostName
+            peerhost = head $ catMaybes $
+                         [ BS.toString <$> getHeader h rq
+                         |  h <- ["x-forwarded-for", "x-real-ip"]
+                         ] ++ [Just (fst (rqPeer rq))]
             hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
         addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
         return $ case addrAddress $ head addrs of
