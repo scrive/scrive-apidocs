@@ -344,6 +344,11 @@ javascriptLocalisation =
          , validation : {
                 firstNameRequired: "$_flashMessageFirstNameIsRequired()$"
               , secondNameRequired: "$_flashMessageSecondNameIsRequired()$"
+              , required: "$_nameRequired()$"
+              , toolong: "$_nameTooLong()$"
+              , invalidnamechars: "$_nameInvalidChars()$"
+              , firstNameField: "$_firstNameField()$"
+              , lastNameField: "$_lastNameField()$"
               , passwordExceedsMaxLength: "$_PasswordValidationMessageInputExceedsMaxLength()$"
               , passwordLessThanMinLength: "$_PasswordValidationMessageInputLessThanMinLength()$"
               , passwordNeedsLetterAndDigit: "$_PasswordValidationMessageNeedsLetterAndDigit()$"

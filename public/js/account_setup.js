@@ -180,7 +180,7 @@
       });
 
       model.addValidator(function() {
-        return firstNameInput.input().validate(new NameValidation({callback: view.validationCallback, message: localization.validation.firstNameRequired}));
+        return firstNameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.firstNameField}));
       });
 
       body.append($("<div class='position first'/>").append(firstNameInput.input()));
@@ -195,7 +195,7 @@
       });
 
       model.addValidator(function() {
-        return lastNameInput.input().validate(new NameValidation({callback: view.validationCallback, message: localization.validation.secondNameRequired}));
+        return lastNameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.lastNameField}));
       });
 
       body.append($("<div class='position'/>").append(lastNameInput.input()));

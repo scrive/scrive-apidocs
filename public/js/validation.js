@@ -30,6 +30,9 @@ window.Validation = Backbone.Model.extend({
     message: function() {
         return this.get("message");
     },
+    setMessage: function(msg) {
+      this.set('message', msg);
+    },
     setCallback : function(callback) {
         this.set({callback : callback});
         if (this.get('next') != undefined) this.get('next').setCallback(callback);
@@ -77,6 +80,37 @@ window.NameValidation = Validation.extend({
                 return true;
             },
             message: "Name may contain only alphabetic characters, apostrophe, hyphen or space!"
+    }
+});
+
+window.UserNameValidation = Validation.extend({
+    initialize: function(args) {
+      this.set('fieldName', args.fieldName);
+    },
+    fieldName: function() {
+      return this.get('fieldName');
+    },
+    defaults: {
+            validates: function(t) {
+                var t = $.trim(t);
+
+                if (t.length === 0) {
+                    this.setMessage(this.fieldName() + ' ' + localization.validation.required);
+                    return false;
+                }
+                if (t.length > 100) {
+                    this.setMessage(this.fieldName() + ' ' + localization.validation.toolong);
+                    return false;
+                }
+                // we want to match international characters
+                // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
+                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(t)) {
+                    this.setMessage(this.fieldName() + ' ' + localization.validation.invalidnamechars);
+                    return false;
+                }
+
+                return true;
+            }
     }
 });
 

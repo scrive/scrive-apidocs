@@ -1150,3 +1150,8 @@ have an account please follow the account creation process. Free use of up to 5 
 "_companyBrandingBarsColour","Sidhuvud-/sidfotsfärg","Header/footer colour"
 "_companyBrandingBarsTextColour"," Sidhuvud/sidfot typsnittsfärg","Header/footer text colour"
 "_companyBrandingCustomize","Anpassa...","Customize..."
+"_nameInvalidChars","may contain only alphabetic characters, apostrophe, hyphen or space.","may contain only alphabetic characters, apostrophe, hyphen or space."
+"_nameRequired","required.","required."
+"_nameTooLong","may contain up to 100 characters.","may contain up to 100 characters."
+"_firstNameField","First name","First name"
+"_lastNameField","Last name","Last name"
