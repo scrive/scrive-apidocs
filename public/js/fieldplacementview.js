@@ -403,6 +403,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
+        if (field.signatory() == field.signatory().document().currentSignatory() && field.signatory().document().currentSignatoryCanSign())
+              place.css('cursor','pointer');
 
         this.updatePosition();
 
@@ -657,6 +659,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
+        if (field.signatory() == field.signatory().document().currentSignatory() && field.signatory().document().currentSignatoryCanSign())
+              place.css('cursor','pointer');
         this.updatePosition();
 
         place.empty();
@@ -878,6 +882,8 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         var document = signatory.document();
         var place = $(this.el);
         place.addClass('placedfield');
+        if (field.signatory() == field.signatory().document().currentSignatory() && field.signatory().document().currentSignatoryCanSign())
+              place.css('cursor','pointer');
         this.updatePosition();
 
         if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current() && !signatory.document().readOnlyView()) {
