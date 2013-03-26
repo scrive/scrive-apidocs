@@ -66,7 +66,7 @@ emailFromSigLink sl = (getFullName sl, getEmail sl)
 
 -- | Get the full name (first last)
 getFullName :: (HasSomeUserInfo a) => a -> String
-getFullName a = (strip $ getFirstName a) ++ " " ++ (strip $ getLastName  a)
+getFullName a = strip $ (strip $ getFirstName a) ++ " " ++ (strip $ getLastName  a)
 
 
 -- | If the full name is empty, return the email
