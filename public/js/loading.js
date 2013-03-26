@@ -26,7 +26,7 @@ window.LoadingDialog = {
     },
     open: function (message) {
          var dialog = LoadingDialog.dialog();
-         dialog.css('display','block')
+         dialog.css('display','block');
          $(".loadingmessage", dialog).html(message);
          $(".modal-container",dialog).css("top",$(window).scrollTop());
          $(".modal-container",dialog).css("margin-top",($(window).height()- 200) /2);
@@ -38,7 +38,7 @@ window.LoadingDialog = {
     close : function() {
        var dialog =  $('.loadingdialog');
        if (dialog.size() > 0 ) {
-         dialog.removeClass("active")
+         dialog.removeClass("active");
          if (BrowserInfo.isIE8orLower())
            dialog.css('display','none');
       }
