@@ -695,7 +695,7 @@ fetchSignatoryLinks = do
           , signatorylinkstatusclass = status_class
           , signatorylinksignredirecturl = signredirecturl
           , signatorylinkrejectionreason = rejection_reason
-          , signatorylinkrejectiontime = rejection_time 
+          , signatorylinkrejectiontime = rejection_time
           , signatorylinkauthenticationmethod = authentication_method
           , signatorylinkelegdatamismatchmessage = eleg_data_mismatch_message
           , signatorylinkelegdatamismatchfirstname = eleg_data_mismatch_first_name
@@ -1295,7 +1295,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
                 (Just docid)
                 actor
     return ()
-   
+
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () where
@@ -1361,7 +1361,7 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m Docu
      toNewSigLink csvdata1 mh sl
          | isJust (signatorylinkcsvupload sl) = (pumpData csvdata1 sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
          | otherwise = sl { signatorymagichash = mh }
-     pumpData (fstname,sndname,email,company,personalnumber,companynumber,fieldvalues) siglink = 
+     pumpData (fstname,sndname,email,company,personalnumber,companynumber,fieldvalues) siglink =
        replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
@@ -1518,7 +1518,7 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash 
 --
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetDocuments [Document] where
-  query (GetDocuments domains filters orderbys (offset,limit)) = 
+  query (GetDocuments domains filters orderbys (offset,limit)) =
     snd <$> query (GetDocuments2 domains filters orderbys (offset,limit,Nothing))
 
 data GetDocuments2 = GetDocuments2 [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int,Maybe Int)
@@ -1583,7 +1583,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
             sqlWhereEq "id" slid
             sqlWhereEq "document_id" did
             sqlWhereEq "token" mh
-            sqlWhere "seen_time IS NULL" 
+            sqlWhere "seen_time IS NULL"
             sqlWhere "sign_time IS NULL"
             sqlWhereExists $ sqlSelect "documents" $ do
                sqlWhereEq "id" did
@@ -1866,7 +1866,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where
   update (SetDocumentTags did doctags actor) = do
     oldtags <- query $ GetDocumentTags did
     let changed = doctags /= oldtags
-    if changed 
+    if changed
       then do
         _ <- kRun $ SQL "DELETE FROM document_tags WHERE document_id = ?" [toSql did]
         newtags <- insertDocumentTagsAsAre did (S.toList doctags)
@@ -1955,8 +1955,6 @@ data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID Signat
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
   update (SetInvitationDeliveryStatus did slid status actor) = do
     let decode acc st = acc ++ [st]
-        lowercase "" = ""
-        lowercase (c:cs) = toLower c: cs
     old_status <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
         sqlJoin "signatory_links AS signatory_links_old"
@@ -1976,7 +1974,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
     when_ (changed) $
       update $ InsertEvidenceEvent
         SetInvitationDeliveryStatusEvidence
-        (value "email" email >> value "status" (lowercase $ show status) >> value "actor" (actorWho actor))
+        (value "email" email >> value "status" (map toLower $ show status) >> value "actor" (actorWho actor))
         (Just did)
         actor
     when_ (changed && status == Delivered) $
@@ -2358,8 +2356,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddSignatoryLinkVisitedEvid
           (value "name" (getSmartName sl))
           (Just $ did)
           actor
-        return ()  
-          
+        return ()
+
 data PostReminderSend = PostReminderSend Document SignatoryLink (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
    update (PostReminderSend doc sl mmsg actor) = do
@@ -2440,7 +2438,7 @@ data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool where
   update (AddDocumentAttachment did fid actor) = do
     mf <- query (GetFileByFileID fid)
-    success <- kRun01 $ sqlInsertSelect "author_attachments" "" $ do 
+    success <- kRun01 $ sqlInsertSelect "author_attachments" "" $ do
         sqlSet "document_id" did
         sqlSet "file_id" fid
         sqlWhereExists $ sqlSelect "documents" $ do
