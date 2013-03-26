@@ -403,7 +403,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
-        if (field.signatory() == field.signatory().document().currentSignatory() && field.signatory().document().currentSignatoryCanSign())
+        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
 
         this.updatePosition();
@@ -659,7 +659,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
-        if (field.signatory() == field.signatory().document().currentSignatory() && field.signatory().document().currentSignatoryCanSign())
+        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
         this.updatePosition();
 
@@ -882,7 +882,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         var document = signatory.document();
         var place = $(this.el);
         place.addClass('placedfield');
-        if (field.signatory() == field.signatory().document().currentSignatory() && field.signatory().document().currentSignatoryCanSign())
+        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
         this.updatePosition();
 
