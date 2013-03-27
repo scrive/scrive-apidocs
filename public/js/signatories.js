@@ -277,6 +277,9 @@ window.Signatory = Backbone.Model.extend({
     signs: function() {
          return this.get("signs");
     },
+    signsuccessredirect : function() {
+          return this.get("signsuccessredirect");
+    },
     makeSignatory: function() {
       var isAuthor = this.author();
       var authorNotSignsMode = this.document().authorNotSignsMode();

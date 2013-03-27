@@ -199,7 +199,7 @@ apiCallUpdate did = api $ do
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (documentstatus doc /= Preparation) $ do
-        throwIO . SomeKontraException $ (conflictError "Document is not a draft or template")
+        checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
   jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
@@ -234,9 +234,10 @@ apiCallReady did =  api $ do
     checkObjectVersionIfProvided did
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-    when (documentstatus doc /= Preparation || isTemplate doc) $ do
-          throwIO . SomeKontraException $ (conflictError "Document is not a draft")
-
+    when (documentstatus doc /= Preparation) $ do
+          checkObjectVersionIfProvidedAndThrowError did $ (conflictError "Document is not a draft")
+    when (isTemplate doc) $ do
+          checkObjectVersionIfProvidedAndThrowError did $ (serverError "Document is not a draft")
     let defaultParams = ReadyParams { timezonestring = "Europe/Stockholm" }
     mjsons <- lift $ getDataFn' (look "json")
     params <- case mjsons of
@@ -308,7 +309,8 @@ apiCallReject did slid = api $ do
       let Just sl = getSigLinkFor doc' slid
       _ <- addSignStatRejectEvent doc' sl
       lift $ postDocumentRejectedChange doc' slid method
-      Accepted <$> (runJSONGenT $ value "rejected" True)
+      Just doc'' <- dbQuery $ GetDocumentByDocumentID did
+      Accepted <$> documentJSON False True True Nothing Nothing doc''
 
 
 apiCallSign :: Kontrakcja m
@@ -355,11 +357,8 @@ apiCallSign  did slid = api $ do
       lift $ postDocumentPendingChange doc olddoc method
       udoc <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
       lift $ handleAfterSigning udoc slid
-      siglink <- apiGuardJustM (serverError "Can find signatory after signing") $ return $ getSigLinkFor doc slid
-      case (signatorylinksignredirecturl siglink) of
-           Nothing -> Accepted <$> (runJSONGenT $ value "signed" True)
-           Just "" -> Accepted <$> (runJSONGenT $ value "signed" True)
-           Just s  -> Accepted <$> (runJSONGenT $ value "signed" True >> value "redirect" s)
+      udoc' <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
+      Accepted <$> documentJSON False True True Nothing Nothing udoc'
     Right (Left err) -> throwIO . SomeKontraException $ serverError  $ "Error: DB action " ++ show err
     Left msg ->  throwIO . SomeKontraException $ serverError  $ "Error: " ++ msg
 
@@ -677,3 +676,12 @@ checkObjectVersionIfProvided did = lift $ do
         Just ov -> dbQuery $ CheckDocumentObjectVersionIs did ov
         Nothing -> return ()
   `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
+
+checkObjectVersionIfProvidedAndThrowError ::  (Kontrakcja m) => DocumentID -> APIError -> APIMonad m ()
+checkObjectVersionIfProvidedAndThrowError did err = lift $ do
+    mov <- readField "objectversion"
+    case mov of
+        Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did ov)
+                      `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
+        Nothing -> return ()
+    throwIO . SomeKontraException $ err

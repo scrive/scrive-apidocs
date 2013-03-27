@@ -292,10 +292,9 @@ window.Document = Backbone.Model.extend({
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
             ajax: true,
-            ajaxsuccess : function(rs) {
-              var resp = JSON.parse(rs);
-              if (resp.redirect != undefined && resp.redirect != "")
-                window.location = redirect;
+            ajaxsuccess : function() {
+              if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "")
+                window.location = document.currentSignatory().signsuccessredirect();
               else
                 window.location.reload();
             },
