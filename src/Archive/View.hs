@@ -77,6 +77,8 @@ docFieldsListForJSON padqueue doc = do
     J.value "time" $ formatMinutesTimeRealISO (documentmtime doc)
     J.value "ctime" $ formatMinutesTimeRealISO (documentctime doc)
     J.value "timeouttime" $ formatMinutesTimeRealISO <$> unTimeoutTime <$> documenttimeouttime doc
+    J.value "template" $ isTemplate doc
+    J.value "partiescount" $ length $ (documentsignatorylinks doc)
     J.value "type" $ case documenttype doc of
                         Template _ -> "template"
                         Signable _ -> "signable"

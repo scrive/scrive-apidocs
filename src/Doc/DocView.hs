@@ -130,6 +130,8 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
         J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
         J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
         J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
+      J.value "time" $ jsonDate (Just $ documentmtime doc)
+      J.value "ctime" $ jsonDate (Just $ documentctime doc)
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
       J.value "state" $ show $ documentstatus doc
