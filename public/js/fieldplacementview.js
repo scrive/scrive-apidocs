@@ -135,7 +135,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                     yrel : y/h,
                     wrel: $(helper).width() / w,
                     hrel: $(helper).height() / h,
-                    fsrel: fontSize/w
+                    fsrel: fontSize/w,
+                    withTypeSetter : true
                 });
                 field.addPlacement(newPlacement);
             }
@@ -427,6 +428,11 @@ var TextPlacementPlacedView = Backbone.View.extend({
             });
         }
 
+        if (placement.withTypeSetter()) {
+          this.addTypeSetter();
+          placement.cleanTypeSetter();
+        }
+
         return this;
     }
 });
@@ -688,6 +694,10 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
                     field.setValue("");
                 return false;
             });
+        }
+        if (placement.withTypeSetter()) {
+          this.addTypeSetter();
+          placement.cleanTypeSetter();
         }
         return this;
     }

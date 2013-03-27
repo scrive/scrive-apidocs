@@ -12,7 +12,8 @@ window.FieldPlacement = Backbone.Model.extend({
       tip: undefined,
       wrel: 0,
       hrel: 0,
-      fsrel: 0
+      fsrel: 0,
+      withTypeSetter : false,
     },
     initialize : function(args){
         var placement = this;
@@ -70,6 +71,12 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     tip : function(){
         return this.get("tip");
+    },
+    withTypeSetter : function() {
+      return this.get("withTypeSetter") == true;
+    },
+    cleanTypeSetter : function() {
+       this.set({"withTypeSetter" : false}, {silent: true});
     },
     remove : function() {
        var document = this.field().signatory().document();
