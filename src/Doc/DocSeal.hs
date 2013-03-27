@@ -585,8 +585,8 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
                       return res
                  _ -> do
                       res <- liftIO $ BS.readFile tmpout
-                      Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid
-                      Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid
+                      Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
+                      Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
                       return res
           ExitFailure c -> do
             res <- liftIO $ BS.readFile tmpout

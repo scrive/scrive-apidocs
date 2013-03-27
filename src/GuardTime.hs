@@ -64,6 +64,7 @@ digitallySign conf inputFileName = do
 data VerifyResult = Valid String String      |
                     Invalid String           |
                     Problem String
+  deriving Show
 
 instance FromJSValue VerifyResult where
     fromJSValueM = do
