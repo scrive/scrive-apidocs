@@ -15,7 +15,6 @@ window.User = Backbone.Model.extend({
       usercompanyname : "",
       usercompanynumber : "",
       lang : "sv",
-      footer : undefined,
       company   : undefined,
       mailapi   : undefined,
       ready : false
@@ -62,17 +61,11 @@ window.User = Backbone.Model.extend({
   lang : function() {
      return this.get("lang");
   },
-  footer : function() {
-     return this.get("footer");
-  },
   mailapi : function() {
      return this.get("mailapi");
   },
   company : function() {
      return this.get("company");
-  },
-  hasFooter : function() {
-     return this.footer() != undefined;
   },
   hasCompany : function() {
      return this.company() != undefined;
@@ -94,7 +87,6 @@ window.User = Backbone.Model.extend({
       usercompanyname : args.usercompanyname,
       usercompanynumber : args.usercompanynumber,
       lang : args.lang,
-      footer : args.footer,
       company   : args.company != undefined ? new Company(args.company) : undefined,
       mailapi   :  args.mailapi != undefined ? new MailApi(args.mailapi) : undefined,
       ready : true

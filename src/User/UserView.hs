@@ -85,7 +85,6 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
     value "usercompanyname" $ getCompanyName (user,mcompany)
     value "usercompanynumber" $ getCompanyNumber (user,mcompany)
     value "lang"   $ "en" <| LANG_EN == (getLang user) |> "sv"
-    value "footer" $ customfooter $ usersettings user
     valueM "mailapi" $ case (mumailapi) of
                             Nothing -> return JSNull
                             Just umailapi -> mailAPIInfoJSON umailapi

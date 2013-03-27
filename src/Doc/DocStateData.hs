@@ -8,7 +8,6 @@ module Doc.DocStateData (
   , DocumentSharing(..)
   , DocumentStatus(..)
   , DocumentTag(..)
-  , DocumentUI(..)
   , DocumentType(..)
   , DocumentProcess(..)
   , FieldPlacement(..)
@@ -33,7 +32,6 @@ module Doc.DocStateData (
   , StatusClass(..)
   , getFieldOfType
   , getValueOfType
-  , emptyDocumentUI
   , documentType
   , toDocumentProcess
   ) where
@@ -362,14 +360,6 @@ data DocumentTag = DocumentTag {
 instance Ord DocumentTag where
   a `compare` b = tagname a `compare` tagname b
 
-data DocumentUI = DocumentUI {
-    documentmailfooter :: Maybe String
-  } deriving (Eq, Ord, Show)
-
-emptyDocumentUI :: DocumentUI
-emptyDocumentUI = DocumentUI { documentmailfooter = Nothing }
-
-
 getFieldOfType :: FieldType -> [SignatoryField] -> Maybe SignatoryField
 getFieldOfType _ [] = Nothing
 getFieldOfType t (sf:rest) =
@@ -407,7 +397,6 @@ data Document = Document {
   , documentsharing                :: DocumentSharing
   , documenttags                   :: S.Set DocumentTag
   , documentauthorattachments      :: [AuthorAttachment]
-  , documentui                     :: DocumentUI
   , documentlang                   :: Lang
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
@@ -432,7 +421,6 @@ instance HasDefaultValue Document where
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documenttags                 = S.empty
-          , documentui                   = emptyDocumentUI
           , documentauthorattachments    = []
           , documentlang                 = defaultValue
           , documentstatusclass          = SCDraft

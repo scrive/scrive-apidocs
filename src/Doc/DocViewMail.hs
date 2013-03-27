@@ -13,7 +13,6 @@ module Doc.DocViewMail (
     , mailMismatchAuthor
     , mailMismatchSignatory
     , documentMailWithDocLang
-    , mailFooterForDocument
     , companyBrandFields
     ) where
 
@@ -26,7 +25,6 @@ import File.FileID
 import Kontra
 import KontraLink
 import Mails.SendMail
-import Utils.List
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
@@ -84,7 +82,6 @@ remindMailNotSigned forMail customMessage ctx document signlink ispreview = do
     documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         F.value  "custommessage" customMessage
         F.value  "authorname" authorname
-        F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "partners" $ map getSmartName $ partyList document
         F.value "partnerswhosigned" $ map getSmartName $ partySignedList document
         F.value "someonesigned" $ not $ null $ partySignedList document
@@ -117,7 +114,6 @@ remindMailSigned _forMail customMessage ctx document signlink ispreview = do
     sheader <- remindMailSignedStandardHeader document signlink
     documentMailWithDocLang ctx document "remindMailSigned" $ do
             F.valueM "header" $ makeEditable "customtext" $ fromMaybe sheader customMessage
-            F.valueM "footer" $ mailFooterForDocument ctx document
             F.value "ispreview" ispreview
 
 
@@ -163,7 +159,6 @@ mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
 mailDocumentRejected customMessage ctx document rejector ispreview = do
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         F.value "rejectorName" $ getSmartName rejector
-        F.valueM "footer" $ defaultFooter ctx
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "loginlink" $ show $ LinkLogin (getLang document) NotLogged
@@ -238,7 +233,6 @@ mailInvitation forMail
                 else renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
                                      F.value "creatorname" creatorname
                                      F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
-        F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "link" $ case msiglink of
           Just siglink -> makeFullLink ctx $ show (LinkSignDoc document siglink)
           Nothing -> makeFullLink ctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
@@ -274,7 +268,6 @@ mailDocumentClosed ctx document l sl = do
    let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document)
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
-        F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "confirmationlink" $ (++) (ctxhostpart ctx) <$> show <$> l
         F.value "doclink" $ if isAuthor sl
@@ -291,7 +284,6 @@ mailDocumentAwaitingForAuthor ctx document authorlang = do
         F.value "documentlink" $ (ctxhostpart ctx) ++ show (LinkSignDoc document $ fromJust $ getAuthorSigLink document)
         F.value "partylist" signatories
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
-        F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile
 
 mailMismatchSignatory :: (MonadDB m, TemplatesMonad m)
@@ -330,41 +322,6 @@ makeEditable :: TemplatesMonad m => String -> String -> m String
 makeEditable name this = renderTemplate "makeEditable" $ do
   F.value "name" name
   F.value "this" this
-
-{- |
-    Use for anyone sending a mail as a person from the inviting side.  This could be the author
-    in the case of the invitation mails, and it could be a company admin withdrawing a document
-    that was authored within their company by another person.
-    The footer is in order of preference
-      1. a custom footer configured on context user (there should be one!)
-      2. the custom footer saved on the document itself (setup for Upsales originally)
-      3. a custom footer configured for the document's service
-      4. the default powered by scrive footer
--}
-mailFooterForDocument :: (MonadDB m, TemplatesMonad m) => Context -> Document -> m (Maybe String)
-mailFooterForDocument ctx doc = firstOrNothing  [
-    getDocumentFooter doc
-  , getUserFooter ctx
-  ]
-
-
-{- |
-    Use for anyone sending a mail as a person invited to that document.  For example when rejecting
-    a document.
-    The footer is in order of preference:
-      1. a custom footer configured on the context user (if there is one)
-      3. the default powered by scrive footer
--}
-
-getUserFooter :: Monad m => Context -> m (Maybe String)
-getUserFooter ctx = return $ join $ customfooter <$> usersettings <$> ctxmaybeuser ctx
-
-getDocumentFooter :: Monad m => Document -> m (Maybe String)
-getDocumentFooter doc = return $ documentmailfooter $ documentui doc
-
-defaultFooter :: TemplatesMonad m => Context -> m String
-defaultFooter ctx = renderTemplate "poweredByScrive" $ do
-  F.value "ctxhostpart" $ ctxhostpart ctx
 
 makeFullLink :: Context -> String -> String
 makeFullLink ctx link = ctxhostpart ctx ++ link

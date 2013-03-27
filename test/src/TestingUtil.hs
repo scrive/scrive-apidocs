@@ -144,9 +144,6 @@ instance Arbitrary TimeoutTime where
 instance Arbitrary MinutesTime where
   arbitrary = fromSeconds <$> arbitrary
 
-instance Arbitrary DocumentUI where
-  arbitrary = DocumentUI <$> arbitrary
-
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
      This is a class to make it more random - so to attach this fields for example.
@@ -499,9 +496,7 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , usercompanyname = []
                                        , usercompanynumber = []
                                        }
-                 , usersettings  = UserSettings { lang = defaultValue
-                                                , customfooter = Nothing
-                                                }
+                 , usersettings  = UserSettings { lang = defaultValue }
                  , usercompany = Nothing
                  , userisfree  = False
                  }

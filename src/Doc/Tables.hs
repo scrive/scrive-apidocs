@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 20
+  , tblVersion = 21
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -26,7 +26,6 @@ tableDocuments = tblTable {
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("sharing", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
-       , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("delivery_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("api_callback_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -53,7 +52,6 @@ tableDocuments = tblTable {
           <> ", csv_contents                  TEXT             NULL"
           <> ", csv_signatory_index           INTEGER          NULL"
           <> ", sharing                       SMALLINT     NOT NULL"
-          <> ", mail_footer                   TEXT             NULL"
           <> ", lang                          SMALLINT     NOT NULL"
           <> ", delivery_method               SMALLINT     NOT NULL"
           <> ", api_callback_url              TEXT             NULL"

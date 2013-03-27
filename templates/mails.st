@@ -268,14 +268,6 @@ remindMailSigned=
 remindMailSignedP=
 $header:noescape()$
 ####
-remindMailFooter=
-$if(footer)$
-  $footer:noescape()$
-  <br/>
-$else$
-$regards()$
-$endif$
-###
 remindMailSignedStandardHeader=
 $_hi()$ <strong>$personname$</strong>,
 <br/>

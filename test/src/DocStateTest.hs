@@ -123,9 +123,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "SetDocumentTags succeeds" env testSetDocumentTagsRight,
 
-  testThat "SetDocumentUI fails when does not exist" env testSetDocumentUINotLeft,
-  testThat "SetDocumentUI succeeds" env testSetDocumentUIRight,
-
   testThat "GetTimeoutedButPendingDocuments works as expected" env testGetTimedOutButPendingDocuments,
 
   testThat "SetInvitationDeliveryStatus fails when not signable" env testSetInvitationDeliveryStatusNotSignableLeft,
@@ -184,7 +181,7 @@ docStateTests env = testGroup "DocState" [
 
   testThat "when I create document from shared template author custom fields are stored" env testCreateFromSharedTemplate,
   testThat "when I create document from template company name is taken from company" env testCreateFromTemplateCompanyField,
-  
+
   testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" env testNoDocumentResetSignatoryDetailsAlwaysLeft,
   testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" env testNotPreparationResetSignatoryDetailsAlwaysLeft,
   testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" env testPreparationResetSignatoryDetailsAlwaysRight,
@@ -637,7 +634,7 @@ testDeleteSigAttachmentAlreadySigned = do
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
   assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
     randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
-  
+
 testDeleteSigAttachmentEvidenceLog :: TestEnv ()
 testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
@@ -781,7 +778,6 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "No author attachments" [] (documentauthorattachments doc)
     assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
     assertBool "Uses email identification only" (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) (documentsignatorylinks doc))
-    assertEqual "Doc has user's footer" (customfooter $ usersettings user) (documentmailfooter $ documentui doc)
     assertEqual "In preparation" Preparation (documentstatus doc)
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
     let siglink = head $ documentsignatorylinks doc
@@ -818,7 +814,7 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ not . isPending)
   time <- getMinutesTime
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $
-               randomUpdate $ CancelDocument (documentid doc) 
+               randomUpdate $ CancelDocument (documentid doc)
                               (authorActor time noIP (userid user) (getEmail user))
 
 testSignatories1 :: Assertion
@@ -949,7 +945,7 @@ testArchiveDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   unrelateduser <- addNewRandomUser
-  assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True) $ 
+  assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True) $
     randomUpdate $ \t -> ArchiveDocument (userid unrelateduser) (documentid doc) (systemActor t)
 
 testArchiveDocumentCompanyStandardLeft :: TestEnv ()
@@ -1275,7 +1271,7 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   doc5 <- addRandomDocumentWithAuthorAndCondition user5 (isTemplate)
   doc6 <- addRandomDocumentWithAuthorAndCondition user6 (isTemplate)
 
-  let [docid1, docid2, docid3, docid4, docid5, docid6] = 
+  let [docid1, docid2, docid3, docid4, docid5, docid6] =
          documentid <$> [doc1, doc2, doc3, doc4, doc5, doc6]
 
   -- user1: owns doc1, sees doc2
@@ -1415,7 +1411,7 @@ testCreateFromTemplateCompanyField = doTimes 10 $ do
   assertEqual "Author signatory link company name is not same as his company" (getCompanyName company) (getCompanyName author)
 
 
-    
+
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   author <- addNewRandomUser
@@ -1799,19 +1795,6 @@ testSetDocumentTagsRight = doTimes 10 $ do
   assert success
   assertEqual "Tags should be equal" tags (documenttags ndoc)
 
-testSetDocumentUINotLeft :: TestEnv ()
-testSetDocumentUINotLeft = doTimes 10 $ do
-  success <- randomUpdate $ (\did ui time -> SetDocumentUI did ui (systemActor time))
-  assert $ not success
-
-testSetDocumentUIRight :: TestEnv ()
-testSetDocumentUIRight = doTimes 10 $ do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthor' author
-  ac <- unSystemActor <$> rand 10 arbitrary
-  success <- randomUpdate $ (\ui -> SetDocumentUI (documentid doc) ui ac)
-  assert success
-
 testCloseDocumentSignableButNotEverybodyHasSigned :: TestEnv ()
 testCloseDocumentSignableButNotEverybodyHasSigned = doTimes 10 $ do
   author <- addNewRandomUser
@@ -1853,7 +1836,7 @@ testCancelDocumentNotSignableNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ 
+  assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $
                randomUpdate $ CancelDocument (documentid doc)
                               (authorActor time noIP (userid author) (getEmail author))
 
@@ -1861,7 +1844,7 @@ testCancelDocumentNotNothing :: TestEnv ()
 testCancelDocumentNotNothing = doTimes 10 $ do
   aa <- unAuthorActor <$> rand 10 arbitrary
 
-  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ 
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $
              randomUpdate $ (\did -> CancelDocument did aa)
 
 testSetDocumentTitleNotLeft :: TestEnv ()
@@ -1960,7 +1943,7 @@ testSetDocumentUnsavedDraft = doTimes 10 $ do
                      [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (0,maxBound)
   docs4 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
                      [DocumentFilterUnsavedDraft True, DocumentFilterByDocumentID did] [] (0,maxBound)
-  let isdraft = (isSignable doc && isPreparation doc)                   
+  let isdraft = (isSignable doc && isPreparation doc)
 
   assertEqual "Should return the document" [did] (map documentid docs1)
   assertEqual "Should return no documents" ([] <| isdraft |>[did])    (map documentid docs2)

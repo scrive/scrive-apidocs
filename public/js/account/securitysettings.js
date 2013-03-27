@@ -31,12 +31,6 @@ var SecuritySettingsModel = Backbone.Model.extend({
   password2 : function() {
      return this.get("password2");
   },
-  useFooter : function() {
-    return this.get("useFooter");
-  },
-  footer : function() {
-    return this.get("footer");
-  },
   lang : function() {
     return this.get("lang");
   },
@@ -49,12 +43,6 @@ var SecuritySettingsModel = Backbone.Model.extend({
   setPassword2 : function(v) {
     this.set({"password2" : v} );
   },
-  setUseFooter : function(v) {
-    this.set({"useFooter" : v} );
-  },
-  setFooter : function(v) {
-    this.set({"footer" : v} );
-  },
   setLang : function(v) {
     this.set({"lang" : v}, {silent : true} );
     this.trigger("change:lang");
@@ -65,9 +53,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
       oldpassword : "",
       password1  : "",
       password2  : "",
-      footer     : this.user().footer() ,
-      lang       : this.user().lang() != "sv" ?  "en" : "sv",
-      useFooter  : this.user().footer() != undefined
+      lang       : this.user().lang() != "sv" ?  "en" : "sv"
     }, {silent : true});
     this.trigger("reset");
   },
@@ -88,15 +74,6 @@ var SecuritySettingsModel = Backbone.Model.extend({
       }
     }).send();
   },
-  saveFooter : function(callback) {
-    new Submit({
-      method : "POST",
-      url : "/api/frontend/changefooter",
-      customfooter  : this.useFooter() ? this.footer() : undefined,
-      ajax : true,
-      ajaxsuccess : callback
-    }).send();
-  },
   saveLang : function(callback) {
     new Submit({
       method : "POST",
@@ -113,9 +90,9 @@ var SecuritySettingsModel = Backbone.Model.extend({
   save : function() {
     var self = this;
     if (self.passwordNeedSaving())
-      self.savePassword(function() { self.saveLang(function() { self.saveFooter(function() {window.location.reload();})})});
+      self.savePassword(function() { self.saveLang(function() {window.location.reload();})});
     else
-      self.saveFooter(function() { self.saveLang(function() {window.location.reload();})});
+      self.saveLang(function() {window.location.reload();});
   },
   refresh : function() {    this.user().fetch({cache: false}); this.reset(); }
 });
@@ -189,54 +166,6 @@ var SecuritySettingsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.lang))).append(this.langSelectBox));
       return box;
     },
-    footerSettings : function() {
-      // Building frame
-      var self = this;
-      var model = this.model;
-      var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.footerSection);
-      var body = $("<div class='account-body'/>");
-      box.append(header).append(body);
-
-      var checkbox = $("<div class='checkbox'/>");
-      if (model.useFooter()) checkbox.addClass("checked");
-      checkbox.click(function() {
-        checkbox.toggleClass("checked");
-        model.setUseFooter(!model.useFooter());
-      });
-
-      var label = $("<label/>").text(localization.account.accountSecurity.useFooter);
-      body.append($("<div class='checkbox-box'/>").append(checkbox).append(label));
-
-      var cfb = $("<div class='customfooterbox'/>");
-      var updateTinyVisibility = function() {
-          if (!model.useFooter())
-            cfb.css("display","none");
-          else
-            cfb.css("display","block");
-      }
-      updateTinyVisibility();
-      model.bind("change:useFooter", updateTinyVisibility);
-
-      this.customfooter = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").val(model.useFooter() ? model.footer() : "");
-      setTimeout(function() {self.customfooter.tinymce({
-                                script_url: '/tiny_mce/tiny_mce.js',
-                                theme: "advanced",
-                                theme_advanced_toolbar_location: "top",
-                                theme_advanced_buttons1: "bold,italic,underline",
-                                theme_advanced_buttons2: "",
-                                convert_urls: false,
-                                theme_advanced_toolbar_align: "left",
-                                valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
-                                onchange_callback  : function (inst) {
-                                  model.setFooter(inst.getBody().innerHTML);
-                                }
-                        });}, 100);
-
-      body.append(cfb.append(this.customfooter));
-
-      return box;
-    },
     passwordsAreValid : function() {
         var model = this.model;
         var res = model.password1().validate(new PasswordValidation({callback: function(text,elem,v) {new FlashMessage({color: 'red', content : v.message() })},
@@ -287,7 +216,6 @@ var SecuritySettingsView = Backbone.View.extend({
 
        box.append(this.passwordSettings());
        box.append(this.langSettings());
-       box.append(this.footerSettings());
        box.append(this.saveButton());
        box.append("<div class='clearfix'></div>");
        return this;

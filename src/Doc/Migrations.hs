@@ -282,6 +282,14 @@ dropCancelationReasonFromDocuments = Migration {
               <+> "DROP COLUMN cancelation_reason"
 }
 
+dropMailFooterFromDocuments :: MonadDB m => Migration m
+dropMailFooterFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 20
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE documents"
+              <+> "DROP COLUMN mail_footer"
+}
 
 dropCSVSignatoryIndexFromSignatoryLinks :: MonadDB m => Migration m
 dropCSVSignatoryIndexFromSignatoryLinks = Migration {

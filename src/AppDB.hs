@@ -134,6 +134,8 @@ kontraMigrations = [
   , dropCancelationReasonFromDocuments
   , addNewCompanyBrandingOptions
   , addSignviewBrandingOptions
+  , dropCustomFooterFromUsers
+  , dropMailFooterFromDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

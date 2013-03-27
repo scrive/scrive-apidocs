@@ -62,7 +62,6 @@ versionedAPI _version = choice [
   dir "getprofile" $ hGet $ toK0 $ apiCallGetUserProfile,
   dir "changepassword"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserPassword,
   dir "changelanguage"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserLanguage,
-  dir "changefooter"    $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserFooter,
   dir "updateprofile"   $ hPostNoXTokenHttp $ toK0 $ apiCallUpdateUserProfile,
   dir "createcompany"   $ hPostNoXTokenHttp $ toK0 $ apiCallCreateCompany,
   dir "changeemail"     $ hPostNoXTokenHttp $ toK0 $ apiCallChangeEmail,
@@ -131,17 +130,6 @@ apiCallChangeUserLanguage = api $ do
          Ok <$> (runJSONGenT $ value "changed" True)
        Nothing -> do
          Ok <$> (runJSONGenT $ value "changed" False)
-
-
-apiCallChangeUserFooter :: Kontrakcja m => m Response
-apiCallChangeUserFooter = api $ do
-  (user, _ , _) <- getAPIUser APIPersonal
-  customfooter <- lift $ getField "customfooter"
-  _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             customfooter = customfooter
-           }
-  Ok <$> (runJSONGenT $ value "changed" True)
-
 
 
 apiCallUpdateUserProfile :: Kontrakcja m => m Response

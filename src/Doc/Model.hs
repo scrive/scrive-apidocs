@@ -60,7 +60,6 @@ module Doc.Model
   , SetDocumentUnsavedDraft(..)
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
-  , SetDocumentUI(..)
   , SetDocumentDeliveryMethod(..)
   , SetDocumentProcess(..)
   , SetInvitationDeliveryStatus(..)
@@ -482,7 +481,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
-                   , checkEqualBy "documentui" documentui
                    , checkEqualBy "documentlang" documentlang
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
                    ] ++
@@ -506,7 +504,6 @@ documentsSelectors =
   , "documents.invite_time"
   , "documents.invite_ip"
   , "documents.invite_text"
-  , "documents.mail_footer"
   , "documents.lang"
   , "documents.sharing"
   , "documents.delivery_method"
@@ -522,7 +519,7 @@ fetchDocuments = kFold decoder []
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
-     invite_ip invite_text mail_footer
+     invite_ip invite_text
      lang sharing delivery_method apicallback status_class
        = Document {
          documentid = did
@@ -547,7 +544,6 @@ fetchDocuments = kFold decoder []
        , documentsharing = sharing
        , documenttags = S.empty
        , documentauthorattachments = []
-       , documentui = DocumentUI mail_footer
        , documentlang = lang
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
@@ -980,7 +976,6 @@ insertDocumentAsIs document = do
                  , documentsharing
                  , documenttags
                  , documentauthorattachments
-                 , documentui
                  , documentlang
                  } = document
         process = toDocumentProcess documenttype
@@ -1003,7 +998,6 @@ insertDocumentAsIs document = do
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
         sqlSet "invite_text" documentinvitetext
         sqlSet "delivery_method" documentdeliverymethod
-        sqlSet "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
         mapM_ (sqlResult) documentsSelectors
@@ -1666,7 +1660,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentmtime                = ctime
                 , documentauthorattachments    = []
                 , documentdeliverymethod       = EmailDelivery
-                , documentui                   = (documentui defaultValue) { documentmailfooter = customfooter $ usersettings user }
                 }
 
   case invariantProblems ctime doc of
@@ -1943,14 +1936,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLang Bool where
         (Just did)
         actor
 
-data SetDocumentUI = SetDocumentUI DocumentID DocumentUI Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUI Bool where
-  update (SetDocumentUI did docui actor) = do
-    kRun01 $ sqlUpdate "documents" $ do
-        sqlSet "mail_footer" $ documentmailfooter docui
-        sqlSet "mtime" $ actorTime actor
-        sqlWhereEq "id" did
-
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
   update (SetInvitationDeliveryStatus did slid status actor) = do
@@ -2225,7 +2210,6 @@ instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m SignableFromDocum
                                        -- FIXME: Need to remove authorfields?
               , documentctime = time
               , documentmtime = time
-              , documentui    = DocumentUI { documentmailfooter = customfooter (usersettings user) }
               }
           case res of
             Nothing -> return Nothing

@@ -232,7 +232,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", users.mobile"
   <> ", users.email"
   <> ", users.lang"
-  <> ", users.customfooter"
   <> ", users.company_name"
   <> ", users.company_number"
   <> ", users.is_free"
@@ -277,7 +276,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
-     email lang customfooter company_name company_number is_free cid eid
+     email lang company_name company_number is_free cid eid
      name number address zip' city country email_font
      email_bordercolour email_buttoncolour email_emailbackgroundcolour
      email_backgroundcolour email_textcolour email_logo signview_logo
@@ -305,7 +304,6 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
            }
          , usersettings = UserSettings {
              lang = lang
-           , customfooter = customfooter
            }
          , usercompany = company_id
          , userisfree = is_free

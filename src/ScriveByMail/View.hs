@@ -31,7 +31,6 @@ mailMailAPIConfirm :: (MonadDB m, TemplatesMonad m)
                    -> m Mail
 mailMailAPIConfirm ctx document siglink = do
   documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
-        F.valueM "footer" $ mailFooterForDocument ctx document
         F.valueM "timetosigninfo" $ do
             case (documenttimeouttime document) of
                  Just time -> renderLocalTemplate document "timetosigninfo" $ do
