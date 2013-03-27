@@ -13,7 +13,7 @@ window.FieldPlacement = Backbone.Model.extend({
       wrel: 0,
       hrel: 0,
       fsrel: 0,
-      withTypeSetter : false,
+      withTypeSetter : false
     },
     initialize : function(args){
         var placement = this;
