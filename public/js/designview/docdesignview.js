@@ -256,6 +256,7 @@ var DesignViewView = Backbone.View.extend({
 
         var emailOption =    {name : localization.email, onSelect :  function() {  mixpanel.track('Select delivery method', {'Delivery method' : 'email'}); document.setEmailDelivery(); return true;}  };
         var padOption =    {name : localization.pad.delivery, onSelect :  function() {  mixpanel.track('Select delivery method', {'Delivery method' : 'pad'}); document.setPadDelivery(); return true;}  };
+        var mobileOption =    {name : localization.mobile.delivery, onSelect :  function() {  mixpanel.track('Select delivery method', {'Delivery method' : 'mobile'}); document.setMobileDelivery(); return true;}  };
 
 
         var options = []
@@ -263,14 +264,17 @@ var DesignViewView = Backbone.View.extend({
 
         if (document.emailDelivery()) {
             name = localization.email;
-            options = [padOption];
+            options = [padOption, mobileOption];
         } else if (document.padDelivery()) {
             name = localization.pad.delivery;
-            options = [emailOption];
+            options = [emailOption, padOption];
+        } else if (document.mobileDelivery()) {
+            name = localization.mobile.delivery;
+            options = [emailOption, mobileOption];
         }
         else if (document.apiDelivery()) {
             name = "API";
-            options = [padOption,emailOption];
+            options = [padOption,emailOption, mobileOption];
         }
         var select = new Select({options: options, name: name, textWidth: "126px"}).view().el;
         $(select).addClass("float-left");

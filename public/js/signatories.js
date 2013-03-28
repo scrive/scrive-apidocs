@@ -388,6 +388,9 @@ window.Signatory = Backbone.Model.extend({
     padDelivery : function() {
           return this.get("delivery") == "pad";
     },
+    mobileDelivery : function() {
+          return this.get("delivery") == "mobile";
+    },
     apiDelivery : function() {
           return this.get("delivery") == "api";
     },

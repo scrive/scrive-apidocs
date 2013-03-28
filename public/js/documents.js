@@ -439,6 +439,9 @@ window.Document = Backbone.Model.extend({
     padDelivery : function() {
           return this.get("delivery") == "pad";
     },
+    mobileDelivery : function() {
+          return this.get("delivery") == "mobile";
+    },
     apiDelivery : function() {
           return this.get("delivery") == "api";
     },
@@ -456,6 +459,11 @@ window.Document = Backbone.Model.extend({
     },
     setPadDelivery : function() {
           this.set({"delivery":"pad"}, {silent: true});
+          _.each(this.signatories(), function(sig) {sig.clearAttachments();});
+          this.trigger("change:authenticationdelivery");
+    },
+    setMobileDelivery : function() {
+          this.set({"delivery":"mobile"}, {silent: true});
           _.each(this.signatories(), function(sig) {sig.clearAttachments();});
           this.trigger("change:authenticationdelivery");
     },

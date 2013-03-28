@@ -94,6 +94,7 @@ docFieldsListForJSON userid padqueue doc = do
       [EmailDelivery] -> "email"
       [PadDelivery]   -> "pad"
       [APIDelivery]   -> "api"
+      [MobileDelivery]-> "mobile"
       _                        -> "mixed"
     J.value "anyinvitationundelivered" $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ documentsharing doc == Shared
@@ -123,6 +124,7 @@ signatoryFieldsListForJSON padqueue doc sl = do
       EmailDelivery -> "email"
       PadDelivery   -> "pad"
       APIDelivery   -> "api"
+      MobileDelivery-> "mobile"
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl

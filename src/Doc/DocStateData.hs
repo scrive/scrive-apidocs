@@ -122,11 +122,13 @@ instance FromJSValue DeliveryMethod where
     Just "email" -> Just EmailDelivery
     Just "pad"   -> Just PadDelivery
     Just "api"   -> Just APIDelivery
+    Just "mobile"-> Just MobileDelivery
     _            -> Nothing
 
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
                     | APIDelivery
+                    | MobileDelivery
   deriving (Eq, Ord, Show)
 
 data SignatureInfo = SignatureInfo {

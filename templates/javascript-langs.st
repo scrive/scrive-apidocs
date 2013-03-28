@@ -381,6 +381,9 @@ javascriptLocalisation =
              ,  changePartyTo : "$_changePartyTo()$"
              ,  giveForSigningThisDevice : "$_padGiveForSigningThisDevice()$"
         }
+         , mobile : {
+                delivery : "$_mobileDelivery()$"
+         }
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
          , newPasswordModal: {

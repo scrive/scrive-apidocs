@@ -82,9 +82,11 @@ instance SafeEnum DeliveryMethod where
     fromSafeEnum EmailDelivery = 1
     fromSafeEnum PadDelivery   = 2
     fromSafeEnum APIDelivery   = 3
+    fromSafeEnum MobileDelivery= 4
     toSafeEnum 1 = Just EmailDelivery
     toSafeEnum 2 = Just PadDelivery
     toSafeEnum 3 = Just APIDelivery
+    toSafeEnum 4 = Just MobileDelivery
     toSafeEnum _  = Nothing
 
 -- I really want to add a url to the file in the json, but the only

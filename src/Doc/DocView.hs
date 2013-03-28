@@ -158,6 +158,7 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
                                    [EmailDelivery]   -> "email"
                                    [PadDelivery]     -> "pad"
                                    [APIDelivery]     -> "api"
+                                   [MobileDelivery]  -> "mobile"
                                    _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
@@ -222,6 +223,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
                              EmailDelivery   -> "email"
                              PadDelivery     -> "pad"
                              APIDelivery     -> "api"
+                             MobileDelivery  -> "mobile"
 
     when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
