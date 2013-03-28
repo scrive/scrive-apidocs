@@ -15,9 +15,9 @@ instance MonadDB m => DBUpdate m CreateSMS ShortMessageID where
   update (CreateSMS token originator msisdn body to_be_sent) =
     $fromJust `fmap` insertSMS token originator msisdn body to_be_sent
 
-insertSMS :: MonadDB m => MagicHash -> String -> String -> String -> MinutesTime -> DBEnv m (Maybe ShortMessageID)
+insertSMS :: MonadDB m => MagicHash -> String -> String -> String -> MinutesTime -> m (Maybe ShortMessageID)
 insertSMS token originator msisdn body to_be_sent =
-  getOne $ mkSQL INSERT tableMails [
+  getOne $ mkSQL INSERT tableSMSes [
       sql "token" token
     , sql "originator" originator
     , sql "msisdn" msisdn
