@@ -108,7 +108,7 @@ verify conf inputFileName = do
   case code of
        ExitSuccess -> do
            case (runGetJSON readJSObject $ BSL.toString stdout) of
-                Left s -> return $ Problem $ "GuardTime verification result bad format: " ++ s
+                Left s -> return $ Problem $ "GuardTime verification result bad format: " ++ s ++", stdout: " ++ BSL.toString stdout ++ ", stderr " ++ BSL.toString stderr
                 Right json -> case fromJSValue json of
                                   Nothing -> do
                                       Log.debug $ "GT parsing error " ++ BSL.toString stdout
