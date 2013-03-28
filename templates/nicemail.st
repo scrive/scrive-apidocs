@@ -8,7 +8,7 @@ nicemail=
           <tr>
             <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
               <!-- // Begin Module: Standard Header Image \\ -->
-              <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 50px; margin-bottom: 20px;" id="headerImage campaign-icon" />
+              <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 30px; margin-bottom: 30px;" id="headerImage campaign-icon" />
               <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
@@ -18,7 +18,7 @@ nicemail=
 
     <tr>
       <td align="center" valign="top">
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-color: $nicemailbgcolour()$;">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-color: $nicemailbgcolour()$; margin-bottom: 20px;">
           <tr>
             <td></td>
           </tr>
@@ -60,7 +60,7 @@ nicemail=
                         <td valign="top">
                           <div style="color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
                             $if(previewLink)$
-                              <div style="color: #333; font-family: $nicemailfont()$; font-size: 16px; line-height: 0; text-align: left; float:left;margin-right:32px;border:1px solid $nicemailbordercolour()$;">
+                              <div style="color: #333; font-family: $nicemailfont()$; font-size: 16px; line-height: 0; text-align: left; float:left;margin-right:32px;border:1px solid #dee4ed;">
                                 <img src="$ctxhostpart$$previewLink$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; display: inline; max-width:150px;"/>
                               </div>
                               <div style="float: right; width: 330px;">

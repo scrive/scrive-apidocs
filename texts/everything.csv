@@ -345,7 +345,7 @@
 "_modalContractCreatedHeaderIfSignedAndCompleted","Du har signerat dokumentet <strong>$documenttitle$</strong>!","You have signed the document <strong>$documenttitle$</strong>!"
 "_name","Namn","Name"
 "_nameFieldName","namn","name"
-"_newUserMailContentBodyFirst","Du har skapat ett konto i Scrive. Klicka på följande länk för att aktivera ditt konto: <a href=""$ctxhostpart$$activatelink$"">$ctxhostpart$$activatelink$</a>","You have created an account with Scrive. To activate this account, please click the following link: <a href=""$ctxhostpart$$activatelink$"">$ctxhostpart$$activatelink$</a>"
+"_newUserMailContentBodyFirst","Du har skapat ett konto i Scrive. Klicka på följande länk för att aktivera ditt konto: <a href=""$ctxhostpart$$activatelink$"">$ctxhostpart$$activatelink$</a>","You have created an account with Scrive. Please click the button to activate the account."
 "_newUserMailContentBodySecond","Klicka på länken för att aktivera ditt konto. Länken är giltig i 14 dagar:","Click to activate the account. The link is valid for 14 days:"
 "_newUserMailContentBodyUserName","Användarnamn:<br/>","Username:<br/>"
 "_newUserMailTitle","Vänligen aktivera ditt konto","Please activate your account"
@@ -1059,3 +1059,4 @@
 "_companyNumberInvalidChars","Organisationsnumret får endast innehålla bokstäver, siffror samt bindestreck.","Company number may only contain letters, digits and dash symbol."
 "_companyNumberTooShort","Organisationsnumret måste innehålla minst 4 tecken.","Company number must be at least 4 characters long."
 "_companyNumberTooLong","Organisationsnumret får inte vara längre än 50 tecken.","Company number must be at most 50 characters long."
+"_mailActivateAccountButton","Aktivera konto","Activate account"

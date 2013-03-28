@@ -84,9 +84,9 @@ mailRejectContractMail=
       $_mailRejectMailTitleContract()$
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
-        mailp1 = mailRejectMailContentHeader();
+        mailp1 = _mailRejectMailContentRejected();
         mailspacing1 = "";
-        mailp2 = _mailRejectMailContentRejected();
+        mailp2 = mailRejectMailContentHeader();
         footer = null
       )$
 ####
@@ -94,9 +94,9 @@ mailRejectOfferMail=
       $_mailRejectMailTitleOffer()$
       $nicemail(
         mailheader = _mailRejectMailTitleOffer();
-        mailp1 = mailRejectMailContentHeader();
+        mailp1 = _mailRejectMailContentRejected();
         mailspacing1 = "";
-        mailp2 = _mailRejectMailContentRejected();
+        mailp2 = mailRejectMailContentHeader();
         footer = null
       )$
 ###
@@ -104,16 +104,19 @@ mailRejectOrderMail=
       $_mailRejectMailTitleOrder()$
       $nicemail(
         mailheader = _mailRejectMailTitleOrder();
-        mailp1 = mailRejectMailContentHeader();
+        mailp1 = _mailRejectMailContentRejected();
         mailspacing1 = "";
-        mailp2 = _mailRejectMailContentRejected();
+        mailp2 = mailRejectMailContentHeader();
         footer = null
       )$
 
 ###
 mailRejectMailContentHeader=
 $if(customMessage)$
-  $customMessage:noescape()$ <BR/>
+  $_mailInvitationCustomInvitationHeader()$:
+  <br/>
+  <i>$customMessage:noescape()$</i>
+  <br/>
 $else$
   <div class="editable" name="custommessage"></div>
 $endif$
@@ -252,7 +255,6 @@ mailInvitationToViewDefaultHeader=
 mailInvitationCustomInvitationHeader=
 $_mailInvitationCustomInvitationHeader()$:
 <br/>
-<br/>
 <i>$custommessage:noescape()$</i>
 ###
 ### Reminding mails - SIGNED
@@ -309,7 +311,9 @@ remindMailNotSignedContract=
 #####
 remindMailNotSignedContractP1=
 $if(custommessage)$
-  $custommessage:noescape()$
+  $_mailInvitationCustomInvitationHeader()$:
+  <br/>
+  <i>$custommessage:noescape()$</i>
 $else$
       <div class="editable" name="custommessage">$_remindMailNotSignedContractBody()$</div>
 $endif$
@@ -368,6 +372,9 @@ $nicemail(
 ####
 newUserMailMainP=
 $_newUserMailContentBodyFirst()$
+<br/>
+<br/>
+$nicebutton(link=concat(a1=ctxhostpart;a2=activatelink); text=_mailActivateAccountButton())$
 ####
 #### INVITE TO COMPANY MAIL
 ####

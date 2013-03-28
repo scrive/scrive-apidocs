@@ -196,7 +196,6 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.headertable.css('border-bottom-color', bordercolour);
     this.contenttable.css('border-bottom-color', bordercolour);
     this.maincontenttable.css('border', '1px solid ' + bordercolour);
-    this.documentpreviewdiv.css('border', '1px solid ' + bordercolour);
   },
   changeFont : function(font) {
     this.subjectspan.css('font-family', font);
