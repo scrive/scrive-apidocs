@@ -303,6 +303,7 @@ javascriptLocalisation =
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
+                    , missingOrWrongMobile : "$_emptyOrNotValidMobile()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"

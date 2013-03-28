@@ -234,6 +234,12 @@ window.Field = Backbone.Model.extend({
             return new EmailValidation({message: msg});
         }
 
+        if ( this.isMobile() && this.value() != undefined && this.value() != "") {
+            var msg = localization.designview.validation.missingOrWrongMobile;
+            this.setValue(this.value().trim());
+            return new PhoneValidation({message: msg});
+        }
+
         if (forSigning && this.signatory().author() && this.signatory().document().elegAuthentication() && this.isSSN()) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
@@ -268,6 +274,9 @@ window.Field = Backbone.Model.extend({
     },
     isEmail: function() {
         return  this.isStandard() && this.name() == "email";
+    },
+    isMobile: function() {
+        return  this.isStandard() && this.name() == "mobile";
     },
     isFstName: function() {
         return  this.isStandard() && this.name() == "fstname";

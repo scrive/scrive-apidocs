@@ -129,6 +129,7 @@
 "_eleg","E-legitimation","E-ID"
 "_email","E-post","Email"
 "_emptyOrNotValidEmail","Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.","You have not entered an email address or the email address is incorrect. Please try again."
+"_emptyOrNotValidMobile","Du har inte skrivit in ett mobilnummer eller numret är felaktigt. Vänligen kontrollera att numret börjar med ett + tecken och landskod.","You have not entered a mobile number, or the number is incorrect. Please note that the number must be on international format starting with a + sign and country code."
 "_evidenceAttachmentBoxHeader","Bevisbilagor","Evidence attachments"
 "_fieldName","Namnge fältet","Name the field"
 "_fieldNameFieldName","namn på fält","field name"

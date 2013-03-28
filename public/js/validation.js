@@ -65,6 +65,16 @@ window.EmailValidation = Validation.extend({
     }
 });
 
+window.PhoneValidation = Validation.extend({
+     defaults: {
+            validates: function(t) {
+                var t = $.trim(t);
+                return /^\+[0-9 -]+$/i.test(t);
+            },
+            message: "Wrong phone number format!"
+    }
+});
+
 window.NameValidation = Validation.extend({
     defaults: {
             validates: function(t) {
