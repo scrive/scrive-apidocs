@@ -37,7 +37,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
     }
     var verticaloffset = 0;
     if (field.isText())
-       verticaloffset = -4;
+       verticaloffset = -2;
     else if (field.isSignature())
        verticaloffset = 1;
     dragHandler.draggable({
