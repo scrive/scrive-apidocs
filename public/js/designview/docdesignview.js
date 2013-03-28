@@ -833,7 +833,7 @@ var DesignViewView = Backbone.View.extend({
         var url = "/api/frontend/mainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
-            color : "black",
+            color : "green",
             shape : "rounded",
             size : "small",
             width: 300,
