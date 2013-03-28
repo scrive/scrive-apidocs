@@ -35,7 +35,11 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
         placement = undefined;
         field = fieldOrPlacement;
     }
-
+    var verticaloffset = 0;
+    if (field.isText())
+       verticaloffset = -4;
+    else if (field.isSignature())
+       verticaloffset = 1;
     dragHandler.draggable({
         appendTo: "body",
         helper: function(event) {
@@ -62,7 +66,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                 dragHandler.hide();
             }
             if (field.signatory().document().mainfile() != undefined)
-                field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper);
+                field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper,verticaloffset);
         },
         stop: function() {
             if( placement!=undefined && !droppedInside ) {
@@ -77,7 +81,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
         },
         drag: function(event, ui) {
             if (field.signatory().document().mainfile() != undefined)
-                field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper);
+                field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset);
         },
         onDrop: function(page, x, y, w, h) {
             droppedInside = true;
