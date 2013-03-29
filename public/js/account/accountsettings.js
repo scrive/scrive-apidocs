@@ -188,9 +188,7 @@ var AccountSettingsModel = Backbone.Model.extend({
     var number = this.companynumber();
     var message = null;
     var validCharsRegex = /^[a-zA-Z0-9-]*$/;
-    if (number.length > 0 && number.length < 4) {
-      message = localization.validation.companyNumberTooShort;
-    } else if (number.length > 50) {
+    if (number.length > 50) {
       message = localization.validation.companyNumberTooLong;
     } else if (number.match(validCharsRegex) === null) {
       message = localization.validation.companyNumberInvalidChars;

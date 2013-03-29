@@ -468,7 +468,6 @@ asValidCompanyNumber :: String -> Result String
 asValidCompanyNumber input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMin 4 fieldtemplate
     >>= checkLengthIsMax 50 fieldtemplate
     >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')] fieldtemplate
     where fieldtemplate = "companyNumberFieldName"
