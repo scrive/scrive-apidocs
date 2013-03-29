@@ -103,7 +103,7 @@ jsonDocumentForAuthor doc hostpart =
     value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
                                    [StandardAuthentication] -> (1 :: Int)
                                    [ELegAuthentication]     -> 2
-                                   _                        -> 3
+                                   _                        -> 0
     value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
 
 jsonDocumentForSignatory :: Document -> JSValue
@@ -116,7 +116,7 @@ jsonDocumentForSignatory doc =
     value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
                                    [StandardAuthentication] -> (1 :: Int)
                                    [ELegAuthentication]     -> 2
-                                   _                        -> 3
+                                   _                        -> 0
     value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
 
 -- I really want to add a url to the file in the json, but the only
