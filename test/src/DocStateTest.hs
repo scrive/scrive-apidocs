@@ -1066,7 +1066,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   -- assert
 
   assertJust mndoc
-  assert $ sameDocID doc (fromJust mndoc)
+  assert $ documentid doc  == documentid (fromJust mndoc)
   assertInvariants (fromJust mndoc)
 
 testDocumentAttachNotPreparationLeft :: TestEnv ()

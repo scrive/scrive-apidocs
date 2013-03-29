@@ -84,9 +84,9 @@ testUploadingFileAsOrder = do
 testNewDocumentUnsavedDraft :: TestEnv ()
 testNewDocumentUnsavedDraft = do
   (user, _rsp) <- uploadDocAsNewUser Contract
-  docs <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False] [] (0,maxBound)
+  docs <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False False] [] (0,maxBound)
   assertEqual "Draft is there" 1 (length docs)
-  docs' <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False] [] (0,maxBound)
+  docs' <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False False] [] (0,maxBound)
   assertEqual "Draft is not visible in archive" 0 (length docs')
 
 

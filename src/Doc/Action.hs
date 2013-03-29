@@ -94,7 +94,7 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
   -- Log the current time as the last doc sent time
   asyncLogEvent SetUserProps [UserIDProp (userid author),
                               someProp "Last Doc Sent" now]
-  json <- documentJSON False True False Nothing Nothing doc
+  json <- documentJSON Nothing False True False Nothing Nothing doc
   asyncLogEvent (UploadDocInfo json) [UserIDProp (userid author),
                                       DocIDProp (documentid doc)]
   logDocEvent "Doc Sent" doc author []

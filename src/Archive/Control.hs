@@ -178,12 +178,13 @@ jsonDocumentsList = do
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterDeleted False False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
                           "Template"          -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted False, DocumentFilterTemplate])
+                                                 ,[DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted True])
-                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterDeleted True False, DocumentFilterUnsavedDraft False])
+                          "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])
+                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]

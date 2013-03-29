@@ -110,8 +110,8 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m) => Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
-documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     ctx <- getContext
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
@@ -156,6 +156,8 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
                                     J.value "name"  n
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
+      J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> mviewer
+      J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> mviewer
       J.value "objectversion" $ documentobjectversion doc
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))

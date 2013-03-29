@@ -696,18 +696,10 @@ checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-       let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
-                      (authorattachmentfile <$> documentauthorattachments doc) ++
-                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-       when (all (/= fid) allfiles) $
-            internalError
+       when (fileInDocument doc fid) $ internalError
     (_,_,Just did,_) -> do
        doc <- guardRightM $ getDocByDocID did
-       let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc)  ++
-                      (authorattachmentfile <$> documentauthorattachments doc) ++
-                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-       when (all (/= fid) allfiles) $
-            internalError
+       when (fileInDocument doc fid) $ internalError
     (_,_,_,Just attid) -> do
        ctx <- getContext
        case ctxmaybeuser ctx of

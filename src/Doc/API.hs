@@ -169,7 +169,7 @@ apiCallCreateFromFile = api $ do
       return ()
   doc' <- apiGuardL  (forbidden "Access to file is forbiden")  $ dbQuery $ GetDocumentByDocumentID (documentid doc)
   _ <- lift $ addDocumentCreateStatEvents (documentid doc) "web"
-  Created <$> documentJSON False True True Nothing Nothing doc'
+  Created <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
 
 
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
@@ -188,7 +188,7 @@ apiCallCreateFromTemplate did =  api $ do
           _ <- lift $ addDocumentCreateStatEvents (documentid newdoc) "web"
           Log.debug $ show "Document created from template"
           when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
-          Created <$> documentJSON False True  True Nothing Nothing newdoc
+          Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
       Nothing -> throwIO . SomeKontraException $ serverError "Create document from template failed"
 
 
@@ -211,7 +211,7 @@ apiCallUpdate did = api $ do
   when (draftIsChangingDocument draftData doc) (checkObjectVersionIfProvided did) -- If we will change document, then we want to be sure that object version is ok.
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
   triggerAPICallbackIfThereIsOne newdocument
-  Ok <$> documentJSON False True True Nothing Nothing newdocument
+  Ok <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
 
 data ReadyParams = ReadyParams
   { timezonestring :: String
@@ -229,7 +229,7 @@ apiCallReady did =  api $ do
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   if (documentstatus doc == Pending && not (any hasSigned $ documentsignatorylinks doc))
-   then Accepted <$> documentJSON False True True Nothing Nothing doc
+   then Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc
    else do
     checkObjectVersionIfProvided did
     when (not $ (auid == userid user)) $ do
@@ -259,7 +259,7 @@ apiCallReady did =  api $ do
             Right newdocument -> do
                 lift $ postDocumentPreparationChange newdocument "web"
                 newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
-                Accepted <$> documentJSON False True True Nothing Nothing newdocument'
+                Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
             Left reason -> throwIO . SomeKontraException $ serverError $ "Operation failed: " ++ show reason
 
 
@@ -277,22 +277,22 @@ apiCallCancel did =  api $ do
     newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
     lift $ postDocumentCanceledChange newdocument "api"
     newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
-    Accepted <$> documentJSON False True True Nothing Nothing newdocument'
+    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
 
 
 apiCallReject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
 apiCallReject did slid = api $ do
   checkObjectVersionIfProvided did
-  (mh,method) <- do
+  (mh,method,muid) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
-      Just mh'' ->  return (mh'',"web")
+      Just mh'' ->  return (mh'',"web", Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Magic hash for signatory was not provided"
-           Just mh''' -> return (mh''',"api")
+           Just mh''' -> return (mh''',"api", Just $ userid user)
   edoc <- lift $ getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
     Left _ -> throwIO . SomeKontraException $ serverError "Can't find a document that matches signatory"
@@ -310,7 +310,7 @@ apiCallReject did slid = api $ do
       _ <- addSignStatRejectEvent doc' sl
       lift $ postDocumentRejectedChange doc' slid method
       Just doc'' <- dbQuery $ GetDocumentByDocumentID did
-      Accepted <$> documentJSON False True True Nothing Nothing doc''
+      Accepted <$> documentJSON muid False True True Nothing Nothing doc''
 
 
 apiCallSign :: Kontrakcja m
@@ -320,16 +320,16 @@ apiCallSign :: Kontrakcja m
 apiCallSign  did slid = api $ do
   checkObjectVersionIfProvided did
   Log.debug $ "Ready to sign a docment " ++ show did ++ " for signatory " ++ show slid
-  (mh,method) <- do
+  (mh,method,muid) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
-      Just mh'' ->  return (mh'',"web")
+      Just mh'' ->  return (mh'',"web", Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
-           Just mh''' -> return (mh''',"api")
+           Just mh''' -> return (mh''',"api", Just $ userid user)
   Log.debug "We have magic hash for this operation"
   screenshots <- lift $ (fromMaybe emptySignatoryScreenshots) <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
   fields <- do
@@ -358,7 +358,7 @@ apiCallSign  did slid = api $ do
       udoc <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
       lift $ handleAfterSigning udoc slid
       udoc' <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
-      Accepted <$> documentJSON False True True Nothing Nothing udoc'
+      Accepted <$> documentJSON muid False True True Nothing Nothing udoc'
     Right (Left err) -> throwIO . SomeKontraException $ serverError  $ "Error: DB action " ++ show err
     Left msg ->  throwIO . SomeKontraException $ serverError  $ "Error: " ++ msg
 
@@ -375,7 +375,7 @@ apiCallRemind did =  api $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
   _ <- lift $ sendAllReminderEmails ctx actor user did
   newdocument <- apiGuardL (serverError "No document found after sending reminder") $ dbQuery $ GetDocumentByDocumentID $ did
-  Accepted <$> documentJSON False True True Nothing Nothing newdocument
+  Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
 
 apiCallDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallDelete did =  api $ do
@@ -420,7 +420,7 @@ apiCallGet did = api $ do
                 Just u -> dbQuery $ GetPadQueue $ (userid u)
                 _ -> return Nothing
 
-         Ok <$> documentJSON includeEvidenceAttachments False False pq (Just sl) doc
+         Ok <$> documentJSON Nothing includeEvidenceAttachments False False pq (Just sl) doc
       _ -> do
         (user, _actor, external) <- getAPIUser APIDocCheck
         doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
@@ -440,7 +440,7 @@ apiCallGet did = api $ do
         let haspermission = (isJust msiglink)
                          || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)
-          then Ok <$> documentJSON includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
+          then Ok <$> documentJSON (Just $ userid user) includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
           else throwIO . SomeKontraException $ serverError "You do not have right to access document"
 
 apiCallList :: Kontrakcja m => m Response

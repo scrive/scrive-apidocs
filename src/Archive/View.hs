@@ -60,12 +60,12 @@ docForListJSON user padqueue doc = do
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do
-    J.object "fields" $ docFieldsListForJSON padqueue doc
+    J.object "fields" $ docFieldsListForJSON (userid user) padqueue doc
     J.objects "subfields" $ map (signatoryFieldsListForJSON padqueue doc) (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
 
-docFieldsListForJSON :: TemplatesMonad m => PadQueue -> Document -> JSONGenT m ()
-docFieldsListForJSON padqueue doc = do
+docFieldsListForJSON :: TemplatesMonad m => UserID -> PadQueue -> Document -> JSONGenT m ()
+docFieldsListForJSON userid padqueue doc = do
     J.value "id" $ show $ documentid doc
     J.value "title" $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
@@ -99,6 +99,8 @@ docFieldsListForJSON padqueue doc = do
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
+    J.value "deleted" $ documentDeletedForUser doc userid
+    J.value "reallydeleted" $ documentReallyDeletedForUser doc userid
     J.value "objectversion" $ documentobjectversion doc
 
 signatoryFieldsListForJSON :: TemplatesMonad m => PadQueue -> Document -> SignatoryLink -> JSONGenT m ()

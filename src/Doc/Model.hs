@@ -162,7 +162,7 @@ data DocumentFilter
   | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
   | DocumentFilterSignable                    -- ^ Document is signable
   | DocumentFilterTemplate                    -- ^ Document is template
-  | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents
+  | DocumentFilterDeleted Bool Bool           -- ^ Only deleted (=True) or non-deleted (=False) documents. Other bool is for really deleted.
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
@@ -423,8 +423,9 @@ documentFilterToSQL (DocumentFilterSignable) = do
 documentFilterToSQL (DocumentFilterTemplate) = do
   sqlWhereEq "documents.type" (Template undefined)
 
-documentFilterToSQL (DocumentFilterDeleted flag) = do
-  sqlWhereEq "signatory_links.deleted" flag
+documentFilterToSQL (DocumentFilterDeleted flag1 flag2) = do
+  sqlWhereEq "signatory_links.deleted" flag1
+  sqlWhereEq "signatory_links.deleted" flag2
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
@@ -1533,8 +1534,6 @@ instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
-
-        sqlWhere "NOT signatory_links.really_deleted"
         sqlWhereAny (mapM_ documentDomainToSQL domains)
         mapM_ documentFilterToSQL filters
 
@@ -1545,18 +1544,18 @@ instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
-    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False] [Asc DocumentOrderByMTime] (0,maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False False] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
-    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (0,maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
 instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
   query (GetAvailableTemplates uid processes) =
     query (GetDocuments [DocumentsVisibleToUser uid]
-                            [DocumentFilterByProcess processes, DocumentFilterTemplate, DocumentFilterDeleted False]
+                            [DocumentFilterByProcess processes, DocumentFilterTemplate, DocumentFilterDeleted False False]
                             [Asc DocumentOrderByMTime]
                             (0,maxBound))
 

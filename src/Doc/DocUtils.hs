@@ -23,7 +23,6 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB
-import Utils.Prelude
 import qualified Text.StringTemplates.Fields as F
 
 import Control.Monad
@@ -31,7 +30,6 @@ import Data.List hiding (insert)
 import Data.Maybe
 import File.Model
 import Control.Applicative
-import MinutesTime
 
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
@@ -42,14 +40,6 @@ partyList document = [signatorydetails sl | sl <- documentsignatorylinks documen
                                           , isSignatory sl]
 
 {- |
-   Given a Document, return all of the signatory details for all signatories who have not yet signed.
- -}
-partyUnsignedList :: Document -> [SignatoryDetails]
-partyUnsignedList document = [signatorydetails sl | sl <- documentsignatorylinks document
-                                                  , isSignatory sl
-                                                  , not $ hasSigned sl]
-
-{- |
    Given a Document, return all of the signatory details for all signatories who have signed.
  -}
 partySignedList :: Document -> [SignatoryDetails]
@@ -57,22 +47,6 @@ partySignedList document = [signatorydetails sl | sl <- documentsignatorylinks d
                                                 , isSignatory sl
                                                 ,  hasSigned sl]
 
-{- |
-   Given a Document, return all signatories except the author.
-   See also: partyList to include the author.
- -}
-partyListButAuthor :: Document -> [SignatoryDetails]
-partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
-                                                   , isSignatory sl
-                                                   , not $ isAuthor sl]
-
-{- |
-   Insert the first list between each list of the second list.
- -}
-joinWith :: [a] -> [[a]] -> [a]
-joinWith _ [] = []
-joinWith _ [x] = x
-joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 renderListTemplateNormal :: TemplatesMonad m => [String] -> m String
 renderListTemplateNormal = renderListTemplateNormalHelper renderTemplate
@@ -224,9 +198,9 @@ documentcurrentsignorder doc =
 signatoryDetailsFromUser :: (MonadDB m) => User -> (Bool, Bool) -> m SignatoryDetails
 signatoryDetailsFromUser user (is_author, is_partner) = do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) (usercompany user)
-  return $ SignatoryDetails 
+  return $ SignatoryDetails
     { signatorysignorder = SignOrder 1
-    , signatoryfields = 
+    , signatoryfields =
         [ toSF FirstNameFT $ getFirstName user
         , toSF LastNameFT $ getLastName user
         , toSF EmailFT $ getEmail user
@@ -245,16 +219,6 @@ signatoryDetailsFromUser user (is_author, is_partner) = do
                  , sfObligatory = True
                  }
 
-
-{- |
-   Is a CancelationReason due to ELegDataMismatch?
- -}
-isELegDataMismatch :: CancelationReason -> Bool
-isELegDataMismatch (ELegDataMismatch _ _ _ _ _) = True
-isELegDataMismatch _                            = False
-
-hasOtherSignatoriesThenAuthor :: Document -> Bool
-hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . isAuthor) $ documentsignatorylinks doc
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
@@ -299,43 +263,6 @@ isDocumentEligibleForReminder :: Document -> Bool
 isDocumentEligibleForReminder doc = not $ documentstatus doc `elem` [Timedout, Canceled, Rejected]
 
 {- |
-    Removes the field placements and the custom fields.
--}
-removeFieldsAndPlacements :: SignatoryDetails -> SignatoryDetails
-removeFieldsAndPlacements sd = sd { signatoryfields = filter (not . isFieldCustom)
-  $ map (\sf -> sf { sfPlacements = [] }) $ signatoryfields sd }
-
-hasFieldsAndPlacements :: SignatoryDetails -> Bool
-hasFieldsAndPlacements sd = any (isFieldCustom ||^ (not . Data.List.null . sfPlacements)) (signatoryfields sd)
-
-{- |
-    Sets the sign order on some signatory details.
--}
-replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
-replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
-
-{- |
-   Can the user view this document directly?
- -}
-canUserInfoViewDirectly :: UserID -> String -> Document -> Bool
-canUserInfoViewDirectly userid email doc =
-    (checkSigLink' $ getSigLinkFor doc userid) || (checkSigLink' $ getSigLinkFor doc email)
-  where
-    checkSigLink' a = case a of
-      Nothing                                                                    -> False
-      Just siglink | signatorylinkdeleted siglink                                -> False
-      Just siglink | isAuthor siglink                                            -> True
-      Just _       | Preparation == documentstatus doc                           -> False
-      Just siglink | isActivatedSignatory (documentcurrentsignorder doc) siglink -> True
-      _                                                                          -> False
-
-{- |
-   Can a user view this document?
- -}
-canUserViewDirectly :: User -> Document -> Bool
-canUserViewDirectly user = canUserInfoViewDirectly (userid user) (getEmail user)
-
-{- |
    Has the signatory's sign order come up?
  -}
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
@@ -350,34 +277,17 @@ isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
 isCurrentSignatory signorder siglink =
   signorder == signatorysignorder (signatorydetails siglink)
 
-type CustomSignatoryField = (SignatoryField, String, Bool)
-
-filterCustomField :: [SignatoryField] -> [CustomSignatoryField]
-filterCustomField l = [(sf, cs, cb) | sf@SignatoryField{sfType = CustomFT cs cb} <- l]
-
 isFieldCustom :: SignatoryField -> Bool
 isFieldCustom SignatoryField{sfType = CustomFT{}} = True
 isFieldCustom _ = False
 
-isStandardField :: SignatoryField -> Bool
-isStandardField SignatoryField{sfType = CustomFT{}} = False
-isStandardField SignatoryField{sfType = SignatureFT{}} = False
-isStandardField _ = True
-
 findCustomField :: HasFields a => String -> a -> Maybe SignatoryField
 findCustomField name = find (matchingFieldType (CustomFT name False)) . getAllFields
-
-samenameanddescription :: String -> String -> (String, String, [(String, String)]) -> Bool
-samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
 getSignatoryAttachment :: Document -> SignatoryLinkID -> String -> Maybe SignatoryAttachment
 getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a)
                                        <$> signatoryattachments
                                        <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
-
-sameDocID :: Document -> Document -> Bool
-sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
-
 
 isAuthorAdmin :: User -> Document -> Bool
 isAuthorAdmin user doc =
@@ -443,12 +353,8 @@ makeSignatory pls fds sid sfn  ssn  se  sso sauthor spartner sc  spn  scn = Sign
       , sfObligatory = True
     }
 
-recentDate :: Document -> MinutesTime
-recentDate doc =
-  maximum $ [documentctime doc, documentmtime doc] ++
-  (maybeToList $ signtime <$> documentinvitetime doc) ++
-  concat (for (documentsignatorylinks doc) (\sl ->
-       (maybeToList $ signtime <$> maybeseeninfo sl)
-    ++ (maybeToList $ signtime <$> maybesigninfo sl)
-    ++ (maybeToList $ signatorylinkrejectiontime sl)
-    ++ (maybeToList $ id       <$> maybereadinvite sl)))
+documentDeletedForUser :: Document -> UserID -> Bool
+documentDeletedForUser doc uid = fromMaybe False (fmap signatorylinkdeleted $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
+
+documentReallyDeletedForUser :: Document -> UserID -> Bool
+documentReallyDeletedForUser doc uid = fromMaybe False (fmap signatorylinkreallydeleted $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
