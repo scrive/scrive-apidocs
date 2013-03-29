@@ -47,6 +47,9 @@ import Util.FlashUtil
 import ActionQueue.UserAccountRequest
 import ThirdPartyStats.Core
 import User.Action
+import Payments.Model
+import MinutesTime
+import Doc.Model
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -59,13 +62,14 @@ versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
   dir "getpersonaltoken"     $ hPostNoXTokenHttp $ toK0 $ apiCallGetUserPersonalToken,
   dir "signup"          $ hPostNoXTokenHttp $ toK0 $ apiCallSignup,
-  dir "getprofile" $ hGet $ toK0 $ apiCallGetUserProfile,
+  dir "getprofile"      $ hGet $ toK0 $ apiCallGetUserProfile,
   dir "changepassword"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserPassword,
   dir "changelanguage"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserLanguage,
   dir "updateprofile"   $ hPostNoXTokenHttp $ toK0 $ apiCallUpdateUserProfile,
   dir "createcompany"   $ hPostNoXTokenHttp $ toK0 $ apiCallCreateCompany,
   dir "changeemail"     $ hPostNoXTokenHttp $ toK0 $ apiCallChangeEmail,
-  dir "addflash"        $ hPostNoXTokenHttp $ toK0 $ apiCallAddFlash
+  dir "addflash"        $ hPostNoXTokenHttp $ toK0 $ apiCallAddFlash,
+  dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo
   ]
 
 
@@ -247,3 +251,39 @@ apiCallAddFlash = api $  do
        "blue"  -> lift $ addFlashMsg (FlashMessage SigningRelated content)
        _ -> return ()
   Ok <$> (runJSONGenT $ return ())
+
+apiCallPaymentInfo :: Kontrakcja m => m Response
+apiCallPaymentInfo = api $ do
+  (user, _ , _) <- getAPIUser APIPersonal
+  admin <- isAdmin <$> getContext
+  time <- ctxtime <$> getContext
+
+  docsusedthismonth <- lift $ dbQuery $ GetDocsSentBetween (userid user) (beginingOfMonth time) time
+  mpaymentplan <- lift $ dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
+  quantity <- case usercompany user of
+                Nothing -> return 1
+                Just cid -> dbQuery $ GetCompanyQuantity cid
+
+  let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
+      status      = maybe "active" (show . ppStatus) mpaymentplan
+      dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
+      canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
+      billingEnds = (formatMinutesTimeRealISO . ppBillingEndDate) <$> mpaymentplan
+      docTotal = if (Just DeactivatedStatus == (ppStatus <$> mpaymentplan))
+                  then 0
+                  else if (Just EnterprisePricePlan == (ppPricePlan <$> mpaymentplan))
+                        then 5000000
+                        else if ((Just FreePricePlan /= (ppPricePlan <$> mpaymentplan)) && (Just ActiveStatus == (ppStatus <$> mpaymentplan)))
+                              then 100
+                              else 3
+  fmap Ok $ runJSONGenT $ do
+        value "adminuser" admin
+        value "docsUsed"  docsusedthismonth
+        value "plan"      paymentplan
+        value "status"    status
+        value "dunning"   dunning
+        value "canceled"  canceled
+        value "quantity"  quantity
+        value "billingEnds" billingEnds
+        value "docsTotal" (docTotal::Int)
+

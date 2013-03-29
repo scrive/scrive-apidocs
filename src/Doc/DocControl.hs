@@ -696,10 +696,10 @@ checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-       when (fileInDocument doc fid) $ internalError
+       when (not $ fileInDocument doc fid) $ internalError
     (_,_,Just did,_) -> do
        doc <- guardRightM $ getDocByDocID did
-       when (fileInDocument doc fid) $ internalError
+       when (not $ fileInDocument doc fid) $ internalError
     (_,_,_,Just attid) -> do
        ctx <- getContext
        case ctxmaybeuser ctx of

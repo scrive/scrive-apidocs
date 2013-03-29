@@ -42,6 +42,50 @@ window.CreateFromFileApiCall = ApiCall.extend({
         }
 });
 
+window.ChangeMainFileApiCall = ApiCall.extend({
+        defaults: {
+            name : "Change main file API call",
+            file : $("<input type='file' name='file' class='file-input'/>"),
+            documentid : LocalStorage.get("api","documentid")
+        },
+        initialize: function (args) {
+        },
+        isChangeMainFile : function() {return true;},
+        file : function() {return this.get("file");},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+             LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        send : function() {
+            var model = this;
+            var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            $("body").append(form);
+            form.append(this.file());
+            var formData = new FormData(form[0]);
+            $.ajax(Scrive.apiUrl()+"changemainfile/" + this.documentid(), {
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.file().detach();
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                    form.remove();
+                },
+                error : function(res) {
+                    model.file().detach();
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                    form.remove();
+                }
+            });
+
+        }
+});
+
+
 window.CreateFromTemplateApiCall = ApiCall.extend({
         defaults: {
             name : "Create from template API call",
@@ -295,7 +339,8 @@ window.ListApiCall = ApiCall.extend({
              tags : "[]",
              offset : 0,
              limit : 5,
-             selectfilters : "[{\"name\":\"cansign\",\"value\":\"\"}]"
+             selectfilters : "[{\"name\":\"cansign\",\"value\":\"\"}]",
+             documentType : ""
         },
         tags : function() {return this.get("tags");},
         setTags : function(tags) {
@@ -317,6 +362,11 @@ window.ListApiCall = ApiCall.extend({
             LocalStorage.set("api","selectfilters",selectfilters);
             this.set({"selectfilters" : selectfilters});
         },
+        documentType : function() {return this.get("documentType");},
+        setDocumentType : function(documentType) {
+            LocalStorage.set("api","documentType",documentType);
+            this.set({"documentType" : documentType});
+        },
         initialize: function (args) {
         },
         isList : function() {return true;},
@@ -328,7 +378,8 @@ window.ListApiCall = ApiCall.extend({
                 data : { tags   : model.tags(),
                          offset : model.offset(),
                          limit  : model.limit(),
-                         selectfilter : model.selectfilters()
+                         selectfilter : model.selectfilters(),
+                         documentType : model.documentType()
                 },
                 headers : { authorization : model.authorization() },
                 success : function(res) {
@@ -589,6 +640,37 @@ window.CreateFromFileApiCallView = Backbone.View.extend({
         }
 });
 
+window.ChangeMainFileApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+
+            this.filebox = $("<div>");
+            boxLeft.append($("<div>Document # : <BR/></div>").append(documentidInput)).append($("<div> File: <BR/> </div>").append(this.filebox.append(model.file()))).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+            this.filebox.append(model.file())
+        }
+});
+
 window.CreateFromTemplateApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
@@ -831,6 +913,8 @@ window.ListApiCallView = Backbone.View.extend({
             limitInput.change(function() {model.setLimit(limitInput.val()); return false;})
             var selectfiltersInput = $("<input type='text'/>").val(model.selectfilters());
             selectfiltersInput.change(function() {model.setSelectfilters(selectfiltersInput.val()); return false;})
+            var documentTypeInput = $("<input type='text'/>").val(model.documentType());
+            documentTypeInput.change(function() {model.setDocumentType(documentTypeInput.val()); return false;})
 
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
@@ -838,6 +922,7 @@ window.ListApiCallView = Backbone.View.extend({
             boxLeft.append($("<div>Offset: <BR/></div>").append(offsetInput));
             boxLeft.append($("<div>Limit: <BR/></div>").append(limitInput));
             boxLeft.append($("<div>Select filters: <BR/></div>").append(selectfiltersInput));
+            boxLeft.append($("<div>Document type: <BR/></div>").append(documentTypeInput));
             boxLeft.append($("<div/>").append(button));
             this.render();
         },

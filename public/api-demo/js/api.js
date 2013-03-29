@@ -11,6 +11,7 @@ window.ApiCall = Backbone.Model.extend({
         initialize: function (args) {
         },
         isCreateFromFile : function() {return false;},
+        isChangeMainFile : function() {return false;},
         isCreateFromTemplate : function() {return false;},
         isUpdate : function() {return false;},
         isReady : function() {return false;},
@@ -23,6 +24,7 @@ window.ApiCall = Backbone.Model.extend({
         isDownloadMainFile : function() {return false;},
         isAddToPadQueue : function() {return false;},
         isGetProfile : function() {return false;},
+        isGetPaymentInfo : function() {return false;},
         isSetPassword : function() {return false;},
         isSetLanguage : function() {return false;},
         isSignup : function() {return false;},
@@ -42,6 +44,8 @@ window.ApiCall = Backbone.Model.extend({
 window.ApiCallView = function(args) {
         if (args.model.isCreateFromFile())
            return new CreateFromFileApiCallView(args);
+        if (args.model.isChangeMainFile())
+           return new ChangeMainFileApiCallView(args);
         else if (args.model.isCreateFromTemplate())
            return new CreateFromTemplateApiCallView(args);
         else if (args.model.isUpdate())
@@ -70,6 +74,8 @@ window.ApiCallView = function(args) {
            return new SignApiCallView(args);
         else if (args.model.isGetProfile())
            return new GetProfileApiCallView(args);
+        else if (args.model.isGetPaymentInfo())
+           return new GetPaymentInfoApiCallView(args);
         else if (args.model.isSetLanguage())
            return new SetLanguageApiCallView(args);
         else if (args.model.isSetPassword())

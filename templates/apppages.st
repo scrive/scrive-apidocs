@@ -249,9 +249,11 @@ var google_remarketing_only = true;
 
 ####
 header=
+$if(logged)$
 <script>
   window.BlockingInfo = Blocking();
 </script>
+$endif$
 
 <header class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <nav>

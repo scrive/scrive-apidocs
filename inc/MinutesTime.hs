@@ -31,6 +31,7 @@ module MinutesTime
        , monthsBefore
        , daysBefore
        , daysAfter
+       , beginingOfMonth
        , toClockTime
        , toUTCTime
        , mtMonth
@@ -47,7 +48,7 @@ import Data.Typeable
 import Database.HDBC
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
-import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
+import qualified System.Time as System.Time (toUTCTime, toCalendarTime,toClockTime)
 import Text.Printf
 import System.IO.Unsafe
 import Data.Binary
@@ -191,6 +192,10 @@ daysAfter i mt = minutesAfter (i * 60 * 24) mt
 
 monthsBefore :: Int -> MinutesTime -> MinutesTime
 monthsBefore i mt = daysBefore (i * 31) mt
+
+
+beginingOfMonth :: MinutesTime -> MinutesTime
+beginingOfMonth time = fromClockTime $ System.Time.toClockTime $ (toCalendarTimeInUTC time) { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
 
 -- | Convert a date representation to integer. For date like
 -- "2010-06-12" result will be 20100612. Useful in IntMap for

@@ -113,7 +113,7 @@ versionedAPI _version = choice [
   dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallDownloadFile,
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
-  dir "mainfile" $ hPostNoXTokenHttp $ toK1 $ documentChangeMainFile,
+  dir "changemainfile"     $ hPostNoXTokenHttp $ toK1 $ apiCallChangeMainFile,
 
   dir "document" $ hPostNoXTokenHttp $ toK6 $ documentUploadSignatoryAttachment,
   dir "document" $ hDeleteAllowHttp  $ toK6 $ documentDeleteSignatoryAttachment
@@ -532,12 +532,15 @@ apiCallDownloadFile did fileid _nameForBrowser = api $ do
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
 -- Change main file, file stored in input "file" OR templateid stored in "template"
-documentChangeMainFile :: Kontrakcja m => DocumentID -> m Response
-documentChangeMainFile docid = api $ do
-  ctx <- getContext
-  aa <- apiGuard (forbidden "No user is logged in.") $ mkAuthorActor ctx
-  doc <- apiGuardL forbidden' $ getDocByDocID docid
-  apiGuard (forbidden "Logged in user is not author of document.") (isAuthor $ getSigLinkFor doc (ctxmaybeuser ctx))
+apiCallChangeMainFile :: Kontrakcja m => DocumentID -> m Response
+apiCallChangeMainFile docid = api $ do
+  (user, actor, _) <- getAPIUser APIDocCreate
+  checkObjectVersionIfProvided docid
+  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ docid
+  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+  when (documentstatus doc /= Preparation) $ throwIO . SomeKontraException $ (serverError "Document is not a draft or template")
+  when (not $ (auid == userid user)) $ do
+        throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
 
   fileinput <- lift $ getDataFn' (lookInput "file")
 
@@ -553,6 +556,7 @@ documentChangeMainFile docid = api $ do
       content'' <- case mformat of
         Nothing -> return content'
         Just format -> do
+          ctx <- getContext
           eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
           case eres of
             Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
@@ -570,12 +574,12 @@ documentChangeMainFile docid = api $ do
 
   case mft of
     Just  (fileid,filename) -> do
-      dbUpdate $ AttachFile docid fileid aa
-      apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename aa
-    Nothing -> dbUpdate $ DetachFile docid aa
+      dbUpdate $ AttachFile docid fileid actor
+      apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename actor
+    Nothing -> dbUpdate $ DetachFile docid actor
+  doc' <- apiGuardL (serverError "No document found after change") $ dbQuery $ GetDocumentByDocumentID $ docid
+  Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
 
-
-  return ()
 
 
 

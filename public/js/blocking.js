@@ -2,7 +2,7 @@
 
     /*
       Holds information relevant to blocking for a user.
-      
+
     */
     window.BlockingInfoModel = Backbone.Model.extend({
         defaults: {
@@ -10,20 +10,13 @@
             dunning: false
         },
         url: function() {
-            return "/blockinginfo";
+            return "/api/frontend/paymentinfo";
         },
         docsTotal: function() {
-            if(this.isDeactivated())
-                return 0;
-            if(this.isEnterprise())
-                return 500000; 
-            if(!this.isFree() && this.isActive())
-                return 100; // # of docs it says in the TOS
-            else 
-                return 3;
+            return this.get('docsTotal');
         },
         docsUsed: function() {
-            return this.get('docsused');
+            return this.get('docsUsed');
         },
         docsLeft: function() {
             var ret = this.docsTotal() - this.docsUsed();
@@ -65,8 +58,8 @@
             return this.get('dunning');
         },
         hasUsedAll: function() {
-            return !this.isEnterprise()  && 
-                   !this.isFree()        && 
+            return !this.isEnterprise()  &&
+                   !this.isFree()        &&
                     this.isActive()      &&
                     this.docsLeft() <= 0;
         },
@@ -143,7 +136,7 @@
         subtext1: function() {
             var view = this;
             var model = view.model;
-            
+
             if(model.isFree() && model.docsLeft() > 0)
                 return localization.blocking.free.has.subtext1;
             else if(model.isFree())
@@ -185,7 +178,7 @@
         makeBox: function() {
             var view = this;
             var model = view.model;
-            
+
             var container = $("<div />");
             container.append($("<div class='headline' />").html(this.headline()));
             container.append($("<div class='subheadline' />").html(this.subtext1()));
@@ -200,10 +193,10 @@
             var model = view.model;
             var $el = $(view.el);
             $el.unbind('click');
-            if(model.isFree() || 
+            if(model.isFree() ||
                model.isOverdue() ||
-               model.isDunning() || 
-               model.isCanceled() || 
+               model.isDunning() ||
+               model.isCanceled() ||
                model.isDeactivated() ||
                model.willCancel() ||
                model.hasUsedAll()) {
@@ -266,7 +259,7 @@
         csvMessage: function() {
             var view = this;
             var model = view.model;
-           
+
             if(model.isFree())
                 return view.freeCSVMessage();
             else if(model.isOverdue())
