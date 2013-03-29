@@ -9,6 +9,7 @@ module Log (
   , mail
   , mailContent
   , mailingServer
+  , messengerServer
   , docConverter
   , security
   , server
@@ -136,6 +137,7 @@ setupLogger = do
     statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     mailingServerLog <- fileHandler' "log/mailingserver.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    messengerServerLog <- fileHandler' "log/messengerserver.log" INFO >>= \lh -> return $ setFormatter lh fmt
     docConverterLog <- fileHandler' "log/docconverter.log" INFO >>= \lh -> return $ setFormatter lh fmt
     integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailLog<- fileHandler' "log/scrivebymail.log" INFO >>= \lh -> return $ setFormatter lh fmt
@@ -158,6 +160,8 @@ setupLogger = do
                      , elegLog
                      , statsLog
                      , mailContentLog
+                     , mailingServerLog
+                     , messengerServerLog
                      , integrationLog
                      , scriveByMailLog
                      , scriveByMailFailuresLog
@@ -197,6 +201,11 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.MailingServer"
         (setLevel NOTICE . setHandlers [mailingServerLog, stdoutLog])
+
+    -- Mailing Server Log
+    updateGlobalLogger
+        "Kontrakcja.MessengerServer"
+        (setLevel NOTICE . setHandlers [messengerServerLog, stdoutLog])
 
     -- Doc Converter Log
     updateGlobalLogger
@@ -302,6 +311,9 @@ mailContent msg = logM "Kontrakcja.MailContent" NOTICE msg
 
 mailingServer :: (MonadLog m) => String -> m ()
 mailingServer msg = logM "Kontrakcja.MailingServer" NOTICE msg
+
+messengerServer :: (MonadLog m) => String -> m ()
+messengerServer msg = logM "Kontrakcja.MessengerServer" NOTICE msg
 
 docConverter :: (MonadLog m) => String -> m ()
 docConverter msg = logM "Kontrakcja.DocConverter" NOTICE msg
