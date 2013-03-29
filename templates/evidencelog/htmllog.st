@@ -91,7 +91,15 @@ htmlevidencelog=
         /**border: 1px solid red;**/
       }
 
-
+      h4 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.1em;
+        line-height: 1em;
+        text-align: justify;
+        color: #364963;
+        margin: 0px;
+        font-weight: normal;
+      }
 
       p {
         margin-bottom: 1.2em;
@@ -101,6 +109,11 @@ htmlevidencelog=
         text-align: justify;
         color: #333333;
         /**border: 1px solid red;**/
+      }
+
+      ul li {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.0em;
       }
 
       * {
@@ -117,14 +130,13 @@ htmlevidencelog=
 
 
       table {
-      width: 800px;
+      width: 100%;
       margin-bottom: 60px;
       padding: 0;
 
       }
 
       table td{
-        width:
         font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
         font-weight: normal;
         font-size: .8em;
@@ -137,7 +149,7 @@ htmlevidencelog=
       td.top{
         font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
         font-size: 1.1em;
-        line-height: 1.4em;
+        line-height: 1em;
         text-align: justify;
         color: #364963;
         font-style: italic;
@@ -155,13 +167,32 @@ htmlevidencelog=
 
 <body class="en legal article ct full">
 <h1>Evidence Log</h1>
-
-<table>
+<p>
+  This evidence log is a complete collection of all actions and events that occurred during the document transaction, which have been logged by the Scrive e-signing service. The information included in each log event is the following:
+</p>
+<div style="margin-left: 50px;">
+  <ul>
+    <li>What occurred</li>
+    <li>Who executed the action</li>
+    <li>At what time this action or event occurred</li>
+    <li>An estimate of clock error with regards to the time of the action or event</li>
+    <li>The time at which the previous clock error estimate was collected</li>
+  </ul>
+</div>
+<h4 style="margin-top: 20px; margin-bottom: 10px;">About the clock error estimate</h4>
+<p>
+  As accurate time can be of crucial importance for some types of transactions, this evidence log includes abundant information about time and estimated time error. The purpose of the time error estimate is to give the holder of this document a tool to be able to evaluate the accuracy of the Scrive e-signing service´s clock at the point of each logged event. We estimate the clock error each hour and measure the estimated error in milliseconds (the Clock Error Sample or CES). The first column in the table tells us the time of the event and the estimated error at the time of the last Clock Error Sample. The second column in the table tells us the time of the latest successful Clock Error Sample (CES).  
+</p>
+<p>
+  Additionally, below this evidence log, are statistics about clock error history over an extended period of time. This information is to serve as a reference of the Scrive e-signing system´s time accuracy over time.  
+</p>
+<br/>
+<table style="border-collapse: separate; border-spacing: 20px 0px; margin: 0 -20px;">
     <tr>
         <td class="top" style="border-bottom: solid 1px #666; width:120px;"><em>Time</em></td>
-        <td class="top" style="border-bottom: solid 1px #666; width:70px;"><em>Clock Error <br/>Estimate Age</em></td>
-        <td class="top" style="border-bottom: solid 1px #666; width:70px;"><em>IP Address</em></td>
-        <td class="top" style="border-bottom: solid 1px #666; width:170px;"><em>Event</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:100px;"><em>CES</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:90px;"><em>IP address</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:160px;"><em>Event</em></td>
     </tr>
 
     $entries:{entry|
@@ -174,7 +205,10 @@ htmlevidencelog=
     }$
 
 </table>
-<p/>
+<br/>
+<br/>
+<h4>Clock error history statistics</h4>
+<p>
 For a time period including the lifetime of the document and at least 24 hours long, Scrive recorded the following statistics for the offset between Scrive system clocks and reference time:
 <table>
    <tr><td style="width: 220px;">Maximum offset</td><td>$ce_max$</td></tr>
