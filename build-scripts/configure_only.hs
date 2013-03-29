@@ -11,6 +11,7 @@ allFlags = [ "test"
            , "pdfseal"
            , "cron"
            , "update-reference-screenshot"
+           , "messenger-server"
            ]
 
 

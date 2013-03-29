@@ -2,6 +2,11 @@ module SMS.Tables where
 
 import DB
 
+messengerTables :: [Table]
+messengerTables = [
+    tableSMSes
+  ]
+
 tableSMSes :: Table
 tableSMSes = tblTable {
     tblName = "smses"

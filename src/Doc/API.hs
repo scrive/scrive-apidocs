@@ -22,6 +22,7 @@ import Doc.DocStateData
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.JSON
+import Text.JSON.Pretty
 import Doc.DocumentID
 import Doc.Tokens.Model
 import Control.Applicative
@@ -206,7 +207,7 @@ apiCallUpdate did = api $ do
   json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                J.Ok js -> Just js
                                                                                _ -> Nothing
-  Log.debug $ "Document " ++ show did ++ " updated with JSON:" ++ encode json
+  Log.debug $ "Document " ++ show did ++ " updated with JSON:\n" ++ show (pp_value json)
   draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValue json
   when (draftIsChangingDocument draftData doc) (checkObjectVersionIfProvided did) -- If we will change document, then we want to be sure that object version is ok.
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor

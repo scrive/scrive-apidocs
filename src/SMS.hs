@@ -6,13 +6,9 @@ module SMS (
 
 import Control.Applicative
 import Data.Char
-import qualified Codec.Text.IConv as IConv
-import qualified Data.ByteString.Lazy.Char8 as BSC
-import qualified Data.ByteString.Lazy.UTF8 as BSU
 
 import Crypto.RNG
 import DB
-import MinutesTime
 import SMS.Model
 import qualified Log
 
@@ -40,7 +36,7 @@ scheduleSMS msg@SMS{..} = case (validOriginator smsOriginator, validNumber smsMS
   (True, True) -> do
     now <- getMinutesTime
     token <- random
-    sid <- dbUpdate $ CreateSMS token (toLatin smsOriginator) smsMSISDN (toLatin smsBody) now
+    sid <- dbUpdate $ CreateSMS token smsOriginator smsMSISDN smsBody now
     Log.debug $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
     return True
   res -> do
@@ -51,7 +47,3 @@ scheduleSMS msg@SMS{..} = case (validOriginator smsOriginator, validNumber smsMS
 
     validNumber ('+':rest) = length rest == 11 && all isDigit rest
     validNumber _ = False
-
-    toLatin = BSC.unpack
-            . IConv.convertFuzzy IConv.Transliterate "utf8" "latin1"
-            . BSU.fromString

@@ -329,7 +329,7 @@ sendInvitationEmails :: Kontrakcja m => Context -> Document -> m ()
 sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
-                      , signatorylinkdeliverymethod sl == EmailDelivery
+                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery]
                       , not $ hasSigned sl
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
@@ -500,8 +500,9 @@ handlePostSignSignup email fn ln = do
 -- Notification sendout
 
 -- | Currently, we pick either mail or SMS delivery.  In the future, we may do both.
-sendNotifications :: (Monad m) => SignatoryLink -> m () -> m () -> m ()
-sendNotifications sl domail dosms =
+sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> m () -> m () -> m ()
+sendNotifications sl domail dosms = do
+  Log.debug $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
   case signatorylinkdeliverymethod sl of
     EmailDelivery   -> domail
     MobileDelivery  -> dosms
