@@ -6,9 +6,7 @@ module Session.Data (
   , session
   ) where
 
-import Control.Monad.IO.Class
 import Data.Typeable
-
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import Crypto.RNG
@@ -29,7 +27,7 @@ data Session = Session {
   , sesCSRFToken :: MagicHash
   } deriving (Eq, Show, Typeable)
 
-emptySession :: (CryptoRNG m, MonadIO m) => m Session
+emptySession :: (CryptoRNG m, MonadDB m) => m Session
 emptySession = do
   now <- getMinutesTime
   token <- random

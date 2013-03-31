@@ -29,7 +29,6 @@ import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import Mails.SendMail
-import MinutesTime
 import Utils.Read
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import Templates

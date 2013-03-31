@@ -20,7 +20,6 @@ import DB.PostgreSQL
 import Doc.DocStateData
 import IPAddress
 import Kontra
-import MinutesTime
 import Utils.Either
 import Utils.HTTP
 import Utils.Monoid

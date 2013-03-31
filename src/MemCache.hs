@@ -18,10 +18,9 @@ where
 import Control.Concurrent.MVar
 import qualified Data.Map as Map
 import Control.Monad.Trans
-import MinutesTime
+import System.Time (getClockTime, ClockTime)
 
-
-data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k (MinutesTime,v))
+data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k (ClockTime,v))
 
 newtype MemCache k v = MemCache (MVar (MemCache' k v))
 
@@ -37,7 +36,7 @@ put :: (MonadIO m, Ord k, Show k, Show v) => k -> v -> MemCache k v -> m ()
 put k v (MemCache mc) = do
   liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit csize mmap) ->
       do
-        now <- getMinutesTime
+        now <- getClockTime
         let (mmap', csize') = if (csize + sizefun v > sizelimit && sizefun v > 0)
                                 then cleanMap sizefun sizelimit (mmap,csize)
                                 else (mmap,csize)
@@ -65,7 +64,7 @@ get k (MemCache mc) = liftIO $ do
       case Map.lookup k mmap of
            Nothing -> return (MemCache' sf sl cs mmap, Nothing)
            Just (_,v) -> do
-               now <- getMinutesTime
+               now <- getClockTime
                return (MemCache' sf sl cs (Map.insert k (now,v) mmap), Just v)
 
 -- | Get current cache size. This is the sum of all objects inside

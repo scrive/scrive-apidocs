@@ -660,7 +660,7 @@ addRandomDocument rda = do
 
 addRandomDocumentWithFile :: File -> RandomDocumentAllows -> TestEnv Document
 addRandomDocumentWithFile file rda = do
-  now <- liftIO getMinutesTime
+  now <- getMinutesTime
   let user = randomDocumentAuthor rda
       p = randomDocumentCondition rda
   mcompany <- case usercompany user of

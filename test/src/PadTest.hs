@@ -9,7 +9,6 @@ import IPAddress
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import TestingUtil
-import MinutesTime
 
 import Test.Framework
 import TestKontra

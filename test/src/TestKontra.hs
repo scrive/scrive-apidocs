@@ -45,7 +45,6 @@ import DB
 import GuardTime (GuardTimeConf(..))
 import Kontra
 import Mails.MailsConfig
-import MinutesTime
 import Utils.Default
 import Payments.Config (RecurlyConfig(..))
 import IPAddress
@@ -82,7 +81,7 @@ runTestEnv st m = do
   can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
   when can_be_run $ do
     atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
-    E.finally (runDBT (teNexus st) (DBEnvSt Nothing []) $ ununTestEnv st $ withTestDB m) $ do
+    E.finally (runDBT (teNexus st) (DBEnvSt Nothing [] Nothing) $ ununTestEnv st $ withTestDB m) $ do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
@@ -103,6 +102,7 @@ instance MonadDB TestEnv where
   kDescribeTable   = TestEnv . kDescribeTable
   kFold2 decoder init_acc = TestEnv (kFold2 decoder init_acc)
   kThrow       = TestEnv . kThrow
+  getMinutesTime = TestEnv $ getMinutesTime
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByColumn $ show (defaultValue :: Lang)
@@ -123,7 +123,7 @@ runTestKontraHelper rq ctx tk = do
   nex <- getNexus
   rng <- getCryptoRNGState
   mres <- liftIO . ununWebT $ runServerPartT
-    (runOurServerPartT . runDBT nex (DBEnvSt Nothing []) . runCryptoRNGT rng $
+    (runOurServerPartT . runDBT nex (DBEnvSt Nothing [] Nothing) . runCryptoRNGT rng $
       runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
@@ -227,10 +227,10 @@ mkRequestWithHeaders method vars headers = liftIO $ do
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
   globaltemplates <- teGlobalTemplates <$> ask
+  time <- getMinutesTime
   liftIO $ do
     docs <- MemCache.new JpegPages.pagesCount 500
     memcache <- MemCache.new BS.length 52428800
-    time <- getMinutesTime
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = "http://testkontra.fake"

@@ -15,7 +15,6 @@ import InputValidation
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
-import MinutesTime
 import qualified Log
 import qualified Mails.Model as M
 import qualified Text.StringTemplates.Templates as T

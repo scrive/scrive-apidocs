@@ -15,7 +15,6 @@ import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import MinutesTime
 import qualified Log
 
 type InnerAQ qd = ReaderT qd (CryptoRNGT (DBT IO))

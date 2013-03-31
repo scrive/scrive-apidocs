@@ -13,6 +13,6 @@ withPostgreSQL :: (MonadBaseControl IO m, MonadIO m) => String -> DBT m a -> m a
 withPostgreSQL conf m =
   E.bracket (liftIO $ PG.connectPostgreSQL conf) (liftIO . disconnect) $ \conn -> do
     nex <- mkNexus conn
-    res <- runDBT nex (DBEnvSt Nothing []) m
+    res <- runDBT nex (DBEnvSt Nothing [] Nothing) m
     liftIO $ commit conn
     return res
