@@ -26,10 +26,20 @@ data Action idx t con n = Action {
 data GetAction idx t con n = GetAction (Action idx t con n) idx
 instance (Convertible idx SqlValue, MonadDB m) => DBQuery m (GetAction idx t con n) (Maybe t) where
   query (GetAction Action{..} aid) = do
+    -- Updating 'expires' on every access is costly and results in
+    -- quite a lot of database races for a single row in database, at
+    -- least for user sessions.
+
+    -- We update 'expires' only when less than 90% of
+    -- qaExpirationDelay of time left till expire.
+    kRun_ $ "SELECT" <+> sqlConcatComma qaSelectFields
+        <+> "FROM" <+> raw (tblName qaTable)
+        <+> "WHERE" <+> qaIndexField <+> "=" <?> aid <+> "AND expires > now()"
+    result <- qaDecode >>= oneObjectReturnedGuard
     kRun_ $ "UPDATE" <+> raw (tblName qaTable) <+> ("SET expires = GREATEST(expires, now() + interval '" <> raw qaExpirationDelay <> "')")
         <+> "WHERE" <+> qaIndexField <+> "=" <?> aid <+> "AND expires > now()"
-        <+> "RETURNING" <+> sqlConcatComma qaSelectFields
-    qaDecode >>= oneObjectReturnedGuard
+        <+> "AND (expires - now()) < 0.9 * interval '" <> raw qaExpirationDelay <> "'"
+    return result
 
 data GetExpiredActions idx t con n = GetExpiredActions (Action idx t con n) MinutesTime
 instance MonadDB m => DBQuery m (GetExpiredActions idx t con n) [t] where
