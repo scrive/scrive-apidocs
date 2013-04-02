@@ -2,6 +2,7 @@ module Mails.Tables (
     mailerTables
   , tableMails
   , tableMailEvents
+  , tableMailAttachments
   ) where
 
 import DB
@@ -51,25 +52,29 @@ tableMails = tblTable {
 tableMailAttachments :: Table
 tableMailAttachments = tblTable {
     tblName = "mail_attachments"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id",      SqlColDesc {colType = SqlBigIntT,    colNullable = Just False})
        , ("mail_id", SqlColDesc {colType = SqlBigIntT,    colNullable = Just False})
        , ("name",    SqlColDesc {colType = SqlVarCharT,   colNullable = Just False})
-       , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just False})
+       , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True })
+       , ("file_id", SqlColDesc {colType = SqlBigIntT,    colNullable = Just True })
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE mail_attachments ("
           <> "  id        BIGSERIAL PRIMARY KEY"
           <> ", mail_id   BIGINT    NOT NULL"
           <> ", name      TEXT      NOT NULL"
-          <> ", content   BYTEA     NOT NULL"
+          <> ", content   BYTEA         NULL"
+          <> ", file_id   BIGINT        NULL"
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "mail_id" ]
   , tblForeignKeys = [ (tblForeignKeyColumn "mail_id" "mails" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "file_id" "files" "id")
+                     ]
   }
 
 tableMailEvents :: Table
