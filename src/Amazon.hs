@@ -35,8 +35,8 @@ isAWSConfigOk conf = case amazonConfig conf of
   Just ((_:_), (_:_), (_:_)) -> True
   _ -> False
 
-mkAWSAction :: AppConf -> AWS.S3Action
-mkAWSAction appConf = AWS.S3Action {
+mkAWSAction :: Maybe (String, String, String) -> AWS.S3Action
+mkAWSAction amazonConfig = AWS.S3Action {
     AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
   , AWS.s3bucket = bucket
   , AWS.s3object = ""
@@ -46,7 +46,7 @@ mkAWSAction appConf = AWS.S3Action {
   , AWS.s3operation = HTTP.GET
   }
   where
-    (bucket, accessKey, secretKey) = fromMaybe ("","","") $ amazonConfig appConf
+    (bucket, accessKey, secretKey) = fromMaybe ("","","") $ amazonConfig
 
 uploadFilesToAmazon :: Scheduler ()
 uploadFilesToAmazon = do
@@ -55,7 +55,7 @@ uploadFilesToAmazon = do
     Nothing -> return ()
     Just file -> do
       conf <- sdAppConf <$> ask
-      success <- exportFile (mkAWSAction conf) file
+      success <- exportFile (mkAWSAction $ amazonConfig conf) file
       if success
         then kCommit
         else do

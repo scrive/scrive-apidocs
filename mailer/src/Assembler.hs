@@ -26,8 +26,11 @@ import qualified Text.JSON as J
 import Crypto.RNG
 import Crypto.RNG.Utils
 import Mails.Model
+import File.Storage
+import DB
+import KontraMonad
 
-assembleContent :: (MonadIO m, CryptoRNG m) => Mail -> m BSL.ByteString
+assembleContent :: (MonadIO m, CryptoRNG m, MonadDB m, KontraMonad m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
   let datafields = do
@@ -62,8 +65,14 @@ assembleContent Mail{..} = do
         "Content-Type: application/pdf; name=\"" ++ mailEncode fname ++ ".pdf\"\r\n" ++
         "Content-Transfer-Encoding: base64\r\n" ++
         "\r\n"
-      attach Attachment{..} = BSLU.fromString (headerAttach attName) `BSL.append`
-        BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode attContent]
+      attach Attachment{..} = do
+        content <- case attContent of
+                  Left c -> return c
+                  Right file_id -> do
+                    getFileIDContents file_id
+        return $ BSLU.fromString (headerAttach attName) `BSL.append`
+               BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode content]
+  atts <- mapM attach mailAttachments
   return $ BSL.concat $ [
       BSLU.fromString headerEmail
     , BSLU.fromString headerContent
@@ -72,7 +81,7 @@ assembleContent Mail{..} = do
     , BSLU.fromString headerContentHtml
     , BSL.fromChunks [BSU.fromString mailContent]
     , BSLU.fromString footerContent
-    ] ++ map attach mailAttachments
+    ] ++ atts
       ++ [BSLU.fromString footerEmail]
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=

@@ -29,7 +29,6 @@ import Doc.SignatoryLinkID
 import Doc.DocumentID
 import InputValidation
 import File.Model
-import File.Storage
 import Kontra
 import KontraLink
 import Mails.SendMail
@@ -402,7 +401,7 @@ sendClosedEmails document = do
              , attachments = mailattachments
              }
 
-makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, BS.ByteString)]
+makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
   let mainfile = documentsealedfile document `mplus` documentfile document
   let
@@ -415,7 +414,7 @@ makeMailAttachments document = do
   --use the doc title rather than file name for the main file (see jira #1152)
   let filenames = map dropPDFSuffix $ documenttitle document : map filename ($(tail) allfiles)
 
-  filecontents <- mapM getFileContents allfiles
+  let filecontents = map (Right . fileid) allfiles
   return $ zip filenames filecontents
 
 {- |
