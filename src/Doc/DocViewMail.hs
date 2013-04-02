@@ -216,23 +216,23 @@ mailInvitation forMail
         F.value "nojavascriptmagic" $ forMail
         F.value "javascriptmagic" $ not forMail
         F.valueM "header" $ do
-            if null documentinvitetext
-                then if isSignatory msiglink || not forMail
-                                 then do
-                                   res <-  renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
-                                     F.value "creatorname" $ creatorname
-                                     F.value "personname" $ Just personname <| personname /= "" |> Nothing
-                                     F.value "documenttitle" $ documenttitle
-                                   makeEditable "customtext" res
-                                 else do
-                                   res <- renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
-                                     F.value "creatorname" creatorname
-                                     F.value "personname" personname
-                                     F.value "documenttitle" $ documenttitle
-                                   makeEditable "customtext" res
-                else renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
-                                     F.value "creatorname" creatorname
-                                     F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
+          defaultHeader <- if isSignatory msiglink || not forMail then
+                            renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
+                              F.value "creatorname" $ creatorname
+                              F.value "personname" $ Just personname <| personname /= "" |> Nothing
+                              F.value "documenttitle" $ documenttitle
+                          else
+                            renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
+                              F.value "creatorname" creatorname
+                              F.value "personname" personname
+                              F.value "documenttitle" $ documenttitle
+          if null documentinvitetext then
+            return defaultHeader
+           else
+            renderLocalTemplate document "mailInvitationCustomInvitationHeader" $ do
+              F.value "defaultheader" defaultHeader
+              F.value "creatorname" creatorname
+              F.valueM "custommessage" $ makeEditable "customtext" documentinvitetext
         F.value "link" $ case msiglink of
           Just siglink -> makeFullLink ctx $ show (LinkSignDoc document siglink)
           Nothing -> makeFullLink ctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"

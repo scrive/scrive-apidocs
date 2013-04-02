@@ -239,20 +239,35 @@ mailInvitationToSignOrderIntructions=
     $nicebutton(link=link; text=_mailReviewOnlineDocument())$
 ####
 mailInvitationToSignContractDefaultHeader=
-      $_mailInvitationToSignContractDefaultHeader()$
+$_mailInvitationToSignContractDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ####
 mailInvitationToSignOfferDefaultHeader=
-    $_mailInvitationToSignOfferDefaultHeader()$
+$_mailInvitationToSignOfferDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ####
 mailInvitationToSignOrderDefaultHeader=
-    $_mailInvitationToSignOrderDefaultHeader()$
+$_mailInvitationToSignOrderDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ####
 mailInvitationToViewDefaultHeader=
-    $_hi()$ <strong>$personname$</strong>,
-    <br/><br/>
-     $_mailInvitationToViewDefaultHeader()$
+$_hi()$ <strong>$personname$</strong>,
+<br/>
+<br/>
+$_mailInvitationToViewDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ###
 mailInvitationCustomInvitationHeader=
+$defaultheader:noescape()$
+<br/>
 $_mailInvitationCustomInvitationHeader()$:
 <br/>
 <i>$custommessage:noescape()$</i>
