@@ -357,4 +357,4 @@ companyBrandFields company = do
   F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company
   F.value "logo" $ isJust $ companyemaillogo $ companyui company
   F.value "logoLink" $ show $ LinkCompanyEmailLogo $ companyid company
- where (r, g, b) = hsl2rgb (maybe 215 read $ companyemailbordercolour $ companyui company) 0.3 0.35
+ where (r, g, b) = hsl2rgb (maybe 215 read $ companyemailbuttoncolour $ companyui company) 0.3 0.35
