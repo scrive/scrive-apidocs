@@ -115,7 +115,7 @@ unescapeHTML (x:xs) = x : unescapeHTML xs
 -- | Convert e-mail from html to txt
 htmlToTxt :: String -> String
 htmlToTxt = dropWhile isSpace . unescapeHTML . toText . removeWSAfterNL . reduceWS .
-  replaceLinks . concatTexts . filterUnneeded . lowerTags . parseTags
+  replaceLinks . removeStyle . concatTexts . filterUnneeded . lowerTags . parseTags
   where
     toText = concat . foldr (\t ts -> f t : ts) []
       where
@@ -170,11 +170,19 @@ htmlToTxt = dropWhile isSpace . unescapeHTML . toText . removeWSAfterNL . reduce
         f (TagText s) ((TagText s'):ts) = TagText (s ++ s') : ts
         f t ts = t : ts
 
+    removeStyle = foldr f []
+      where
+        f (TagOpen "style" _) ((TagText _):(TagClose "style"):ts) = ts
+        f (TagOpen "style" _) ((TagClose "style"):ts) = ts
+        f (TagOpen "script" _) ((TagText _):(TagClose "script"):ts) = ts
+        f (TagOpen "script" _) ((TagClose "script"):ts) = ts
+        f t ts = t : ts
+
     filterUnneeded = filter f
       where
         f (TagText s)   = not $ all isSpace s
-        f (TagOpen t _) = t `elem` ["a", "b", "br", "i", "p", "strong"]
-        f (TagClose t)  = t `elem` ["a", "b", "i", "p", "strong"]
+        f (TagOpen t _) = t `elem` ["a", "b", "br", "i", "p", "strong", "style", "script"]
+        f (TagClose t)  = t `elem` ["a", "b", "i", "p", "strong", "style", "script"]
         f _             = False
 
     lowerTags = map f
