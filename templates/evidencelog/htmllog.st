@@ -209,7 +209,10 @@ htmlevidencelog=
 <br/>
 <h4>Clock error history statistics</h4>
 <p>
-For a time period including the lifetime of the document and at least 24 hours long, Scrive recorded the following statistics for the offset between Scrive system clocks and reference time:
+For a time period including the lifetime of the document and at least
+24 hours long, Scrive recorded the following statistics for the offset
+between Scrive system clocks and reference time:
+</p>
 <table>
    <tr><td style="width: 220px;">Maximum offset</td><td>$ce_max$</td></tr>
    <tr><td>Sample mean</td><td>$ce_mean$</td></tr>
