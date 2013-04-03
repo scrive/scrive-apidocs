@@ -54,7 +54,7 @@ testInviteStat = do
                                                           (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time) Nothing
-  True <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (systemActor time)
+  dbUpdate $ SetDocumentInviteTime (documentid doc') time (systemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatInviteEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -197,7 +197,7 @@ testDeleteStat = do
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   let actor = systemActor time
-  _ <- dbUpdate $ ArchiveDocument author' (documentid doc') actor
+  _ <- dbUpdate $ ArchiveDocument (userid author') (documentid doc') actor
 
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl = getAuthorSigLink doc
@@ -218,7 +218,7 @@ testPurgeStat = do
   doc' <- addRandomDocumentWithAuthorAndCondition author' (isSignable &&^
                                                            isClosed &&^
                                                            (any isSignatory . documentsignatorylinks))
-  _ <- dbUpdate $ ArchiveDocument author' (documentid doc') actor
+  _ <- dbUpdate $ ArchiveDocument (userid author') (documentid doc') actor
   _ <- dbUpdate $ ReallyDeleteDocument (userid author') (documentid doc') actor
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl = getAuthorSigLink doc

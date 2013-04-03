@@ -1,5 +1,6 @@
 module Doc.DocStateUpdate
     ( restartDocument
+    , prolongDocument
     , signDocumentWithEmailOrPad
     , signDocumentWithEleg
     , rejectDocumentWithChecks
@@ -22,7 +23,6 @@ import Kontra
 import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
-import Doc.DocUtils
 import Doc.SignatoryLinkID
 import Control.Applicative
 import Doc.DocumentID
@@ -56,6 +56,18 @@ restartDocument doc = withUser $ \user -> do
     else return $ Left DBResourceNotAvailable
 
 {- |
+   Securely
+ -}
+prolongDocument :: Kontrakcja m => Document -> m (Either DBError ())
+prolongDocument doc = withUser $ \user -> do
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  if isSigLinkFor user $ getAuthorSigLink doc
+    then do
+      dbUpdate $ ProlongDocument (documentid doc) actor
+      return (Right ())
+    else return $ Left DBResourceNotAvailable
+
+{- |
    Sign a document with email identification (typical, non-eleg).
  -}
 
@@ -67,15 +79,15 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
     Left err -> return $ Left err
     Right olddoc -> do
      switchLang (getLang olddoc)
-     case olddoc `allowsAuthMethod` ELegAuthentication of
+     let Just sl' = getSigLinkFor olddoc slid
+     case signatorylinkauthenticationmethod sl' == ELegAuthentication of
       True -> return $ Left (DBActionNotAvailable "This document does not allow signing using email authentication.")
       False  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
-        let Just sl' = getSigLinkFor olddoc slid
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
           True <- dbUpdate $ UpdateFields did slid fields actor
-          True <- dbUpdate $ SignDocument did slid mh Nothing screenshots actor
+          dbUpdate $ SignDocument did slid mh Nothing screenshots actor
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           let Just sl = getSigLinkFor doc slid
           _ <- addSignStatSignEvent doc sl
@@ -93,16 +105,16 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
     Left err -> return $ Left err
     Right olddoc -> do
      switchLang (getLang olddoc)
-     case olddoc `allowsAuthMethod` ELegAuthentication of
+     let Just sl' = getSigLinkFor olddoc slid
+     case signatorylinkauthenticationmethod sl' == ELegAuthentication of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using eleg authentication.")
       True  -> do
-        let Just sl' = getSigLinkFor olddoc slid
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
           Log.debug "a"
           True <- dbUpdate $ UpdateFields did slid fields actor
           Log.debug "b"
-          True <- dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
+          dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
           Log.debug "c"
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           Log.debug "d"
@@ -129,7 +141,7 @@ rejectDocumentWithChecks did slid mh customtext = do
       let Just sll = getSigLinkFor olddocument slid
       let sa = signatoryActor ctxtime ctxipnumber (maybesignatory sll) (getEmail sll) slid
       mdoc <- runMaybeT $ do
-        True <- dbUpdate $ RejectDocument did slid customtext sa
+        dbUpdate $ RejectDocument did slid customtext sa
         Just doc <- dbQuery $ GetDocumentByDocumentID did
         let Just sl = getSigLinkFor doc slid
         _ <- addSignStatRejectEvent doc sl
@@ -146,12 +158,12 @@ authorSignDocument actor did msigninfo timezone screenshots = onlyAuthor did $ \
   ctx <- getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ PreparationToPending did actor (Just timezone)
-    True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+    dbUpdate $ PreparationToPending did actor (Just timezone)
+    dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- please delete after Oct 1, 2012 -Eric
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
     -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
-    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
+    dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let Just sl = getSigLinkFor doc signatorylinkid
     _ <- addSignStatSignEvent doc sl
@@ -171,19 +183,13 @@ authorSendDocument user actor did timezone = do
     then return $ Left DBResourceNotAvailable
     else do
         Log.debug $ "Preparation to pending for document " ++ show did
-        r1 <-  dbUpdate $ PreparationToPending did actor (Just timezone)
-        if (not r1)
-           then return $ Left $ DBActionNotAvailable $ "Can't change from draft to pending"
-           else do
-             Log.debug $ "Setting invite time for  " ++ show did
-             r2 <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-             if (not r2)
-               then return $ Left $ DBActionNotAvailable $ "Can't send proper invitation time on document"
-               else do
-                 mdoc <- dbQuery $ GetDocumentByDocumentID did
-                 return $ case mdoc of
-                    Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
-                    Just d -> Right d
+        dbUpdate $ PreparationToPending did actor (Just timezone)
+        Log.debug $ "Setting invite time for  " ++ show did
+        dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+        mdoc <- dbQuery $ GetDocumentByDocumentID did
+        return $ case mdoc of
+          Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
+          Just d -> Right d
 
 {- |
   Reseting all signatory attachments when document is in preparation | State of document is not checked
@@ -202,8 +208,8 @@ authorSignDocumentFinal did msigninfo screenshots = onlyAuthor did $ \olddoc -> 
   actor <- guardJustM $ mkAuthorActor <$> getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
-    True <- dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
+    dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
+    dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let Just sl = getSigLinkFor doc signatorylinkid
     _ <- addSignStatSignEvent doc sl
@@ -261,7 +267,7 @@ attachFile docid filename content = onlyAuthor docid $ \_ -> do
   file <- dbUpdate $ NewFile filename content14
   actor <- guardJustM $ mkAuthorActor <$> getContext
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ AttachFile docid (fileid file) actor
+    dbUpdate $ AttachFile docid (fileid file) actor
     Just doc <- dbQuery $ GetDocumentByDocumentID docid
     return doc
   return $ case mdoc of

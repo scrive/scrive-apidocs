@@ -9,7 +9,6 @@ import MagicHash
 import Crypto.RNG
 import Data.Int
 import Data.List
-import Control.Monad.Trans
 import Network.URI
 import Data.Maybe
 
@@ -99,8 +98,8 @@ data OAuthAuthorization = OAuthAuthorization { oaAPIToken     :: APIToken
 data CreateAPIToken = CreateAPIToken UserID
 instance (MonadDB m, CryptoRNG m) => DBUpdate m CreateAPIToken Bool where
   update (CreateAPIToken userid) = do
-    token  :: MagicHash <- lift random
-    secret :: MagicHash <- lift random
+    token  :: MagicHash <- random
+    secret :: MagicHash <- random
     r <- kRun $ SQL ("INSERT INTO oauth_api_token "
              <> "(api_token, api_secret, user_id) "
              <> "SELECT ?, ?, ? "
@@ -155,9 +154,9 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
   update (RequestTempCredentials (OAuthTempCredRequest {tcPrivileges = []}) _) = return Nothing
   update (RequestTempCredentials (OAuthTempCredRequest {tcPrivileges}) _) | APIPersonal `elem` tcPrivileges = return Nothing
   update (RequestTempCredentials (OAuthTempCredRequest {..}) time) = do
-    temptoken  :: MagicHash <- lift random
-    tempsecret :: MagicHash <- lift random
-    verifier   :: MagicHash <- lift random
+    temptoken  :: MagicHash <- random
+    tempsecret :: MagicHash <- random
+    verifier   :: MagicHash <- random
     mid ::    Maybe Int64 <- getOne $ SQL ("INSERT INTO oauth_temp_credential ("
                            <> "  temp_token"
                            <> ", temp_secret"
@@ -243,8 +242,8 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
 data RequestAccessToken = RequestAccessToken OAuthTokenRequest MinutesTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestAccessToken (Maybe (APIToken, MagicHash)) where
   update (RequestAccessToken (OAuthTokenRequest {..}) time) = do
-    accesstoken  :: MagicHash <- lift random
-    accesssecret :: MagicHash <- lift random
+    accesstoken  :: MagicHash <- random
+    accesssecret :: MagicHash <- random
     kRun_ $ SQL ("INSERT INTO oauth_access_token (access_token, access_secret, api_token_id, user_id, created) "
               <> "SELECT ?, ?, c.api_token_id, c.user_id, ? "
               <> "FROM oauth_temp_credential c "
@@ -422,8 +421,8 @@ instance (MonadDB m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
     if isJust m
       then return False
       else do
-        token  :: MagicHash <- lift random
-        secret :: MagicHash <- lift random
+        token  :: MagicHash <- random
+        secret :: MagicHash <- random
         kRun_ $ SQL (  "INSERT INTO oauth_api_token "
                  <> "(api_token, api_secret, user_id) "
                  <> "SELECT ?, ?, ? "
@@ -435,8 +434,8 @@ instance (MonadDB m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
                        toSql userid]
         [apiid] <- kFold (\acc (i :: Int64) -> i:acc) []
         -- now create the access token
-        atoken  :: MagicHash <- lift random
-        asecret :: MagicHash <- lift random
+        atoken  :: MagicHash <- random
+        asecret :: MagicHash <- random
         now <- getMinutesTime
         kRun_ $ SQL("INSERT INTO oauth_access_token "
                  <> "(access_token, access_secret, api_token_id, user_id, created) "

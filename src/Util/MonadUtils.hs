@@ -49,7 +49,7 @@ guardJustM404 action = guardJust404 =<< action
 {- |
    Get the value from a Right or log an error and fail if it is Left
  -}
-guardRight' :: (MonadBase IO m, MonadIO m, Show msg) => Either msg a -> m a
+guardRight' :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => Either msg a -> m a
 guardRight' (Right val) = return val
 guardRight' (Left  msg) = do 
   Log.debug (show msg)
@@ -58,5 +58,5 @@ guardRight' (Left  msg) = do
 {- |
    Get the value from a Right or log an error and fail if it is a left
  -}
-guardRightM' :: (MonadBase IO m, MonadIO m, Show msg) => m (Either msg b) -> m b
+guardRightM' :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => m (Either msg b) -> m b
 guardRightM' action = guardRight' =<< action

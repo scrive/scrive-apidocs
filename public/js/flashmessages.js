@@ -59,6 +59,19 @@ var FlashMessageView = Backbone.View.extend({
 });
 
 window.FlashMessage = function(args) {
+        if (args.withReload != undefined && args.withReload == true) {
+          console.log("Adding flash message to server and reloading page");
+          new Submit({
+            method : "POST",
+            url : "/api/frontend/addflash",
+            ajax : true,
+            color : args.color,
+            content : args.content,
+            ajaxsuccess : function() {window.location.reload();},
+            ajaxerror   : function() {window.location.reload();}
+          }).send();
+          return;
+        }
         var model = new FlashMessageModel(args);
         var view = new FlashMessageView({model : model, el : $("<div class='flash'/>")});
         $("body").append($(view.el));

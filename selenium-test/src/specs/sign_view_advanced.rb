@@ -19,6 +19,7 @@ describe "sign view all functionalities" do
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     begin
       @h.loginhelper.set_name(@h.ctx.props.tester_fstname, @h.ctx.props.tester_sndname)
+
       @h.dochelper.uploadContract
 
       puts "set the author to have some custom fields"

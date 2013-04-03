@@ -60,7 +60,6 @@ inputValidationTests = testGroup "InputValidation"
         , testProperty "whitespace only is counted as empty" propValidCompanyNumberWhitespaceIsEmpty
         , testProperty "can only contain hyphen, digits [0-9] or ascii chars [A-Z] [a-z]" 
                        propValidCompanyNumberRestrictsChars
-        , testProperty "must be at least 8 chars" propValidCompanyNumberMustBeAtLeast4Chars
         , testProperty "good examples pass" propValidCompanyNumberGoodExamples ]
     , testGroup "asValidAddress"
         [ testProperty "strips surrounding whitespace" propValidAddressStripsWhitespace
@@ -290,11 +289,6 @@ propValidCompanyNumberWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyNu
 propValidCompanyNumberRestrictsChars :: String -> Property
 propValidCompanyNumberRestrictsChars =
    propJustAllowed asValidCompanyNumber [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
-
-propValidCompanyNumberMustBeAtLeast4Chars :: Property
-propValidCompanyNumberMustBeAtLeast4Chars =
-    mapSize (const 10) $ \xs ->
-    propIsMinSize asValidCompanyNumber 4 $ map cn xs
 
 propValidCompanyNumberGoodExamples :: [CompanyNumberChar] -> Property
 propValidCompanyNumberGoodExamples ns =

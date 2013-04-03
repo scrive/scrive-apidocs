@@ -18,6 +18,7 @@ describe "sign up on front page and modify account settings" do
     puts "reset password for "+email+" to "+password
     @h.driver.navigate().to(@h.ctx.createKontrakcjaURL "/login")
     (@h.wait_until { @h.driver.find_element :css => "a.s-forgot-password" }).click
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).click
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).send_keys email
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
     @h.emailhelper.follow_link_in_latest_mail_for email
@@ -108,6 +109,7 @@ describe "sign up on front page and modify account settings" do
     @h.loginhelper.login_as(random_email, new_password)
     puts "Setting names"
     @h.loginhelper.set_name("Random", "User")
+    sleep 4
     puts "Looking for change mail button"
     (@h.wait_until { @h.driver.find_element :css => "a.new-mail-button" }).click
 
@@ -121,18 +123,27 @@ describe "sign up on front page and modify account settings" do
     @h.loginhelper.logout
 
     @h.emailhelper.follow_link_in_latest_mail_for new_email
-
+    puts "just followed link"
+    sleep 1
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).click
+    puts "just clicked email input"
+    sleep 1
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='password']" }).click
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='password']" }).send_keys new_password
-
+    # trying to get this click thing to work
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).click
+    puts "just clicked email input"
+    sleep 1
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container a.login-button" }).click
-
-
+    puts "waiting for recovery-container"
     @h.wait_until { @h.driver.find_element :css => "div.recovery-container" }
-
+    puts "waiting for password"
     (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys new_password
+    puts "about to accept"
     @h.dochelper.acceptStandardModal
-
+    puts "about to logout"
     @h.loginhelper.logout
 
     puts "make sure we can log in with new email address"

@@ -13,44 +13,49 @@ $doctype()$
     <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
     <script src="$homebase$/js/docsignviewpromotescrive.js"></script>
       </head>
-  <body class="signview">
+  <body>
     $if(usestandardheaders)$
     $header()$
     $endif$
-    <div class="mainContainer" >
-      $flashmessages()$
-      <div class="body-container">
-        <script>
+    <div class="signview">
+      <div class="mainContainer" >
+        $flashmessages()$
+        <div class="body-container">
+          <script>
 
-            jQuery(function(){
-                var docview = new DocumentSignView({
-                    id:"$documentid$"
-                    $if(usestandardheaders)$
-                    ,  ignoredoclang : true
-                    $endif$
-                    $if(siglinkid)$
-                    , viewer : new DocumentViewer({
-                        signatoryid : "$siglinkid$"
-                       })
-                    $endif$
-                });
-              $if(!usestandardheaders)$
-                jQuery('body').prepend(new DocumentSignViewHeader({model : docview.model, mainview : docview.view}).el)
-                jQuery('body').append(new DocumentSignViewFooter({model : docview.model,  mainview : docview.view}).el)
-              $endif$
-              jQuery(".body-container").replaceWith(docview.view.el);
-            });
+              jQuery(function(){
+                  var docview = new DocumentSignView({
+                      id:"$documentid$"
+                      $if(usestandardheaders)$
+                      ,  ignoredoclang : true
+                      ,  usebranding : false
+                      $else$
+                      ,  usebranding : true
+                      $endif$
+                      $if(siglinkid)$
+                      , viewer : new DocumentViewer({
+                          signatoryid : "$siglinkid$"
+                         })
+                      $endif$
+                  });
+                $if(!usestandardheaders)$
+                  jQuery('.signview').prepend(new DocumentSignViewHeader({model : docview.model, mainview : docview.view}).el)
+                  jQuery('.signview').append(new DocumentSignViewFooter({model : docview.model,  mainview : docview.view}).el)
+                $endif$
+                jQuery(".body-container").replaceWith(docview.view.el);
+              });
 
-            mixpanel.register({
-              Context : 'Sign view',
-              DocumentID : "$documentid$",
-              'Signatory ID' : $siglinkid$
-            });
-            mixpanel.people.set({
-             'Last document sign view' : new Date()
-            });
+              mixpanel.register({
+                Context : 'Sign view',
+                DocumentID : "$documentid$",
+                'Signatory ID' : $siglinkid$
+              });
+              mixpanel.people.set({
+               'Last document sign view' : new Date()
+              });
 
-       </script>
+         </script>
+        </div>
       </div>
     </div>
     $if(usestandardheaders)$

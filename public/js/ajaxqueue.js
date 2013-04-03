@@ -50,10 +50,14 @@ var QueueRequest = Backbone.Model.extend({
   defaults : {
       send : false,
       submit : undefined,
-      result : undefined      // True <=> ajaxsuccess , False <=> ajaxerror
+      result : undefined,      // True <=> ajaxsuccess , False <=> ajaxerror
+      errorCode : 0
   },
   started : function() {
      return this.get("send");
+  },
+  errorCode : function() {
+     return this.get("errorCode");
   },
   restart : function() {
       this.set({"result" : undefined});
@@ -68,8 +72,8 @@ var QueueRequest = Backbone.Model.extend({
        var queueRequest = this;
        var submit = this.get("submit");
        submit.set({   ajax : true
-                   ,  ajaxerror: function() {
-                        queueRequest.set({result:false});
+                   ,  ajaxerror: function(res) {
+                        queueRequest.set({result:false, errorCode : res.status});
                         queueRequest.trigger("error");
                        }
                    ,  ajaxsuccess: function() {
@@ -100,7 +104,7 @@ window.AjaxQueue = Backbone.Model.extend({
      }
 
   },
-  add : function(s){
+  add : function(s, errorCallback){
        var ajaxQueue = this;
        var requestQueue = this.get("queue");
        if (this.get("finishWithFunction") != undefined)
@@ -115,6 +119,7 @@ window.AjaxQueue = Backbone.Model.extend({
                 ajaxQueue.run();
             });
        qr.bind("error", function() {
+                if (errorCallback != undefined) errorCallback(qr.errorCode());
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 if (requestQueue.length == 1)
                     // REVIEW: What prevents the client from getting

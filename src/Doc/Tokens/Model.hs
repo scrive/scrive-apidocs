@@ -4,8 +4,6 @@ module Doc.Tokens.Model (
   ) where
 
 import Control.Monad
-import Control.Monad.Trans
-
 import Context
 import Crypto.RNG
 import DB
@@ -17,7 +15,7 @@ import Session.Model
 data GetDocumentSessionToken = GetDocumentSessionToken SignatoryLinkID
 instance (KontraMonad m, MonadDB m) => DBQuery m GetDocumentSessionToken (Maybe MagicHash) where
   query (GetDocumentSessionToken slid) = do
-    sid <- ctxsessionid `liftM` lift getContext
+    sid <- ctxsessionid `liftM` getContext
     getOne $ "SELECT token FROM document_session_tokens"
          <+> "WHERE session_id =" <?> sid <+> "AND signatory_link_id =" <?> slid
 

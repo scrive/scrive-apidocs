@@ -149,6 +149,7 @@ javascriptLocalisation =
                    confirmsendtitle: "$_contractconfirmsendtitle()$",
                    expirytext: "$_contractexpirytext()$",
                    restartbuttontext: "$_contractrestartbuttontext()$",
+                   prolongbuttontext: "$_contractprolongbuttontext()$",
                    cancelbuttontext: "$_contractcancelbuttontext()$",
                    cancelmodaltitle: "$_contractcancelmodaltitle()$",
                    cancelmodaltext: "$_contractcancelmodaltext()$",
@@ -174,6 +175,7 @@ javascriptLocalisation =
                    confirmsendtitle: "$_offerconfirmsendtitle()$",
                    expirytext: "$_offerexpirytext()$",
                    restartbuttontext: "$_offerrestartbuttontext()$",
+                   prolongbuttontext: "$_offerprolongbuttontext()$",
                    cancelbuttontext: "$_offercancelbuttontext()$",
                    cancelmodaltitle: "$_offercancelmodaltitle()$",
                    cancelmodaltext: "$_offercancelmodaltext()$",
@@ -199,6 +201,7 @@ javascriptLocalisation =
                    confirmsendtitle: "$_orderconfirmsendtitle()$",
                    expirytext: "$_orderexpirytext()$",
                    restartbuttontext: "$_orderrestartbuttontext()$",
+                   prolongbuttontext: "$_orderprolongbuttontext()$",
                    cancelbuttontext: "$_ordercancelbuttontext()$",
                    cancelmodaltitle: "$_ordercancelmodaltitle()$",
                    cancelmodaltext: "$_ordercancelmodaltext()$",
@@ -341,19 +344,22 @@ javascriptLocalisation =
          , validation : {
                 firstNameRequired: "$_flashMessageFirstNameIsRequired()$"
               , secondNameRequired: "$_flashMessageSecondNameIsRequired()$"
+              , required: "$_nameRequired()$"
+              , toolong: "$_nameTooLong()$"
+              , invalidnamechars: "$_nameInvalidChars()$"
+              , firstNameField: "$_firstNameField()$"
+              , lastNameField: "$_lastNameField()$"
+              , companyNumberInvalidChars: "$_companyNumberInvalidChars()$"
+              , companyNumberTooShort: "$_companyNumberTooShort()$"
+              , companyNumberTooLong: "$_companyNumberTooLong()$"
               , passwordExceedsMaxLength: "$_PasswordValidationMessageInputExceedsMaxLength()$"
               , passwordLessThanMinLength: "$_PasswordValidationMessageInputLessThanMinLength()$"
               , passwordNeedsLetterAndDigit: "$_PasswordValidationMessageNeedsLetterAndDigit()$"
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
               , wrongEmail : "$_emptyOrNotValidEmail()$"
+              , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
          }
-         , emailBranding: "$_EmailBranding()$"
-         , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
-         , customiseTextColour: "$_CustomiseTextColour()$"
-         , customiseLogo: "$_CustomiseLogo()$"
-         , selectImageLabel: "$_SelectImageLabel()$"
-         , saveBranding: "$_SaveSettings()$"
          , pad : {
                 delivery : "$_padDelivery()$"
              ,  signingOnSameDevice : "$_padSigningOnSameDevice()$"
@@ -374,9 +380,6 @@ javascriptLocalisation =
              ,  changePartyTo : "$_changePartyTo()$"
              ,  giveForSigningThisDevice : "$_padGiveForSigningThisDevice()$"
         }
-         , sampleEmailHeader: "$_SampleEmailHeader()$"
-         , sampleEmailSubheader: "$_mailsubheader()$"
-         , sampleEmailContent: "$_SampleEmailContent()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
          , newPasswordModal: {
@@ -845,6 +848,14 @@ javascriptLocalisation =
               , createCompanyExplanation : "$_createCompanyExplanation()$"
               , createCompanyPreambule :   "$_createCompanyFormPreamble()$"
               , save : "$_SaveChanges()$"
+              , detailSaved : "$_flashMessageUserDetailsSaved()$"
+              , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
+              , invalidEmail : "$_flashMessageInvalidEmailFormat()$"
+              , emailAlreadyInUse : "$_flashCantChangeEmail()$"
+              , changeEmailMailSent1 : "$_flashMessageChangeEmailMailSent1()$"
+              , changeEmailMailSent2 : "$_flashMessageChangeEmailMailSent2()$"
+              , companyCreated : "$_flashMessageCompanyCreated()$"
+
             }
           , accountSecurity : {
                 name            : "$_HeadAccountSettings()$"
@@ -909,6 +920,35 @@ javascriptLocalisation =
               , columnClosedSignatures : "$_closedSignatures()$"
             }
           , subscription : "$_Subscription()$"
+      }
+      , companyBranding : {
+               customiseHeaderFontLabel : "$_customiseHeaderFontLabel()$"
+             , customiseFontLabel : "$_customiseFontLabel()$"
+             , customiseSignViewFooterTextColourLabel : "$_customiseSignViewFooterTextColourLabel()$"
+             , customiseSignViewFooterTextFontLabel : "$_customiseSignViewFooterTextFontLabel()$"
+             , customiseSignViewHeaderTextColourLabel : "$_customiseSignViewHeaderTextColourLabel()$"
+             , customiseSignViewHeaderTextFontLabel : "$_customiseSignViewHeaderTextFontLabel()$"
+             , customiseSignViewHeaderBackgroundColour : "$_customiseSignViewHeaderBackgroundColour()$"
+             , customiseSignViewFooterBackgroundColour : "$_customiseSignViewFooterBackgroundColour()$"
+             , customiseSignViewBackgroundColour : "$_customiseSignViewBackgroundColour()$"
+             , signviewBranding : "$_signviewBranding()$"
+             , customiseBorderColourLabel : "$_customiseBorderColourLabel()$"
+             , customiseButtonColourLabel : "$_customiseButtonColourLabel()$"
+             , customiseEmailBackgroundColour : "$_customiseEmailBackgroundColourLabel()$"
+             , sampleEmailButtonLabel : "$_sampleEmailButtonLabel()$"
+             , sampleEmailFooter : "$_sampleEmailFooter()$"
+             , barsColour : "$_companyBrandingBarsColour()$"
+             , barsTextColour : "$_companyBrandingBarsTextColour()$"
+             , saveBranding: "$_SaveSettings()$"
+             , emailBranding: "$_EmailBranding()$"
+             , customiseLogo: "$_CustomiseLogo()$"
+             , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
+             , customiseTextColour: "$_CustomiseTextColour()$"
+             , selectImageLabel: "$_SelectImageLabel()$"
+             , sampleEmailHeader: "$_SampleEmailHeader()$"
+             , sampleEmailSubheader: "$_mailsubheader()$"
+             , sampleEmailContent: "$_SampleEmailContent()$"
+             , customize : "$_companyBrandingCustomize()$"
       }
       , createFromTemplateDescription : "$_createFromTemplateDescription()$"
       , nofiletext : "$_nofiletext()$"

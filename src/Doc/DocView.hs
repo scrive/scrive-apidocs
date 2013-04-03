@@ -6,11 +6,11 @@ module Doc.DocView (
   , flashAuthorSigned
   , flashDocumentDraftSaved
   , flashDocumentRestarted
+  , flashDocumentProlonged
   , flashDocumentTemplateSaved
   , flashMessageCSVSent
   , flashMessageInvalidCSV
   , flashRemindMailSent
-  , getDataMismatchMessage
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -21,7 +21,6 @@ module Doc.DocView (
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
-  , documentsToFixView
   , documentJSON
   , gtVerificationPage
   ) where
@@ -39,7 +38,7 @@ import KontraLink
 import MinutesTime
 import Utils.Prelude
 import Utils.Monoid
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -51,13 +50,13 @@ import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BSC
 import Data.Maybe
 import Text.JSON
-import Data.List (sortBy)
+import Data.List (sortBy, nub)
 import File.Model
 import DB
 import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified Data.Set as Set
 import Analytics.Include
 
@@ -98,6 +97,10 @@ flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentRestarted document = do
   toFlashMsg OperationDone <$> (renderTemplateForProcess document processflashmessagerestarted $ documentInfoFields document)
 
+flashDocumentProlonged :: TemplatesMonad m => Document -> m FlashMessage
+flashDocumentProlonged document = do
+  toFlashMsg OperationDone <$> (renderTemplateForProcess document processflashmessageprolonged $ documentInfoFields document)
+
 flashRemindMailSent :: TemplatesMonad m => SignatoryLink -> m FlashMessage
 flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
   toFlashMsg OperationDone <$> (renderTemplate (template_name maybesigninfo) $ do
@@ -119,7 +122,7 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m) => Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
     ctx <- getContext
     file <- documentfileM doc
@@ -129,15 +132,6 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
     mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
-    let logo  = if (isJust mcompany && isJust (companylogo $ companyui (fromJust mcompany)))
-                  then show <$> LinkCompanyLogo <$> companyid <$> mcompany
-                  else Nothing
-    let bbc  = if (isJust mcompany && isJust (companybarsbackground $ companyui (fromJust mcompany)))
-                  then companybarsbackground $ companyui (fromJust mcompany)
-                  else Nothing
-    let bbtc  = if (isJust mcompany && isJust (companybarstextcolour $ companyui (fromJust mcompany)))
-                  then companybarstextcolour $ companyui (fromJust mcompany)
-                  else Nothing
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
@@ -152,7 +146,10 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "status" $ show $ documentstatus doc
       J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
-      J.value "authentication" $ authenticationJSON $ documentauthenticationmethod doc
+      J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
+                                   [StandardAuthentication] -> "standard"
+                                   [ELegAuthentication]     -> "eleg"
+                                   _                        -> "mixed"
       J.value "delivery" $ deliveryJSON $ documentdeliverymethod doc
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
@@ -165,12 +162,18 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
       when (not $ forapi) $ do
-        J.value "logo" logo
-        J.value "barsbackgroundcolor" bbc
-        J.value "barsbackgroundtextcolor" bbtc
+        J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
+                                    then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
+                                    else Nothing
+        J.value "signviewtextcolour" $ companysignviewtextcolour . companyui =<< mcompany
+        J.value "signviewtextfont" $ companysignviewtextfont . companyui =<< mcompany
+        J.value "signviewbarscolour" $ companysignviewbarscolour . companyui =<<  mcompany
+        J.value "signviewbarstextcolour" $ companysignviewbarstextcolour . companyui  =<< mcompany
+        J.value "signviewbackgroundcolour" $ companysignviewbackgroundcolour . companyui  =<< mcompany
         J.value "author" $ authorJSON mauthor mcompany
         J.value "process" $ show $ toDocumentProcess (documenttype doc)
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
+        J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
         J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
         J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
 
@@ -193,7 +196,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "signs" $ isSignatory siglink
     J.value "author" $ isAuthor siglink
     J.value "saved" $ isJust . maybesignatory $ siglink
-    J.value "datamismatch" datamismatch
+    J.value "datamismatch" $ signatorylinkelegdatamismatchmessage siglink
     J.value "signdate" $ jsonDate $ signtime <$> maybesigninfo siglink
     J.value "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
     J.value "readdate" $ jsonDate $ maybereadinvite siglink
@@ -205,16 +208,12 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
+    J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink
     when (not (isPreparation doc) && forauthor && forapi && documentdeliverymethod doc == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
-      datamismatch = case documentcancelationreason doc of
-        Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
-        _                                   -> False
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
-      rejectedDate = case documentrejectioninfo doc of
-        Just (rt, slid, _) | slid == signatorylinkid siglink -> Just rt
-        _                                                    -> Nothing
+      rejectedDate = signatorylinkrejectiontime siglink
 
 signatoryAttachmentJSON :: MonadDB m => SignatoryAttachment -> JSONGenT m ()
 signatoryAttachmentJSON sa = do
@@ -226,7 +225,7 @@ signatoryAttachmentJSON sa = do
   J.value "file" $ fileJSON <$> mfile
 
 signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
-signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
+signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfObligatory} -> do
 
     case sfType of
@@ -244,7 +243,7 @@ signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signa
                                   sfObligatory sfPlacements
       CompanyFT             -> fieldJSON "standard" "sigco"     sfValue
                                   ((not $ null $ sfValue)  && (null sfPlacements) &&
-                                      (ELegAuthentication /= documentauthenticationmethod doc) &&
+                                      (ELegAuthentication /= signatorylinkauthenticationmethod sl) &&
                                       (not $ isPreparation doc))
                                   sfObligatory sfPlacements
       CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  sfValue
@@ -355,8 +354,8 @@ documentInfoFields  document  = do
   F.value "id" $ show $ documentid document
   F.value "documentid" $ show $ documentid document
   F.value "template" $  isTemplate document
-  F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
-  F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
+  -- F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
+  -- F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
   F.value "emaildeliveryselected" $ documentdeliverymethod document == EmailDelivery
   F.value "paddeliveryselected" $ documentdeliverymethod document == PadDelivery
   F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
@@ -380,7 +379,7 @@ documentStatusFields document = do
   F.value "preparation" $ documentstatus document == Preparation
   F.value "pending" $ documentstatus document == Pending
   F.value "cancel" $ (documentstatus document == Canceled
-      && documentcancelationreason document == Just ManualCancel)
+      && (all (not . isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
   F.value "timedout" $ documentstatus document == Timedout
   F.value "rejected" $ documentstatus document == Rejected
   F.value "signed" $ documentstatus document == Closed
@@ -389,23 +388,7 @@ documentStatusFields document = do
   -- currently it means: is the next turn for author to sign?
   F.value "awaitingauthor" $ canAuthorSignNow document
   F.value "datamismatch" $ (documentstatus document == Canceled
-      && case documentcancelationreason document of
-           Just (ELegDataMismatch _ _ _ _ _) -> True
-           _ -> False)
-
-getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
-getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
-getDataMismatchMessage _ = Nothing
-
--- This is temporary method used to see list of broken documents
-documentsToFixView :: TemplatesMonad m => [Document] -> m String
-documentsToFixView docs = do
-    renderTemplate "documentsToFixView" $ do
-        F.objects "documents" $ for docs $ \doc -> do
-            F.value "title" $ documenttitle doc
-            F.value "id" $ show $ documentid doc
-            F.value "involved" $ map getEmail  $ documentsignatorylinks doc
-            F.value "cdate" $  show $ documentctime doc
+      && (any (isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
 
 -- Page for GT verification
 gtVerificationPage :: TemplatesMonad m => m String

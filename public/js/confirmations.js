@@ -25,7 +25,9 @@ var ConfirmationModel = Backbone.Model.extend({
       cantCancel : false,
       width: 640,
       acceptVisible : true,
-      extraOption : undefined
+      extraOption : undefined,
+      textfont : undefined,
+      textcolor : undefined
   },
   title : function(){
        return this.get("title");
@@ -73,7 +75,12 @@ var ConfirmationModel = Backbone.Model.extend({
   width: function() {
       return this.get("width");
   },
-
+  textfont: function() {
+      return this.get("textfont");
+  },
+  textcolor: function() {
+      return this.get("textcolor");
+  },
   showAccept : function() {
       this.set({acceptVisible : true});
   },
@@ -88,6 +95,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   extraOption: function() {
             return this.get("extraOption");
+  },
+  close : function() {
+    this.trigger("close");
   }
 });
 
@@ -96,8 +106,9 @@ var ConfirmationView = Backbone.View.extend({
         "click .close"  :  "reject"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'reject', 'renderAcceptButton');
+        _.bindAll(this, 'render', 'reject', 'renderAcceptButton', 'clear');
         this.model.bind('change:acceptVisible', this.renderAcceptButton);
+        this.model.bind('close', this.clear);
         this.model.view = this;
         this.render();
     },
@@ -123,16 +134,28 @@ var ConfirmationView = Backbone.View.extend({
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
        title.append(this.model.title());
+       if (model.textcolor())
+         title.css("color",model.textcolor());
+       if (model.textfont())
+         title.css("font-family",model.textfont());
+
        header.append(title);
        if (model.canCancel())
         header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
+       if (model.textcolor())
+         content.css("color",model.textcolor());
+       if (model.textfont())
+         content.css("font-family",model.textfont());
        content.append($("<div class='body'/>").html(this.model.content()));
        body.append(content);
        var footer = $("<div class='modal-footer'/>");
        if (model.canCancel()) {
         var cancel = $("<label class='cancel clickable close float-left'/>");
+        if (model.textfont())
+          cancel.css("font-family",model.textfont());
+
         cancel.text(this.model.rejectText());
         footer.append(cancel);
        }

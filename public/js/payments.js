@@ -200,7 +200,7 @@
             return this;
         },
         createdUser: function() {
-            return this.get('createdUser');            
+            return this.get('createdUser');
         },
         setCreatedUser: function(b) {
             this.set({createdUser:b});
@@ -255,12 +255,13 @@
         },
         createaccount: function(email, firstname, lastname, callback) {
             var model = this;
-            $.ajax('/payments/createuser',
+            $.ajax('/api/frontend/signup',
                    {type: 'POST',
                     data: {email: email,
                            firstName: firstname,
                            lastName: lastname,
-                           xtoken: readCookie("xtoken")},
+                           lang : Language.current()
+                    },
                     timeout: 1000,
                     dataType: 'json',
                     error: function() {
@@ -287,7 +288,7 @@
             var model = this;
             $.ajax("/payments/newsubscriptionoutside",
                    { type: "POST"
-                     ,data: {accountCode : model.accountCode(), 
+                     ,data: {accountCode : model.accountCode(),
                              email        : model.email()}
                      ,success: callback
                    });
@@ -397,7 +398,7 @@
             form.append(ul);
             form.append($('<input type="hidden" name="plan" />').val(view.plan));
             div2.append(form);
-            
+
             div.append(div2);
         }
     });
@@ -489,7 +490,7 @@
             var div = $('<div class="borderbox" />');
             div.append(form.contents());
             form.append(div);
-            
+
             form.find('.server_errors').prependTo(form);
 
             // set the quantity that we found from the db
@@ -506,7 +507,7 @@
                 form.find('.quantity .label').text("You next invoice will include: ");
                 quantbox.after($('<span class="quantity" />').html("&nbsp;"));
             }
-            quantbox.change();                    
+            quantbox.change();
             quantbox.hide();
 
             var permonth = $('<span />');
@@ -528,12 +529,12 @@
                     if(work) {
                         work = false;
                         model.createaccount(model.email(),
-                                            model.firstName(), 
-                                            model.lastName(), 
+                                            model.firstName(),
+                                            model.lastName(),
                                             function(data) {
                                                 //LoadingDialog.close();
                                                 //loadingicon.hide();
-                                                if(data.success)
+                                                if(data.sent)
                                                     form.submit();
                                                 // what else?
                                             });
@@ -578,7 +579,7 @@
                                       //size:'big',
                                       cssClass:'s-subscribe',
                                       text:localization.payments.subscribe,
-                                      icon: loadingicon, 
+                                      icon: loadingicon,
                                       onClick: function() {
                                           form.find('.coupon .check').click();
                                           view.validator.validate(function success() {
@@ -619,8 +620,8 @@
             cc.val(model.creditCard());
             cc.attr('placeholder', cc.parent().find('.placeholder').text());
             cc.change();
-            cc.change(function(e) { 
-                model.setCreditCard($(e.target).val()); 
+            cc.change(function(e) {
+                model.setCreditCard($(e.target).val());
             });
             var cvv = form.find('.cvv input');
             cvv.val(model.cvv());
@@ -753,7 +754,7 @@
                     loadingicon.hide();
                 }
                 , successHandler: function(stuff) {
-                    
+
                     LoadingDialog.open(localization.payments.savingsubscription);
                     //loadingicon.css({display:'inline'});
                     model.submitSubscription(function() {
@@ -802,12 +803,12 @@
                                                     view.model.setCurrentPlan('team');
                                             }});
             this.formBox = new ContactBoxView({model: args.model,
-                                               plan:'form', 
-                                               onClick: function() { 
+                                               plan:'form',
+                                               onClick: function() {
                                                    mixpanel.track('Click online form plan');
                                                }});
             this.enterpriseBox = new ContactBoxView({model: args.model,
-                                                     plan:'enterprise', 
+                                                     plan:'enterprise',
                                                      onClick: function() {
                                                          mixpanel.track('Click enterprise plan');
                                                      }});
@@ -832,7 +833,7 @@
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
-            
+
             view.$el.html(div.contents());
         }
     });
@@ -877,7 +878,7 @@
         render: function() {
             var view = this;
             var model = view.model;
-            
+
             var payments = $('<div class="col" />');
             var paymentsheader = $('<div class="account-header" />')
                 .append($('<h2 />')
@@ -901,7 +902,7 @@
             var view = this;
             var model = view.model;
 
-            var pOrS = model.subscription().pending() 
+            var pOrS = model.subscription().pending()
                 || model.subscription();
             var billingEnds  = model.subscription().billingEnds();
             var billingEndsf = view.dateString(billingEnds);
@@ -966,7 +967,7 @@
             var view = this;
             var model = view.model;
             var $el = $(view.el);
-            
+
             var billing = $('<div class="col" />');
             var billingheader = $('<div class="account-header" />')
                 .append($('<h2 />')
@@ -1048,7 +1049,7 @@
                                       onClick: function() {
                                           mixpanel.track('Click cancel subscription button');
                                           var message = localization.payments.cancelDialog;
-                                          
+
                                           var conf = Confirmation.popup({
                                               title: localization.payments.cancelsubscription,
                                               acceptText: localization.payments.cancelsubscription,
@@ -1091,7 +1092,7 @@
             var view = this;
             var model = view.model;
             var $el = $(view.el);
-            
+
             var billing = $('<div class="col" />');
             var billingheader = $('<div class="account-header" />')
                 .append($('<h2 />')
@@ -1103,7 +1104,7 @@
             var message;
             if(canceledDate)
                 message = localization.payments.canceledDate.replace('X1', moment(canceledDate).format("YYYY-MM-DD"));
-            else 
+            else
                 message = localization.payments.wasCanceled;
             billingform.text(message);
             //billingform.append(view.renewButton());
@@ -1122,7 +1123,7 @@
                                       onClick: function() {
                                           mixpanel.track('Click renew subscription');
                                           var message = localization.payments.renewDialog.replace("X1", price);
-                                          
+
                                           var conf = Confirmation.popup({
                                               title: localization.payments.renewSubscription,
                                               acceptText: localization.payments.renewSubscription,
@@ -1173,7 +1174,7 @@
 
             var col1 = $('<div class="col1" />')
                 .append(view.paymentsTable.el);
-            
+
             var col2 = $('<div class="col2" />');
 
             if(model.subscription().code() === 'free' || (model.subscription().pending() && model.subscription().pending().code() === 'free'))
@@ -1220,7 +1221,7 @@
         };
     };
 
-    window.PricePage = function(opts) { 
+    window.PricePage = function(opts) {
         var model = new PricePageModel(opts);
         var view  = new PricePageView($.extend({model:model}, opts));
 

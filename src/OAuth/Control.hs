@@ -13,6 +13,8 @@ import KontraLink
 import Happstack.StaticRouting(Route, choice, dir)
 import User.Utils
 import Util.MonadUtils
+import Control.Exception.Lifted
+import DB.SQL2
 import OAuth.View
 import OAuth.Util
 import User.Model
@@ -59,7 +61,7 @@ tempCredRequest = api $ do
 
   etcr <- lift $ getTempCredRequest
   case etcr of
-    Left errors -> throwError $ badInput errors
+    Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tcr -> do
       Log.debug $ "TempCredRequest: " ++ show tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
@@ -115,7 +117,7 @@ tokenCredRequest = api $ do
   time <- ctxtime <$> getContext
   etr <- lift $ getTokenRequest
   case etr of
-    Left errors -> throwError $ badInput errors
+    Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tr -> do
       (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken tr time
       return $ FormEncoded [("oauth_token",        show accesstoken)
@@ -168,7 +170,7 @@ createAPIToken = do
   user <- guardJust muser
   _success <- dbUpdate $ CreateAPIToken (userid user)
   return success
-  
+
 deleteAPIToken :: Kontrakcja m => m JSValue
 deleteAPIToken = do
   muser <- ctxmaybeuser <$> getContext
@@ -178,14 +180,14 @@ deleteAPIToken = do
     Nothing -> return ()
     Just token -> void $ dbUpdate $ DeleteAPIToken (userid user) token
   return success
-      
+
 createPersonalToken :: Kontrakcja m => m JSValue
 createPersonalToken = do
   muser <- ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ CreatePersonalToken (userid user)
   return success
-  
+
 deletePersonalToken :: Kontrakcja m => m JSValue
 deletePersonalToken = do
   muser <- ctxmaybeuser <$> getContext

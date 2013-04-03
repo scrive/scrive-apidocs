@@ -7,17 +7,14 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.SignatoryLinkID
 import File.FileID (FileID)
-import Doc.DocumentID
 import qualified Log
 import KontraError (internalError)
 import MagicHash (MagicHash)
-import MinutesTime
-import Utils.Default
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import qualified Data.Set as S
 import Company.Model
+import Utils.Default
 
 trueOrMessage :: Bool -> String -> Maybe String
 trueOrMessage False s = Just s
@@ -29,7 +26,7 @@ signLinkFromDetails' :: SignatoryDetails
                      -> MagicHash
                      -> SignatoryLink
 signLinkFromDetails' details attachments magichash =
-  SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
+  defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                 , signatorydetails = signatoryLinkClearDetails details
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
@@ -44,6 +41,13 @@ signLinkFromDetails' details attachments magichash =
                 , signatoryattachments = attachments
                 , signatorylinkstatusclass = SCDraft
                 , signatorylinksignredirecturl = Nothing
+                , signatorylinkrejectiontime = Nothing
+                , signatorylinkrejectionreason = Nothing
+                , signatorylinkauthenticationmethod = StandardAuthentication
+                , signatorylinkelegdatamismatchmessage = Nothing
+                , signatorylinkelegdatamismatchfirstname = Nothing
+                , signatorylinkelegdatamismatchlastname = Nothing
+                , signatorylinkelegdatamismatchpersonalnumber = Nothing
                 }
 
 signatoryLinkClearDetails :: SignatoryDetails -> SignatoryDetails
@@ -64,44 +68,10 @@ emptySignatoryFields = [
         , sf EmailFT
         ]
     where sf t = SignatoryField t "" True []
-{- |
-    A blank document containing default values that need to be set before
-    saving.
--}
-blankDocument :: Document
-blankDocument =
-          Document
-          { documentid                   = unsafeDocumentID 0
-          , documenttitle                = ""
-          , documentsignatorylinks       = []
-          , documentfile                 = Nothing
-          , documentstatus               = Preparation
-          , documenttype                 = Signable Contract
-          , documentctime                = fromSeconds 0
-          , documentmtime                = fromSeconds 0
-          , documentdaystosign           = 14
-          , documenttimeouttime          = Nothing
-          , documentinvitetext           = ""
-          , documentsealedfile           = Nothing
-          -- , documenttrustweaverreference = Nothing
-          , documentauthenticationmethod = StandardAuthentication
-          , documentdeliverymethod       = EmailDelivery
-          , documentcancelationreason    = Nothing
-          , documentinvitetime           = Nothing
-          , documentsharing              = Private
-          , documentrejectioninfo        = Nothing
-          , documenttags                 = S.empty
-          , documentui                   = emptyDocumentUI
-          , documentauthorattachments    = []
-          -- , documentattachments          = []
-          , documentlang                 = defaultValue
-          , documentstatusclass          = SCDraft
-          , documentapicallbackurl       = Nothing
-          }
 
-checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] -> [String]
+checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod)] -> [String]
 checkResetSignatoryData doc sigs =
-  let authors = length $ filter (\(d, _, _, _) -> signatoryisauthor d) sigs
+  let authors = length $ filter (\(d, _, _, _, _) -> signatoryisauthor d) sigs
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (authors == 1) $ "Should have exactly one author, had " ++ show authors
@@ -177,7 +147,7 @@ replaceSignatoryUser siglink user mcompany=
   newsl { maybesignatory = Just $ userid user }
 
 -- | Extract main file ID from document, assuming it has been set
-documentFileID :: (MonadIO m, MonadBase IO m) => Document -> m FileID
+documentFileID :: (MonadIO m, MonadBase IO m, Log.MonadLog m) => Document -> m FileID
 documentFileID doc =
     case documentfile doc of
       Nothing -> do
@@ -186,7 +156,7 @@ documentFileID doc =
       Just di -> return di
 
 -- | Extract main sealed file ID from document, assuming it has been set
-documentSealedFileID :: (MonadIO m, MonadBase IO m) => Document -> m FileID
+documentSealedFileID :: (MonadIO m, MonadBase IO m, Log.MonadLog m) => Document -> m FileID
 documentSealedFileID doc =
     case documentsealedfile doc of
       Nothing -> do

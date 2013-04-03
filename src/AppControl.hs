@@ -27,7 +27,7 @@ import Utils.Monoid
 import OurServerPart
 import Session.Data hiding (session)
 import Session.Model
-import Templates.TemplatesLoader
+import Templates
 import User.Model
 import qualified Log (error, debug)
 import qualified FlashMessage as F
@@ -221,7 +221,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         return response
   where
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
-      Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
+      lift $ Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
       internalServerError $ toResponse ""
 
     routeHandlers ctx = runKontraPlus ctx $ do

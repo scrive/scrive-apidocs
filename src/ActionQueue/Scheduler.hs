@@ -16,7 +16,7 @@ import Doc.DocStateData
 import Doc.Model
 import MinutesTime
 import Stats.Control
-import Templates.TemplatesLoader
+import Templates
 import Util.Actor
 import qualified Log
 
@@ -41,10 +41,8 @@ timeoutDocuments = do
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
   forM_ docs $ \doc -> do
     gt <- getGlobalTemplates
-    success <- runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
-    when success $ do
-      _ <- addDocumentTimeoutStatEvents (documentid doc) "scheduler"
-      return ()
+    runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
+    _ <- addDocumentTimeoutStatEvents (documentid doc) "scheduler"
     Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
   when (not (null docs)) $ do
     kCommit

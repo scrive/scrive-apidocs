@@ -11,9 +11,9 @@ mailDocumentAwaitingForAuthor=
     $_mailDocumentAwaitingForAuthorTitle()$
     $nicemail(
         mailheader= _mailDocumentAwaitingForAuthorTitle();
-        mailp1 = mailDocumentAwaitingForAuthorContentMainP();
-        mailp2 = footer;
-        mailp3 = legalparagraph()
+        mailp1 = _mailDocumentAwaitingForAuthorContentSignedBy();
+        mailp2 = nicebutton(link=documentlink; text=_mailReviewOnlineDocument());
+        footer = legalparagraph()
     )$
 #####
 mailClosedSignup=
@@ -25,9 +25,7 @@ $_mailClosedLogin()$
 $endif$
 #####
 mailDocumentAwaitingForAuthorContentMainP =
-   <p>$_hi()$,</p>
-   <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
-   <p>$_mailDocumentAwaitingForAuthorContentInstruction()$</p>
+   $_hi()$ <strong>$authorname$</strong>,
 #####
 ##### CLOSED MAIL
 #####
@@ -36,54 +34,49 @@ mailContractClosed=
     $nicemail(
         mailheader = _mailDocumentClosedTitleContract();
         mailp1 = mailContractClosedMainP();
-        mailp2 = footer
+        mailp2 = regards();
+        footer = footer
     )$
 
 ####
 mailContractClosedMainP =
-      <p>$_hi()$,</p>
-      <p>$_mailContractClosedContentSignedBy()$</p>
-      <p>$_mailContractClosedContentAttached()$ $mailClosedSignup()$</p>
-
+$_hi()$ <strong>$creatorname$</strong>,
+<br/>
+<br/>
+      $_mailContractClosedContentSignedBy()$
+      <br/>
+      <br/>
+      $_mailContractClosedContentAttached()$ $mailClosedSignup()$
 ####
 mailOfferClosed=
     $_mailDocumentClosedTitleOffer()$
     $nicemail(
         mailheader = _mailDocumentClosedTitleOffer();
-        mailp1 = mailOfferClosedMainP();
-        mailp2 = footer
+        mailp1 = mailContractClosedMainP();
+        mailp2 = regards();
+        footer = footer
     )$
-    $footer:noescape()$
 ####
 mailOfferClosedMainP =
-    <p>$_hi()$,</p>
-      <p>
-       $if(!service)$
-        $_mailOfferClosedContentOfferAccepted()$
-       $else$
-        $_mailOfferClosedContentOfferAcceptedWithService()$
-       $endif$
-       </p>
-      <p>$_mailOfferClosedContentAttached()$ $mailClosedSignup()$</p>
+      $_mailOfferClosedContentOfferAccepted()$
+    <br/>
+    <br/>
+    $_mailOfferClosedContentAttached()$ $mailClosedSignup()$
 ####
 mailOrderClosed=
     $_mailDocumentClosedTitleOrder()$
     $nicemail(
         mailheader = _mailDocumentClosedTitleOrder();
-        mailp1 = mailOrderClosedMainP();
-        mailp2 = footer
+        mailp1 = mailContractClosedMainP();
+        mailp2 = regards();
+        footer = footer
     )$
 ####
 mailOrderClosedMainP=
-      <p>$_hi()$,</p>
-      <p>
-       $if(!service)$
         $_mailOrderClosedContentViewed()$
-       $else$
-        $_mailOrderClosedContentViewedWithService()$
-       $endif$
-      </p>
-      <p>$_mailOrderClosedContentAttached()$ $mailClosedSignup()$</p>
+      <br/>
+      <br/>
+      $_mailOrderClosedContentAttached()$ $mailClosedSignup()$
 ####
 #### REJECTED MAIL
 ####
@@ -91,37 +84,42 @@ mailRejectContractMail=
       $_mailRejectMailTitleContract()$
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
-        mailp1 = mailRejectMailContentHeader();
-        mailp2 = _mailRejectContractMailContentContractRejected();
-        mailp3 = footer
+        mailp1 = _mailRejectMailContentRejected();
+        mailspacing1 = "";
+        mailp2 = mailRejectMailContentHeader();
+        footer = null
       )$
 ####
 mailRejectOfferMail=
       $_mailRejectMailTitleOffer()$
       $nicemail(
         mailheader = _mailRejectMailTitleOffer();
-        mailp1 = mailRejectMailContentHeader();
-        mailp2 = _mailRejectOfferMailContentOfferRejected();
-        mailp3 = footer
+        mailp1 = _mailRejectMailContentRejected();
+        mailspacing1 = "";
+        mailp2 = mailRejectMailContentHeader();
+        footer = null
       )$
 ###
 mailRejectOrderMail=
       $_mailRejectMailTitleOrder()$
-    $nicemail(
+      $nicemail(
         mailheader = _mailRejectMailTitleOrder();
-        mailp1 = mailRejectMailContentHeader();
-        mailp2 = _mailRejectOrderMailContentHasRejected();
-        mailp3 = footer
+        mailp1 = _mailRejectMailContentRejected();
+        mailspacing1 = "";
+        mailp2 = mailRejectMailContentHeader();
+        footer = null
       )$
+
 ###
 mailRejectMailContentHeader=
-      $if(customMessage)$
-       $customMessage:noescape()$
-      $else$
-      <div class="editable" name="customtext">
-      <p>$_hi()$,</p>
-      </div>
-      $endif$
+$if(customMessage)$
+  $_mailInvitationCustomInvitationHeader()$:
+  <br/>
+  <i>$customMessage:noescape()$</i>
+  <br/>
+$else$
+  <div class="editable" name="custommessage"></div>
+$endif$
 ####
 #### INVITATION MAILS
 ####
@@ -157,9 +155,11 @@ mailInvitationToSignContract=
     $mailInvitationTitleContract()$
      $nicemail(
         mailheader= mailInvitationTitleContract();
-        mailp1 = mailInvitationToSignContractP1();
-        mailp2 = footer;
-        mailp3 = legalparagraph()
+        mailp1 = header;
+        mailspacing1 = "<br/>";
+        mailp2 = mailInvitationToSignContractIntructions();
+        mailp3 = footer;
+        footer = legalparagraph()
     )$
 ###
 mailInvitationToSignContractP1=
@@ -178,24 +178,17 @@ mailInvitationToSignContractP1=
     )$
 ###
 mailInvitationToSignContractIntructions=
-    $if(sign)$
-    <p>$_mailInvitationToSignContractContentIfSignatoryInstruction()$</p>
-    $else$
-    $_mailInvitationToSignContractContentIfNotSignatoryInstruction()$
-    <br/>
-    <a href="$link$">$link$</a> <br/>
-    <br/>
-    $endif$
-    <BR/>
-
+    $nicebutton(link=link; text=_mailReviewOnlineDocument())$
 ####
 mailInvitationToSignOffer=
      $mailInvitationTitleOffer()$
      $nicemail(
         mailheader= mailInvitationTitleOffer();
-        mailp1 = mailInvitationToSignOfferP1();
-        mailp2 = footer;
-        mailp3 = legalparagraph()
+        mailp1 = header;
+        mailspacing1 = "<br/>";
+        mailp2 = mailInvitationToSignOfferIntructions();
+        mailp3 = footer;
+        footer = legalparagraph()
     )$
 ###
 mailInvitationToSignOfferP1=
@@ -214,23 +207,17 @@ mailInvitationToSignOfferP1=
     )$
 ###
 mailInvitationToSignOfferIntructions=
-    $if(sign)$
-    <p>$_mailInvitationToSignOfferContentIfSignatoryInstruction()$</p>
-    $else$
-    $_mailInvitationToSignOfferContentIfNotSignatoryInstruction()$
-    <br/>
-    <a href="$link$">$link$</a> <br/>
-    <br/>
-    $endif$
-
+    $nicebutton(link=link; text=_mailReviewOnlineDocument())$
 ###
 mailInvitationToSignOrder=
     $mailInvitationTitleOrder()$
     $nicemail(
         mailheader= mailInvitationTitleOrder();
-        mailp1 = mailInvitationToSignOrderP1();
-        mailp2 = footer;
-        mailp3 = legalparagraph()
+        mailp1 = header;
+        mailspacing1 = "<br/>";
+        mailp2 = mailInvitationToSignOrderIntructions();
+        mailp3 = footer;
+        footer = legalparagraph()
     )$
 ####
 mailInvitationToSignOrderP1=
@@ -249,189 +236,141 @@ mailInvitationToSignOrderP1=
     )$
 ###
 mailInvitationToSignOrderIntructions=
-    $if(sign)$
-    <p>$_mailInvitationToSignOrderContentIfSignatoryInstruction()$</p>
-    $else$
-    $_mailInvitationToSignOrderContentIfNotSignatoryInstruction()$
-    <br/>
-    <a href="$link$">$link$</a> <br/>
-    <br/>
-    $endif$
+    $nicebutton(link=link; text=_mailReviewOnlineDocument())$
 ####
 mailInvitationToSignContractDefaultHeader=
-    <p>$_hi()$$if(personname)$ $personname$$endif$,
-      <br/><br/>
-      $if(!service)$
-        $_mailInvitationToSignContractDefaultHeader()$
-      $else$
-        $_mailInvitationToSignContractDefaultHeaderWithService()$
-      $endif$
-   </p>
+$_mailInvitationToSignContractDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ####
 mailInvitationToSignOfferDefaultHeader=
-    <p>$_hi()$$if(personname)$ $personname$$endif$,
-      <br/><br/>
-      $_mailInvitationToSignOfferDefaultHeader()$
-    </p>
+$_mailInvitationToSignOfferDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ####
 mailInvitationToSignOrderDefaultHeader=
-    <p>$_hi()$$if(personname)$ $personname$$endif$,
-      <br/><br/>
-      $_mailInvitationToSignOrderDefaultHeader()$
-    </p>
+$_mailInvitationToSignOrderDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ####
 mailInvitationToViewDefaultHeader=
-    <p>$_hi()$ $personname$,
-      <br/><br/>
-      $if(!service)$
-       $_mailInvitationToViewDefaultHeader()$
-      $else$
-       $_mailInvitationToViewDefaultHeaderWithService()$
-      $endif$
-     </p>
+$_hi()$ <strong>$personname$</strong>,
+<br/>
+<br/>
+$_mailInvitationToViewDefaultHeader()$
+<br/>
+<div class="editable" name="customtext">
+</div>
 ###
+mailInvitationCustomInvitationHeader=
+$defaultheader:noescape()$
+<br/>
+$_mailInvitationCustomInvitationHeader()$:
+<br/>
+<i>$custommessage:noescape()$</i>
 ###
 ### Reminding mails - SIGNED
 ###
 ###
 remindMailSigned=
-    $documenttitle$
+    $_remindMailSignedTitle()$
     $nicemail(
-        mailheader= documenttitle;
-        mailp1 = header;
-        mailp2 = footer
+        mailheader= _remindMailSignedTitle();
+        mailp1 = remindMailSignedP()
     )$
 ###
-remindMailSignedContractStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>
-       $if(!service)$
-        $_remindMailSignedContractStandardHeaderSendRequest()$
-       $else$
-        $_remindMailSignedContractStandardHeaderSendRequestWithService()$
-       $endif$
-      </p>
-    </span>
+remindMailSignedP=
+$header:noescape()$
+####
+remindMailSignedStandardHeader=
+$_hi()$ <strong>$personname$</strong>,
+<br/>
+<br/>
+  $_remindMailSignedContractStandardHeaderSendRequest()$
+  <br/>
+  <br/>
+  $_remindMailSignedContractStandardHeaderSendRequest2()$
 ####
 remindMailSignedOfferStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>
-       $if(!service)$
-        $_remindMailSignedOfferStandardHeaderSendRequest()$
-       $else$
-        $_remindMailSignedOfferStandardHeaderSendRequestWithService()$
-       $endif$
-     </p>
-    </span>
+$_hi()$ <strong>$personname$</strong>,
+<br/>
+<br/>
+  $_remindMailSignedOfferStandardHeaderSendRequest()$
+<br/>
+<br/>
+$regards()$
 ####
 remindMailSignedOrderStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>
-        $if(!service)$
-         $_remindMailSignedOrderStandardHeaderSendRequest()$
-        $else$
-         $_remindMailSignedOrderStandardHeaderSendRequestWithService()$
-       $endif$
-      </p>
-    </span>
+$_hi()$ <strong>$personname$</strong>,
+<br/>
+<br/>
+  $_remindMailSignedOrderStandardHeaderSendRequest()$
+<br/>
+<br/>
+$regards()$
 ###
 ###
 ### Reminding mails - NOT SIGNED
 ###
-###
-remindMailNotSignedContractStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailNotSignedContractStandardHeaderRemind()$</p>
-    </span>
-#####
-remindMailNotSignedOfferStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailNotSignedOfferStandardHeaderRemind()$</p>
-    </span>
-#####
-remindMailNotSignedOrderStandardHeader=
-    <span>
-      <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailNotSignedOrderStandardHeaderRemind()$</p>
-    </span>
-#####
 remindMailNotSignedContract=
     $_remindMailNotSignedTitleContract()$
 
     $nicemail(
         mailheader=_remindMailNotSignedTitleContract();
         mailp1=remindMailNotSignedContractP1();
-        mailp2=footer;
-        mailp3= legalparagraph()
+        footer= legalparagraph()
     )$
 #####
 remindMailNotSignedContractP1=
-    $nicemailbodywithpreview(
-        hidetitle='true';
-
-        r1='true';
-        r1cond='true';
-        r1elems=header;
-        r1noescp='true';
-
-        r2='true';
-        r2cond='true';
-        r2elems=_remindMailNotSignedContractContentInstruction();
-        r2noescp='true'
-    )$
+$if(custommessage)$
+  $_mailInvitationCustomInvitationHeader()$:
+  <br/>
+  <i>$custommessage:noescape()$</i>
+$else$
+      <div class="editable" name="custommessage">$_remindMailNotSignedContractBody()$</div>
+$endif$
+<br/>
+<br/>
+$nicebutton(link=link; text=_mailReviewOnlineDocument())$
 #####
 remindMailNotSignedOffer=
     $_remindMailNotSignedTitleOffer()$
     $nicemail(
         mailheader=_remindMailNotSignedTitleOffer();
         mailp1=remindMailNotSignedOfferP1();
-        mailp2=footer;
-        mailp3= legalparagraph()
+        footer= legalparagraph()
     )$
 ###
 remindMailNotSignedOfferP1=
-    $nicemailbodywithpreview(
-        hidetitle='true';
-
-        r1='true';
-        r1cond='true';
-        r1elems=header;
-        r1noescp='true';
-
-        r2='true';
-        r2cond='true';
-        r2elems=_remindMailNotSignedOfferContentInstruction();
-        r2noescp='true'
-    )$
+$if(custommessage)$
+  $custommessage:noescape()$
+$else$
+      <div class="editable" name="custommessage">$_remindMailNotSignedOfferBody()$</div>
+$endif$
+<br/>
+<br/>
+$nicebutton(link=link; text=_mailReviewOnlineDocument())$
 ###
 remindMailNotSignedOrder=
     $_remindMailNotSignedTitleOrder()$
     $nicemail(
         mailheader=_remindMailNotSignedTitleOrder();
         mailp1=remindMailNotSignedOrderP1();
-        mailp2=footer;
-        mailp3= legalparagraph()
+        footer= legalparagraph()
     )$
 ###
 remindMailNotSignedOrderP1=
-    $nicemailbodywithpreview(
-        hidetitle='true';
-
-        r1='true';
-        r1cond='true';
-        r1elems=header;
-        r1noescp='true';
-
-        r2='true';
-        r2cond='true';
-        r2elems=_remindMailNotSignedOfferContentInstruction();
-        r2noescp='true'
-    )$
+$if(custommessage)$
+  $custommessage:noescape()$
+$else$
+      <div class="editable" name="custommessage">$_remindMailNotSignedOrderBody()$</div>
+$endif$
+<br/>
+<br/>
+$nicebutton(link=link; text=_mailReviewOnlineDocument())$
 ###
 ###
 ###  NEW USER MAIN
@@ -441,35 +380,44 @@ newUserMail=
 $_newUserMailTitle()$
 $nicemail(
         mailheader=_newUserMailTitle();
-        mailp1=newUserMailMainP();
-        mailp2=poweredByScrive()
+        mailp1=_newUserMailHeader();
+        mailp2=newUserMailMainP();
+        mailp3=regards()
     )$
 ####
 newUserMailMainP=
-<p>$_hi()$,</p>
-<p>$_newUserMailContentBodyFirst()$</p>
-<p>$_newUserMailContentBodyUserName()$ $email$</p>
-<p>$_newUserMailContentBodySecond()$ <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
-</p>
+$_newUserMailContentBodyFirst()$
+<br/>
+<br/>
+$nicebutton(link=concat(a1=ctxhostpart;a2=activatelink); text=_mailActivateAccountButton())$
 ####
 #### INVITE TO COMPANY MAIL
 ####
 mailNewCompanyUserInvite=
-    $_mailNewCompanyUserInviteTitle()$
+    $_mailNewAccountCreatedByAdminTitle()$
     $nicemail(
-        mailheader=_mailNewCompanyUserInviteTitle();
+        mailheader=_mailNewAccountCreatedByAdminTitle();
         mailp1=mailNewCompanyUserInviteMainP();
-        mailp2=poweredByScrive()
+        mailp2=regards()
     )$
 ####
 mailNewCompanyUserInviteMainP=
- <p>$_hi()$ <strong>$invitedname$</strong>,</p>
-
-    <p>$_mailNewCompanyUserInviteContentBodyFirst()$</p>
-
-    <p>$_mailNewCompanyUserInviteContentBodyUserName()$ $invitedemail$</p>
-
-    <p>$_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
+ $_hi()$ <strong>$invitedname$</strong>,
+ <br/>
+ <br/>
+ $_mailNewAccountCreatedByAdminContentHeaderBodyFirst()$
+ <br/>
+ <br/>
+ $_mailNewCompanyUserInvitePrivacyInfo()$
+ <br/>
+ <br/>
+ $_mailNewAccountCreatedByAdminContentHeaderBodySecond()$
+ <br/>
+ <br/>
+ $_mailNewCompanyUserInviteContentBodyUserName()$ $invitedemail$
+ <br/>
+ <br/>
+ $_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a>
 
 ###
 ### NEW ACCOUNT BY ADMIN
@@ -477,10 +425,14 @@ mailNewCompanyUserInviteMainP=
 mailNewAccountCreatedByAdminContentHeader=
 $if(custommessage)$
     $custommessage:noescape()$
-    $else$
-    <p>$_hi()$ <strong>$personname$</strong>,</p>
-
-    <p>$_mailNewAccountCreatedByAdminContentHeaderBody()$</p>
+$else$
+    $_hi()$ <strong>$personname$</strong>,
+    <br/>
+    <br/>
+    $_mailNewAccountCreatedByAdminContentHeaderBodyFirst()$
+    <br/>
+    <br/>
+    $_mailNewAccountCreatedByAdminContentHeaderBodySecond()$
 $endif$
 ###
 mailNewAccountCreatedByAdmin=
@@ -489,13 +441,14 @@ mailNewAccountCreatedByAdmin=
         mailheader=_mailNewAccountCreatedByAdminTitle();
         mailp1=mailNewAccountCreatedByAdminContentHeader();
         mailp2=mailNewAccountCreatedByAdminMainP();
-        mailp3=poweredByScrive()
+        mailp3=regards()
     )$
 ####
 mailNewAccountCreatedByAdminMainP=
-    <p>$_mailNewAccountCreatedByAdminContentUserName()$ $email$</p>
-
-    <p>$_mailNewAccountCreatedByAdminContentBody()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    $_mailNewAccountCreatedByAdminContentUserName()$ $email$
+    <br/>
+    <br/>
+    $_mailNewAccountCreatedByAdminContentBody()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
 ####
 ####
 invitationMailDeferred=
@@ -503,14 +456,17 @@ invitationMailDeferred=
     $nicemail(
         mailheader=_invitationMailDeferredTitle();
         mailp1=invitationMailDeferredMainP();
-        mailp2=poweredByScrive()
+        mailp2=regards()
     )$
 ###
 invitationMailDeferredMainP=
-      <p>$_hi()$ $authorname$,</p>
-      <p>$_invitationMailDeferredContentBodyFirst()$</p>
-      <p>$_invitationMailDeferredContentBodySecond()$ <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a></p>
-
+      $_hi()$ <strong>$authorname$</strong>,
+      <br/>
+      <br/>
+      $_invitationMailDeferredContentBodyFirst()$
+      <br/>
+      <br/>
+      $_invitationMailDeferredContentBodySecond()$ <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a>
 ###
 ###
 invitationMailDeliveredAfterDeferred=
@@ -518,12 +474,12 @@ invitationMailDeliveredAfterDeferred=
     $nicemail(
         mailheader=_invitationMailDeliveredAfterDeferredTitle();
         mailp1=invitationMailDeliveredAfterDeferredMainP();
-        mailp2=poweredByScrive()
+        mailp2=_invitationMailDeliveredAfterDeferredContentBody();
+        mailp3=regards()
     )$
 ###
 invitationMailDeliveredAfterDeferredMainP =
-      <p>$_hi()$ $authorname$,</p>
-      <p>$_invitationMailDeliveredAfterDeferredContentBody()$</p>
+      $_hi()$ <strong>$authorname$</strong>,
 ###
 ### UNDELIVERED MAIL
 ###
@@ -532,14 +488,21 @@ invitationMailUndelivered=
     $nicemail(
         mailheader=_invitationMailUndeliveredTitle();
         mailp1=invitationMailUndeliveredMainP();
-        mailp2=poweredByScrive()
+        mailp2=regards()
     )$
 ####
 ####
 invitationMailUndeliveredMainP =
-       <p>$_hi()$ $authorname$,</p>
-       <p>$_invitationMailUndeliveredContentBody()$</p>
-       <p>$_invitationMailUndeliveredContentInstruction()$</p>
+       $_hi()$ <strong>$authorname$</strong>,
+       <br/>
+       <br/>
+       $_invitationMailUndeliveredContentBody()$
+       <br/>
+       <br/>
+       $_invitationMailUndeliveredContentBodyFirst()$
+       <div style="margin-left: 50px;">
+         $_invitationMailUndeliveredContentInstruction()$
+       </div>
 ####
 #### DOCUMENT ERROR
 ####
@@ -548,15 +511,15 @@ mailDocumentError=
     $nicemail(
         mailheader=_mailDocumentErrorTitle();
         mailp1=mailDocumentErrorMainP();
-        mailp2=poweredByScrive()
+        mailp2=_mailDocumentErrorContentBodyFirst();
+        mailp3=_mailDocumentErrorContentBodySecond();
+        mailp4=_mailDocumentErrorContentBodyThird();
+        mailspacing4='';
+        mailp5=regards()
     )$
 ###
 mailDocumentErrorMainP =
-    <p>$_hi()$,</p>
-    <p>$_mailDocumentErrorContentBodyFirst()$</p>
-    <p>$_mailDocumentErrorContentBodySecond()$</p>
-    <p>$_mailDocumentErrorContentBodyThird()$</p>
-    <p>$_mailDocumentErrorContentBodyFourth()$</p>
+    $_hi()$ <strong>$creatorname$</strong>,
 ####
 #### CHANGE PASSWORD MAIL
 ####
@@ -565,13 +528,17 @@ passwordChangeLinkMail=
     $nicemail(
         mailheader=_passwordChangeLinkMailTitle();
         mailp1=passwordChangeLinkMailMainP();
-        mailp2=poweredByScrive()
+        mailp2=regards()
     )$
 ###
 passwordChangeLinkMailMainP=
-    <p>$_hi()$ $personname$,</p>
-    <p>$_passwordChangeLinkMailContentBody()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
-
+$_hi()$ <strong>$personname$</strong>,
+<br/>
+<br/>
+$_passwordChangeLinkMailContentBody()$
+<br/>
+<br/>
+$_passwordChangeLinkMailContentBody2()$
 ###
 ### MISMATCH MAILS
 ###
@@ -580,38 +547,40 @@ $_mailMismatchSignatoryTitle()$
     $nicemail(
         mailheader=_mailMismatchSignatoryTitle();
         mailp1=mailMismatchSignatoryMainP();
-        mailp2=poweredByScrive()
+        mailp2=regards()
     )$
 #####
 mailMismatchSignatoryMainP=
-<p>$_hi()$ $signame$,</p>
-
-<p>$_mailMismatchSignatoryContentBodyFirst()$</p>
-
-<p>$_mailMismatchSignatoryContentBodySecond()$</p>
-
-$if(messages)$
-<p>$_mailMismatchSignatoryContentBodyIfMessages()$</p>
-$messages:noescape()$
-$endif$
-
-<p>$_mailMismatchSignatoryContentBestRegards()$</p>
+$_hi()$ <strong>$signame$</strong>,
+<br/>
+<br/>
+$_mailMismatchSignatoryContentBodyFirst()$
+<br/>
+<br/>
+$_mailMismatchSignatoryContentBodySecond()$
+<br/>
+<br/>
+$_mailMismatchSignatoryContentBodyThird()$
 ####
 mailMismatchAuthor=
 $_mailMismatchAuthorTitle()$
 $nicemail(
         mailheader=_mailMismatchAuthorTitle();
         mailp1=mailMismatchAuthorMainP();
-        mailp2=poweredByScrive()
+        mailp2=regards()
     )$
 ####
 mailMismatchAuthorMainP =
-<p>$_hi()$ $authorname$,</p>
-<p>$_mailMismatchAuthorContentBodyFirst()$</p>
-<p>$_mailMismatchAuthorContentBodySecond()$</p>
-<p>$_mailMismatchAuthorContentErrorReport()$</p>
-$messages:noescape()$
-<p>$_mailMismatchAuthorContentBestRegards()$</p>
+$_hi()$ <strong>$authorname$</strong>,
+<br/>
+<br/>
+$_mailMismatchAuthorContentBodyFirst()$
+<br/>
+<br/>
+$_mailMismatchAuthorContentBodySecond()$
+<br/>
+<br/>
+$_mailMismatchAuthorContentBodyThird()$
 ####
 ####
 mailTakeoverPrivateUserInvite=
@@ -619,32 +588,43 @@ mailTakeoverPrivateUserInvite=
   $nicemail(
       mailheader=_mailTakeoverPrivateUserInviteTitle();
       mailp1=mailTakeoverPrivateUserInviteP();
-      mailp2=poweredByScrive()
+      mailp2=regards()
     )$
 ####
 mailTakeoverPrivateUserInviteP=
-  <p>$_hi()$ $invitedname$,</p>
-  <p>$_mailTakeoverPrivateUserInviteContentBodyFirst()$</p>
-
-  <p>$_mailTakeoverPrivateUserInviteContentBodySecond()$</p>
-
-  <p>$_mailTakeoverPrivateUserInviteContentInstructionFirst()$</p>
-  <ul>$_mailTakeoverPrivateUserInviteContentInstructionSecond()$</ul>
-
-  <p>$_mailTakeoverPrivateUserInviteContentLink()$: <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
+  $_hi()$ <strong>$invitedname$</strong>,
+  <br/>
+  <br/>
+  $_mailTakeoverPrivateUserInviteContentBodyFirst()$
+  <br/>
+  <br/>
+  $_mailTakeoverPrivateUserInviteContentBodySecond()$
+  <br/>
+  <br/>
+  $_mailTakeoverPrivateUserInviteContentInstructionFirst()$
+  <ul>
+    $_mailTakeoverPrivateUserInviteContentInstructionSecond()$
+  </ul>
+  $_mailTakeoverPrivateUserInviteContentLink()$ $_mailTakeoverPrivateUserInviteContentInstructionThird()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a>
 ####
 mailRequestChangeEmail=
   $_mailRequestChangeEmailTitle()$
   $nicemail(
     mailheader=_mailRequestChangeEmailTitle();
     mailp1=mailRequestChangeEmailP();
-    mailp2=poweredByScrive()
+    mailp2=regards()
   )$
 ####
 mailRequestChangeEmailP=
-  <p>$_hi()$ $fullname$,</p>
-  <p>$_mailRequestChangeEmailExplanation()$</p>
-  <p><a href="$hostpart$$link$">$hostpart$$link$</a></p>
+  $_hi()$ <strong>$fullname$</strong>,
+  <br/>
+  <br/>
+  $_mailRequestChangeEmailExplanation()$
+  <br/>
+  <br/>
+  <a href="$ctxhostpart$$link$">
+    $ctxhostpart$$link$
+  </a>
 ####
 #### Mail API EMAILS
 ####
@@ -652,53 +632,48 @@ mailMailAPIConfirmContract=
    $_mailMailAPIConfirmTitle()$
    $nicemail(
         mailheader=_mailMailAPIConfirmTitle();
-        mailp1=mailMailAPIConfirmContractMainP();
-        mailp2=footer
+        mailp1=_mailMailAPIConfirm()
     )$
 ####
-mailMailAPIConfirmContractMainP=
 $_mailMailAPIConfirmContractHeader()$
-    <p>
+     <br/>
+     <br/>
      <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
      $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
      $_mailInvitationToSignContractContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
-    </p>
 ####
 mailMailAPIConfirmOrder=
    $_mailMailAPIConfirmTitle()$
    $nicemail(
         mailheader=_mailMailAPIConfirmTitle();
-        mailp1=mailMailAPIConfirmOrderMainP();
-        mailp2=footer
+        mailp1=_mailMailAPIConfirm()
     )$
 ####
 mailMailAPIConfirmOrderMainP=
 $_mailMailAPIConfirmOrderHeader()$
-   <p>
+     <br/>
+     <br/>
      <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
      $_mailInvitationToSignOrderContentPartys()$ $partnersinfo:noescape()$<br/>
      $_mailInvitationToSignOrderContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
-    </p>
 ####
 mailMailAPIConfirmOffer=
    $_mailMailAPIConfirmTitle()$
-   $_mailMailAPIConfirmTitle()$
    $nicemail(
         mailheader=_mailMailAPIConfirmTitle();
-        mailp1=mailMailAPIConfirmOfferMainP();
-        mailp2=footer
+        mailp1=_mailMailAPIConfirm()
     )$
 ####
 mailMailAPIConfirmOfferMainP=
     $_mailMailAPIConfirmOfferHeader()$
-    <p>
+    <br/>
+    <br/>
      <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>
      $_mailInvitationToSignOfferContentPartys()$ $partnersinfo:noescape()$<br/>
      $_mailInvitationToSignOfferContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
-    </p>
 ####
 ####
 ####   UTILS
@@ -708,8 +683,7 @@ timetosigninfo=
     <span>$_timetosigninfo()$ <strong>$time$</strong>.</span><br/>
 ###
 legalparagraph=
-<p style="width:90%;font-size:8pt;font-style:italic;">$_legalparagraphBody()$ </p>
-<BR/>
+$_legalparagraphBody()$
 ####
 ####
 ####
@@ -872,31 +846,31 @@ mailMailAPIError=
     Scrive by Mail Error
     $nicemail(
         mailheader= "Scrive by Mail Error";
-        mailp1 = "<p>Greetings from Scrive by Mail,</p>";
-        mailp2 = "<p>I was unable to process the mail you just sent me and I have not forwarded the document to anyone.</p>";
+        mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
+        mailp2 = "We were unable to process the mail you sent us and therefore have not forwarded the document to anyone.";
         mailp3 = errormsg;
-        mailp4 = "<p>Thanks for using Scrive by Mail</p>"
+        mailp4 = "Thanks for using Scrive by Mail"
     )$
 #####
 mailMailAPIDelayAdmin=
     Scrive by Mail User Confirmation
     $nicemail(
         mailheader= "Scrive by Mail User Confirmation";
-        mailp1 = "<p>Greetings from Scrive by Mail,</p>";
-        mailp2 = concat(a1="<p>I have just received an email from ";a2=email;a3=", which is an account on your domain.</p>");
-        mailp3 = "<p>If this is an email address in your company, please click on the confirmation link below, then I will create the new account. Please act soon. The link expires in three days for security reasons.</p>";
-        mailp4 = para(a=linkk(href=confirmationlink;text="Click here to confirm this account."));
-        mailp5 = "<p>If you received this email in error or the email address is not correct, please ignore this email.</p><p>Thanks for using Scrive by Mail.</p>"
+        mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
+        mailp2 = concat(a1="We have just received an email from ";a2=email;a3=" which is an account on your domain, requesting to be added to your Scrive account.");
+        mailp3 = "If this is a valid email address within your company or organization, please click on the confirmation link below and we will create the new account. This link expires in three days for security reasons.";
+        mailp4 = linkk(href=confirmationlink;text="Click here to confirm this account.");
+        mailp5 = "If you received this email in error or if the email address is incorrect, please ignore this email.<br/><br/>Thanks for using Scrive by Mail."
     )$
 #####
 mailMailAPIDelayUser=
     Scrive by Mail
     $nicemail(
-        mailheader= "ScriveBy Mail";
-        mailp1 = "<p>Greetings from Scrive by Mail,</p>";
-        mailp2 = "<p>I was unable to immediately process the mail you just sent me and I have not forwarded the document to anyone.</p>";
-        mailp3 = "<p>There is no account for this email address. I have contacted the Company Account administrators to ask them to confirm the creation of a new account. When your account is created, I will continue processing the document. If you have not received an invitation within three days, please contact the administrator of the Company Account.</p>";
-        mailp4 = "<p>Thanks for using Scrive by Mail</p>"
+        mailheader= "Scrive By Mail";
+        mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
+        mailp2 = "We were unable to immediately process the mail you sent us and therefore have not forwarded the document to anyone.";
+        mailp3 = "At this point in time, there is no account associated with this email address. We have contacted the Company Account administrators and asked them to confirm the creation of your new account. Upon creation of your account, we will continue processing the document. If you have not received an invitation within three days, please contact the administrator of the Company Account.";
+        mailp4 = "Thanks for using Scrive by Mail"
     )$
 #####
 para=<p>$a$</p>
@@ -904,3 +878,7 @@ para=<p>$a$</p>
 linkk=<a href="$href$">$text$</a>
 ####
 concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$
+####
+regards=
+$_regards()$,<br/>
+Scrive

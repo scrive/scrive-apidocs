@@ -231,7 +231,7 @@ diffUserInfos old new = fstNameDiff
       then [("email", unEmail $ useremail old, unEmail $ useremail new)]
       else []
 
-addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> DBEnv m Bool
+addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> m Bool
 addUserHistory user event ip time mpuser =
   kRun01 $ sqlInsert "users_history" $ do
       sqlSet "user_id" user
@@ -254,7 +254,7 @@ selectUserHistorySQL = SQL ("SELECT"
  <> "  FROM users_history"
  <> " ") []
 
-fetchUserHistory :: MonadDB m => DBEnv m [UserHistory]
+fetchUserHistory :: MonadDB m => m [UserHistory]
 fetchUserHistory = kFold decoder []
   where
     decoder acc userid eventtype meventdata ip time sysver mpuser = UserHistory {

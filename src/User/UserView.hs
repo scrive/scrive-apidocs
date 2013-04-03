@@ -18,11 +18,7 @@ module User.UserView (
     -- flash messages
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
-    flashMessageCompanyCreated,
-    flashMessageNoAccountType,
-    flashMessageInvalidAccountType,
     flashMessageMustAcceptTOS,
-    flashMessageBadOldPassword,
     flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
@@ -32,7 +28,6 @@ module User.UserView (
     flashMessageUserAlreadyActivated,
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
-    flashMessageChangeEmailMailSent,
     flashMessageMismatchedEmails,
     flashMessageProblemWithEmailChange,
     flashMessageProblemWithPassword,
@@ -53,9 +48,8 @@ import Data.Maybe
 import Company.Model
 import Kontra
 import KontraLink
-import Mails.SendMail(Mail)
-import Templates.Templates
-import Templates.TemplatesUtils
+import Mails.SendMail(Mail, kontramail, kontramaillocal)
+import Text.StringTemplates.Templates
 import Text.StringTemplate.GenericStandard()
 import FlashMessage
 import Util.HasSomeCompanyInfo
@@ -67,9 +61,11 @@ import Text.JSON.Gen
 import Data.Either
 import ScriveByMail.Model
 import ScriveByMail.View
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Control.Logic
-
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Base64 as B64
+import DB
 showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
 showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
@@ -84,11 +80,11 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
     value "personalnumber" $ getPersonalNumber user
     value "phone" $ userphone $ userinfo user
     value "mobile" $ usermobile $ userinfo user
+    value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "usercompanyname" $ getCompanyName user
-    value "usercompanynumber" $ getCompanyNumber user
+    value "usercompanyname" $ getCompanyName (user,mcompany)
+    value "usercompanynumber" $ getCompanyNumber (user,mcompany)
     value "lang"   $ "en" <| LANG_EN == (getLang user) |> "sv"
-    value "footer" $ customfooter $ usersettings user
     valueM "mailapi" $ case (mumailapi) of
                             Nothing -> return JSNull
                             Just umailapi -> mailAPIInfoJSON umailapi
@@ -98,9 +94,19 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
 
 companyUIJson :: Monad m => Company -> Bool -> m JSValue
 companyUIJson company editable = runJSONGenT $ do
-    value "logo" $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company
-    value "barsbackground" $ fromMaybe "" $ companybarsbackground $ companyui $ company
-    value "barstextcolour" $ fromMaybe "" $ companybarstextcolour $ companyui $ company
+    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui $ company)
+    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui $ company)
+    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui $ company
+    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui $ company
+    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui $ company
+    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui $ company
+    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui $ company
+    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui $ company
+    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui $ company
+    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui $ company
+    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui $ company
+    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui $ company
+    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui $ company
     value "editable" editable
 
 companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> Bool -> m JSValue
@@ -198,6 +204,7 @@ resetPasswordMail :: TemplatesMonad m => String -> User -> KontraLink -> m Mail
 resetPasswordMail hostname user setpasslink = do
   kontramail "passwordChangeLinkMail" $ do
     F.value "personname"   $ getFullName user
+    F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ hostname
 
@@ -224,7 +231,7 @@ mailEmailChangeRequest hostpart user newemail link = do
   kontramail "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
-    F.value "hostpart" $ hostpart
+    F.value "ctxhostpart" $ hostpart
     F.value "link" $ show link
 
 -------------------------------------------------------------------------------
@@ -249,28 +256,9 @@ flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserDetailsSaved"
 
-flashMessageCompanyCreated :: TemplatesMonad m => m FlashMessage
-flashMessageCompanyCreated =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageCompanyCreated"
-
-
-flashMessageNoAccountType :: TemplatesMonad m => m FlashMessage
-flashMessageNoAccountType =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoAccountType"
-
-flashMessageInvalidAccountType :: TemplatesMonad m => m FlashMessage
-flashMessageInvalidAccountType =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidAccountType"
-
 flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
 flashMessageMustAcceptTOS =
   toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageMustAcceptTOS"
-
-
-flashMessageBadOldPassword :: TemplatesMonad m => m FlashMessage
-flashMessageBadOldPassword =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageBadOldPassword"
-
 
 flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordsDontMatch =
@@ -313,11 +301,6 @@ flashMessageNewActivationLinkSend =
 flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserSignupDone"
-
-flashMessageChangeEmailMailSent :: TemplatesMonad m => Email -> m FlashMessage
-flashMessageChangeEmailMailSent newemail =
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageChangeEmailMailSent" $
-                                  F.value "newemail" $ unEmail newemail)
 
 flashMessageMismatchedEmails :: TemplatesMonad m => m FlashMessage
 flashMessageMismatchedEmails =

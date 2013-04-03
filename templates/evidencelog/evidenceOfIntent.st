@@ -167,18 +167,15 @@ evidenceOfIntent=
 <body class="en legal article ct full">
 <h1>Evidence of Intent </h1>
 
-<p>The following screen shots show the signing environments of
-   the respective signing parties. Each time stamp reflects
-   the clock of the client, and may be different from the
-   server clock. </p>
-<p> At any point in time, the signing service maintains a
-    screen shot of a <em>reference sign view</em> showing a
-   standard document at the moment it is being signed.  The
-    reference sign view shot illustrates what the signing
-    environment is supposed to look like for clients at the
-    moment of signing, which is helpful for cases when
-    clients' signing environments were unable to provide
-    accurate screen shots.</p>
+<p>
+  When a person signs a document using the Scrive e-signing system a screen capture is executed on the person´s screen and saved by the Scrive e-signing system. The purpose of making the screen capture is to collect evidence of the signing environment at the time of signing the document. When sealing the signed document the Scrive e-signing system includes the screen captures from all signing parties into this document.
+</p>
+<p>
+  The screen capture technology used does not function with some older browsers. Therefore, in case the screen capture technology would fail with executing the screen capture, a screen shot with a reference signing view is prepared in the Scrive e-signing system at each production upgrade. Upon sealing the document, the Scrive e-signing system includes the latest reference signing view in this Evidence of Intent (one per party that signed). The reference signing view is included as a reference even if the screen capture succeeded.
+</p>
+<p>
+  Important to note is also that, in the event log below each time stamp reflects the clock of the client, and may be different from the server clock.
+</p>
 
 <table>
     <tr>
@@ -192,7 +189,8 @@ evidenceOfIntent=
                   <td>$entry.first.time$</td>
                   <td>$entry.ip$</td>
                   <td class="column3">
-                    <a href="$entry.first.image$">$entry.signatory$ opened the sign view</a>.
+                    $entry.signatory$ opened the document in the signing view.
+                    <a href="$entry.first.image$">Click here</a> to see an attached screen capture of the top of their signing view.
                   </td>
                 </tr>
                 $endif$
@@ -200,10 +198,14 @@ evidenceOfIntent=
                   <td>$entry.signing.time$</td>
                   <td>$entry.ip$</td>
                   <td class="column3">
-                    $if(entry.signing.image)$<a href="$entry.signing.image$">$entry.signatory$ signed the document</a>.
-                    $else$                                                   $entry.signatory$ signed the document.
+                    $entry.signatory$ signed the document.
+                    $if(entry.signing.image)$
+                      <a href="$entry.signing.image$">
+                        Click here
+                      </a>
+                      to see attached screen capture of their signing view.
                     $endif$
-                    Corresponding <a href="$entry.reference.image$">reference sign view</a>, created $entry.reference.time$.
+                    <a href="$entry.reference.image$">Click here</a> to see attached screen capture of the reference signing view created at $entry.reference.time$.
                   </td>
                 </tr>
               }$

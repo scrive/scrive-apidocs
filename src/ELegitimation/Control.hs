@@ -20,7 +20,6 @@ import qualified Log
 import Control.Logic
 import Control.Monad.State
 import Doc.DocStateData
-import Doc.DocUtils
 import Doc.Tokens.Model
 import ELegitimation.ELegTransaction.Model
 import Happstack.Server
@@ -39,8 +38,8 @@ import Text.JSON
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
 import Text.JSON.Gen as J
-import Templates.Templates
-import qualified Templates.Fields as F
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 import Data.List
 import Data.Maybe
 
@@ -70,9 +69,6 @@ generateBankIDTransaction docid signid = do
 
   -- sanity check
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
-
-  unless (document `allowsAuthMethod` ELegAuthentication) internalError
-    -- request a nonce
 
   nonceresponse <- liftIO $ generateChallenge ctxlogicaconf provider
   case nonceresponse of
@@ -267,7 +263,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
     unless (transactiondocumentid == docid) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
-    unless (doc `allowsAuthMethod` ELegAuthentication) internalError
+
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
     res <- liftIO $ verifySignature logicaconf provider
                       etbs
@@ -312,7 +308,6 @@ initiateMobileBankID docid slid = do
 
     -- sanity check
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
-    unless (document `allowsAuthMethod` ELegAuthentication) internalError
 
     mpn <- getField "personnummer"
 
@@ -343,7 +338,7 @@ initiateMobileBankIDForAuthor docid = do
     logicaconf <- ctxlogicaconf <$> getContext
     -- sanity check
     document <- guardRightM $ getDocByDocIDForAuthor docid
-    unless (document `allowsAuthMethod` ELegAuthentication) internalError
+
     tbs <-getTBS document
     sl <- guardJust $ getAuthorSigLink document
     let pn = getPersonalNumber sl
@@ -375,7 +370,6 @@ collectMobileBankID docid slid = do
   logicaconf <- ctxlogicaconf <$> getContext
   -- sanity check
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
-  unless (document `allowsAuthMethod` ELegAuthentication) internalError
 
   trans@ELegTransaction {transactionsignatorylinkid
                         ,transactionmagichash
@@ -429,7 +423,7 @@ collectMobileBankIDForAuthor docid = do
   logicaconf <- ctxlogicaconf <$> getContext
   -- sanity check
   document <- guardRightM $ getDocByDocIDForAuthor docid
-  unless (document `allowsAuthMethod` ELegAuthentication) internalError
+
   trans@ELegTransaction {transactionoref
                         ,transactionstatus
                         ,transactiondocumentid} <- guardJustM $ dbQuery $ GetELegTransaction tid

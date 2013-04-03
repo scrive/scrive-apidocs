@@ -28,7 +28,7 @@ data DraftData = DraftData {
       title :: String
     , invitationmessage :: Maybe String
     , daystosign :: Int
-    , authentication :: AuthenticationMethod
+    , authentication :: Maybe AuthenticationMethod
     , delivery :: DeliveryMethod
     , signatories :: [SignatoryTMP]
     , lang :: Maybe Lang
@@ -38,18 +38,6 @@ data DraftData = DraftData {
     , process :: Maybe DocumentProcess
     } deriving Show
 
-instance FromJSValue AuthenticationMethod where
-  fromJSValue j = case fromJSValue j of
-    Just "standard" -> Just StandardAuthentication
-    Just "eleg"     -> Just ELegAuthentication
-    _               -> Nothing
-
-instance FromJSValue DeliveryMethod where
-  fromJSValue j = case fromJSValue j of
-    Just "email" -> Just EmailDelivery
-    Just "pad"   -> Just PadDelivery
-    Just "api"   -> Just APIDelivery
-    _            -> Nothing
 
 instance FromJSValue DocumentProcess where
   fromJSValue j = fromJSValue j >>= maybeRead
@@ -85,14 +73,14 @@ instance FromJSValue DraftData where
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
         process' <- fromJSValueField "process"
-        case (title', daystosign', authentication', delivery') of
-            (Just t, Just daystosign, Just a, Just d)
+        case (title', daystosign', delivery') of
+            (Just t, Just daystosign, Just d)
              | daystosign >= minDaysToSign && daystosign <= maxDaysToSign ->
                 return $ Just DraftData {
                                       title =  t
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign
-                                    , authentication = a
+                                    , authentication = authentication'
                                     , delivery = d
                                     , signatories = concat $ maybeToList $ signatories'
                                     , lang = lang'
@@ -114,7 +102,6 @@ applyDraftDataToDocument doc draft actor = do
                                     documenttitle = title draft
                                   , documentinvitetext = fromMaybe (documentinvitetext doc) $ invitationmessage draft
                                   , documentdaystosign = daystosign draft
-                                  , documentauthenticationmethod = authentication draft
                                   , documentdeliverymethod = delivery draft
                                   , documentlang = fromMaybe (documentlang doc) (lang draft)
                                   , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
@@ -126,7 +113,7 @@ applyDraftDataToDocument doc draft actor = do
       when_ (isJust (process draft) && fromJust (process draft) /= toDocumentProcess (documenttype doc)) $ do
            Log.debug "Changing document process"
            dbUpdate $ SetDocumentProcess  (documentid doc) (fromJust (process draft)) actor
-      case (mergeSignatories (fromJust $ getAuthorSigLink doc) (signatories draft)) of
+      case (mergeSignatories draft (fromJust $ getAuthorSigLink doc) (signatories draft)) of
            Nothing   -> return $ Left "Problem with author details while sending draft"
            Just sigs -> do
              mdoc <- runMaybeT $ do
@@ -137,12 +124,21 @@ applyDraftDataToDocument doc draft actor = do
                Nothing  -> Left "applyDraftDataToDocument failed"
                Just newdoc -> Right newdoc
 
-mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)]
-mergeSignatories docAuthor tmps =
-        let (atmp, notatmps) = partition isAuthorTMP tmps
-            setAuthorConstandDetails =  setFstname (getFirstName docAuthor) .
+mergeSignatories :: DraftData
+                 -> SignatoryLink
+                 -> [SignatoryTMP]
+                 -> Maybe [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod)]
+mergeSignatories docdraft docAuthor tmps =
+        let
+            (atmp, notatmps) = partition isAuthorTMP tmps
+            setAuthorConstantDetails =  setFstname (getFirstName docAuthor) .
                                         setSndname (getLastName docAuthor) .
                                         setEmail   (getEmail docAuthor)
+            mapAuthenticationMethod (a,b,c,d,e) =
+              case authentication docdraft of
+                Just x -> (a,b,c,d,x)
+                _ -> (a,b,c,d,e)
+
         in case (atmp) of
-                ([authorTMP]) -> Just $ map toSignatoryDetails2 $ (setAuthorConstandDetails authorTMP) : notatmps
+                ([authorTMP]) -> Just $ map mapAuthenticationMethod $ map toSignatoryDetails2 $ (setAuthorConstantDetails authorTMP) : notatmps
                 _ -> Nothing

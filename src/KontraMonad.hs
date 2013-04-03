@@ -12,7 +12,7 @@ import Happstack.Server
 import Context
 import Crypto.RNG
 import DB.Core
-import Templates.Templates
+import Text.StringTemplates.Templates
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature

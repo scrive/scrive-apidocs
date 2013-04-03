@@ -109,7 +109,6 @@ data UserInfo = UserInfo {
 
 data UserSettings  = UserSettings {
     lang                :: Lang
-  , customfooter        :: Maybe String
   } deriving (Eq, Ord, Show)
 
 instance HasLang User where
@@ -367,10 +366,8 @@ instance MonadDB m => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     kRun01 $ SQL ("UPDATE users SET"
                   <> "  lang = ?"
-                  <> ", customfooter = ?"
                   <> "  WHERE id = ? AND deleted = FALSE")
              [ toSql $ getLang us
-             , toSql $ customfooter us
              , toSql uid
              ]
 
@@ -413,7 +410,7 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-checkIfUserExists :: MonadDB m => UserID -> DBEnv m Bool
+checkIfUserExists :: MonadDB m => UserID -> m Bool
 checkIfUserExists uid = checkIfAnyReturned
   $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
 
@@ -438,7 +435,6 @@ selectUsersSelectorsList =
   , "mobile"
   , "email"
   , "lang"
-  , "customfooter"
   , "company_name"
   , "company_number"
   , "is_free"
@@ -447,7 +443,7 @@ selectUsersSelectorsList =
 selectUsersSelectors :: SQL
 selectUsersSelectors = sqlConcatComma (map raw selectUsersSelectorsList)
 
-fetchUsers :: MonadDB m => DBEnv m [User]
+fetchUsers :: MonadDB m => m [User]
 fetchUsers = kFold decoder []
   where
     -- Note: this function gets users in reversed order, but all queries
@@ -455,7 +451,7 @@ fetchUsers = kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method company_id
       first_name last_name personal_number company_position phone mobile
-      email lang customfooter
+      email lang
       company_name company_number is_free = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
@@ -476,7 +472,6 @@ fetchUsers = kFold decoder []
           }
         , usersettings = UserSettings {
             lang = lang
-          , customfooter = customfooter
           }
         , usercompany = company_id
         , userisfree = is_free

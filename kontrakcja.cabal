@@ -240,6 +240,7 @@ Executable kontrakcja-server
   Build-depends: mixpanel == 0.1.3.0.1
   Build-depends: certificate == 1.3.5
   Build-depends: precog == 0.0.5
+  Build-depends: kontrakcja-templates == 0.1
   Main-Is: Main.hs
 
   Extensions: BangPatterns,
@@ -254,6 +255,7 @@ Executable kontrakcja-server
               RankNTypes,
               RecordWildCards,
               ScopedTypeVariables,
+              StandaloneDeriving,
               TemplateHaskell,
               TupleSections,
               TypeFamilies,
@@ -323,6 +325,7 @@ Executable cron
               RankNTypes,
               RecordWildCards,
               ScopedTypeVariables,
+              StandaloneDeriving,
               TemplateHaskell,
               TupleSections,
               TypeFamilies,
@@ -366,6 +369,7 @@ Executable mailing-server
               RankNTypes,
               RecordWildCards,
               ScopedTypeVariables,
+              StandaloneDeriving,
               TemplateHaskell,
               TupleSections,
               TypeFamilies,
@@ -406,6 +410,7 @@ Executable update-reference-screenshot
               RankNTypes,
               RecordWildCards,
               ScopedTypeVariables,
+              StandaloneDeriving,
               TemplateHaskell,
               TupleSections,
               TypeFamilies,

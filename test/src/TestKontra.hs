@@ -51,8 +51,9 @@ import Payments.Config (RecurlyConfig(..))
 import IPAddress
 import OurServerPart
 import Session.SessionID
-import Templates.Templates
-import Templates.TemplatesLoader
+import qualified Text.StringTemplates.TemplatesLoader as TL
+import Text.StringTemplates.Templates
+import Templates
 import qualified MemCache
 import User.Lang
 import Util.FinishWith
@@ -61,6 +62,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
 import System.Time
+import qualified Log
 
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
@@ -70,20 +72,20 @@ data TestEnvSt = TestEnvSt {
   , teRejectedDocuments :: TVar Int
   }
 
-type InnerTestEnv = ReaderT TestEnvSt IO
+type InnerTestEnv = ReaderT TestEnvSt (DBT IO)
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
-  deriving (Applicative, Functor, Monad, MonadBase IO, MonadIO, MonadReader TestEnvSt)
+  deriving (Applicative, Functor, Monad, MonadIO, MonadReader TestEnvSt, Log.MonadLog, MonadBase IO)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
   can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
   when can_be_run $ do
     atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
-    E.finally (ununTestEnv st $ withTestDB m) $ do
+    E.finally (runDBT (teNexus st) (DBEnvSt Nothing []) $ ununTestEnv st $ withTestDB m) $ do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
-ununTestEnv :: TestEnvSt -> TestEnv a -> IO a
+ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st m = runReaderT (unTestEnv m) st
 
 instance CryptoRNG TestEnv where
@@ -92,12 +94,21 @@ instance CryptoRNG TestEnv where
 instance MonadDB TestEnv where
   getNexus     = teNexus <$> ask
   localNexus f = local (\st -> st { teNexus = f (teNexus st) })
+  kCommit      = TestEnv $ kCommit
+  kRollback    = TestEnv $ kRollback
+  kClone       = TestEnv $ kClone
+  kRunSQL      = TestEnv . kRunSQL
+  kFinish      = TestEnv $ kFinish
+  kGetTables   = TestEnv $ kGetTables
+  kDescribeTable   = TestEnv . kDescribeTable
+  kFold2 decoder init_acc = TestEnv (kFold2 decoder init_acc)
+  kThrow       = TestEnv . kThrow
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getLocalTemplates defaultValue
-  getLocalTemplates lang = do
+  getTemplates = getTextTemplatesByColumn $ show (defaultValue :: Lang)
+  getTextTemplatesByColumn langStr = do
     globaltemplates <- teGlobalTemplates <$> ask
-    return $ localizedVersion lang globaltemplates
+    return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
   newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }
@@ -112,7 +123,7 @@ runTestKontraHelper rq ctx tk = do
   nex <- getNexus
   rng <- getCryptoRNGState
   mres <- liftIO . ununWebT $ runServerPartT
-    (runOurServerPartT . runDBT nex . runCryptoRNGT rng $
+    (runOurServerPartT . runDBT nex (DBEnvSt Nothing []) . runCryptoRNGT rng $
       runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
@@ -275,7 +286,7 @@ withTestDB m = E.finally m $ do
   kCommit
 
 clearTables :: TestEnv ()
-clearTables = runDBEnv $ do
+clearTables = do
   kRunRaw "UPDATE users SET company_id = NULL"
   kRunRaw "DELETE FROM evidence_log"
   kRunRaw "DELETE FROM doc_stat_events"

@@ -55,7 +55,14 @@ data SQL = SQL RawSQL [SqlValue]
   deriving (Eq)
 
 instance Show SQL where
-    showsPrec _ (SQL rawsql values) = ((++) "SQL ") . shows rawsql . ((++) " [") . ((++) (Data.List.intercalate "," $ map fromSql values)) . ((++) "]")
+    showsPrec _ (SQL rawsql values) = ((++) "SQL ") . shows rawsql . ((++) " [") . ((++) (Data.List.intercalate "," $ map showSql values)) . ((++) "]")
+      where
+        showSql (SqlNull) = "NULL"
+        showSql s = case safeFromSql s of
+                      Right g -> if null (drop 30 g)
+                                 then take 30 g
+                                 else take 30 g ++ "..."
+                      Left _ -> "<inconvertible sql value>"
 
 -- | Convenience class for things that can be turned into 'SQL'.
 -- There is intentionally no instance for String, use 'SQL' in a

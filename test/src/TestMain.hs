@@ -21,7 +21,7 @@ import DB
 import DB.Checks
 import DB.SQLFunction
 import DB.PostgreSQL
-import Templates.TemplatesLoader
+import Templates (readGlobalTemplates)
 import TestKontra
 
 -- Note: if you add new testsuites here, please add them in a similar
@@ -266,7 +266,7 @@ testMany (args, ts) = Log.withLogger $ do
   templates <- readGlobalTemplates
   withPostgreSQL pgconf $ do
     performDBChecks Log.debug kontraTables kontraMigrations
-    runDBEnv $ defineMany kontraFunctions
+    defineMany kontraFunctions
     nex <- getNexus
     active_tests <- liftIO . atomically $ newTVar (True, 0)
     rejected_documents <- liftIO . atomically $ newTVar 0

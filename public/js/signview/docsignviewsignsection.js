@@ -13,8 +13,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     _.bindAll(this, 'popup');
     _.bindAll(this, 'createContentElems');
   },
+  document : function() {
+    return this.model.document();
+  },
   createElegButtonElems: function() {
-    var document = this.model;
+    var document = this.document();
     var signatory = document.currentSignatory();
 
     var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
@@ -44,7 +47,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
   },
   createSignButtonElems: function() {
-    var document = this.model;
+    var document = this.document();
     var guardModel = this.guardModel;
     return Button.init({
       size: "small",
@@ -62,7 +65,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     }).input().css('margin-top', '-10px');
   },
   createPreambleElems: function() {
-    var document = this.model;
+    var document = this.document();
     var signatory = document.currentSignatory();
 
     if (signatory.author) {
@@ -103,13 +106,15 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return content;
   },
   popup: function() {
-    var document = this.model;
+    var document = this.document();
     var signatory = document.currentSignatory();
 
     Confirmation.popup({
       title: signatory.author ? localization.signByAuthor.modalTitle : document.process().processLocalization().signatorysignmodaltitle,
       acceptButton: document.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
+      textcolor : this.model.usebranding() ? document.signviewtextcolour() : undefined,
+      textfont : this.model.usebranding() ? document.signviewtextfont() : undefined,
       content: this.createContentElems
     });
   }
@@ -158,6 +163,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             editText: localization.reject.editMessage,
                                             rejectText: localization.cancel,
                                             acceptColor: "red",
+                                            textcolor : model.usebranding() ? document.signviewtextcolour() : undefined,
+                                            textfont : model.usebranding() ? document.signviewtextfont() : undefined,
                                             onAccept: function(customtext) {
                                                 if (alreadyClicked(this))
                                                   return;
@@ -186,7 +193,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                     }
                                 mixpanel.track('Click sign');
                                 new DocumentSignConfirmation({
-                                    model: document
+                                    model: model
                                     }).popup();
                                 }
                             });

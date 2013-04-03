@@ -77,7 +77,7 @@ data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
   query GetUnreadEvents = getUnreadEvents False
 
-selectMails :: MonadDB m => SqlSelect -> DBEnv m [Mail]
+selectMails :: MonadDB m => SqlSelect -> m [Mail]
 selectMails query' = do
   kRun_ $ "CREATE TEMP TABLE mails_tmp AS" <+> toSQLCommand query'
   kRun_ $ ("SELECT * FROM mails_tmp" :: SQL)
@@ -179,7 +179,7 @@ sqlSelectMails refine = sqlSelect "mails" $ do
                     sqlOrderBy "id DESC"
                     refine
 
-insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> DBEnv m (Maybe MailID)
+insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> m (Maybe MailID)
 insertEmail service_test token sender to to_be_sent =
   getOne $ sqlInsert "mails" $ do
       sqlSet "token" token
@@ -189,7 +189,7 @@ insertEmail service_test token sender to to_be_sent =
       sqlSet "service_test" service_test
       sqlResult "id"
 
-getUnreadEvents :: MonadDB m => Bool -> DBEnv m [(EventID, MailID, XSMTPAttrs, Event)]
+getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, XSMTPAttrs, Event)]
 getUnreadEvents service_test = do
   kRun_ $ sqlSelect "mails" $ do
     sqlResult "mail_events.id"
@@ -205,7 +205,7 @@ getUnreadEvents service_test = do
   where
     fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc
 
-fetchMails :: MonadDB m => DBEnv m [Mail]
+fetchMails :: MonadDB m => m [Mail]
 fetchMails = kFold decoder []
   where
     -- Note: this function gets mails in reversed order, but all queries
@@ -223,7 +223,7 @@ fetchMails = kFold decoder []
         , mailServiceTest = service_test
         } : acc
 
-fetchMailAttachments :: MonadDB m => DBEnv m (Map.Map MailID [Attachment])
+fetchMailAttachments :: MonadDB m => m (Map.Map MailID [Attachment])
 fetchMailAttachments = kFold decoder Map.empty
   where
     -- Note: this function gets mails in reversed order, but all queries

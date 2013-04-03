@@ -833,7 +833,7 @@ var DesignViewView = Backbone.View.extend({
         var url = "/api/frontend/mainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
-            color : "black",
+            color : "green",
             shape : "rounded",
             size : "small",
             width: 300,
@@ -1017,7 +1017,7 @@ var DesignViewView = Backbone.View.extend({
                                     document.makeTemplate();
                                     document.save();
                                     document.afterSave(function() {
-                                        new Submit().send();
+                                         window.location.reload();
                                     });
                                 }});
 
@@ -1070,7 +1070,7 @@ var DesignViewView = Backbone.View.extend({
                   })
                 ]
         });
-        this.contrainer.append(BlockingInfo.el()).append($(this.tabs.view.el));
+        this.contrainer.append(BlockingInfo.el()).append(this.tabs.el());
 
         new ScrollFixer({object : designbody1.add(designbody2)});
     }

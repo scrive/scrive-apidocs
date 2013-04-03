@@ -21,10 +21,9 @@ import Util.Actor
 import Doc.SignatoryLinkID
 import Version
 import Doc.DocumentID
-import Templates.Templates
-import qualified Templates.Fields as F
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 import Control.Monad.Identity
-import Control.Monad.Trans
 
 
 data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAffectedSignatoryAndMsg
@@ -55,7 +54,7 @@ eventTextTemplateName e =  (show e) ++ "Text"
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid maslid mmsg actor) = do
-   text <- lift $ renderTemplateI (eventTextTemplateName event) $ textFields
+   text <- renderTemplateI (eventTextTemplateName event) $ textFields
    kRun01 $ sqlInsert "evidence_log" $ do
       sqlSet "document_id" mdid
       sqlSet "time" $ actorTime actor
@@ -75,7 +74,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool wh
       
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyDocuments () where
   update (InsertEvidenceEventForManyDocuments event textFields dids actor) = do
-   texts <- lift $ forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
+   texts <- forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
    kRun_ $ sqlInsert "evidence_log" $ do
       sqlSetList "document_id" dids
       sqlSet "time" $ actorTime actor
@@ -146,11 +145,11 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
           , evMessageText = emsg
           } : acc
 
-copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> DBEnv m ()
+copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> m ()
 copyEvidenceLogToNewDocument fromdoc todoc = do
   copyEvidenceLogToNewDocuments fromdoc [todoc]
 
-copyEvidenceLogToNewDocuments :: MonadDB m => DocumentID -> [DocumentID] -> DBEnv m ()
+copyEvidenceLogToNewDocuments :: MonadDB m => DocumentID -> [DocumentID] -> m ()
 copyEvidenceLogToNewDocuments fromdoc todocs = do
   kRun_ $ "INSERT INTO evidence_log ("
     <> "  document_id"
@@ -257,7 +256,8 @@ data EvidenceEventType =
   DetachFileEvidence                              |
   InvitationDelivered                             |
   InvitationUndelivered                           |
-  SignatoryLinkVisited
+  SignatoryLinkVisited                            |
+  ProlongDocumentEvidence
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -334,6 +334,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert InvitationDelivered                             = return 71
   safeConvert InvitationUndelivered                           = return 72
   safeConvert SignatoryLinkVisited                            = return 73
+  safeConvert ProlongDocumentEvidence                         = return 74
 
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -409,6 +410,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 71 = return InvitationDelivered
     safeConvert 72 = return InvitationUndelivered
     safeConvert 73 = return SignatoryLinkVisited
+    safeConvert 74 = return ProlongDocumentEvidence
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

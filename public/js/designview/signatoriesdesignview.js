@@ -1,6 +1,6 @@
 /* Signatory view of document
  * Now unified with author and viewer views
- * 
+ *
  * Instrumented with Mixpanel events
  */
 
@@ -49,9 +49,9 @@ var SignatoriesDesignView = Backbone.View.extend({
 
         });
         box.append(addLink).append(removeLink);
-        
+
         var nextStep = Button.init({
-             color : 'green',
+             color : document.mainfile() != undefined ? "green" : "black",
              size: 'small',
              text: localization.nextStep,
              cssClass : "nextstepbutton",

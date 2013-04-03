@@ -188,9 +188,18 @@ window.Document = Backbone.Model.extend({
     canberestarted: function() {
         return this.get("canberestarted");
     },
+    canbeprolonged: function() {
+        return this.get("canbeprolonged");
+    },
     restart: function() {
           return new Submit({
               url: "/restart/" + this.documentid(),
+              method: "POST"
+          });
+    },
+    prolong: function() {
+          return new Submit({
+              url: "/prolong/" + this.documentid(),
               method: "POST"
           });
     },
@@ -241,7 +250,7 @@ window.Document = Backbone.Model.extend({
         function callDone() {
             if (done) done();
         }
-        window.takeScreenshot( 
+        window.takeScreenshot(
             function(canvas) {
                 var shot = [ new Date().getTime()/1000, canvas.toDataURL("image/jpeg",0.7) ];
                 if (first)
@@ -299,7 +308,7 @@ window.Document = Backbone.Model.extend({
               url: "/api/frontend/update/" + this.documentid(),
               method: "POST",
               json: JSON.stringify(this.draftData())
-          }));
+          }), function(ec) {if (ec == 403) window.location.reload()});
     },
     afterSave: function(f) {
          this.get("saveQueue").finishWith(f);
@@ -534,14 +543,23 @@ window.Document = Backbone.Model.extend({
     currentSignatoryCanSign: function() {
       return this.currentSignatory() && this.currentSignatory().canSign();
     },
-    logo: function() {
-        return this.get("logo");
+    signviewlogo: function() {
+      return this.get('signviewlogo');
     },
-    barsbackgroundcolor: function() {
-        return this.get("barsbackgroundcolor");
+    signviewtextcolour: function() {
+      return this.get('signviewtextcolour');
     },
-    barsbackgroundtextcolor: function() {
-        return this.get("barsbackgroundtextcolor");
+    signviewtextfont: function() {
+      return this.get('signviewtextfont');
+    },
+    signviewbarscolour: function() {
+      return this.get('signviewbarscolour');
+    },
+    signviewbarstextcolour: function() {
+      return this.get('signviewbarstextcolour');
+    },
+    signviewbackgroundcolour: function() {
+      return this.get('signviewbackgroundcolour');
     },
     authoruser: function() {
         return this.get("authoruser");
@@ -603,6 +621,7 @@ window.Document = Backbone.Model.extend({
        lang: new Lang({lang : args.lang}),
        infotext: args.infotext,
        canberestarted: args.canberestarted,
+       canbeprolonged: args.canbeprolonged,
        canbecanceled: args.canbecanceled,
        canseeallattachments: args.canseeallattachments,
        status: args.status,
@@ -613,9 +632,12 @@ window.Document = Backbone.Model.extend({
        template: args.template,
        daystosign: args.daystosign,
        invitationmessage: args.invitationmessage,
-       logo: args.logo,
-       barsbackgroundcolor: args.barsbackgroundcolor,
-       barsbackgroundtextcolor: args.barsbackgroundtextcolor,
+       signviewlogo: args.signviewlogo,
+       signviewtextcolour: args.signviewtextcolour,
+       signviewtextfont: args.signviewtextfont,
+       signviewbarscolour: args.signviewbarscolour,
+       signviewbarstextcolour: args.signviewbarstextcolour,
+       signviewbackgroundcolour: args.signviewbackgroundcolour,
        ready: true
      };
     }

@@ -12,7 +12,6 @@ import qualified Data.List as L
 import Database.HDBC
 
 import DB.Core
-import DB.Env
 import DB.Functions
 import DB.Fetcher
 import DB.Model
@@ -25,33 +24,32 @@ default (SQL)
 
 -- | Runs all checks on a database
 performDBChecks :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
-performDBChecks logger tables migrations = runDBEnv $ do
-  let liftedLogger = lift . logger
-  set <- setByteaOutput liftedLogger
+performDBChecks logger tables migrations = do
+  set <- setByteaOutput logger
   when set $ do
-    lift kCommit
+    kCommit
     error $ "Bytea_output was changed to 'hex'. Restart application so the change is visible."
-  checkDBTimeZone liftedLogger
-  checkDBConsistency liftedLogger (tableVersions : tables) migrations
+  checkDBTimeZone logger
+  checkDBConsistency logger (tableVersions : tables) migrations
   -- everything is OK, commit changes
-  lift kCommit
+  kCommit
   return ()
 
 -- | Return SQL fragment of current catalog within quotes
-currentCatalog :: MonadDB m => DBEnv m RawSQL
+currentCatalog :: MonadDB m => m RawSQL
 currentCatalog = do
   Just dbname <- getOne "SELECT current_catalog"
   return $ unsafeFromString $ "\"" ++ dbname ++ "\""
 
 -- |  Checks whether database returns timestamps in UTC
-checkDBTimeZone :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m ()
+checkDBTimeZone :: MonadDB m => (String -> m ()) -> m ()
 checkDBTimeZone logger = do
   dbname <- currentCatalog
   logger $ "Setting " ++ unRawSQL dbname ++ " database to return timestamps in UTC"
   kRunRaw $ "ALTER DATABASE " <> dbname <> " SET TIMEZONE = 'UTC'"
   return ()
 
-setByteaOutput :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m Bool
+setByteaOutput :: MonadDB m => (String -> m ()) -> m Bool
 setByteaOutput logger = do
   dbname <- currentCatalog
   Just bytea_output <- getOne "SHOW bytea_output"
@@ -63,7 +61,7 @@ setByteaOutput logger = do
     else return False
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: MonadDB m => (String -> DBEnv m ()) -> [Table] -> [Migration m] -> DBEnv m ()
+checkDBConsistency :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
 checkDBConsistency logger tables migrations = do
   (created, to_migration) <- checkTables
   when (not $ null to_migration) $ do

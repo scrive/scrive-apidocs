@@ -45,9 +45,19 @@ testBrandedDocumentMails mailTo = do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
-        companybarsbackground = Just "orange"
-      , companybarstextcolour = Just "green"
-      , companylogo = Nothing
+        companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
+      , companyemailbordercolour = Just "#dee4ed"
+      , companyemailbuttoncolour = Just "215"
+      , companyemailemailbackgroundcolour = Just "#0f0"
+      , companyemailbackgroundcolour = Just "orange"
+      , companyemailtextcolour = Just "green"
+      , companyemaillogo = Nothing
+      , companysignviewlogo = Nothing
+      , companysignviewtextcolour = Nothing
+      , companysignviewtextfont = Nothing
+      , companysignviewbarscolour = Nothing
+      , companysignviewbarstextcolour = Nothing
+      , companysignviewbackgroundcolour = Nothing
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
   sendDocumentMails mailTo author
@@ -72,18 +82,18 @@ sendDocumentMails mailTo author = do
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         file <- addNewRandomFile
-        True <- randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
+        randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
         let sigs = [authordetails, isl]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
-        True <- randomUpdate $ PreparationToPending docid (systemActor now) Nothing
+        randomUpdate $ PreparationToPending docid (systemActor now) Nothing
         Just d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
         True <- randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
-        True <- randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.empty (systemActor now)
+        randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.empty (systemActor now)
         Just doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
@@ -93,26 +103,26 @@ sendDocumentMails mailTo author = do
                               m <- fst <$> (runTestKontra req ctx $ mg)
                               validMail (s ++ " "++ show doctype) m
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
-        checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
+        checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl) False
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc sl
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxhostpart ctx) doc sl
         --remind mails
-        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
+        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl False
         --reject mail
-        checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
+        checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl False
         -- awaiting author email
         when (doctype == Contract) $ do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
-        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty
+        randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl
         -- Reminder after send
-        checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
+        checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc) False
   kCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"

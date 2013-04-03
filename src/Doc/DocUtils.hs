@@ -15,7 +15,8 @@ import Control.Logic
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
-import Templates.Templates
+import Text.StringTemplates.Templates
+import Templates
 import User.Model
 import Doc.SignatoryLinkID
 import Util.SignatoryLinkUtils
@@ -23,7 +24,7 @@ import Doc.DocInfo
 import Company.Model
 import DB
 import Utils.Prelude
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 import Control.Monad
 import Data.List hiding (insert)
@@ -252,9 +253,6 @@ isELegDataMismatch :: CancelationReason -> Bool
 isELegDataMismatch (ELegDataMismatch _ _ _ _ _) = True
 isELegDataMismatch _                            = False
 
-allowsAuthMethod :: Document -> AuthenticationMethod -> Bool
-allowsAuthMethod doc auth = documentauthenticationmethod doc == auth
-
 {- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
 sendMailsDuringSigning :: Document -> Bool
 sendMailsDuringSigning doc = (not $ documentdeliverymethod doc == PadDelivery) && (not $ documentdeliverymethod doc == APIDelivery)
@@ -453,8 +451,8 @@ recentDate :: Document -> MinutesTime
 recentDate doc =
   maximum $ [documentctime doc, documentmtime doc] ++
   (maybeToList $ signtime <$> documentinvitetime doc) ++
-  (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++
   concat (for (documentsignatorylinks doc) (\sl ->
        (maybeToList $ signtime <$> maybeseeninfo sl)
     ++ (maybeToList $ signtime <$> maybesigninfo sl)
+    ++ (maybeToList $ signatorylinkrejectiontime sl)
     ++ (maybeToList $ id       <$> maybereadinvite sl)))

@@ -29,6 +29,7 @@ module Doc.DocControl(
     , handleResend
     , handleChangeSignatoryEmail
     , handleRestart
+    , handleProlong
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -77,7 +78,7 @@ import Redirect
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.CSVUtil
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
@@ -113,7 +114,7 @@ import Doc.DocDraft() -- Import instances only
 import qualified User.Action
 import qualified ELegitimation.Control as BankID
 import Util.Actor
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp
@@ -260,7 +261,7 @@ handleMismatch doc sid msg sfn sln spn = do
         let Just sl = getSigLinkFor doc sid
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
         Just newdoc <- runMaybeT $ do
-          True <- dbUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn)
+          dbUpdate $ ELegAbortDocument (documentid doc) sid msg sfn sln spn
            (signatoryActor (ctxtime ctx)
            (ctxipnumber ctx)
            (maybesignatory sl)
@@ -409,7 +410,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   document <- guardRightM $ getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
 
-  let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+  let mMismatchMessage = msum (map signatorylinkelegdatamismatchmessage (documentsignatorylinks document))
   when (isAuthor (document, muser) && isCanceled document && isJust mMismatchMessage) $
     addFlash (OperationFailed, fromJust mMismatchMessage)
 
@@ -451,7 +452,7 @@ handleIssueShowPost :: Kontrakcja m => DocumentID -> m (Either KontraLink JSValu
 handleIssueShowPost docid = do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
-  timezone <- getDataFnM (look "timezone") >>= (runDBEnv . mkTimeZoneName)
+  timezone <- getDataFnM (look "timezone") >>= (mkTimeZoneName)
   unless (isAuthor (document, muser)) internalError -- still need this because others can read document
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "send"
@@ -582,23 +583,27 @@ handleIssueSend document timezone = do
 -}
 splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
 splitUpDocument doc = do
-  case (msum (signatorylinkcsvupload <$> documentsignatorylinks doc), getCSVCustomFields doc) of
-    (Just _, Left msg) -> do
-      Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
-      internalError
-    (Nothing, _) -> do
+  case find (isJust . signatorylinkcsvupload) (documentsignatorylinks doc) of
+    Nothing -> do
       Log.debug $ "splitUpDocument called on document without csvupload, that is ok"
       return $ Right [doc]
-    (Just csvupload, Right csvcustomfields) -> do
-      Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
-      case (cleanCSVContents (doc `allowsAuthMethod` ELegAuthentication) (length csvcustomfields) $ csvcontents csvupload) of
-        (_prob:_, _) -> do
-          addFlashM flashMessageInvalidCSV
-          Log.debug $ "splitUpDocument: back to document"
-          return $ Left $ LinkDesignDoc $ (documentid doc)
-        ([], CleanCSVData{csvbody}) -> do
-          actor <- guardJustM $ mkAuthorActor <$> getContext
-          Right <$> splitUpDocumentWorker doc actor csvbody
+    Just sl -> do
+      case (signatorylinkcsvupload sl, getCSVCustomFields sl) of
+        (_, Left msg) -> do
+          Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
+          internalError
+        (Just csvupload, Right csvcustomfields) -> do
+          Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
+          case (cleanCSVContents (signatorylinkauthenticationmethod sl == ELegAuthentication) (length csvcustomfields) $ csvcontents csvupload) of
+            (_prob:_, _) -> do
+               addFlashM flashMessageInvalidCSV
+               Log.debug $ "splitUpDocument: back to document"
+               return $ Left $ LinkIssueDoc $ (documentid doc)
+            ([], CleanCSVData{csvbody}) -> do
+               actor <- guardJustM $ mkAuthorActor <$> getContext
+               Right <$> splitUpDocumentWorker doc actor csvbody
+        _ -> error "Should never happen"
+
 
 splitUpDocumentWorker :: (MonadDB m, TemplatesMonad m, CryptoRNG m, MonadBase IO m)
                       => Document -> Actor -> [[String]] -> m [Document]
@@ -726,6 +731,13 @@ handleRestart docid = withUserPost $ do
   addFlashM $ flashDocumentRestarted doc2
   return $ LinkIssueDoc (documentid doc2)
 
+handleProlong :: Kontrakcja m => DocumentID -> m KontraLink
+handleProlong docid = withUserPost $ do
+  doc <- guardRightM $ getDocByDocID docid
+  guardRightM $ prolongDocument doc
+  addFlashM $ flashDocumentProlonged doc
+  return $ LinkIssueDoc (documentid doc)
+
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
   ctx <- getContext
@@ -749,10 +761,9 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Right _ -> do
           muser <- dbQuery $ GetUserByEmail (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
-          mnewdoc <- runMaybeT $ do
-            True <- dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
-            Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
-            return newdoc
+          dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
+          mnewdoc <- dbQuery $ GetDocumentByDocumentID docid
+
           case mnewdoc of
             Just newdoc -> do
               -- get (updated) siglink from updated document
@@ -872,11 +883,9 @@ handleSigAttach docid siglinkid = do
   content <- guardRightM $ liftIO $ preCheckPDF (concatChunks content1)
   file <- dbUpdate $ NewFile attachname content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
-  d <- guardJustM . runMaybeT $ do
-    True <- dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
-    Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
-    return newdoc
-  return $ LinkSignDoc d siglink
+  dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
+  newdoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+  return $ LinkSignDoc newdoc siglink
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
@@ -886,15 +895,16 @@ prepareEmailPreview docid slid = do
          "remind" -> do
              Right doc <- getDocByDocID docid
              Just sl <- return $ getSigLinkFor doc slid
-             mailDocumentRemindContent  Nothing ctx doc sl
+             mailDocumentRemindContent  Nothing ctx doc sl True
          "reject" -> do
              Just mh <- dbQuery $ GetDocumentSessionToken slid
              Just doc <- dbQuery $ GetDocumentByDocumentID docid
              Just sl <- return $ getSigLinkFor doc (slid,mh)
-             mailDocumentRejectedContent Nothing ctx  doc sl
+             x :: String <- mailDocumentRejectedContent Nothing ctx  doc sl True
+             return x
          "invite" -> do
              Right doc <- getDocByDocID docid
-             mailInvitationContent False ctx Sign doc Nothing
+             mailInvitationContent False ctx Sign doc Nothing True
          _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
 

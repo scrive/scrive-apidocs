@@ -22,6 +22,7 @@ module Log (
   , jsonMailAPI
   , mailAPI
   , payments
+  , MonadLog(..)
   ) where
 
 import Control.Exception.Extensible (bracket)
@@ -32,10 +33,78 @@ import System.IO (stdout, Handle, hSetEncoding, utf8, IOMode(..), hClose)
 import System.Log.Formatter
 import System.Log.Handler (close, setFormatter)
 import System.Log.Handler.Simple (streamHandler, GenericHandler(..))
-import System.Log.Logger (Priority(..), rootLoggerName, setLevel, setHandlers, updateGlobalLogger, noticeM, errorM)
+import System.Log.Logger (Priority(..), rootLoggerName, setLevel, setHandlers, updateGlobalLogger)
+import qualified System.Log.Logger
 import qualified Control.Concurrent as C
 import qualified Control.Exception as C
 import OpenFileShared
+
+import qualified Control.Monad.State.Lazy as LS
+import qualified Control.Monad.State.Strict as SS
+import qualified Control.Monad.Writer.Lazy as LW
+import qualified Control.Monad.Writer.Strict as SW
+import qualified Control.Monad.RWS.Lazy as LRWS
+import qualified Control.Monad.RWS.Strict as SRWS
+import Control.Monad.Cont
+import Control.Monad.Error
+import Control.Monad.List
+import Control.Monad.Reader
+import Crypto.RNG
+import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Identity
+
+
+-- | MonadLog is for situations when you want to have access to
+-- logging, but to not expose whole IO functionality. It is a safe
+-- entry to a restricted IO monad.
+--
+-- Should be used together with other IO based monads that do not
+-- expose MonadIO or MonadBase IO.
+class (Monad m) => MonadLog m where
+  logM :: String -> Priority -> String -> m ()
+
+instance (MonadLog m) => MonadLog (LS.StateT s m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m) => MonadLog (SS.StateT s m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m, LW.Monoid w) => MonadLog (LW.WriterT w m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m, SW.Monoid w) => MonadLog (SW.WriterT w m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m) => MonadLog (MaybeT m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m) => MonadLog (ListT m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m) => MonadLog (ContT r m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m) => MonadLog (IdentityT m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m, Error e) => MonadLog (ErrorT e m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m) => MonadLog (ReaderT r m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m) => MonadLog (CryptoRNGT m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m, SRWS.Monoid w) => MonadLog (SRWS.RWST r w s m) where
+  logM a b c = lift $ logM a b c
+
+instance (MonadLog m, LRWS.Monoid w) => MonadLog (LRWS.RWST r w s m) where
+  logM a b c = lift $ logM a b c
+
+
+instance MonadLog IO where
+  logM = System.Log.Logger.logM
 
 fileHandler' :: FilePath -> Priority -> IO (GenericHandler Handle)
 fileHandler' fp pri = do
@@ -216,62 +285,62 @@ teardownLogger (LoggerHandle loggers) = do
 withLogger :: IO a -> IO a
 withLogger = bracket setupLogger teardownLogger . const
 
-debug :: (MonadIO m) => String -> m ()
-debug msg = liftIO $ noticeM "Kontrakcja.Debug" msg
+debug :: (MonadLog m) => String -> m ()
+debug msg = logM "Kontrakcja.Debug" NOTICE msg
 
-error :: (MonadIO m) => String -> m ()
-error msg = liftIO $ noticeM "Kontrakcja.Error" msg
+error :: (MonadLog m) => String -> m ()
+error msg = logM "Kontrakcja.Error" NOTICE msg
 
-cron :: (MonadIO m) => String -> m ()
-cron msg = liftIO $ noticeM "Kontrakcja.Cron" msg
+cron :: (MonadLog m) => String -> m ()
+cron msg = logM "Kontrakcja.Cron" NOTICE msg
 
-mail :: (MonadIO m) => String -> m ()
-mail msg = liftIO $ noticeM "Kontrakcja.Mail" msg
+mail :: (MonadLog m) => String -> m ()
+mail msg = logM "Kontrakcja.Mail" NOTICE msg
 
-mailContent :: (MonadIO m) => String -> m ()
-mailContent msg = liftIO $ noticeM "Kontrakcja.MailContent" msg
+mailContent :: (MonadLog m) => String -> m ()
+mailContent msg = logM "Kontrakcja.MailContent" NOTICE msg
 
-mailingServer :: (MonadIO m) => String -> m ()
-mailingServer msg = liftIO $ noticeM "Kontrakcja.MailingServer" msg
+mailingServer :: (MonadLog m) => String -> m ()
+mailingServer msg = logM "Kontrakcja.MailingServer" NOTICE msg
 
-docConverter :: (MonadIO m) => String -> m ()
-docConverter msg = liftIO $ noticeM "Kontrakcja.DocConverter" msg
+docConverter :: (MonadLog m) => String -> m ()
+docConverter msg = logM "Kontrakcja.DocConverter" NOTICE msg
 
-amazon :: (MonadIO m) => String -> m ()
-amazon msg = liftIO $ noticeM "Kontrakcja.Amazon" msg
+amazon :: (MonadLog m) => String -> m ()
+amazon msg = logM "Kontrakcja.Amazon" NOTICE msg
 
-security :: (MonadIO m) => String -> m ()
-security msg = liftIO $ noticeM "Kontrakcja.Security" msg
+security :: (MonadLog m) => String -> m ()
+security msg = logM "Kontrakcja.Security" NOTICE msg
 
-server :: (MonadIO m) => String -> m ()
-server msg = liftIO $ noticeM "Happstack.Server" msg
+server :: (MonadLog m) => String -> m ()
+server msg = logM "Happstack.Server" NOTICE msg
 
-eleg :: (MonadIO m) => String -> m ()
-eleg msg = liftIO $ noticeM "Kontrakcja.Eleg" msg
+eleg :: (MonadLog m) => String -> m ()
+eleg msg = logM "Kontrakcja.Eleg" NOTICE msg
 
-stats :: (MonadIO m) => String -> m ()
-stats msg = liftIO $ noticeM "Kontrakcja.Stats" msg
+stats :: (MonadLog m) => String -> m ()
+stats msg = logM "Kontrakcja.Stats" NOTICE msg
 
-integration :: (MonadIO m) => String -> m ()
-integration msg = liftIO $ noticeM "Kontrakcja.Integration" msg
+integration :: (MonadLog m) => String -> m ()
+integration msg = logM "Kontrakcja.Integration" NOTICE msg
 
-scrivebymail :: (MonadIO m) => String -> m ()
-scrivebymail msg = liftIO $ noticeM "Kontrakcja.ScriveByMail" msg
+scrivebymail :: (MonadLog m) => String -> m ()
+scrivebymail msg = logM "Kontrakcja.ScriveByMail" NOTICE msg
 
-jsonMailAPI :: (MonadIO m) => String -> m ()
-jsonMailAPI msg = liftIO $ noticeM "Kontrakcja.JSONMailAPI" msg
+jsonMailAPI :: (MonadLog m) => String -> m ()
+jsonMailAPI msg = logM "Kontrakcja.JSONMailAPI" NOTICE msg
 
-mailAPI :: (MonadIO m) => String -> m ()
-mailAPI msg = liftIO $ noticeM "Kontrakcja.MailAPI" msg
+mailAPI :: (MonadLog m) => String -> m ()
+mailAPI msg = logM "Kontrakcja.MailAPI" NOTICE msg
 
-scrivebymailfailure :: (MonadIO m) => String -> m ()
-scrivebymailfailure msg = liftIO $ errorM "Kontrakcja.ScriveByMailFailures" msg
+scrivebymailfailure :: (MonadLog m) => String -> m ()
+scrivebymailfailure msg = logM "Kontrakcja.ScriveByMailFailures" ERROR msg
 
-docevent :: (MonadIO m) => String -> m ()
-docevent msg = liftIO $ noticeM "Kontrakcja.DocEvent" msg
+docevent :: (MonadLog m) => String -> m ()
+docevent msg = logM "Kontrakcja.DocEvent" NOTICE msg
 
-payments :: MonadIO m => String -> m ()
-payments msg = liftIO $ noticeM "Kontrakcja.Payments" msg
+payments :: (MonadLog m) => String -> m ()
+payments msg = logM "Kontrakcja.Payments" NOTICE msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
@@ -279,4 +348,3 @@ forkIOLogWhenError errmsg action =
   liftIO $ do
     _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
     return ()
-

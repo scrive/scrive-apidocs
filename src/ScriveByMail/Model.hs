@@ -33,7 +33,6 @@ import User.Model
 import qualified Log
 
 import Control.Monad
-import Control.Monad.Trans
 import Data.Maybe
 import Data.Int
 
@@ -181,7 +180,7 @@ $(enumDeriveConvertible ''DelayStatus)
 data AddMailAPIDelay = AddMailAPIDelay String BS.ByteString CompanyID MinutesTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m AddMailAPIDelay (Maybe (Int64, MagicHash, Bool)) where
   update (AddMailAPIDelay email text cid now) = do
-    key :: MagicHash <- lift random
+    key :: MagicHash <- random
     r <- kRun $ SQL ("INSERT INTO mail_api_user_request ("
                  <> " key"
                  <> ",email"

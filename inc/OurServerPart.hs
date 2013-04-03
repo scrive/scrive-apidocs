@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module OurServerPart (
     OurServerPartT
   , runOurServerPartT
@@ -10,8 +11,13 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Happstack.Server
+import Log
 
 import Control.Monad.Trans.Control.Util
+
+instance (MonadLog m) => MonadLog (ServerPartT m) where
+  logM a b c = lift $ logM a b c
+
 
 -- | The purpose of this wrapper is to override ServerPartT implementation
 -- of fail in Monad instance, which immediately returns to Happstack (by
@@ -20,7 +26,9 @@ import Control.Monad.Trans.Control.Util
 -- this is bad for us (information leakage) and confusing for customers.
 
 newtype OurServerPartT m a = OurServerPartT { runOurServerPartT :: ServerPartT m a }
-  deriving (Applicative, FilterMonad Response, Functor, HasRqData, MonadBase b, MonadIO, MonadPlus, MonadTrans, ServerMonad, WebMonad Response)
+  deriving (Applicative, FilterMonad Response, Functor, HasRqData, MonadBase b, MonadIO, MonadPlus, MonadTrans, ServerMonad, WebMonad Response, MonadLog)
+
+
 
 instance Monad m => Monad (OurServerPartT m) where
   return  = OurServerPartT . return

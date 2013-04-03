@@ -21,7 +21,7 @@ import qualified Log
 type InnerAQ qd = ReaderT qd (CryptoRNGT (DBT IO))
 
 newtype ActionQueue qd a = AQ { unAQ :: InnerAQ qd a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase IO, MonadDB, MonadIO, MonadReader qd)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase IO, MonadDB, MonadIO, MonadReader qd, Log.MonadLog)
 
 instance MonadBaseControl IO (ActionQueue qd) where
   newtype StM (ActionQueue qd) a = StAQ { unStAQ :: StM (InnerAQ qd) a }

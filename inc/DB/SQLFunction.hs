@@ -3,7 +3,7 @@ module DB.SQLFunction where
 import Data.Foldable as F
 
 import DB.Core
-import DB.Env
+
 import DB.Functions
 import DB.SQL
 
@@ -11,8 +11,8 @@ import DB.SQL
 
 newtype SQLFunction = SQLFunction { sqlFunDef :: SQL }
 
-define :: MonadDB m => SQLFunction -> DBEnv m ()
+define :: MonadDB m => SQLFunction -> m ()
 define SQLFunction{..} = kRun_ sqlFunDef
 
-defineMany :: (Foldable f, MonadDB m) => f SQLFunction -> DBEnv m ()
+defineMany :: (Foldable f, MonadDB m) => f SQLFunction -> m ()
 defineMany = F.mapM_ define

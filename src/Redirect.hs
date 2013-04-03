@@ -39,13 +39,6 @@ sendRedirect LoopBack = do
   let link = fromMaybe (show mainlink) referer
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
-sendRedirect BackToReferer = do
-  referer <- getField "referer"
-  mainlink <- getHomeOrDesignViewLink
-  let link' = fromMaybe (show mainlink) referer
-  let link  = if (null link') then (show mainlink) else link'
-  seeOther link =<< setRsCode 303 (seeOtherXML link)
-
 sendRedirect link@(LinkLogin _lang reason) = do
   curr <- rqUri <$> askRq
   qr <- rqQuery <$> askRq

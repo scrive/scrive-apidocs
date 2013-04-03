@@ -24,9 +24,9 @@ import KontraLink
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
-import Templates.Templates
+import Text.StringTemplates.Templates
 import User.Lang
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import qualified Static.Resources as SR
@@ -111,7 +111,6 @@ renderTemplateAsPage ctx templateName showCreateAccount f = do
   renderTemplate templateName $ do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
-    staticLinksFields $ ctxlang ctx
     langSwitcherFields ctx
     F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
@@ -123,7 +122,6 @@ standardPageFields :: TemplatesMonad m => Context -> String -> AnalyticsData -> 
 standardPageFields ctx title ad = do
   F.value "title" title
   mainLinksFields $ ctxlang ctx
-  staticLinksFields $ ctxlang ctx
   langSwitcherFields ctx
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
@@ -165,24 +163,14 @@ simpleHtmlResonseClrFlash rsp = do
 mainLinksFields :: Monad m => Lang -> Fields m ()
 mainLinksFields lang = do
   F.value "linkaccount"          $ show (LinkAccount)
-  F.value "linkforgotenpassword" $ show LinkForgotPassword
   F.value "linkissue"            $ show LinkArchive
   F.value "linklogin"            $ show (LinkLogin lang LoginTry)
   F.value "linklogout"           $ show LinkLogout
-  F.value "linkquestion"         $ show LinkAskQuestion
-  F.value "linksignup"           $ show LinkSignup
 
 langSwitcherFields :: Monad m => Context -> Fields m ()
 langSwitcherFields Context{ctxlang} = do
   F.value "langswedish" $ getLang ctxlang == LANG_SV
   F.value "langenglish" $ getLang ctxlang == LANG_EN
-
-{- |
-    Defines the static links which are language sensitive.
--}
-staticLinksFields :: Monad m => Lang -> Fields m ()
-staticLinksFields lang = do
-  F.value "linkpriceplan"  $ show $ LinkPriceplan lang
 
 {- |
    Defines some standard context information as fields handy for substitution

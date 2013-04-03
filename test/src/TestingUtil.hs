@@ -25,13 +25,13 @@ import Control.Monad.Reader.Class
 import File.FileID
 import Crypto.RNG
 import DB
+import DB.SQL2
 import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage
 import qualified Log
 import Doc.Model
 import Doc.DocStateData
-import Doc.DocStateCommon
 import ELegitimation.BankIDRequests
 import ELegitimation.ELegTransaction.Model
 import KontraError (internalError)
@@ -89,9 +89,19 @@ instance Arbitrary Company where
                      }
     where
       emptyCompanyUI = CompanyUI {
-        companybarsbackground = Nothing
-      , companybarstextcolour = Nothing
-      , companylogo = Nothing
+          companyemailfont = Nothing
+        , companyemailbordercolour = Nothing
+        , companyemailbuttoncolour = Nothing
+        , companyemailemailbackgroundcolour = Nothing
+        , companyemailbackgroundcolour = Nothing
+        , companyemailtextcolour = Nothing
+        , companyemaillogo = Nothing
+        , companysignviewlogo = Nothing
+        , companysignviewtextcolour = Nothing
+        , companysignviewtextfont = Nothing
+        , companysignviewbarscolour = Nothing
+        , companysignviewbarstextcolour = Nothing
+        , companysignviewbackgroundcolour = Nothing
       }
 
 instance Arbitrary CompanyID where
@@ -133,9 +143,6 @@ instance Arbitrary TimeoutTime where
 
 instance Arbitrary MinutesTime where
   arbitrary = fromSeconds <$> arbitrary
-
-instance Arbitrary DocumentUI where
-  arbitrary = DocumentUI <$> arbitrary
 
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
@@ -186,22 +193,13 @@ instance Arbitrary SignatoryLink where
     signinfo <- if isJust seeninfo
                 then arbitrary
                 else return Nothing
-    return $ SignatoryLink { signatorylinkid            = slid
-                           , signatorydetails           = sd
-                           , signatorymagichash         = mh
-                           , maybesignatory             = Nothing
-                           , maybesigninfo              = signinfo
-                           , maybeseeninfo              = seeninfo
-                           , maybereadinvite            = Nothing
-                           , invitationdeliverystatus   = Unknown
-                           , signatorysignatureinfo     = Nothing
-                           , signatorylinkdeleted       = False
-                           , signatorylinkreallydeleted = False
-                           , signatorylinkcsvupload     = Nothing
-                           , signatoryattachments       = []
-                           , signatorylinkstatusclass   = SCDraft
-                           , signatorylinksignredirecturl = Nothing
-                           }
+
+    return $ defaultValue { signatorylinkid            = slid
+                          , signatorydetails           = sd
+                          , signatorymagichash         = mh
+                          , maybesigninfo              = signinfo
+                          , maybeseeninfo              = seeninfo
+                          }
 
 instance Arbitrary SignatureProvider where
   arbitrary = elements [ BankIDProvider
@@ -279,15 +277,13 @@ instance Arbitrary Document where
                then arbitrary
                else return Preparation
     sls <- arbitrary
-    auth <- arbitrary
     delivery <- arbitrary
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
-    return $ blankDocument { documentstatus = dstatus
+    return $ defaultValue  { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
-                           , documentauthenticationmethod = auth
                            , documentdeliverymethod = delivery
                            , documenttimeouttime = Just (TimeoutTime dtimeouttime)
                            , documentdaystosign = ddaystosign
@@ -446,7 +442,7 @@ arbEmail = do
   return $ n ++ "@" ++ d ++ ".com"
 
 signatoryLinkExample1 :: SignatoryLink
-signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
+signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
                                       , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
@@ -474,6 +470,13 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , signatoryattachments   = []
                                       , signatorylinkstatusclass = SCDraft
                                       , signatorylinksignredirecturl = Nothing
+                                      , signatorylinkrejectiontime = Nothing
+                                      , signatorylinkrejectionreason = Nothing
+                                      , signatorylinkauthenticationmethod = StandardAuthentication
+                                      , signatorylinkelegdatamismatchmessage = Nothing
+                                      , signatorylinkelegdatamismatchfirstname = Nothing
+                                      , signatorylinkelegdatamismatchlastname = Nothing
+                                      , signatorylinkelegdatamismatchpersonalnumber = Nothing
                                       }
 
 blankUser :: User
@@ -493,9 +496,7 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , usercompanyname = []
                                        , usercompanynumber = []
                                        }
-                 , usersettings  = UserSettings { lang = defaultValue
-                                                , customfooter = Nothing
-                                                }
+                 , usersettings  = UserSettings { lang = defaultValue }
                  , usercompany = Nothing
                  , userisfree  = False
                  }
@@ -583,14 +584,6 @@ addNewRandomCompanyUser cid isadmin = do
   _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
   Just user <- dbQuery $ GetUserByID userid
   return user
-
-emptySignatoryDetails :: SignatoryDetails
-emptySignatoryDetails = SignatoryDetails
-    { signatoryfields = []
-    , signatorysignorder = SignOrder 1
-    , signatoryisauthor = False
-    , signatoryispartner = False
-    }
 
 data RandomDocumentAllows = RandomDocumentAllows
                           { randomDocumentAllowedTypes :: [DocumentType]
@@ -892,18 +885,20 @@ assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
 assertionPredicate = liftIO . T.assertionPredicate
 
 
-assertRaises :: (Exception e, Show v, MonadIO m, MonadBaseControl IO m)
+assertRaisesKontra :: forall e v m. (KontraException e, Show v, MonadIO m, MonadBaseControl IO m)
              => (e -> Bool) -> m v -> m ()
-assertRaises correctException action = do
-  result' <- try $ action
-  case result' of
-    Right r -> assertString $ "Action should raise exception " ++ show (typeOf (fromLeft result')) ++
-               ", instead returned " ++ show r
-    Left e -> if correctException e
-              then return ()
-              else assertString $ "Action threw exception, but not a valid one: " ++ show e
-  where fromLeft (Left x) = x
-        fromLeft (Right _) = error "Should never happen"
+assertRaisesKontra correctException action =
+  helper `handle` (action >>= \r -> assertString $ "Expected KontraException " ++ show (typeOf (undefined :: e)) ++
+                    ", instead returned result " ++ show r)
+  where
+    helper (SomeKontraException e) =
+      case cast e of
+        Just e1 -> if correctException e1
+                   then return ()
+                   else assertString $ "KontraException " ++ show (typeOf (undefined :: e)) ++
+                          " is not correct " ++ show e1
+        Nothing -> assertString $ "Expected KontraException " ++ show (typeOf (undefined :: e)) ++
+                          ", instead got exception " ++ show (typeOf e)
 
 -- other helpers
 

@@ -8,6 +8,7 @@ var ArrowModel = Backbone.Model.extend({
   defaults : {
       type : undefined,
       text  : undefined,
+      labelCss: undefined,
       point : undefined
   },
   type : function(){
@@ -15,6 +16,9 @@ var ArrowModel = Backbone.Model.extend({
   },
   text : function(){
        return this.get("text");
+  },
+  labelCss: function(){
+       return this.get('labelCss');
   },
   point: function() {
        return this.get("point");
@@ -79,7 +83,7 @@ var PointLeftArrowView = Backbone.View.extend({
        var container = $(this.el);
        container.addClass('action-arrow').addClass('left');
        container.append($("<div class='front' />"));
-       container.append($("<div class='label' />").text(this.model.text() || "" ));
+       container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
        container.append($("<div class='back' />"));
 
        if (this.model.point() != undefined) {
@@ -117,7 +121,7 @@ var PointRightArrowView = Backbone.View.extend({
        var container = $(this.el);
        container.addClass('action-arrow').addClass('right');
        container.append($("<div class='front' />"));
-       container.append($("<div class='label' />").text(this.model.text() || "" ));
+       container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
        container.append($("<div class='back' />"));
 
        if (this.model.point() != undefined) {
@@ -255,6 +259,7 @@ window.Arrow = {
           var model = new ArrowModel({
                           type  : args.type,
                           text  : args.text,
+                          labelCss : args.labelCss,
                           point : args.point,
                           scrollDone : args.scrollDone
                     });

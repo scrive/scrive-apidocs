@@ -25,6 +25,7 @@ import Data.Maybe
 import Data.Functor
 import Control.Monad.Reader
 import Doc.DocDraft()
+import Data.List (nub)
 
 parseIsAuthor :: Int -> Maybe Bool
 parseIsAuthor n
@@ -99,7 +100,10 @@ jsonDocumentForAuthor doc hostpart =
     value "type"           $ fromSafeEnumInt $ documenttype doc
     value "status"         $ fromSafeEnumInt $ documentstatus doc
     value "designurl"      $ show $ LinkIssueDoc (documentid doc)
-    value "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc
+    value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
+                                   [StandardAuthentication] -> (1 :: Int)
+                                   [ELegAuthentication]     -> 2
+                                   _                        -> 0
     value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
 
 jsonDocumentForSignatory :: Document -> JSValue
@@ -109,7 +113,10 @@ jsonDocumentForSignatory doc =
     value "title"          $ documenttitle doc
     value "type"           $ fromSafeEnumInt $ documenttype doc
     value "status"         $ fromSafeEnumInt $ documentstatus doc
-    value "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc
+    value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
+                                   [StandardAuthentication] -> (1 :: Int)
+                                   [ELegAuthentication]     -> 2
+                                   _                        -> 0
     value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
 
 -- I really want to add a url to the file in the json, but the only

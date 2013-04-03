@@ -114,3 +114,10 @@ removeRegionFromUsers = Migration {
   , mgrFrom = 10
   , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN region"
 }
+
+dropCustomFooterFromUsers :: MonadDB m => Migration m
+dropCustomFooterFromUsers = Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 11
+  , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN customfooter"
+}

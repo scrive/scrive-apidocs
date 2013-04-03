@@ -1,6 +1,9 @@
 (function(window) {
 
   var SignupModel = Backbone.Model.extend({
+    autofocus: function() {
+      return this.get('autofocus');
+    },
     email: function() {
       return this.get('email');
     },
@@ -12,8 +15,9 @@
       mixpanel.track('Submit signup');
       new Submit({
         method: 'POST',
-        url: "/signup",
+        url: "/api/frontend/signup",
         ajax: true,
+        lang : Language.current(),
         email: model.email(),
         ajaxsuccess: function(rs) {
           resp = JSON.parse(rs);
@@ -72,6 +76,12 @@
           name: 'email'
         });
 
+        // Automatically focus the appropriate login field.
+        if(model.autofocus()) {
+            $(document).ready(function() {
+                emailInput.input().focus();
+            });
+        }
 
         var signupButton = Button.init({
             size  : 'small',

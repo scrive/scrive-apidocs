@@ -1,4 +1,4 @@
-module Doc.APIVersion
+module API.APIVersion
  ( APIVersion(..)
  ) where
 

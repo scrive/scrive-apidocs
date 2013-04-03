@@ -7,13 +7,12 @@ var AccountSettingsModel = Backbone.Model.extend({
     var self = this;
     var user = new User();
     this.set({"user" : user})
-    user.bind("change:ready",function() {
+    user.bind("change",function() {
+      console.log('User changed ready');
       self.reset();
     });
-    user.bind("reset",function() {
-      self.reset();
-    });
-    user.fetch({cache: false});
+    this.user().set({"ready" : false}, {silent: true});
+    user.fetch({cache: false, processData: true});
     this.reset();
   },
   companyAdmin : function() {
@@ -133,10 +132,44 @@ var AccountSettingsModel = Backbone.Model.extend({
     }, {silent : true});
     this.trigger("reset");
   },
-  saveSubmit : function() {
+  createCompany : function(callback) {
+     return new Submit({
+      method : "POST",
+      url : "/api/frontend/createcompany",
+      ajax : true,
+      ajaxsuccess : function(rs) {
+        if (callback!= undefined) callback();
+      },
+    }).send();
+  },
+  changeEmail :function(callback) {
+     var self = this;
+     return new Submit({
+      method : "POST",
+      url : "/api/frontend/changeemail",
+      ajax : true,
+      ajaxsuccess : function(rs) {
+        var res = JSON.parse(rs);
+        if (res.send) {
+            new FlashMessage({content: localization.account.accountDetails.changeEmailMailSent1 + self.newemail() + localization.account.accountDetails.changeEmailMailSent2, color: "green"});
+        }
+        else {
+            new FlashMessage({content: localization.account.accountDetails.emailAlreadyInUse, color: "red"});
+        }
+        if (callback!= undefined) callback();
+
+      },
+      newemail : self.newemail()
+    }).send();
+  },
+  updateProfile : function(callback) {
     return new Submit({
       method : "POST",
-      url : "/account",
+      url : "/api/frontend/updateprofile",
+      ajax : true,
+      ajaxsuccess : function() {
+        if (callback!= undefined) callback();
+      },
       fstname : this.fstname(),
       sndname : this.sndname(),
       personalnumber : this.personnumber(),
@@ -149,28 +182,53 @@ var AccountSettingsModel = Backbone.Model.extend({
       companyzip :      this.companyzip(),
       companycity :     this.companycity(),
       companycountry :  this.companycountry()
-    });
-  },  
+    }).send();
+  },
+  valid: function() {
+    var number = this.companynumber();
+    var message = null;
+    var validCharsRegex = /^[a-zA-Z0-9-]*$/;
+    if (number.length > 50) {
+      message = localization.validation.companyNumberTooLong;
+    } else if (number.match(validCharsRegex) === null) {
+      message = localization.validation.companyNumberInvalidChars;
+    }
+    if (message !== null) {
+      new FlashMessage({content: message, color: "red"});
+      return false;
+    } else {
+      return true;
+    }
+  },
   save : function() {
-    this.saveSubmit().send();
+    var self  = this;
+    if (!self.valid()) {
+      return;
+    }
+    this.updateProfile(function() {
+      new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue"});
+      self.refresh();
+    });
   },
-  changeEmail : function() {
-    this.saveSubmit().add("newemail", this.newemail()).add("newemailagain", this.newemailagain()).add("changeemail","true").send();
-  },
-  createCompany : function() {
-    this.saveSubmit().add("createcompany","true").send();
-  },
-  refresh : function() {    this.user().fetch({cache: false}); this.reset(); }
+  refresh : function() {
+    console.log("Forcing refresh");
+    this.user().set({"ready" : false}, {silent: true});
+    console.log("User marked as dirty");
+    this.user().fetch({cache: false, processData: true});
+    console.log("Done fetching, now reset");
+    this.reset();
+
+  }
 });
 
 
-  
+
 var AccountSettingsView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind("reset", this.render);
         this.render();
-    },   
+    },
     accountSettings : function() {
       // Building frame
       var model = this.model;
@@ -218,7 +276,7 @@ var AccountSettingsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.phone))).append($("<td/>").append(phoneinput)));
 
       if (!model.user().hasCompany()) {
-        
+
           var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
           companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
@@ -230,14 +288,14 @@ var AccountSettingsView = Backbone.View.extend({
               model.setCompanynumber(companynumberinput.val());
             })
           table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber))).append($("<td/>").append(companynumberinput)));
-          
+
       };
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
         })
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyposition))).append($("<td/>").append(companypositioninput)));
-      
+
       return box;
     },
     companySettings : function() {
@@ -326,12 +384,25 @@ var AccountSettingsView = Backbone.View.extend({
             body.append(table);
 
 
-            Confirmation.popup({
+            var confirmation = Confirmation.popup({
               onAccept: function() {
+                if ( ! new EmailValidation().validateData(model.newemail())) {
+                  new FlashMessage({color: "red", content : localization.account.accountDetails.invalidEmail });
+                  return false;
+                }
+                if (model.newemail() != model.newemailagain()) {
+                  new FlashMessage({color: "red", content : localization.account.accountDetails.mismatchedEmails });
+                  return false;
+                }
                   trackTimeout('Accept',
                                {'Accept' : 'Change email'},
                                function () {
-                                   model.changeEmail();
+                                   model.changeEmail(
+                                     function() {model.updateProfile(function() {
+                                       confirmation.close();
+                                       model.refresh();
+                                    }); }
+                                  );
                                });
               },
               onReject : function() {
@@ -368,7 +439,7 @@ var AccountSettingsView = Backbone.View.extend({
               model.setCompanyname(companynameinput.val());
             })
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyname)).append($("<td/>").append(companynameinput)));
-      
+
             var companynumberinput = $("<input type='text'/>").val(model.companynumber());
             companynumberinput.change(function() {
               model.setCompanynumber(companynumberinput.val());
@@ -399,16 +470,23 @@ var AccountSettingsView = Backbone.View.extend({
             })
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycountry)).append($("<td/>").append(companycountryinput)));
 
-            
+
             body.append(table);
 
-            Confirmation.popup({
+            var confirmation = Confirmation.popup({
               onAccept: function() {
                   trackTimeout('Accept',
                                {'Accept' : 'create company'},
-                              function() {
-                                  model.createCompany();
-                              });
+                                function() {
+                                  model.createCompany(function() {
+                                       model.updateProfile(function() {
+                                         confirmation.close();
+                                         // We need to refrest the page, since other tabs will be added.
+                                         // Flash message has to be personstent
+                                         new FlashMessage({content: localization.account.accountDetails.companyCreated, color: "green", withReload : true});
+                                      });
+                                    });
+                                  });
               },
               onReject: function() {
                 window.location = window.location
@@ -434,16 +512,18 @@ var AccountSettingsView = Backbone.View.extend({
           model.save();
           return false;
         }
-      }) 
+      })
       return button.input();
     },
     render: function () {
+       console.log("Rendering main view");
        var model = this.model;
        if (!model.ready()) return;
+       console.log("Rendering main view - now we are ready");
        var container = $(this.el).empty();
        var box = $("<div class='tab-content account'/>");
        container.append(box);
-       
+
        box.append(this.accountSettings());
        if (model.user().hasCompany())
         box.append(this.companySettings());

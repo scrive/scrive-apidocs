@@ -32,7 +32,8 @@ import Utils.IO
 import System.Directory
 import System.Exit
 import Kontra
-import Templates.Templates
+import Text.StringTemplates.Templates
+import Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -55,7 +56,7 @@ import Util.Actor
 import Control.Concurrent
 import Control.Monad.Trans.Maybe
 import Data.String.Utils
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Utils.Prelude
 import qualified Codec.Picture.Png as PNG
@@ -292,7 +293,7 @@ findOutAttachmentDesc document = do
                  , fileAttachedBy = attachedByText
                  }
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m) => String -> [SignatoryLink] -> m Seal.SealAttachment
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
@@ -317,7 +318,7 @@ sealSpecFromDocument boxImages hostpart document elog content inputpath outputpa
   evidenceDoc <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/evidenceDocumentation.html"
   sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -508,7 +509,7 @@ presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath 
             }
 
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
              => Document
              -> m (Either String Document)
 sealDocument document = do
@@ -525,7 +526,7 @@ sealDocument document = do
       return $ Left msg
 
 
-sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
                  => Document
                  -> File
                  -> m (Either String Document)
@@ -572,7 +573,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
         res <- runMaybeT $ do
-          True <- dbUpdate $ AttachSealedFile documentid sealedfileid $ systemActor ctxtime
+          dbUpdate $ AttachSealedFile documentid sealedfileid $ systemActor ctxtime
           Just doc <- dbQuery $ GetDocumentByDocumentID documentid
           return doc
         Log.debug $ "Should be attached to document; is it? " ++ show (((Just sealedfileid==) . documentsealedfile) <$> res)
@@ -594,7 +595,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
 
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)

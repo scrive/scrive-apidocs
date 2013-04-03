@@ -8,7 +8,6 @@ module Payments.Control (
                         ,handleRecurlyPostBack
                         ,handlePricePageJSON
                         ,handleUserExists
-                        ,handleCreateUser
                         ,handleSyncNewSubscriptionWithRecurlyOutside)
        where
 
@@ -28,10 +27,8 @@ import Crypto.RNG
 import Recurly
 import Recurly.JS
 import Recurly.Push
---import Templates.Templates
-import Templates.TemplatesLoader
+import Templates
 import User.Lang
-import Templates.Trans
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import User.Model
@@ -41,12 +38,11 @@ import Happstack.Fields
 import Utils.Read
 import Utils.Either
 import Utils.IO
-import qualified Log (payments)
+import qualified Log (payments, MonadLog)
 import qualified Text.JSON.Gen as J
 import MinutesTime
 import Mails.SendMail
 import Utils.Monad
-import qualified Login
 
 import Payments.JSON ()
 import Payments.Model
@@ -65,7 +61,7 @@ handleSyncNewSubscriptionWithRecurly = do
         readField "account_code"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurly: No user logged in." $
           ctxmaybeuser <$> getContext
-  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 
+  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
   subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $
                   listToMaybe subscriptions
@@ -303,7 +299,7 @@ handleRecurlyPostBack = do
   case parsePush bdy of
     Just ps -> postBackCache ps
     _       -> return ()
-    
+
 handlePricePageUserPlanRecurlyJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
 handlePricePageUserPlanRecurlyJSON user plan = do
   Log.payments $ "Handling Price Page JSON for existing user with payment plan on recurly"
@@ -333,7 +329,7 @@ handlePricePageUserPlanRecurlyJSON user plan = do
     J.value "invoices"     $ minvoices
     J.value "subdomain" recurlySubdomain
     J.value "accountCode"  $ show $ ppAccountCode plan
-    J.value "paidPlan"     $ show $ ppPricePlan plan    
+    J.value "paidPlan"     $ show $ ppPricePlan plan
     J.value "status"       $ show $ ppStatus plan
     J.value "firstName"    $ getFirstName user
     J.value "lastName"     $ getLastName user
@@ -361,7 +357,7 @@ handlePricePageUserPlanNoneJSON user plan = do
     J.value "firstName"   $ getFirstName user
     J.value "lastName"    $ getLastName user
     J.value "email"       $ getEmail user
-    J.value "companyName" $ getCompanyName (user, mcompany)        
+    J.value "companyName" $ getCompanyName (user, mcompany)
     J.value "paidPlan"    $ show $ ppPricePlan plan
     J.value "status"      $ show $ ppStatus plan
     J.value "provider"    $ "none"
@@ -389,7 +385,7 @@ handlePricePageUserJSON user = do
     J.value "lastName" $ getLastName user
     J.value "email" $ getEmail user
     J.value "quantity" quantity
-    J.value "companyName" $ getCompanyName (user, mcompany)    
+    J.value "companyName" $ getCompanyName (user, mcompany)
     J.value "has_company" $ isJust $ usercompany user
     J.value "is_admin" $ useriscompanyadmin user
     J.object "plans" $ do
@@ -397,7 +393,7 @@ handlePricePageUserJSON user = do
         J.value "signature" teamsig
       J.object "form" $ do
         J.value "signature" formsig
-    
+
 handlePricePageNoUserJSON :: Kontrakcja m => m JSValue
 handlePricePageNoUserJSON = do
   Log.payments $ "Handling Price Page JSON for non-existing user"
@@ -415,7 +411,7 @@ handlePricePageNoUserJSON = do
         J.value "signature" teamsig
       J.object "form" $ do
         J.value "signature" formsig
-    
+
 handlePricePageJSON :: Kontrakcja m => m JSValue
 handlePricePageJSON = do
   muser <- ctxmaybeuser <$> getContext
@@ -425,7 +421,7 @@ handlePricePageJSON = do
     (Just user, Nothing  , _)               -> handlePricePageUserJSON user
     (Just user, Just plan, NoProvider)      -> handlePricePageUserPlanNoneJSON user plan
     (Just user, Just plan, RecurlyProvider) -> handlePricePageUserPlanRecurlyJSON user plan
-        
+
 toEID :: User -> Either UserID CompanyID
 toEID user = maybe (Left (userid user)) Right (usercompany user)
 
@@ -442,28 +438,21 @@ handleUserExists = do
     J.value "is_admin"    $ maybe False useriscompanyadmin muser
     J.value "has_company" $ maybe False (isJust . usercompany) muser
 
-handleCreateUser :: Kontrakcja m => m JSValue
-handleCreateUser = do
-  Log.payments $ "handleCreateUser"
-  mres <- Login.handleSignup
-  runJSONGenT $ do
-    J.value "success" $ isJust mres
-
 handleSyncNewSubscriptionWithRecurlyOutside :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurlyOutside = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   time <- ctxtime <$> getContext
-  ac <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: account_code must exist and be an integer." $ 
+  ac <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: account_code must exist and be an integer." $
         readField "accountCode"
-  email <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: email must exist." $ 
+  email <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: email must exist." $
         getField "email"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: user does not exist." $
           dbQuery $ GetUserByEmail $ Email email
   subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurlyOutside" $
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
-  subscription <- pguard' "handleSyncNewSubscriptionWithRecurlyOutside: No subscription." $ 
+  subscription <- pguard' "handleSyncNewSubscriptionWithRecurlyOutside: No subscription." $
                   listToMaybe subscriptions
-  invoices <- pguardM "handleChangePlan" $
+  invoices <- pguardM "handleSyncNewSubscriptionWithRecurlyOutside: no invoices" $
               liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show ac
   let is = maybe "collected" inState $ listToMaybe invoices
   let eid = maybe (Left $ userid user) Right $ usercompany user
@@ -508,22 +497,22 @@ fromRecurlyPricePlan "free"         = FreePricePlan
 fromRecurlyPricePlan "team"         = TeamPricePlan
 fromRecurlyPricePlan "form"         = FormPricePlan
 fromRecurlyPricePlan _              = TeamPricePlan
-  
+
 -- factor out error logging
-pguard :: (MonadBase IO m, MonadIO m) => String -> Either String a -> m a
+pguard :: (MonadBase IO m, Log.MonadLog m) => String -> Either String a -> m a
 pguard _   (Right v) = return v
 pguard pre (Left msg) = do
   Log.payments $ pre ++ ": " ++ msg
   internalError
 
-pguardM :: (MonadBase IO m, MonadIO m) => String -> m (Either String a) -> m a
+pguardM :: (MonadBase IO m, Log.MonadLog m) => String -> m (Either String a) -> m a
 pguardM pre action = pguard pre =<< action
 
-pguard' :: (MonadBase IO m, MonadIO m) => String -> Maybe a -> m a
+pguard' :: (MonadBase IO m, Log.MonadLog m) => String -> Maybe a -> m a
 pguard' _ (Just v) = return v
 pguard' msg Nothing = do
   Log.payments msg
   internalError
 
-pguardM' :: (MonadBase IO m, MonadIO m) => String -> m (Maybe a) -> m a
+pguardM' :: (MonadBase IO m, Log.MonadLog m) => String -> m (Maybe a) -> m a
 pguardM' msg action = pguard' msg =<< action

@@ -16,7 +16,8 @@ class DocHelper
 
   def uploadContract
     puts "Creating document"
-    (@h.wait_until { @driver.find_element :css => ".js-create-document" }).click
+    @driver.navigate().to(@ctx.createKontrakcjaURL "/newdocument")
+    puts "Uploading PDF"
     (@h.wait_until { @driver.find_element :css => ".document-pages input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @h.wait_until { @driver.find_element :css => "#page1" }
@@ -111,7 +112,7 @@ class DocHelper
     puts "review attachment"
     @h.wait_until { (@driver.find_elements :css => ".s-review-sigattachment").length == uploaded + 1 }
     puts "Checking lenght"
-    (@h.wait_until { @driver.find_elements :css => ".s-review-sigattachment" })[uploaded].click
+    #(@h.wait_until { @driver.find_elements :css => ".s-review-sigattachment" })[uploaded].click
     puts "reviewed attachment"
   end
 

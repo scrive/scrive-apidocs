@@ -19,14 +19,15 @@ var SignatoryDesignModel = Backbone.Model.extend({
      return this.get("documentdesignview");
   }
 });
-  
+
 var SignatoryDesignView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'refreshTop');
         this.model.signatory().bind('reset', this.render);
         this.model.signatory().bind('change:fields', this.render);
         this.model.signatory().bind('change:role', this.render);
         this.model.signatory().bind('change:csv', this.render);
+        this.model.signatory().document().bind('change:signatories-roles', this.refreshTop);
         this.render();
     },
    addCustomFieldButton : function() {
@@ -157,7 +158,6 @@ var SignatoryDesignView = Backbone.View.extend({
           self.signOrderSelectorSelect.val(signatory.signorder());
         });
      }
-     if (this.signOrderSelectorSelect.children().size() != maxSO)
      this.signOrderSelectorSelect.children().remove();
      for(var i=1; i<= maxSO; i++){
        var option = $("<option>").attr("value",i).text(i);
@@ -192,9 +192,6 @@ var SignatoryDesignView = Backbone.View.extend({
        var signatory = this.model.signatory();
        var field = signatory.newSignature();
        var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
-       field.view = placeSignatureIcon;
-       field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};
-       field.view.mousedown(function() {placeSignatureIcon.removeClass('redborder')});
        draggebleField(placeSignatureIcon, field);
        return placeSignatureIcon;
    },
@@ -217,6 +214,13 @@ var SignatoryDesignView = Backbone.View.extend({
 
         return top;
     },
+    refreshTop : function() {
+        if (this.topBar != undefined) {
+          var old = this.topBar;
+          this.topBar = this.top();
+          old.replaceWith(this.topBar);
+        }
+    },
     postRender : function() {
         this.refreshRoleSelector();
     },
@@ -230,7 +234,8 @@ var SignatoryDesignView = Backbone.View.extend({
         var view = this;
         this.container.addClass('sigview');
         this.container.children().detach();
-        this.container.append(this.top());
+        this.topBar = this.top();
+        this.container.append(this.topBar);
         var fields = $("<div class='fields'/>");
         view.fields = fields;
         var makeField = function(field) {
@@ -264,7 +269,7 @@ window.SignatoryDesign = function(args) {
           var model = new SignatoryDesignModel(args);
           var view =  new SignatoryDesignView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
-    
+
 };
 
 

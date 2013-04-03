@@ -34,18 +34,20 @@ import KontraError
 import KontraMonad
 import Mails.MailsConfig
 import OurServerPart
-import Templates.Templates
-import Templates.TemplatesLoader
+import qualified Text.StringTemplates.TemplatesLoader as TL
+import Text.StringTemplates.Templates
+import Templates
 import User.Model
 import Utils.List
 import Utils.Monad
+import Log
 
 type InnerKontraPlus = StateT Context (CryptoRNGT (DBT (OurServerPartT IO)))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
+  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response, MonadLog)
 
 runKontraPlus :: Context -> KontraPlus a -> CryptoRNGT (DBT (OurServerPartT IO)) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
@@ -65,9 +67,9 @@ instance KontraMonad KontraPlus where
 
 instance TemplatesMonad KontraPlus where
   getTemplates = ctxtemplates <$> getContext
-  getLocalTemplates lang = do
-    Context{ctxglobaltemplates} <- getContext
-    return $ localizedVersion lang ctxglobaltemplates
+  getTextTemplatesByColumn langStr = do
+     Context{ctxglobaltemplates} <- getContext
+     return $ TL.localizedVersion langStr ctxglobaltemplates
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not MonadZero and WebMonad.
@@ -75,7 +77,7 @@ instance TemplatesMonad KontraPlus where
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad, MonadLog)
 
 instance Kontrakcja Kontra
 

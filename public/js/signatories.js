@@ -106,7 +106,7 @@ window.Signatory = Backbone.Model.extend({
         });
 
         this.bind("change", function() {signatory.document().trigger("change:signatories")});
-
+        this.bind("change:role", function() {signatory.document().trigger("change:signatories-roles")});
     },
     document: function() {
         return this.get("document");
@@ -417,7 +417,7 @@ window.Signatory = Backbone.Model.extend({
                 document: this.document(),
                 signatory: this,
                 type: "remind",
-                editWidth: (this.canSign() && !this.hasSigned()) ? 300 : undefined
+                editWidth: (this.canSign() && !this.hasSigned()) ? 300 : 540
         });
     },
     rejectMail: function() {

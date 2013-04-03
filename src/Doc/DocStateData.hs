@@ -8,7 +8,6 @@ module Doc.DocStateData (
   , DocumentSharing(..)
   , DocumentStatus(..)
   , DocumentTag(..)
-  , DocumentUI(..)
   , DocumentType(..)
   , DocumentProcess(..)
   , FieldPlacement(..)
@@ -33,7 +32,6 @@ module Doc.DocStateData (
   , StatusClass(..)
   , getFieldOfType
   , getValueOfType
-  , emptyDocumentUI
   , documentType
   , toDocumentProcess
   ) where
@@ -59,6 +57,7 @@ import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
 import Utils.Read
+import Utils.Default
 import Control.Monad
 import qualified Data.Set as S
 
@@ -113,6 +112,19 @@ instance Read StatusClass where
 data AuthenticationMethod = StandardAuthentication
                           | ELegAuthentication
   deriving (Eq, Ord, Show)
+
+instance FromJSValue AuthenticationMethod where
+  fromJSValue j = case fromJSValue j of
+    Just "standard" -> Just StandardAuthentication
+    Just "eleg"     -> Just ELegAuthentication
+    _               -> Nothing
+
+instance FromJSValue DeliveryMethod where
+  fromJSValue j = case fromJSValue j of
+    Just "email" -> Just EmailDelivery
+    Just "pad"   -> Just PadDelivery
+    Just "api"   -> Just APIDelivery
+    _            -> Nothing
 
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
@@ -184,6 +196,14 @@ instance Eq SignatoryDetails where
     SignatoryDetails {signatorysignorder=so2, signatoryfields=sf2, signatoryisauthor = isauthor2, signatoryispartner = ispartner2} =
       so1 == so2 && (sort sf2) == (sort sf1) && isauthor1 == isauthor2 && ispartner1 == ispartner2
 
+instance HasDefaultValue SignatoryDetails where
+  defaultValue = SignatoryDetails
+                 { signatorysignorder = SignOrder 1
+                 , signatoryfields    = []
+                 , signatoryisauthor  = False
+                 , signatoryispartner = False
+                 }
+
 data SignatoryLink = SignatoryLink {
     signatorylinkid            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
   , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
@@ -199,8 +219,41 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
   , signatorylinkstatusclass   :: StatusClass
-  , signatorylinksignredirecturl  :: Maybe String
+  , signatorylinksignredirecturl :: Maybe String
+  , signatorylinkrejectiontime   :: Maybe MinutesTime
+  , signatorylinkrejectionreason :: Maybe String
+  , signatorylinkauthenticationmethod   :: AuthenticationMethod
+  , signatorylinkelegdatamismatchmessage        :: Maybe String
+  , signatorylinkelegdatamismatchfirstname      :: Maybe String
+  , signatorylinkelegdatamismatchlastname       :: Maybe String
+  , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
   } deriving (Eq, Ord, Show)
+
+instance HasDefaultValue SignatoryLink where
+  defaultValue =  SignatoryLink
+                  { signatorylinkid              = unsafeSignatoryLinkID 0
+                  , signatorydetails             = defaultValue
+                  , signatorymagichash           = unsafeMagicHash 0
+                  , maybesignatory               = Nothing
+                  , maybesigninfo                = Nothing
+                  , maybeseeninfo                = Nothing
+                  , maybereadinvite              = Nothing
+                  , invitationdeliverystatus     = Unknown
+                  , signatorysignatureinfo       = Nothing
+                  , signatorylinkdeleted         = False
+                  , signatorylinkreallydeleted   = False
+                  , signatorylinkcsvupload       = Nothing
+                  , signatoryattachments         = []
+                  , signatorylinkstatusclass     = SCDraft
+                  , signatorylinksignredirecturl = Nothing
+                  , signatorylinkrejectiontime   = Nothing
+                  , signatorylinkrejectionreason = Nothing
+                  , signatorylinkauthenticationmethod = StandardAuthentication
+                  , signatorylinkelegdatamismatchmessage = Nothing
+                  , signatorylinkelegdatamismatchfirstname = Nothing
+                  , signatorylinkelegdatamismatchlastname = Nothing
+                  , signatorylinkelegdatamismatchpersonalnumber = Nothing
+                  }
 
 data CSVUpload = CSVUpload {
     csvtitle :: String
@@ -307,14 +360,6 @@ data DocumentTag = DocumentTag {
 instance Ord DocumentTag where
   a `compare` b = tagname a `compare` tagname b
 
-data DocumentUI = DocumentUI {
-    documentmailfooter :: Maybe String
-  } deriving (Eq, Ord, Show)
-
-emptyDocumentUI :: DocumentUI
-emptyDocumentUI = DocumentUI { documentmailfooter = Nothing }
-
-
 getFieldOfType :: FieldType -> [SignatoryField] -> Maybe SignatoryField
 getFieldOfType _ [] = Nothing
 getFieldOfType t (sf:rest) =
@@ -348,18 +393,39 @@ data Document = Document {
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
-  , documentauthenticationmethod   :: AuthenticationMethod
   , documentdeliverymethod         :: DeliveryMethod
-  , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
   , documentsharing                :: DocumentSharing
-  , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, String)
   , documenttags                   :: S.Set DocumentTag
   , documentauthorattachments      :: [AuthorAttachment]
-  , documentui                     :: DocumentUI
   , documentlang                   :: Lang
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
   } deriving (Eq, Ord, Show)
+
+
+instance HasDefaultValue Document where
+  defaultValue = Document
+          { documentid                   = unsafeDocumentID 0
+          , documenttitle                = ""
+          , documentsignatorylinks       = []
+          , documentfile                 = Nothing
+          , documentstatus               = Preparation
+          , documenttype                 = Signable Contract
+          , documentctime                = fromSeconds 0
+          , documentmtime                = fromSeconds 0
+          , documentdaystosign           = 14
+          , documenttimeouttime          = Nothing
+          , documentinvitetext           = ""
+          , documentsealedfile           = Nothing
+          , documentdeliverymethod       = EmailDelivery
+          , documentinvitetime           = Nothing
+          , documentsharing              = Private
+          , documenttags                 = S.empty
+          , documentauthorattachments    = []
+          , documentlang                 = defaultValue
+          , documentstatusclass          = SCDraft
+          , documentapicallbackurl       = Nothing
+          }
 
 instance HasLang Document where
   getLang = documentlang

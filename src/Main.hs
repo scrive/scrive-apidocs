@@ -24,7 +24,7 @@ import Utils.Default
 import Utils.IO
 import Utils.Network
 import RoutingTable
-import Templates.TemplatesLoader
+import Templates
 import User.Model
 import Control.Logic
 import qualified Log
@@ -66,7 +66,7 @@ main = Log.withLogger $ do
 
   withPostgreSQL (dbConfig appConf) $ do
     performDBChecks Log.server kontraTables kontraMigrations
-    runDBEnv $ defineMany kontraFunctions
+    defineMany kontraFunctions
 
   startSystem appGlobals appConf
 

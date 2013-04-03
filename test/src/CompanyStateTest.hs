@@ -64,9 +64,19 @@ test_updateCompanyUI :: TestEnv ()
 test_updateCompanyUI = do
   Company{companyid = cid, companyui} <- addTestCompany ""
   let cui = companyui {
-    companybarsbackground = Just "blue"
-  , companybarstextcolour = Just "green"
-  , companylogo = Nothing
+    companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
+  , companyemailbordercolour = Just "#dee4ed"
+  , companyemailbuttoncolour = Just "215"
+  , companyemailemailbackgroundcolour = Just "#0f0"
+  , companyemailbackgroundcolour = Just "blue"
+  , companyemailtextcolour = Just "green"
+  , companyemaillogo = Nothing
+  , companysignviewlogo = Nothing
+  , companysignviewtextcolour = Nothing
+  , companysignviewtextfont = Nothing
+  , companysignviewbarscolour = Nothing
+  , companysignviewbarstextcolour = Nothing
+  , companysignviewbackgroundcolour = Nothing
   }
   res <- dbUpdate $ UpdateCompanyUI cid cui
   assertBool "CompanyUI updated correctly" res

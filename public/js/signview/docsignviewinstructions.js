@@ -56,6 +56,18 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       var padGiveToNextSignatoryModel = new PadGiveToNextSignatoryModel({document : document});
       return $(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
   },
+  styleText: function(elem) {
+    var document = this.model.document();
+    var textcolour = document.signviewtextcolour();
+    var textfont = document.signviewtextfont();
+
+    if (this.model.usebranding() && textcolour) {
+      elem.css('color', textcolour);
+    }
+    if (this.model.usebranding() && textfont) {
+      elem.css('font-family', textfont);
+    }
+  },
   render: function() {
     var document = this.model.document();
     $(this.el).empty();
@@ -67,29 +79,38 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
        !document.padDelivery() &&
        document.currentSignatory().canSign() &&
        !document.currentSignatory().author()) {
-      container.append($("<div class='headline' style='margin-bottom : 10px'/>").text(this.welcomeText()));
+      var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
+      this.styleText(headline);
+      container.append(headline.text(this.welcomeText()));
     }
 
-    container.append($("<div class='headline' />").text(this.text()));
-    container.append($("<div class='subheadline' />").text(this.subtext()));
+    var headline = $("<div class='headline' />");
+    this.styleText(headline);
+    container.append(headline.text(this.text()));
+    var subheadline = $("<div class='subheadline' />");
+    this.styleText(subheadline);
+    container.append(subheadline.text(this.subtext()));
 
     if (document.padDelivery() && document.isSignedNotClosed())
          container.append(this.giveToNextPadSignatoryOption());
 
     var smallerbit = $("<div class='smaller-bits'/>");
 
-    if (document.timeouttime() != undefined && document.signingInProcess())
-        smallerbit.append($("<div class='duedate' />").text(this.dueDateDescription()));
+    if (document.timeouttime() != undefined && document.signingInProcess()) {
+        var duedate = $("<div class='duedate' />");
+        this.styleText(duedate);
+        smallerbit.append(duedate.text(this.dueDateDescription()));
+    }
 
 
     if (!this.model.document().padDelivery()) {
-        var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf")
+        var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
+        this.styleText(link);
         smallerbit.append(link);
     }
 
 
     container.append($("<div class='subheadline' />").append(smallerbit));
-
 
     $(this.el).append(container);
 

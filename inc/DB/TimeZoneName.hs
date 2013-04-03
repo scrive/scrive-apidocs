@@ -14,7 +14,6 @@ import Data.Typeable (Typeable)
 import Database.HDBC (SqlValue)
 
 import DB.Core (MonadDB)
-import DB.Env (DBEnv)
 import DB.Functions (kRun)
 import DB.SQL (SQL, (<?>), (<+>), unsafeFromString, raw)
 import DB.Utils (getOne, exactlyOneObjectReturnedGuard)
@@ -26,7 +25,7 @@ default (SQL)
 newtype TimeZoneName = TimeZoneName String
   deriving (Eq, Show, Ord, Typeable)
 
-mkTimeZoneName :: (MonadBaseControl IO m, MonadDB m) => String -> DBEnv m TimeZoneName
+mkTimeZoneName :: (MonadBaseControl IO m, MonadDB m) => String -> m TimeZoneName
 mkTimeZoneName s | not (sanityCheck s) = fail $ "mkTimeZoneName: illegal time zone string: " ++ show s
                  | otherwise = do
   -- Check if we can use the string to form a valid SQL 'timestamp with time zone' value.
@@ -43,7 +42,7 @@ sanityCheck s = case break (=='/') s of
           _           -> all (\b -> isAlphaNum b || b `elem` "/+-_") s
 
 withTimeZone :: (MonadDB m, MonadBaseControl IO m)
-             => TimeZoneName -> DBEnv m a -> DBEnv m a
+             => TimeZoneName -> m a -> m a
 withTimeZone (TimeZoneName tz) m = E.bracket
   (do stz :: String <- getOne "SHOW timezone" >>= exactlyOneObjectReturnedGuard
       setTz tz

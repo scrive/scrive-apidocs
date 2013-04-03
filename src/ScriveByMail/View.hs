@@ -1,7 +1,7 @@
 module ScriveByMail.View where
 
-import Templates.Templates
-import Templates.TemplatesUtils
+import Text.StringTemplates.Templates
+import Templates
 import Context
 import DB
 import Doc.DocStateData
@@ -17,11 +17,12 @@ import MagicHash
 import MinutesTime
 import ScriveByMail.Model
 import FlashMessage
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified Text.JSON.Gen as J
 import Text.JSON
 import Control.Applicative
 import Data.Int
+import Mails.SendMail(kontramail)
 
 mailMailAPIConfirm :: (MonadDB m, TemplatesMonad m)
                    => Context
@@ -30,12 +31,12 @@ mailMailAPIConfirm :: (MonadDB m, TemplatesMonad m)
                    -> m Mail
 mailMailAPIConfirm ctx document siglink = do
   documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
-        F.valueM "footer" $ mailFooterForDocument ctx document
         F.valueM "timetosigninfo" $ do
             case (documenttimeouttime document) of
                  Just time -> renderLocalTemplate document "timetosigninfo" $ do
                                   F.value "time" $ show time
                  Nothing -> return ""
+        F.value "loginlink" $ show $ LinkLogin (documentlang document) NotLogged
         F.valueM "partnersinfo" $ do
              renderLocalListTemplate document $ map getSmartName $ partyList document
         F.valueM "whohadsignedinfo" $ do
@@ -64,8 +65,9 @@ mailMailApiDelayAdmin ctx adminemail email delayid key expires =
     F.value "expires" $ showDateDMY expires
 
 mailMailApiDelayUser :: TemplatesMonad m => Context -> String -> m Mail
-mailMailApiDelayUser _ctx email =
+mailMailApiDelayUser ctx email =
   kontramail "mailMailAPIDelayUser" $ do
+    F.value "ctxhostpart" $ ctxhostpart ctx
     F.value "email" email
 
 mailAPIInfoFields :: Monad m => MailAPIInfo -> Fields m ()

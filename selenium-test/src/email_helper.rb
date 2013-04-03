@@ -18,8 +18,8 @@ class EmailHelper
     @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
     begin
       @driver.navigate().to(@ctx.createKontrakcjaURL("/dave/backdoor/" + email))
-      @h.wait_until { @driver.find_element :css => "#content a" }
-      link = (@driver.find_elements :css => "#content a").first.attribute("href")
+      @h.wait_until { @driver.find_element :css => ".bodyContent a" }
+      link = (@driver.find_elements :css => ".bodyContent a").first.attribute("href")
       puts "Link from latest email to " + email + " has link " + link
     ensure
       @loginhelper.logout

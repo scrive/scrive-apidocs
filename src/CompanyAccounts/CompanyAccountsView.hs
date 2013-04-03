@@ -18,15 +18,14 @@ import Control.Applicative ((<$>))
 
 import FlashMessage
 import KontraLink
-import Mails.SendMail(Mail)
-import Templates.Templates
-import Templates.TemplatesUtils
+import Mails.SendMail(Mail, kontramail, kontramaillocal)
+import Text.StringTemplates.Templates
 import User.Model
 import Company.Model
 import Doc.DocViewMail
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 ----------------------------------------------------------------------------
 
@@ -37,6 +36,7 @@ mailNewCompanyUserInvite hostpart invited inviter company link =
     basicCompanyInviteFields invited inviter company
     basicLinkFields hostpart link
     F.object "companybrand" $ companyBrandFields company
+    F.value "creatorname" $ getSmartName inviter
 
 
 mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>

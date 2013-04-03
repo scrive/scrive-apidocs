@@ -167,7 +167,7 @@ htmlevidencelog=
      <tr>
        <td>$entry.time$</td>
        <td>$entry.ip$</td>
-       <td><div style="max-height:100px;overflow-y:auto;overflow-x:auto" class='capitalize-first-letter'>$entry.text:noescape()$</div></td>
+       <td><div class='capitalize-first-letter'>$entry.text:noescape()$</div></td>
      </tr>
     }$
 

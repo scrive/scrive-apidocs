@@ -9,7 +9,7 @@ module EvidenceLog.View (
 import Doc.DocStateData
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified Doc.Screenshot as Screenshot
-import Templates.Templates
+import Text.StringTemplates.Templates
 
 import Control.Applicative
 
@@ -17,7 +17,7 @@ import MinutesTime
 import Text.JSON
 
 import Text.JSON.Gen as J
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import EvidenceLog.Model
 import Utils.Prelude
 import Util.HasSomeUserInfo
@@ -153,10 +153,11 @@ emptyEvent _ = False
 
 simplyfiedEventText :: TemplatesMonad m => Document -> DocumentEvidenceEvent -> m String
 simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evType dee)) $ do
+    let siglink = (getSigLinkFor doc =<< evAffectedSigLinkID dee)
     F.value "documenttitle" $ (documenttitle doc)
-    F.value "affectedsignatory" $ getSmartName <$> (getSigLinkFor doc =<< evAffectedSigLinkID dee)
+    F.value "affectedsignatory" $ getSmartName <$> siglink
     F.value "text" $ filterTags <$> evMessageText dee
-    F.value "eleg" $ documentauthenticationmethod doc == ELegAuthentication
+    F.value "eleg" $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
     F.value "pad"  $ documentdeliverymethod doc == PadDelivery
     
 -- | Generating text of Evidence log that is attachmed to PDF. It should be compleate

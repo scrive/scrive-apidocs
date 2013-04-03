@@ -19,8 +19,8 @@ import Data.Maybe (listToMaybe, isJust)
 import Data.Functor
 import Util.Actor
 import EvidenceLog.Model
-import Templates.Templates
-import Templates.Fields
+import Text.StringTemplates.Templates
+import Text.StringTemplates.Fields
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 
@@ -72,7 +72,7 @@ instance MonadDB m => DBQuery m GetPadQueue PadQueue where
             [toSql uid,toSql uid]
     fetchPadQueue
 
-fetchPadQueue :: MonadDB m => DBEnv m PadQueue
+fetchPadQueue :: MonadDB m => m PadQueue
 fetchPadQueue = listToMaybe `liftM` kFold decoder []
   where
     decoder acc did slid  = (did, slid) : acc

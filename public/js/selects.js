@@ -14,6 +14,9 @@ window.SelectOptionModel = Backbone.Model.extend({
   value : function(){
        return this.get("value");
   },
+  extraAttrs: function() {
+       return this.get('extraAttrs');
+  },
   selected : function() {
        if (this.get("onSelect")(this.value()) == true)
            this.trigger("done");
@@ -27,6 +30,7 @@ window.SelectModel = Backbone.Model.extend({
       expandSide : "left",
       expanded : false,
       onOpen : function() {return true;},
+      extraNameAttrs: {},
       expandOnHover : false
   },
   initialize: function(args){
@@ -45,6 +49,9 @@ window.SelectModel = Backbone.Model.extend({
   },
   name : function(){
        return this.get("name");
+  },
+  extraNameAttrs : function(){
+       return this.get("extraNameAttrs");
   },
   iconClass : function(){
        return this.get("iconClass");
@@ -97,6 +104,10 @@ window.SelectOptionView = Backbone.View.extend({
     render: function () {
         var model = this.model;
         var a = $("<span/>").text(this.model.name());
+        var attrs = model.extraAttrs() ? model.extraAttrs() : {};
+        $.each(attrs, function(attr, val) {
+          a.attr(attr, val);
+        });
         $(this.el).append(a);
         $(this.el).click(function() {model.selected(); return false;});
         return this;
@@ -130,6 +141,10 @@ var SelectView = Backbone.View.extend({
         var button = $("<div class='select-button' />");
         button.append("<div class='select-button-left' />");
         var label = $("<div class='select-button-label' />");
+        var extraNameAttrs = this.model.extraNameAttrs() != null ? this.model.extraNameAttrs() : {};
+        $.each(extraNameAttrs, function(attr, val) {
+          label.attr(attr, val);
+        });
         if (this.model.iconClass() != undefined)
             label.append($("<div class='select-icon'>").addClass(this.model.iconClass()));
         else
@@ -204,6 +219,7 @@ window.Select = function(args) {
                                         textWidth : args.textWidth,
                                         expandSide : args.expandSide,
                                         onOpen : args.onOpen,
+                                        extraNameAttrs: args.extraNameAttrs,
                                         expandOnHover : args.expandOnHover
                                        });
           var input = $("<div class='select'/>");

@@ -1,11 +1,9 @@
 module Login (
     forgotPasswordPagePost
   , signupPageGet
-  , signupPagePost
   , handleLoginGet
   , handleLoginPost
   , handleLogout
-  , handleSignup
   ) where
 
 import ActionQueue.Core
@@ -17,25 +15,22 @@ import Kontra
 import KontraLink
 import Mails.SendMail
 import Redirect
-import User.Action
 import User.Model
 import IPAddress
 import Company.Model
 import User.UserView as UserView
 import qualified Log (security, debug)
-import qualified User.UserControl as UserControl
 import Util.HasSomeUserInfo
 import Stats.Control
 import User.History.Model
-import ActionQueue.UserAccountRequest
 
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Text.JSON.Gen as J
 import Text.JSON
-import qualified Templates.Fields as F
-import Templates.Templates
+import qualified Text.StringTemplates.Fields as F
+import Text.StringTemplates.Templates
 import Routing
 import Utils.HTTP
 import ThirdPartyStats.Core
@@ -90,77 +85,6 @@ signupPageGet = do
   memail <- getField "email"
   fmap ThinPage $ renderTemplate "signupPage" $ do
     F.value "email" memail
-
-{- |
-   Handles submission of the signup form.
-   Normally this would create the user, (in the process mailing them an activation link),
-   but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
-   then we send them a new activation link because probably the old one expired or was lost.
-   If they have then we stop the signup.
--}
-signupPagePost :: Kontrakcja m => m JSValue
-signupPagePost = do
-  me <- handleSignup
-  runJSONGenT $ value "sent" $ isJust me
-
-{- |
-   Try to sign up a new user. Returns the email and the new user id. If the
-   user already existed, don't return the userid.
- -}
-handleSignup :: Kontrakcja m => m (Maybe (Email, Maybe UserID))
-handleSignup = do
-  memail <- getOptionalFieldNoFlash asValidEmail "email"
-  mfirstname <- getOptionalFieldNoFlash asValidName "firstName"
-  mlastname <- getOptionalFieldNoFlash asValidName "lastName"
-  ctx <- getContext
-  case memail of
-    Nothing -> return Nothing
-    Just email -> do
-      muser <- dbQuery $ GetUserByEmail $ Email email
-      case (muser, muser >>= userhasacceptedtermsofservice) of
-        (Just user, Nothing) -> do
-          -- there is an existing user that hasn't been activated
-          -- send them another invite
-          UserControl.sendNewUserMail user
-          l <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
-          asyncLogEvent "Send account confirmation email" [
-            UserIDProp $ userid user,
-            IPProp $ ctxipnumber ctx,
-            TimeProp $ ctxtime ctx,
-            someProp "Context" ("Acount request" :: String)
-            ]
-          asyncLogEvent SetUserProps [
-            UserIDProp $ userid user,
-            someProp "Account confirmation email" $ ctxtime ctx,
-            someProp "Confirmation link" $ show l
-            ]
-          return $ Just (Email email, Nothing)
-        (Nothing, Nothing) -> do
-          -- this email address is new to the system, so create the user
-          -- and send an invite
-          lang <- ctxlang <$> getContext
-          mnewuser <- createUser (Email email) (fromMaybe "" mfirstname, fromMaybe "" mlastname) Nothing lang
-          case mnewuser of
-            Nothing -> return $ Just (Email email, Nothing)
-            Just newuser -> do
-              UserControl.sendNewUserMail newuser
-              l <- newUserAccountRequestLink (ctxlang ctx) (userid newuser) AccountRequest
-              asyncLogEvent "Send account confirmation email" [
-                UserIDProp $ userid newuser,
-                IPProp $ ctxipnumber ctx,
-                TimeProp $ ctxtime ctx,
-                someProp "Context" ("Acount request" :: String)
-                ]
-              asyncLogEvent SetUserProps [
-                UserIDProp $ userid newuser,
-                someProp "Account confirmation email" $ ctxtime ctx,
-                NameProp (fromMaybe "" mfirstname ++ " " ++ fromMaybe "" mlastname),
-                FirstNameProp $ fromMaybe "" mfirstname,
-                LastNameProp $ fromMaybe "" mlastname,
-                someProp "Confirmation link" $ show l
-                ]
-              return $ Just (Email email, Just $ userid newuser)
-        (_, _) -> return Nothing
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.

@@ -22,11 +22,13 @@ import qualified ScriveByMail.Control as MailAPI
 import qualified Payments.Control as Payments
 import qualified Attachment.Control as AttachmentControl
 import Doc.API
+import User.API
 import OAuth.Control
 import LangRouting
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import AppView
 import qualified PadQueue.Control as PadQueue
+import PadApplication.API
 
 {- |
    The routing table for the app.
@@ -74,7 +76,6 @@ staticRoutes = choice
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
 
-     , dir "lang" $ hPostNoXToken $ toK0 $ UserControl.handlePostUserLang
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
      , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
@@ -112,6 +113,7 @@ staticRoutes = choice
      , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
      -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
      , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
+     , dir "prolong" $ hPost $ toK1 $ DocControl.handleProlong
 
      , dir "pages"  $ hGet $ toK2 $ DocControl.showPage
      -- HTMP emails can have embedded preview image
@@ -129,11 +131,8 @@ staticRoutes = choice
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleAccountGet
-     , dir "account" $ dir "json"       $ hGet  $ toK0 $ UserControl.getUserJSON
-     , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
-     , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "company" $ Company.routes
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
@@ -155,7 +154,6 @@ staticRoutes = choice
      -- price plan page information
      , dir "payments" $ dir "pricepageinfo" $ hGetAllowHttp $ toK0 $ Payments.handlePricePageJSON
      , dir "payments" $ dir "userexists" $ hGetAllowHttp $ toK0 $ Payments.handleUserExists
-     , dir "payments" $ dir "createuser" $ hPostAllowHttp $ toK0 $ Payments.handleCreateUser
      , dir "payments" $ dir "newsubscriptionoutside" $ hPostAllowHttp $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
 
      -- account stuff
@@ -163,7 +161,7 @@ staticRoutes = choice
      , allLangDirs $ dir "login" $ hGet $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ signupPageGet
-     , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ signupPagePost
+     , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
@@ -178,6 +176,8 @@ staticRoutes = choice
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes
      , documentAPI
+     , userAPI
+     , padApplicationAPI
      , oauth
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
 

@@ -33,25 +33,20 @@ data LoginRedirectReason = LoginTry
 -}
 data KontraLink
     = LinkHome Lang
-    | LinkPriceplan Lang
     | LinkLogin Lang LoginRedirectReason
     | LinkLogout
     | LinkSignup Lang
-    | LinkForgotPassword Lang
-    | LinkLangSwitch
     | LinkArchive
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
-    | LinkCompanyLogo CompanyID
+    | LinkCompanySignViewLogo CompanyID
+    | LinkCompanyEmailLogo CompanyID      
     | LinkChangeUserEmail UserID MagicHash
-    | LinkAccountSecurity
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkIssueDoc DocumentID
-    | LinkDesignDoc DocumentID
     | LinkEvidenceAttachment DocumentID BSC.ByteString
-    | LinkRenameAttachment AttachmentID
     | LinkCompanyAccounts
     | LinkCompanyTakeover CompanyID
     | LinkAcceptTOS
@@ -65,10 +60,8 @@ data KontraLink
     | LinkPasswordReminder UserID MagicHash
     | LinkAccountCreated Lang UserID MagicHash SignupMethod -- email
     | LoopBack
-    | BackToReferer
     | LinkDaveDocument DocumentID
     | LinkDaveFile FileID String
-    | LinkAskQuestion
     | LinkAttachmentView AttachmentID
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
@@ -78,7 +71,7 @@ data KontraLink
     | LinkCompanyAdminPayments CompanyID
     | LinkUserAdminPayments UserID
     | LinkExternal String
-    | LinkDesignView 
+    | LinkDesignView
     deriving (Eq)
 
 langFolder :: Lang -> String
@@ -89,29 +82,24 @@ langFolder lang = "/" ++ (codeFromLang lang)
 -}
 instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
-    showsPrec _ (LinkPriceplan lang) = (++) $ langFolder lang ++ "/pricing"
     showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/login"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/signup"
-    showsPrec _ (LinkForgotPassword lang) = (++) $ langFolder lang ++ "/amnesia"
-    showsPrec _ LinkLangSwitch = (++) "/lang"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
     showsPrec _ (LinkAccountCompany Nothing) = (++) "/account#company"
     showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/branding/" ++ show cid
-    showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
+    showsPrec _ (LinkCompanySignViewLogo cid) = (++) $ "/account/company/signview/" ++ show cid
+    showsPrec _ (LinkCompanyEmailLogo cid) = (++) $ "/account/company/email/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts) = (++) $ "/account#users"
     showsPrec _ (LinkCompanyTakeover companyid) = (++) $ "/companyaccounts/join/" ++ show companyid
-    showsPrec _ LinkAccountSecurity = (++) "/account#security"
     showsPrec _ LinkUserMailAPI = (++) "/account#mailapi"
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
-    showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
     showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ BSC.unpack filename
-    showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink)
@@ -129,10 +117,8 @@ instance Show KontraLink where
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated lang uid hash sm) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash ++ "/" ++ show sm
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
-    showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkDaveFile fileid filename) =  (++) $ "/dave/file/" ++ show fileid ++ "/" ++ filename
-    showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
     showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show (signatorylinkid sl) ++

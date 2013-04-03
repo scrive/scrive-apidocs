@@ -30,6 +30,7 @@ ignore  css/fonts
 
 set systemPage
  css css/calendar.css
+ css css/colorpicker.css
  less less/utils.less
  less less/branding/index.less
  less less/document-pages.less
@@ -46,6 +47,7 @@ set systemPage
  less less/tabs.less
  less less/archive.less
  less less/account.less
+ less less/companybranding.less
  less less/signaturedrawer.less
  less less/paddeviceview.less
  less less/createfromtemplate.less
@@ -59,6 +61,7 @@ set systemPage
  js   libs/jquery.MultiFile.js
  js   libs/jquery.hashchange.js
  jsx  tiny_mce/jquery.tinymce.js
+ js   libs/colorpicker.js
  js   libs/json2.js
  js   libs/jstz.min.js
  js   libs/underscore.js
@@ -74,7 +77,6 @@ set systemPage
  js   js/utils/browserinfo.js
  js   js/utils/language.js
  js   js/loading.js
- js   js/table.js
  js   js/arrows.js
  js   js/flashmessages.js
  js   js/infotextinputs.js
@@ -155,7 +157,10 @@ set systemPage
  js   js/account/securitysettings.js
  js   js/account/mailapisettings.js
  js   js/account/companyaccounts.js
- js   js/account/companybranding.js
+ js   js/account/companybranding/companybrandingutils.js
+ js   js/account/companybranding/companybrandingemail.js
+ js   js/account/companybranding/companybrandingsignview.js
+ js   js/account/companybranding/companybranding.js
  js   js/account/account.js
  js   js/blocking.js
  js   js/oauth.js

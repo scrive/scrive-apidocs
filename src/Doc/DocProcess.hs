@@ -8,7 +8,8 @@ module Doc.DocProcess (
 where
 
 import Doc.DocStateData
-import Templates.Templates
+import Text.StringTemplates.Templates
+import Templates
 import User.Lang
 
 class HasProcess a where
@@ -66,14 +67,13 @@ data DocProcessInfo =
   , processmailreject :: String
   , processmailinvitationtosign :: String
   , processmailinvitationtosigndefaultheader :: String
-  , processmailsignedstandardheader :: String
-  , processmailnotsignedstandardheader :: String
   , processmailremindnotsigned :: String
   , processmailconfirmbymailapi :: String
   , processwhohadsignedinfoformail :: String
 
   -- process specific flash message templates
   , processflashmessagerestarted :: String
+  , processflashmessageprolonged :: String
 
   -- process specific modal templates
   , processmodalsendconfirmation :: String
@@ -105,14 +105,13 @@ contractProcess =
   , processmailreject = "mailRejectContractMail"
   , processmailinvitationtosign = "mailInvitationToSignContract"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
-  , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
-  , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
   , processmailremindnotsigned = "remindMailNotSignedContract"
   , processmailconfirmbymailapi = "mailMailAPIConfirmContract"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageContractRestarted"
+  , processflashmessageprolonged = "flashMessageContractProlonged"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalContractCreated"
@@ -144,14 +143,13 @@ offerProcess =
   , processmailreject = "mailRejectOfferMail"
   , processmailinvitationtosign = "mailInvitationToSignOffer"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
-  , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
-  , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
   , processmailremindnotsigned= "remindMailNotSignedOffer"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOffer"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageOfferRestarted"
+  , processflashmessageprolonged = "flashMessageOfferProlonged"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalOfferCreated"
@@ -184,14 +182,13 @@ orderProcess =
   , processmailreject = "mailRejectOrderMail"
   , processmailinvitationtosign = "mailInvitationToSignOrder"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
-  , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
-  , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
   , processmailremindnotsigned = "remindMailNotSignedOrder"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOrder"
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages
   , processflashmessagerestarted = "flashMessageOrderRestarted"
+  , processflashmessageprolonged = "flashMessageOrderProlonged"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalOrderCreated"

@@ -12,7 +12,7 @@ import Control.Applicative
 import System.IO
 import Language.Haskell.Exts
 import System.FilePath.Find
-import Templates.TemplatesFiles
+import Text.StringTemplates.Files
 import qualified Data.Map as Map
 import Text.StringTemplate
 import Data.CSV
@@ -286,6 +286,7 @@ main = do
   let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, docProcessInfoTemplates, whiteList]
   translationsLines <- tail <$> basicCSVParser "texts/everything.csv"
   let translations = map (\fields -> (fields !! 0, fields !! 1)) translationsLines
+  templatesFilesPath <- find (return True) (extension ==? ".st") "templates"
   templates <- concat <$> mapM getTemplates templatesFilesPath
   let templatesMap = Map.fromList $ templates ++ translations
       allTemplates = S.fromList $ Map.keys templatesMap

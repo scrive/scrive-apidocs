@@ -4,9 +4,9 @@ module OAuth.View where
 import MagicHash
 import Utils.Prelude
 import Data.Int
-import Templates.Templates
+import Text.StringTemplates.Templates
 import OAuth.Model
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import User.Model
 import User.UserView
 import Text.JSON.Gen hiding (value)

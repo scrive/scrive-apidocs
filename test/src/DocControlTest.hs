@@ -197,7 +197,6 @@ testNonLastPersonSigningADocumentRemainsPending = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
@@ -207,7 +206,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com" False True)
                ]) (systemActor $ documentctime doc')
 
-  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
+  randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
   Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
@@ -245,7 +244,6 @@ testLastPersonSigningADocumentClosesIt = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
             file
 
@@ -256,7 +254,7 @@ testLastPersonSigningADocumentClosesIt = do
                ]) (systemActor $ documentctime doc')
 
 
-  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
+  randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
   Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
@@ -445,7 +443,7 @@ testGetNotLoggedIn = do
   ctx <- mkContext defaultValue
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
-  assertEqual "Response code is 401" 401 (rsCode res)
+  assertEqual "Response code is 403" 403 (rsCode res)
 
 
 testGetBadHeader :: TestEnv ()
@@ -455,7 +453,7 @@ testGetBadHeader = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
-  assertEqual "Response code is 401" 401 (rsCode res)
+  assertEqual "Response code is 403" 403 (rsCode res)
 
 
 

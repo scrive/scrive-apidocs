@@ -26,6 +26,7 @@ var UploadButtonModel = Backbone.Model.extend({
   defaults : {
       name : "",
       text : "",
+      labelstyle: '',
       button : null,
       width: 200,
       maxlength : 1,
@@ -40,6 +41,9 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   text: function() {
        return this.get("text");
+  },
+  labelstyle: function() {
+       return this.get("labelstyle");
   },
   button: function() {
        return this.get("button");
@@ -96,24 +100,25 @@ var UploadButtonView = Backbone.View.extend({
         this.render();
     },
     render: function () {
+
         var model = this.model;
         var button = model.button();
         if (!button) {
-            button = Button.init({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), onClick : function() {return false;}}).input();
+            button = Button.init({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), labelstyle: model.labelstyle(), onClick : function() {return false;}}).input();
         }
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         if (model.type() != "")
             fileinput.attr("accept",model.type());
         fileinput.attr("maxlength",model.maxlength());
         fileinput.attr("name",model.name());
+
+
         fileinput.css("width",(model.width() + 30)  + "px");
 
         if (BrowserInfo.isIE8orLower()) {
             // make input invisible
             fileinput.css('filter', 'alpha(opacity=0)');
         }
-
-
         var list = model.list();
         if (list == undefined) {
             list = $("<div style='display:none'/>");

@@ -14,7 +14,7 @@ module Archive.View
 import Doc.DocStateData
 import FlashMessage
 import KontraLink
-import Templates.Templates
+import Text.StringTemplates.Templates
 import User.Model
 
 import Control.Applicative
@@ -32,7 +32,7 @@ import Text.JSON
 import Doc.DocUtils
 import PadQueue.Model
 import Text.JSON.Gen as J
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Data.String.Utils (strip)
 
 flashMessageSignableArchiveDone :: TemplatesMonad m => m FlashMessage
@@ -81,9 +81,10 @@ docFieldsListForJSON tl crtime padqueue doc = do
                           Contract -> "contract"
                           Offer    -> "offer"
                           Order    -> "order"
-    J.value "authentication" $ case documentauthenticationmethod doc of
-      StandardAuthentication -> "standard"
-      ELegAuthentication  -> "eleg"
+    J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
+      [StandardAuthentication] -> "standard"
+      [ELegAuthentication]     -> "eleg"
+      _                        -> "mixed"
     J.value "delivery" $ case documentdeliverymethod doc of
       EmailDelivery -> "email"
       PadDelivery   -> "pad"
@@ -104,12 +105,13 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
     J.value "isauthor" $ "true" <| isAuthor sl |> "false" 
+    J.value "authentication" $ case signatorylinkauthenticationmethod sl of
+      StandardAuthentication -> "standard"
+      ELegAuthentication  -> "eleg"
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl
-        reject = case documentrejectioninfo doc of
-          Just (rt, slid, _) | slid == signatorylinkid sl -> Just rt
-          _                                               -> Nothing
+        reject = signatorylinkrejectiontime sl
         open = maybereadinvite sl
 
 docForListCSV:: KontraTimeLocale -> Int -> Document -> [[String]]

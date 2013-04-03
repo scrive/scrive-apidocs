@@ -2,7 +2,7 @@ module DB.Model where
 import Database.HDBC
 
 import DB.Core
-import DB.Env
+
 import DB.SQL (RawSQL)
 
 data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
@@ -11,8 +11,8 @@ data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
 data Table = Table {
     tblName             :: RawSQL
   , tblVersion          :: Int
-  , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> DBEnv m TableValidationResult
-  , tblPutProperties    :: MonadDB m => DBEnv m ()
+  , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> m TableValidationResult
+  , tblPutProperties    :: MonadDB m => m ()
   , tblIndexes          :: [TableIndex]
   , tblForeignKeys      :: [ForeignKey]
   }
@@ -53,7 +53,7 @@ tblIndexOnColumns columns = TableIndex { tblIndexColumns = columns }
 data Migration m = Migration {
     mgrTable :: Table
   , mgrFrom  :: Int
-  , mgrDo    :: DBEnv m ()
+  , mgrDo    :: m ()
   }
 
 data ForeignKey = ForeignKey

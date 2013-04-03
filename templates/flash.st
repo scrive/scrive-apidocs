@@ -14,12 +14,6 @@ flashRemindMailSentNotSigned=
 flashRemindMailSentSigned=
 	$_flashRemindMailSentSigned()$ $personname$
 
-######
-flashMessageNoAccountType=
-	$_flashMessageNoAccountType()$
-#####
-flashMessageInvalidAccountType=
-	$_flashMessageInvalidAccountType()$
 #####
 flashMessageMustAcceptTOS=
 	$_flashMessageMustAcceptTOS()$
@@ -27,13 +21,6 @@ flashMessageMustAcceptTOS=
 ####
 flashMessageUserDetailsSaved=
 	<div>$_flashMessageUserDetailsSaved()$</div>
-####
-flashMessageCompanyCreated=
-        <div>$_flashMessageCompanyCreated()$</div>
-####
-flashMessageBadOldPassword=
-	$_flashMessageBadOldPassword()$
-
 ####
 flashMessagePasswordsDontMatch=
 	$_flashMessagePasswordsDontMatch()$
@@ -44,6 +31,12 @@ flashMessageContractRestarted=$_flashMessageContractRestarted()$
 flashMessageOfferRestarted=$_flashMessageOfferRestarted()$
 ###
 flashMessageOrderRestarted=$_flashMessageOrderRestarted()$
+###
+flashMessageContractProlonged=$_flashMessageContractProlonged()$
+###
+flashMessageOfferProlonged=$_flashMessageOfferProlonged()$
+###
+flashMessageOrderProlonged=$_flashMessageOrderProlonged()$
 ###
 flashMessageUserPasswordChanged=
 	$_flashMessageUserPasswordChanged()$
