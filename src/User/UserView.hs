@@ -62,7 +62,6 @@ import Data.Either
 import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Text.StringTemplates.Fields as F
-import Control.Logic
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as B64
 import DB
@@ -84,7 +83,7 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
     value "companyposition" $ usercompanyposition $ userinfo user
     value "usercompanyname" $ getCompanyName (user,mcompany)
     value "usercompanynumber" $ getCompanyNumber (user,mcompany)
-    value "lang"   $ "en" <| LANG_EN == (getLang user) |> "sv"
+    value "lang"   $ codeFromLang $ getLang user
     valueM "mailapi" $ case (mumailapi) of
                             Nothing -> return JSNull
                             Just umailapi -> mailAPIInfoJSON umailapi
