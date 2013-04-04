@@ -40,7 +40,7 @@ mailContractClosed=
 
 ####
 mailContractClosedMainP =
-$_hi()$ <strong>$creatorname$</strong>,
+$_hi()$ <strong>$signatoryname$</strong>,
 <br/>
 <br/>
       $_mailContractClosedContentSignedBy()$

@@ -268,6 +268,7 @@ mailDocumentClosed ctx document l sl = do
    let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document)
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
+        F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "confirmationlink" $ (++) (ctxhostpart ctx) <$> show <$> l
         F.value "doclink" $ if isAuthor sl
