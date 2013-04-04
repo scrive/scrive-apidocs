@@ -39,7 +39,6 @@ import Data.Maybe
 import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
-import Utils.Colour
 import qualified Text.StringTemplates.Fields as F
 
 -- FIXME: why do we even use that?
@@ -351,10 +350,6 @@ companyBrandFields company = do
   F.value "font"  $ companyemailfont $ companyui company
   F.value "bordercolour"  $ companyemailbordercolour $ companyui company
   F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui company
-  F.value "buttoncolourR" $ show r
-  F.value "buttoncolourG" $ show g
-  F.value "buttoncolourB" $ show b
   F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company
   F.value "logo" $ isJust $ companyemaillogo $ companyui company
   F.value "logoLink" $ show $ LinkCompanyEmailLogo $ companyid company
- where (r, g, b) = hsl2rgb (maybe 215 read $ companyemailbuttoncolour $ companyui company) 0.3 0.35
