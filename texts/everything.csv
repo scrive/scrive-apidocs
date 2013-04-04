@@ -282,7 +282,7 @@
 "_mailInvitationToSignTitleContract","Avtal att e-signera: $documenttitle$","Contract to e-sign: $documenttitle$"
 "_mailInvitationToSignTitleOffer","Offert att e-signera: $documenttitle$","Offer to e-sign: $documenttitle$"
 "_mailInvitationToSignTitleOrder","Orderbekräftelse att e-signera: $documenttitle$","Order confirmation to e-sign: $documenttitle$"
-"_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.","<strong>$creatorname$</strong> has invited you to review the document <strong>$creatorname$</strong>."
+"_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.","<strong>$creatorname$</strong> has invited you to review the document <strong>$documenttitle$</strong>."
 "_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.","<strong>$creatorname$</strong> has invited you to review the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewTitleContract","Avtal att granska: $documenttitle$","Contract to review: $documenttitle$"
 "_mailInvitationToViewTitleOffer","Offert att granska: $documenttitle$","Offer to review: $documenttitle$"
