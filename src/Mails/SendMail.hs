@@ -7,7 +7,6 @@ module Mails.SendMail
     , scheduleEmailSendout
     , kontramail
     , kontramaillocal
-    , wrapHTML
     ) where
 
 import DB
@@ -23,7 +22,6 @@ import qualified Text.StringTemplates.Fields as F
 import Templates
 import Control.Logic
 import Data.Char
-import Data.List
 
 -- Needed only for FROM address
 import User.Lang
@@ -63,33 +61,17 @@ scheduleEmailSendout MailsConfig{..} mail@Mail{..} = do
           _ -> False
 
 wrapHTML :: String -> String
-wrapHTML body = concatMap (\x -> x ++ "\r\n") $ [
+wrapHTML body = concat [
     "<!DOCTYPE html PUBLIC \"-//W4C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
   , "<html>"
   , "<head>"
   , "<meta http-equiv='content-type' content='text/html; charset=utf-8'/>"
-  , "<style>"
-  ] ++ pureStyleAsLines ++
-  [ "</style>"
   , "</head>"
   , "<body style='padding:0px;margin:0px;'>"
-  ] ++ pureBodyAsLines ++
-  [ "</body>"
+  , body
+  , "</body>"
   , "</html>"
   ]
-  where
-    bodyAsLines = lines body
-    bodyAsLinesTrimmed = filter (not . null) $ map (reverse . dropWhile isSpace . reverse) $ map (dropWhile isSpace) bodyAsLines
-    takeBody [] = ([], [])
-    takeBody body' = (body'' ++ body''', style)
-      where
-        (body'',rest) = break (isPrefixOf "<style" . dropWhile isSpace . map toLower) body'
-        (body''',style) = takeStyle (drop 1 rest)
-    takeStyle body' = (body''', style'' ++ style)
-      where
-        (style'',rest) = break (isPrefixOf "</style" . dropWhile isSpace . map toLower) body'
-        (body''',style) = takeBody (drop 1 rest)
-    (pureBodyAsLines :: [String], pureStyleAsLines :: [String]) = takeBody bodyAsLinesTrimmed
 
 -- Prototyped. This is why texts are here. But the proper way to do
 -- that is not to add some extra info in Mail data structure

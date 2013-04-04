@@ -46,59 +46,6 @@ a.button-blue
      transform: translatez(0);
      zoom: 1;
 }
-
-div.preview-link
-{
-    color: #333;
-    font-family: $nicemailfont()$;
-    font-size: 16px;
-    line-height: 0;
-    text-align: left;
-    float:left;
-    margin-right:32px;
-    border:1px solid #dee4ed;
-}
-
-div.preview-link img
-{
-    border: none;
-    font-size: 14px;
-    font-weight: bold;
-    height: auto;
-    line-height: 100%;
-    outline: none;
-    text-decoration: none;
-    text-transform: capitalize;
-     display: inline;
-     max-width:150px;
-}
-
-img. nice-mail-logo-class
-{
-    border: none;
-    font-size: 14px;
-    font-weight: bold;
-    height: auto;
-    line-height: 100%;
-    outline: none;
-    text-decoration: none;
-    text-transform: capitalize;
-    max-width:600px;
-    margin-top: 30px;
-    margin-bottom: 30px;
-}
-
-headerContent
-{
-    color: $nicemailbordercolour()$;
-    font-family: Helvetica Neue, Arial, sans-serif;
-    font-size: 40px;
-    font-weight: bold;
-    line-height: 100%;
-    padding: 0;
-    text-align: left;
-    vertical-align: middle;
-}
 </style>
 ####
 nicemail=
@@ -107,28 +54,30 @@ $nicemailcss()$
   <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable" style="height: 100%; margin: 0; padding: 0; width: 100%;">
     <tr>
       <td align="center" valign="top">
+        <!-- // Begin Template Header \\ -->
         <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="background-color: transparent; border-bottom: 0; padding: 24px 0 8px;">
           <tr>
-            <td class="headerContent">
-              <img src="$nicemaillogo()$" class="nice-mail-logo-class"
-              id="headerImage campaign-icon">
+            <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
+              <!-- // Begin Module: Standard Header Image \\ -->
+              <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 30px; margin-bottom: 30px;" id="headerImage campaign-icon" />
+              <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
-        </table>
+        </table><!-- // End Template Header \\ -->
       </td>
     </tr>
 
     <tr>
       <td align="center" valign="top">
-        <table border="0" cellpadding="0" cellspacing="0" width="600"
-              id="templateContainer"
-style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-color: $nicemailbgcolour()$; margin-bottom: 20px;">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-color: $nicemailbgcolour()$; margin-bottom: 20px;">
           <tr>
             <td></td>
           </tr>
 
           <tr>
             <td align="center" valign="top">
+              <!-- // Begin Template Body Top \\ -->
+
               <table border="0" cellpadding="40" cellspacing="0"width="600" id="templateTop" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid;">
                 <tr>
                   <td valign="top" class="topContent">
@@ -150,19 +99,20 @@ style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-
                     </table>
                   </td>
                 </tr>
-              </table>
+              </table><!-- // Begin Template Body \\ -->
 
               <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid; $if(ispreview)$border-collapse: separate; border-spacing: $borderspacing()$$endif$">
                 <tr>
                   <td valign="top" class="bodyContent" style="background-color: $nicemailbgcolour()$">
+                    <!-- // Begin Module: Standard Content \\ -->
 
                     <table border="0" cellspacing="0" width="100%">
                       <tr>
                         <td valign="top">
                           <div style="color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
                             $if(previewLink)$
-                              <div class="preview-link">
-                                <img src="$ctxhostpart$$previewLink$">
+                              <div style="color: #333; font-family: $nicemailfont()$; font-size: 16px; line-height: 0; text-align: left; float:left;margin-right:32px;border:1px solid #dee4ed;">
+                                <img src="$ctxhostpart$$previewLink$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; display: inline; max-width:150px;"/>
                               </div>
                               <div style="float: right; width: 330px;">
                                 $nicemailparagraph(p=mailp1;l=mailp2;spacing=mailspacing1)$
@@ -184,39 +134,45 @@ style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-
                         </td>
                       </tr>
                     </table>
+                    <!-- // End Module: Standard Content \\ -->
                   </td>
                 </tr>
-              </table>
+              </table><!-- // End Template Body \\ -->
             </td>
           </tr>
 
           $if(footer)$
           <tr>
             <td align="center" valign="top">
+              <!-- // Begin Template Footer \\ -->
+
               <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="background-color: $nicemailbgcolour()$; border-top: 0;">
                 <tr>
                   <td valign="top" class="footerContent">
+                    <!-- // Begin Module: Standard Footer \\ -->
+
                     <table border="0" cellpadding="0" cellspacing="0" width="100%">
                       <tr>
 
                         <td colspan="2" valign="top">
-                          <br>
+                          <br />
                           <div style="color: $if(!companybrand.textcolor)$#999999$else$$companybrand.textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 125%; text-align: justify; padding: 0 40px">
                             $footer:noescape()$
                           </div>
 
-                          <br>
+                          <br />
                         </td>
                       </tr>
                     </table>
+                    <!-- // End Module: Standard Footer \\ -->
                   </td>
                 </tr>
-              </table>
+              </table><!-- // End Template Footer \\ -->
             </td>
           </tr>
           $endif$
         </table>
-        <br>
+        <br />
       </td>
     </tr>
   </table>
