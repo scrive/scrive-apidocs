@@ -101,6 +101,7 @@ docFieldsListForJSON userid padqueue doc = do
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
     J.value "deleted" $ documentDeletedForUser doc userid
     J.value "reallydeleted" $ documentReallyDeletedForUser doc userid
+    J.value "canperformsigning" $ userCanPerformSigningAction userid doc
     J.value "objectversion" $ documentobjectversion doc
 
 signatoryFieldsListForJSON :: TemplatesMonad m => PadQueue -> Document -> SignatoryLink -> JSONGenT m ()

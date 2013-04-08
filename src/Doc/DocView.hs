@@ -158,6 +158,8 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "apicallbackurl" $ documentapicallbackurl doc
       J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> mviewer
       J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> mviewer
+      when (isJust mviewer) $
+        J.value "canperformsigning" $ userCanPerformSigningAction (fromJust mviewer) doc
       J.value "objectversion" $ documentobjectversion doc
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))

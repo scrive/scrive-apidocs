@@ -255,6 +255,16 @@ canAuthorSignNow doc =
                    Just a -> a
                    _ -> error $ "Document " ++ show (documentid doc) ++ " does not have author"
 
+
+-- Checks if signatory can sign now
+canSignatorySignNow :: Document -> SignatoryLink -> Bool
+canSignatorySignNow doc sl =
+  isPending doc
+  && documentcurrentsignorder doc >= signatorysignorder (signatorydetails sl)
+  && (not . hasSigned $ sl)
+  && isSignatory sl
+
+
 -- Please define this better. Maybe in the positive?
 {- |
    Is this document eligible for a reminder (depends on documentstatus)?
@@ -358,3 +368,11 @@ documentDeletedForUser doc uid = fromMaybe False (fmap signatorylinkdeleted $ (g
 
 documentReallyDeletedForUser :: Document -> UserID -> Bool
 documentReallyDeletedForUser doc uid = fromMaybe False (fmap signatorylinkreallydeleted $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
+
+userCanPerformSigningAction :: UserID -> Document  -> Bool
+userCanPerformSigningAction uid doc =
+      (isJust msl && (canSignatorySignNow doc sl))
+   || (isJust msl && isAuthor sl && any (canSignatorySignNow doc &&^ ((== PadDelivery) . signatorylinkdeliverymethod)) (documentsignatorylinks doc))
+  where
+    msl = getSigLinkFor doc uid
+    sl  = fromJust msl

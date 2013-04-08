@@ -896,9 +896,9 @@ var SignaturePlacementView = Backbone.View.extend({
             box.resizable("destroy");
             if (this.resizable) {
                 box.resizable({stop : function(e, ui) {
-                            _.each(placement.field().placements(), function(p) {
-                            p.fixWHRel(Math.floor(ui.size.width),Math.floor(ui.size.height));
-                        }});
+                                _.each(placement.field().placements(), function(p) {
+                                p.fixWHRel(Math.floor(ui.size.width),Math.floor(ui.size.height));
+                               })}});
                 $(".ui-resizable-se",box).css("z-index","0");
             }
             return this;
