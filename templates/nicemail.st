@@ -8,7 +8,21 @@ nicemail=
           <tr>
             <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
               <!-- // Begin Module: Standard Header Image \\ -->
-              <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 30px; margin-bottom: 30px;" id="headerImage campaign-icon" />
+              <table>
+                <tr>
+                  <td style="height: 30px;">
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 50px; margin-bottom: 20px;" id="headerImage campaign-icon" />
+                  </td>
+                </tr>
+                <tr>
+                  <td style="height: 30px;">
+                  </td>
+                </tr>
+              </table>
               <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
@@ -18,7 +32,7 @@ nicemail=
 
     <tr>
       <td align="center" valign="top">
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; border-top: auto; background-color: $nicemailbgcolour()$; margin-bottom: 20px;">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; background-color: $nicemailbgcolour()$;">
           <tr>
             <td></td>
           </tr>
@@ -34,14 +48,24 @@ nicemail=
                       <tr>
                         <td valign="top">
                           <div>
-                            <span class="h1" style="color: $if(!companybrand.textcolor)$#364963$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">
-                              $if(mailheader)$ $mailheader$ $endif$
-                            </span>
-                            <a style="text-decoration: none;" href="$ctxhostpart$" class="notclickableinpreview">
-                              <span class="h3" style="color: $if(!companybrand.textcolor)$#7a94b8$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">
-                                $_poweredByScrive()$
-                              </span>
-                            </a>
+                            <table>
+                              <tr>
+                                <td>
+                                  <span class="h1" style="color: $if(!companybrand.textcolor)$#364963$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">
+                                    $if(mailheader)$ $mailheader$ $endif$
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td>
+                                  <a style="text-decoration: none;" href="$ctxhostpart$">
+                                    <span class="h3" style="color: $if(!companybrand.textcolor)$#7a94b8$else$$companybrand.textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">
+                                      $_poweredByScrive()$
+                                    </span>
+                                  </a>
+                                </td>
+                              </tr>
+                            </table>
                           </div>
                         </td>
                       </tr>
@@ -60,17 +84,33 @@ nicemail=
                         <td valign="top">
                           <div style="color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
                             $if(previewLink)$
-                              <div style="color: #333; font-family: $nicemailfont()$; font-size: 16px; line-height: 0; text-align: left; float:left;margin-right:32px;border:1px solid #dee4ed;">
-                                <img src="$ctxhostpart$$previewLink$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; display: inline; max-width:150px;"/>
-                              </div>
-                              <div style="float: right; width: 330px;">
-                                $nicemailparagraph(p=mailp1;l=mailp2;spacing=mailspacing1)$
-                                $nicemailparagraph(p=mailp2;l=mailp3;spacing=mailspacing2)$
-                                $nicemailparagraph(p=mailp3;l=mailp4;spacing=mailspacing3)$
-                                $nicemailparagraph(p=mailp4;l=mailp5;spacing=mailspacing4)$
-                                $nicemailparagraph(p=mailp5;l=mailp6;spacing=mailspacing5)$
-                                $nicemailparagraph(p=mailp6;l=false)$
-                              </div>
+                              <table>
+                                <tr>
+                                  <td>
+                                    <table>
+                                      <tr>
+                                        <td style="height: 106px; color: #333; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; line-height: 0; text-align: left; border:1px solid #dee4ed; width: 150px;">
+                                          <img src="$ctxhostpart$$previewLink$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; display: inline; max-width:150px;"/>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td style="height: 0px;">
+                                        </td>
+                                      </tr>
+                                    </table>
+                                  </td>
+                                  <td style="width: 32px;">
+                                  </td>
+                                  <td style="float: right; width: 330px;">
+                                    $nicemailparagraph(p=mailp1;l=mailp2;spacing=mailspacing1)$
+                                    $nicemailparagraph(p=mailp2;l=mailp3;spacing=mailspacing2)$
+                                    $nicemailparagraph(p=mailp3;l=mailp4;spacing=mailspacing3)$
+                                    $nicemailparagraph(p=mailp4;l=mailp5;spacing=mailspacing4)$
+                                    $nicemailparagraph(p=mailp5;l=mailp6;spacing=mailspacing5)$
+                                    $nicemailparagraph(p=mailp6;l=false)$
+                                  </td>
+                                </tr>
+                              </table>
                           $else$
                             $nicemailparagraph(p=mailp1;l=mailp2;spacing=mailspacing1)$
                             $nicemailparagraph(p=mailp2;l=mailp3;spacing=mailspacing2)$
@@ -156,15 +196,20 @@ $if(l)$
 $endif$
 ####
 nicebutton=
-<a href="$link$" class="button-blue notclickableinpreview" style="
+<table>
+  <tr>
+    <td>
+<a href="$link$" class="button-blue" style="
     $if(!companybrand.buttoncolour)$
-     background-color: rgb(62,85,116); background: hsl(215, 30%, 35%); border: 2px solid hsl(215, 30%, 23%); -webkit-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -moz-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -ms-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; -o-box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px; box-shadow: inset hsl(215, 30%, 60%) 0 0 0 1px;
+     background-color: rgb(62,85,116); background: rgb(62,85,116); border: 2px solid rgb(62,85,116); -webkit-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -moz-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -ms-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -o-box-shadow: inset rgb(62,85,116) 0 0 0 1px; box-shadow: inset rgb(62,85,116) 0 0 0 1px;
     $else$
      background-color: $companybrand.buttoncolour$; background: $companybrand.buttoncolour$; border: 2px solid $companybrand.buttoncolour$; -webkit-box-shadow: #CCCCCC 0 0 0 1px; -moz-box-shadow: inset #CCCCCC 0 0 0 1px; -ms-box-shadow: inset #CCCCCC 0 0 0 1px; -o-box-shadow: inset #CCCCCC 0 0 0 1px; box-shadow: inset #CCCCCC 0 0 0 1px;
     $endif$
     text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 12px 20px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1">
-      <div style="position: relative; background-color:
-     $if(!companybrand.buttoncolour)$ rgb(62,85,116); $else$ $companybrand.buttoncolour$; $endif$" >
-    $text$
+      <div style="position: relative; background-color: $if(!companybrand.buttoncolour)$ rgb(62,85,116); $else$ $companybrand.buttoncolour$; $endif$;  color: #fff" >
+        $text$
      </div>
 </a>
+</td>
+</tr>
+</table>

@@ -11,6 +11,8 @@ module API.Monad (
                  actionNotAvailable',
                  serverError,
                  serverError',
+                 noAvailableYet,
+                 noAvailableYet',
                  apiGuard,
                  apiGuard',
                  apiGuardL,
@@ -76,6 +78,7 @@ data APIError = BadInput           String
               | Forbidden          String -- | also used for not found, since we don't want to reveal the non-existence of resources
               | ActionNotAvailable String
               | ServerError        String
+              | NoAvailableYet     String
               deriving (Show, Eq, Typeable)
 
 instance KontraException APIError
@@ -88,6 +91,8 @@ instance ToJSValue APIError where
                                   value "url" "https://scrive.com/login"
   toJSValue (ServerError msg) = jsonError 500 $ value "message" msg
   toJSValue (ActionNotAvailable msg) = jsonError 500 $ value "message" msg
+  toJSValue (NoAvailableYet msg) = jsonError 420 $ value "message" msg
+
 
 badInput :: String -> APIError
 badInput = BadInput
@@ -118,6 +123,12 @@ serverError = ServerError
 
 serverError' :: APIError
 serverError' = serverError "An internal server error occurred which could not be resolved."
+
+noAvailableYet:: String -> APIError
+noAvailableYet = NoAvailableYet
+
+noAvailableYet':: APIError
+noAvailableYet' = noAvailableYet "Resource is not yet available"
 
 -- Define what we can respond from an API call
 class ToAPIResponse a where
