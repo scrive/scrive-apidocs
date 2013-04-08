@@ -39,7 +39,6 @@ import Data.Maybe
 import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
-import Utils.Colour
 import qualified Text.StringTemplates.Fields as F
 
 -- FIXME: why do we even use that?
@@ -269,6 +268,7 @@ mailDocumentClosed ctx document l sl = do
    let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document)
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
+        F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "confirmationlink" $ (++) (ctxhostpart ctx) <$> show <$> l
         F.value "doclink" $ if isAuthor sl
@@ -351,10 +351,6 @@ companyBrandFields company = do
   F.value "font"  $ companyemailfont $ companyui company
   F.value "bordercolour"  $ companyemailbordercolour $ companyui company
   F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui company
-  F.value "buttoncolourR" $ show r
-  F.value "buttoncolourG" $ show g
-  F.value "buttoncolourB" $ show b
   F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company
   F.value "logo" $ isJust $ companyemaillogo $ companyui company
   F.value "logoLink" $ show $ LinkCompanyEmailLogo $ companyid company
- where (r, g, b) = hsl2rgb (maybe 215 read $ companyemailbuttoncolour $ companyui company) 0.3 0.35
