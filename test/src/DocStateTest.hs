@@ -461,7 +461,7 @@ testSetInviteTextEvidenceLog = do
                     then loop doc
                     else randomUpdate $ \t -> SetInviteText (documentid doc) i (systemActor t)
 
-getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.T
+getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
   now <- getMinutesTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"

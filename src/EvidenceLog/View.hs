@@ -163,7 +163,7 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
     F.value "eleg" $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
     F.value "pad"  $ (\sl -> signatorylinkdeliverymethod sl == PadDelivery) <$> siglink
 
-    showClockError :: Word8 -> Double -> String
+showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
 
 -- | Generating text of Evidence log that is attachmed to PDF. It should be complete

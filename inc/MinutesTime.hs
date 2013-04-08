@@ -39,8 +39,6 @@ module MinutesTime
        , fromClockTime
        ) where
 
-import Data.Char
-import Control.Monad.IO.Class
 import Data.Convertible
 import Data.Time
 import Data.Time.Clock.POSIX

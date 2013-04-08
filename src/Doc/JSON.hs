@@ -2,11 +2,9 @@
 
 module Doc.JSON
        (
-         jsonDocumentForSignatory
-       , jsonDocumentID
+         jsonDocumentID
        , jsonDocumentType
        , jsonSigAttachmentWithFile
-       , jsonDocumentForAuthor
        , dcrFromJSON
        , DocumentCreationRequest(..)
        , InvolvedRequest(..)
@@ -19,13 +17,11 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Doc.DocumentID
 import Utils.Enum
-import KontraLink
 import Control.Monad.Identity
 import Data.Maybe
 import Data.Functor
 import Control.Monad.Reader
 import Doc.DocDraft()
-import Data.List (nub)
 
 parseIsAuthor :: Int -> Maybe Bool
 parseIsAuthor n
