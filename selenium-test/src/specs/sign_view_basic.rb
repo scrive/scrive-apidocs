@@ -60,7 +60,7 @@ describe "basic signing" do
     puts "swith to new window"
     @h.driver.switch_to().window((@h.driver.window_handles() - wh)[0]) {
      puts "click first screenshot..."
-     (@h.wait_until { @h.driver.find_element :partial_link_text => "signed the document" }).click
+     (@h.wait_until { @h.driver.find_element :partial_link_text => "Click here" }).click
      puts "wait a bit for the screenshot to be recorded in a movie"
      sleep 2
     }
