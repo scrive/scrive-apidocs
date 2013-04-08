@@ -151,7 +151,7 @@ instance ToAPIResponse Response where
 instance ToAPIResponse JSValue where
   toAPIResponse jv =
     -- must be text/plain because some browsers complain about JSON type
-    (setHeader "Content-Type" "text/plain" $ Web.toResponse $ encode jv) { rsCode = code }
+    (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv) { rsCode = code }
     where
        -- Am I stupid or it is realy so hard to get an integer from a json object?
        -- The below simulates: (jv.http_status_code || 200)
@@ -163,11 +163,11 @@ instance ToAPIResponse JSValue where
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in
-    setHeader "Content-Type" "text/zip" r1
+    setHeader "Content-Type" "text/csv" r1
 
 instance ToAPIResponse ZipArchive where
   toAPIResponse v = let r1 = Web.toResponse $ v in
-    setHeader "Content-Type" "text/csv" r1
+    setHeader "Content-Type" "text/zip" r1
 
 instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
   toAPIResponse = either toAPIResponse toAPIResponse
