@@ -60,7 +60,10 @@ instance Configuration AppConf where
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , srConfig           = "public/resources.spec"
     , production         = True
-    , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
+    , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice"
+                                         , guardTimeExtendingServiceURL = "http://verifier.guardtime.net/gt-extendingservice"
+                                         , guardTimeControlPublicationsURL = "http://verify.guardtime.com/gt-controlpublications.bin"
+                                         }
     , mailsConfig        = defaultMailsConfig
     , liveDocxConfig     = confDefault
     , logicaConfig       = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"

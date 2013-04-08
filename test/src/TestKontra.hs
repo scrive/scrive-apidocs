@@ -267,7 +267,10 @@ mkContext lang = do
         , ctxmaybepaduser = Nothing
         , ctxstaticresources = SR.ResourceSetsForImport [] (TOD 0 0)
         , ctxusehttps = False
-        , ctxgtconf = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
+        , ctxgtconf = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice"
+                                    , guardTimeExtendingServiceURL = "http://verifier.guardtime.net/gt-extendingservice"
+                                    , guardTimeControlPublicationsURL = "http://verify.guardtime.com/gt-controlpublications.bin"
+                                    }
         , ctxrecurlyconfig = RecurlyConfig { recurlySubdomain  = "scrive-test"
                                            , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
                                            , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"

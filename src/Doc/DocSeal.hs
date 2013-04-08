@@ -564,7 +564,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
         newfilepdf <- Binary <$> case code2 of
           ExitSuccess -> do
-            vr <- liftIO $ GT.verify tmpout
+            vr <- liftIO $ GT.verify ctxgtconf tmpout
             case vr of
                  GT.Valid _ _ -> do
                       res <- liftIO $ BS.readFile tmpout

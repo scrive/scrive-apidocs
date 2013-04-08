@@ -1004,7 +1004,8 @@ handleVerify = do
                     BSL.hPutStr handle content
                     return pth
             _ -> internalError
-      liftIO $ toJSValue <$> GuardTime.verify filepath
+      ctx <- getContext
+      liftIO $ toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do
