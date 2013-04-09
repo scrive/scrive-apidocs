@@ -230,7 +230,7 @@ var CompanyBrandingFontModel = Backbone.Model.extend({
     defaultfont: 'Helvetica Neue, Arial, sans-serif',
     label: '',
     editable: false,
-    font : "",
+    font : ""
   },
   customised: function() {
     return this.get('customised');

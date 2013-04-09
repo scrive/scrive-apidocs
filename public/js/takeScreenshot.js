@@ -21,21 +21,22 @@
             window.setTimeout(timedout, timeoutval);
 
         try {
-            html2canvas( $('body'),
-                         { onrendered: function(canvas)
-                           {
-                               if (!callbackCalled) {
-                                   callbackCalled = true;
-                                   success(canvas);
-                               }
-                           },
-                           width : $(window).width(),
-                           height : $(window).height(),
-                           scale : 0.6, // smallest scale that still makes text readable
-                           logging: true,
-                           proxy: null
-                         }
-                       );
+           if (!BrowserInfo.isIE8orLower())
+              html2canvas( $('body'),
+                          { onrendered: function(canvas)
+                            {
+                                if (!callbackCalled) {
+                                    callbackCalled = true;
+                                    success(canvas);
+                                }
+                            },
+                            width : $(window).width(),
+                            height : $(window).height(),
+                            scale : 0.6, // smallest scale that still makes text readable
+                            logging: true,
+                            proxy: null
+                          }
+                        );
         }
         catch(e) {
             if (!callbackCalled) {

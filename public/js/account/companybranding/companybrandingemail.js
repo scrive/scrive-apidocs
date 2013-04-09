@@ -26,7 +26,7 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
           customised: companyui.emailemailbackgroundcolour().trim() != '',
           defaultcolour: "#FFFFFF",
           colour: companyui.emailemailbackgroundcolour(),
-          label: localization.companyBranding.customiseEmailBackgroundColour,
+          label: localization.companyBranding.customiseEmailBackgroundColour
         }),
         emailtextcolour: new CompanyBrandingColour({
           customised: companyui.emailtextcolour().trim() != '',
