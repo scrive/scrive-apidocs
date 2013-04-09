@@ -757,7 +757,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 var textholder = $("<span class='text'/>");
 
                 var button = $("<div class='placesignaturebutton'/>");
-                var document = signatory.document();
+                var document = field.signatory().document();
 
                 button.append(textholder.text(localization.signature.placeYour));
 

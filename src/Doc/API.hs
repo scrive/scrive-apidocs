@@ -96,15 +96,15 @@ documentAPI = dir "api" $ choice
 versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
 
-  dir "createfromfile"     $ hPostNoXTokenHttp $ toK0 $ apiCallCreateFromFile,
-  dir "createfromtemplate" $ hPostNoXTokenHttp $ toK1 $ apiCallCreateFromTemplate,
-  dir "update"             $ hPostNoXTokenHttp $ toK1 $ apiCallUpdate,
-  dir "ready"              $ hPostNoXTokenHttp $ toK1 $ apiCallReady,
-  dir "cancel"             $ hPostNoXTokenHttp $ toK1 $ apiCallCancel,
-  dir "reject"             $ hPostNoXTokenHttp $ toK2 $ apiCallReject,
-  dir "sign"               $ hPostNoXTokenHttp $ toK2 $ apiCallSign,
+  dir "createfromfile"     $ hPost $ toK0 $ apiCallCreateFromFile,
+  dir "createfromtemplate" $ hPost $ toK1 $ apiCallCreateFromTemplate,
+  dir "update"             $ hPost $ toK1 $ apiCallUpdate,
+  dir "ready"              $ hPost $ toK1 $ apiCallReady,
+  dir "cancel"             $ hPost $ toK1 $ apiCallCancel,
+  dir "reject"             $ hPost $ toK2 $ apiCallReject,
+  dir "sign"               $ hPost $ toK2 $ apiCallSign,
 
-  dir "remind"             $ hPostNoXTokenHttp $ toK1 $ apiCallRemind,
+  dir "remind"             $ hPost $ toK1 $ apiCallRemind,
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
   dir "list"               $ hGetAllowHttp $ apiCallList,
@@ -113,9 +113,9 @@ versionedAPI _version = choice [
   dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallDownloadFile,
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
-  dir "changemainfile"     $ hPostNoXTokenHttp $ toK1 $ apiCallChangeMainFile,
+  dir "changemainfile"     $ hPost $ toK1 $ apiCallChangeMainFile,
 
-  dir "document" $ hPostNoXTokenHttp $ toK6 $ documentUploadSignatoryAttachment,
+  dir "document" $ hPost $ toK6 $ documentUploadSignatoryAttachment,
   dir "document" $ hDeleteAllowHttp  $ toK6 $ documentDeleteSignatoryAttachment
   ]
 

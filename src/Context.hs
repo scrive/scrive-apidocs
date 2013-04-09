@@ -1,5 +1,6 @@
 module Context (
-      Context(..)
+      Context(..),
+      anonymousContext
     ) where
 
 import File.FileID
@@ -50,3 +51,10 @@ data Context = Context
     , ctxmixpaneltoken       :: String
     , ctxhomebase            :: String
     }
+
+-- | anonymousContext changes given context into one that does not hold any user details.
+-- | use this if your action requires different for of authentication
+anonymousContext :: Context -> Context
+anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, ctxsessionid = tempSessionID }
+
+

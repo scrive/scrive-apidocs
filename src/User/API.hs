@@ -60,15 +60,15 @@ userAPI = dir "api" $ choice
 
 versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
-  dir "getpersonaltoken"     $ hPostNoXTokenHttp $ toK0 $ apiCallGetUserPersonalToken,
-  dir "signup"          $ hPostNoXTokenHttp $ toK0 $ apiCallSignup,
+  dir "getpersonaltoken"     $ hPost $ toK0 $ apiCallGetUserPersonalToken,
+  dir "signup"          $ hPost $ toK0 $ apiCallSignup,
   dir "getprofile"      $ hGet $ toK0 $ apiCallGetUserProfile,
-  dir "changepassword"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserPassword,
-  dir "changelanguage"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserLanguage,
-  dir "updateprofile"   $ hPostNoXTokenHttp $ toK0 $ apiCallUpdateUserProfile,
-  dir "createcompany"   $ hPostNoXTokenHttp $ toK0 $ apiCallCreateCompany,
-  dir "changeemail"     $ hPostNoXTokenHttp $ toK0 $ apiCallChangeEmail,
-  dir "addflash"        $ hPostNoXTokenHttp $ toK0 $ apiCallAddFlash,
+  dir "changepassword"  $ hPost $ toK0 $ apiCallChangeUserPassword,
+  dir "changelanguage"  $ hPost $ toK0 $ apiCallChangeUserLanguage,
+  dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
+  dir "createcompany"   $ hPost $ toK0 $ apiCallCreateCompany,
+  dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
+  dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
   dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo
   ]
 
