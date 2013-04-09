@@ -139,7 +139,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       ajax : true,
       ajaxsuccess : function(rs) {
         if (callback!= undefined) callback();
-      },
+      }
     }).send();
   },
   changeEmail :function(callback) {
