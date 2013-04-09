@@ -834,10 +834,10 @@ var SignaturePlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear);
-        if (this.model.signatory().fstnameField() != undefined)
-          this.model.signatory().fstnameField().bind('change', this.render);
-        if (this.model.signatory().sndnameField() != undefined)
-        this.model.signatory().sndnameField().bind('change', this.render);
+        if (this.model.field().signatory().fstnameField() != undefined)
+          this.model.field().signatory().fstnameField().bind('change', this.render);
+        if (this.model.field().signatory().sndnameField() != undefined)
+        this.model.field().signatory().sndnameField().bind('change', this.render);
         this.model.bind('change', this.render);
         this.resizable = args.resizable;
         this.render();
