@@ -57,9 +57,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       onClick: function() {
         if (alreadyClicked(this))
           return false;
-        trackTimeout('Accept', {'Accept' : 'sign document'}, function() {
-            document.sign().send();
-        });
+        trackTimeout('Accept', {'Accept' : 'sign document'});
         document.takeSigningScreenshot(function() { document.sign().send(); });
       }
     }).input().css('margin-top', '-10px');
