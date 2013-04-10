@@ -75,6 +75,8 @@ window.FlashMessage = function(args) {
         var model = new FlashMessageModel(args);
         var view = new FlashMessageView({model : model, el : $("<div class='flash'/>")});
         $("body").append($(view.el));
+        if ($('.flash-body',$(view.el)).height() > $('.flash-content',$(view.el)).height() + 10)
+          $('.flash-body',$(view.el)).addClass("twoLines");
         setTimeout(function() {$(view.el).addClass("active");},100);
         setTimeout(function() {view.clear();},10000);
 }

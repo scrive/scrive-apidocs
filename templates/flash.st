@@ -1,4 +1,10 @@
-### Some comment here
+###
+flashDocumentSend=
+    $_flashDocumentSend()$
+###
+flashDocumentSignedAndSend=
+    $_flashDocumentSignedAndSend()$
+###
 flashDocumentDraftSaved=
 	$_flashDocumentDraftSaved()$
 

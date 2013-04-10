@@ -135,8 +135,8 @@ class DocHelper
     puts "Final approval modal"
     sleep 1
     acceptStandardModal
-    puts "Closing confirmation modal"
-    (@h.wait_until { @driver.find_element :css => ".s-document-created .modal-footer a.button-small" }).click
+    puts "Waiting for history to show up"
+    (@h.wait_until { @driver.find_element :css => ".document-history-container" })
   end
 
   def acceptStandardModal
