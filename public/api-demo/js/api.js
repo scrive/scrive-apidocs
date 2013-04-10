@@ -28,6 +28,7 @@ window.ApiCall = Backbone.Model.extend({
         isSetPassword : function() {return false;},
         isSetLanguage : function() {return false;},
         isSignup : function() {return false;},
+        isSendPasswordResetMail : function() {return false;},
         isUpdateProfile : function() {return false;},
         isCheckClient : function() {return false;},
         isReject : function() {return false;},
@@ -84,6 +85,8 @@ window.ApiCallView = function(args) {
            return new UpdateProfileApiCallView(args);
         else if (args.model.isSignup())
            return new SignupApiCallView(args);
+        else if (args.model.isSendPasswordResetMail())
+           return new SendPasswordResetMailApiCallView(args);
         else if (args.model.isCheckClient())
            return new CheckClientApiCallView(args);
 

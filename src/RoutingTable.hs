@@ -154,9 +154,8 @@ staticRoutes = choice
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ signupPageGet
      , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API
-     , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
-     , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
+     , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK3 $ UserControl.handleAccountSetupGetWithMethod
      -- This can go away ~14 days after this code reaches production

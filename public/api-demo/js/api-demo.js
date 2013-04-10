@@ -61,13 +61,14 @@ var ApiDemoView = Backbone.View.extend({
             var password  = $("<option value='sp'>Set password</option>");
             var updateprofile = $("<option value='up'>Update profile</option>");
             var signup = $("<option value='su'>Signup</option>");
+            var passwordreset = $("<option value='passwordreset'>Reset password</option>");
             var checkclient  = $("<option value='check'>Check client</option>");
 
             select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update)
                   .append(ready).append(sendReminder).append(cancel).append(del).append(check)
                   .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(sign)
                   .append($("<option>---------</option>"))
-                  .append(profile).append(payments).append(language).append(password).append(signup).append(updateprofile)
+                  .append(profile).append(payments).append(language).append(password).append(signup).append(passwordreset).append(updateprofile)
                   .append($("<option>---------</option>"))
                   .append(checkclient);
             if (model.selectedApiCall() != undefined) {
@@ -111,6 +112,8 @@ var ApiDemoView = Backbone.View.extend({
                     password.attr("selected", "true");
                 else if (model.selectedApiCall().isSignup())
                     signup.attr("selected", "true");
+                else if (model.selectedApiCall().isSendPasswordResetMail())
+                    passwordreset.attr("selected", "true");
                 else if (model.selectedApiCall().isUpdateProfile())
                     updateprofile.attr("selected", "true");
                 else if (model.selectedApiCall().isCheckClient())
@@ -162,6 +165,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new UpdateProfileApiCall({oauth : oauth}));
                 else if (select.val() == "su")
                     model.setSelectedApiCall(new SignupApiCall({oauth : oauth}));
+                else if (select.val() == "passwordreset")
+                    model.setSelectedApiCall(new SendPasswordResetMailApiCall({oauth : oauth}));
                 else if (select.val() == "check")
                     model.setSelectedApiCall(new CheckClientApiCall({oauth : oauth}));
 
