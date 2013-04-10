@@ -3,6 +3,8 @@ module Doc.DocView (
     pageCreateFromTemplate
   , documentAuthorInfo
   , documentInfoFields
+  , flashDocumentSend
+  , flashDocumentSignedAndSend
   , flashAuthorSigned
   , flashDocumentDraftSaved
   , flashDocumentRestarted
@@ -17,7 +19,6 @@ module Doc.DocView (
   , mailDocumentRemind
   , mailInvitation
   , modalRejectedView
-  , modalSendConfirmationView
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
@@ -63,18 +64,6 @@ import Analytics.Include
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 
-modalSendConfirmationView :: TemplatesMonad m => Document -> Bool -> m FlashMessage
-modalSendConfirmationView document authorWillSign = do
-  partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
-  toModal <$> (renderTemplateForProcess document processmodalsendconfirmation $ do
-    F.value "signedAndCompleted" $ all (hasSigned) $ filter isSignatory $ documentsignatorylinks document
-    F.value "partyListButAuthor" partylist
-    F.value "signatory" . listToMaybe $ map getSmartName $ partyList document
-    F.value "willBeSigned" (authorWillSign && (not $ hasOtherSignatoriesThenAuthor document))
-    F.value "signedByAuthor" $ hasSigned $ getAuthorSigLink document
-    documentInfoFields document)
-
-
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
@@ -83,6 +72,15 @@ modalRejectedView document = do
   toModal <$> (renderTemplate "modalRejectedView" $ do
     F.value "partyList" partylist
     F.value "documenttitle" $ documenttitle document)
+
+
+flashDocumentSend :: TemplatesMonad m => m FlashMessage
+flashDocumentSend =
+  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentSend"
+
+flashDocumentSignedAndSend :: TemplatesMonad m => m FlashMessage
+flashDocumentSignedAndSend =
+  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentSignedAndSend"
 
 flashDocumentDraftSaved :: TemplatesMonad m => m FlashMessage
 flashDocumentDraftSaved =

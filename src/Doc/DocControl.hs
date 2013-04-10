@@ -498,7 +498,7 @@ handleIssueSign document timezone = do
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDuringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d True
+                addFlashM $ flashDocumentSignedAndSend
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
@@ -554,7 +554,7 @@ handleIssueSend document timezone = do
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDuringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d False
+                addFlashM $ flashDocumentSend
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
