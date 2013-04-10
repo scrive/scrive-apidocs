@@ -213,16 +213,6 @@ apiCallUpdate did = api $ do
   triggerAPICallbackIfThereIsOne newdocument
   Ok <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
 
-data ReadyParams = ReadyParams
-  { timezonestring :: String
-  }
-  deriving Show
-
-instance FromJSValue ReadyParams where
-  fromJSValue = do
-    Just s <- fromJSValueField "timezone"
-    return $ Just ReadyParams { timezonestring = s }
-
 apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do
   (user, actor, _) <- getAPIUser APIDocSend
@@ -238,22 +228,11 @@ apiCallReady did =  api $ do
           checkObjectVersionIfProvidedAndThrowError did $ (conflictError "Document is not a draft")
     when (isTemplate doc) $ do
           checkObjectVersionIfProvidedAndThrowError did $ (serverError "Document is not a draft")
-    let defaultParams = ReadyParams { timezonestring = "Europe/Stockholm" }
-    mjsons <- lift $ getDataFn' (look "json")
-    params <- case mjsons of
-              Nothing -> return defaultParams
-              Just jsons -> do
-                json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $
-                        case decode jsons of
-                          J.Ok js -> Just js
-                          _ -> Nothing
-                apiGuardJustM (badInput "Given JSON does not represent valid READY parameters.") $
-                  return $ fromJSValue json
+    timezone <- lift $ mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
     when (not $ all ((/=EmailDelivery) . signatorylinkdeliverymethod ||^ isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
           throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
     when (isNothing $ documentfile doc) $ do
           throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
-    timezone <- lift $ mkTimeZoneName (timezonestring params)
     mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
     case mndoc of
             Right newdocument -> do

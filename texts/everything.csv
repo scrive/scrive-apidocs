@@ -1041,7 +1041,6 @@
 "_companyBrandingBarsColour","Sidhuvud-/sidfotsfärg","Header/footer colour"
 "_companyBrandingBarsTextColour"," Sidhuvud/sidfot typsnittsfärg","Header/footer text colour"
 "_companyBrandingCustomize","Anpassa...","Customize..."
-<<<<<<< HEAD
 "_nameInvalidChars","får endast innehålla bokstäver, apostrof, bindestreck eller mellanslag.","may contain only alphabetic characters, apostrophe, hyphen or space."
 "_nameRequired","krävs.","required."
 "_nameTooLong","får innehålla maximalt 100 tecken.","may contain up to 100 characters."
