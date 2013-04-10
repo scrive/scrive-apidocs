@@ -623,6 +623,7 @@ window.Document = Backbone.Model.extend({
         { documentid: self.documentid(),
           signatoryid: self.viewer().signatoryid()
         };
+        console.log(args.daystosign);
      return {
        title: args.title,
        file: function() {
@@ -651,9 +652,16 @@ window.Document = Backbone.Model.extend({
                         var process= new Process({process : args.process});
                         process.bind("change", function() { self.trigger("change:process")});
                         // This is not used but nice to have. Please leave it.
+                        // It is used now --Eric
                         return process;
                 }(),
-       lang: new Lang({lang : args.lang}),
+       lang: (function() {
+           var lang = new Lang({lang : args.lang});
+           lang.bind('change', function() {
+               self.trigger('change:lang');
+           });
+           return lang;
+       }()),
        infotext: args.infotext,
        canberestarted: args.canberestarted,
        canbeprolonged: args.canbeprolonged,
@@ -673,15 +681,12 @@ window.Document = Backbone.Model.extend({
        signviewbarscolour: args.signviewbarscolour,
        signviewbarstextcolour: args.signviewbarstextcolour,
        signviewbackgroundcolour: args.signviewbackgroundcolour,
+       flux: false,
        ready: true
      };
     },
     setFlux: function() {
         this.set({flux:true});
-        return this;
-    },
-    unsetFlux: function() {
-        this.set({flux:false});
         return this;
     },
     flux: function() {

@@ -27,6 +27,10 @@ window.Process = Backbone.Model.extend({
     isOrder : function() {
       return this.process() == "Order";
     },
+    setProcess: function(process) {
+        this.set({process:process});
+        return this;
+    },
     changeToContract : function() {
       this.set({"process": "Contract"});
     },
@@ -136,6 +140,10 @@ window.Lang = Backbone.Model.extend({
     },
     draftData : function() {
         return this.lang();
+    },
+    setLanguage: function(l) {
+        this.set({lang:l});
+        return this;
     }
 });
 

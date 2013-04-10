@@ -50,6 +50,10 @@ window.SelectModel = Backbone.Model.extend({
   name : function(){
        return this.get("name");
   },
+  setName: function(name) {
+      this.set({name:name});
+      return this;
+  },
   extraNameAttrs : function(){
        return this.get("extraNameAttrs");
   },
@@ -230,7 +234,8 @@ window.Select = function(args) {
               model : function() {return model;},
               view : function()  {return view;},
               clear : function() {view.clear(); model.destroy();},
-              open : function()  {model.expand();}
+              open : function()  {model.expand();},
+              input : function() {return $(view.el);}
             });
 };
 

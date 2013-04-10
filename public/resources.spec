@@ -61,6 +61,7 @@ set systemPage
  less less/designview/participants.less
  less less/designview/editdocument.less
  less less/designview/documentview.less
+ less less/designview/process.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  js   libs/jquery-ui.min.js
@@ -147,6 +148,7 @@ set systemPage
  js   js/designview/docdesignview2.js
  js   js/designview/documentstep.js
  js   js/designview/attachmentsdesignview.js
+ js   js/designview/process.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js

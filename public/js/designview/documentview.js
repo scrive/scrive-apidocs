@@ -87,19 +87,10 @@
                             
                         },
                         ajaxerror: function(d,a){
-                            doc.fetch();
-                            doc.unsetFlux();
+                            doc.recall();
                         },
                         ajaxsuccess: function() {
-                            doc.fetch({
-                                success: function() {
-                                    doc.unsetFlux();
-                                },
-                                error: function() {
-                                    doc.unsetFlux();
-                                }
-
-                            });
+                            doc.recall();
 
                         }}).send();
                 });
@@ -198,7 +189,10 @@
                 text: localization.uploadButton,
                 submitOnUpload: true,
                 onClick : function () {
+                    // TODO: fix this thing in Firefox
                     console.log('click');
+                    upbutton.clickFile();
+                    return true;
                 },
                 onError: function() {
                     document.trigger('change');
@@ -212,23 +206,18 @@
                             method : "POST",
                             url : url,
                             ajax: true,
-                            beforeSend: function() {
-
-                            },
-                            onSend: function() {
-                                //LoadingDialog.open();
-                            },
                             ajaxtimeout : 40000,
                             ajaxerror: function(d,a){
-                                //LoadingDialog.close();
                                 if(a === 'parsererror') { // file too large
                                     new FlashMessage({content: localization.fileTooLarge, color: "red"});
+                                    document.unsetFlux();
                                     //mixpanel.track('Error',
                                     //               {Message: 'main file too large'});
 
                                 }
                                 else {
                                     new FlashMessage({content: localization.couldNotUpload, color: "red"});
+                                    document.unsetFlux();
                                     //mixpanel.track('Error',
                                     //               {Message: 'could not upload main file'});
                                 }
@@ -238,14 +227,7 @@
                             ajaxsuccess: function() {
                                 document.save();
                                 document.afterSave(function() {
-                                    document.fetch({
-                                        success: function() {
-                                            document.unsetFlux();
-                                        },
-                                        error : function() {
-                                            document.unsetFlux();
-                                        }
-                                    });
+                                    document.recall();
                                 });
                                 //trackTimeout('Upload main file', {}, function() {
                                 //LoadingDialog.close();

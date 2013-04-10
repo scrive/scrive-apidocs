@@ -28,17 +28,12 @@
 
 .design-view-action-participant-inner {
     .box-sizing(border-box);
+    overflow: hidden;
     border: 3px solid #eee;
     width: 970px;
     height: 50px;
     position: relative;
-    -webkit-transition: height 0.5s linear;
-    transition: height 0.5s linear;
-    overflow: hidden;
-}
-
-.design-view-action-participant.open .design-view-action-participant-inner{
-    height: 256px;
+    z-index: 1;
 }
 
 .design-view-action-participant-close {
@@ -369,6 +364,7 @@
 .design-view-action-participant-details-participation {
     .box-sizing(border-box);
     display: block;
+    margin-left: 8px;
 }
 
 .design-view-action-participant-details-participation-header {
@@ -379,7 +375,52 @@
     
 }
 
+.design-view-action-participant-details-participation-order {
+    width: 225px;
+    margin-right: 8px;
+    float: left;
+    .select-opts {
+        z-index: 1000;
+        width: 100%;
+    }
+}
+
+.design-view-action-participant-details-participation-delivery {
+    width: 225px;
+    margin-right: 8px;
+    float: left;
+    .select-opts {
+        z-index: 1000;
+        width: 100%;
+        li {
+            z-index: 1000;
+        }
+    }
+}
+
+.design-view-action-participant-details-participation-role {
+    width: 225px;
+    margin-right: 8px;
+    float: left;
+    .select-opts {
+        z-index: 1000;
+        width: 100%;
+    }
+}
+
+.design-view-action-participant-details-participation-auth {
+    width: 225px;
+    margin-right: 8px;
+    float: left;
+    .select-opts {
+        z-index: 1000;
+        width: 100%;
+    }
+}
+
 .design-view-action-participant-details-buttons {
     
 }
+
+
 

@@ -128,6 +128,7 @@
             _.bindAll(view);
             view.participantsView = window.DesignViewParticipantsView({ model : view.model});
             view.draggablesView   = new DesignViewDraggablesView({ model : view.model});
+            view.processView = DesignViewProcessView({ model : view.model });
             view.model.bind('change:step', view.render);
             view.render();
         },
@@ -145,8 +146,10 @@
             } else if(model.step() === 3) {
                 // add in the edit process view
                 view.$el.children().detach();
-                view.$el.html('');
+                view.$el.html(view.processView.el);
+                view.processView.afterInsertion();
             } else {
+                console.log("don't know what step this is: " + model.step());
                 view.$el.children().detach();
                 view.$el.html('');
             }
@@ -274,8 +277,7 @@
         var view = new DesignViewView({
             model: model
         });
-        document.fetch({ processData:  true, cache : false
-                       });
+        document.recall();
         this.el = function() {return $(view.el);};
     }
 

@@ -51,6 +51,8 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details');
             div.append(view.detailsInformation());
+
+            view.detailsDiv = div;
             
             return div;
         },
@@ -303,12 +305,12 @@
 
             var options = [];
             for(i=1;i<=model.document().maxPossibleSignOrder() + 1;i++)
-                options.push({name:i + 'st to sign',
+                options.push({name: englishOrdinal(i) + ' to receive document',
                               value: i});
             
             var select = new Select({
                 options: options,
-                name: order + 'st to sign',
+                name: englishOrdinal(order) + ' to receive document',
                 onSelect: function(v) {
                     model.setSignOrder(v);
                     return true;
@@ -321,15 +323,23 @@
         detailsParticipationFieldsDelivery: function() {
             var view = this;
             var sig = view.model;
+            var delivery = sig.delivery();
+
+            var deliveryTexts = {
+                email : "by email",
+                pad : "on this tablet",
+                api : "via API"
+            };
+
+            var deliveryTypes = ['email', 'pad', 'api'];
+
             var select = new Select({
-                options: [
-                    {name:'on this tablet', value:'tablet'},
-                    {name:'by email', value:'email'}
-                ],
-                name: order + 'st to sign',
+                options: _.map(deliveryTypes, function(t) {
+                    return {name: deliveryTexts[t], value:t};
+                }),
+                name: deliveryTexts[delivery],
                 onSelect: function(v) {
-                    // TODO: make this call the appropriate method
-                    sig.delivery = v;
+                    sig.setDelivery(v);
                     return true;
                 }
             });
@@ -338,21 +348,56 @@
         },
         detailsParticipationFieldsRole: function() {
             var view = this;
+            var sig = view.model;
+            var role = sig.signs();
 
-            var input = $('<select />');
-            input.append($('<option value="signs" />').text('for signing'));
-            input.append($('<option value="views" />').text('for viewing'));
-            
-            return input;
+            var roleTexts = {
+                true : "for signing",
+                false : "for viewing"
+            };
+
+            var roleTypes = [true, false];
+
+            var select = new Select({
+                options: _.map(roleTypes, function(t) {
+                    return {name: roleTexts[t], value:t};
+                }),
+                name: roleTexts[role],
+                onSelect: function(v) {
+                    if(v)
+                        sig.makeSignatory();
+                    else
+                        sig.makeViewer();
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-participation-role');
+            return select.view().el;
         },
         detailsParticipationFieldsAuth: function() {
             var view = this;
+            var sig = view.model;
+            var auth = sig.authentication();
 
-            var input = $('<select />');
-            input.append($('<option value="standard" />').text('with no additional ID required'));
-            input.append($('<option value="eleg" />').text('with Elegitimation'));
-            
-            return input;
+            var authTexts = {
+                standard : "with no additional ID control",
+                eleg : "with Elegitimation"
+            };
+
+            var authTypes = ['standard', 'eleg'];
+
+            var select = new Select({
+                options: _.map(authTypes, function(t) {
+                    return {name: authTexts[t], value:t};
+                }),
+                name: authTexts[auth],
+                onSelect: function(v) {
+                    sig.setAuthorization(v);
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-participation-auth');
+            return select.view().el;
         }
     });
 
@@ -471,7 +516,8 @@
             _.bindAll(view);
             view.addNew = new DesignViewParticipantsNewView(args);
             view.reset();
-            view.model.document().bind('change:signatories', view.reset);
+            // TODO: clean up events that trigger change:signatories!
+            //view.model.document().bind('change:signatories', view.reset);
         },
         reset: function() {
             var view = this;
@@ -507,27 +553,6 @@
 
             view.$el.html(div.children());
 
-            view.updateHidden();
-
-            return view;
-        },
-        hide: function() {
-            var view = this;
-            view.$el.toggleClass('hidden', true);
-            return view;
-        },
-        unhide: function() {
-            var view = this;
-            view.$el.toggleClass('hidden', false);
-            return view;
-        },
-        updateHidden: function() {
-            var view = this;
-            var viewmodel = view.model;
-            if(viewmodel.step() === 1)
-                view.unhide();
-            else
-                view.hide();
             return view;
         }
     });
@@ -632,27 +657,6 @@
             view.viewmodel = args.viewmodel;
             view.participation = new DesignViewParticipation({model:view.model});
             view.render();
-            view.viewmodel.bind('change:participantDetail', view.updateHidden);
-        },
-        updateHidden: function() {
-            var view = this;
-            var sig = view.model;
-            var viewmodel = view.viewmodel;
-            if(viewmodel.participantDetail() === sig)
-                view.unhide();
-            else
-                view.hide();
-            return view;
-        },
-        hide: function() {
-            var view = this;
-            view.$el.toggleClass('hidden', true);
-            return view;
-        },
-        unhide: function() {
-            var view = this;
-            view.$el.toggleClass('hidden', false);
-            return view;
         },
         render: function() {
             var view = this;
@@ -660,8 +664,6 @@
 
             view.$el.append(view.detailsInformation());
             view.$el.append(view.participation.el);
-
-            view.updateHidden();
             
             return view;
         },
@@ -784,6 +786,7 @@
             var viewmodel = args.viewmodel;
             view.viewmodel = args.viewmodel;
             _.bindAll(view);
+            
             view.orderIcon  = new DesignViewOrderIconView ({model:view.model,
                                                             viewmodel: view.viewmodel});
             view.roleIcon   = new DesignViewRoleIconView  ({model:view.model,
@@ -796,7 +799,7 @@
             view.detailsView = new DesignViewParticipantDetailsView({model:view.model,
                                                                      viewmodel: view.viewmodel});
 
-            sig.bind('change', view.render);
+            //sig.bind('change', view.render);
             viewmodel.bind('change:participantDetail', view.updateOpened);
             view.render();
         },
@@ -804,6 +807,7 @@
             var view = this;
             var sig = view.model;
             var viewmodel = view.viewmodel;
+            console.log(view.opened);
 
             var div = $('<div />');
 
@@ -818,13 +822,34 @@
         },
         open: function() {
             var view = this;
-            if(!view.$el.hasClass('open'))
-                view.$el.addClass('open');
+            if(!view.opened) {
+                view.innerDiv.animate({height: view.detailsView.$el.height() + 50},
+                                      500, "linear", function() {
+                                          view.innerDiv.css({overflow:'visible',
+                                                             'z-index': 500});
+                                      });
+                view.opened = true;
+            } else {
+                // don't animate, just set them
+                view.innerDiv.css({height: view.detailsView.$el.height() + 50,
+                                   overflow:'visible',
+                                   'z-index': 500});
+            }
             return view;
         },
         close: function() {
             var view = this;
-            return view.$el.removeClass('open');
+            if(view.opened) {
+                view.innerDiv.css({'overflow': 'hidden',
+                                   'z-index': 1});
+                view.innerDiv.animate({height:50}, 500, "linear");
+                view.opened = false;
+            } else {
+                view.innerDiv.css({height:50, 
+                                   overflow:'hidden',
+                                   'z-index': 1});
+            }
+            return view;
         },
         updateOpened: function() {
             var view = this;
@@ -841,6 +866,9 @@
             div.addClass('design-view-action-participant-inner');
             div.append(view.infoBox());
             div.append(view.detailsView.el);
+
+            // save the div for later
+            view.innerDiv = div;
 
             return div;
         },
