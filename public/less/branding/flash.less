@@ -45,6 +45,7 @@
   position: relative;
   border: 2px solid #ddd;
   background: #fff;
+  overflow: hidden;
 }
 
 .flash-icon {
@@ -64,9 +65,12 @@
   font-size: 1.25em;
   line-height: 60px;
   font-family: @source;
-  max-width: 860px;
-  max-height: 60px;
-  overflow: hidden;
+  max-width: 840px;
+  &.twoLines {
+    line-height: 25px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
 }
 .flash-close {
   position: absolute;
