@@ -387,6 +387,8 @@ addObligatoryColumnToSignatoryLinkFields = Migration {
     kRunRaw "UPDATE signatory_link_fields SET type = 9 WHERE type = 10"
   }
 
+
+
 dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields :: MonadDB m => Migration m
 dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
     mgrTable = tableSignatoryLinkFields
@@ -485,6 +487,12 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
                                                  <*> page <*> (Just $ Control.Monad.join $ maybeRead <$> tipside))
                      ]
 
+addShouldBeFilledBySenderColumnToSignatoryLinkFields :: MonadDB m => Migration m
+addShouldBeFilledBySenderColumnToSignatoryLinkFields = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 3
+  , mgrDo = kRunRaw "ALTER TABLE signatory_link_fields ADD COLUMN should_be_filled_by_author BOOL NOT NULL DEFAULT FALSE"
+  }
 
 splitIdentificationTypes :: MonadDB m => Migration m
 splitIdentificationTypes = Migration {

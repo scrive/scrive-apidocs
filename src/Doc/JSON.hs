@@ -137,6 +137,7 @@ sfFromJSON (name, jsv) =
       sfType = tp,
       sfValue = val,
       sfObligatory = obl,
+      sfShouldBeFilledBySender = False,
       sfPlacements = [] -- do placements later /Eric
     }
   where

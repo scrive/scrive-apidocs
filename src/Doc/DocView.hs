@@ -226,38 +226,38 @@ signatoryAttachmentJSON sa = do
 
 signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
-  for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfObligatory} -> do
+  for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfShouldBeFilledBySender, sfObligatory} -> do
 
     case sfType of
       FirstNameFT           -> fieldJSON "standard" "fstname"   sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       LastNameFT            -> fieldJSON "standard" "sndname"   sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       EmailFT               -> fieldJSON "standard" "email"     sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       PersonalNumberFT      -> fieldJSON "standard" "sigpersnr" sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CompanyFT             -> fieldJSON "standard" "sigco"     sfValue
                                   ((not $ null $ sfValue)  && (null sfPlacements) &&
                                       (ELegAuthentication /= signatorylinkauthenticationmethod sl) &&
                                       (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  sfValue
                                   (closedF sf && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       SignatureFT label     -> fieldJSON "signature" label sfValue
                                   (closedSignatureF sf && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CustomFT label closed -> fieldJSON "custom" label          sfValue
                                   (closed  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CheckboxFT label      -> fieldJSON "checkbox" label sfValue
                                   False
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
@@ -270,13 +270,14 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: String -> String -> String -> Bool -> Bool -> [FieldPlacement] -> JSValue
-fieldJSON tp name value closed obligatory placements = runJSONGen $ do
+fieldJSON :: String -> String -> String -> Bool -> Bool -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON tp name value closed obligatory filledbysender placements = runJSONGen $ do
     J.value "type" tp
     J.value "name" name
     J.value "value" value
     J.value "closed" closed
     J.value "obligatory" obligatory
+    J.value "shouldbefilledbysender" filledbysender
     J.value "placements" $ map placementJSON placements
 
 

@@ -155,6 +155,7 @@ data SignatoryField = SignatoryField
   { sfType       :: FieldType
   , sfValue      :: String
   , sfObligatory :: Bool
+  , sfShouldBeFilledBySender :: Bool
   , sfPlacements :: [FieldPlacement]
   } deriving (Eq, Ord, Show, Data, Typeable)
 

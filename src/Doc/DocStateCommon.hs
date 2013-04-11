@@ -67,7 +67,7 @@ emptySignatoryFields = [
         , sf CompanyNumberFT
         , sf EmailFT
         ]
-    where sf t = SignatoryField t "" True []
+  where sf t = SignatoryField t "" True False []
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] -> [String]
 checkResetSignatoryData doc sigs =

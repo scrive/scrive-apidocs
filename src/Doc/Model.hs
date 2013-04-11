@@ -881,6 +881,7 @@ signatoryLinkFieldsSelectors =
   , "is_author_filled"
   , "value"
   , "obligatory"
+  , "should_be_filled_by_author"
   , "placements"
   ]
 
@@ -892,7 +893,7 @@ selectSignatoryLinkFieldsSQL = "SELECT"
 fetchSignatoryLinkFields :: MonadDB m => m (M.Map SignatoryLinkID [SignatoryField])
 fetchSignatoryLinkFields = kFold decoder M.empty
   where
-    decoder acc slid xtype custom_name is_author_filled v obligatory placements =
+    decoder acc slid xtype custom_name is_author_filled v obligatory should_be_filled_by_sender placements =
       M.insertWith' (++) slid
          [SignatoryField
           { sfValue = v
@@ -905,6 +906,7 @@ fetchSignatoryLinkFields = kFold decoder M.empty
                                                       else custom_name)
                         _   -> xtype
           , sfObligatory = obligatory
+          , sfShouldBeFilledBySender = should_be_filled_by_sender
           }] acc
 
 insertSignatoryLinkFieldsAsAre :: MonadDB m
@@ -929,6 +931,7 @@ insertSignatoryLinkFieldsAsAre fields = do
          sqlSetList "value" $ sfValue <$> concatMap snd fields
          sqlSetList "placements" $ sfPlacements <$> concatMap snd fields
          sqlSetList "obligatory" $ sfObligatory <$> concatMap snd fields
+         sqlSetList "should_be_filled_by_author" $ sfShouldBeFilledBySender <$> concatMap snd fields
          mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields

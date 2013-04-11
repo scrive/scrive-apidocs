@@ -819,15 +819,15 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
 testSignatories1 :: Assertion
 testSignatories1 =
   let s1 = SignatoryDetails {signatorysignorder = SignOrder 0,
-                             signatoryfields = [SignatoryField FirstNameFT "Eric" True []
-                                               ,SignatoryField LastNameFT "Normand" True []
+                             signatoryfields = [SignatoryField FirstNameFT "Eric" True False []
+                                               ,SignatoryField LastNameFT "Normand" True False []
                                                 ],
                              signatoryisauthor = True,
                              signatoryispartner = True
                             }
       s2 = SignatoryDetails {signatorysignorder = SignOrder 0,
-                             signatoryfields = [SignatoryField LastNameFT "Normand" True []
-                                               ,SignatoryField FirstNameFT "Eric" True []
+                             signatoryfields = [SignatoryField LastNameFT "Normand" True False []
+                                               ,SignatoryField FirstNameFT "Eric" True False []
                                                 ],
                              signatoryisauthor = True,
                              signatoryispartner = True

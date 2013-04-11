@@ -154,7 +154,7 @@ instance HasFields SignatoryLink where
 replaceFieldValue :: HasFields a =>  FieldType -> String -> a -> a
 replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
                             Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
-                            Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[], sfObligatory = True}) a
+                            Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[], sfObligatory = True, sfShouldBeFilledBySender = False}) a
 
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
@@ -217,6 +217,7 @@ signatoryDetailsFromUser user (is_author, is_partner) = do
                  , sfValue = v
                  , sfPlacements = []
                  , sfObligatory = True
+                 , sfShouldBeFilledBySender = False
                  }
 
 
@@ -361,6 +362,7 @@ makeSignatory pls fds sid sfn  ssn  se  sso sauthor spartner sc  spn  scn = Sign
       , sfValue = value
       , sfPlacements = filterPlacementsByID pls sid texttype
       , sfObligatory = True
+      , sfShouldBeFilledBySender = False
     }
 
 documentDeletedForUser :: Document -> UserID -> Bool

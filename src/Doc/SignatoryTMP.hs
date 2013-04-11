@@ -206,10 +206,11 @@ instance FromJSValue SignatoryField where
         ftype <- fromJSValue -- We read field type at this from two different fields, so we can't use fromJSValueField
         value  <- fromJSValueField "value"
         obligatory <- fromMaybe True <$> fromJSValueField "obligatory"
+        filledbysender <- fromMaybe False <$> fromJSValueField "shouldbefilledbysender"
         placements <- fromMaybe [] <$> fromJSValueField "placements"
         case (ftype,value) of
           (Just ft, Just v) -> do
-              return $ Just $ SignatoryField ft (v <| ft /= EmailFT|> strip v) obligatory placements
+              return $ Just $ SignatoryField ft (v <| ft /= EmailFT|> strip v) obligatory filledbysender placements
           _ -> return Nothing
 
 

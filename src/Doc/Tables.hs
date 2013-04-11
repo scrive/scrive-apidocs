@@ -225,7 +225,7 @@ tableDocumentTags = tblTable {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [ ("id",                 SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
        , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
@@ -235,6 +235,7 @@ tableSignatoryLinkFields = tblTable {
        , ("is_author_filled",  SqlColDesc {colType = SqlBitT,      colNullable = Just False})
        , ("placements",        SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
        , ("obligatory",        SqlColDesc {colType = SqlBitT,      colNullable = Just False})
+       , ("should_be_filled_by_author",        SqlColDesc {colType = SqlBitT,      colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_link_fields"
@@ -246,6 +247,7 @@ tableSignatoryLinkFields = tblTable {
                   <> ", is_author_filled  BOOL      NOT NULL DEFAULT FALSE"
                   <> ", placements        TEXT      NOT NULL DEFAULT ''"
                   <> ", obligatory        BOOL      NOT NULL DEFAULT TRUE"
+                  <> ", should_be_filled_by_author BOOL NOT NULL DEFAULT FALSE"
                   <> ", CONSTRAINT pk_signatory_link_fields PRIMARY KEY (id)"
                   <> ")"
         return TVRcreated

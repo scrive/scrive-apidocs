@@ -113,6 +113,7 @@ window.Field = Backbone.Model.extend({
         closed : false,
         placements : [],
         obligatory : true,
+        shouldbefilledbysender : false,
         fresh : false
     },
     initialize : function(args){
@@ -147,6 +148,9 @@ window.Field = Backbone.Model.extend({
     },
     obligatory : function() {
         return this.get("obligatory");
+    },
+    shouldbefilledbysender : function() {
+        return this.get("shouldbefilledbysender");
     },
     setValue : function(value) {
         this.set({"value" : value});
@@ -327,6 +331,7 @@ window.Field = Backbone.Model.extend({
                , value : this.value()
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
                , obligatory : this.obligatory()
+               , shouldbefilledbysender : this.shouldbefilledbysender()
              };
     },
    hasPlacements : function() {

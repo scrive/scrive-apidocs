@@ -467,5 +467,6 @@ mkSigDetails fstname sndname email isauthor ispartner = SignatoryDetails {
         sfType = t
       , sfValue = v
       , sfPlacements = []
+      , sfShouldBeFilledBySender = False
       , sfObligatory = True
     }
