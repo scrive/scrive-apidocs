@@ -6,12 +6,15 @@ import DB (dbUpdate, MonadDB)
 import HostClock.Model (InsertClockOffsetFrequency(..))
 import HostClock.System (getOffset, getFrequency)
 import Control.Monad.IO.Class
+import qualified Log
 
 -- | Update the statistics for the host's clock error versus reference NTP servers.
 collectClockError :: (MonadDB m, MonadIO m) => [String] -> (forall a . IO a -> IO a) -> m ()
 collectClockError ntpServers interruptible = do
   moffset <- liftIO $ (interruptible $ Just <$> getOffset ntpServers) `E.catch`
-                \E.SomeException{} -> return Nothing
+                \(E.SomeException e) -> do
+    Log.error $ "HostClock.collectClockError: getOffset failed: " ++ show e
+    return Nothing
   freq <- liftIO $ interruptible $ getFrequency
   _ <- dbUpdate $ InsertClockOffsetFrequency moffset freq
   return ()
