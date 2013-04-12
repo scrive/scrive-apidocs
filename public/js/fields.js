@@ -207,6 +207,8 @@ window.Field = Backbone.Model.extend({
                 return localization.personamNumber;
             if (name == "sigcompnr")
                 return localization.companyNumber;
+            if (name == "mobile")
+                return localization.phone;
         }
         return name;
     },

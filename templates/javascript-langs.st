@@ -28,6 +28,7 @@ javascriptLocalisation =
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
              , email : "$_email()$"
+             , phone : "$_phone()$"
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
              , companyNumber : "$_orgnumber()$"
