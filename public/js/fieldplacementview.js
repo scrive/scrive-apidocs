@@ -742,7 +742,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             box.addClass('signatureBox').addClass('forDrawing');
             if (image == "")
             {
-                console.log("Place for drawing - rendering no value")
+                console.log("Place for drawing - rendering no value");
                 box.removeClass('withImage');
                 var bwidth = 253;
                 var bheight = 48;
@@ -771,7 +771,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.append(button);
             }
             else {
-                console.log("Place for drawing - rendering with value")
+                console.log("Place for drawing - rendering with value");
                 box.addClass('withImage');
                 var img = $("<img alt=''/>");
                 img.css("width",width);
