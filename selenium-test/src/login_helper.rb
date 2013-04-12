@@ -11,6 +11,7 @@ class LoginHelper
   end
 
   def login_as(email, password)
+    sleep 1
     @driver.navigate().to(@ctx.createKontrakcjaURL "/login")
     (@h.wait_until { @driver.find_element :css => ".short-input-container" })
     sleep 1
