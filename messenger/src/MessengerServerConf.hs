@@ -15,9 +15,8 @@ data MessengerServerConf = MessengerServerConf
 
 data SenderConfig = SMSSender
   { serviceName        :: String
-  , smtpAddr           :: String
-  , smtpUser           :: String
-  , smtpPassword       :: String
+  , smsSenderUser      :: String
+  , smsSenderPassword  :: String
   }
   | LocalSender
   { localDirectory     :: FilePath

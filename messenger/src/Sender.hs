@@ -38,16 +38,16 @@ instance Eq Sender where
 
 createSender :: SenderConfig -> Sender
 createSender mc = case mc of
-  SMSSender{}   -> createExternalSender "" "" undefined
+  SMSSender{..}   -> createExternalSender "GlobalMouth" smsSenderUser smsSenderPassword
   LocalSender{}  -> createLocalSender mc
 
-createExternalSender :: String -> String -> (ShortMessage -> [String]) -> Sender
-createExternalSender name _program _createargs = Sender { senderName = name, sendSMS = send }
+createExternalSender :: String -> String -> String -> Sender
+createExternalSender name user password = Sender { senderName = name, sendSMS = send }
   where
     send :: CryptoRNG m => ShortMessage -> m Bool
     send _sms@ShortMessage{..} = do
       liftIO $ do
-        sendSMS2 ("","") "" "" ""
+        sendSMS2 (user,password) smOriginator smMSISDN smBody
         return True
 
 sendSMS2 :: (String, String) -> String -> String -> String -> IO ()
