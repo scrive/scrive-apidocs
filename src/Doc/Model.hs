@@ -1778,11 +1778,14 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
              return $ Right doc'
 
     clearSignInfofromDoc = do
-      let signatoriesDetails = map (\x -> (signatorydetails x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
+      let signatoriesDetails = map (\x -> (signatorydetails x, signatorylinkid x, signatoryattachments x, signatorylinkauthenticationmethod x, signatorylinkdeliverymethod x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
-      newSignLinks <- forM signatoriesDetails $ \(details, linkid, atts) -> do
+      newSignLinks <- forM signatoriesDetails $ \(details, linkid, atts, auth, delivery) -> do
                            magichash <- random
-                           return $ (signLinkFromDetails' details atts magichash) { signatorylinkid = linkid }
+                           return $ (signLinkFromDetails' details atts magichash) { signatorylinkid = linkid
+                                                                                  , signatorylinkdeliverymethod = delivery
+                                                                                  , signatorylinkauthenticationmethod = auth
+                                                                                  }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl
