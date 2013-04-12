@@ -180,8 +180,8 @@ htmlDocFromEvidenceLog title elog ces = do
       F.value "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
                        ++ maybe "" (\e -> " ±" ++ showClockError 0 e)
                                    (HC.maxClockError (evTime entry) <$> evClockErrorEstimate entry)
-      F.value "hce_age" $ maybe "" (\t -> show ((toSeconds (evTime entry) - toSeconds t) `div` 60) ++ " minutes")
-                                   (HC.time <$> evClockErrorEstimate entry)
+      F.value "ces_time" $ maybe "" ((++" UTC") . formatMinutesTimeUTC . HC.time)
+                                    (evClockErrorEstimate entry)
       F.value "ip"   $ show <$> evIP4 entry
       F.value "text" $ evText entry
 

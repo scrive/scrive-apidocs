@@ -187,18 +187,18 @@ htmlevidencelog=
   Additionally, below this evidence log, are statistics about clock error history over an extended period of time. This information is to serve as a reference of the Scrive e-signing system´s time accuracy over time.  
 </p>
 <br/>
-<table style="border-collapse: separate; border-spacing: 20px 0px; margin: 0 -20px;">
+<table style="border-collapse: separate; border-spacing: 20px 0px; margin: 0 -20px; table-layout: fixed;">
     <tr>
-        <td class="top" style="border-bottom: solid 1px #666; width:120px;"><em>Time</em></td>
-        <td class="top" style="border-bottom: solid 1px #666; width:100px;"><em>CES</em></td>
-        <td class="top" style="border-bottom: solid 1px #666; width:90px;"><em>IP address</em></td>
-        <td class="top" style="border-bottom: solid 1px #666; width:160px;"><em>Event</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width: 60px;"><em>Time</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width: 60px;"><em>CES</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width: 60px;"><em>IP address</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width: 300px;"><em>Event</em></td>
     </tr>
 
     $entries:{entry|
      <tr>
        <td>$entry.time$</td>
-       <td>$entry.hce_age$</td>
+       <td>$entry.ces_time$</td>
        <td>$entry.ip$</td>
        <td><div class='capitalize-first-letter'>$entry.text:noescape()$</div></td>
      </tr>
