@@ -24,7 +24,7 @@ var ArrowModel = Backbone.Model.extend({
        return this.get("point");
   },
   isPointLeft: function() {
-      return this.type() ==  "point-left";   
+      return this.type() ==  "point-left";
   },
   isPointRight: function() {
       return this.type() ==  "point-right";
@@ -114,7 +114,7 @@ var PointRightArrowView = Backbone.View.extend({
          $('.label',container).text("").css("min-width", maxLabelWidth + "px");
          container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+2);
        }
-       else  
+       else
         container.width(desiredWidth);
     },
     render: function () {
@@ -244,7 +244,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         if (task == undefined) return;
         var scrollbottom = task.offset().top + task.height() + 150;
         $('html,body').animate({
-          scrollTop: scrollbottom - $(window).height()
+          scrollTop: scrollbottom - (window.innerHeight ? window.innerHeight : $(window).height())
         }, 2000, function() {model.scrollDone();});
        return false;
     }
@@ -279,9 +279,9 @@ window.Arrow = {
                          el.hide();
                     else
                          el.show();
-                    setTimeout(function() {arrow.blink(i - 1)},200);              
+                    setTimeout(function() {arrow.blink(i - 1)},200);
               },
-              /* We need to recalculate width after appending arrow to page */ 
+              /* We need to recalculate width after appending arrow to page */
               fixWidth: function() {
                    if (view.fixWidth != undefined) view.fixWidth();
               }

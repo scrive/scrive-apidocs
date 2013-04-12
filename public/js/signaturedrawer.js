@@ -22,9 +22,10 @@ var SignatureDrawer = Backbone.View.extend({
         var view = this;
         this.drawing = false;
 
-        document.ontouchstart = function(e){
+        document.ontouchmove = function(e){
             return true;
         }
+
     },
     lineWith : function() {
         return 3;
@@ -312,11 +313,6 @@ window.SignatureDrawerPopup = function(args){
                 loadSpeed: 0,
                 opacity: 0.1
             },
-            onLoad : function() {
-              document.ontouchmove = function(e){
-                e.preventDefault();
-              }
-            },
             onClose : function() {
               opened = false;
               document.ontouchmove = function(e){
@@ -333,7 +329,7 @@ window.SignatureDrawerPopup = function(args){
           };
         if ($(window).scrollLeft() > 60) ol.left = 60 - $(window).scrollLeft();
         self.overlay.overlay(ol);
-        window.onorientationchange = function() {
+        /* window.onorientationchange = function() {
            if (opened) {
              var png = self.dw.drawer.getPNG();
              self.overlay.data("overlay").close();
@@ -343,7 +339,7 @@ window.SignatureDrawerPopup = function(args){
                window.scrollTo(0,s.overlay.offset().top - 30);
               },100);
            }
-        };
+        }; */
 
 };
 
