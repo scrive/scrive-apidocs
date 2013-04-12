@@ -76,6 +76,7 @@ set systemPage
  js   js/storage.js
  js   js/utils/browserinfo.js
  js   js/utils/language.js
+ js   js/utils/time.js
  js   js/loading.js
  js   js/arrows.js
  js   js/flashmessages.js
@@ -103,7 +104,6 @@ set systemPage
  js   js/files.js
  js   js/process.js
  js   js/fields.js
- js   js/signature.js
  js   js/signatories.js
  js   js/documents.js
  js   js/takeScreenshot.js

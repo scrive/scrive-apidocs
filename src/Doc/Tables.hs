@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 21
+  , tblVersion = 23
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -27,9 +27,9 @@ tableDocuments = tblTable {
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("sharing", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
-       , ("delivery_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("api_callback_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("unsaved_draft", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("object_version", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE documents ("
@@ -53,9 +53,9 @@ tableDocuments = tblTable {
           <> ", csv_signatory_index           INTEGER          NULL"
           <> ", sharing                       SMALLINT     NOT NULL"
           <> ", lang                          SMALLINT     NOT NULL"
-          <> ", delivery_method               SMALLINT     NOT NULL"
           <> ", api_callback_url              TEXT             NULL"
           <> ", unsaved_draft                 BOOL         NOT NULL DEFAULT FALSE"
+          <> ", object_version                BIGINT       NOT NULL"
           <> ", CONSTRAINT pk_documents PRIMARY KEY (id)"
           <> ")"
         return TVRcreated
@@ -115,7 +115,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 19
+  , tblVersion = 20
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -150,6 +150,7 @@ tableSignatoryLinks = tblTable {
        , ("eleg_data_mismatch_first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("eleg_data_mismatch_last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("eleg_data_mismatch_personal_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("delivery_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_links"
@@ -186,6 +187,7 @@ tableSignatoryLinks = tblTable {
           <> ", eleg_data_mismatch_first_name       TEXT             NULL"
           <> ", eleg_data_mismatch_last_name        TEXT             NULL"
           <> ", eleg_data_mismatch_personal_number  TEXT             NULL"
+          <> ", delivery_method                     SMALLINT     NOT NULL"
           <> ", CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
           <> ")"
         return TVRcreated
@@ -223,7 +225,7 @@ tableDocumentTags = tblTable {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 2
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [ ("id",                 SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
        , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
@@ -233,6 +235,7 @@ tableSignatoryLinkFields = tblTable {
        , ("is_author_filled",  SqlColDesc {colType = SqlBitT,      colNullable = Just False})
        , ("placements",        SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
        , ("obligatory",        SqlColDesc {colType = SqlBitT,      colNullable = Just False})
+       , ("should_be_filled_by_author",        SqlColDesc {colType = SqlBitT,      colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_link_fields"
@@ -244,6 +247,7 @@ tableSignatoryLinkFields = tblTable {
                   <> ", is_author_filled  BOOL      NOT NULL DEFAULT FALSE"
                   <> ", placements        TEXT      NOT NULL DEFAULT ''"
                   <> ", obligatory        BOOL      NOT NULL DEFAULT TRUE"
+                  <> ", should_be_filled_by_author BOOL NOT NULL DEFAULT FALSE"
                   <> ", CONSTRAINT pk_signatory_link_fields PRIMARY KEY (id)"
                   <> ")"
         return TVRcreated

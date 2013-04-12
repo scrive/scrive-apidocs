@@ -93,7 +93,7 @@ sendDocumentMails mailTo author = do
         let asl2 = head $ documentsignatorylinks d2
         True <- randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
-        randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.empty (systemActor now)
+        randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
         Just doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
@@ -116,7 +116,7 @@ sendDocumentMails mailTo author = do
         when (doctype == Contract) $ do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
-        randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty
+        randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email

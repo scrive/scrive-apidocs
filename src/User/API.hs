@@ -47,6 +47,12 @@ import Util.FlashUtil
 import ActionQueue.UserAccountRequest
 import ThirdPartyStats.Core
 import User.Action
+import Payments.Model
+import MinutesTime
+import Doc.Model
+import ActionQueue.Core
+import ActionQueue.PasswordReminder
+import KontraLink
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -57,15 +63,17 @@ userAPI = dir "api" $ choice
 
 versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
-  dir "getpersonaltoken"     $ hPostNoXTokenHttp $ toK0 $ apiCallGetUserPersonalToken,
-  dir "signup"          $ hPostNoXTokenHttp $ toK0 $ apiCallSignup,
-  dir "getprofile" $ hGet $ toK0 $ apiCallGetUserProfile,
-  dir "changepassword"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserPassword,
-  dir "changelanguage"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserLanguage,
-  dir "updateprofile"   $ hPostNoXTokenHttp $ toK0 $ apiCallUpdateUserProfile,
-  dir "createcompany"   $ hPostNoXTokenHttp $ toK0 $ apiCallCreateCompany,
-  dir "changeemail"     $ hPostNoXTokenHttp $ toK0 $ apiCallChangeEmail,
-  dir "addflash"        $ hPostNoXTokenHttp $ toK0 $ apiCallAddFlash
+  dir "getpersonaltoken"     $ hPost $ toK0 $ apiCallGetUserPersonalToken,
+  dir "signup"          $ hPost $ toK0 $ apiCallSignup,
+  dir "sendpasswordresetmail" $ hPost $ toK0 $ apiCallSendPasswordReminder,
+  dir "getprofile"      $ hGet $ toK0 $ apiCallGetUserProfile,
+  dir "changepassword"  $ hPost $ toK0 $ apiCallChangeUserPassword,
+  dir "changelanguage"  $ hPost $ toK0 $ apiCallChangeUserLanguage,
+  dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
+  dir "createcompany"   $ hPost $ toK0 $ apiCallCreateCompany,
+  dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
+  dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
+  dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo
   ]
 
 
@@ -209,6 +217,7 @@ apiCallSignup = api $ do
   firstname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "firstName"
   lastname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "lastName"
   lang <- lift $ fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
+  lift $ switchLang lang
   muser <- dbQuery $ GetUserByEmail $ Email email
   muser' <- case muser of
                Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
@@ -235,6 +244,34 @@ apiCallSignup = api $ do
           runJSONGenT $ value "sent" $ True
 
 
+apiCallSendPasswordReminder :: Kontrakcja m => m Response
+apiCallSendPasswordReminder = api $ do
+  ctx <- getContext
+  memail <- lift $ getOptionalFieldNoFlash asValidEmail "email"
+  case memail of
+    Nothing -> runJSONGenT $ value "send" False >> value "badformat" True
+    Just email -> do
+      muser <- dbQuery $ GetUserByEmail $ Email email
+      case muser of
+        Nothing -> do
+          runJSONGenT $ value "send" False >> value "nouser" True
+        Just user -> do
+          minv <- dbQuery $ GetAction passwordReminder $ userid user
+          case minv of
+            Just pr@PasswordReminder{..} -> case prRemainedEmails of
+              0 -> runJSONGenT $ value "send" False >> value "toomuch" True
+              n -> do
+                _ <- dbUpdate $ UpdateAction passwordReminder $ pr { prRemainedEmails = n - 1 }
+                sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user
+                runJSONGenT $ value "send" True
+            _ -> do
+              link <- newPasswordReminderLink $ userid user
+              sendResetPasswordMail ctx link user
+              runJSONGenT $ value "send" True
+ where
+  sendResetPasswordMail ctx link user = do
+    mail <- resetPasswordMail (ctxhostpart ctx) user link
+    scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 apiCallAddFlash :: Kontrakcja m => m Response
 apiCallAddFlash = api $  do
@@ -247,3 +284,39 @@ apiCallAddFlash = api $  do
        "blue"  -> lift $ addFlashMsg (FlashMessage SigningRelated content)
        _ -> return ()
   Ok <$> (runJSONGenT $ return ())
+
+apiCallPaymentInfo :: Kontrakcja m => m Response
+apiCallPaymentInfo = api $ do
+  (user, _ , _) <- getAPIUser APIPersonal
+  admin <- isAdmin <$> getContext
+  time <- ctxtime <$> getContext
+
+  docsusedthismonth <- lift $ dbQuery $ GetDocsSentBetween (userid user) (beginingOfMonth time) time
+  mpaymentplan <- lift $ dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
+  quantity <- case usercompany user of
+                Nothing -> return 1
+                Just cid -> dbQuery $ GetCompanyQuantity cid
+
+  let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
+      status      = maybe "active" (show . ppStatus) mpaymentplan
+      dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
+      canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
+      billingEnds = (formatMinutesTimeRealISO . ppBillingEndDate) <$> mpaymentplan
+      docTotal = if (Just DeactivatedStatus == (ppStatus <$> mpaymentplan))
+                  then 0
+                  else if (Just EnterprisePricePlan == (ppPricePlan <$> mpaymentplan))
+                        then 5000000
+                        else if ((Just FreePricePlan /= (ppPricePlan <$> mpaymentplan)) && (Just ActiveStatus == (ppStatus <$> mpaymentplan)))
+                              then 100
+                              else 3
+  fmap Ok $ runJSONGenT $ do
+        value "adminuser" admin
+        value "docsUsed"  docsusedthismonth
+        value "plan"      paymentplan
+        value "status"    status
+        value "dunning"   dunning
+        value "canceled"  canceled
+        value "quantity"  quantity
+        value "billingEnds" billingEnds
+        value "docsTotal" (docTotal::Int)
+

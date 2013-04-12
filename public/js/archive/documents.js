@@ -18,7 +18,10 @@ window.DocumentCellsDefinition = function(archive) { return  [
                     return icon;
                  }
         }),
-        new Cell({name: localization.archive.documents.columns.time, width:"140px", field:"time"}),
+        new Cell({name: localization.archive.documents.columns.time, width:"140px", field:"time", special: "rendered",
+                  rendering: function(time) {
+                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+        }}),
         new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.party, width:"190px", field:"party", special: "expandable", subfield : "name"}),

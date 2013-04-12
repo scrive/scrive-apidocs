@@ -76,7 +76,9 @@ window.Signatory = Backbone.Model.extend({
         signorder: 1,
         csv: undefined,
         saved: false,
-        ispadqueue : false
+        ispadqueue : false,
+        authentication: "standard",
+        delivery: "email"
     },
 
     initialize: function(args) {
@@ -275,6 +277,9 @@ window.Signatory = Backbone.Model.extend({
     signs: function() {
          return this.get("signs");
     },
+    signsuccessredirect : function() {
+          return this.get("signsuccessredirect");
+    },
     makeSignatory: function() {
       var isAuthor = this.author();
       var authorNotSignsMode = this.document().authorNotSignsMode();
@@ -368,8 +373,23 @@ window.Signatory = Backbone.Model.extend({
     },
     anySignatureHasImageOrPlacement : function() {
       return _.any(this.signatures(), function (field) {
-           return field.signature().hasImage() || field.hasPlacements();
+           return field.value() != "" || field.hasPlacements();
        });
+    },
+    standardAuthentication: function() {
+          return this.get("authentication") == "standard";
+    },
+    elegAuthentication: function() {
+          return this.get("authentication") == "eleg";
+    },
+    emailDelivery: function() {
+          return this.get("delivery") == "email";
+    },
+    padDelivery : function() {
+          return this.get("delivery") == "pad";
+    },
+    apiDelivery : function() {
+          return this.get("delivery") == "api";
     },
     remind: function(customtext) {
         return new Submit({
@@ -396,10 +416,10 @@ window.Signatory = Backbone.Model.extend({
     },
     reject: function(customtext) {
         return new Submit({
-              url: "/s/" + this.document().documentid() + "/" + this.document().viewer().signatoryid(),
+              url: "/api/frontend/reject/" + this.document().documentid() + "/" + this.document().viewer().signatoryid(),
               method: "POST",
-              customtext: customtext,
-              reject: "YES"
+              ajax : true,
+              customtext: customtext
           });
     },
     padSigningURL : function() {

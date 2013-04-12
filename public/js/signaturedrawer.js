@@ -6,6 +6,8 @@ var SignatureDrawer = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.view = this;
+        this.height = args.height;
+        this.width = args.width;
         this.empty = true;
         this.render();
     },
@@ -145,32 +147,33 @@ var SignatureDrawer = Backbone.View.extend({
     },
     saveImage : function(callback) {
         if (this.empty) {
-          this.model.setImage("");
+          this.model.setValue("");
           if (callback != undefined) callback();
         } else {
-          var signature = this.model;
+          var self = this;
+          var field = this.model;
           var image = this.canvas[0].toDataURL("image/png",1.0);
           var img = new Image();
           img.type = 'image/png';
           img.src = image;
           img.onload = function() {
                var canvas = $("<canvas class='signatureCanvas' />");
-               canvas.attr("width",4* signature.width());
-               canvas.attr("height",4* signature.height());
+               canvas.attr("width",4* self.width);
+               canvas.attr("height",4* self.height);
                canvas[0].getContext('2d').fillStyle = "#ffffff";
-               canvas[0].getContext('2d').fillRect (0,0,4*signature.width(),4*signature.height());
-               canvas[0].getContext('2d').drawImage(img,0,0,4*signature.width(),4*signature.height());
+               canvas[0].getContext('2d').fillRect (0,0,4*self.width,4*self.height);
+               canvas[0].getContext('2d').drawImage(img,0,0,4*self.width,4*self.height);
 
 
-               signature.setImage(canvas[0].toDataURL("image/jpeg",1.0));
-               signature.setImagePNG(image);
+               field.setValue(canvas[0].toDataURL("image/jpeg",1.0));
+               field.setValueTMP(image);
 
                if (callback != undefined) callback();
          };
        }
     },
     clear: function() {
-          this.canvas[0].getContext('2d').clearRect(0,0,this.model.swidth(),this.model.sheight());
+          this.canvas[0].getContext('2d').clearRect(0,0,820,820 * this.height / this.width);
           this.canvas[0].width = this.canvas[0].width;
           this.empty  = true;
     },
@@ -186,7 +189,7 @@ var SignatureDrawer = Backbone.View.extend({
          var img = new Image();
          img.type = 'image/png';
          img.src = png;
-         img.onload = function() {self.canvas[0].getContext('2d').drawImage(img,0,0,signature.swidth(),signature.sheight());};
+         img.onload = function() {self.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);};
          this.empty = false;
       }
     },
@@ -196,16 +199,15 @@ var SignatureDrawer = Backbone.View.extend({
         this.container = $(this.el);
         this.container.addClass("signatureDrawingBox");
         this.canvas = $("<canvas class='signatureCanvas' />");
-        this.canvas.attr("width",signature.swidth());
-        this.canvas.width(signature.swidth());
-        this.canvas.attr("height",signature.sheight());
-        this.canvas.height(signature.sheight());
+        this.canvas.attr("width",820);
+        this.canvas.width(820);
+        this.canvas.attr("height",820 * this.height / this.width);
+        this.canvas.height(820 * this.height / this.width);
         this.picture =  this.canvas[0].getContext('2d');
-        //view.drawImage(this.model.image());
-        if (this.model.image() != undefined && this.model.image() != "" && this.model.imagePNG() != undefined && this.model.imagePNG() != "") {
+        if (this.model.value() != "" && this.model.valueTMP() != undefined && this.model.valueTMP() != "") {
           var img = new Image();
-          img.src = this.model.imagePNG() ;
-          this.canvas[0].getContext('2d').drawImage(img,0,0,signature.swidth(),signature.sheight());
+          img.src = this.model.valueTMP() ;
+          this.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);
           this.empty = false;
         };
         this.initDrawing();
@@ -218,6 +220,8 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.overlay = args.overlay;
+        this.height = args.height;
+        this.width = args.width;
         this.render();
     },
     header: function() {
@@ -229,16 +233,16 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     },
     drawingBox : function() {
         var div = $("<div class='signatureDrawingBoxWrapper'>");
-        this.drawer = new SignatureDrawer({model : this.model});
+        this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width});
         div.append(this.drawer.el);
-        div.width(this.model.swidth() );
-        div.height(this.model.sheight() );
+        div.width(820);
+        div.height(820 * this.height / this.width);
         return div;
     },
     acceptButton : function() {
         var view = this;
-        var field = this.model.field();
-        var signatory = this.model.field().signatory();
+        var field = this.model;
+        var signatory = field.signatory();
         var document = signatory.document();
         return Button.init({
                     color : 'green',
@@ -265,7 +269,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         }).input();
     },
     footer : function() {
-           var signatory = this.model.document().currentSignatory();
+           var signatory = this.model.signatory();
            var abutton = this.acceptButton();
            abutton.addClass("float-right");
            var detailsBox = $("<div class='details-box' />");
@@ -298,7 +302,7 @@ window.SignatureDrawerPopup = function(args){
             return;
         }
         self.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/></div>");
-        self.dw = new SignatureDrawerWrapper({model : args.signature, overlay : self.overlay});
+        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, overlay : self.overlay});
         self.overlay.append(self.dw.el);
         $('body').append(self.overlay );
         var opened = true;

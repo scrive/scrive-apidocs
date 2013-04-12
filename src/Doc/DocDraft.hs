@@ -2,7 +2,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocDraft (
     DraftData,
-    applyDraftDataToDocument
+    applyDraftDataToDocument,
+    draftIsChangingDocument
   ) where
 
 import Control.Monad.Trans.Maybe
@@ -29,7 +30,7 @@ data DraftData = DraftData {
     , invitationmessage :: Maybe String
     , daystosign :: Int
     , authentication :: Maybe AuthenticationMethod
-    , delivery :: DeliveryMethod
+    , delivery :: Maybe DeliveryMethod
     , signatories :: [SignatoryTMP]
     , lang :: Maybe Lang
     , template :: Bool
@@ -73,15 +74,15 @@ instance FromJSValue DraftData where
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
         process' <- fromJSValueField "process"
-        case (title', daystosign', delivery') of
-            (Just t, Just daystosign, Just d)
+        case (title', daystosign') of
+            (Just t, Just daystosign)
              | daystosign >= minDaysToSign && daystosign <= maxDaysToSign ->
                 return $ Just DraftData {
                                       title =  t
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign
                                     , authentication = authentication'
-                                    , delivery = d
+                                    , delivery = delivery'
                                     , signatories = concat $ maybeToList $ signatories'
                                     , lang = lang'
                                     , template = joinB template'
@@ -102,7 +103,6 @@ applyDraftDataToDocument doc draft actor = do
                                     documenttitle = title draft
                                   , documentinvitetext = fromMaybe (documentinvitetext doc) $ invitationmessage draft
                                   , documentdaystosign = daystosign draft
-                                  , documentdeliverymethod = delivery draft
                                   , documentlang = fromMaybe (documentlang doc) (lang draft)
                                   , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
                                   , documentapicallbackurl = (apicallbackurl draft)
@@ -127,18 +127,43 @@ applyDraftDataToDocument doc draft actor = do
 mergeSignatories :: DraftData
                  -> SignatoryLink
                  -> [SignatoryTMP]
-                 -> Maybe [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod)]
+                 -> Maybe [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)]
 mergeSignatories docdraft docAuthor tmps =
         let
             (atmp, notatmps) = partition isAuthorTMP tmps
             setAuthorConstantDetails =  setFstname (getFirstName docAuthor) .
                                         setSndname (getLastName docAuthor) .
                                         setEmail   (getEmail docAuthor)
-            mapAuthenticationMethod (a,b,c,d,e) =
+            mapAuthenticationMethod (a,b,c,d,e,f) =
               case authentication docdraft of
-                Just x -> (a,b,c,d,x)
-                _ -> (a,b,c,d,e)
+                Just x -> (a,b,c,d,x,f)
+                _ -> (a,b,c,d,e,f)
+            mapDeliveryMethod (a,b,c,d,e,f) =
+              case delivery docdraft of
+                Just x -> (a,b,c,d,e,x)
+                _ -> (a,b,c,d,e,f)
 
         in case (atmp) of
-                ([authorTMP]) -> Just $ map mapAuthenticationMethod $ map toSignatoryDetails2 $ (setAuthorConstantDetails authorTMP) : notatmps
+                ([authorTMP]) -> Just $ map mapDeliveryMethod $ map mapAuthenticationMethod $
+                                      map toSignatoryDetails2 $ (setAuthorConstantDetails authorTMP) : notatmps
                 _ -> Nothing
+
+
+draftIsChangingDocument :: DraftData -> Document -> Bool
+draftIsChangingDocument DraftData{..} doc@Document{..}  =
+        (title /= documenttitle)
+     || ((isJust invitationmessage) && (fromJust invitationmessage) /= documentinvitetext)
+     || ((isJust lang) && (fromJust lang) /= documentlang)
+     || ((isJust process) && (fromJust process) /= toDocumentProcess documenttype)
+     || ((isJust tags) && (Set.fromList $ fromJust tags) /= documenttags)
+     || (apicallbackurl /= documentapicallbackurl)
+     || (template /= isTemplate doc)
+     || (daystosign /= documentdaystosign)
+     || (isJust authentication && all ((/=) (fromJust authentication)) (fmap signatorylinkauthenticationmethod documentsignatorylinks))
+     || (isJust delivery && all ((/=) (fromJust delivery)) (fmap signatorylinkdeliverymethod documentsignatorylinks))
+     || (draftIsChangingDocumentSignatories signatories documentsignatorylinks)
+
+draftIsChangingDocumentSignatories :: [SignatoryTMP] -> [SignatoryLink] -> Bool
+draftIsChangingDocumentSignatories (stmp:stmps) (sl:sls) = (signatoryTMPIsChangingSignatoryLink stmp sl) || (draftIsChangingDocumentSignatories stmps sls)
+draftIsChangingDocumentSignatories [] [] = False
+draftIsChangingDocumentSignatories _ _ = True

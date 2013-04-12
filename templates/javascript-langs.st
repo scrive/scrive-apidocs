@@ -950,6 +950,20 @@ javascriptLocalisation =
              , sampleEmailContent: "$_SampleEmailContent()$"
              , customize : "$_companyBrandingCustomize()$"
       }
+      , dates : {
+               jan : "$_datesJan()$"
+             , feb : "$_datesFeb()$"
+             , mar : "$_datesMar()$"
+             , apr : "$_datesApr()$"
+             , may : "$_datesMay()$"
+             , jun : "$_datesJun()$"
+             , jul : "$_datesJul()$"
+             , aug : "$_datesAug()$"
+             , sep : "$_datesSep()$"
+             , oct : "$_datesOct()$"
+             , nov : "$_datesNov()$"
+             , dec : "$_datesDec()$"
+      }
       , createFromTemplateDescription : "$_createFromTemplateDescription()$"
       , nofiletext : "$_nofiletext()$"
     };

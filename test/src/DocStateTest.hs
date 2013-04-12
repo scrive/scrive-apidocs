@@ -59,15 +59,17 @@ docStateTests env = testGroup "DocState" [
   testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
   testThat "Set StandardAuthentication adds to the log" env testSetStandardAuthenticationEvidenceLog,
 -}
+{-
   testThat "Set PadDelivery adds to the log" env testSetPadDeliveryEvidenceLog,
   testThat "Set EmailDelivery adds to the log" env testSetEmailDeliveryEvidenceLog,
+-}
   testThat "SetInvitationDeliveryStatus adds to the log" env testSetInvitationDeliveryStatusEvidenceLog,
   testThat "SetInviteText adds to the log" env testSetInviteTextEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
   testThat "SignableFromDocumentIDWithUpdatedAuthor adds to the log" env testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog,
   testThat "TemplateFromDocument adds to the log" env testTemplateFromDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
-  testThat "UpdateFields adds to the log" env testUpdateFieldsEvidenceLog,
+  testThat "UpdateFieldsForSigning adds to the log" env testUpdateFieldsEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
   testThat "SetDocumentUnsavedDraft and filtering based on unsaved_draft works" env testSetDocumentUnsavedDraft,
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
@@ -185,6 +187,7 @@ docStateTests env = testGroup "DocState" [
   testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" env testNoDocumentResetSignatoryDetailsAlwaysLeft,
   testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" env testNotPreparationResetSignatoryDetailsAlwaysLeft,
   testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" env testPreparationResetSignatoryDetailsAlwaysRight,
+  testThat "ResetSignatoryDetails2 works as expected" env testPreparationResetSignatoryDetails2Works,
   testThat "when I call attachcsvupload with a doc that does not exist, always returns left" env testNoDocumentAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" env testNotPreparationAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload and the csvindex is the author, return left" env testPreparationAttachCSVUploadAuthorIndexLeft,
@@ -405,6 +408,7 @@ testSetStandardAuthenticationEvidenceLog = do
   assertJust $ find (\e -> evType e == SetStandardAuthenticationMethodEvidence) lg
 -}
 
+{-
 testSetPadDeliveryEvidenceLog :: TestEnv ()
 testSetPadDeliveryEvidenceLog = do
   author <- addNewRandomUser
@@ -426,6 +430,7 @@ testSetEmailDeliveryEvidenceLog = do
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetEmailDeliveryMethodEvidence) lg
+-}
 
 testSetInvitationDeliveryStatusEvidenceLog :: TestEnv ()
 testSetInvitationDeliveryStatusEvidenceLog = do
@@ -456,15 +461,15 @@ testSetInviteTextEvidenceLog = do
                     then loop doc
                     else randomUpdate $ \t -> SetInviteText (documentid doc) i (systemActor t)
 
-getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.T
+getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
   now <- getMinutesTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"
   signing <- liftIO $ BS.readFile "test/screenshots/s2.jpg"
-  let mkss i = Just (now, Screenshot.T{ Screenshot.mimetype = "image/jpeg"
+  let mkss i = Just (now, Screenshot.Screenshot{ Screenshot.mimetype = "image/jpeg"
                                       , Screenshot.image = Binary i
                                       })
-  return $ SignatoryScreenshots.empty{ SignatoryScreenshots.first = mkss first_
+  return $ SignatoryScreenshots.emptySignatoryScreenshots{ SignatoryScreenshots.first = mkss first_
                                      , SignatoryScreenshots.signing = mkss signing
                                      }
 
@@ -516,19 +521,14 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ isSignable &&^ ((<=) 2 . length . documentsignatorylinks))
   let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  let sf = filter (\f -> not $ (sfType f) `elem` [FirstNameFT,LastNameFT, EmailFT]) $ signatoryfields $ signatorydetails sl
+  let sf = filter (\f -> (sfValue f == "") && (not $ (sfType f) `elem` [FirstNameFT,LastNameFT, EmailFT])) $ signatoryfields $ signatorydetails sl
   case sf of
    (f:_) -> do
         v <-  rand 10 arbitrary
-        success <- randomUpdate $ \t->UpdateFields (documentid doc) (signatorylinkid sl) [(sfType f,v)] (systemActor t)
+        randomUpdate $ \t->UpdateFieldsForSigning (documentid doc) (signatorylinkid sl) [(sfType f,v)] (systemActor t)
         lg <- dbQuery $ GetEvidenceLog (documentid doc)
-        case success of
-                True ->
-                    assertBool "if UpdateFields did change document it should add to the evidence (or not affect anything) " $
-                        (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))
-                False ->
-                    assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
-                        (find (\e -> evType e == UpdateFieldsEvidence) lg)
+        assertBool "if UpdateFieldsForSigning did change document it should add to the evidence (or not affect anything) " $
+              (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))
    _ -> return ()
 
 testPreparationToPendingEvidenceLog :: TestEnv ()
@@ -560,7 +560,7 @@ testMarkDocumentSeenEvidenceLog  = do
   success <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   assert success
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
+  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   assertRaisesKontra (\SignatoryTokenDoesNotMatch {} -> True) $ do
     _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh (systemActor t)
@@ -631,7 +631,7 @@ testDeleteSigAttachmentAlreadySigned = do
   randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
 
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
+  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
     randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
 
@@ -745,9 +745,8 @@ testCloseDocumentEvidenceLog = do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   forM_ (documentsignatorylinks doc) $ \sl -> when (isSignatory sl) $ do
     void $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-    randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
-
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == CloseDocumentEvidence) lg
 
@@ -820,15 +819,15 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
 testSignatories1 :: Assertion
 testSignatories1 =
   let s1 = SignatoryDetails {signatorysignorder = SignOrder 0,
-                             signatoryfields = [SignatoryField FirstNameFT "Eric" True []
-                                               ,SignatoryField LastNameFT "Normand" True []
+                             signatoryfields = [SignatoryField FirstNameFT "Eric" True False []
+                                               ,SignatoryField LastNameFT "Normand" True False []
                                                 ],
                              signatoryisauthor = True,
                              signatoryispartner = True
                             }
       s2 = SignatoryDetails {signatorysignorder = SignOrder 0,
-                             signatoryfields = [SignatoryField LastNameFT "Normand" True []
-                                               ,SignatoryField FirstNameFT "Eric" True []
+                             signatoryfields = [SignatoryField LastNameFT "Normand" True False []
+                                               ,SignatoryField FirstNameFT "Eric" True False []
                                                 ],
                              signatoryisauthor = True,
                              signatoryispartner = True
@@ -1067,7 +1066,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   -- assert
 
   assertJust mndoc
-  assert $ sameDocID doc (fromJust mndoc)
+  assert $ documentid doc  == documentid (fromJust mndoc)
   assertInvariants (fromJust mndoc)
 
 testDocumentAttachNotPreparationLeft :: TestEnv ()
@@ -1186,6 +1185,31 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   --assert
   assert success
   assertInvariants ndoc
+
+testPreparationResetSignatoryDetails2Works :: TestEnv ()
+testPreparationResetSignatoryDetails2Works = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  mt <- rand 10 arbitrary
+  --execute
+  let newData1 = (defaultValue { signatoryisauthor = True },[],Nothing, Nothing, StandardAuthentication, EmailDelivery)
+  success1 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData1] (systemActor mt)
+  assert success1
+  Just ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc1))
+  assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc1))
+
+  let newData2 = (defaultValue { signatoryisauthor = True },[],Nothing, Nothing, ELegAuthentication, PadDelivery)
+  success2 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData2] (systemActor mt)
+  assert success2
+  Just ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  assertEqual "Proper delivery method set" [PadDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc2))
+  assertEqual "Proper authentication method set" [ELegAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc2))
+
+  --assert
+  assertInvariants ndoc1
+  assertInvariants ndoc2
 
 testNoDocumentResetSignatoryDetailsAlwaysLeft :: TestEnv ()
 testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
@@ -1548,7 +1572,7 @@ testSignDocumentNonSignableLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   let Just sl = getSigLinkFor doc author
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
-    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
 testSignDocumentSignableNotPendingLeft :: TestEnv ()
 testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
@@ -1556,7 +1580,7 @@ testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
   let Just sl = getSigLinkFor doc author
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
-    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
 testSignDocumentSignablePendingRight :: TestEnv ()
 testSignDocumentSignablePendingRight = doTimes 10 $ do
@@ -1565,8 +1589,7 @@ testSignDocumentSignablePendingRight = doTimes 10 $ do
   let Just sl = find (isSignatory &&^ (not . hasSigned)) (documentsignatorylinks doc)
   time <- rand 10 arbitrary
   _ <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
-  randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor time)
-
+  randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentNotLeft :: TestEnv ()
 testSignDocumentNotLeft = doTimes 10 $ do
@@ -1574,7 +1597,7 @@ testSignDocumentNotLeft = doTimes 10 $ do
   assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
     -- our machinery is broken here, baseline condition has only relations
     -- this should be ignored and properly return info about non existing document
-    randomUpdate $ \d sl mh si t -> SignDocument d sl mh si SignatoryScreenshots.empty (systemActor t)
+    randomUpdate $ \d sl mh si t -> SignDocument d sl mh si SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
 testPreparationToPendingNotSignableLeft :: TestEnv ()
 testPreparationToPendingNotSignableLeft = doTimes 10 $ do
@@ -1805,7 +1828,6 @@ testCloseDocumentSignableButNotEverybodyHasSigned = doTimes 10 $ do
                                      (not . all (isSignatory =>>^ hasSigned) . documentsignatorylinks)
          }
   sa <- unSystemActor <$> rand 10 arbitrary
-
   assertRaisesKontra (\(SignatoryHasNotYetSigned {}) -> True) $ do
     randomUpdate $ CloseDocument (documentid doc) sa
 

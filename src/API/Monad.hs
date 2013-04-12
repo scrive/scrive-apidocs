@@ -13,6 +13,8 @@ module API.Monad (
                  serverError',
                  noAvailableYet,
                  noAvailableYet',
+                 conflictError,
+                 conflictError',
                  apiGuard,
                  apiGuard',
                  apiGuardL,
@@ -79,6 +81,7 @@ data APIError = BadInput           String
               | ActionNotAvailable String
               | ServerError        String
               | NoAvailableYet     String
+              | ConflictError      String
               deriving (Show, Eq, Typeable)
 
 instance KontraException APIError
@@ -92,6 +95,7 @@ instance ToJSValue APIError where
   toJSValue (ServerError msg) = jsonError 500 $ value "message" msg
   toJSValue (ActionNotAvailable msg) = jsonError 500 $ value "message" msg
   toJSValue (NoAvailableYet msg) = jsonError 420 $ value "message" msg
+  toJSValue (ConflictError msg) = jsonError 409 $ value "message" msg
 
 
 badInput :: String -> APIError
@@ -124,11 +128,18 @@ serverError = ServerError
 serverError' :: APIError
 serverError' = serverError "An internal server error occurred which could not be resolved."
 
+
 noAvailableYet:: String -> APIError
 noAvailableYet = NoAvailableYet
 
 noAvailableYet':: APIError
 noAvailableYet' = noAvailableYet "Resource is not yet available"
+
+conflictError :: String -> APIError
+conflictError = ConflictError
+
+conflictError' :: APIError
+conflictError' = conflictError "An internal server error occurred which could not be resolved."
 
 -- Define what we can respond from an API call
 class ToAPIResponse a where
@@ -140,7 +151,7 @@ instance ToAPIResponse Response where
 instance ToAPIResponse JSValue where
   toAPIResponse jv =
     -- must be text/plain because some browsers complain about JSON type
-    (setHeader "Content-Type" "text/plain" $ Web.toResponse $ encode jv) { rsCode = code }
+    (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv) { rsCode = code }
     where
        -- Am I stupid or it is realy so hard to get an integer from a json object?
        -- The below simulates: (jv.http_status_code || 200)
@@ -152,11 +163,11 @@ instance ToAPIResponse JSValue where
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in
-    setHeader "Content-Type" "text/zip" r1
+    setHeader "Content-Type" "text/csv" r1
 
 instance ToAPIResponse ZipArchive where
   toAPIResponse v = let r1 = Web.toResponse $ v in
-    setHeader "Content-Type" "text/csv" r1
+    setHeader "Content-Type" "text/zip" r1
 
 instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
   toAPIResponse = either toAPIResponse toAPIResponse

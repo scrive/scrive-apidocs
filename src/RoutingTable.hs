@@ -54,10 +54,6 @@ staticRoutes = choice
      , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
      , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
-     -- Only download function | unified for author and signatories
-     , dir "download"                     $ hGet  $ toK2 $ DocControl.handleDownloadFile
-
-
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
 
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
@@ -67,10 +63,6 @@ staticRoutes = choice
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowSaveMagicHash
 
-     , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
-     , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocumentIphoneCase
-     , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
-     , dir "s" $ param "reject"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocumentIphoneCase
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
@@ -83,6 +75,8 @@ staticRoutes = choice
      , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
      , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
+     , dir "a" $ dir "download"    $ hGet  $ toK3 $ AttachmentControl.handleDownloadAttachment
+
 
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
 
@@ -105,8 +99,6 @@ staticRoutes = choice
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
      , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
-
-     , dir "blockinginfo"          $ hGet $ toK0 $ UserControl.handleBlockingInfo
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
@@ -162,9 +154,8 @@ staticRoutes = choice
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ signupPageGet
      , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API
-     , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
-     , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
+     , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK3 $ UserControl.handleAccountSetupGetWithMethod
      -- This can go away ~14 days after this code reaches production

@@ -830,7 +830,7 @@ var DesignViewView = Backbone.View.extend({
     },
     uploadFile : function() {
         var document = this.model.document();
-        var url = "/api/frontend/mainfile/" + document.documentid();
+        var url = "/api/frontend/changemainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
             color : "green",
@@ -971,7 +971,7 @@ var DesignViewView = Backbone.View.extend({
                                     document.afterSave( function() {
                                       new Submit({
                                               method : "POST",
-                                              url :  "/api/frontend/mainfile/" + document.documentid(),
+                                              url :  "/api/frontend/changemainfile/" + document.documentid(),
                                               ajax: true,
                                               onSend: function() {
                                                   LoadingDialog.open();

@@ -69,10 +69,10 @@ updateReference = do
             \-- Do not edit manually.\n\
             \module Doc.ReferenceScreenshot where\n\
             \\n\
-            \import Doc.Screenshot(T(..))\n\
+            \import Doc.Screenshot(Screenshot(..))\n\
             \import MinutesTime(MinutesTime, fromSeconds)\n\
             \\n\
-            \referenceScreenshot :: (MinutesTime, T)\n\
+            \referenceScreenshot :: (MinutesTime, Screenshot)\n\
             \referenceScreenshot = " ++ show' signing ++ "\n\
             \"
           liftIO $ putStrLn $ "Wrote new screenshot to " ++ filename
@@ -81,5 +81,5 @@ updateReference = do
     _ -> usage
 
 
-show' :: (MinutesTime, Screenshot.T) -> String
+show' :: (MinutesTime, Screenshot.Screenshot) -> String
 show' (t, s) = "(fromSeconds " ++ show (toSeconds t) ++ ", "++ show s ++ ")"

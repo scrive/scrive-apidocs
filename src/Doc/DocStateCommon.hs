@@ -67,11 +67,11 @@ emptySignatoryFields = [
         , sf CompanyNumberFT
         , sf EmailFT
         ]
-    where sf t = SignatoryField t "" True []
+  where sf t = SignatoryField t "" True False []
 
-checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod)] -> [String]
+checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] -> [String]
 checkResetSignatoryData doc sigs =
-  let authors = length $ filter (\(d, _, _, _, _) -> signatoryisauthor d) sigs
+  let authors = length $ filter (\(d, _, _, _, _, _) -> signatoryisauthor d) sigs
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (authors == 1) $ "Should have exactly one author, had " ++ show authors

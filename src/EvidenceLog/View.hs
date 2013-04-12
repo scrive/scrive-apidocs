@@ -33,8 +33,8 @@ import User.Model
 import DB
 import Control.Logic
 -- | Evidence log for web page - short and simplified texts
-eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> [DocumentEvidenceEvent] -> m [JSValue]
-eventsJSListFromEvidenceLog tl doc dees = mapM (J.runJSONGenT . eventJSValue tl doc) $ eventsForLog doc dees
+eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
+eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) $ eventsForLog doc dees
 
 
 eventsForLog :: Document -> [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
@@ -46,11 +46,11 @@ eventsForLog _doc events =
         cleanerLog  = cleanUnimportantAfterSigning separatedLog
     in cleanerLog
 
-        
-eventJSValue :: (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> DocumentEvidenceEvent -> JSONGenT m ()
-eventJSValue tl doc dee = do
+
+eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent -> JSONGenT m ()
+eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
-    J.value "time"  $ showDateForHistory tl (evTime dee)
+    J.value "time"  $ showDateForHistory (evTime dee)
     J.valueM "party" $ if (systemEvents $ evType dee)
                           then return "Scrive"
                           else case (getSigLinkFor doc $ evSigLinkID dee) of
@@ -59,7 +59,7 @@ eventJSValue tl doc dee = do
                                          else case (getSmartName sl) of
                                                 "" -> renderTemplate_ "notNamedParty"
                                                 name -> return name
-                                Nothing -> case (evUserID dee) of                       
+                                Nothing -> case (evUserID dee) of
                                            Just uid -> if (isAuthor (doc,uid))
                                                         then authorName
                                                         else do
@@ -129,7 +129,7 @@ cleanUnimportantAfterSigning (e:es) = if ((     (evType e == SignatoryLinkVisite
                                 && ((isJust muid && evUserID e' == muid)
                                      || (isJust mslid && evSigLinkID e' == mslid)
                                     )) es')
-                                
+
 
 endOfHistoryEvent :: EvidenceEventType -> Bool
 endOfHistoryEvent  PreparationToPendingEvidence = True
@@ -161,7 +161,7 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
     F.value "affectedsignatory" $ getSmartName <$> siglink
     F.value "text" $ filterTags <$> evMessageText dee
     F.value "eleg" $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
-    F.value "pad"  $ documentdeliverymethod doc == PadDelivery
+    F.value "pad"  $ (\sl -> signatorylinkdeliverymethod sl == PadDelivery) <$> siglink
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
@@ -195,7 +195,7 @@ filterTags (a:rest) = a : (filterTags rest)
 filterTags [] = []
 
 -- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
-evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.T)] -> m String
+evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
 evidenceOfIntentHTML title l = do
   renderTemplate "evidenceOfIntent" $ do
     F.value "documenttitle" title

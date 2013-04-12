@@ -84,7 +84,7 @@ var LoginModel = Backbone.Model.extend({
                 trackTimeout('Login successful', {}, function() {
                     window.location = model.referer() != undefined && model.referer() != "" && model.referer() != "/" ? model.referer() : "/newdocument";
                 });
-            }  
+            }
             else {
                 if( resp.ipaddr ) {
                     mixpanel.track('Error',
@@ -112,7 +112,7 @@ var LoginModel = Backbone.Model.extend({
     var model = this;
     new Submit({
           method: "POST",
-          url: "/amnesia",
+          url: "/api/frontend/sendpasswordresetmail",
           ajax: true,
           email : model.email(),
           ajaxsuccess: function(rs) {
@@ -122,7 +122,7 @@ var LoginModel = Backbone.Model.extend({
                 mixpanel.track('Password reminder sent');
               new FlashMessage({ content: localization.loginModal.passwordReminderSend, color: "green"});
             }
-            else 
+            else
             {
               var text = "";
               if (resp.badformat)
@@ -214,14 +214,14 @@ var LoginView = Backbone.View.extend({
                   cssClass : "login-button ",
                   onClick : loginFunction
                 });
-                
+
       body.append($("<div class='position'/>").append(loginButton.input()));
 
 
       if (!model.pad()) {
         var footer = $("<div class='short-input-container-footer'/>");
         content.append(footer);
-      
+
         var toogleOption = $("<a href='#' class='s-forgot-password'/>").text(localization.loginModal.forgotpassword + "?").click(function(){ model.toogleView();return false;});
         footer.append($("<p class='float-right'/>").append(toogleOption));
       }
@@ -238,9 +238,9 @@ var LoginView = Backbone.View.extend({
       header.append($("<h1/>").text(localization.resetYourPassword));
       header.append($("<h2/>").text(localization.resetYourPasswordCheckEmail));
       $(this.el).append(header);
-                                     
+
       content.append(wrapper.append(body));
-     
+
       var emailinput = InfoTextInput.init({
               infotext: localization.loginModal.email,
               value : model.email(),
@@ -249,7 +249,7 @@ var LoginView = Backbone.View.extend({
               name : "email",
               cssClass : "big-input",
               onEnter : function() { model.sendPasswordReminder();}
-                                          
+
       });
       emailinput.input().attr("autocomplete","false");
         emailinput.input().focus(

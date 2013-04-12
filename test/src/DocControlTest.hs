@@ -84,13 +84,13 @@ testUploadingFileAsOrder = do
 testNewDocumentUnsavedDraft :: TestEnv ()
 testNewDocumentUnsavedDraft = do
   (user, _rsp) <- uploadDocAsNewUser Contract
-  docs <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False] [] (0,maxBound)
+  docs <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False False] [] (0,maxBound)
   assertEqual "Draft is there" 1 (length docs)
-  docs' <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False] [] (0,maxBound)
+  docs' <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False False] [] (0,maxBound)
   assertEqual "Draft is not visible in archive" 0 (length docs')
-  
 
-  
+
+
 uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, Response)
 uploadDocAsNewUser doctype = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -125,10 +125,7 @@ testSendingDocumentSendsInvites = do
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
     && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
-    && case documenttype d of
-          Signable _ -> True
-          _ -> False
-    && sendMailsDuringSigning d)
+    && isSignable d)
 
   req <- mkRequest POST [ ("send", inText "True")
                         , ("timezone", inText "Europe/Stockholm")
@@ -167,12 +164,9 @@ testSigningDocumentFromDesignViewSendsInvites = do
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
-    && case documenttype d of
-        Signable Contract -> True
-        _ -> False
+    && isSignable d
     && isSignatory (getAuthorSigLink d)
-    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
-    && sendMailsDuringSigning d)
+    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d))
 
   req <- mkRequest POST [ ("sign", inText "True")
                         , ("timezone", inText "Europe/Stockholm")
@@ -197,7 +191,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && documentdeliverymethod d == EmailDelivery)
+                     {- && documentdeliverymethod d == EmailDelivery -})
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
@@ -221,7 +215,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
   (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
 
   req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
-  (_link, _ctx') <- runTestKontra req ctx' $ signDocument (documentid doc) (signatorylinkid siglink)
+  (_link, _ctx') <- runTestKontra req ctx' $ apiCallSign (documentid doc) (signatorylinkid siglink)
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus signeddoc)
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
@@ -244,7 +238,7 @@ testLastPersonSigningADocumentClosesIt = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && documentdeliverymethod d == EmailDelivery)
+                     {- && documentdeliverymethod d == EmailDelivery -} )
             file
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
@@ -270,7 +264,7 @@ testLastPersonSigningADocumentClosesIt = do
   (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
 
   req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
-  (_link, _ctx') <- runTestKontra req ctx' $ signDocument (documentid doc) (signatorylinkid siglink)
+  (_link, _ctx') <- runTestKontra req ctx' $ apiCallSign (documentid doc) (signatorylinkid siglink)
 
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In closed state" Closed (documentstatus signeddoc)
@@ -414,7 +408,7 @@ testDocumentDeleteInBulk :: TestEnv ()
 testDocumentDeleteInBulk = do
     (Company {companyid}) <- addNewCompany
     (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
-    -- isSignable condition below is wrong. Tests somehow generate template documents 
+    -- isSignable condition below is wrong. Tests somehow generate template documents
     -- that are pending and that breaks everything.
     docs <- replicateM 100 (addRandomDocumentWithAuthorAndCondition author (isSignable))
 
@@ -473,5 +467,6 @@ mkSigDetails fstname sndname email isauthor ispartner = SignatoryDetails {
         sfType = t
       , sfValue = v
       , sfPlacements = []
+      , sfShouldBeFilledBySender = False
       , sfObligatory = True
     }
