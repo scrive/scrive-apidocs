@@ -224,7 +224,7 @@ window.Field = Backbone.Model.extend({
 
         if (   this.isEmail()
             && !this.signatory().isCsv()
-            && (this.signatory().document().emailDelivery())){
+            && (this.signatory().emailDelivery())){
             var msg = localization.designview.validation.missingOrWrongEmail;
             this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
@@ -234,6 +234,14 @@ window.Field = Backbone.Model.extend({
             var msg = localization.designview.validation.missingOrWrongEmail;
             this.setValue(this.value().trim());
             return new EmailValidation({message: msg});
+        }
+
+        if (   this.isMobile()
+            && !this.signatory().isCsv()
+            && (this.signatory().mobileDelivery())){
+            var msg = localization.designview.validation.missingOrWrongMobile;
+            this.setValue(this.value().trim());
+            return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
         if ( this.isMobile() && this.value() != undefined && this.value() != "") {

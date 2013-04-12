@@ -68,8 +68,12 @@ window.EmailValidation = Validation.extend({
 window.PhoneValidation = Validation.extend({
      defaults: {
             validates: function(t) {
-                var t = $.trim(t);
-                return /^\+[0-9 -]+$/i.test(t);
+                /* After trimming and removal of ignorable characters
+                 * mobile phone number is required to have 11 digits
+                 * including country code. Prefix it with plus sign.
+                 */
+                var z = t.replace(/ -./, "");
+                return /^\+[0-9]{9,}$/i.test(z);
             },
             message: "Wrong phone number format!"
     }
