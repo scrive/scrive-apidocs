@@ -152,7 +152,7 @@ var LoginView = Backbone.View.extend({
       var content = $("<div class='short-input-container login'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
       var body = $("<div class='short-input-container-body'/>");
-      var header = $("<header class='shadowed'/>");
+      var header = $("<div class='shadowed'/>");
       var loginFunction = function() {
           document.cookie = 'last_login_email=' + model.email();
           model.login();
