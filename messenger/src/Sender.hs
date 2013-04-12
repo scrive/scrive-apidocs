@@ -24,6 +24,8 @@ import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.ByteString.Lazy.UTF8 as BSU
 import Utils.IO
+import Utils.Read
+import System.Exit
 
 data Sender = Sender {
     senderName :: String
@@ -48,16 +50,16 @@ createExternalSender name user password = Sender { senderName = name, sendSMS = 
     send _sms@ShortMessage{..} = do
       liftIO $ do
         sendSMS2 (user,password) smOriginator smMSISDN smBody
-        return True
 
-sendSMS2 :: (String, String) -> String -> String -> String -> IO ()
+sendSMS2 :: (String, String) -> String -> String -> String -> IO Bool
 sendSMS2 (user, password) originator msisdn body = do
-  (code, stdout, stderr) <- readProcessWithExitCode' "curl" [url] BS.empty
-  putStrLn $ show code
-  putStr "STDOUT: "
-  BSC.putStrLn stdout
-  putStr "STDERR: "
-  BSC.putStrLn stderr
+  (code, stdout, stderr) <- readCurl [url] BS.empty
+  case (code, maybeRead (takeWhile (not . isSpace) $ BSC.unpack stdout)) of
+    (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 ->
+      return True
+    _ -> do
+      Log.messengerServer $ "sendSMS2 failed with message " ++ BSLU.toString stderr
+      return False
   where
     latin_user = toLatin user
     latin_password = toLatin password
@@ -79,8 +81,15 @@ sendSMS2 (user, password) originator msisdn body = do
       , "originator=", urlEncode latin_originator, "&"
       , "hash=", hash
       ]
-
-    toLatin = BSC.unpack . IConv.convert "utf8" "latin1" . BSU.fromString
+    -- Seems we hit a bug in iconv under Mac. Using translitera mode there
+    -- loves to produce empty strings for unknown reason. Using discard mode
+    -- removes everything but ANSI, so it is not good either, but good enough
+    -- for signing links to get through.
+    toLatinTransliterate = BSC.unpack . IConv.convertFuzzy IConv.Transliterate "utf8" "latin1" . BSU.fromString
+    toLatinDiscard = BSC.unpack . IConv.convertFuzzy IConv.Discard "utf8" "latin1" . BSU.fromString
+    toLatin x = case toLatinTransliterate x of
+                  "" -> toLatinDiscard x
+                  z -> z
     urlEncode = URL.encode . map (fromIntegral . ord)
 
 {-
