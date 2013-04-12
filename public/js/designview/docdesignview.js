@@ -267,10 +267,10 @@ var DesignViewView = Backbone.View.extend({
             options = [padOption, mobileOption];
         } else if (document.padDelivery()) {
             name = localization.pad.delivery;
-            options = [emailOption, padOption];
+            options = [emailOption, mobileOption];
         } else if (document.mobileDelivery()) {
             name = localization.mobile.delivery;
-            options = [emailOption, mobileOption];
+            options = [emailOption, padOption];
         }
         else if (document.apiDelivery()) {
             name = "API";
