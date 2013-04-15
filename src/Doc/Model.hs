@@ -2038,10 +2038,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
                               value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
                               value "ocsp" $ signatureinfoocspresponse si
                               value "infotext" $ signatureinfotext si
-            _ <- update $ InsertEvidenceEvent
+            _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 SignDocumentEvidence
                 (signatureFields >> value "actor" (actorWho actor))
                 (Just docid)
+                (Just slid)
+                Nothing
                 actor
             _ <- insertSignatoryScreenshots [(slid, screenshots)]
             return ()
