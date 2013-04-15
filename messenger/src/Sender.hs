@@ -47,8 +47,9 @@ createExternalSender :: String -> String -> String -> Sender
 createExternalSender name user password = Sender { senderName = name, sendSMS = send }
   where
     send :: CryptoRNG m => ShortMessage -> m Bool
-    send _sms@ShortMessage{..} = do
+    send sms@ShortMessage{..} = do
       liftIO $ do
+        Log.messengerServer $ show sms
         sendSMS2 (user,password) smOriginator smMSISDN smBody
 
 sendSMS2 :: (String, String) -> String -> String -> String -> IO Bool
