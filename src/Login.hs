@@ -54,8 +54,8 @@ handleLoginPost :: Kontrakcja m => m JSValue
 handleLoginPost = do
     padlogin <- isFieldSet "pad"
     ctx <- getContext
-    memail  <- getOptionalFieldNoFlash asDirtyEmail    "email"
-    mpasswd <- getOptionalFieldNoFlash asDirtyPassword "password"
+    memail  <- getOptionalField asDirtyEmail    "email"
+    mpasswd <- getOptionalField asDirtyPassword "password"
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here

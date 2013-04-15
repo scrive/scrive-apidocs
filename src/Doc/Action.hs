@@ -4,7 +4,6 @@ module Doc.Action (
   , postDocumentPendingChange
   , postDocumentRejectedChange
   , postDocumentCanceledChange
-  , getCustomTextField
   , sendReminderEmail
   , sendInvitationEmail1
   , sendAllReminderEmails
@@ -155,7 +154,7 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   maybe (return ())
         (\user -> logDocEvent "Doc Rejected" doc user [])
         (ctxmaybeuser ctx)
-  customMessage <- getCustomTextField "customtext"
+  customMessage <- getOptionalField  asValidInviteText "customtext"
   sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
   return ()
 
@@ -431,17 +430,6 @@ sendAllReminderEmails ctx actor user docid = do
             sequence . map (sendReminderEmail Nothing ctx actor doc) $ unsignedsiglinks
           _ -> return []
 
-{- |
-    If the custom text field is empty then that's okay, but if it's invalid
-    then we want to fail.
--}
-getCustomTextField :: Kontrakcja m => String -> m (Maybe String)
-getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
-    where
-    customTextHandler textresult =
-        logIfBad textresult
-            >>= flashValidationMessage
-            >>= withFailureIfBad
 
 {- |
    Try to sign up a new user. Returns the confirmation link for the new user.

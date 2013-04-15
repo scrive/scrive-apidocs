@@ -2,31 +2,25 @@
     The input validation rules.
 -}
 module InputValidation
-    ( ValidationMessage
-    , Result(..)
+    ( Result(..)
     , isGood
-    , fromGood
+    , isBad
+    , isEmpty
     , checkIfEmpty
-    , getOptionalFieldNoFlash
     , getOptionalField
     , getOptionalFieldList
     , getDefaultedField
     , getDefaultedFieldList
     , getRequiredField
-    , getRequiredFieldList
     , getCriticalField
     , getCriticalFieldList
     , getValidateAndHandle
     , getValidateAndHandleList
     , getAndValidate
     , getAndValidateList
-    , logIfBad
-    , flashValidationMessage
-    , asMaybe
     , withDefault
     , withRequiredFlash
     , withFailure
-    , withFailureIfBad
     , asValidEmail
     , asDirtyEmail
     , asValidPassword
@@ -38,27 +32,21 @@ module InputValidation
     , asValidPhone
     , asValidPosition
     , asValidCheckBox
-    , asValidDaysToSign
     , asValidID
     , asValidNumber
     , asValidDocID
     , asValidAttachmentID
     , asValidUserID
-    , asValidBool
-    , asValidFieldName
     , asValidFieldValue
-    , asValidPlace
     , asValidInviteText
     , asValidIPAddressWithMaskList
-    , sanitize
-    , flashMessageMissingRequiredField) where
+) where
 
 import Control.Applicative
 import Control.Monad()
 import Control.Monad.Error
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Data.Char
-import Data.Maybe
 import Text.Regex.TDFA ((=~))
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
@@ -71,16 +59,8 @@ import Numeric
 import IPAddress
 import qualified Log (security)
 import Happstack.Fields hiding (getFields)
-import Text.StringTemplates.Templates
-import qualified Text.StringTemplates.Fields as F
-import Util.FlashUtil
 import User.Model
 import Data.Monoid
-
-{- |
-    If there's a problem this will create the appropriate FlashMessage.
--}
-type ValidationMessage = TemplatesMonad m => m FlashMessage
 
 {- |
     The input data.
@@ -93,46 +73,35 @@ type Input = Maybe String
     Alternatively the user could've entered nothing.
 -}
 data Result a = Good a
-              | Bad ValidationMessage
+              | Bad
               | Empty
 
 instance Monoid a => Monoid (Result a) where
     mappend (Good a1) (Good a2) = Good $ mappend a1 a2
     mappend Empty a = a
     mappend a Empty = a
-    mappend (Bad vm) _ = (Bad vm)
-    mappend _ (Bad vm) = (Bad vm)
+    mappend Bad _ = Bad
+    mappend _ Bad  = Bad
     mempty = Empty
 
 instance Monad Result where
   return = Good
 
   Good x >>= f = f x
-  Bad msg >>= _ = Bad msg
+  Bad >>= _ = Bad
   Empty >>= _ = Empty
 
 isGood:: Result a -> Bool
 isGood (Good _) = True
 isGood _ = False
 
-fromGood:: Result a -> a
-fromGood (Good a) = a
-fromGood _ = error "Trying to get good from bad"
+isBad:: Result a -> Bool
+isBad Bad = True
+isBad _ = False
 
-
-
-{- |
-    Use this to get and validate most of the usual fields for all AJAX calls.
--}
-getOptionalFieldNoFlash :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a)
-getOptionalFieldNoFlash validate =
-    getValidateAndHandle validate optionalFieldHandlerNoFlash
-
-optionalFieldHandlerNoFlash :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
-optionalFieldHandlerNoFlash result =
-    logIfBad result
-    >>= asMaybe
-
+isEmpty :: Result a -> Bool
+isEmpty Empty = True
+isEmpty _ = False
 
 {- |
     Use this to get and validate most of the usual fields.  If the field
@@ -150,7 +119,6 @@ getOptionalFieldList validate =
 optionalFieldHandler :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 optionalFieldHandler result =
     logIfBad result
-    >>= flashValidationMessage
     >>= asMaybe
 
 {- |
@@ -167,7 +135,6 @@ getDefaultedFieldList d validate =
 defaultedFieldHandler :: Kontrakcja m => a -> (Input, Result a) -> m (Maybe a)
 defaultedFieldHandler d result =
     logIfBad result
-    >>= flashValidationMessage
     >>= withDefault d
     >>= asMaybe
 
@@ -179,15 +146,10 @@ getRequiredField :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a
 getRequiredField validate =
     getValidateAndHandle validate requiredFieldHandler
 
-getRequiredFieldList :: Kontrakcja m => (String -> Result a) -> String -> m [Maybe a]
-getRequiredFieldList validate =
-    getValidateAndHandleList validate requiredFieldHandler
-
 requiredFieldHandler :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 requiredFieldHandler result =
     withRequiredFlash result
     >>= logIfBad
-    >>= flashValidationMessage
     >>= asMaybe
 
 {- |
@@ -207,7 +169,6 @@ criticalFieldHandler :: Kontrakcja m => (Input, Result a) -> m a
 criticalFieldHandler result =
     withRequiredFlash result
     >>= logIfBad
-    >>= flashValidationMessage
     >>= withFailure
 
 {- |
@@ -236,25 +197,9 @@ getAndValidate validate fieldname = do
 
 getAndValidateList :: Kontrakcja m => (String -> Result a) -> String -> m [(Input, Result a)]
 getAndValidateList validate fieldname = do
-  rawvalues <- getFields fieldname
+  rawvalues <- map BSL.toString <$> getDataFnM (lookInputList fieldname)
   return $ zip (map Just rawvalues) (map validate rawvalues)
 
-getFields :: Kontrakcja m => String -> m [String]
-getFields fieldname = map BSL.toString <$> getDataFnM (lookInputList fieldname)
-
-{- |
-    Handles any validation message by adding
-    as a flash message.  The result returned is the same
-    as the one given, I thought it might be handy to include
-    just in case.
--}
-flashValidationMessage :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
-flashValidationMessage x@(_, Bad flashmsg) = do
-  flashmsgs <- ctxflashmessages <$> getContext
-  msg <- flashmsg
-  when (msg `notElem` flashmsgs) $ addFlash msg
-  return x
-flashValidationMessage x = return x
 
 {- |
     Puts any validation problem in the security log.
@@ -262,27 +207,17 @@ flashValidationMessage x = return x
     behaviour.
 -}
 logIfBad :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
-logIfBad x@(input, Bad flashmsg) = do
+logIfBad x@(input, Bad) = do
   Context{ctxmaybeuser, ctxipnumber} <- getContext
-  flash <- flashmsg
   let username :: String
       username = maybe "unknown" (unEmail . useremail . userinfo) ctxmaybeuser
       logtext = "ip " ++ show ctxipnumber ++
                " user " ++ username ++
                " invalid input: " ++
-               " flash [" ++ show (snd <$> unFlashMessage flash) ++ "]" ++
-               " raw value info [" ++ (formatRawValueInfo input) ++ "]"
+               " raw value info [" ++ show input ++ "]"
   _ <- liftIO $ Log.security logtext
   return x
 logIfBad x = return x
-
-{- |
-    Returns relevant info about the raw value, I'm scared to print it out,
-    in case reading our logs gets dangerous!
--}
-formatRawValueInfo :: Input -> String
-formatRawValueInfo Nothing = "Nothing"
-formatRawValueInfo (Just xs) = (show $ length xs) ++ " chars"
 
 {- |
     Interprets the Result as a Maybe,
@@ -306,12 +241,9 @@ withDefault _ x     = return x
     into a Bad result with an appropriate flash message.
 -}
 withRequiredFlash :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
-withRequiredFlash (input, Empty) = return $ (input, Bad flashMessageMissingRequiredField)
+withRequiredFlash (input, Empty) = return $ (input, Empty)
 withRequiredFlash x     = return x
 
-flashMessageMissingRequiredField :: ValidationMessage
-flashMessageMissingRequiredField =
-    flashMessage "flashMessageMissingRequiredField" Nothing
 
 {- |
     You either get a value or a failure,
@@ -321,14 +253,6 @@ flashMessageMissingRequiredField =
 withFailure :: Kontrakcja m => (Input, Result a) -> m a
 withFailure (_,Good x) = return x
 withFailure _        = internalError
-
-{- |
-    You get a failure for bad input.
--}
-withFailureIfBad :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
-withFailureIfBad (_,Good x) = return $ Just x
-withFailureIfBad (_,Bad _) = internalError
-withFailureIfBad (_,Empty) = return Nothing
 
 -- | Creates a clean and validated email.
 --
@@ -368,13 +292,13 @@ asValidEmail :: String -> Result String
 asValidEmail input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 200 fieldtemplate
+    >>= checkLengthIsMax 200
     >>= checkFormat
     >>= mkLowerCase
-    where fieldtemplate = "emailFieldName"
+    where
           checkFormat :: String -> Result String
           checkFormat email | isValidFormat email = return email
-                            | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
+                            | otherwise = Bad
           isValidFormat :: String -> Bool
           isValidFormat = (=~ ("^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$":: String))
 
@@ -399,19 +323,16 @@ asDirtyEmail input =
 asValidPassword :: String -> Result String
 asValidPassword input =
     checkIfEmpty input
-    >>= checkLengthIsMin 8 fieldtemplate
-    >>= checkLengthIsMax 250 fieldtemplate
-    >>= checkOnly [isAlpha, isDigit, isPunctuation, isSymbol] fieldtemplate
+    >>= checkLengthIsMin 8
+    >>= checkLengthIsMax 250
+    >>= checkOnly [isAlpha, isDigit, isPunctuation, isSymbol]
     >>= checkContains1AlphaAndDigit
-    where fieldtemplate = "passwordFieldName"
+    where
           checkContains1AlphaAndDigit :: String -> Result String
           checkContains1AlphaAndDigit pwd
               | length (filter isAlpha pwd) >= 1 && length (filter isDigit pwd) >=1 = return pwd
-              | otherwise = Bad $ flashMessageNeedsLetterAndDigit fieldtemplate
+              | otherwise = Bad
 
-flashMessageNeedsLetterAndDigit :: String -> ValidationMessage
-flashMessageNeedsLetterAndDigit fieldtemplate =
-    flashMessageWithFieldName fieldtemplate "flashMessageNeedsLetterAndDigit" Nothing
 
 {- |
     Creates a dirty password.  This is useful when validating
@@ -430,20 +351,9 @@ asValidName :: String -> Result String
 asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 100 fieldtemplate
-    >>= checkOnly (isAlpha : map (==) " \'-") fieldtemplate
-    where fieldtemplate = "nameFieldName"
+    >>= checkLengthIsMax 100
+    >>= checkOnly (isAlpha : map (==) " \'-")
 
-{- |
-   Sanitize characters that are not allowed but can be converted
-into something we do allow without upsetting the user.
- -}
-sanitize :: String -> Result String
-sanitize input =
-  replaceChar '\t' ' ' input
-
-replaceChar :: Char -> Char -> String -> Result String
-replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
 
 {- |
     Creates a clean and validated company name.
@@ -452,12 +362,11 @@ replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
 -}
 asValidCompanyName :: String -> Result String
 asValidCompanyName input =
-    sanitize input
+    (Good $ map (\ch -> if ch == '\t' then ' ' else ch) input)
     >>= stripWhitespace
     >>= checkIfEmpty
-    >>= checkLengthIsMax 100 fieldtemplate
-    >>= checkOnly (isAlphaNum : map (==) " &\'@():,!.-?") fieldtemplate
-    where fieldtemplate = "companyNameFieldName"
+    >>= checkLengthIsMax 100
+    >>= checkOnly (isAlphaNum : map (==) " &\'@():,!.-?")
 
 {- |
     Creates a clean and validated company or individual number.
@@ -468,9 +377,8 @@ asValidCompanyNumber :: String -> Result String
 asValidCompanyNumber input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 50 fieldtemplate
-    >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')] fieldtemplate
-    where fieldtemplate = "companyNumberFieldName"
+    >>= checkLengthIsMax 50
+    >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
 
 {- |
     Creates a clean and validated address.
@@ -481,9 +389,8 @@ asValidAddress :: String -> Result String
 asValidAddress input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 200 fieldtemplate
-    >>= checkOnly (isAlphaNum : map (==) " \'():,/.#-") fieldtemplate
-    where fieldtemplate = "addressFieldName"
+    >>= checkLengthIsMax 200
+    >>= checkOnly (isAlphaNum : map (==) " \'():,/.#-")
 
 asValidIPAddressWithMaskList :: String -> Result [IPAddressWithMask]
 asValidIPAddressWithMaskList input =
@@ -499,7 +406,7 @@ asValidIPAddressWithMaskList input =
           readAll2 src = case readAll src of
                            [(result,r)] | all isSpace r -> return result
                            [] | all isSpace src -> return []
-                           _ -> Bad $ flashMessageInvalidFormat "ipAddressMaskList"
+                           _ -> Bad
 
 
 
@@ -513,9 +420,8 @@ asValidPosition :: String -> Result String
 asValidPosition input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 200 fieldtemplate
-    >>= checkOnly (isAlphaNum : map (==) " &():,-") fieldtemplate
-    where fieldtemplate = "positionFieldName"
+    >>= checkLengthIsMax 200
+    >>= checkOnly (isAlphaNum : map (==) " &():,-")
 
 {- |
     Creates a Bool result for a check box, depending on whether it was set to "on" or "off".
@@ -525,10 +431,10 @@ asValidCheckBox input =
     checkIfEmpty input
     >>= mkLowerCase
     >>= parseOnOrOff
-    where fieldtemplate = "checkBoxFieldName"
+    where
           parseOnOrOff val | val == "on"  = return True
                            | val == "off" = return False
-                           | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
+                           | otherwise = Bad
 
 
 {- |
@@ -538,22 +444,8 @@ asValidPhone :: String -> Result String
 asValidPhone input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 100 fieldtemplate
-    >>= checkOnly (isAlphaNum : map (==) " +-()") fieldtemplate
-  where fieldtemplate = "_phone"
-
-{-|
-    Gets the cleaned up number of days to sign.
-    This'll make sure you get a number in the range 1-99.
--}
-asValidDaysToSign :: String -> Result Int
-asValidDaysToSign input =
-    stripWhitespace input
-    >>= checkIfEmpty
-    >>= parseAsNum fieldtemplate
-    >>= checkWithinLowerBound 1 fieldtemplate
-    >>= checkWithinUpperBound 99 fieldtemplate
-    where fieldtemplate = "daysToSignFieldName"
+    >>= checkLengthIsMax 100
+    >>= checkOnly (isAlphaNum : map (==) " +-()")
 
 {- |
     Gets a cleaned up doc id. Useful for validating
@@ -564,11 +456,11 @@ asValidDocID :: String -> Result DocumentID
 asValidDocID input =
     checkIfEmpty input
     >>= parseAsDocID
-    where fieldtemplate = "idFieldName"
+    where
           parseAsDocID xs =
             case reads xs of
               (val,[]):[] -> return val
-              _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
+              _ -> Bad
 
 {- |
     Gets a cleaned up doc id. Useful for validating
@@ -579,11 +471,11 @@ asValidAttachmentID :: String -> Result AttachmentID
 asValidAttachmentID input =
     checkIfEmpty input
     >>= parseAsAttachmentID
-    where fieldtemplate = "idFieldName"
+    where
           parseAsAttachmentID xs =
             case reads xs of
               (val,[]):[] -> return val
-              _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
+              _ -> Bad
 
 {- |
     Gets a cleaned up user id. Useful for validating
@@ -594,7 +486,7 @@ asValidUserID :: String -> Result UserID
 asValidUserID input = checkIfEmpty input
   >>= \xs -> case reads xs of
     [(val,[])] -> return val
-    _ -> Bad $ flashMessageNotAValidInteger "idFieldName"
+    _ -> Bad
 
 {- |
     Checks that the input is a valid id, meaning it can be parsed
@@ -614,42 +506,7 @@ asValidID input =
 asValidNumber :: (Num a, Read a, Real a) => String -> Result a
 asValidNumber input =
     checkIfEmpty input
-    >>= parseAsNum fieldtemplate
-    where fieldtemplate = "idFieldName"
-
-{- |
-    Parses as a bool.
--}
-asValidBool :: String -> Result Bool
-asValidBool input =
-    checkIfEmpty input
-    >>= parseAsBool
-  where
-    parseAsBool :: String -> Result Bool
-    parseAsBool xs = return $ "TRUE" == map toUpper xs
-
-{-|
-   Creates a cleaned up place.  Which is just a positive int.
--}
-asValidPlace :: String -> Result Int
-asValidPlace input =
-    checkIfEmpty input
-    >>= parseAsNum fieldtemplate
-    >>= checkWithinLowerBound 0 fieldtemplate
-    where fieldtemplate = "placeFieldName"
-
-{- |
-    Creates a clean and validated field name
-    White list: Space, Hyphen -, Alphabetic characters, Numeric characters
-    Size: Up to 50 chars
--}
-asValidFieldName :: String -> Result String
-asValidFieldName input =
-    stripWhitespace input
-    >>= checkIfEmpty
-    >>= checkLengthIsMax 50 fieldtemplate
-    >>= checkOnly (isAlphaNum : map (==) " -") fieldtemplate
-    where fieldtemplate = "fieldNameFieldName"
+    >>= parseAsNum
 
 {- |
     Creates a clean and validated field value.
@@ -660,9 +517,8 @@ asValidFieldValue :: String -> Result String
 asValidFieldValue input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 200 fieldtemplate
-    >>= checkOnly [isAlphaNum, isPunctuation, isSymbol, (==' ')] fieldtemplate
-    where fieldtemplate = "fieldValueFieldName"
+    >>= checkLengthIsMax 200
+    >>= checkOnly [isAlphaNum, isPunctuation, isSymbol, (==' ')]
 
 {- |
     Cleans and validates the invite text html.
@@ -682,28 +538,24 @@ asValidInviteText input =
     >>= parseAsXml
     >>= checkContent
     >>= ignoreXml input
-    where fieldtemplate = "inviteTextFieldName"
-          bad = Bad $ flashMessageInvalidFormat fieldtemplate
+    where
           parseAsXml :: String -> Result (Content Posn)
           parseAsXml xs =
             case xmlParse' "asValidInviteText" $ "<p>" ++ xs ++ "</p>" of
               (Right (Document _ _ root _)) -> return $ CElem root undefined
-              _ -> bad
+              _ -> Bad
           checkContent :: Content Posn -> Result (Content Posn)
           checkContent x@(CElem (Elem (N name) atts cnt) _)
               | isValidElemName name
                 && all (isValidAtt name) atts
                 && all isValidChild cnt = return x
-              | otherwise = bad
+              | otherwise = Bad
           checkContent x@(CString _ _ _) = return x
           checkContent x@(CRef _ _) = return x
           checkContent x@(CMisc (Comment _) _) = return x
-          checkContent _ = bad
+          checkContent _ = Bad
           isValidChild :: Content Posn -> Bool
-          isValidChild c =
-            case checkContent c of
-              (Bad _) -> False
-              _ -> True
+          isValidChild c = not $ isBad $ checkContent c
           isValidElemName :: Name -> Bool
           isValidElemName n = n `elem` ["br", "em", "li", "ol", "p", "span", "strong", "ul"]
           isValidAtt :: Name -> Attribute -> Bool
@@ -726,92 +578,43 @@ mkLowerCase :: String -> Result String
 mkLowerCase = return . map toLower
 
 {- |
-    Checks the lower bound of a number
--}
-checkWithinLowerBound :: (Num a, Ord a, Show a) => a -> String -> a -> Result a
-checkWithinLowerBound lowerbound fieldtemplate val
-    | val>=lowerbound = return val
-    | otherwise = Bad $ flashMessageNumberBelowMinimum fieldtemplate lowerbound
-
-flashMessageNumberBelowMinimum :: (Num a, Show a) => String -> a -> ValidationMessage
-flashMessageNumberBelowMinimum fieldtemplate lowerbound =
-    flashMessageWithFieldName fieldtemplate "flashMessageNumberBelowMinimum"  . Just $ F.value "min" (show lowerbound)
-
-{- |
-    Checks the upper bound of a number
--}
-checkWithinUpperBound :: (Num a, Ord a, Show a) => a -> String -> a -> Result a
-checkWithinUpperBound upperbound fieldtemplate val
-    | val<=upperbound = return val
-    | otherwise = Bad $ flashMessageNumberAboveMaximum fieldtemplate upperbound
-
-flashMessageNumberAboveMaximum :: (Num a, Show a) => String -> a -> ValidationMessage
-flashMessageNumberAboveMaximum fieldtemplate upperbound =
-    flashMessageWithFieldName fieldtemplate "flashMessageNumberAboveMaximum" . Just $ F.value "max" (show upperbound)
-
-{- |
     Parses a string as a Num
 -}
-parseAsNum :: (Num a, Read a, Real a) => String -> String -> Result a
-parseAsNum fieldtemplate xs =
+parseAsNum :: (Num a, Read a, Real a) => String -> Result a
+parseAsNum  xs =
     case readSigned readDec xs of
         (val,[]):[] -> return val
-        _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
-
-flashMessageNotAValidInteger :: String -> ValidationMessage
-flashMessageNotAValidInteger fieldtemplate =
-    flashMessageWithFieldName fieldtemplate "flashMessageNotAValidInteger" Nothing
+        _ -> Bad
 
 {- |
     Checks that a string only contains the indicated types of characters.
     When there are invalid chars the flash message depends on what those chars were.
 -}
-checkOnly :: [Char -> Bool] -> String -> String -> Result String
-checkOnly ps fieldtemplate str =
+checkOnly :: [Char -> Bool] -> String -> Result String
+checkOnly ps str =
     case invalidChars of
         [] | null invalidChars -> return str
-        _ | ' ' `elem` invalidChars -> Bad $ flashMessageInvalidSpaceInInput fieldtemplate
-        _ | null invalidPrintableChars -> Bad $ flashMessageInvalidUnprintableCharsInInput fieldtemplate
-        _ -> Bad $ flashMessageInvalidPrintableCharsInInput fieldtemplate invalidPrintableChars
+        _ | ' ' `elem` invalidChars -> Bad
+        _ | null invalidPrintableChars -> Bad
+        _ -> Bad
     where invalidChars = filter isInvalidChar str
           isInvalidChar c = all (\p -> not $ p c) ps
           invalidPrintableChars = filter (\c -> isAlphaNum c || isPunctuation c || isSymbol c) invalidChars
-
-flashMessageInvalidSpaceInInput :: String -> ValidationMessage
-flashMessageInvalidSpaceInInput fieldtemplate =
-    flashMessageWithFieldName fieldtemplate "flashMessageInvalidSpaceInInput" Nothing
-
-flashMessageInvalidUnprintableCharsInInput :: String -> ValidationMessage
-flashMessageInvalidUnprintableCharsInInput fieldtemplate =
-    flashMessageWithFieldName fieldtemplate "flashMessageInvalidUnprintableCharsInInput" Nothing
-
-flashMessageInvalidPrintableCharsInInput :: String -> String -> ValidationMessage
-flashMessageInvalidPrintableCharsInInput fieldtemplate invalidchars =
-    flashMessageWithFieldName fieldtemplate "flashMessageInvalidPrintableCharsInInput" . Just $ F.value "invalidchar" (head invalidchars)
-
 {- |
     Checks that a string meets the min length restriction.
 -}
-checkLengthIsMin :: Int -> String -> String -> Result String
-checkLengthIsMin minlength fieldtemplate xs
-    | length xs < minlength =  Bad $ flashMessageInputLessThanMinLength fieldtemplate minlength
+checkLengthIsMin :: Int -> String ->  Result String
+checkLengthIsMin minlength xs
+    | length xs < minlength =  Bad
     | otherwise = return xs
-
-flashMessageInputLessThanMinLength :: String -> Int -> ValidationMessage
-flashMessageInputLessThanMinLength fieldtemplate minlength =
-    flashMessageWithFieldName fieldtemplate "flashMessageInputLessThanMinLength" . Just $ F.value "minlength" minlength
 
 {- |
     Checks that a string doesn't exceed the max length restriction.
 -}
-checkLengthIsMax :: Int -> String -> String -> Result String
-checkLengthIsMax maxlength fieldtemplate xs
-    | length xs > maxlength =  Bad $ flashMessageInputExceedsMaxLength fieldtemplate maxlength
+checkLengthIsMax :: Int -> String -> Result String
+checkLengthIsMax maxlength xs
+    | length xs > maxlength =  Bad
     | otherwise = return xs
-
-flashMessageInputExceedsMaxLength :: String -> Int -> ValidationMessage
-flashMessageInputExceedsMaxLength fieldtemplate maxlength =
-    flashMessageWithFieldName fieldtemplate "flashMessageInputExceedsMaxLength" . Just $ F.value "maxlength" maxlength
 
 {- |
     Checks if the input is empty, assigning it value Empty.
@@ -829,26 +632,3 @@ stripWhitespace =
     where stripLeadingWhitespace = dropWhile isSpace
           stripTrailingWhitespace = reverse . stripLeadingWhitespace . reverse
 
-{- |
-    This isn't very specific, so try not to use!
--}
-flashMessageInvalidFormat :: String -> ValidationMessage
-flashMessageInvalidFormat fieldtemplate =
-    flashMessageWithFieldName fieldtemplate "flashMessageInvalidFormat" Nothing
-
-flashMessageWithFieldName :: TemplatesMonad m => String -> String -> Maybe (Fields m ()) -> m FlashMessage
-flashMessageWithFieldName fieldtemplate templatename mfields = do
-   fieldname <- renderTemplate_ fieldtemplate
-   let fields = do
-       when (isJust mfields) (fromJust mfields)
-       F.value "fieldnametitlecase" (titleCase fieldname)
-       F.value "fieldnamelowercase" (lowerCase fieldname)
-   flashMessage templatename (Just fields)
-   where titleCase (x:xs) = toUpper x : lowerCase xs
-         titleCase [] = []
-         lowerCase = map toLower
-
-flashMessage :: TemplatesMonad m => String -> Maybe (Fields m ()) -> m FlashMessage
-flashMessage templatename mfields =
-    toFlashMsg OperationFailed <$> renderTemplate templatename
-        (when (isJust mfields) (fromJust mfields))

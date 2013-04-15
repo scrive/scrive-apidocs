@@ -124,7 +124,7 @@ cleanCSVContents eleg customfieldcount contents =
 
     validate :: (String -> Result a, Int -> Int -> CSVProblem) -> String -> Either (Int -> Int -> CSVProblem) String
     validate (v,pd) s =  case v s of
-                           Bad _ -> Left pd
+                           Bad -> Left pd
                            _ -> Right s
 
 csvProblemToDescription :: (TemplatesMonad m) => CSVProblem -> m String

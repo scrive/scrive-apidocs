@@ -279,7 +279,7 @@ apiCallReject did slid = api $ do
       ctx <- getContext
       let Just sll = getSigLinkFor doc slid
           actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sll) (getEmail sll) slid
-      customtext <- lift $ getCustomTextField "customtext"
+      customtext <- lift $ getOptionalField  asValidInviteText "customtext"
       lift $ switchLang (getLang doc)
       lift $ (dbUpdate $ RejectDocument did slid customtext actor)
           `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)

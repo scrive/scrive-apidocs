@@ -210,12 +210,12 @@ apiCallCreateCompany =  api $  do
 apiCallSignup :: Kontrakcja m => m Response
 apiCallSignup = api $ do
   ctx <- getContext
-  memail <- lift $ getOptionalFieldNoFlash asValidEmail "email"
+  memail <- lift $ getOptionalField asValidEmail "email"
   when (isNothing memail) $ do
     throwIO . SomeKontraException $ serverError "Email not provided or invalid"
   let email = fromJust memail
-  firstname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "firstName"
-  lastname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "lastName"
+  firstname <- lift $ fromMaybe "" <$> getOptionalField asValidName "firstName"
+  lastname <- lift $ fromMaybe "" <$> getOptionalField asValidName "lastName"
   lang <- lift $ fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
   lift $ switchLang lang
   muser <- dbQuery $ GetUserByEmail $ Email email
@@ -247,7 +247,7 @@ apiCallSignup = api $ do
 apiCallSendPasswordReminder :: Kontrakcja m => m Response
 apiCallSendPasswordReminder = api $ do
   ctx <- getContext
-  memail <- lift $ getOptionalFieldNoFlash asValidEmail "email"
+  memail <- lift $ getOptionalField asValidEmail "email"
   case memail of
     Nothing -> runJSONGenT $ value "send" False >> value "badformat" True
     Just email -> do
