@@ -92,6 +92,7 @@ personFields _doc (person, signinfo,_seeninfo, _ , mprovider, delivery, _initial
    F.value "email"  $ delivery == EmailDelivery
    F.value "pad"    $ delivery == PadDelivery
    F.value "api"    $ delivery == APIDelivery
+   F.value "mobile" $ delivery == MobileDelivery
 
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString)
                           -> SignatoryLink
