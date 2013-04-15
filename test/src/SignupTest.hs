@@ -180,9 +180,7 @@ assertAccountActivated fstname sndname ctx = do
 assertAccountActivationFailed :: Context -> TestEnv ()
 assertAccountActivationFailed ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
-  assertEqual "There are two flash messages" 1 (length $ ctxflashmessages ctx)
   -- if they don't accept the tos then the flash is signing related, not sure why
-  assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do
