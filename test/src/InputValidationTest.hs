@@ -6,20 +6,14 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize, forAll, elements)
+import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize)
 
 import InputValidation
 
 inputValidationTests :: Test
 inputValidationTests = testGroup "InputValidation"
-    [ testGroup "sanitizing"
-      [ testCase "alphanum string doesn't change" (assert (isGoodAndEquals (sanitize "abcsdfsdf432423") "abcsdfsdf432423"))
-      , testCase "tab string turns to whitespace" (assert (isGoodAndEquals (sanitize "\t") " "))
-      , testCase "two tabs works" (assert (isGoodAndEquals (sanitize "\t\t") "  "))
-      , testCase "tabs in between works" (assert (isGoodAndEquals (sanitize "hello\tthere") "hello there"))
-      , testCase "sanitize company name" (assert (isGood (sanitize "Company \tassociates")))
-      ]
-    , testGroup "asValidEmail"
+    [
+      testGroup "asValidEmail"
         [ testCase "bad examples fail" testValidEmailExampleFails
         , testCase "good examples pass" testValidEmailExamplePasses
         , testCase "lower cases" testValidEmailLowercases
@@ -34,7 +28,7 @@ inputValidationTests = testGroup "InputValidation"
     , testGroup "asValidPassword"
         [ testProperty "must be at least 8 chars" propValidPasswordMustBeAtLeast8Chars
         , testCase "null is counted as empty" testValidPasswordNullIsEmpty
-        , testProperty "can only contain alpha, digit or punctuation" 
+        , testProperty "can only contain alpha, digit or punctuation"
                        propValidPasswordOnlyAlphaDigitPuncAndSymbol
         , testProperty "must contain alpha and digit" propValidPasswordMustContainAlphaAndDigit
         , testProperty "good examples pass" propValidPasswordGoodExamples ]
@@ -44,35 +38,35 @@ inputValidationTests = testGroup "InputValidation"
         [ testProperty "strips surrounding whitespace" propValidNameStripsWhitespace
         , testCase "null is counted as empty" testValidNameNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidNameWhitespaceIsEmpty
-        , testProperty "can only contain alpha, space, apostrophe and hyphen" 
+        , testProperty "can only contain alpha, space, apostrophe and hyphen"
                        propValidNameRestrictsChars
         , testProperty "good examples pass" propValidNameGoodExamples ]
     , testGroup "asValidCompanyName"
         [ testProperty "strips surrounding whitespace" propValidCompanyNameStripsWhitespace
         , testCase "null is counted as empty" testValidCompanyNameNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidCompanyNameWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, spaces and chars &\'@():,!.-?" 
+        , testProperty "can only contain alphanumeric, spaces and chars &\'@():,!.-?"
                        propValidCompanyNameRestrictsChars
         , testProperty "good examples pass" propValidCompanyNameGoodExamples ]
     , testGroup "asValidCompanyNumber"
         [ testProperty "strips surrounding whitespace" propValidCompanyNumberStripsWhitespace
         , testCase "null is counted as empty" testValidCompanyNumberNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidCompanyNumberWhitespaceIsEmpty
-        , testProperty "can only contain hyphen, digits [0-9] or ascii chars [A-Z] [a-z]" 
+        , testProperty "can only contain hyphen, digits [0-9] or ascii chars [A-Z] [a-z]"
                        propValidCompanyNumberRestrictsChars
         , testProperty "good examples pass" propValidCompanyNumberGoodExamples ]
     , testGroup "asValidAddress"
         [ testProperty "strips surrounding whitespace" propValidAddressStripsWhitespace
         , testCase "null is counted as empty" testValidAddressNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidAddressWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, spaces and chars \'():,/.#-" 
+        , testProperty "can only contain alphanumeric, spaces and chars \'():,/.#-"
                        propValidAddressRestrictsChars
         , testProperty "good examples pass" propValidAddressGoodExamples ]
     , testGroup "asValidPosition"
         [ testProperty "strips surrounding whitespace" propValidPositionStripsWhitespace
         , testCase "null is counted as empty" testValidPositionNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidPositionWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, spaces and chars &():,-" 
+        , testProperty "can only contain alphanumeric, spaces and chars &():,-"
                        propValidPositionRestrictsChars
         , testProperty "good examples pass" propValidPositionGoodExamples ]
     , testGroup "asValidCheckBox"
@@ -80,12 +74,6 @@ inputValidationTests = testGroup "InputValidation"
         , testCase "off/OFF is true" testValidCheckBoxOffIsFalse
         , testCase "null is counted as empty" testValidCheckBoxNullIsEmpty
         , testCase "not on/off is fail" testValidCheckBoxBadIfNotOnOrOff ]
-    , testGroup "asValidDaysToSign"
-        [ testCase "null is counted as empty" testValidDaysToSignNullIsEmpty
-        , testProperty "must be a min of 1" propValidDaysToSignIsMin1
-        , testProperty "must be a max of 99" propValidDaysToSignIsMax99
-        --, testProperty "must be an int" propValidDaysToSignMustBeInt
-        , testProperty "good examples pass" propValidDaysToSignGoodExamples ]
     , testGroup "asValidDocID"
         [ testCase "null is counted as empty" testValidDocIDNullIsEmpty
         --, testProperty "must be an int64" propValidDocIDMustBeInt64
@@ -94,23 +82,11 @@ inputValidationTests = testGroup "InputValidation"
         [ testCase "null is counted as empty" testValidIDNullIsEmpty
         --, testProperty "must be an int" propValidIDMustBeInt
         , testProperty "good examples pass" propValidIDGoodExamples ]
-    , testGroup "asValidPlace"
-        [ testCase "null is counted as empty" testValidPlaceNullIsEmpty
-        , testProperty "must be a min of 0" propValidPlaceIsMin0
-        --, testProperty "must be an int" propValidPlaceMustBeInt
-        , testProperty "good examples pass" propValidPlaceGoodExamples ]
-    , testGroup "asValidFieldName"
-        [ testProperty "strips surrounding whitespace" propValidFieldNameStripsWhitespace
-        , testCase "null is counted as empty" testValidFieldNameNullIsEmpty
-        , testProperty "whitespace only is counted as empty" propValidFieldNameWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, spaces or -" 
-                       propValidFieldNameRestrictsChars
-        , testProperty "good examples pass" propValidFieldNameGoodExamples ]
     , testGroup "asValidFieldValue"
         [ testProperty "strips surrounding whitespace" propValidFieldValueStripsWhitespace
         , testCase "null is counted as empty" testValidFieldValueNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidFieldValueWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, punctuation or symbol or space" 
+        , testProperty "can only contain alphanumeric, punctuation or symbol or space"
                        propValidFieldValueRestrictsChars
         , testProperty "good examples pass" propValidFieldValueGoodExamples ]
     , testGroup "asValidInviteText"
@@ -118,18 +94,18 @@ inputValidationTests = testGroup "InputValidation"
         , testCase "bad examples fail" testValidInviteTextBadExamples
         , testCase "good examples pass" testValidInviteTextGoodExamples ]
     ]
-    
+
 testValidEmailExampleFails :: Assertion
 testValidEmailExampleFails = do
     let results = map asValidEmail
-                  [ "@aaa.com" 
-                  , "a£@aaa.com" 
-                  , "aaa.cOm" 
-                  , "a@aaA_.com" 
-                  , "a@.com" 
-                  , "a@abC." 
-                  , "a@Abc._om" 
-                  , "a@abc.abcde" 
+                  [ "@aaa.com"
+                  , "a£@aaa.com"
+                  , "aaa.cOm"
+                  , "a@aaA_.com"
+                  , "a@.com"
+                  , "a@abC."
+                  , "a@Abc._om"
+                  , "a@abc.abcde"
                   , "a@abc.a"
                   , "a@abc.a2"
                   , "12@122@sdfsw@"
@@ -229,7 +205,7 @@ testValidNameNullIsEmpty = testNullIsEmpty asValidName
 
 propValidNameWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidName
- 
+
 propValidNameRestrictsChars :: String -> Property
 propValidNameRestrictsChars =
    propJustAllowed asValidName (isAlpha : map (==) " \'-")
@@ -257,7 +233,7 @@ testValidCompanyNameNullIsEmpty = testNullIsEmpty asValidCompanyName
 
 propValidCompanyNameWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidCompanyNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyName
- 
+
 propValidCompanyNameRestrictsChars :: String -> Property
 propValidCompanyNameRestrictsChars =
    propJustAllowed asValidCompanyName (isAlphaNum : map (==) "\t &\'@():,!.-?")
@@ -285,7 +261,7 @@ testValidCompanyNumberNullIsEmpty = testNullIsEmpty asValidCompanyNumber
 
 propValidCompanyNumberWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidCompanyNumberWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyNumber
- 
+
 propValidCompanyNumberRestrictsChars :: String -> Property
 propValidCompanyNumberRestrictsChars =
    propJustAllowed asValidCompanyNumber [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
@@ -313,7 +289,7 @@ testValidAddressNullIsEmpty = testNullIsEmpty asValidAddress
 
 propValidAddressWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidAddressWhitespaceIsEmpty = propWhitespaceIsEmpty asValidAddress
- 
+
 propValidAddressRestrictsChars :: String -> Property
 propValidAddressRestrictsChars =
    propJustAllowed asValidAddress (isAlphaNum : map (==) " \'():,/.#-")
@@ -341,7 +317,7 @@ testValidPositionNullIsEmpty = testNullIsEmpty asValidPosition
 
 propValidPositionWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidPositionWhitespaceIsEmpty = propWhitespaceIsEmpty asValidPosition
- 
+
 propValidPositionRestrictsChars :: String -> Property
 propValidPositionRestrictsChars =
    propJustAllowed asValidPosition (isAlphaNum : map (==) " &():,-")
@@ -377,32 +353,13 @@ testValidCheckBoxBadIfNotOnOrOff = do
     assert . isBad . asValidCheckBox $ " on "
     assert . isBad . asValidCheckBox $ " off "
     assert . isBad . asValidCheckBox $ "other"
-    assert . isBad . asValidCheckBox $ " " 
-
-testValidDaysToSignNullIsEmpty :: Assertion
-testValidDaysToSignNullIsEmpty = testNullIsEmpty asValidDaysToSign
-
-propValidDaysToSignIsMin1 :: Int -> Property
-propValidDaysToSignIsMin1 n =
-    n < 1
-    ==> isBad . asValidDaysToSign $ show n
-
-propValidDaysToSignIsMax99 :: Int -> Property
-propValidDaysToSignIsMax99 n =
-    n > 99
-    ==> isBad . asValidDaysToSign $ show n
-
-propValidDaysToSignGoodExamples :: Property
-propValidDaysToSignGoodExamples =
-    forAll (elements [-200..200]) $ \(n::Int) ->
-    n >= 1 && n <= 99
-    ==> isGood . asValidDaysToSign $ show n
+    assert . isBad . asValidCheckBox $ " "
 
 testValidDocIDNullIsEmpty :: Assertion
 testValidDocIDNullIsEmpty = testNullIsEmpty asValidDocID
 
 propValidDocIDGoodExamples :: Int64 -> Property
-propValidDocIDGoodExamples n = 
+propValidDocIDGoodExamples n =
     True ==> isGood . asValidDocID $ show n
 
 testValidIDNullIsEmpty :: Assertion
@@ -410,47 +367,6 @@ testValidIDNullIsEmpty = testNullIsEmpty asValidID
 
 propValidIDGoodExamples :: Int -> Property
 propValidIDGoodExamples n = property (isGood . asValidID $ show n)
-
-testValidPlaceNullIsEmpty :: Assertion
-testValidPlaceNullIsEmpty = testNullIsEmpty asValidPlace
-
-propValidPlaceIsMin0 :: Int -> Property
-propValidPlaceIsMin0 n =
-    n < 0
-    ==> isBad . asValidPlace $ show n
-
-propValidPlaceGoodExamples :: Int -> Property
-propValidPlaceGoodExamples n =
-    n >= 0
-    ==> isGood . asValidPlace $ show n
-
-propValidFieldNameStripsWhitespace :: [WhitespaceChar] -> [FieldNameChar] -> Property
-propValidFieldNameStripsWhitespace ws fs =
-    let xs = map fnc fs in
-    propStripWhitespace asValidFieldName ws xs
-
-testValidFieldNameNullIsEmpty :: Assertion
-testValidFieldNameNullIsEmpty = testNullIsEmpty asValidFieldName
-
-propValidFieldNameWhitespaceIsEmpty :: [WhitespaceChar] -> Property
-propValidFieldNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidFieldName
- 
-propValidFieldNameRestrictsChars :: String -> Property
-propValidFieldNameRestrictsChars =
-   propJustAllowed asValidFieldName (isAlphaNum : map (==) " -")
-
-propValidFieldNameGoodExamples :: [FieldNameChar] -> Property
-propValidFieldNameGoodExamples fs =
-    let xs = map fnc fs in
-    length xs > 0
-      && length xs < 25
-      && not (isWhitespace xs)
-     ==> isGood $ asValidFieldName xs
-
-newtype FieldNameChar = FieldNameChar { fnc :: Char } deriving Show
-
-instance Arbitrary FieldNameChar where
-    arbitrary = oneof . map (return . FieldNameChar) $ "aAż29 -"
 
 propValidFieldValueStripsWhitespace :: [WhitespaceChar] -> [FieldValueChar] -> Property
 propValidFieldValueStripsWhitespace ws fs =
@@ -462,7 +378,7 @@ testValidFieldValueNullIsEmpty = testNullIsEmpty asValidFieldValue
 
 propValidFieldValueWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidFieldValueWhitespaceIsEmpty = propWhitespaceIsEmpty asValidFieldValue
- 
+
 propValidFieldValueRestrictsChars :: String -> Property
 propValidFieldValueRestrictsChars =
    propJustAllowed asValidFieldValue [isAlphaNum, isPunctuation, isSymbol, (==' ')]
@@ -561,13 +477,6 @@ isEmptyInput xs = isWhitespace xs || null xs
 isLowerCase :: String -> Bool
 isLowerCase xs = map toLower xs == xs
 
-isBad :: Result a -> Bool
-isBad (Bad _) = True
-isBad _ = False
-
-isEmpty :: Result a -> Bool
-isEmpty Empty = True
-isEmpty _ = False
-
-isGoodAndEquals :: (Eq a) => Result a -> a -> Bool
-isGoodAndEquals r a = isGood r && fromGood r == a
+fromGood:: Result a -> a
+fromGood (Good a) = a
+fromGood _ = error "Trying to get good from bad"
