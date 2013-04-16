@@ -6,7 +6,6 @@ module MinutesTime
        , minutesAfter
        , minutesBefore
        , parseMinutesTimeDMY
-       , showDateForHistory
        , showDateDMY
        , showDateDMYYYY
        , showDateOnly
@@ -98,9 +97,6 @@ parseMinutesTime format string = do
 
 parseDateOnly :: String -> Maybe MinutesTime
 parseDateOnly = parseMinutesTime "%Y-%m-%d"
-
-showDateForHistory :: MinutesTime -> String
-showDateForHistory time = formatMinutesTime "%Y-%m-%d %H:%M:%S" time
 
 -- | Convert 'ClockTime' to 'MinutesTime'. Uses just seconds, picoseconds are ignored.
 fromClockTime :: ClockTime -> MinutesTime

@@ -50,7 +50,7 @@ eventsForLog _doc events =
 eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
-    J.value "time"  $ showDateForHistory (evTime dee)
+    J.value "time"  $ formatMinutesTimeRealISO (evTime dee)
     J.valueM "party" $ if (systemEvents $ evType dee)
                           then return "Scrive"
                           else case (getSigLinkFor doc $ evSigLinkID dee) of
