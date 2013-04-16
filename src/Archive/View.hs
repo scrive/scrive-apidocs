@@ -148,17 +148,25 @@ signatoryForListCSV _agr doc msl = [
             , fromMaybe  "" $ getPersonalNumber <$> msl
             , fromMaybe  "" $ getCompanyName <$> msl
             , fromMaybe  "" $ getCompanyNumber <$> msl
-            ] ++ (map sfValue $ sortBy fieldNameSort customFields)
+            ] ++ (map fieldValue $ sortBy fieldNameSort customFieldsOrCheckbox)
     where
         csvTime = formatMinutesTime "%Y-%m-%d %H:%M"
-        customFields = filter isCustom  $ concat $ maybeToList $ signatoryfields <$> signatorydetails <$> msl
+        customFieldsOrCheckbox = filter isCustomOrCheckbox  $ concat $ maybeToList $ signatoryfields <$> signatorydetails <$> msl
         fieldNameSort sf1 sf2 = case (sfType sf1, sfType sf2) of
                                   (CustomFT n1 _, CustomFT n2 _) -> compare n1 n2
+                                  (CustomFT _ _,_) -> GT
                                   (SignatureFT n1, SignatureFT n2) -> compare n1 n2
                                   (CheckboxFT n1, CheckboxFT n2) -> compare n1 n2
                                   _ -> EQ
-        isCustom SignatoryField{sfType} = case sfType of
+        fieldValue sf = case sfType sf of
+                             (CustomFT _ _) -> sfValue sf
+                             (CheckboxFT name) -> if (null $ sfValue sf)
+                                                     then name ++ " : not checked"
+                                                     else name ++ " : checked"
+                             _ -> ""
+        isCustomOrCheckbox SignatoryField{sfType} = case sfType of
                                             (CustomFT _ _) -> True
+                                            (CheckboxFT _) -> True
                                             _ -> False
 docForListCSVHeader :: [String]
 docForListCSVHeader = [
