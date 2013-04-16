@@ -98,7 +98,7 @@ docFieldsListForJSON userid padqueue doc = do
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
-    J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
+    J.value "inpadqueue" $  (fmap fst padqueue == Just (documentid doc))
     J.value "deleted" $ documentDeletedForUser doc userid
     J.value "reallydeleted" $ documentReallyDeletedForUser doc userid
     J.value "canperformsigning" $ userCanPerformSigningAction userid doc
@@ -112,9 +112,9 @@ signatoryFieldsListForJSON padqueue doc sl = do
                        "" -> getSmartName sl
                        _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
     J.value "time" $ fromMaybe "" $ formatMinutesTimeRealISO <$> (sign `mplus` reject `mplus` seen `mplus` open)
-    J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
-    J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
-    J.value "isauthor" $ "true" <| isAuthor sl |> "false"
+    J.value "invitationundelivered" $ isUndelivered sl && Pending == documentstatus doc
+    J.value "inpadqueue" $  (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl))
+    J.value "isauthor" $ isAuthor sl
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
       StandardAuthentication -> "standard"
       ELegAuthentication  -> "eleg"

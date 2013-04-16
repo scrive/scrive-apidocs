@@ -42,7 +42,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                           ))
                       {
                         var actionIcon = $("<a class='actionIcon'/>");
-                        if (listobject.field("inpadqueue") == "true" && listobject.subfield(idx,"inpadqueue") == "true")
+                        if (listobject.field("inpadqueue") && listobject.subfield(idx,"inpadqueue"))
                             {
                                 actionIcon.addClass("removefromqueue");
                                 ToolTip.set({on: actionIcon,  tip : localization.pad.removeFromPadQueue});
