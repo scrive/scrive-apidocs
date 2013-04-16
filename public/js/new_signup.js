@@ -54,7 +54,7 @@
         $("#page-signup").removeClass("button-red").addClass("button-gray");
         var self = this;
         var model = this.model;
-        var header = $("<header class='shadowed signup'/>");
+        var header = $("<div class='shadowed signup'/>");
         header.append($("<h1/>").append(localization.getStartedInstantly));
         header.append($("<h2/>").append(localization.freeDocumentPerMonth));
         $(this.el).append(header);

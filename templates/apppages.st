@@ -3,9 +3,9 @@ notFound=
 <div class='mainContainer big'>
 <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
 <div class='short-input-section'>
-  <header>
+  <div class="shadowed">
     $_notFound()$
-  </header>
+  </div>
   <div class='short-input-container'>
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>
@@ -26,9 +26,9 @@ internalServerError=
 <div class='mainContainer big'>
 <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
 <div class='short-input-section'>
-  <header>
+  <div class="shadowed">
    $_internalServerError()$
-  </header>
+  </div>
   <div class='short-input-container'>
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>

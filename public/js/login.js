@@ -234,7 +234,7 @@ var LoginView = Backbone.View.extend({
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
       var body = $("<div class='short-input-container-body'/>");
 
-      var header = $("<header class='shadowed recovery'/>");
+      var header = $("<div class='shadowed recovery'/>");
       header.append($("<h1/>").text(localization.resetYourPassword));
       header.append($("<h2/>").text(localization.resetYourPasswordCheckEmail));
       $(this.el).append(header);
