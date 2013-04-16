@@ -89,16 +89,13 @@ adminonlyRoutes =
   fmap onlySalesOrAdmin $ choice $ [
           hGet $ toK0 $ showAdminMainPage
         , dir "createuser" $ hPost $ toK0 $ handleCreateUser
-        , dir "useradminforsales" $ hGet $ toK0 $ showAdminUsersForSales
         , dir "userslist" $ hGet $ toK0 $ jsonUsersList
         , dir "useradmin" $ hGet $ toK1 $ showAdminUsers . Just
-        , dir "useradmin" $ hGet $ toK0 $ showAdminUsers Nothing
         , dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
         , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
         , dir "useradmin" $ dir "payments" $ hGet $ toK1 $ showAdminUserPayments
         , dir "useradmin" $ dir "payments" $ hPost $ toK1 $ handleUserPaymentsChange
-        , dir "companyadmin" $ hGet $ toK0 $ showAdminCompanies
         , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
         , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
         , dir "companyadmin" $ dir "users" $ hGet $ toK1 $ showAdminCompanyUsers
@@ -109,7 +106,6 @@ adminonlyRoutes =
         , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
 
-        , dir "documents" $ hGet $ toK0 $ showDocuments
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
 
         , dir "allstatscsv" $ hGet $ toK0 $ Stats.handleDocStatsCSV
@@ -120,7 +116,6 @@ adminonlyRoutes =
         , dir "userslistcsv" $ hGet $ toK0 $ handleUsersListCSV
         , dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
 
-        , dir "statistics"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStats
         , dir "statsbyday"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByDayJSON
         , dir "statsbymonth" $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByMonthJSON
 
@@ -148,16 +143,13 @@ showAdminMainPage = onlySalesOrAdmin $ do
 {- | Process view for finding a user in basic administration. If provided with userId string as param
 it allows to edit user details -}
 showAdminUsers :: Kontrakcja m => Maybe UserID -> m String
-showAdminUsers Nothing = onlySalesOrAdmin adminUsersPage
-
+{- Nothing should never happen anymore -}
+showAdminUsers Nothing = internalError
 showAdminUsers (Just userId) = onlySalesOrAdmin $ do
   muser <- dbQuery $ GetUserByID userId
   case muser of
     Nothing -> internalError
     Just user -> adminUserPage user =<< getCompanyForUser user
-
-showAdminCompanies :: Kontrakcja m => m String
-showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
@@ -237,10 +229,6 @@ companyPaginationFromParams pageSize params = (fromIntegral (listParamsOffset pa
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m String
 showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
-
-
-showAdminUsersForSales :: Kontrakcja m => m String
-showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
 handleUsersListCSV :: Kontrakcja m => m CSV
 handleUsersListCSV = onlySalesOrAdmin $ do
@@ -793,9 +781,6 @@ Used signatures last 3 months
 Used signatures last 6 months
 Used signatures last 12 months
 -}
-
-showDocuments ::  Kontrakcja m => m  String
-showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do

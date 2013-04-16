@@ -40,7 +40,7 @@ data KontraLink
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
     | LinkCompanySignViewLogo CompanyID
-    | LinkCompanyEmailLogo CompanyID      
+    | LinkCompanyEmailLogo CompanyID
     | LinkChangeUserEmail UserID MagicHash
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
@@ -54,7 +54,6 @@ data KontraLink
     | LinkUserAdmin (Maybe UserID)
     | LinkCompanyAdmin (Maybe CompanyID)
     | LinkCompanyUserAdmin CompanyID
-    | LinkAdminStatistics
     | LinkAdminStatsByDay
     | LinkAdminStatsByMonth
     | LinkPasswordReminder UserID MagicHash
@@ -106,12 +105,11 @@ instance Show KontraLink where
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
-    showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
+    showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/#useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
-    showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"
+    showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/#companyadmin"
     showsPrec _ (LinkCompanyAdmin (Just companyid)) = (++) $ "/adminonly/companyadmin/" ++ show companyid
     showsPrec _ (LinkCompanyUserAdmin companyid) = (++) $ "/adminonly/companyadmin/users/" ++ show companyid
-    showsPrec _ (LinkAdminStatistics) = (++) $ "/adminonly/statistics"
     showsPrec _ (LinkAdminStatsByDay) = (++) $ "/adminonly/statsbyday"
     showsPrec _ (LinkAdminStatsByMonth) = (++) $ "/adminonly/statsbymonth"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash

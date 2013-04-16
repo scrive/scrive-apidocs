@@ -2,7 +2,6 @@ module Stats.Control
        (
          showAdminCompanyUsageStats,
          showAdminUserUsageStats,
-         handleAdminSystemUsageStats,
          handleAdminSystemUsageStatsByDayJSON,
          handleAdminSystemUsageStatsByMonthJSON,
          addDocumentCloseStatEvents,
@@ -95,9 +94,6 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   content <- adminCompanyUsageStatsPage companyid $ do
     F.objects "statistics" $ statisticsCompanyFieldsByDay fullnames
   renderFromBody kontrakcja content
-
-handleAdminSystemUsageStats :: Kontrakcja m => m String
-handleAdminSystemUsageStats = onlySalesOrAdmin $ adminSystemUsageStatsPage
 
 handleAdminSystemUsageStatsByDayJSON :: Kontrakcja m => m JSValue
 handleAdminSystemUsageStatsByDayJSON =

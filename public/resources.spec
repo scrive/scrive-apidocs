@@ -149,6 +149,14 @@ set systemPage
  js   js/archive/attachments.js
  js   js/archive/bin.js
  js   js/archive/archive.js
+ js   js/admin/admin.js
+ js   js/admin/companyadmin.js
+ js   js/admin/useradmin.js
+ js   js/admin/documentadmin.js
+ js   js/admin/csvstatsview.js
+ js   js/admin/createuser.js
+ js   js/admin/useradminsales.js
+ js   js/admin/adminstats.js
  js   js/account/mailapi.js
  js   js/account/company.js
  js   js/account/user.js
