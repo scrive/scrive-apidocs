@@ -80,7 +80,7 @@
 
     render: function () {
       var model = this.model;
-       var header = $("<header/>").append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
+       var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
        $(this.el).append(header);
 
 
