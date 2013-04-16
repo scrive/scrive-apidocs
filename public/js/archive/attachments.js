@@ -15,7 +15,7 @@ window.AttachmentsListDefinition = function(archive) {
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.attachments.columns.shared, width:"60px", field:"shared", special: "rendered",
                   rendering: function(shared) {
-                         return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
+                         return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
                   }}),
         new Cell({name: localization.archive.attachments.columns.attachment, width:"600px", field:"title",  special: "link"}),
         new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time", special: "rendered",

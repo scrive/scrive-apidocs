@@ -27,7 +27,7 @@ window.TemplatesListDefinition = function(archive) { return {
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.templates.columns.shared, width:"60px", field:"shared", special: "rendered",
                   rendering: function(shared) {
-                         return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
+                         return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
                   }}),
 
         new Cell({name: localization.archive.templates.columns.time, width:"150px", field:"time", special: "rendered",

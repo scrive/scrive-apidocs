@@ -95,8 +95,8 @@ docFieldsListForJSON userid padqueue doc = do
       [PadDelivery]   -> "pad"
       [APIDelivery]   -> "api"
       _                        -> "mixed"
-    J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
-    J.value "shared" $ show $ documentsharing doc == Shared
+    J.value "anyinvitationundelivered" $ anyInvitationUndelivered  doc && Pending == documentstatus doc
+    J.value "shared" $ documentsharing doc == Shared
     J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
     J.value "inpadqueue" $  (fmap fst padqueue == Just (documentid doc))
     J.value "deleted" $ documentDeletedForUser doc userid
