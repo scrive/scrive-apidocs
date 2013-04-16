@@ -300,6 +300,7 @@ var CompanyBrandingFontView = Backbone.View.extend({
                  'Narrow': 'arial narrow,sans-serif',
                  'Comic Sans MS': 'comic sans ms,sans-serif',
                  'Courier New': 'courier new,monospace',
+                 'Helvetica': 'helvetica,sans-serif',
                  'Garamond': 'garamond,serif',
                  'Georgia': 'georgia,serif',
                  'Tahoma': 'tahoma,sans-serif',
