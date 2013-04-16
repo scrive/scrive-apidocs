@@ -333,6 +333,37 @@ window.GetApiCall = ApiCall.extend({
         }
 });
 
+window.GetHistoryApiCall = ApiCall.extend({
+        defaults: {
+             name : "Get history API call",
+             documentid : LocalStorage.get("api","documentid")
+
+        },
+        initialize: function (args) {
+        },
+        isGetHistory : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+             LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"evidencelog/" + model.documentid(), {
+                type: 'GET',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+
 window.ListApiCall = ApiCall.extend({
         defaults: {
              name : "List API call",
@@ -864,6 +895,36 @@ window.DeleteApiCallView = Backbone.View.extend({
 });
 
 window.GetApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput)).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+
+window.GetHistoryApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);

@@ -49,6 +49,7 @@ var ApiDemoView = Backbone.View.extend({
             var cancel = $("<option value='cc'>Cancel</option>");
             var del = $("<option value='d'>Delete</option>");
             var check = $("<option value='c'>Get</option>");
+            var history = $("<option value='history'>History</option>");
             var list  = $("<option value='l'>List</option>");
             var download  = $("<option value='dl'>Download file</option>");
             var downloadmf  = $("<option value='dlmf'>Download document file</option>");
@@ -65,7 +66,7 @@ var ApiDemoView = Backbone.View.extend({
             var checkclient  = $("<option value='check'>Check client</option>");
 
             select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update)
-                  .append(ready).append(sendReminder).append(cancel).append(del).append(check)
+                  .append(ready).append(sendReminder).append(cancel).append(del).append(check).append(history)
                   .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(sign)
                   .append($("<option>---------</option>"))
                   .append(profile).append(payments).append(language).append(password).append(signup).append(passwordreset).append(updateprofile)
@@ -90,6 +91,8 @@ var ApiDemoView = Backbone.View.extend({
                     del.attr("selected", "true");
                 else if (model.selectedApiCall().isGet())
                     check.attr("selected", "true");
+                else if (model.selectedApiCall().isGetHistory())
+                    history.attr("selected", "true");
                 else if (model.selectedApiCall().isList())
                     list.attr("selected", "true");
                 else if (model.selectedApiCall().isDownloadFile())
@@ -141,6 +144,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new DeleteApiCall({oauth : oauth}));
                 else if (select.val() == "c")
                     model.setSelectedApiCall(new GetApiCall({oauth : oauth}));
+                else if (select.val() == "history")
+                    model.setSelectedApiCall(new GetHistoryApiCall({oauth : oauth}));
                 else if (select.val() == "l")
                     model.setSelectedApiCall(new ListApiCall({oauth : oauth}));
                 else if (select.val() == "dl")

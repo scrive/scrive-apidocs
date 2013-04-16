@@ -61,6 +61,8 @@ window.ApiCallView = function(args) {
            return new DeleteApiCallView(args);
         else if (args.model.isGet())
            return new GetApiCallView(args);
+        else if (args.model.isGetHistory())
+           return new GetHistoryApiCallView(args);
         else if (args.model.isList())
            return new ListApiCallView(args);
         else if (args.model.isDownloadFile())
