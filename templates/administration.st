@@ -5,7 +5,7 @@ adminsmain=
 <div class='blocking-box'></div>
 <div class='admin'></div>
 <script>
-    jQuery(".admin").append(new Admin({isAdmin: $if(admin)$true$else$false$endif$}).view().el);
+    jQuery(".admin").append(new Admin({isAdmin: $if(admin)$true$else$false$endif$}).el());
 </script>
 </div>
 </div>
@@ -14,7 +14,7 @@ adminuser=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
+    <a style="padding-left:100px" href="/adminonly/useradmin">Go back to user admin page</a>
     <br/>
     <br/>
 
@@ -22,9 +22,9 @@ adminuser=
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="active float-left"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
-	  <li class="float-left"><a href="$adminuserslink$/payments/$user.id$">Payment info</a></li>
-	  <li class="float-left"><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
+	  <li class="active float-left"><a href="/adminonly/useradmin/$user.id$">Användaruppgifter</a></li>
+	  <li class="float-left"><a href="/adminonly/useradmin/payments/$user.id$">Payment info</a></li>
+	  <li class="float-left"><a href="/adminonly/useradmin/usagestats/$user.id$">Statistics</a></li>
           <li class="float-right"/>
 	</ul>
 	<div class="tab-container">
@@ -139,16 +139,16 @@ adminuserpayments=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
+    <a style="padding-left:100px" href="/adminonly/useradmin">Go back to user admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="float-left"><a href="$adminuserslink$/$userid$">Användaruppgifter</a></li>
-	  <li class="active float-left"><a href="$adminuserslink$/payments/$userid$">Payment info</a></li>
-	  <li class="float-left"><a href="$adminuserslink$/usagestats/$userid$">Statistics</a></li>
+	  <li class="float-left"><a href="/adminonly/useradmin/$userid$">Användaruppgifter</a></li>
+	  <li class="active float-left"><a href="/adminonly/useradmin/payments/$userid$">Payment info</a></li>
+	  <li class="float-left"><a href="/adminonly/useradmin/usagestats/$userid$">Statistics</a></li>
           <li class="float-right"/>
 	</ul>
       <div class="tab-container">
@@ -230,7 +230,7 @@ adminuserpayments=
 		<tr>
                   <td>Company price plan: </td>
 		  <td>
-                    This user is part of a company. <a href="$admincompanieslink$/payments/$companyid$">Visit the company price plan.</a>
+                    This user is part of a company. <a href="/adminonly/companyadmin/payments/$companyid$">Visit the company price plan.</a>
 		  </td>
 		</tr>
                 $else$
@@ -277,7 +277,7 @@ admincompany=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
     <form action="" method="POST">
@@ -285,11 +285,11 @@ admincompany=
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="active float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
-          <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
+	  <li class="active float-left"><a href="/adminonly/companyadmin/$companyid$">Company Information</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/users/$companyid$">Users</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left"><a href="/adminonly/companyadmin/payments/$companyid$">Payments</a></li>
           <li class="float-right"/>
 	</ul>
 	<div class="tab-container">
@@ -386,18 +386,18 @@ admincompanybranding=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li class="active float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
-          <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/$companyid$">Company Information</a></li>
+	  <li class="active float-left"><a href="/adminonly/companyadmin/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/users/$companyid$">Users</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left"><a href="/adminonly/companyadmin/payments/$companyid$">Payments</a></li>
           <li class="float-right"/>
 	</ul>
       <div class="place-for-branding">
@@ -414,18 +414,18 @@ admincompanypayments=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
-          <li class="float-left active"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/$companyid$">Company Information</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/users/$companyid$">Users</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left active"><a href="/adminonly/companyadmin/payments/$companyid$">Payments</a></li>
           <li class="float-right"/>
 	</ul>
       <div class="tab-container">
@@ -513,7 +513,7 @@ admincompanyusers=
 <div class="mainContainer" >
   <div class="body-container">
   <a href="$adminlink$">Go back to main admin page</a>
-  <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+  <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
   <br/>
   <br/>
 
@@ -521,11 +521,11 @@ admincompanyusers=
     <div class="tab-header">
     </div>
     <ul class="tabs">
-      <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-      <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-      <li class="active float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-      <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
-      <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
+      <li class="float-left"><a href="/adminonly/companyadmin/$companyid$">Company Information</a></li>
+      <li class="float-left"><a href="/adminonly/companyadmin/branding/$companyid$">Branding</a></li>
+      <li class="active float-left"><a href="/adminonly/companyadmin/users/$companyid$">Users</a></li>
+      <li class="float-left"><a href="/adminonly/companyadmin/usagestats/$companyid$">Statistics</a></li>
+      <li class="float-left"><a href="/adminonly/companyadmin/payments/$companyid$">Payments</a></li>
       <li class="float-right"/>
     </ul>
   </div>
@@ -615,7 +615,7 @@ admincompanyusers=
                               if (vresult.every(function(a) {return a;})) {
                                   new Submit({
                                       method: "POST",
-                                      url: "$admincompanieslink$/users/$companyid$",
+                                      url: "/adminonly/companyadmin/users/$companyid$",
                                       fstname : fstname.val(),
                                       sndname : sndname.val(),
                                       email : email.val(),
@@ -672,7 +672,7 @@ admincompanyusers=
                               if (vresult.every(function(a) {return a;})) {
                                   new Submit({
                                       method: "POST",
-                                      url: "$admincompanieslink$/users/$companyid$",
+                                      url: "/adminonly/companyadmin/users/$companyid$",
                                       email : email.val(),
                                       privateinvite : "true",
                                       }).send();
@@ -726,16 +726,16 @@ userusagestats=
 <div class="mainContainer" >
   <div class="body-container">
    <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
+    <a style="padding-left:100px" href="/adminonly/useradmin">Go back to user admin page</a>
     <br/>
     <br/>
     <div class="tab-viewer">
       <div class="tab-header">
       </div>
       <ul class="tabs">
-	<li class="float-left"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
-	<li class="float-left"><a href="$adminuserslink$/payments/$user.id$">Payment info</a></li>
-	<li class="active float-left"><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
+	<li class="float-left"><a href="/adminonly/useradmin/$user.id$">Användaruppgifter</a></li>
+	<li class="float-left"><a href="/adminonly/useradmin/payments/$user.id$">Payment info</a></li>
+	<li class="active float-left"><a href="/adminonly/useradmin/usagestats/$user.id$">Statistics</a></li>
         <li class="float-right"/>
       </ul>
       <div class="tab-container">
@@ -766,18 +766,18 @@ companyusagestats=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li class="active float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
-          <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/$companyid$">Company Information</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="/adminonly/companyadmin/users/$companyid$">Users</a></li>
+	  <li class="active float-left"><a href="/adminonly/companyadmin/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left"><a href="/adminonly/companyadmin/payments/$companyid$">Payments</a></li>
           <li class="float-right" />
 	</ul>
       <div class="tab-container">

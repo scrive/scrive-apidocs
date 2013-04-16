@@ -1,6 +1,6 @@
 /* Definition of document list seen by admins/sales */
 (function(window){
-window.DocumentAdminListDefinition = function(admin) { 
+window.DocumentAdminListDefinition = function(isAdmin, userid) {
     var cells = [
         new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
                     rendering: function(_, _, doc) {
@@ -59,7 +59,7 @@ window.DocumentAdminListDefinition = function(admin) {
     ];
 
     // Only admins are allowed to access the DAVE pages.
-    if (admin.isAdmin()) {
+    if (isAdmin) {
         cells.push(
             new Cell({name: "DAVE", width:"30px", field:"id", special:"rendered",
                         rendering: function(value, idx, doc) {
@@ -72,7 +72,7 @@ window.DocumentAdminListDefinition = function(admin) {
     var list = {
         name : "Documents Table",
         schema: new Schema({
-            url: "/adminonly/documentslist",
+            url: "/adminonly/documentslist" + (userid != undefined ? "?userid=" + userid : ""),
             sorting: new Sorting({
                 fields: [
                       "ctime"

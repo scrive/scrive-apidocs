@@ -2,7 +2,8 @@
  * extensions.
  */
 (function(window){
-    window.CSVStatsView = Backbone.View.extend({
+
+var CSVStatsView = Backbone.View.extend({
         links: [
             {
                 url: "/adminonly/allstatscsv",
@@ -49,4 +50,10 @@
         },
 
     });
+window.CSVStats = function(args) {
+          var view =  new CSVStatsView({});
+          return new Object({
+              el  : function() {return $(view.el);}
+            });
+};
 })(window);

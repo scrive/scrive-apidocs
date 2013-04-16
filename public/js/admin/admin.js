@@ -1,4 +1,4 @@
-/* Main admin only site definition. Its a tab based set of different lists. 
+/* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
 (function(window){
@@ -29,12 +29,12 @@ var AdminModel = Backbone.Model.extend({
   },
   documents: function() {
         if (this.get("documents") != undefined) return this.get("documents");
-        this.set({ "documents" : new KontraList(DocumentAdminListDefinition(this)) });
+        this.set({ "documents" : new KontraList(DocumentAdminListDefinition(this.isAdmin(), undefined)) });
         return this.documents();
   },
   csvstats: function() {
     if (this.get("csvstats") != undefined) return this.get("csvstats");
-    this.set({ "csvstats" : new CSVStatsView() });
+    this.set({ "csvstats" : new CSVStats() });
     return this.csvstats();
   },
 
@@ -42,7 +42,7 @@ var AdminModel = Backbone.Model.extend({
                     var admin = this;
                     return new Tab({
                         name: "CSV Statistics",
-                        elems: [$(admin.csvstats().el)],
+                        elems: [$(admin.csvstats().el())],
                         pagehash : "csvstats",
                         // This view is static, so we don't have to onActivate.
                     });
@@ -116,10 +116,10 @@ var AdminView = Backbone.View.extend({
        var admin = this.model;
        var view = this;
        var tabs = new KontraTabs({
-        tabs: [ 
-           admin.statsAsCSVTab(), 
-           admin.salesUserAdminTab(), 
-           admin.statsTab(), 
+        tabs: [
+           admin.statsAsCSVTab(),
+           admin.salesUserAdminTab(),
+           admin.statsTab(),
            admin.documentsTab(),
            admin.userAdminTab(),
            admin.companyAdminTab()]
@@ -134,8 +134,7 @@ window.Admin = function(args) {
           var model = new AdminModel(args);
           var view =  new AdminView({model : model, el : $("<div/>")});
           return new Object({
-              model : function() {return model;},
-              view  : function() {return view;}
+              el  : function() {return $(view.el);}
             });
 };
 

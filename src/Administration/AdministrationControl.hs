@@ -435,7 +435,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
     (_, _, Just plan) -> addCompanyPlanManual companyid plan status
     _ -> return ()
   return $ LinkCompanyAdminPayments companyid
-  
+
 migrateCompanyPlan :: Kontrakcja m => CompanyID -> m ()
 migrateCompanyPlan companyid = do
   migratetype <- getField' "migratetype"
@@ -447,7 +447,7 @@ migrateCompanyPlan companyid = do
           _ <- changePaymentPlanOwner (Right companyid) (Left dest)
           return ()
         _ -> return ()
-        
+
     "companyid" -> do
       mcompanyid <- readField "id"
       case mcompanyid of
@@ -456,7 +456,7 @@ migrateCompanyPlan companyid = do
           return ()
         _ -> return ()
     _ -> return ()
-    
+
 deleteCompanyPlan :: Kontrakcja m => CompanyID -> m ()
 deleteCompanyPlan companyid = do
   dbUpdate $ DeletePaymentPlan (Right companyid)
@@ -522,7 +522,7 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
     (_, _, Just plan) -> addManualPricePlan userid plan status
     _ -> return ()
   return $ LinkUserAdminPayments userid
-  
+
 migratePlan :: Kontrakcja m => UserID -> m ()
 migratePlan userid = do
   migratetype <- getField' "migratetype"
@@ -534,7 +534,7 @@ migratePlan userid = do
           _ <- changePaymentPlanOwner (Left userid) (Left dest)
           return ()
         _ -> return ()
-        
+
     "companyid" -> do
       mcompanyid <- readField "id"
       case mcompanyid of
@@ -543,7 +543,7 @@ migratePlan userid = do
           return ()
         _ -> return ()
     _ -> return ()
-    
+
 deletePlan :: Kontrakcja m => UserID -> m ()
 deletePlan userid = do
   dbUpdate $ DeletePaymentPlan (Left userid)
@@ -786,11 +786,14 @@ jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
 
   params <- getListParamsNew
+  muserid <- readField "userid"
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = ((listParamsOffset params),(listParamsLimit params))
       filters    = []
-      domain     = [DocumentsOfWholeUniverse]
+      domain     = case muserid of
+                     Nothing -> [DocumentsOfWholeUniverse]
+                     Just userid ->   [DocumentsVisibleToUser userid]
       docsPageSize = 100
 
   allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
@@ -966,4 +969,4 @@ daveFile fileid' _title = onlyAdmin $ do
           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
           return res2
 
-  
+
