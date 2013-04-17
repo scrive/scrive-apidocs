@@ -13,7 +13,6 @@ import Text.StringTemplates.Templates
 
 import Control.Applicative
 
-import Control.Monad.Trans
 import MinutesTime
 import Text.JSON
 

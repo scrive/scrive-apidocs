@@ -301,7 +301,7 @@ Executable cron
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc src cron mailer/inc docconv/src pdfseal/inc
+  Hs-source-dirs: inc misc src cron mailer/inc docconv/src pdfseal/inc messenger/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
   if !flag(allow-warnings)
@@ -389,7 +389,7 @@ Executable messenger-server
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc messenger/src messenger/inc
+  Hs-source-dirs: src inc misc messenger/src messenger/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
   if !flag(allow-warnings)

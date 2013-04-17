@@ -33,6 +33,7 @@ module Doc.Model
   , GetDocuments2(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByDocumentIDs(..)
+  , GetDocumentBySignatoryLinkID(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentsByAuthor(..)
   , GetSignatoryScreenshots(..)
@@ -1492,6 +1493,16 @@ instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
     selectDocuments $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereIn "documents.id" dids
+
+data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
+instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) where
+  query (GetDocumentBySignatoryLinkID slid) =
+     (selectDocuments $ sqlSelect "documents" $ do
+       mapM_ sqlResult documentsSelectors
+       sqlWhereExists $ sqlSelect "signatory_links" $ do
+         sqlWhereEq "signatory_links.id" slid
+         sqlWhere "signatory_links.document_id = documents.id")
+    >>= oneObjectReturnedGuard
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash (Maybe Document) where

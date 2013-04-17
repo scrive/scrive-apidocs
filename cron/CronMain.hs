@@ -25,6 +25,7 @@ import Doc.API.Callback.Model
 import Utils.Cron
 import Utils.IO
 import Mails.Events
+import Messages.Events
 import MinutesTime
 import Payments.Config
 import Payments.Control
@@ -97,7 +98,9 @@ main = Log.withLogger $ do
          Log.cron "Evaluating sessions..."
          runScheduler $ actionQueue session
      , forkCron_ True "EventsProcessing" 5 $ do
-         runScheduler processEvents
+         runScheduler Mails.Events.processEvents
+     , forkCron_ True "SMSEventsProcessing" 5 $ do
+         runScheduler Messages.Events.processEvents
      , forkCron_ True "DocumentAPICallback" 10 $ do
          runScheduler $ actionQueue documentAPICallback
      , forkCron_ True "RecurlySync" (60 * 60) . inDB $ do

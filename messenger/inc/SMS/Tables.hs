@@ -11,7 +11,7 @@ messengerTables = [
 tableSMSes :: Table
 tableSMSes = tblTable {
     tblName = "smses"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id",           SqlColDesc {colType = SqlBigIntT,            colNullable = Just False})
        , ("token",        SqlColDesc {colType = SqlBigIntT,            colNullable = Just False})
@@ -20,6 +20,7 @@ tableSMSes = tblTable {
        , ("body",         SqlColDesc {colType = SqlVarCharT,           colNullable = Just False})
        , ("to_be_sent",   SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("sent",         SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True })
+       , ("signatory_link_id",  SqlColDesc {colType = SqlBigIntT,      colNullable = Just True })
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE smses"
@@ -30,10 +31,13 @@ tableSMSes = tblTable {
           <> ", body         TEXT          NOT NULL"
           <> ", to_be_sent   TIMESTAMPTZ   NOT NULL"
           <> ", sent         TIMESTAMPTZ       NULL"
+          <> ", signatory_link_id    BIGINT        NULL"
           <> ", CONSTRAINT pk_smses PRIMARY KEY (id)"
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblForeignKeys =  [ tblForeignKeyColumn "signatory_link_id" "signatory_links" "id"
+                      ]
   }
 
 tableSMSEvents :: Table

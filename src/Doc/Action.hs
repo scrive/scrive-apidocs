@@ -511,7 +511,7 @@ sendNotifications sl domail dosms = do
 -- SMS helpers
 
 notifySMS :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => String -> Document -> SignatoryLink -> Fields m () -> m ()
-notifySMS t doc sl fs = renderLocalTemplate doc t (smsFields doc sl >> fs) >>= simpleSMS (getMobile sl)
+notifySMS t doc sl fs = renderLocalTemplate doc t (smsFields doc sl >> fs) >>= simpleSMS (getMobile sl) (Just $ signatorylinkid sl)
 
 notifySMS_ :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => String -> Document -> SignatoryLink -> m ()
 notifySMS_ t doc sl = notifySMS t doc sl $ return ()
@@ -522,9 +522,10 @@ smsFields document siglink = do
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
 
-simpleSMS :: (CryptoRNG m, MonadDB m) => String -> String -> m ()
-simpleSMS number msg = do
+simpleSMS :: (CryptoRNG m, MonadDB m) => String -> Maybe SignatoryLinkID -> String -> m ()
+simpleSMS number slid msg = do
   _ <- scheduleSMS sms{ smsMSISDN = number
                       , smsBody = msg
+                      , smsSignatoryLinkID = slid
                       }
   return ()

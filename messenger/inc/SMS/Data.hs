@@ -5,7 +5,7 @@ import Data.Int
 import DB.Derive
 import MagicHash
 import Data.Data
-
+import Doc.SignatoryLinkID
 
 newtype ShortMessageID = ShortMessageID Int64
   deriving (Eq, Ord)
@@ -18,6 +18,7 @@ data ShortMessage = ShortMessage {
   , smOriginator :: String
   , smMSISDN     :: String
   , smBody       :: String
+  , smSignatoryLinkID :: Maybe SignatoryLinkID
   } deriving (Eq, Ord, Show)
 
 newtype SMSEventID = SMSEventID Int64
