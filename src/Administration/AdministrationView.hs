@@ -19,6 +19,7 @@ module Administration.AdministrationView(
             , adminUserUsageStatsPage
             , adminCompanyUsageStatsPage
             , adminUserPaymentPage
+            , adminUserDocumentsPage
           ) where
 
 import KontraLink
@@ -99,6 +100,14 @@ adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =
           OverdueStatus     -> F.value "overduestatus"     True
           CanceledStatus    -> F.value "canceledstatus"    True
           DeactivatedStatus -> F.value "deactivatedstatus" True
+
+
+adminUserDocumentsPage:: TemplatesMonad m => UserID -> Context -> m String
+adminUserDocumentsPage uid ctx =
+    renderTemplate "userdocuments" $ do
+        F.value "userid" $ show $ uid
+        F.value "admin" $ isAdmin ctx
+
 
 {- | Manager company page - can change company info and settings here -}
 adminCompanyPage :: TemplatesMonad m => Company -> Maybe MailAPIInfo -> m String

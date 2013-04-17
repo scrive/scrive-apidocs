@@ -13,8 +13,8 @@ adminsmain=
 adminuser=
 <div class="mainContainer" >
   <div class="body-container">
-    <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="/adminonly/useradmin">Go back to user admin page</a>
+    <a href="/adminonly">Go back to main admin page</a>
+    <a style="padding-left:100px" href="/adminonly/#useradmin">Go back to user admin page</a>
     <br/>
     <br/>
 
@@ -25,6 +25,8 @@ adminuser=
 	  <li class="active float-left"><a href="/adminonly/useradmin/$user.id$">Användaruppgifter</a></li>
 	  <li class="float-left"><a href="/adminonly/useradmin/payments/$user.id$">Payment info</a></li>
 	  <li class="float-left"><a href="/adminonly/useradmin/usagestats/$user.id$">Statistics</a></li>
+      <li class="float-left"><a href="/adminonly/useradmin/documents/$user.id$">Documents</a></li>
+
           <li class="float-right"/>
 	</ul>
 	<div class="tab-container">
@@ -138,8 +140,8 @@ adminuser=
 adminuserpayments=
 <div class="mainContainer" >
   <div class="body-container">
-    <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="/adminonly/useradmin">Go back to user admin page</a>
+    <a href="/adminonly">Go back to main admin page</a>
+    <a style="padding-left:100px" href="/adminonly/#useradmin">Go back to user admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
@@ -149,6 +151,8 @@ adminuserpayments=
 	  <li class="float-left"><a href="/adminonly/useradmin/$userid$">Användaruppgifter</a></li>
 	  <li class="active float-left"><a href="/adminonly/useradmin/payments/$userid$">Payment info</a></li>
 	  <li class="float-left"><a href="/adminonly/useradmin/usagestats/$userid$">Statistics</a></li>
+      <li class="float-left"><a href="/adminonly/useradmin/documents/$user.id$">Documents</a></li>
+
           <li class="float-right"/>
 	</ul>
       <div class="tab-container">
@@ -276,7 +280,7 @@ adminuserpayments=
 admincompany=
 <div class="mainContainer" >
   <div class="body-container">
-    <a href="$adminlink$">Go back to main admin page</a>
+    <a href="/adminonly">Go back to main admin page</a>
     <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
@@ -385,7 +389,7 @@ admincompany=
 admincompanybranding=
 <div class="mainContainer" >
   <div class="body-container">
-    <a href="$adminlink$">Go back to main admin page</a>
+    <a href="/adminonly">Go back to main admin page</a>
     <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
@@ -413,7 +417,7 @@ jQuery('.place-for-branding').append(company.el());
 admincompanypayments=
 <div class="mainContainer" >
   <div class="body-container">
-    <a href="$adminlink$">Go back to main admin page</a>
+    <a href="/adminonly">Go back to main admin page</a>
     <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
@@ -512,7 +516,7 @@ admincompanypayments=
 admincompanyusers=
 <div class="mainContainer" >
   <div class="body-container">
-  <a href="$adminlink$">Go back to main admin page</a>
+  <a href="/adminonly">Go back to main admin page</a>
   <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
   <br/>
   <br/>
@@ -725,8 +729,8 @@ admincompanyusers=
 userusagestats=
 <div class="mainContainer" >
   <div class="body-container">
-   <a href="$adminlink$">Go back to main admin page</a>
-    <a style="padding-left:100px" href="/adminonly/useradmin">Go back to user admin page</a>
+   <a href="/adminonly">Go back to main admin page</a>
+    <a style="padding-left:100px" href="/adminonly/#useradmin">Go back to user admin page</a>
     <br/>
     <br/>
     <div class="tab-viewer">
@@ -736,6 +740,8 @@ userusagestats=
 	<li class="float-left"><a href="/adminonly/useradmin/$user.id$">Användaruppgifter</a></li>
 	<li class="float-left"><a href="/adminonly/useradmin/payments/$user.id$">Payment info</a></li>
 	<li class="active float-left"><a href="/adminonly/useradmin/usagestats/$user.id$">Statistics</a></li>
+    <li class="float-left"><a href="/adminonly/useradmin/documents/$user.id$">Documents</a></li>
+
         <li class="float-right"/>
       </ul>
       <div class="tab-container">
@@ -762,10 +768,42 @@ userusagestats=
 </div>
 </div>
 ####
+####
+userdocuments=
+<div class="mainContainer" >
+  <div class="body-container">
+   <a href="/adminonly">Go back to main admin page</a>
+    <a style="padding-left:100px" href="/adminonly/#useradmin">Go back to user admin page</a>
+    <br/>
+    <br/>
+    <div class="tab-viewer">
+      <div class="tab-header">
+      </div>
+      <ul class="tabs">
+    <li class="float-left"><a href="/adminonly/useradmin/$user.id$">Användaruppgifter</a></li>
+    <li class="float-left"><a href="/adminonly/useradmin/payments/$user.id$">Payment info</a></li>
+    <li class="float-left"><a href="/adminonly/useradmin/usagestats/$user.id$">Statistics</a></li>
+    <li class="active float-left"><a href="/adminonly/useradmin/documents/$user.id$">Documents</a></li>
+
+        <li class="float-right"/>
+      </ul>
+      <div class="tab-container">
+        <div class="doclist">
+
+        </div>
+      </div>
+    </div>
+</div>
+</div>
+<script>
+  jQuery(".doclist").append(new KontraList(DocumentAdminListDefinition($if(admin)$true$else$false$endif$, $userid$)).el());
+</script>
+####
+
 companyusagestats=
 <div class="mainContainer" >
   <div class="body-container">
-    <a href="$adminlink$">Go back to main admin page</a>
+    <a href="/adminonly">Go back to main admin page</a>
     <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
@@ -807,7 +845,7 @@ companyusagestats=
 </div>
 ###
 backtoadminmainlink=
-   <a href="$adminlink$">Go back to main admin page</a>
+   <a href="/adminonly">Go back to main admin page</a>
     <br/><br/>
 ###
 daveDocument=

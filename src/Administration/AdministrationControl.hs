@@ -90,12 +90,13 @@ adminonlyRoutes =
           hGet $ toK0 $ showAdminMainPage
         , dir "createuser" $ hPost $ toK0 $ handleCreateUser
         , dir "userslist" $ hGet $ toK0 $ jsonUsersList
-        , dir "useradmin" $ hGet $ toK1 $ showAdminUsers . Just
+        , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
         , dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
         , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
         , dir "useradmin" $ dir "payments" $ hGet $ toK1 $ showAdminUserPayments
         , dir "useradmin" $ dir "payments" $ hPost $ toK1 $ handleUserPaymentsChange
+        , dir "useradmin" $ dir "documents" $ hGet $ toK1 $ showAdminUserDocuments
         , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
         , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
         , dir "companyadmin" $ dir "users" $ hGet $ toK1 $ showAdminCompanyUsers
@@ -140,16 +141,11 @@ showAdminMainPage = onlySalesOrAdmin $ do
     ctx <- getContext
     adminMainPage ctx
 
-{- | Process view for finding a user in basic administration. If provided with userId string as param
-it allows to edit user details -}
-showAdminUsers :: Kontrakcja m => Maybe UserID -> m String
-{- Nothing should never happen anymore -}
-showAdminUsers Nothing = internalError
-showAdminUsers (Just userId) = onlySalesOrAdmin $ do
-  muser <- dbQuery $ GetUserByID userId
-  case muser of
-    Nothing -> internalError
-    Just user -> adminUserPage user =<< getCompanyForUser user
+{- | Process view for finding a user in basic administration -}
+showAdminUsers :: Kontrakcja m => UserID -> m String
+showAdminUsers userId = onlySalesOrAdmin $ do
+  user <- guardJustM $ dbQuery $ GetUserByID userId
+  adminUserPage user =<< getCompanyForUser user
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
@@ -170,6 +166,11 @@ showAdminUserPayments userid = onlySalesOrAdmin $ do
   mpaymentplan <- dbQuery $ GetPaymentPlan (Left userid)
   user <- guardJustM $ dbQuery $ GetUserByID userid
   adminUserPaymentPage userid mpaymentplan (usercompany user) recurlySubdomain
+
+showAdminUserDocuments :: Kontrakcja m =>  UserID -> m String
+showAdminUserDocuments userId = onlySalesOrAdmin $ do
+  ctx <- getContext
+  adminUserDocumentsPage userId ctx
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
