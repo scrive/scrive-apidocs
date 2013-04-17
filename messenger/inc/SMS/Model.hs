@@ -84,3 +84,9 @@ instance MonadDB m => DBUpdate m DeleteSMSesOlderThenDays Integer where
   update (DeleteSMSesOlderThenDays days) = do
     kRun $ sqlDelete "smses" $ do
       sqlWhere $ "(now() > to_be_sent + interval" <+> raw (unsafeFromString ("'"++show days++" days'")) <+> ")" -- Sorry but it did not work as param.
+
+data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
+instance MonadDB m => DBUpdate m UpdateWithSMSEvent Bool where
+  update (UpdateWithSMSEvent mid ev) = do
+    kRun01 $ SQL "INSERT INTO sms_events (sms_id, event) VALUES (?, ?)"
+             [toSql mid, toSql ev]

@@ -5,6 +5,7 @@ import DB
 messengerTables :: [Table]
 messengerTables = [
     tableSMSes
+  , tableSMSEvents
   ]
 
 tableSMSes :: Table
@@ -33,4 +34,29 @@ tableSMSes = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  }
+
+tableSMSEvents :: Table
+tableSMSEvents = tblTable {
+    tblName = "sms_events"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [  ("id",         SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("sms_id",     SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("event",      SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("event_read", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE sms_events ("
+          <> "  id           BIGSERIAL      NOT NULL"
+          <> ", sms_id       BIGINT         NOT NULL"
+          <> ", event        TEXT           NOT NULL"
+          <> ", event_read   TIMESTAMPTZ        NULL"
+          <> ", CONSTRAINT pk_sms_events PRIMARY KEY (id)"
+          <> ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "sms_id" ]
+  , tblForeignKeys = [ (tblForeignKeyColumn "sms_id" "smses" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }

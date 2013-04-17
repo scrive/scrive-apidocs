@@ -4,13 +4,35 @@ module GlobalMouth (
   ) where
 
 import Happstack.Server
+import Happstack.Fields
 import Messenger
 import qualified Log (messengerServer)
+import SMS.Data
+import SMS.Model
+import DB
 
 handleGlobalMouthEvents :: Messenger Response
 handleGlobalMouthEvents = do
   Log.messengerServer $ "Processing some globalmounth event"
-  error "Not implemented yet"
+  _xtype      <- getField' "type"          -- dlr, delivery report
+  xref        <- readField "ref"           -- scrive reference
+  xmsisdn     <- getField' "msisdn"        -- full number
+  _xtimestamp <- getField' "timestamp"     -- timestamp
+  xdelivered  <- getField' "delivered"     -- true or false
+  xreason     <- getField' "reason"        -- optional text message what went wrong if not delivered
+
+  let event = case xdelivered of
+                "true" -> GM_Delivered
+                "false" -> GM_Undelivered xreason
+                _ -> error "Unknown report"
+
+  case xref of
+    Just xref' -> do
+              let ev = GlobalMouthEvent xmsisdn event
+              _ <- dbUpdate (UpdateWithSMSEvent xref' ev)
+              ok $ toResponse "Thanks"
+    Nothing -> do
+              ok $ toResponse "Could not read ShortMessageID"
 
 {-
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
