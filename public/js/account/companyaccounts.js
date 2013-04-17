@@ -51,16 +51,31 @@ var CompanyAccountsModel = Backbone.Model.extend({
 
             Confirmation.popup({
               onAccept : function() {
-                  new Submit({
-                      url: "/account/companyaccounts",
-                      method: "POST",
-                      add : "true",
-                      fstname : fstname.val(),
-                      sndname : sndname.val(),
-                      email : email.val(),
-                      mixpanel : {name : 'Accept',
-                                  props : {'Accept' : 'new account'}}
-                  }).send();
+
+                 var callback = function(t,e,v) {   e.css("border-color", "red"); };
+                 fstname.css("border-color", "");
+                 sndname.css("border-color", "");
+                 email.css("border-color", "");
+
+                  var vresult = [
+                                 fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
+                                 sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
+                                 email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                ];
+
+                  if (vresult.every(function(a) {return a;})) {
+
+                    new Submit({
+                        url: "/account/companyaccounts",
+                        method: "POST",
+                        add : "true",
+                        fstname : fstname.val(),
+                        sndname : sndname.val(),
+                        email : email.val(),
+                        mixpanel : {name : 'Accept',
+                                    props : {'Accept' : 'new account'}}
+                    }).send();
+                 }
               },
               title : localization.account.companyAccounts.createNewModalTitle,
               acceptButtonText : localization.account.companyAccounts.createNewModalAcceptButton,
