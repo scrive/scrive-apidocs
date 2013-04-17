@@ -50,10 +50,10 @@ createExternalSender name user password = Sender { senderName = name, sendSMS = 
     send sms@ShortMessage{..} = do
       liftIO $ do
         Log.messengerServer $ show sms
-        sendSMS2 (user,password) smOriginator smMSISDN smBody
+        sendSMS2 (user,password) smOriginator smMSISDN smBody (maybe "" show smSignatoryLinkID)
 
-sendSMS2 :: (String, String) -> String -> String -> String -> IO Bool
-sendSMS2 (user, password) originator msisdn body = do
+sendSMS2 :: (String, String) -> String -> String -> String -> String -> IO Bool
+sendSMS2 (user, password) originator msisdn body ref = do
   (code, stdout, stderr) <- readCurl [url] BS.empty
   case (code, maybeRead (takeWhile (not . isSpace) $ BSC.unpack stdout)) of
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 ->
@@ -80,7 +80,9 @@ sendSMS2 (user, password) originator msisdn body = do
       , "body=", urlEncode latin_body, "&"
       , "msisdn=", urlEncode latin_msisdn, "&"
       , "originator=", urlEncode latin_originator, "&"
-      , "hash=", hash
+      , "hash=", hash, "&"
+      , "dlr=true", "&"
+      , "ref=", ref
       ]
     -- Seems we hit a bug in iconv under Mac. Using translitera mode there
     -- loves to produce empty strings for unknown reason. Using discard mode
