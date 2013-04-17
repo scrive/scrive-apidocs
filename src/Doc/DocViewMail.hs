@@ -278,12 +278,15 @@ mailDocumentClosed ctx document l sl = do
 
 mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentAwaitingForAuthor ctx document authorlang = do
-    signatories <- renderLocalListTemplate authorlang $ map getSmartName $ partySignedList document
+    signatories <- renderLocalListTemplate authorlang $ map getSmartName $ partyListButAuthor document
+    signatoriesThatSigned <- renderLocalListTemplate authorlang $ map getSmartName $ partySignedList document
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang ctx document "mailDocumentAwaitingForAuthor" $ do
         F.value "authorname" $ getSmartName $ fromJust $ getAuthorSigLink document
         F.value "documentlink" $ (ctxhostpart ctx) ++ show (LinkSignDoc document $ fromJust $ getAuthorSigLink document)
         F.value "partylist" signatories
+        F.value "partylistSigned" signatoriesThatSigned
+        F.value "someonesigned" $ not $ null $ partySignedList document
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile
 

@@ -39,6 +39,11 @@ partyList :: Document -> [SignatoryDetails]
 partyList document = [signatorydetails sl | sl <- documentsignatorylinks document
                                           , isSignatory sl]
 
+partyListButAuthor :: Document -> [SignatoryDetails]
+partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
+                                          , isSignatory sl
+                                          , not $ isAuthor sl
+                                          ]
 {- |
    Given a Document, return all of the signatory details for all signatories who have signed.
  -}
