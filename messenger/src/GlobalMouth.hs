@@ -14,12 +14,18 @@ import DB
 handleGlobalMouthEvents :: Messenger Response
 handleGlobalMouthEvents = do
   Log.messengerServer $ "Processing some globalmounth event"
-  _xtype      <- getField' "type"          -- dlr, delivery report
+  xtype       <- getField' "type"          -- dlr, delivery report
   xref        <- readField "ref"           -- scrive reference
   xmsisdn     <- getField' "msisdn"        -- full number
-  _xtimestamp <- getField' "timestamp"     -- timestamp
+  xtimestamp  <- getField' "timestamp"     -- timestamp
   xdelivered  <- getField' "delivered"     -- true or false
   xreason     <- getField' "reason"        -- optional text message what went wrong if not delivered
+  Log.messengerServer $ "   xtype=" ++ xtype
+  Log.messengerServer $ "   xref=" ++ show xref
+  Log.messengerServer $ "   xmsisdn=" ++ xmsisdn
+  Log.messengerServer $ "   xtimestamp=" ++ xtimestamp
+  Log.messengerServer $ "   xdelivered=" ++ xdelivered
+  Log.messengerServer $ "   xreason=" ++ xreason
 
   let event = case xdelivered of
                 "true" -> GM_Delivered
