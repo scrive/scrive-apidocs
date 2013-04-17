@@ -436,6 +436,8 @@ apiCallHistory did = api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   ctx <- getContext
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+  mlang <- lift $  (join . (fmap langFromCode)) <$> getField "lang"
+  lift $ switchLang $ fromMaybe (lang $ usersettings user) mlang
   res <- lift $ jsonDocumentEvidenceLog did
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
