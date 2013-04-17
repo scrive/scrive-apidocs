@@ -108,7 +108,7 @@ versionedAPI _version = choice [
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
   dir "list"               $ hGetAllowHttp $ apiCallList,
-  dir "evidencelog"        $ hGetAllowHttp $ apiCallEvidenceLog,
+  dir "history"           $ hGetAllowHttp $ apiCallHistory,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallDownloadMainFile,
   dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallDownloadFile,
 
@@ -431,8 +431,8 @@ apiCallList = api $ do
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
 
-apiCallEvidenceLog :: Kontrakcja m => DocumentID -> m Response
-apiCallEvidenceLog did = api $ do
+apiCallHistory :: Kontrakcja m => DocumentID -> m Response
+apiCallHistory did = api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   ctx <- getContext
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});

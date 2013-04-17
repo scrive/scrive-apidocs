@@ -349,7 +349,7 @@ window.GetHistoryApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"evidencelog/" + model.documentid(), {
+            $.ajax(Scrive.apiUrl()+"history/" + model.documentid(), {
                 type: 'GET',
                 cache: false,
                 headers : { authorization : model.authorization() },

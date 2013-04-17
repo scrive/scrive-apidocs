@@ -14,7 +14,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
      return  new KontraList({
         name : "Document history",
         schema: new Schema({
-            url: "/api/frontend/evidencelog/" + this.document().documentid(),
+            url: "/api/frontend/history/" + this.document().documentid(),
             paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 15 }),
             cells : [
                 new Cell({name: localization.archive.documents.columns.status, width:"46px", field:"status",
