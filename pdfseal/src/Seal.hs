@@ -438,6 +438,7 @@ data Box = Box
   , boxHeight   :: Int         -- ^ box height in pt
   , boxCommands :: String      -- ^ commands for the box, does not safe the state
   }
+  deriving Show
 
 
 boxHCat :: Int -> [Box] -> Box
@@ -520,7 +521,8 @@ groupBoxesUpToHeight height boxes = helper boxes
         worker currentHeight currentBoxes rest@((goesWithNext, needsFrame, x@(Box _ h _)):xs)
                                                | currentHeight + h < height || goesWithNext
                                                  = worker (currentHeight + h) ((needsFrame,x):currentBoxes) xs
-                                               | otherwise = (currentBoxes, rest)
+                                               | otherwise = if null currentBoxes then ([(needsFrame,x)],xs) -- TODO: figure out what to do with vertical overflow
+                                                                                  else (currentBoxes, rest)
         helper boxes' = case worker 0 [] boxes' of
                             (cb, []) -> [reverse cb]
                             (cb, rest) -> reverse cb : helper rest
