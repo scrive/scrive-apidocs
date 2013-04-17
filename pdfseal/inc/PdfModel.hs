@@ -224,11 +224,13 @@ data Document = Document
                    { documentHeader :: BS.ByteString                  -- header
                    , documentBodies :: [Body]                         -- bodies, from last to first
                    }
+  deriving Show
 
 data Body = Body
                    { bodyTrailer :: DictData
                    , bodyObjects :: IntMap.IntMap Entry   -- trailer and object map
                    }
+  deriving Show
 
 data Entry = UsedEntry !Int !Indir                -- generation and indirect object
            | FreeEntry !Int                       -- next available generation
