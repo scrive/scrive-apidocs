@@ -19,6 +19,7 @@ window.ApiCall = Backbone.Model.extend({
         isCancel : function() {return false;},
         isDelete : function() {return false;},
         isGet : function() {return false;},
+        isGetHistory : function() {return false;},
         isList : function() {return false;},
         isDownloadFile : function() {return false;},
         isDownloadMainFile : function() {return false;},
