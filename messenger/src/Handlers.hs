@@ -25,7 +25,7 @@ router rng conf routes = withPostgreSQL (mscDBConfig conf) $ do
 
 handlers :: Route (Messenger Response)
 handlers = choice [
-    dir "sms" $ dir "globalmouth" $ hPost handleGlobalMouthEvents
+    dir "sms" $ dir "globalmouth" $ hGet handleGlobalMouthEvents
   ]
   where
-    hPost = path POST id
+    hGet = path GET id
