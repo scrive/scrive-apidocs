@@ -53,7 +53,7 @@ wholePage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body>
+      <body $if(custombackground)$style="background:$custombackground$;"$endif$>
        $header()$
        $flashmessages()$
        $content:noescape()$
@@ -108,10 +108,41 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 <!-- end Mixpanel -->
 ####
 pageFooter=
+<style>
+$if(custombarscolour)$
+  footer.site {
+      background: $custombarscolour$;
+  }
+$endif$
+
+
+$if(custombarshighlightcolour)$
+  footer.site {
+      border-top-color: $custombarshighlightcolour$;
+  }
+$endif$
+
+$if(custombarstextcolour)$
+    footer.site nav header h4 {
+      color: $custombarstextcolour$;
+      text-shadow: none;"
+    }
+$endif$
+
+
+</style>
+
+
 <footer class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
-
+    $if(custombranding)$
+    <nav style='text-align:center;width:100%'>
+      <header>
+        <h4>$_poweredByScrive()$</h4>
+      </header>
+     </nav>
+    $else$
     <div class="visions">
       <p>Visions made in Sweden. Built by experts from around the
         world. </p>
@@ -226,11 +257,10 @@ pageFooter=
         </ul>
       </div>
     </nav>
+  $endif$
   </div>
 </footer>
 
-<!-- Google Code for Tagg f&ouml;r ommarknadsf&ouml;ring -->
-<!-- Remarketing tags may not be associated with personally identifiable information or placed on pages related to sensitive categories. For instructions on adding this tag and more information on the above requirements, read the setup guide: google.com/ads/remarketingsetup -->
 <script type="text/javascript">
 /* <![CDATA[ */
 var google_conversion_id = 1009530676;
@@ -255,33 +285,86 @@ $if(logged)$
 </script>
 $endif$
 
+<style>
+$if(custombarshighlightcolour)$
+header.site nav ul.ct li a.page:hover {
+    border-top-color: $custombarshighlightcolour$;
+    color: $custombarshighlightcolour$;
+}
+header.site nav {
+    border-top-color: $custombarshighlightcolour$;
+    border-bottom-color:$custombarshighlightcolour$;
+}
+
+header.site nav ul.ct li {
+    border-color: $custombarshighlightcolour$;
+}
+$endif$
+
+$if(custombarstextcolour)$
+  header.site nav ul.ct li a.page  {
+    color: $custombarstextcolour$;
+    text-shadow: none;"
+  }
+$endif$
+
+
+$if(custombarscolour)$
+  header.site {
+    background: none repeat scroll 0 0 $custombarscolour$;
+    border-top-color:$custombarscolour$;
+  }
+$endif$
+
+</style>
+
+
+
 <header class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <nav>
     <ul class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
       <li id="branding">
-        <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"/></a>
+        <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="22" $endif$ /></a>
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
-      <li class="float-right">
-        <a class="page js-logout" href="$linklogout$">$_headerLogOut()$</a>
+      <li class="float-right" >
+        <a class="page js-logout"  href="$linklogout$">$_headerLogOut()$</a>
       </li>
-      <li class="float-right"><a class="page" id='page-account' href="$linkaccount$">$_headerAccount()$</a></li>
-      <li class="page-first float-right"><a class="s-archive page" id='page-archive' href="$linkissue$">$_headerArchive()$</a></li>
-      <li class="session-create float-right">
-        <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
+      <li class="float-right" >
+          <a class="page" id='page-account'  href="$linkaccount$">$_headerAccount()$</a>
+      </li>
+      <li class="page-first float-right" >
+          <a class="s-archive page"  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
       </li>
       <li class="session-create float-right">
-        <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
+          <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
+      </li>
+      <li class="session-create float-right">
+          <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
       </li>
       $else$
-      <li class="page-first float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
-      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
-      <li class="float-left"><a class="page price-plan-page-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
-      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
-      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a></li>
-      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
-      <li class="float-left"><a class="page last-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
+      <li class="page-first float-left" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a>
+      </li>
+      <li class="float-left" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a>
+      </li>
+      <li class="float-left" >
+          <a class="page price-plan-page-link"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a>
+      </li>
+      <li class="float-left" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a>
+      </li>
+      <li class="float-left" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a>
+      </li>
+      <li class="float-left" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a>
+      </li>
+      <li class="float-left"  >
+          <a class="page last-link"   href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a>
+      </li>
       <li class="session-login float-right">
         <a class="button button-small" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
         <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>

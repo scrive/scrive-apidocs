@@ -37,6 +37,10 @@ import Version
 import Text.JSON
 import Utils.HTTP
 import Analytics.Include
+import DB
+import Company.Model
+import User.Model
+import Control.Monad
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -75,7 +79,6 @@ renderFromBodyThin title content = do
   clearFlashMsgs
   return res
 
-
 {- |
    Renders some page body xml into a complete page of xml
 -}
@@ -86,12 +89,39 @@ pageFromBody :: Kontrakcja m
              -> String
              -> String
              -> m String
-pageFromBody thin ctx ad title bodytext =
+pageFromBody thin ctx ad title bodytext = do
+  mcompany <- companyForPage
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
     standardPageFields ctx title ad
     F.valueM "httplink" $ getHttpHostpart
+    when (isJust mcompany) $
+      brandingFields (fromJust mcompany)
+
+companyForPage  :: Kontrakcja m => m (Maybe Company)
+companyForPage = do
+  ctx <- getContext
+  case (ctxmaybeuser ctx) of
+       Nothing -> return Nothing
+       Just user -> do
+         mcompany <- dbQuery $ GetCompanyByUserID (userid user)
+         case mcompany of
+              Nothing -> return Nothing
+              Just company -> return $ Just $ company
+
+brandingFields ::  Kontrakcja m => Company -> Fields m ()
+brandingFields company = do
+  F.value "customlogo" $ isJust $ companysignviewlogo $ companyui $ company
+  F.value "customlogolink" $ show $ LinkCompanySignViewLogo $ companyid company
+  F.value "custombranding" $     (isJust $ companysignviewbarscolour $ companyui $ company)
+                              || (isJust $ companysignviewbarstextcolour $ companyui $ company)
+                              || (isJust $ companysignviewtextcolour $ companyui $ company)
+                              || (isJust $ companysignviewlogo $ companyui $ company)
+  F.value "custombarscolour" $ companysignviewbarscolour $ companyui $ company
+  F.value "custombarstextcolour" $ companysignviewbarstextcolour $ companyui $ company
+  F.value "custombarshighlightcolour" $ companysignviewtextcolour $ companyui $ company
+  F.value "custombackground" $ companysignviewbackgroundcolour $ companyui $ company
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
