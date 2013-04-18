@@ -50,7 +50,7 @@ createExternalSender name user password = Sender { senderName = name, sendSMS = 
     send sms@ShortMessage{..} = do
       liftIO $ do
         Log.messengerServer $ show sms
-        sendSMS2 (user,password) smOriginator smMSISDN smBody (maybe "" show smSignatoryLinkID)
+        sendSMS2 (user,password) smOriginator smMSISDN smBody (show smID)
 
 sendSMS2 :: (String, String) -> String -> String -> String -> String -> IO Bool
 sendSMS2 (user, password) originator msisdn body ref = do

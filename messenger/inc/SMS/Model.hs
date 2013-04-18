@@ -122,6 +122,6 @@ instance MonadDB m => DBUpdate m DeleteSMS Bool where
 data MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
 instance MonadDB m => DBUpdate m MarkSMSEventAsRead Bool where
   update (MarkSMSEventAsRead eid) =
-    kRun01 $ sqlUpdate "mail_events" $ do
+    kRun01 $ sqlUpdate "sms_events" $ do
       sqlSetCmd "event_read" "now()"
       sqlWhereEq "id" eid

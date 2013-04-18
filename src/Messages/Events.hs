@@ -46,10 +46,12 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ processEvent
     processEvent (eid, smsid, eventType, Just slid) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
 
+      Log.cron $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
+
       mdoc <- dbQuery $ GetDocumentBySignatoryLinkID slid
       case mdoc of
         Nothing -> do
-          Log.debug $ "No document with signatory link id = " ++ show slid
+          Log.cron $ "No document with signatory link id = " ++ show slid
           deleteSMS smsid
         Just doc -> do
           let msl = getSigLinkFor doc slid
@@ -63,7 +65,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ processEvent
               -- success/failure for old signatory address, so we need to compare
               -- addresses here (for dropped/bounce events)
               handleEv (GlobalMouthEvent phone ev) = do
-                Log.debug $ signphone ++ " == " ++ phone
+                Log.cron $ signphone ++ " == " ++ phone
                 runTemplatesT (getLang doc, templates) $ case ev of
                   GM_Delivered -> handleDeliveredInvitation (host, mc) doc slid
                   GM_Undelivered _ -> when (signphone == phone) $ handleUndeliveredInvitation (host, mc) doc slid
@@ -81,6 +83,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ processEvent
 
 handleDeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
 handleDeliveredInvitation (_hostpart, _mc) doc signlinkid = do
+  Log.cron $ "handleDeliveredInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       time <- getMinutesTime
@@ -91,6 +94,7 @@ handleDeliveredInvitation (_hostpart, _mc) doc signlinkid = do
 
 handleUndeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MonadBase IO m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
+  Log.cron $ "handleUndeliveredInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       time <- getMinutesTime
