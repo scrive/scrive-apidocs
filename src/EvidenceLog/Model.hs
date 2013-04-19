@@ -245,9 +245,9 @@ data EvidenceEventType =
   InvitationEvidence                              |
   SignableFromDocumentIDWithUpdatedAuthorEvidence |
   ArchiveDocumentEvidence                         |
-  ResetSignatoryDetailsEvidence                   |
+  ResetSignatoryDetailsEvidence                   | -- not used anymore
   AdminOnlySaveForUserEvidence                    |
-  SignableFromDocumentEvidence                    |
+  SignableFromDocumentEvidence                    | -- not used anymore
   TemplateFromDocumentEvidence                    |
   AttachCSVUploadEvidence                         |
   SendToPadDevice                                 |
