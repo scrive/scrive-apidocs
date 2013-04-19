@@ -142,6 +142,7 @@ kontraMigrations = [
   , dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields
   , addObjectVersionToDocuments
   , addShouldBeFilledBySenderColumnToSignatoryLinkFields
+  , addCustomBrandingOptions
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

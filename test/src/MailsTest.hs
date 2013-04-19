@@ -58,6 +58,11 @@ testBrandedDocumentMails mailTo = do
       , companysignviewbarscolour = Nothing
       , companysignviewbarstextcolour = Nothing
       , companysignviewbackgroundcolour = Nothing
+      , companycustomlogo  = Nothing
+      , companycustombarscolour = Nothing
+      , companycustombarstextcolour = Nothing
+      , companycustombarssecondarycolour = Nothing
+      , companycustombackgroundcolour = Nothing
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
   sendDocumentMails mailTo author

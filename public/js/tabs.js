@@ -21,7 +21,7 @@ window.Tab = Backbone.Model.extend({
   ,
   initialize : function(args){
        var self = this;
-       if (this.pagehash() != undefined && window.location.hash == "#" + this.pagehash())
+       if (this.currentHashMatches())
           this.set({active: true}, {silent: true});
 
        if (this.active())
@@ -32,6 +32,19 @@ window.Tab = Backbone.Model.extend({
   },
   pagehash : function() {
       return this.get("pagehash");
+  },
+  currentHashMatches : function() {
+    if (this.pagehash() == undefined)
+        return false;
+    else if (this.pagehash() instanceof Array) {
+        for(var i = 0; i < this.pagehash().length; i++) {
+          if (window.location.hash == "#" + this.pagehash()[i])
+            return true;
+        }
+        return false;
+    }
+    else
+      return window.location.hash == "#" + this.pagehash()   ;
   },
   iconClass : function() {
       return this.get("iconClass");
@@ -46,7 +59,10 @@ window.Tab = Backbone.Model.extend({
       this.set({active: bool});
       if (bool) {
           if (this.pagehash() != undefined)
-            window.location.hash = this.pagehash();
+            if (this.pagehash() instanceof Array)
+              window.location.hash = this.pagehash()[0];
+            else
+              window.location.hash = this.pagehash();
           this.get("onActivate")();
       }
   },
@@ -96,7 +112,7 @@ var Tabs = Backbone.Model.extend({
    {
         var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
-            tabs[i].setActive(newtab === tabs[i]);
+            tabs[i].setActive(newtab == tabs[i]);
         this.trigger("change");
    },
    activateNext : function() {
@@ -232,14 +248,15 @@ window.KontraTabs = function(args){
                     });
         $(window).hashchange(function() {
          _.each(self.model.tabs(), function(tab) {
-          if (tab.pagehash() != undefined && window.location.hash == "#" + tab.pagehash() && !tab.active())
+          if (tab.currentHashMatches() && !tab.active())
             self.model.activate(tab);
           });
         });
 
         return {el: function() {return self.view.el;},
                 next: function() {self.model.activateNext();},
-                activate: function(tab) {self.model.activate(tab);}};
+                activate: function(tab) {self.model.activate(tab);},
+                activateFirst: function() {self.model.activate(self.model.tabs()[0]);}};
 };
 
 

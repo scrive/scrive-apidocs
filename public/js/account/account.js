@@ -86,7 +86,7 @@ var AccountModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.account.companySettings,
                         elems: [function() {return $(account.companySettings().el());}],
-                        pagehash : "company",
+                        pagehash : ["branding-email","branding-signview", "branding-service"],
                         onActivate : function() {
                             account.companySettings().refresh();
                             mixpanel.register({Subcontext : 'Company settings tab'});

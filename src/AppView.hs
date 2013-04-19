@@ -112,16 +112,12 @@ companyForPage = do
 
 brandingFields ::  Kontrakcja m => Company -> Fields m ()
 brandingFields company = do
-  F.value "customlogo" $ isJust $ companysignviewlogo $ companyui $ company
-  F.value "customlogolink" $ show $ LinkCompanySignViewLogo $ companyid company
-  F.value "custombranding" $     (isJust $ companysignviewbarscolour $ companyui $ company)
-                              || (isJust $ companysignviewbarstextcolour $ companyui $ company)
-                              || (isJust $ companysignviewtextcolour $ companyui $ company)
-                              || (isJust $ companysignviewlogo $ companyui $ company)
-  F.value "custombarscolour" $ companysignviewbarscolour $ companyui $ company
-  F.value "custombarstextcolour" $ companysignviewbarstextcolour $ companyui $ company
-  F.value "custombarshighlightcolour" $ companysignviewtextcolour $ companyui $ company
-  F.value "custombackground" $ companysignviewbackgroundcolour $ companyui $ company
+  F.value "customlogo" $ isJust $ companycustomlogo $ companyui $ company
+  F.value "customlogolink" $ show $ LinkCompanyCustomLogo $ companyid company
+  F.value "custombarscolour" $ companycustombarscolour $ companyui $ company
+  F.value "custombarstextcolour" $ companycustombarstextcolour $ companyui $ company
+  F.value "custombarshighlightcolour" $ companycustombarssecondarycolour $ companyui $ company
+  F.value "custombackground" $ companycustombackgroundcolour $ companyui $ company
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja

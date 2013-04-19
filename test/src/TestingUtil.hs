@@ -102,6 +102,11 @@ instance Arbitrary Company where
         , companysignviewbarscolour = Nothing
         , companysignviewbarstextcolour = Nothing
         , companysignviewbackgroundcolour = Nothing
+        , companycustomlogo  = Nothing
+        , companycustombarscolour = Nothing
+        , companycustombarstextcolour = Nothing
+        , companycustombarssecondarycolour = Nothing
+        , companycustombackgroundcolour = Nothing
       }
 
 instance Arbitrary CompanyID where

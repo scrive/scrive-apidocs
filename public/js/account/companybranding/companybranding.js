@@ -53,16 +53,48 @@ window.CompanyBrandingModel = Backbone.Model.extend({
       if (!this.ready()) return;
       var companybranding = this;
       var companyui = this.companyui();
-      this.set({ "emailBranding" : new CompanyBrandingEmail({companyui : companyui})}, {silent: true});
-      this.set({ "signviewBranding" : new CompanyBrandingSignView({companyui : companyui})}, {silent: true});
-      this.set({ "editable" : companyui.editable() }, {silent: true});
+      var emailBranding = new CompanyBrandingEmail({companyui : companyui});
+      var signviewBranding = new CompanyBrandingSignView({companyui : companyui});
+      var serviceBranding = new CompanyBrandingServiceView({companyui : companyui});
+
+      var tabs = new KontraTabs({
+            tabs: [
+                new Tab({
+                    name  : localization.companyBranding.emailBranding,
+                    pagehash : "branding-email",
+                    elems : [emailBranding.el()]
+                  }),
+                new Tab({
+                    name  : localization.companyBranding.signviewBranding,
+                    pagehash :  "branding-signview",
+                    elems : [signviewBranding.el()]
+                  }),
+                new Tab({
+                    name  : localization.companyBranding.serviceBranding,
+                    pagehash :  "branding-service",
+                    elems : [serviceBranding.el()]
+                  })
+                ]
+        });
+      this.set({ "emailBranding" : emailBranding ,
+                 "signviewBranding" : signviewBranding,
+                 "serviceBranding" : serviceBranding,
+                 "tabs" : tabs,
+                 "editable" : companyui.editable()
+               }, {silent: true});
       this.trigger("reset");
+    },
+    tabs : function() {
+      return this.get("tabs");
     },
     emailBranding: function() {
       return this.get("emailBranding");
     },
     signviewBranding: function() {
       return this.get("signviewBranding");
+    },
+    serviceBranding: function() {
+      return this.get("serviceBranding");
     },
     editable: function() {
       return this.get("editable");
@@ -99,7 +131,12 @@ window.CompanyBrandingModel = Backbone.Model.extend({
         companysignviewbarscolour: this.signviewBranding().signviewbarscolour().customised() ? this.signviewBranding().signviewbarscolour().colour() : '',
         companysignviewbarstextcolour: this.signviewBranding().signviewbarstextcolour().customised() ? this.signviewBranding().signviewbarstextcolour().colour() : '',
         companysignviewbackgroundcolour: this.signviewBranding().signviewbackgroundcolour().customised() ? this.signviewBranding().signviewbackgroundcolour().colour() : '',
-        companysignviewlogo: this.signviewBranding().signviewlogo().customised() ? this.signviewBranding().signviewlogo().logo() : ''
+        companysignviewlogo: this.signviewBranding().signviewlogo().customised() ? this.signviewBranding().signviewlogo().logo() : '',
+        companycustomlogo: this.serviceBranding().customlogo().customised() ? this.serviceBranding().customlogo().logo() : '',
+        companycustombarscolour :this.serviceBranding().custombarscolour().customised() ? this.serviceBranding().custombarscolour().colour() : '',
+        companycustombarstextcolour : this.serviceBranding().custombarstextcolour().customised() ? this.serviceBranding().custombarstextcolour().colour() : '',
+        companycustombarssecondarycolour : this.serviceBranding().custombarssecondarycolour().customised() ? this.serviceBranding().custombarssecondarycolour().colour() : '',
+        companycustombackgroundcolour : this.serviceBranding().custombackgroundcolour().customised() ? this.serviceBranding().custombackgroundcolour().colour() : ''
       });
     }
 });
@@ -125,7 +162,11 @@ window.CompanyBrandingView = Backbone.View.extend({
       }
     }).input();
   },
+  clean : function() {
+    $(this.el).children().detach();
+  },
   render: function() {
+    console.log("Rerendering")
     var model = this.model;
 
     if (!model.ready() || model.emailBranding() == undefined || model.signviewBranding() == undefined) {
@@ -134,23 +175,7 @@ window.CompanyBrandingView = Backbone.View.extend({
     $(this.el).children().detach();
     var container = $("<div class='tab-content companybranding' />");
     $(this.el).append(container);
-    var tabs = new KontraTabs({
-            tabs: [
-                new Tab({
-                    name  : localization.companyBranding.emailBranding,
-                    onActivate : function() {
-                    },
-                    elems : [model.emailBranding().el()]
-                  }),
-                new Tab({
-                    name  : localization.companyBranding.signviewBranding,
-                    onActivate : function() {
-                    },
-                    elems : [model.signviewBranding().el()]
-                  })
-                ]
-        });
-    container.append(tabs.el());
+    container.append(model.tabs().el());
 
     container.append($("<div class='float-right save'/>").append(this.saveButton()));
     $(this.el).append("<div class='clearfix'></div>");
@@ -162,7 +187,7 @@ window.CompanyBranding = function(args) {
     var model = new CompanyBrandingModel(args);
     var view = new CompanyBrandingView({ model: model, el:$("<div class='tab-container account'/>") });
     return {
-      refresh: function() {model.refresh();},
+      refresh: function() {view.clean(); model.refresh();},
       el : function() { return $(view.el); }
     };
 };

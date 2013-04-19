@@ -123,9 +123,9 @@ $if(custombarshighlightcolour)$
 $endif$
 
 $if(custombarstextcolour)$
-    footer.site nav header h4 {
+    footer.site .poweredbyscrive {
       color: $custombarstextcolour$;
-      text-shadow: none;"
+      text-shadow: none;
     }
 $endif$
 
@@ -136,13 +136,18 @@ $endif$
 <footer class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
-    $if(custombranding)$
-    <nav style='text-align:center;width:100%'>
-      <header>
-        <h4>$_poweredByScrive()$</h4>
-      </header>
-     </nav>
+    $if(logged)$
+
+      <div class="poweredbyscrive" style="text-align: center; width: 100%;">
+        $if(!custombarscolour)$
+        <div class='text'>Powered by <div class='logo'/></div>
+        $else$
+        <div class='text'>Powered by Scrive</div>
+        $endif$
+      </div>
+
     $else$
+
     <div class="visions">
       <p>Visions made in Sweden. Built by experts from around the
         world. </p>
@@ -259,8 +264,9 @@ $endif$
     </nav>
   $endif$
   </div>
-</footer>
 
+<!-- Google Code for Tagg f&ouml;r ommarknadsf&ouml;ring -->
+<!-- Remarketing tags may not be associated with personally identifiable information or placed on pages related to sensitive categories. For instructions on adding this tag and more information on the above requirements, read the setup guide: google.com/ads/remarketingsetup -->
 <script type="text/javascript">
 /* <![CDATA[ */
 var google_conversion_id = 1009530676;
@@ -277,6 +283,7 @@ var google_remarketing_only = true;
 </div>
 </noscript>
 
+</footer>
 ####
 header=
 $if(logged)$

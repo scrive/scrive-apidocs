@@ -168,6 +168,7 @@ set systemPage
  js   js/account/companybranding/companybrandingutils.js
  js   js/account/companybranding/companybrandingemail.js
  js   js/account/companybranding/companybrandingsignview.js
+ js   js/account/companybranding/companybrandingservice.js
  js   js/account/companybranding/companybranding.js
  js   js/account/account.js
  js   js/blocking.js

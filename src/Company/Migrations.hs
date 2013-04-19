@@ -122,3 +122,16 @@ addSignviewBrandingOptions =
       kRunRaw "ALTER TABLE companies DROP COLUMN bars_textcolour"
       kRunRaw "ALTER TABLE companies DROP COLUMN logo"
   }
+
+addCustomBrandingOptions :: MonadDB m => Migration m
+addCustomBrandingOptions =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 10
+  , mgrDo = do
+      kRunRaw "ALTER TABLE companies ADD COLUMN custom_logo BYTEA NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN custom_barscolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN custom_barstextcolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN custom_barssecondarycolour TEXT NULL"
+      kRunRaw "ALTER TABLE companies ADD COLUMN custom_backgroundcolour TEXT NULL"
+  }

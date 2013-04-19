@@ -244,19 +244,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.zip"
   <> ", c.city"
   <> ", c.country"
-  <> ", c.email_font"
-  <> ", c.email_bordercolour"
-  <> ", c.email_buttoncolour"
-  <> ", c.email_emailbackgroundcolour"
-  <> ", c.email_backgroundcolour"
-  <> ", c.email_textcolour"
-  <> ", c.email_logo"
-  <> ", c.signview_logo"
-  <> ", c.signview_textcolour"
-  <> ", c.signview_textfont"
-  <> ", c.signview_barscolour"
-  <> ", c.signview_barstextcolour"
-  <> ", c.signview_backgroundcolour"
   <> ", email_domain"
   <> ", ip_address_mask_list"
   -- InviteInfo:
@@ -277,11 +264,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
      email lang company_name company_number is_free cid eid
-     name number address zip' city country email_font
-     email_bordercolour email_buttoncolour email_emailbackgroundcolour
-     email_backgroundcolour email_textcolour email_logo signview_logo
-     signview_textcolour signview_textfont signview_barscolour
-     signview_barstextcolour signview_backgroundcolour email_domain ip_address_mask inviter_id
+     name number address zip' city country email_domain ip_address_mask inviter_id
      invite_time invite_type
      = (
        User {
@@ -323,19 +306,24 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companyipaddressmasklist = maybe [] $(read) ip_address_mask
                 }
               , companyui = CompanyUI {
-                  companyemailfont = email_font
-                , companyemailbordercolour = email_bordercolour
-                , companyemailbuttoncolour = email_buttoncolour
-                , companyemailemailbackgroundcolour = email_emailbackgroundcolour
-                , companyemailbackgroundcolour = email_backgroundcolour
-                , companyemailtextcolour = email_textcolour
-                , companyemaillogo = email_logo
-                , companysignviewlogo = signview_logo
-                , companysignviewtextcolour = signview_textcolour
-                , companysignviewtextfont = signview_textfont
-                , companysignviewbarscolour = signview_barscolour
-                , companysignviewbarstextcolour = signview_barstextcolour
-                , companysignviewbackgroundcolour = signview_backgroundcolour
+                  companyemailfont = Nothing
+                , companyemailbordercolour = Nothing
+                , companyemailbuttoncolour = Nothing
+                , companyemailemailbackgroundcolour = Nothing
+                , companyemailbackgroundcolour = Nothing
+                , companyemailtextcolour = Nothing
+                , companyemaillogo = Nothing
+                , companysignviewlogo = Nothing
+                , companysignviewtextcolour = Nothing
+                , companysignviewtextfont = Nothing
+                , companysignviewbarscolour = Nothing
+                , companysignviewbarstextcolour = Nothing
+                , companysignviewbackgroundcolour = Nothing
+                , companycustomlogo = Nothing
+                , companycustombarscolour = Nothing
+                , companycustombarstextcolour = Nothing
+                , companycustombarssecondarycolour = Nothing
+                , companycustombackgroundcolour = Nothing
                 }
               }
             _ -> Nothing

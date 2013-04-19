@@ -20,7 +20,12 @@ window.CompanyUI = Backbone.Model.extend({
         signviewtextfont: args.companysignviewtextfont,
         signviewbarscolour: args.companysignviewbarscolour,
         signviewbarstextcolour: args.companysignviewbarstextcolour,
-        signviewbackgroundcolour: args.companysignviewbackgroundcolour
+        signviewbackgroundcolour: args.companysignviewbackgroundcolour,
+        customlogo: args.companycustomlogo,
+        custombarscolour: args.companycustombarscolour,
+        custombarstextcolour: args.companycustombarstextcolour,
+        custombarssecondarycolour : args.companycustombarssecondarycolour,
+        custombackgroundcolour: args.companycustombackgroundcolour
       }, {silent: true});
     }
   },
@@ -63,6 +68,21 @@ window.CompanyUI = Backbone.Model.extend({
   signviewbackgroundcolour: function() {
     return this.get('signviewbackgroundcolour');
   },
+  customlogo: function() {
+    return this.get('customlogo');
+  },
+  custombarscolour: function() {
+    return this.get('custombarscolour');
+  },
+  custombarstextcolour: function() {
+    return this.get('custombarstextcolour');
+  },
+  custombarssecondarycolour: function() {
+    return this.get('custombarssecondarycolour');
+  },
+  custombackgroundcolour: function() {
+    return this.get('custombackgroundcolour');
+  },
   editable: function() {
     return this.get('editable');
   },
@@ -81,6 +101,11 @@ window.CompanyUI = Backbone.Model.extend({
       signviewbarscolour: args.companysignviewbarscolour,
       signviewbarstextcolour: args.companysignviewbarstextcolour,
       signviewbackgroundcolour: args.companysignviewbackgroundcolour,
+      customlogo: args.companycustomlogo,
+      custombarscolour: args.companycustombarscolour,
+      custombarstextcolour: args.companycustombarstextcolour,
+      custombarssecondarycolour : args.companycustombarssecondarycolour,
+      custombackgroundcolour: args.companycustombackgroundcolour,
       editable: args.editable,
       ready: true
     };

@@ -106,6 +106,11 @@ companyUIJson company editable = runJSONGenT $ do
     value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui $ company
     value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui $ company
     value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui $ company
+    value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui $ company)
+    value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui company
+    value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui company
+    value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui company
+    value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui company
     value "editable" editable
 
 companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> Bool -> m JSValue

@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 10
+  , tblVersion = 11
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -30,6 +30,11 @@ tableCompanies = tblTable {
        , ("signview_barscolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("signview_barstextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("signview_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("custom_logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("custom_barscolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("custom_barstextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("custom_barssecondarycolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("custom_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
@@ -56,6 +61,11 @@ tableCompanies = tblTable {
           <> ", signview_barscolour TEXT NULL"
           <> ", signview_barstextcolour TEXT NULL"
           <> ", signview_backgroundcolour TEXT NULL"
+          <> ", custom_logo BYTEA      NULL"
+          <> ", custom_barscolour TEXT NULL"
+          <> ", custom_barstextcolour TEXT NULL"
+          <> ", custom_barssecondarycolour TEXT NULL"
+          <> ", custom_backgroundcolour TEXT NULL"
           <> ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           <> ")"
         return TVRcreated

@@ -67,6 +67,11 @@ data CompanyUI = CompanyUI {
   , companysignviewbarscolour :: Maybe String
   , companysignviewbarstextcolour :: Maybe String
   , companysignviewbackgroundcolour :: Maybe String
+  , companycustomlogo  :: Maybe Binary
+  , companycustombarscolour :: Maybe String
+  , companycustombarstextcolour :: Maybe String
+  , companycustombarssecondarycolour :: Maybe String
+  , companycustombackgroundcolour :: Maybe String
 } deriving (Eq, Ord, Show)
 
 data CompanyFilter
@@ -195,6 +200,11 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
       sqlSet "signview_barscolour" $ companysignviewbarscolour cui
       sqlSet "signview_barstextcolour" $ companysignviewbarstextcolour cui
       sqlSet "signview_backgroundcolour" $ companysignviewbackgroundcolour cui
+      sqlSet "custom_logo" $ companycustomlogo cui
+      sqlSet "custom_barscolour" $ companycustombarscolour cui
+      sqlSet "custom_barstextcolour" $ companycustombarstextcolour cui
+      sqlSet "custom_barssecondarycolour" $ companycustombarssecondarycolour cui
+      sqlSet "custom_backgroundcolour" $ companycustombackgroundcolour cui
       sqlWhereEq "id" cid
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID ExternalCompanyID
@@ -248,6 +258,11 @@ selectCompaniesSelectors = do
   sqlResult "companies.signview_barscolour"
   sqlResult "companies.signview_barstextcolour"
   sqlResult "companies.signview_backgroundcolour"
+  sqlResult "companies.custom_logo"
+  sqlResult "companies.custom_barscolour"
+  sqlResult "companies.custom_barstextcolour"
+  sqlResult "companies.custom_barssecondarycolour"
+  sqlResult "companies.custom_backgroundcolour"
 
 
 fetchCompanies :: MonadDB m => m [Company]
@@ -258,7 +273,8 @@ fetchCompanies = kFold decoder []
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
       signview_textfont signview_barscolour signview_barstextcolour
-      signview_backgroundcolour = Company {
+      signview_backgroundcolour custom_logo custom_barscolour custom_barstextcolour
+      custom_barssecondarycolour custom_backgroundcolour  = Company {
         companyid = cid
       , companyexternalid = eid
       , companyinfo = CompanyInfo {
@@ -285,5 +301,10 @@ fetchCompanies = kFold decoder []
         , companysignviewbarscolour = signview_barscolour
         , companysignviewbarstextcolour = signview_barstextcolour
         , companysignviewbackgroundcolour = signview_backgroundcolour
+        , companycustomlogo  = custom_logo
+        , companycustombarscolour = custom_barscolour
+        , companycustombarstextcolour = custom_barstextcolour
+        , companycustombarssecondarycolour = custom_barssecondarycolour
+        , companycustombackgroundcolour = custom_backgroundcolour
         }
       } : acc
