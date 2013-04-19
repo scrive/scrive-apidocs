@@ -350,5 +350,15 @@ contactUsVivocha=
   </ul>
 </nav>
 </aside>
-<script src="https://www.vivocha.com/a/scrive/api/vivocha.js"></script>
+$loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
+####
+loadScript=
+<script>
+  jQuery(function(){
+    var script = document.createElement( 'script' );
+    script.type = 'text/javascript';
+    script.src = "$src$";
+    jQuery("head").append( script );
+  })
+</script>
 ####
