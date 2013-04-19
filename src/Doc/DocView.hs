@@ -161,6 +161,7 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
                                     J.value "name"  n
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
+      J.value "process" $ show $ toDocumentProcess (documenttype doc)
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
                                     then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
@@ -171,7 +172,6 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
         J.value "signviewbarstextcolour" $ companysignviewbarstextcolour . companyui  =<< mcompany
         J.value "signviewbackgroundcolour" $ companysignviewbackgroundcolour . companyui  =<< mcompany
         J.value "author" $ authorJSON mauthor mcompany
-        J.value "process" $ show $ toDocumentProcess (documenttype doc)
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
         J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
