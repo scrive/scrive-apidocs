@@ -109,6 +109,7 @@ set systemPage
  js   js/documents.js
  js   js/takeScreenshot.js
  js   js/confirmationsWithEmails.js
+ js   js/confirmationsWithSMS.js
  js   js/authorview/authorviewtitlebox.js
  js   js/authorview/authorsviewhistory.js
  js   js/authorview/authorviewsignatoriesattachments.js

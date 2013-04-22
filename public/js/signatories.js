@@ -444,6 +444,14 @@ window.Signatory = Backbone.Model.extend({
                 editWidth: (this.canSign() && !this.hasSigned()) ? 300 : 540
         });
     },
+    remindSMS: function() {
+        return new SMS({
+                document: this.document(),
+                signatory: this,
+                type: "remind",
+                editWidth: 300
+        });
+    },
     rejectMail: function() {
         return new Mail({
                         document: this.document(),

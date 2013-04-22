@@ -119,7 +119,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       statusbox.append(space);
       return statusbox;
   },
-  remidenMailOption: function() {
+  remiderOption: function() {
          var signatory = this.model.signatory();
          var button = $("<label class='clickable prepareToSendReminderMail'/>");
          var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
@@ -129,21 +129,39 @@ var AuthorViewSignatoryView = Backbone.View.extend({
          button.click(function() {
              mixpanel.track('Click send reminder',
                             {'Signatory index':signatory.signIndex()});
-             ConfirmationWithEmail.popup({
-                title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
-                mail: signatory.remindMail(),
-                acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-                editText: localization.reminder.formOwnMessage,
-                rejectText: localization.cancel,
-                onAccept: function(customtext) {
-                    trackTimeout('Accept',
-                                 {'Accept' : 'send reminder',
-                                  'Signatory index' : signatory.signIndex()},
-                                 function() {
-                                     signatory.remind(customtext).send();
-                                 });
-                }
-            });
+             if( signatory.emailDelivery()) {
+                 ConfirmationWithEmail.popup({
+                     title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
+                     mail: signatory.remindMail(),
+                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                     editText: localization.reminder.formOwnMessage,
+                     rejectText: localization.cancel,
+                     onAccept: function(customtext) {
+                         trackTimeout('Accept',
+                                      {'Accept' : 'send reminder',
+                                       'Signatory index' : signatory.signIndex()},
+                                      function() {
+                                          signatory.remind(customtext).send();
+                                      });
+                     }
+                 });
+             } else if( signatory.mobileDelivery()) {
+                 ConfirmationWithSMS.popup({
+                     title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
+                     sms: signatory.remindSMS(),
+                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                     editText: localization.reminder.formOwnMessage,
+                     rejectText: localization.cancel,
+                     onAccept: function(customtext) {
+                         trackTimeout('Accept',
+                                      {'Accept' : 'send reminder',
+                                       'Signatory index' : signatory.signIndex()},
+                                      function() {
+                                          signatory.remind(customtext).send();
+                                      });
+                     }
+                 });
+             }
          });
          return button;
 
@@ -263,7 +281,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     var signatory = this.model.signatory();
     var optionbox = $("<div class='optionbox'/>");
     if (this.model.hasRemindOption())
-      optionbox.append(this.remidenMailOption());
+      optionbox.append(this.remiderOption());
     if (this.model.hasChangeEmailOption())
       optionbox.append(this.changeEmailOption());
     if (this.model.hasGiveForSigningOnThisDeviceOption())

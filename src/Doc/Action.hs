@@ -393,7 +393,8 @@ sendReminderEmail custommessage ctx actor doc siglink = do
                                              then mailattachments
                                              else []
                              })
-    (notifySMS_ "_smsReminder" doc siglink)
+    (notifySMS "_smsReminder" doc siglink $ do
+       F.value "link" $ ctxhostpart ctx ++ show (LinkSignDoc doc siglink))
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
     dbUpdate $ PostReminderSend doc siglink custommessage actor
