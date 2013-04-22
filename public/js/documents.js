@@ -447,28 +447,34 @@ window.Document = Backbone.Model.extend({
     },
     setStandardAuthentication: function() {
           this.set({"authentication": "standard"}, {silent: true});
+          _.each(this.signatories(), function(sig) {sig.set({"authentication":"standard"}, {silent: true});});
           this.trigger("change:authenticationdelivery");
     },
     setElegAuthentication : function() {
           this.set({"authentication":"eleg"}, {silent: true});
+          _.each(this.signatories(), function(sig) {sig.set({"authentication":"eleg"}, {silent: true});});
           this.trigger("change:authenticationdelivery");
     },
     setEmailDelivery: function() {
           this.set({"delivery": "email"}, {silent: true});
+          _.each(this.signatories(), function(sig) {sig.set({"delivery":"email"}, {silent: true});});
           this.trigger("change:authenticationdelivery");
     },
     setPadDelivery : function() {
           this.set({"delivery":"pad"}, {silent: true});
           _.each(this.signatories(), function(sig) {sig.clearAttachments();});
+          _.each(this.signatories(), function(sig) {sig.set({"delivery":"pad"}, {silent: true});});
           this.trigger("change:authenticationdelivery");
     },
     setMobileDelivery : function() {
           this.set({"delivery":"mobile"}, {silent: true});
           _.each(this.signatories(), function(sig) {sig.clearAttachments();});
+          _.each(this.signatories(), function(sig) {sig.set({"delivery":"mobile"}, {silent: true});});
           this.trigger("change:authenticationdelivery");
     },
     setAPIDelivery : function() {
           this.set({"delivery":"api"}, {silent: true});
+          _.each(this.signatories(), function(sig) {sig.set({"delivery":"api"}, {silent: true});});
           this.trigger("change:authenticationdelivery");
     },
     elegTBS: function() {
