@@ -26,6 +26,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSU
 import Utils.IO
 import Utils.Read
 import System.Exit
+import Text.Regex.TDFA
 
 data Sender = Sender {
     senderName :: String
@@ -143,8 +144,21 @@ createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
   where
     send :: CryptoRNG m => ShortMessage -> m Bool
-    send sms@ShortMessage{..} = do
-      content <- return (show sms)
+    send ShortMessage{..} = do
+
+
+      let matchResult = (match (makeRegex ("https?://[a-zA-Z_:/0-9#?]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
+      let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
+      let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ smMSISDN ++ "</title></head><body>" ++
+                    "ID: " ++ show smID ++ "<br>" ++
+                    "Token: " ++ show smToken ++ "<br>" ++
+                    "SigLinkID: " ++ maybe "" show smSignatoryLinkID ++ "<br>" ++
+                    "<br>" ++
+                    "Originator: " ++ smOriginator ++ "<br>" ++
+                    "MSISDN: " ++ smMSISDN ++ "<br>" ++
+                    "<br>" ++
+                    withClickableLinks ++
+                    "</body></html>"
       let filename = localDirectory config ++ "/SMS-" ++ show smID ++ ".html"
       liftIO $ do
         BSL.writeFile filename (BSLU.fromString content)
