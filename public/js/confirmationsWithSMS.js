@@ -19,7 +19,7 @@ window.SMS = Backbone.Model.extend({
            this.fetch({data : {mailtype: args.type},   processData:  true, cache : false});
         */
         this.set({
-            content : $("<div>").text("This is SMS text"),
+            content : $("<div>").text(localization.reminder.mobileQuestion),
             ready : true
         });
     },

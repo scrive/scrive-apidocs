@@ -67,6 +67,7 @@ javascriptLocalisation =
 					   , formHead : "$_reminderFormHead()$"
 					   , formSend :	"$_reminderFormSendReminder()$"
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
+                       , mobileQuestion : "$_reminderByMobileQuestion()$"
 					}
              , sign :  {
                           eleg : {

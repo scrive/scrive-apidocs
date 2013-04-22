@@ -710,6 +710,7 @@
 "_padDelivery","Personligt möte","In person delivery"
 "_padSigningOnSameDevice","Signera på denna enhet","Give for signing on this device"
 "_mobileDelivery","Mobile","Mobile"
+"_reminderByMobileQuestion","Vill du skicka påminnelse via SMS?","Do you want to send reminder by SMS?"
 "_smsClosedNotification","Bekräftelse: $documenttitle$ är nu signerat av alla parter.","Confirmation: $documenttitle$ has now been signed by all parties."
 "_smsInvitationToAuthor","Det är din tur att signera $documenttitle$.","It is your turn to sign $documenttitle$"
 "_smsInvitationToSign","Hej $personname$, du har en inbjudan från $creatorname$ att signera $documenttitle$ på Scrive. Öppna följande länk för att läsa: $link$","Hi $personname$, you have been invited by $creatorname$ to sign $documenttitle$ on Scrive. To read it open: $link$"
