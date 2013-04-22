@@ -81,7 +81,7 @@
                 doc.afterSave( function() {
                     new Submit({
                         method : "POST",
-                        url :  "/api/frontend/mainfile/" + doc.documentid(),
+                        url :  "/api/frontend/changemainfile/" + doc.documentid(),
                         ajax: true,
                         onSend: function() {
                             
@@ -177,7 +177,7 @@
             div.append(circle);
             div.append(label);
 
-            var url = "/api/frontend/mainfile/" + document.documentid();
+            var url = "/api/frontend/changemainfile/" + document.documentid();
             var upbutton = UploadButton.init({
                 button: div,
                 name: "file",
