@@ -72,68 +72,46 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     var company = this.model;
 
     this.container = $("<div class='sample-custom-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
-    this.header = $("<div class='sample-custom-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED'/>");
-    this.header = $("<div class='sample-custom-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED'/>");
+    this.header = $("<div class='sample-custom-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED;'/>");
+    this.subheader = $("<div style='width:560px;border-top:1px solid #DEE4ED;height:0px;position:absolute;margin-top:2px;'/>")
+    this.header.append(this.subheader);
 
-    this.header1 = $('<div style="float: left; margin: 20px;"/>');
-    this.logowrapper = $("<a class='hoverable'/>");
-    this.logo = $("<img class='hoverable' src='/img/logo_email.png'/>");
+    this.header1 = $('<div style="float: left;margin-left:16px;"/>');
+    this.logowrapper = $("<a class='hoverable logo' style='line-height:62px;'/>");
+    this.logo = $("<img src='/img/logo_email.png' style='padding-top:5px;padding-bottom:5px'/>");
     this.header1.append(this.logowrapper.append(this.logo));
 
-    this.header2 = $('<div style="float: right; margin: 22px 10px;"/>');
-    this.header2.append(Button.init({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:8px"}).input())
+    this.header2 = $('<div style="float: right; margin: 23px 8px;"/>');
+    this.header2.append(Button.init({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input())
 
-    this.header3 = $('<div style="float: right; margin: 22px 10px;"/>');
-    this.header3.append(Button.init({size: 'tiny', color: 'blue', text: 'Start from templat', style:"padding: 4px 8px;font-size:8px"}).input())
+    this.header3 = $('<div style="float: right; margin: 23px 8px;"/>');
+    this.header3.append(Button.init({size: 'tiny', color: 'blue', text: 'Start from templat', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input())
 
     this.header4 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;border-right:1px solid white"/>');
-    this.header4.append("<a class='hoverable'>Archive</a>");
+    this.header4content = $("<a class='hoverable'>Archive</a>")
+    this.header4.append(this.header4content);
 
     this.header5 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;border-right:1px solid white"/>');
-    this.header5.append("<a class='hoverable'>Account</a>");
+    this.header5content = $("<a class='hoverable'>Account</a>")
+    this.header5.append(this.header5content);
+
 
     this.header6 = $('<div style="float: right;  margin: 30px 0px;height: 15px;  line-height: 15px; font-size:10px;"/>');
-    this.header6.append("<a class='hoverable'>Log out</a>");
+    this.header6content = $("<a class='hoverable'>Log out</a>")
+    this.header6.append(this.header6content);
 
     this.header.append(this.header1).append(this.header6).append(this.header5).append(this.header4).append(this.header3).append(this.header2).append($('<div style="clear:both;"/>'));
     this.header.append("<style>"
                           + ".sample-custom-view-header .hoverable {display:block;margin-top:-30px;padding-top:30px; padding-left:8px;padding-right:8px;}"
                           + ".sample-custom-view-header .hoverable:hover {border-top: 2px solid white;padding-top:28px}"
+                          + ".sample-custom-view-header .logo.hoverable {display:block;margin-top:0px;padding-top:5px;}"
+                          + ".sample-custom-view-header .logo.hoverable:hover {border-top: 2px solid white;padding-top:3px}"
                         +"</style>");
-    /*
-    this.contentheader = $('<div style="text-align: center; border: 1px solid #BABABC; background:#ffffff;font-size: 12px;font-weight: bold;"/>');
-    this.contentheader.html('WELCOME JOHN SMITH<br/>Due date 2013-01-01');
-    var documentpic = $('<img src="/img/document_example.png" style="width: 480px;margin:10px;"/>')
-                        .css("width","480px").css("margin","10px").css("border","1px solid #777777").css("box-shadow","1px 1px 5px #505050");
 
-    var document = $("<div/>").css("margin","auto").css("text-align","center");
-    document.append(documentpic);
-    var rejectbuttoncontainer = $('<div style="float: left;padding:10px;"/>');
-    var rejectbutton = Button.init({size: 'tiny',
-                                    color: 'red',
-                                    shape: "rounded",
-                                    width: 150,
-                                    text: 'Reject document',
-                                    onClick: function() {}});
-    rejectbuttoncontainer.append(rejectbutton.input());
-    var signbuttoncontainer = $('<div style="float: right;padding:10px;"/>');
-    var signbutton = Button.init({size: 'tiny',
-                                  color: 'blue',
-                                  shape: "rounded",
-                                  width: 150,
-                                  text: 'Sign document',
-                                  onClick: function() {}});
-    signbuttoncontainer.append(signbutton.input());
-    var buttonsdiv = $('<div style="height: 56px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;margin: 0 10px; background:#ffffff;box-shadow: 1px 1px 5px #505050;"/>');
-    buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
-    var contentcontent = $('<div/>').css("width","500px").css("margin","auto")
-                              .css("background-image", "url('../img/horizontal-shading-bar.png')").css("background-color","#F0F0F0")
-                              .css("background-repeat","no-repeat").css("box-shadow","1px 1px 5px #505050 inset").css("padding-bottom", "10px");
-    contentcontent.append(this.contentheader).append(document).append(buttonsdiv);
-    var contentpadding = $('<div style="height: 30px; width: 100%;"/>');
-    */
-    this.content = $('<div style="padding:20px;text-align:center">Some content here</div>');
-    /* this.content.append(contentpadding).append(contentcontent);  */
+    this.stylepeace = $("<style></style>");
+    this.header.append(this.stylepeace);
+
+    this.content = $('<div style="padding:20px;text-align:center"><img src="/img/branding-archive-sample.png"></div>');
     this.footercontent = $('<div style="text-align: center;"/>');
     this.footercontent.text('Powered by Scrive');
     this.footer = $('<div style="height: 30px; padding:10px;border-top: 1px solid #DEE4ED;font-size: 10px;"/>');
@@ -151,23 +129,24 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
       this.model.custombackgroundcolour().onChange(function(colour,customised) {self.changeBackground(colour,customised);});
       this.model.custombarscolour().onChange(function(colour) {self.changeBarsColor(colour);});
       this.model.custombarstextcolour().onChange(function(colour) {self.changeBarsTextColor(colour);});
+      this.model.custombarssecondarycolour().onChange(function(colour) {self.changeBarsSecondaryColour(colour);});
       this.model.customlogo().onChange(function(logo) {self.changeLogo(logo);});
   },
   changeLogo : function(logo) {
     var self = this;
-    this.logo.css("width","").css("height","");
-    this.logo.attr('src', logo);
-    var scaleWhenComplete = function() {
-      if (self.logo[0].complete && self.logo.width() > 0) {
-        var w = self.logo.width();
-        var h = self.logo.height();
-        self.logo.css("width", Math.ceil(3*w/5) + "px").css("height",Math.ceil(3*h/5) + "px");
+    self.logo.css("width","").css("height","").attr('src', '');
+    self.logo.attr('src', logo);
+      var scaleWhenComplete = function() {
+        if (self.logo[0].complete && self.logo.width() > 0) {
+          var w = self.logo.width();
+          var h = self.logo.height();
+          console.log("Scaling " + w + " " + h)
+          self.logo.css("width", Math.ceil(3*w/5) + "px").css("height",Math.ceil(3*h/5) + "px");
+        }
+        else setTimeout(scaleWhenComplete,10);
       }
-      else setTimeout(scaleWhenComplete,5);
-    }
-    if (!BrowserInfo.isIE8orLower()) //Scaling inlined images with css properties fails in IE
-      setTimeout(scaleWhenComplete,5);
-
+      if (!BrowserInfo.isIE8orLower()) //Scaling inlined images with css properties fails in IE
+        setTimeout(scaleWhenComplete,5);
   },
   changeBarsColor : function(color) {
     this.header.css('background-color', color);
@@ -185,11 +164,28 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     else
       this.content.css('background-color', '');
   },
+  changeBarsSecondaryColour : function(color) {
+    this.header4.css("border-color",color);
+    this.header5.css("border-color",color);
+    this.header6.css("border-color",color);
+    this.header4content.css("border-color",color);
+    this.header5content.css("border-color",color);
+    this.header6content.css("border-color",color);
+    this.logowrapper.css("border-color",color);
+    this.header.css("border-color",color);
+    this.subheader.css("border-color",color);
+    this.footer.css("border-color",color);
+    this.stylepeace.remove();
+    this.stylepeace = $("<style>.sample-custom-view-header .hoverable:hover {color: "+color+ "}</style>");
+    this.header.append(this.stylepeace);
+
+  },
   render: function() {
 
     this.changeLogo(this.model.customlogo().logo());
     this.changeBarsColor(this.model.custombarscolour().colour());
     this.changeBarsTextColor(this.model.custombarstextcolour().colour());
+    this.changeBarsSecondaryColour(this.model.custombarssecondarycolour().colour());
     this.changeBackground(this.model.custombackgroundcolour().colour(),this.model.custombackgroundcolour().customised());
   }
 });

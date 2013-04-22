@@ -145,7 +145,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
   },
   changeLogo : function(logo) {
     var self = this;
-    this.logo.css("width","").css("height","");
+    this.logo.css("width","").css("height","").attr('src', '');
     this.logo.attr('src', logo);
     var scaleWhenComplete = function() {
       if (self.logo[0].complete && self.logo.width() > 0) {
