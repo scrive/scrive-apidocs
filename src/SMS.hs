@@ -35,18 +35,9 @@ sms = SMS {
 -- latin1, but we still want messages containing such characters to be sent
 -- successfully.
 scheduleSMS :: (CryptoRNG m, MonadDB m) => SMS -> m Bool
-scheduleSMS msg@SMS{..} = case (validOriginator smsOriginator, validNumber smsMSISDN) of
-  (True, True) -> do
+scheduleSMS msg@SMS{..} = do
     now <- getMinutesTime
     token <- random
     sid <- dbUpdate $ CreateSMS token smsOriginator smsMSISDN smsBody smsSignatoryLinkID now
     Log.debug $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
     return True
-  res -> do
-    Log.error $ "SMS " ++ show msg ++ " discarded as (originator_ok, msisdn_ok) = " ++ show res
-    return False
-  where
-    validOriginator = (&&) <$> (<= 11) . length <*> all ((||) <$> isAlphaNum <*> isSpace)
-
-    validNumber ('+':rest) = length rest == 11 && all isDigit rest
-    validNumber _ = False
