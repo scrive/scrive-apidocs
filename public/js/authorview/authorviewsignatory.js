@@ -139,7 +139,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                      onAccept: function(customtext) {
                          trackTimeout('Accept',
                                       {'Accept' : 'send reminder',
-                                       'Signatory index' : signatory.signIndex()},
+                                       'Signatory index' : signatory.signIndex(),
+                                       'Delivery method' : 'Email'},
                                       function() {
                                           signatory.remind(customtext).send();
                                       });
@@ -155,7 +156,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                      onAccept: function(customtext) {
                          trackTimeout('Accept',
                                       {'Accept' : 'send reminder',
-                                       'Signatory index' : signatory.signIndex()},
+                                       'Signatory index' : signatory.signIndex(),
+                                       'Delivery method' : 'Mobile'},
                                       function() {
                                           signatory.remind(customtext).send();
                                       });
