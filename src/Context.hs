@@ -1,6 +1,7 @@
 module Context (
       Context(..),
-      anonymousContext
+      anonymousContext,
+      currentBrandedDomain
     ) where
 
 import File.FileID
@@ -21,6 +22,7 @@ import qualified Static.Resources as SR
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig)
+import BrandedDomains
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -50,6 +52,7 @@ data Context = Context
     , ctxsessionid           :: SessionID
     , ctxmixpaneltoken       :: String
     , ctxhomebase            :: String
+    , ctxbrandeddomains      :: BrandedDomains
     }
 
 -- | anonymousContext changes given context into one that does not hold any user details.
@@ -57,4 +60,6 @@ data Context = Context
 anonymousContext :: Context -> Context
 anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, ctxsessionid = tempSessionID }
 
-
+-- | Current branded domain
+currentBrandedDomain :: Context -> Maybe BrandedDomain
+currentBrandedDomain ctx = findBrandedDomain (ctxhostpart ctx) (ctxbrandeddomains ctx)

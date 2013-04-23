@@ -314,4 +314,5 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxsessionid = sesID session
         , ctxmixpaneltoken = mixpanelToken appConf
         , ctxhomebase = homebase appConf
+        , ctxbrandeddomains = brandedDomains appConf
         }

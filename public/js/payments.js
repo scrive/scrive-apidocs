@@ -519,7 +519,7 @@
 
             form.find('div.contact_info').before(form.find('div.server_errors'));
 
-            
+
             var work = true;
             var handlechargeaccount = function(data) {
                 console.log(data);

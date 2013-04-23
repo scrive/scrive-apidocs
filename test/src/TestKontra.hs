@@ -278,6 +278,7 @@ mkContext lang = do
         , ctxsessionid = tempSessionID
         , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
         , ctxhomebase = "https://staging.scrive.com"
+        , ctxbrandeddomains = []
     }
 
 -- pgsql database --

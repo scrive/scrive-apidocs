@@ -295,12 +295,15 @@ handleAccountSetupGetWithMethod uid token sm = do
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
       mcompany <-  getCompanyForUser user
+      mbd <- return $ currentBrandedDomain ctx
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
                                             F.value "userid"  $ show uid
                                             F.value "company" $ companyname <$> companyinfo <$> mcompany
-                                            F.value "signupmethod" $ show sm))
+                                            F.value "signupmethod" $ show sm
+                                            brandingFields mbd mcompany
+                                            ))
     (Just _user, Just _) -> do
       -- this case looks impossible since we delete the account request upon signing up
       -- but may it happen if they sign tos in some other way?

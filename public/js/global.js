@@ -142,21 +142,6 @@ function prepareEditor(textarea) {
   });
 }
 
-function readCookie(name) {
-  var nameEQ = name + "=";
-  var ca = document.cookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if (c.indexOf(nameEQ) == 0) {
-      return c.substring(nameEQ.length);
-    }
-  }
-  return null;
-}
-
 function parseQueryString() {
     var match,
         urlParams = {},
@@ -185,7 +170,7 @@ safeReady(function() {
     var form = $(this);
     if ($("input[name='xtoken']",form).size() == 0 && $(form).attr('method').toUpperCase() == 'POST') {
       var tokenTag = $('<input type="hidden" name="xtoken">');
-      var token = readCookie("xtoken");
+      var token = Cookies.get("xtoken");
       if (token && token.length > 0) {
         console.log(token);
         tokenTag.attr("value", token);

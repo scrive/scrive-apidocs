@@ -15,6 +15,8 @@ module AppView( kontrakcja
               , contextInfoFields
               , renderTemplateAsPage
               , localizationScript
+              , brandingFields
+              , companyForPage
               ) where
 
 import FlashMessage
@@ -32,7 +34,7 @@ import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import qualified Static.Resources as SR
 import qualified Data.ByteString.Base16 as B16
 import Data.Char
-import Data.String.Utils
+import Data.String.Utils hiding (join)
 import Version
 import Text.JSON
 import Utils.HTTP
@@ -41,6 +43,7 @@ import DB
 import Company.Model
 import User.Model
 import Control.Monad
+import BrandedDomains
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -91,13 +94,13 @@ pageFromBody :: Kontrakcja m
              -> m String
 pageFromBody thin ctx ad title bodytext = do
   mcompany <- companyForPage
+  mbd <- return $ currentBrandedDomain ctx
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
     standardPageFields ctx title ad
     F.valueM "httplink" $ getHttpHostpart
-    when (isJust mcompany) $
-      brandingFields (fromJust mcompany)
+    brandingFields mbd mcompany
 
 companyForPage  :: Kontrakcja m => m (Maybe Company)
 companyForPage = do
@@ -110,14 +113,19 @@ companyForPage = do
               Nothing -> return Nothing
               Just company -> return $ Just $ company
 
-brandingFields ::  Kontrakcja m => Company -> Fields m ()
-brandingFields company = do
-  F.value "customlogo" $ isJust $ companycustomlogo $ companyui $ company
-  F.value "customlogolink" $ show $ LinkCompanyCustomLogo $ companyid company
-  F.value "custombarscolour" $ companycustombarscolour $ companyui $ company
-  F.value "custombarstextcolour" $ companycustombarstextcolour $ companyui $ company
-  F.value "custombarshighlightcolour" $ companycustombarssecondarycolour $ companyui $ company
-  F.value "custombackground" $ companycustombackgroundcolour $ companyui $ company
+brandingFields ::  Kontrakcja m => Maybe BrandedDomain -> Maybe Company -> Fields m ()
+brandingFields mbd mcompany = do
+  F.value "customlogo" $ (isJust mbd) || (isJust $ (join $ companycustomlogo <$> companyui <$> mcompany))
+  F.value "customlogolink" $ if (isJust $ (join $ companycustomlogo <$> companyui <$> mcompany))
+                                then show <$> LinkCompanyCustomLogo <$> companyid <$> mcompany
+                                else bdlogolink <$> mbd
+  F.value "custombarscolour" $ mcolour bdbarscolour companycustombarscolour
+  F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
+  F.value "custombarshighlightcolour" $ mcolour bdbarssecondarycolour companycustombarssecondarycolour
+  F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
+ where
+   mcolour df cuf =  (join $ cuf <$> companyui <$> mcompany) `mplus` (df <$> mbd)
+
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja

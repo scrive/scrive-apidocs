@@ -29,23 +29,48 @@ import Text.StringTemplates.Templates
 import Routing
 import Utils.HTTP
 import ThirdPartyStats.Core
+import AppView
+import Analytics.Include
+import BrandedDomains
 
-handleLoginGet :: Kontrakcja m => m (Either KontraLink ThinPage)
+handleLoginGet :: Kontrakcja m => m (Either KontraLink (Either Response ThinPage))
 handleLoginGet = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
        Nothing -> do
           referer <- getField "referer"
-          content <- renderTemplate "loginPage" $ do
-                    F.value "referer" $ fromMaybe "/" referer
-          return $ Right $ ThinPage content
+          let mbd = currentBrandedDomain ctx
+          case mbd of
+               Nothing -> do
+                content <- renderTemplate "loginPage" $ do
+                          F.value "referer" $ fromMaybe "/" referer
+                return $ Right $ Right $ ThinPage content
+               Just bd -> do
+                ad <- getAnalyticsData
+                content <- renderTemplate "loginPageWithBranding" $ do
+                         F.value "logolink" $ bdlogolink bd
+                         F.value "referer" $ fromMaybe "/" referer
+                         standardPageFields ctx kontrakcja ad
+                Right . Left <$> simpleHtmlResonseClrFlash content
        Just _ -> return $ Left LinkDesignView
 
-signupPageGet :: Kontrakcja m => m ThinPage
+signupPageGet :: Kontrakcja m => m (Either Response ThinPage)
 signupPageGet = do
+  ctx <- getContext
+  let mbd = currentBrandedDomain ctx
   memail <- getField "email"
-  fmap ThinPage $ renderTemplate "signupPage" $ do
-    F.value "email" memail
+  case mbd of
+      Nothing -> do
+          content <- renderTemplate "signupPage" $ do
+            F.value "email" memail
+          return $ Right $ ThinPage $ content
+      Just bd -> do
+          ad <- getAnalyticsData
+          content <- renderTemplate "signupPageWithBranding" $ do
+            F.value "email" memail
+            F.value "logolink" $ bdlogolink bd
+            standardPageFields ctx kontrakcja ad
+          Left <$> simpleHtmlResonseClrFlash content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.

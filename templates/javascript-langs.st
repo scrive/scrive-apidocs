@@ -7,6 +7,7 @@ javascriptLocalisation =
   window.localization =
         {      code : "$_code()$"
              , welcomeback : "$_welcomeback()$"
+             , esigningpoweredbyscrive : "E-signing powered by Scrive"
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"
@@ -699,6 +700,7 @@ javascriptLocalisation =
                     ,  search : "$_SearchDoc()$"
                }
         }
+      , login : "$_login()$"
       , loginModal : {
              login : "$_login()$"
            , email : "$_email()$"

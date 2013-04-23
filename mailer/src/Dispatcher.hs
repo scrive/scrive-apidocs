@@ -53,6 +53,7 @@ dispatcher s3action rng master msender dbconf = withPostgreSQL dbconf . runCrypt
                     , ctxsessionid           = error "Dispatcher.dispatcher: Context is limited in here"
                     , ctxmixpaneltoken       = error "Dispatcher.dispatcher: Context is limited in here"
                     , ctxhomebase            = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxbrandeddomains      = error "Dispatcher.dispatcher: Context is limited in here"
                     }
   flip evalStateT ctx $ do
     mails <- dbQuery GetIncomingEmails

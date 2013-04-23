@@ -13,6 +13,7 @@ import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig(..))
 import Precog.Ingest (PrecogPrefix (..))
+import BrandedDomains
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -45,6 +46,7 @@ data AppConf = AppConf {
   , precogRootPath     :: String                       -- ^ API root path for Precog
   , precogPathPrefix   :: PrecogPrefix                 -- ^ Dev/Staging/Prod prefix for Precog. MAKE SURE THIS IS SET CORRECTLY DEPENDING ON WHETHER YOU'RE DEPLOING ON PROD, STAGING OR DEV! (You can see this is important because I'm using all caps!)
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
+  , brandedDomains     :: BrandedDomains               -- ^ List of branded domains
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -89,6 +91,7 @@ instance Configuration AppConf where
     -- annoying way!
     , precogPathPrefix   = Dev
     , ntpServers         = defaultNtpServers
+    , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF"]
     }
   confOptions = [
   {-

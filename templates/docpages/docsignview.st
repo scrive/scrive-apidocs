@@ -6,10 +6,6 @@ $doctype()$
     <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
-
-    <script>
-        var inService = $if(isservice)$true$else$false$endif$;
-    </script>
     <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
     <script src="$homebase$/js/docsignviewpromotescrive.js"></script>
       </head>

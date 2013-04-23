@@ -26,7 +26,7 @@ module Doc.DocView (
   , gtVerificationPage
   ) where
 
-import AppView (kontrakcja, standardPageFields)
+import AppView (kontrakcja, standardPageFields, brandingFields, companyForPage)
 import Company.Model
 import Doc.DocProcess
 import Doc.DocStateData
@@ -342,19 +342,23 @@ pageDocumentView document msiglink authorcompanyadmin =
       F.value "authorcompanyadmin" $ authorcompanyadmin
 
 
-pageDocumentSignView :: TemplatesMonad m
+pageDocumentSignView :: Kontrakcja m
                     => Context
                     -> Document
                     -> SignatoryLink
                     -> AnalyticsData
                     -> m String
-pageDocumentSignView ctx document siglink ad =
+pageDocumentSignView ctx document siglink ad = do
+  let  mbd = currentBrandedDomain ctx
+  mcompany <- companyForPage
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
       F.value "usestandardheaders" $ (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx)
       standardPageFields ctx kontrakcja ad
+      brandingFields mbd mcompany
+
 
 
 -- | Basic info about document , name, id ,author
