@@ -196,20 +196,19 @@ var TextTypeSetterView = Backbone.View.extend({
                             text: localization.designview.textFields.done,
                             style: "position: relative;  z-index: 107;margin-top: 4px;",
                             onClick : function() {
-
                                 var done = field.name() != undefined && field.name() != "";
                                 done = done && _.all(field.signatory().fields(), function(f) {
                                     return f.name() != field.name() || f.type() != field.type() || f == field;
                                 });
-                                if (done){
-                                     field.makeReady();
-                                     view.clear();
-                                    }
-                                else
+                                if (done) {
+                                    field.makeReady();
+                                    view.clear();
+                                } else {
                                     view.nameinput.addClass('redborder');
-                                    return false;
                                 }
-            }).input();
+                                return false;
+                            }
+                           }).input();
     },
     title : function() {
         return $("<div class='title'/>").text(localization.designview.textFields.textField);
