@@ -70,7 +70,7 @@ authorActor time ip uid email = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Nothing
   , actorAPIString = Nothing
-  , actorWho = "the author (" ++ email ++ ")"
+  , actorWho = "the author" ++ if not (null email) then " (" ++ email ++ ")" else ""
 }
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
