@@ -26,6 +26,9 @@
                 var winHeight = $(window).height();
                 view.$el.css('min-height', Math.max(winHeight - myTop, 300));
             });
+            view.viewmodel.bind('change:step', function() {
+                $(window).resize();
+            });
             $(window).resize();
         },
         render: function() {

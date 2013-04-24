@@ -15,9 +15,7 @@
         initialize: function (args) {
             var model = this;
             _.bindAll(model);
-            model.bind('change:step', function() {
-                $(window).resize();
-            });
+      
         },
         document : function() {
             return this.get("document");
