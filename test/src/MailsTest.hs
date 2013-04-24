@@ -112,7 +112,7 @@ sendDocumentMails mailTo author = do
         -- DELIVERY MAILS
         checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc sl
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxhostpart ctx) doc sl
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation  (ctxhostpart ctx) doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl False
         --reject mail
@@ -150,13 +150,13 @@ testUserMails mailTo = do
                            sendoutForManualChecking s req ctx mailTo m
     checkMail "New account" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
-          newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al
+          newUserMail ctx (getEmail user) (getEmail user) al
     checkMail "New account by admin" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) ByAdmin
           mailNewAccountCreatedByAdmin ctx (ctxlang ctx) (getSmartName user) (getEmail user) al Nothing
     checkMail "Reset password mail" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
-          resetPasswordMail (ctxhostpart ctx) user al
+          resetPasswordMail ctx user al
   kCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"

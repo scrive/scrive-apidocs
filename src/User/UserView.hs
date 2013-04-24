@@ -66,6 +66,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as B64
 import DB
 import BrandedDomains
+import Doc.DocViewMail
 
 showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
 showAccount user mcompany = renderTemplate "showAccount" $ do
@@ -212,21 +213,24 @@ activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =
   renderTemplate "activatePageViewNotValidLink" $ F.value "email" email
 
-resetPasswordMail :: TemplatesMonad m => String -> User -> KontraLink -> m Mail
-resetPasswordMail hostname user setpasslink = do
+resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
+resetPasswordMail ctx user setpasslink = do
   kontramail "passwordChangeLinkMail" $ do
     F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
-    F.value "ctxhostpart"  $ hostname
+    F.value "ctxhostpart"  $ ctxhostpart ctx
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
-newUserMail :: TemplatesMonad m => String -> String -> String -> KontraLink -> m Mail
-newUserMail hostpart emailaddress personname activatelink = do
+newUserMail :: TemplatesMonad m => Context -> String -> String -> KontraLink -> m Mail
+newUserMail ctx emailaddress personname activatelink = do
   kontramail "newUserMail" $ do
     F.value "personname"   $ personname
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
-    F.value "ctxhostpart"  $ hostpart
+    F.value "ctxhostpart"  $ ctxhostpart ctx
+    brandingMailFields (currentBrandedDomain ctx) Nothing
+
 
 mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
 mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage = do
@@ -237,14 +241,17 @@ mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     F.value "ctxhostpart"   $ ctxhostpart ctx
     F.value "custommessage"   custommessage
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
-mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => String -> a -> Email -> KontraLink -> m Mail
-mailEmailChangeRequest hostpart user newemail link = do
+
+mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => Context -> a -> Email -> KontraLink -> m Mail
+mailEmailChangeRequest ctx user newemail link = do
   kontramail "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
-    F.value "ctxhostpart" $ hostpart
+    F.value "ctxhostpart" $ ctxhostpart ctx
     F.value "link" $ show link
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
 -------------------------------------------------------------------------------
 

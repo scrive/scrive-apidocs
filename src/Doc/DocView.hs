@@ -60,6 +60,7 @@ import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 import qualified Data.Set as Set
 import Analytics.Include
+import BrandedDomains
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
@@ -128,6 +129,7 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     evidenceattachments <- if includeEvidenceAttachments then EvidenceAttachments.fetch doc else return []
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
+    let mdb = currentBrandedDomain ctx
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
     mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
     runJSONGenT $ do
@@ -176,12 +178,12 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
                                     then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
-                                    else Nothing
+                                    else (bdlogolink <$> mdb)
         J.value "signviewtextcolour" $ companysignviewtextcolour . companyui =<< mcompany
         J.value "signviewtextfont" $ companysignviewtextfont . companyui =<< mcompany
-        J.value "signviewbarscolour" $ companysignviewbarscolour . companyui =<<  mcompany
-        J.value "signviewbarstextcolour" $ companysignviewbarstextcolour . companyui  =<< mcompany
-        J.value "signviewbackgroundcolour" $ companysignviewbackgroundcolour . companyui  =<< mcompany
+        J.value "signviewbarscolour" $ (companysignviewbarscolour . companyui =<<  mcompany) `mplus` (bdbarscolour <$> mdb)
+        J.value "signviewbarstextcolour" $ (companysignviewbarstextcolour . companyui  =<< mcompany) `mplus` (bdbarstextcolour <$> mdb)
+        J.value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour . companyui  =<< mcompany) `mplus` (bdbackgroundcolour <$> mdb)
         J.value "author" $ authorJSON mauthor mcompany
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])

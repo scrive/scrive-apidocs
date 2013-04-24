@@ -13,7 +13,7 @@ module Doc.DocViewMail (
     , mailMismatchAuthor
     , mailMismatchSignatory
     , documentMailWithDocLang
-    , companyBrandFields
+    , brandingMailFields
     ) where
 
 import Company.Model
@@ -40,6 +40,7 @@ import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import qualified Text.StringTemplates.Fields as F
+import BrandedDomains
 
 -- FIXME: why do we even use that?
 para :: String -> String
@@ -344,19 +345,21 @@ documentMail haslang ctx doc mailname otherfields = do
         F.value "ctxlang" (codeFromLang $ ctxlang ctx)
         F.value "documenttitle" $ documenttitle doc
         F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-        when (isJust mcompany) $ do
-            let (Just company) = mcompany
-            F.object "companybrand" $ companyBrandFields company
+        F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) mcompany
         otherfields
     kontramaillocal haslang mailname allfields
 
-companyBrandFields :: Monad m => Company -> Fields m ()
-companyBrandFields company = do
-  F.value "background"  $ companyemailbackgroundcolour $ companyui company
-  F.value "textcolor" $ companyemailtextcolour $ companyui company
-  F.value "font"  $ companyemailfont $ companyui company
-  F.value "bordercolour"  $ companyemailbordercolour $ companyui company
-  F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui company
-  F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui company
-  F.value "logo" $ isJust $ companyemaillogo $ companyui company
-  F.value "logoLink" $ show $ LinkCompanyEmailLogo $ companyid company
+brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe Company -> Fields m ()
+brandingMailFields mbd mcompany = do
+  when (isJust mcompany) $ do
+    F.value "background"  $ companyemailbackgroundcolour $ companyui $ fromJust mcompany
+    F.value "textcolor" $ companyemailtextcolour $ companyui $ fromJust mcompany
+    F.value "font"  $ companyemailfont $ companyui $ fromJust mcompany
+    F.value "bordercolour"  $ companyemailbordercolour $ companyui $ fromJust mcompany
+    F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui $ fromJust mcompany
+    F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui $ fromJust mcompany
+  when (isJust mcompany || isJust mbd) $ do
+    F.value "logo" $ (isJust $ join $ companyemaillogo <$> companyui <$> mcompany) || (isJust $ mbd)
+    F.value "logoLink" $ if (isJust $ join $ companyemaillogo <$> companyui <$> mcompany)
+                            then (show <$> LinkCompanyEmailLogo <$> companyid <$> mcompany)
+                            else (bdlogolink <$> mbd)

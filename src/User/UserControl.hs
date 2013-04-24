@@ -245,7 +245,7 @@ sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
   al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
-  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
+  mail <- newUserMail ctx (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 

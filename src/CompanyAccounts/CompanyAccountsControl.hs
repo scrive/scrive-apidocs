@@ -281,14 +281,14 @@ sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
   al <- newUserAccountRequestLink (ctxlang ctx) (userid user) CompanyInvitation
-  mail <- mailNewCompanyUserInvite (ctxhostpart ctx) user inviter company al
+  mail <- mailNewCompanyUserInvite ctx user inviter company al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
 
 sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverPrivateUserMail inviter company user = do
   ctx <- getContext
-  mail <- mailTakeoverPrivateUserInvite (ctxhostpart ctx) user inviter company (LinkCompanyTakeover (companyid company))
+  mail <- mailTakeoverPrivateUserInvite ctx user inviter company (LinkCompanyTakeover (companyid company))
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()
