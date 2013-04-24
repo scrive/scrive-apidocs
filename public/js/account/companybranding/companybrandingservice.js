@@ -11,30 +11,31 @@ window.CompanyBrandingServiceViewModel = Backbone.Model.extend({
         customlogo: new CompanyBrandingLogo({
           customised: companyui.customlogo().trim() != '',
           logo: companyui.customlogo(),
+          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo_email.png",
           label: localization.companyBranding.customiseLogo,
           url: ''
         }),
         custombarscolour: new CompanyBrandingColour({
           customised: companyui.custombarscolour().trim() != '',
-          defaultcolour: "#FFFFFF",
+          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#FFFFFF",
           colour: companyui.custombarscolour(),
           label: localization.companyBranding.barsColour
         }),
         custombarstextcolour: new CompanyBrandingColour({
           customised: companyui.custombarstextcolour().trim() != '',
-          defaultcolour: "#333333",
+          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#333333",
           colour: companyui.custombarstextcolour(),
           label: localization.companyBranding.barsTextColour
         }),
         custombarssecondarycolour: new CompanyBrandingColour({
           customised: companyui.custombarssecondarycolour().trim() != '',
-          defaultcolour: "#333333",
+          defaultcolour: companyui.domainbarssecondarycolour() != "" ? companyui.domainbarssecondarycolour() : "#333333",
           colour: companyui.custombarssecondarycolour(),
-          label: localization.companyBranding.barsTextColour
+          label: localization.companyBranding.barsSecondaryColour
         }),
         custombackgroundcolour: new CompanyBrandingColour({
           customised: companyui.custombackgroundcolour().trim() != '',
-          defaultcolour: "#EEEEEE",
+          defaultcolour:  companyui.domainbackgroundcolour() != "" ? companyui.domainbackgroundcolour() : "#EEEEEE",
           colour: companyui.custombackgroundcolour(),
           label: localization.companyBranding.customiseSignViewBackgroundColour
         })
@@ -78,7 +79,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
 
     this.header1 = $('<div style="float: left;margin-left:16px;"/>');
     this.logowrapper = $("<a class='hoverable logo' style='line-height:62px;'/>");
-    this.logo = $("<img src='/img/logo_email.png' style='padding-top:5px;padding-bottom:5px'/>");
+    this.logo = $("<img style='padding-top:5px;padding-bottom:5px'/>");
     this.header1.append(this.logowrapper.append(this.logo));
 
     this.header2 = $('<div style="float: right; margin: 23px 8px;"/>');
@@ -159,7 +160,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header6.css('color', color);
   },
   changeBackground : function(custombackgroundcolour,customized) {
-    if (customized != "")
+    if (customized || this.model.companyui().domainbackgroundcolour() != "")
       this.content.css('background-color', custombackgroundcolour);
     else
       this.content.css('background-color', '');

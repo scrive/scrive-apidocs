@@ -103,7 +103,7 @@ apiCallGetUserProfile =  api $ do
   mumailapi <- dbQuery $ GetUserMailAPI $ userid user
   mcompany <- getCompanyForUser user
   mcmailapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
-  Ok <$> userJSON user mumailapi mcompany mcmailapi (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
+  Ok <$> userJSON ctx user mumailapi mcompany mcmailapi (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
 
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response

@@ -99,6 +99,32 @@ window.CompanyBrandingModel = Backbone.Model.extend({
     editable: function() {
       return this.get("editable");
     },
+    changedInnerBranding : function() {
+          if (this.companyui().customlogo() != this.serviceBranding().customlogo().logo() && !(this.companyui().customlogo() == '' &&  !this.serviceBranding().customlogo().customised()))
+            return true;
+          if (this.companyui().custombarscolour() != this.serviceBranding().custombarscolour().colour() && !(this.companyui().custombarscolour() == '' &&  !this.serviceBranding().custombarscolour().customised()))
+            return true;
+          if (this.companyui().custombarstextcolour() != this.serviceBranding().custombarstextcolour().colour() && !(this.companyui().custombarstextcolour() == '' &&  !this.serviceBranding().custombarstextcolour().customised()))
+            return true;
+          if (this.companyui().custombarssecondarycolour() != this.serviceBranding().custombarssecondarycolour().colour() && !(this.companyui().custombarssecondarycolour() == '' &&  !this.serviceBranding().custombarssecondarycolour().customised()))
+            return true;
+          if (this.companyui().custombackgroundcolour() != this.serviceBranding().custombackgroundcolour().colour() && !(this.companyui().custombackgroundcolour() == '' &&  !this.serviceBranding().custombackgroundcolour().customised()))
+            return true;
+          return false;
+          /*
+                alert(self.companyui().custombarscolour()  + " vs " + self.serviceBranding().custombarscolour().colour())
+                alert(self.companyui().custombarstextcolour()  + " vs " + self.serviceBranding().custombarstextcolour().colour())
+                alert(self.companyui().custombarssecondarycolour()  + " vs " + self.serviceBranding().custombarssecondarycolour().colour())
+                alert(self.companyui().custombackgroundcolour()  + " vs  " + self.serviceBranding().custombackgroundcolour().colour())
+
+
+                if ( self.companyui().customlogo() != self.serviceBranding().customlogo().logo()
+                  || self.companyui().custombarscolour() != self.serviceBranding().custombarscolour().colour()
+                  || self.companyui().custombarstextcolour() != self.serviceBranding().custombarstextcolour().colour()
+                  || self.companyui().custombarssecondarycolour() != self.serviceBranding().custombarssecondarycolour().colour()
+                  || self.companyui().custombackgroundcolour() != self.serviceBranding().custombackgroundcolour().colour())
+*/
+    },
     save : function() {
           var self = this;
           LoadingDialog.open(localization.companyBranding.saveBranding);
@@ -107,6 +133,8 @@ window.CompanyBrandingModel = Backbone.Model.extend({
               url: self.submiturl,
               company: JSON.stringify(self.toJSON()),
               ajaxsuccess: function () {
+                if ( self.changedInnerBranding())
+                    window.location.reload();
                 LoadingDialog.close();
               }
           }).sendAjax();

@@ -942,6 +942,7 @@ javascriptLocalisation =
              , sampleEmailFooter : "$_sampleEmailFooter()$"
              , barsColour : "$_companyBrandingBarsColour()$"
              , barsTextColour : "$_companyBrandingBarsTextColour()$"
+             , barsSecondaryColour : "$_companyBrandingbarsSecondaryColour()$"
              , saveBranding: "$_SaveSettings()$"
              , emailBranding: "$_EmailBranding()$"
              , customiseLogo: "$_CustomiseLogo()$"

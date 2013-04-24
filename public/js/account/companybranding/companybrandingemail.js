@@ -12,7 +12,7 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
           customised: companyui.emaillogo().trim() != '',
           logo: companyui.emaillogo(),
           label: localization.companyBranding.customiseLogo,
-          defaultlogo: "/img/logo_email.png",
+          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo_email.png",
           url: ''
         }),
         emailbackgroundcolour: new CompanyBrandingColour({
@@ -89,7 +89,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
   prerender: function() {
     var company = this.model;
 
-    this.logo = $('<img class="emailpreviewlogo" src="/img/logo_email.png" />');
+    this.logo = $('<img class="emailpreviewlogo" />');
     var logorow = $('<tr/>').append($('<td/>').append($('<table/>').append($('<tr/>').append($('<td/>').append(this.logo)))));
 
     this.subjectspan = $('<span class="emailpreviewsubject"/>').text(localization.companyBranding.sampleEmailHeader);

@@ -11,6 +11,7 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         signviewlogo: new CompanyBrandingLogo({
           customised: companyui.signviewlogo().trim() != '',
           logo: companyui.signviewlogo(),
+          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo_email.png",
           label: localization.companyBranding.customiseLogo,
           url: ''
         }),
@@ -27,19 +28,19 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         }),
         signviewbarscolour: new CompanyBrandingColour({
           customised: companyui.signviewbarscolour().trim() != '',
-          defaultcolour: "#FFFFFF",
+          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#FFFFFF",
           colour: companyui.signviewbarscolour(),
           label: localization.companyBranding.barsColour
         }),
         signviewbarstextcolour: new CompanyBrandingColour({
           customised: companyui.signviewbarstextcolour().trim() != '',
-          defaultcolour: "#333333",
+          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#333333",
           colour: companyui.signviewbarstextcolour(),
           label: localization.companyBranding.barsTextColour
         }),
         signviewbackgroundcolour: new CompanyBrandingColour({
           customised: companyui.signviewbackgroundcolour().trim() != '',
-          defaultcolour: "#EEEEEE",
+          defaultcolour:  companyui.domainbackgroundcolour() != "" ? companyui.domainbackgroundcolour() : "#EEEEEE",
           colour: companyui.signviewbackgroundcolour(),
           label: localization.companyBranding.customiseSignViewBackgroundColour
         })
@@ -82,7 +83,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     this.container = $("<div class='sample-sign-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
     this.header = $("<div class='sample-sign-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED'/>");
 
-    this.logo = $('<img src="/img/logo_email.png"/>');
+    this.logo = $('<img/>');
     var leftheader = $('<div style="float: left; margin: 20px;"/>');
     leftheader.append(this.logo);
     this.rightheader = $('<div style="float: right; margin: 20px;font-size: 10px;"/>');
@@ -176,7 +177,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     this.rightheader.css('color', color);
   },
   changeBackground : function(signviewbackgroundcolour,customized) {
-    if (customized != "")
+    if (customized || this.model.companyui().domainbackgroundcolour() != "")
       this.content.css('background-color', signviewbackgroundcolour);
     else
       this.content.css('background-color', '');

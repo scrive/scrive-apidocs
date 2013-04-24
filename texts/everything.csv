@@ -1040,6 +1040,7 @@
 "_signviewBranding","Branding av signeringsvyn","Signview branding"
 "_companyBrandingBarsColour","Sidhuvud-/sidfotsfärg","Header/footer colour"
 "_companyBrandingBarsTextColour"," Sidhuvud/sidfot typsnittsfärg","Header/footer text colour"
+"_companyBrandingbarsSecondaryColour"," Ram- och markeringsfärg","Border and highlight color"
 "_companyBrandingCustomize","Anpassa...","Customize..."
 "_nameInvalidChars","får endast innehålla bokstäver, apostrof, bindestreck eller mellanslag.","may contain only alphabetic characters, apostrophe, hyphen or space."
 "_nameRequired","krävs.","required."

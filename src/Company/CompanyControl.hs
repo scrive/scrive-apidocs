@@ -34,6 +34,7 @@ import User.Utils
 import Util.MonadUtils
 import qualified Log
 import Text.JSON.Gen
+import BrandedDomains
 
 routes :: Route (KontraPlus Response)
 routes = choice
@@ -140,7 +141,9 @@ handleCompanyEmailLogo :: Kontrakcja m => CompanyID -> m Response
 handleCompanyEmailLogo = handleCompanyLogo companyemaillogo
 
 handleGetCompanyJSON :: Kontrakcja m => Maybe CompanyID -> m JSValue
-handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, company) -> runJSONGenT $ do
+handleGetCompanyJSON mcid = do
+  ctx <- getContext
+  withCompanyUserOrAdminOnly mcid $ \(editable, company) -> runJSONGenT $ do
     value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui company
     value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui company
     value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui company
@@ -159,7 +162,10 @@ handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, compan
     value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui company
     value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui company
     value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui company
-
-
+    value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
+    value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
+    value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
+    value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
+    value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
     value "editable" editable
     value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)

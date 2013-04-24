@@ -25,7 +25,12 @@ window.CompanyUI = Backbone.Model.extend({
         custombarscolour: args.companycustombarscolour,
         custombarstextcolour: args.companycustombarstextcolour,
         custombarssecondarycolour : args.companycustombarssecondarycolour,
-        custombackgroundcolour: args.companycustombackgroundcolour
+        custombackgroundcolour: args.companycustombackgroundcolour,
+        domaincustomlogo: args.domaincustomlogo,
+        domainbarscolour: args.domainbarscolour,
+        domainbarstextcolour: args.domainbarstextcolour,
+        domainbarssecondarycolour : args.domainbarssecondarycolour,
+        domainbackgroundcolour: args.domainbackgroundcolour
       }, {silent: true});
     }
   },
@@ -83,6 +88,21 @@ window.CompanyUI = Backbone.Model.extend({
   custombackgroundcolour: function() {
     return this.get('custombackgroundcolour');
   },
+  domaincustomlogo: function() {
+    return this.get('domaincustomlogo');
+  },
+  domainbarscolour: function() {
+    return this.get('domainbarscolour');
+  },
+  domainbarstextcolour : function() {
+    return this.get('domainbarstextcolour');
+  },
+  domainbarssecondarycolour : function() {
+    return this.get('domainbarssecondarycolour');
+  },
+  domainbackgroundcolour : function() {
+    return this.get('domainbackgroundcolour');
+  },
   editable: function() {
     return this.get('editable');
   },
@@ -106,6 +126,11 @@ window.CompanyUI = Backbone.Model.extend({
       custombarstextcolour: args.companycustombarstextcolour,
       custombarssecondarycolour : args.companycustombarssecondarycolour,
       custombackgroundcolour: args.companycustombackgroundcolour,
+      domaincustomlogo: args.domaincustomlogo,
+      domainbarscolour: args.domainbarscolour,
+      domainbarstextcolour: args.domainbarstextcolour,
+      domainbarssecondarycolour : args.domainbarssecondarycolour,
+      domainbackgroundcolour: args.domainbackgroundcolour,
       editable: args.editable,
       ready: true
     };

@@ -65,13 +65,15 @@ import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as B64
 import DB
+import BrandedDomains
+
 showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
 showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "noCompany" $ isNothing mcompany
 
-userJSON :: Monad m => User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> Bool -> m JSValue
-userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
+userJSON :: Monad m => Context -> User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> Bool -> m JSValue
+userJSON ctx user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -89,10 +91,10 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
                             Just umailapi -> mailAPIInfoJSON umailapi
     valueM "company" $ case (mcompany) of
                             Nothing -> return JSNull
-                            Just company -> companyJSON company mcmailapi companyuieditable
+                            Just company -> companyJSON ctx company mcmailapi companyuieditable
 
-companyUIJson :: Monad m => Company -> Bool -> m JSValue
-companyUIJson company editable = runJSONGenT $ do
+companyUIJson :: Monad m => Context -> Company -> Bool -> m JSValue
+companyUIJson ctx company editable = runJSONGenT $ do
     value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui $ company)
     value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui $ company)
     value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui $ company
@@ -111,10 +113,16 @@ companyUIJson company editable = runJSONGenT $ do
     value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui company
     value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui company
     value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui company
+    value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
+    value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
+    value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
+    value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
+    value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
     value "editable" editable
 
-companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> Bool -> m JSValue
-companyJSON company mcmailapi editable = runJSONGenT $ do
+
+companyJSON :: Monad m => Context -> Company -> Maybe MailAPIInfo -> Bool -> m JSValue
+companyJSON ctx company mcmailapi editable = runJSONGenT $ do
     value "companyid" $ show $ companyid company
     value "address" $ companyaddress $ companyinfo company
     value "city" $ companycity $ companyinfo company
@@ -125,7 +133,7 @@ companyJSON company mcmailapi editable = runJSONGenT $ do
     valueM "mailapi" $ case (mcmailapi) of
                             Nothing -> return JSNull
                             Just cmailapi -> mailAPIInfoJSON cmailapi
-    valueM "companyui" $ companyUIJson company editable
+    valueM "companyui" $ companyUIJson ctx company editable
 
 userStatsDayToJSON :: [(Int, [Int])] -> [JSValue]
 userStatsDayToJSON = rights . map f
