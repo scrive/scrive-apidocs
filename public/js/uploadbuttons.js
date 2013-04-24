@@ -163,11 +163,11 @@ var UploadButtonView = Backbone.View.extend({
                 }
             }
         });
-        //button.append(); // This span is bugfix for error cases
-        this.fileinput = fileinput;
+        button.append($("<span/>").append(fileinput)); // This span is bugfix for error cases
+        //this.fileinput = fileinput;
         button.click(function() {return model.click()} );
         $(this.el).append(button);
-        $(this.el).append($("<span/>").append(fileinput).css({display:'none'}));
+        //$(this.el).append($("<span/>").append(fileinput).css({display:'none'}));
         return this;
     }
 });
@@ -179,9 +179,8 @@ window.UploadButton = {
           var input = $("<div style='position:relative;overflow:hidden;'/>");
           var view = new UploadButtonView({model : model, el : input});
           return new Object({
-              input : function() {return input;},
-              clickFile: function() { view.fileinput.click(); }
-            });
+              input : function() {return input;}
+          });
         }
 };
 

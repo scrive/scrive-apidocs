@@ -20,9 +20,17 @@
             view.render();
             view.model.bind('change:file', view.render);
             view.model.bind('change:flux', view.render);
+            view.viewmodel.bind('change:showProblems', view.render);
+            $(window).resize(function() {
+                var myTop = view.$el.offset().top;
+                var winHeight = $(window).height();
+                view.$el.css('min-height', Math.max(winHeight - myTop, 300));
+            });
+            $(window).resize();
         },
         render: function() {
             var view = this;
+            var model = view.viewmodel;
             var document = view.model;
             view.$el.children().detach();
             if(document.flux()) {
@@ -32,6 +40,10 @@
             } else {
                 view.$el.html(view.uploadButtons());
             }
+            if(model.showProblems() && !document.mainfile())
+                view.$el.addClass('redborder');
+            else
+                view.$el.removeClass('redborder');
             return view;
         },
         loading: function() {
@@ -41,14 +53,14 @@
             inner.addClass('design-view-document-loading-inner');
             div.html(inner);
             var spinner = new Spinner({
-	        lines: 10, // The number of lines to draw
-	        length: 19, // The length of each line
-	        width: 10, // The line thickness
-	        radius: 30, // The radius of the inner circle
-	        color: '#000', // #rbg or #rrggbb
-	        speed: 1.5, // Rounds per second
-	        trail: 74, // Afterglow percentage
-	        shadow: false // Whether to render a shadow
+	        lines  : 10,     // The number of lines to draw
+	        length : 19,     // The length of each line
+	        width  : 10,     // The line thickness
+	        radius : 30,     // The radius of the inner circle
+	        color  : '#000', // #rbg or #rrggbb
+	        speed  : 1.5,    // Rounds per second
+	        trail  : 74,     // Afterglow percentage
+	        shadow : false   // Whether to render a shadow
             }).spin(inner.get(0));
             return div;
         },
@@ -159,6 +171,7 @@
             var view = this;
             var document = view.model;
             var div = $('<div />');
+            div.addClass('design-view-document-buttons-upload-button');
             
             var circle = $('<img />');
             circle.addClass('design-view-document-buttons-upload-button-circle');
@@ -178,6 +191,42 @@
             div.append(label);
 
             var url = "/api/frontend/changemainfile/" + document.documentid();
+
+            div.click(function() {
+                document.save();
+                FileUpload.upload({
+                    action: url,
+                    name: 'file',
+                    mimetype: 'application/pdf',
+                    beforeUpload: function() {
+                        document.setFlux();
+                    },
+                    success: function(d) {
+                        document.save();
+                        document.afterSave(function() {
+                            document.recall();
+                        });
+                    },
+                    error: function(d, a){
+                        console.log(d);
+                        if(a === 'parsererror') { // file too large
+                            new FlashMessage({content: localization.fileTooLarge, color: "red"});
+                            document.unsetFlux();
+                            //mixpanel.track('Error',
+                            //               {Message: 'main file too large'});
+                            
+                        } else {
+                            new FlashMessage({content: localization.couldNotUpload, color: "red"});
+                            document.unsetFlux();
+                            //mixpanel.track('Error',
+                            //               {Message: 'could not upload main file'});
+                        }
+                        document.trigger('change');
+                    }
+                });
+            });
+
+            /*
             var upbutton = UploadButton.init({
                 button: div,
                 name: "file",
@@ -238,10 +287,9 @@
                     });
                 }
             });
+            */
 
-            var btn = upbutton.input();
-            btn.addClass('design-view-document-buttons-upload-button');
-            return btn;
+            return div;
         },
         orText: function() {
             var view = this;
@@ -279,6 +327,9 @@
             div.append(label);
 
             return div;
+        },
+        afterInsert: function() {
+            $(window).resize();
         }
 
     });

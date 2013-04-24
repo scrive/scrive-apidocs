@@ -108,8 +108,8 @@ window.Signatory = Backbone.Model.extend({
                   "attachments": attachments
         });
 
-        this.bind("change", function() {signatory.document().trigger("change:signatories")});
-        this.bind("change:role", function() {signatory.document().trigger("change:signatories-roles")});
+        //this.bind("change", function() {signatory.document().trigger("change:signatories")});
+        //this.bind("change:role", function() {signatory.document().trigger("change:signatories-roles")});
     },
     document: function() {
         return this.get("document");
@@ -583,6 +583,14 @@ window.Signatory = Backbone.Model.extend({
         // standard, eleg
         this.set({authentication:a});
         return this;
+    },
+    hasProblems: function(forSigning) {
+        return this.hasFieldProblems(forSigning);
+    },
+    hasFieldProblems: function(forSigning) {
+        return _.some(this.fields(), function(field) {
+            return !field.isValid();
+        });
     }
 
 });

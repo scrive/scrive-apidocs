@@ -226,16 +226,7 @@
     height: 50px;
     position: relative;
     overflow: hidden;
-    -webkit-transition: height 0.5s linear;
     line-height: 1em;
-}
-
-.design-view-action-participant-new-box.opensingle {
-    height: 550px;
-}
-
-.design-view-action-participant-new-box.openmulti {
-    height: 550px;
 }
 
 .design-view-action-participant-new-box-buttons {
@@ -284,7 +275,6 @@
     bottom: 0;
     left: 0;
     width: 970px;
-    height: 200px;
     z-index: 1;
 }
 
@@ -326,6 +316,9 @@
     .design-view-action-participant-details-field;
     margin-right: 8px;
     margin-bottom: 8px;
+    &.redborder {
+        border:1px solid red;
+    }
 }
 
 .design-view-action-participant-details-information-field-options-wrapper {
@@ -372,7 +365,7 @@
 }
 
 .design-view-action-participant-details-participation-fields {
-    
+    height: 32px;
 }
 
 .design-view-action-participant-details-participation-order {
@@ -418,8 +411,9 @@
     }
 }
 
-.design-view-action-participant-details-buttons {
-    
+.design-view-action-participant-buttons {
+    margin-top: 4px;
+    text-align: right;
 }
 
 

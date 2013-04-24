@@ -42,6 +42,7 @@
             div.append(view.documentType());
             div.append(view.language());
             div.append(view.deadline());
+            div.append(view.attachments());
 
             return div;
         },
@@ -219,6 +220,48 @@
             div.append(label);
             div.append(field.input());
             div.append(tag);
+
+            return div;
+        },
+        attachments: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var document = viewmodel.document();
+
+            var div = $('<div />');
+            div.addClass('design-view-action-process-left-column-attachments');
+
+            var labelText = 'Attachments';
+
+            var label = $('<div />');
+            label.addClass('design-view-action-process-left-column-attachments-label');
+            label.text(labelText + ':');
+            
+            var authorAttachmentButton = Button.init({
+                color: 'blue',
+                size: 'tiny',
+                text: 'Add/remove',
+                cssClass: 'design-view-action-process-left-column-attachments-author-button',
+                onClick: function() {
+                    document.save();
+                    DesignAuthorAttachmentsPopup.popup({document: document});
+                }
+            });
+
+            var sigAttachmentButton = Button.init({
+                color: 'blue',
+                size: 'tiny',
+                text: 'Request',
+                cssClass: 'design-view-action-process-left-column-attachments-signatory-button',
+                onClick: function() {
+                    document.save();
+                    DesignSignatoryAttachmentsPopup.popup({document: document});
+                }
+            });
+
+            div.append(label);
+            div.append(authorAttachmentButton.input());
+            div.append(sigAttachmentButton.input());
 
             return div;
         },

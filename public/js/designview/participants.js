@@ -4,6 +4,160 @@
  */
 
 (function(window){
+    /* model is view model */
+    var DesignViewNewParticipation = Backbone.View.extend({
+        className: 'design-view-action-participant-details-participation',
+        initialize: function() {
+            var view = this;
+            _.bindAll(view);
+            // if the signatory changes, we rerender
+            view.model.newSingle().bind('change', view.render);
+            view.render();
+        },
+        render: function() {
+            var view = this;
+            var model = view.model;
+            var sig = model.newSingle();
+
+            if(sig) {
+                var div = $('<div />');
+
+                div.append(view.detailsParticipationHeader());
+                div.append(view.detailsParticipationFields());
+                
+                view.$el.html(div.children());
+            }
+            return view;
+        },
+        detailsParticipationHeader: function() {
+            var view = this;
+
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-details-participation-header');
+            div.text('Define participation:');
+            return div;
+        },
+        detailsParticipationFields: function() {
+            var view = this;
+            
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-details-participation-fields');
+            div.append(view.detailsParticipationFieldsSignOrder());
+            div.append(view.detailsParticipationFieldsDelivery());
+            div.append(view.detailsParticipationFieldsRole());
+            div.append(view.detailsParticipationFieldsAuth());
+            return div;
+        },
+        detailsParticipationFieldsSignOrder: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var model = viewmodel.newSingle();
+            
+            var i;
+
+            var order = model.signorder();
+
+            var options = [];
+            for(i=1;i<=viewmodel.document().maxPossibleSignOrder() + 1;i++)
+                options.push({name: englishOrdinal(i) + ' to receive document',
+                              value: i});
+            
+            var select = new Select({
+                options: options,
+                name: englishOrdinal(order) + ' to receive document',
+                onSelect: function(v) {
+                    model.setSignOrder(v);
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-participation-order');
+            
+            return select.view().el;
+        },
+        detailsParticipationFieldsDelivery: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var sig = viewmodel.newSingle();
+            var delivery = sig.delivery();
+
+            var deliveryTexts = {
+                email : "by email",
+                pad : "on this tablet",
+                api : "via API"
+            };
+
+            var deliveryTypes = ['email', 'pad', 'api'];
+
+            var select = new Select({
+                options: _.map(deliveryTypes, function(t) {
+                    return {name: deliveryTexts[t], value:t};
+                }),
+                name: deliveryTexts[delivery],
+                onSelect: function(v) {
+                    sig.setDelivery(v);
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-participation-delivery');
+            return select.view().el;
+        },
+        detailsParticipationFieldsRole: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var sig = viewmodel.newSingle();
+            var role = sig.signs();
+
+            var roleTexts = {
+                true : "for signing",
+                false : "for viewing"
+            };
+
+            var roleTypes = [true, false];
+
+            var select = new Select({
+                options: _.map(roleTypes, function(t) {
+                    return {name: roleTexts[t], value:t};
+                }),
+                name: roleTexts[role],
+                onSelect: function(v) {
+                    if(v)
+                        sig.makeSignatory();
+                    else
+                        sig.makeViewer();
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-participation-role');
+            return select.view().el;
+        },
+        detailsParticipationFieldsAuth: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var sig = viewmodel.newSingle();
+            var auth = sig.authentication();
+
+            var authTexts = {
+                standard : "with no additional ID control",
+                eleg : "with Elegitimation"
+            };
+
+            var authTypes = ['standard', 'eleg'];
+
+            var select = new Select({
+                options: _.map(authTypes, function(t) {
+                    return {name: authTexts[t], value:t};
+                }),
+                name: authTexts[auth],
+                onSelect: function(v) {
+                    sig.setAuthentication(v);
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-participation-auth');
+            return select.view().el;
+        }
+    });
+
     /** The large detail box for multi-sendout.
         The model is the DesignViewModel
      **/
@@ -13,27 +167,6 @@
             var view = this;
             _.bindAll(view);
             view.render();
-            view.model.bind('change:participantDetail', view.updateHidden);
-        },
-        hide: function() {
-            var view = this;
-            if(!view.$el.hasClass('hidden'))
-                view.$el.addClass('hidden');
-            return view;
-        },
-        show: function() {
-            var view = this;
-            view.$el.removeClass('hidden');
-            return view;
-        },
-        updateHidden: function() {
-            var view = this;
-            var model = view.model;
-            if(model.participantDetail() === 'multi')
-                view.show();
-            else
-                view.hide();
-            return view;
         },
         render: function() {
             var view = this;
@@ -41,7 +174,6 @@
             var div = $('<div />');
 
             view.$el.html(div.children());
-            view.updateHidden();
             return view;
         },
         details: function() {
@@ -118,40 +250,25 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
+            
             view.render();
-            view.model.bind('change:participantDetail', view.updateHidden);
+            // if the new signatory gets changed, we rerender
             view.model.bind('change:newSingle', view.render);
-        },
-        hide: function() {
-            var view = this;
-            if(!view.$el.hasClass('hidden'))
-                view.$el.addClass('hidden');
-            return view;
-        },
-        show: function() {
-            var view = this;
-            view.$el.removeClass('hidden');
-            return view;
-        },
-        updateHidden: function() {
-            var view = this;
-            var model = view.model;
-            if(model.participantDetail() === 'single')
-                view.show();
-            else
-                view.hide();
-            return view;
         },
         render: function() {
             var view = this;
+            var model = view.model;
 
             var div = $('<div />');
 
-            div.append(view.detailsInformation());
-            //div.append(view.detailsParticipation());
+            if(model.newSingle()) {
+                view.participation = new DesignViewNewParticipation({model:model});
+                div.append(view.detailsInformation());
+                div.append(view.participation.el);
+                div.append(view.buttons());
+            }
 
             view.$el.html(div.children());
-            view.updateHidden();
             return view;
         },
         detailsInformation: function() {
@@ -252,6 +369,37 @@
             div.append(input);
             div.append(options.el);
             return div;
+        },
+        buttons: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-buttons');
+
+            var cancel = Button.init({
+                color: 'red',
+                text: 'Cancel',
+                size: 'tiny',
+                onClick: function() {
+                    model.setNewSingle(null);
+                }
+            });
+
+            var save = Button.init({
+                color: 'blue',
+                text: 'Save',
+                size: 'tiny',
+                onClick: function() {
+                    model.document().addExistingSignatory(model.newSingle());
+                    model.setNewSingle(null);
+                }
+            });
+
+            div.append(cancel.input());
+            div.append(save.input());
+
+            return div;
         }
         
     });
@@ -261,7 +409,10 @@
         initialize: function() {
             var view = this;
             _.bindAll(view);
-
+            view.model.bind('change', view.render);
+            // if the document's signorder changes, we rerender in order
+            // to get reset the sign order select box
+            view.model.document().bind('change:signorder', view.render);
             view.render();
         },
         render: function() {
@@ -392,7 +543,7 @@
                 }),
                 name: authTexts[auth],
                 onSelect: function(v) {
-                    sig.setAuthorization(v);
+                    sig.setAuthentication(v);
                     return true;
                 }
             });
@@ -409,7 +560,11 @@
             view.singleDetails = new DesignViewParticipantsNewSingleDetailsView(args);
             view.multiDetails  = new DesignViewParticipantsNewMultiDetailsView(args);
             view.render();
-            view.model.bind('change:participantDetail', view.updateOpened);
+            // when newSingle no longer exists, we want to close new signatory box
+            view.model.bind('change:newSingle', function() {
+                if(!view.model.newSingle())
+                    view.close();
+            });
         },
         render: function() {
             var view = this;
@@ -421,7 +576,6 @@
             div.append(view.multiDetails.el);
 
             view.$el.html(div.children());
-            view.updateOpened();
             return view;
         },
         newButtons: function() {
@@ -444,16 +598,19 @@
                        .text('+ Add party'));
 
             div.click(function() {
-                if(model.participantDetail() === 'single') 
+                if(model.newSingle()) {
                     model.setParticipantDetail(null);
-                else {
-                    model.setNewSingle(new Signatory({}));
-                    model.setParticipantDetail('single');
+                    model.setNewSingle(null);
+                } else {
+                    model.setParticipantDetail(null);
+                    model.setNewSingle(new Signatory({
+                        document:model.document(),
+                        signs: true
+                    }));
+                    view.openSingle();
                 }
                 return false;
             });
-
-
 
             return div;
         },
@@ -467,10 +624,22 @@
                        .text('+ Add multisend'));
 
             div.click(function() {
-                if(model.participantDetail() === 'multi')
-                    model.setParticipantDetail(null);
-                else
-                    model.setParticipantDetail('multi');
+                model.setParticipantDetail(null);
+                model.setNewSingle(null);
+
+                var doc = model.document()
+                var sig = new Signatory({
+                    document:doc,
+                    signs:true
+                });
+                CsvSignatoryDesignPopup.popup({
+                    signatory: sig,
+                    onAccept: function() {
+                        doc.addExistingSignatory(sig);
+                        doc.save();
+                        model.setParticipantDetail(sig);
+                    }
+                });
                 return false;
             });
 
@@ -478,33 +647,40 @@
         },
         openSingle: function() {
             var view = this;
-            view.$el.addClass('opensingle');
-            view.$el.removeClass('openmulti');
+            view.$el.animate({height: view.singleDetails.$el.height() + 50}, {
+                duration: 500,
+                easing: "linear",
+                complete: function() {
+                    view.$el.css('overflow', 'visible');
+                    $(window).resize();
+                },
+                step: function() {
+                    $(window).resize();
+                }
+            });
             return view;
         },
         close: function() {
             var view = this;
-            view.$el.removeClass('opensingle');
-            view.$el.removeClass('openmulti');
+            view.$el.animate({height: 50}, {
+                duration: 500,
+                easing: "linear", 
+                complete: function() {
+                    view.$el.css('overflow', 'hidden');
+                    $(window).resize();
+                },
+                step: function() {
+                    $(window).resize();
+                }
+            });
             return view;
         },
         openMulti: function() {
             var view = this;
-            view.$el.addClass('openmulti');
-            view.$el.removeClass('opensingle');
-            return view;
-        },
-        updateOpened: function() {
-            var view = this;
-            var model = view.model;
-
-            if(model.participantDetail() === 'single')
-                view.openSingle();
-            else if(model.participantDetail() === 'multi')
-                view.openMulti();
-            else 
-                view.close();
-
+            view.$el.animate({height: view.singleDetails.$el.height() + 50},
+                             500, "linear", function() {
+                                 view.$el.css('overflow', 'visible');
+                             });
             return view;
         }
     });
@@ -516,8 +692,9 @@
             _.bindAll(view);
             view.addNew = new DesignViewParticipantsNewView(args);
             view.reset();
-            // TODO: clean up events that trigger change:signatories!
-            //view.model.document().bind('change:signatories', view.reset);
+            // any changes to the signatories of a document and we rerender
+            // this includes adding and removing signatories
+            view.model.document().bind('change:signatories', view.reset);
         },
         reset: function() {
             var view = this;
@@ -656,15 +833,19 @@
             _.bindAll(view);
             view.viewmodel = args.viewmodel;
             view.participation = new DesignViewParticipation({model:view.model});
+            view.viewmodel.bind('change:showProblems', view.render);
             view.render();
         },
         render: function() {
             var view = this;
             var sig = view.model;
 
-            view.$el.append(view.detailsInformation());
-            view.$el.append(view.participation.el);
+            var div = $('<div />');
+
+            div.append(view.detailsInformation());
+            div.append(view.participation.el);
             
+            view.$el.html(div.children());
             return view;
         },
         detailsInformation: function() {
@@ -694,23 +875,42 @@
             
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-fields');
-            div.append(view.detailsFullNameField());
-            div.append(view.detailsInformationField('email', 'standard', 'Email'));
-            div.append(view.detailsInformationField('sigco', 'standard', 'Company'));
 
-            $.each(sig.fields(), function(i, e) {
-                if(e.name() !== 'fstname' && 
-                   e.name() !== 'sndname' &&
-                   e.name() !== 'sigco'   &&
-                   e.name() !== 'email')
-                    div.append(view.detailsInformationField(e.name));
-            });
+            if(sig.isCsv()) {
+                var csvButton = Button.init({
+                    color: 'blue',
+                    text: 'View CSV',
+                    size: 'tiny',
+                    onClick: function() {
+                        CsvSignatoryDesignPopup.popup({
+                            signatory: sig,
+                            onAccept: function() {
+                                sig.document().save();
+                            }
+                        });
+                    }
+                });
+                div.append(csvButton.input());
+            } else {
+                div.append(view.detailsFullNameField());
+                div.append(view.detailsInformationField('email', 'standard', 'Email'));
+                div.append(view.detailsInformationField('sigco', 'standard', 'Company'));
+                
+                $.each(sig.fields(), function(i, e) {
+                    if(e.name() !== 'fstname' && 
+                       e.name() !== 'sndname' &&
+                       e.name() !== 'sigco'   &&
+                       e.name() !== 'email')
+                        div.append(view.detailsInformationField(e.name));
+                });
+            }
             
             return div;
         },
         detailsFullNameField: function() {
             var view = this;
             var sig = view.model;
+            var viewmodel = view.viewmodel;
 
             var value = sig.name();
             var div = $('<div />');
@@ -733,7 +933,7 @@
                     }
                     sig.fstnameField().setValue(f);
                     sig.sndnameField().setValue(s);
-                },0); // do this with the current value
+                },0); // do this with the current value (not value before keypress)
             });
             
             var options = new FieldOptionsView({
@@ -747,6 +947,7 @@
         detailsInformationField: function(name, type, placeholder) {
             var view = this;
             var sig = view.model;
+            var viewmodel = view.viewmodel;
 
             var field = sig.field(name, type);
             if(!field)
@@ -763,12 +964,21 @@
             input.bind('keyup keydown keypress change input', function() {
                 setTimeout(function() {
                     field.setValue(input.val().trim());
+                    if(viewmodel.showProblems() && !field.isValid())
+                        input.addClass('redborder');
+                    else
+                        input.removeClass('redborder');
                 },0);
             });
             
             var options = new FieldOptionsView({
                 model: field
             });
+
+            if(viewmodel.showProblems() && !field.isValid())
+                input.addClass('redborder');
+            else
+                input.removeClass('redborder');
 
             div.append(input);
             div.append(options.el);
@@ -777,7 +987,7 @@
         }
     });
 
-    // single line view
+    // single line view which can open
     var DesignViewParticipantView = Backbone.View.extend({
         className: 'design-view-action-participant',
         initialize: function(args) {
@@ -799,7 +1009,6 @@
             view.detailsView = new DesignViewParticipantDetailsView({model:view.model,
                                                                      viewmodel: view.viewmodel});
 
-            //sig.bind('change', view.render);
             viewmodel.bind('change:participantDetail', view.updateOpened);
             view.render();
         },
@@ -823,11 +1032,19 @@
         open: function() {
             var view = this;
             if(!view.opened) {
-                view.innerDiv.animate({height: view.detailsView.$el.height() + 50},
-                                      500, "linear", function() {
-                                          view.innerDiv.css({overflow:'visible',
-                                                             'z-index': 500});
-                                      });
+                view.innerDiv.animate({height: view.detailsView.$el.height() + 50}, {
+                    duration: 500,
+                    easing: "linear",
+                    complete: function() {
+                        view.innerDiv.css({overflow:'visible',
+                                           'z-index': 500});
+                        $(window).resize();
+                    },
+                    step: function() {
+                        // we change the position of the document box, so we need to trigger resize
+                        $(window).resize();
+                    }
+                });
                 view.opened = true;
             } else {
                 // don't animate, just set them
@@ -842,7 +1059,17 @@
             if(view.opened) {
                 view.innerDiv.css({'overflow': 'hidden',
                                    'z-index': 1});
-                view.innerDiv.animate({height:50}, 500, "linear");
+                view.innerDiv.animate({height:50}, {
+                    duration: 500,
+                    easing: "linear",
+                    step: function() {
+                        // we change the position of the document box, so we need to trigger resize
+                        $(window).resize();
+                    },
+                    complete: function() {
+                        $(window).resize();
+                    }
+                });
                 view.opened = false;
             } else {
                 view.innerDiv.css({height:50, 
@@ -875,18 +1102,21 @@
         closeBox: function() {
             var view = this;
             var sig = view.model;
+
             var div = $('<div />');
-            div.addClass('design-view-action-participant-close')
 
-            var txt = $('<div />');
-            txt.addClass('design-view-action-participant-close-x');
-            txt.text('x');
-            div.html(txt);
-
-            div.click(function() {
-                sig.document().removeSignatory(sig);
-            });
-
+            if(!sig.author()) {
+                div.addClass('design-view-action-participant-close')
+                
+                var txt = $('<div />');
+                txt.addClass('design-view-action-participant-close-x');
+                txt.text('x');
+                div.html(txt);
+                
+                div.click(function() {
+                    sig.document().removeSignatory(sig);
+                });
+            }
             return div;
         },
         infoBox: function() {
@@ -942,6 +1172,7 @@
         },
         email: function() {
             var view = this;
+            var viewmodel = view.viewmodel;
             var sig = view.model;
             var div = $('<div />');
             div.addClass('design-view-action-participant-info-email');
@@ -954,6 +1185,11 @@
             };
 
             sig.emailField().bind('change:value', f);
+
+            if(viewmodel.showProblems() && !sig.emailField().isValid())
+                div.addClass('redborder');
+            else
+                div.removeClass('redborder');            
 
             div.append(txt);
             return div;

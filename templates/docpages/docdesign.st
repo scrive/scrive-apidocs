@@ -9,6 +9,7 @@ jQuery(function(){
                         id:"$documentid$"
                   });
   jQuery(".body-container").replaceWith(dv.el());
+  dv.afterInsert();
 });
   mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
   mixpanel.track('View Design View');

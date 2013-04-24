@@ -10,11 +10,14 @@
     var DesignViewModel = Backbone.Model.extend({
         defaults : {
             step : 1,
-            newSingle : new Signatory({})
+            newSingle : null
         },
         initialize: function (args) {
             var model = this;
             _.bindAll(model);
+            model.bind('change:step', function() {
+                $(window).resize();
+            });
         },
         document : function() {
             return this.get("document");
@@ -27,7 +30,6 @@
         },
         setStep: function(s) {
             this.set({step:s});
-            console.log(s);
             return this;
         },
         participantDetail: function() {
@@ -44,6 +46,14 @@
         setNewSingle: function(sig) {
             this.set({newSingle:sig});
             return sig;
+        },
+        setShowProblems: function(b) {
+            this.set({showProblems:b});
+            return this;
+        },
+        showProblems: function() {
+            return this.get('showProblems');
+            return this;
         }
     });
 
@@ -187,7 +197,6 @@
 
             return div;
         },
-
         saveAsDraft: function() {
             var view = this;
             var viewmodel = view.model;
@@ -203,6 +212,7 @@
 
             div.click(function() {
                 viewmodel.document().save();
+                viewmodel.setShowProblems(false);
             });
 
             return div;
@@ -235,7 +245,252 @@
             div.append($('<div />')
                        .addClass('design-view-button3-text')
                        .append('Start signing'));
+            
+            div.click(view.finalClick);
+
             return div;
+        },
+        finalClick: function() {
+            var view = this;
+            var model = view.model;
+            var document = model.document();
+
+            var isSigning = document.authorCanSignFirst();
+
+            mixpanel.track('Click sign button', {
+                'Is Signing' : isSigning
+            });
+
+            // putting this here makes problems start showing up
+            // (meaning red border). The idea is that they have
+            // shown the intention of trying to send the doc.
+            // Now we want to help them complete this.
+            model.setShowProblems(true);
+
+            // why not save the document before we validate it?
+            document.save();
+
+            if(!view.verificationBeforeSendingOrSigning(isSigning)) {
+                view.performValidationActions(isSigning);
+                return;
+            }
+            
+            if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+                mixpanel.track('Open blocking popup');
+                mixpanel.people.set({
+                    'Blocking Popup': new Date()
+                });
+                
+                BlockingInfo.createPopup();
+                return false;
+            }
+
+            if(isSigning)
+                view.signConfirmation();
+            else
+                view.sendConfirmation();
+        },
+        performValidationActions: function(forSigning) {
+            var view = this;
+            var model = view.model;
+            var doc = model.document();
+            // we only flash the first error
+            if(!doc.mainfile()) {
+                mixpanel.track('Error',
+                               {Message: 'no document'});
+                new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
+                return;
+            } else if(!doc.hasAtLeastOneSignatory()) {
+                mixpanel.track('Error',
+                               {Message: 'nobody signs'});
+                new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
+                model.setStep(1);
+            } else if(doc.hasDuplicateEmails()) {
+                mixpanel.track('Error',
+                               {Message: 'duplicate emails'});
+                new FlashMessage({color: 'red', content : localization.designview.validation.sameMails});
+                model.setStep(1);
+            } else if(doc.hasSignatoryProblems()) {
+                var s, f, sigs = doc.signatories(), fields;
+                for(s=0;s<sigs.length;s++) {
+                    var sig = sigs[s];
+                    var fields = sig.fields();
+                    for(f=0; f<fields.length;f++) {
+                        var field = fields[f];
+                          if(!field.doValidate(forSigning, function(text, object, validation) {
+                            mixpanel.track('Error',
+                                           {Field: field.name(),
+                                            Value: field.value(),
+                                            Message: validation.message()});
+                            new FlashMessage({color: 'red', content : validation.message()});
+                            model.setStep(1);
+                            model.setParticipantDetail(sig);
+                        }))
+                            return;
+                    }
+                }
+            }
+                
+        },
+        signConfirmation : function() {
+            var view = this;
+            var model = view.model;
+            var document = model.document();
+            var signatory = document.currentSignatory();
+            var acceptButton;
+            if (document.elegAuthentication()) {
+                acceptButton = $("<span style='margin-top: -8px;'/>");
+                var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
+                var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
+                var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+                var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
+                var callback = function(submit) {   
+                    document.afterSave(function(){
+                        submit.sendAjax(function(resp) {
+                            var link = JSON.parse(resp).link;
+                            window.location = link;
+                        });
+                    });
+                };
+                bankid.click(function() {
+                    if (alreadyClicked(acceptButton))
+                        return false;
+                    mixpanel.track('Select eleg provider', {
+                        'Eleg provider' : 'BankID'
+                    });
+                    document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, document.signByAuthor(),callback); });
+                    return false;
+                });
+                telia.click(function() {
+                    if (alreadyClicked(acceptButton))
+                        return false;
+                    mixpanel.track('Select eleg provider', {
+                        'Eleg provider' : 'Telia'
+                    });
+                    document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, document.signByAuthor(),callback); });
+                    return false;
+                });
+                nordea.click(function() {
+                    if (alreadyClicked(acceptButton))
+                        return false;
+                    mixpanel.track('Select eleg provider', {
+                        'Eleg provider' : 'Nordea'
+                    });
+                    document.takeSigningScreenshot(function() { Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback); });
+                    return false;
+                });
+                mbi.click(function() {
+                    if (alreadyClicked(acceptButton))
+                        return false;
+                    mixpanel.track('Select eleg provider', {
+                        'Eleg provider' : 'Mobile BankID'
+                    });
+                    document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback); });
+                    return false;
+                });
+                acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
+            } else {
+                acceptButton = Button.init({
+                    size: "tiny",
+                    color : "blue",
+                    shape : "rounded",
+                    text : localization.designview.sign,
+                    onClick : function() {
+                        if (alreadyClicked(this))
+                            return;
+                        mixpanel.track('Click accept sign', {
+                            'Button' : 'sign'
+                        });
+                        document.takeSigningScreenshot(function() {
+                            document.afterSave(function() {
+                                document.signByAuthor().sendAjax(function(resp) {
+                                    var link = JSON.parse(resp).link;
+                                    window.location = link;
+                                });;
+                            });
+                        });
+                    }
+                }).input();
+            }
+            var content = $("<span/>");
+            if (document.authorIsOnlySignatory())
+                content = $(document.process().processLocalization().signatorysignmodalcontentauthoronly);
+            else if (document.elegAuthentication())
+                content = $(document.process().processLocalization().signatorysignmodalcontentdesignvieweleg);
+            else
+                content = $(document.process().processLocalization().signatorysignmodalcontent);
+
+            DocumentDataFiller.fill(document, content);
+            if (document.elegAuthentication()) {
+                var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
+                var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
+                var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
+                content = content.add($("<span/>").append(subhead).append(p));
+            }
+            Confirmation.popup({
+                title : localization.signByAuthor.modalTitle,
+                acceptButton : acceptButton,
+                rejectText: localization.cancel,
+                content  : content
+            });
+        },
+        sendConfirmation : function() {
+            var view = this;
+            var model = view.model;
+            var document = model.document();
+            var signatory = document.currentSignatory();
+            var box = $('<div />');
+            var padDesignViewUtil = undefined;
+            if (!document.padDelivery()) {
+                var content = $("<p/>").append($("<span/>").append(document.process().processLocalization().confirmsendtext));
+                if (!document.authorIsOnlySignatory())
+                    content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
+                content.append($("<span>?</span>"));
+                box.append(DocumentDataFiller.fill(document,content));
+            }
+            else {
+                var padDesignViewUtil = new PadDesignViewUtils({document : document});
+                box.append(padDesignViewUtil.el());
+            }
+            Confirmation.popup({
+                title : (!document.padDelivery()) ? document.process().processLocalization().confirmsendtitle : localization.pad.howDoYouWantToSign,
+                acceptButton : Button.init({
+                    size: "tiny",
+                    color : "green",
+                    shape : "rounded",
+                    text : document.process().processLocalization().sendbuttontext,
+                    onClick : function() {
+                        if (alreadyClicked(this))
+                            return;
+                        mixpanel.track('Click accept sign', {
+                            'Button' : 'send'
+                        });
+                        LoadingDialog.open(localization.designview.messages.sendingDocument);
+                        document.afterSave(function() {
+                            document.sendByAuthor().sendAjax(function(resp) {
+                                var link = JSON.parse(resp).link;
+                                if (padDesignViewUtil != undefined)
+                                    padDesignViewUtil.postSendAction(link);
+                                else
+                                    window.location = link;
+                            });
+                        });
+                    }
+                }).input(),
+                rejectText: localization.cancel,
+                content  : box
+            });
+        },
+        verificationBeforeSendingOrSigning : function() {
+            var view = this;
+            var model = view.model;
+            var document = model.document();
+
+            if(document.hasProblems()) {
+                return false;
+            } else {
+                return true;
+            }
         }
     });
 
@@ -264,6 +519,10 @@
             var view = this;
             view.$el.html(view.frame());
             return view;
+        },
+        afterInsert: function() {
+            var view = this;
+            view.documentView.afterInsert();
         }
     });
 
@@ -278,7 +537,12 @@
             model: model
         });
         document.recall();
-        this.el = function() {return $(view.el);};
+        this.el = function() {
+            return $(view.el);
+        };
+        this.afterInsert = function() {
+            view.afterInsert();
+        };
     }
 
 })(window);

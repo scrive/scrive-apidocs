@@ -381,6 +381,14 @@ window.Field = Backbone.Model.extend({
     },
     removeAllPlacements : function() {
         _.each(this.placements(), function(p) {p.remove();});
+    },
+    isValid: function(forSigning) {
+        return this.validation(forSigning).validateData(this.value());
+    },
+    doValidate: function(forSigning, callback) {
+        return this.validation(forSigning)
+            .setCallback(callback)
+            .validateData(this.value());
     }
 });
 

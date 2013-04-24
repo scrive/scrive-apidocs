@@ -94,6 +94,13 @@ window.Document = Backbone.Model.extend({
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
         return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
     },
+    addExistingSignatory: function(sig) {
+        var document = this;
+        var signatories = document.signatories();
+        signatories[signatories.length] = sig;
+        document.trigger('change:signatories');
+        document.trigger('change:signorder');
+    },
     addSignatory: function() {
       var document = this;
       var signatories = document.signatories();
@@ -132,6 +139,7 @@ window.Document = Backbone.Model.extend({
                                  delivery: nsigdelivery});
       signatories[signatories.length] = nsig;
       document.set({"signatories": signatories});
+        document.trigger('change:signorder');
       this.fixSignorder();
       return nsig;
     },
@@ -599,6 +607,11 @@ window.Document = Backbone.Model.extend({
     authoruser: function() {
         return this.get("authoruser");
     },
+    signatoriesWhoSign: function() {
+        return _.filter(this.signatories(), function(sig) {
+            return sig.signs();
+        });
+    },
     maxPossibleSignOrder : function() {
       var mpso = 0;
       _.each(this.signatories(), function(sig) {if (sig.signs()) mpso++;});
@@ -691,6 +704,35 @@ window.Document = Backbone.Model.extend({
     },
     flux: function() {
         return this.get('flux');
+    },
+    unsetFlux: function() {
+        this.set({flux:false});
+        return this;
+    },
+    // validation
+    hasProblems: function(forSigning) {
+        return this.hasDocumentProblems() || this.hasSignatoryProblems(forSigning);
+    },
+    hasDocumentProblems: function() {
+        return !this.hasAtLeastOneSignatory() ||
+            !this.mainfile() ||
+            this.hasDuplicateEmails();
+    },
+    hasAtLeastOneSignatory: function() {
+        var signing = this.signatoriesWhoSign();
+        return signing.length >= 1;
+    },
+    hasDuplicateEmails: function() {
+        var mails = _.invoke(this.signatories(), 'email').sort();
+        return _.some(_.zip(mails, _.rest(mails)), function(ms) {
+            return ms[0] === ms[1] && ms[0] !== '';
+        });
+    },
+    hasSignatoryProblems: function(forSigning) {
+        var sigs = this.signatories();
+        return _.some(sigs, function(sig) {
+            return sig.hasProblems(forSigning);
+        });
     }
 
 });
