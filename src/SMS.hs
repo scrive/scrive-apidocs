@@ -4,9 +4,6 @@ module SMS (
   , scheduleSMS
   ) where
 
-import Control.Applicative
-import Data.Char
-
 import Crypto.RNG
 import DB
 import SMS.Model

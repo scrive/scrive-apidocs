@@ -519,9 +519,11 @@ notifySMS_ t doc sl = notifySMS t doc sl $ return ()
 
 smsFields :: TemplatesMonad m => Document -> SignatoryLink -> Fields m ()
 smsFields document siglink = do
-    -- F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink document
+    F.value "creatorname" $ getSmartName $ $(fromJust) $ getAuthorSigLink document
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
+    F.value "partylist" $ map getSmartName $ partyList document
+
 
 simpleSMS :: (CryptoRNG m, MonadDB m) => String -> Maybe SignatoryLinkID -> String -> m ()
 simpleSMS number slid msg = do
