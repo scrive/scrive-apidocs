@@ -82,11 +82,10 @@
 
             var deliveryTexts = {
                 email : "by email",
-                pad : "on this tablet",
-                api : "via API"
+                pad : "on this tablet"
             };
 
-            var deliveryTypes = ['email', 'pad', 'api'];
+            var deliveryTypes = ['email', 'pad'];
 
             var select = new Select({
                 options: _.map(deliveryTypes, function(t) {
@@ -404,6 +403,73 @@
         
     });
 
+    // model is Signatory
+    var DesignViewNewFieldSelector = Backbone.View.extend({
+        className: 'design-view-action-participant-new-field-selector',
+        initialize: function() {
+            var view = this;
+            _.bindAll(view);
+            view.render();
+        },
+        render: function() {
+            var view = this;
+            var sig = view.model;
+
+            view.$el.html(view.selectBox());
+
+            return view;
+        },
+        selectBox: function() {
+            var view = this;
+            var sig = view.model;
+
+            var options = [];
+
+            _.each(view.standardFields, function(f) {
+                if(!sig.field(f[0], f[1]))
+                    options.push({
+                        name: view.placeholder(f[0]),
+                        value: f
+                    });
+            });
+
+            options.push({
+                name: 'Custom field',
+                value: '--custom'
+            });
+
+            var select = new Select({
+                options: options,
+                name: 'Add new field',
+                onSelect: function(v) {
+                    if(v === '--custom') {
+                        sig.addNewCustomField();
+                    } else {
+                        var f = sig.addNewField(v[1]);
+                        f.setName(v[0]);
+                    }
+                }
+            });
+
+            return select.view().el;
+        },
+        standardFields: [
+            ["sigpersnr", "standard"],
+            ["sigcompnr", "standard"]
+        ],
+        //TODO: Translate me
+        standardPlaceholders: {
+            email: 'Email',
+            sigco: 'Company',
+            sigcompnr: 'Company number',
+            sigpersnr: 'Person number'
+        },
+        placeholder: function(name) {
+            return this.standardPlaceholders[name] || name;
+        },
+    });
+            
+
     var DesignViewParticipation = Backbone.View.extend({
         className: 'design-view-action-participant-details-participation',
         initialize: function() {
@@ -478,11 +544,10 @@
 
             var deliveryTexts = {
                 email : "by email",
-                pad : "on this tablet",
-                api : "via API"
+                pad : "on this tablet"
             };
 
-            var deliveryTypes = ['email', 'pad', 'api'];
+            var deliveryTypes = ['email', 'pad'];
 
             var select = new Select({
                 options: _.map(deliveryTypes, function(t) {
@@ -713,7 +778,8 @@
             $.each(model.document().signatories(), function(i, s) {
                 view.participants.push(new DesignViewParticipantView({model  : s, 
                                                                       number : i,
-                                                                      viewmodel : model}));
+                                                                      viewmodel : model
+                                                                     }));
             });
             return view;
         },
@@ -765,15 +831,21 @@
             view.model.bind('change:role', view.render);
             view.render();
         },
+        icons: {
+            viewer: '/img/viewer.png',
+            signatory: '/img/signatory.png'
+        },
         render: function() {
             var view = this;
             var sig = view.model;
+
+            var role = sig.role();
 
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-role-inner')
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-role-icon')
-                        .attr('src', '/img/signatory.png'));
+                        .attr('src', view.icons[role]));
             view.$el.html(div);
 
             return view;
@@ -786,17 +858,25 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
+            view.model.bind('change:delivery', view.render);
             view.render();
+        },
+        icons: {
+            email: '/img/email.png',
+            pad: '/img/pad2.png',
+            api: '/img/pad2.png'
         },
         render: function() {
             var view = this;
             var sig = view.model;
 
+            var delivery = sig.delivery();
+
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-device-inner')
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-device-icon')
-                        .attr('src', '/img/pad2.png'));
+                        .attr('src', view.icons[delivery]));
             view.$el.html(div);
 
             return view;
@@ -809,23 +889,33 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
+            view.model.bind('change:authorization', view.render);
             view.render();
+        },
+        icons: {
+            standard: '/img/noauth.png',
+            eleg: '/img/eleg.png'
         },
         render: function() {
             var view = this;
             var sig = view.model;
 
+            var auth = sig.authentication();
+
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-auth-inner')
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-auth-icon')
-                        .attr('src', '/img/eleg.png'));
+                        .attr('src', view.icons[auth]));
             view.$el.html(div);
 
             return view;
         }
     });
 
+    /* model::Signatory
+       viewmodel::DesignViewModel
+    */
     var DesignViewParticipantDetailsView = Backbone.View.extend({
         className: 'design-view-action-participant-details',
         initialize: function(args) {
@@ -833,7 +923,9 @@
             _.bindAll(view);
             view.viewmodel = args.viewmodel;
             view.participation = new DesignViewParticipation({model:view.model});
+            view.newFieldSelector = new DesignViewNewFieldSelector({model:view.model});
             view.viewmodel.bind('change:showProblems', view.render);
+            view.model.bind('change:fields', view.render);
             view.render();
         },
         render: function() {
@@ -856,6 +948,7 @@
             div.addClass('design-view-action-participant-details-information');
             div.append(view.detailsInformationHeader());
             div.append(view.detailsInformationFields());
+            div.append(view.newFieldSelector.el);
             
             return div;
         },
@@ -895,17 +988,29 @@
                 div.append(view.detailsFullNameField());
                 div.append(view.detailsInformationField('email', 'standard', 'Email'));
                 div.append(view.detailsInformationField('sigco', 'standard', 'Company'));
+
+                console.log(sig.fields());
                 
                 $.each(sig.fields(), function(i, e) {
                     if(e.name() !== 'fstname' && 
                        e.name() !== 'sndname' &&
                        e.name() !== 'sigco'   &&
                        e.name() !== 'email')
-                        div.append(view.detailsInformationField(e.name));
+                        div.append(view.detailsInformationField(e.name(), e.type(), view.placeholder(e.name())));
                 });
             }
             
             return div;
+        },
+        //TODO: Translate me
+        standardPlaceholders: {
+            email: 'Email',
+            sigco: 'Company',
+            sigcompnr: 'Company number',
+            sigpersnr: 'Person number'
+        },
+        placeholder: function(name) {
+            return this.standardPlaceholders[name] || name;
         },
         detailsFullNameField: function() {
             var view = this;
@@ -1185,11 +1290,6 @@
             };
 
             sig.emailField().bind('change:value', f);
-
-            if(viewmodel.showProblems() && !sig.emailField().isValid())
-                div.addClass('redborder');
-            else
-                div.removeClass('redborder');            
 
             div.append(txt);
             return div;

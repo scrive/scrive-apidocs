@@ -66,11 +66,12 @@ window.Signatory = Backbone.Model.extend({
         fields: [{name: "fstname",   type : "standard"},
                  {name: "sndname",   type : "standard"},
                  {name: "email",     type : "standard"},
-                 {name: "mobile",    type : "standard"},
-                 {name: "sigco",     type : "standard"},
-                 {name: "sigpersnr", type : "standard"},
-                 {name: "sigcompnr", type : "standard"},
-                 {name: "signature", type : "signature"}
+// remove
+                                  {name: "mobile",    type : "standard"},
+                 {name: "sigco",     type : "standard"}
+                 //{name: "sigpersnr", type : "standard"},
+                 //{name: "sigcompnr", type : "standard"},
+                 //{name: "signature", type : "signature"}
         ],
         current: false,
         attachments: [],
@@ -591,6 +592,12 @@ window.Signatory = Backbone.Model.extend({
         return _.some(this.fields(), function(field) {
             return !field.isValid();
         });
+    },
+    role: function() {
+        if(this.signs())
+            return 'signatory';
+        else
+            return 'viewer';
     }
 
 });
