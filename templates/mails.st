@@ -387,9 +387,7 @@ newUserMail=
 $_newUserMailTitle()$
 $nicemail(
         mailheader=_newUserMailTitle();
-        mailp1=_newUserMailHeader();
-        mailp2=newUserMailMainP();
-        mailp3=regards()
+        mailp1=newUserMailMainP()
     )$
 ####
 newUserMailMainP=
