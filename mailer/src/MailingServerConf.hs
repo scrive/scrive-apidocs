@@ -5,6 +5,7 @@ module MailingServerConf (
 
 import Data.Word
 import Configuration
+import Mails.Data
 
 data MailingServerConf = MailingServerConf {
     mscHttpBindAddress :: (Word32, Word16)
@@ -12,6 +13,7 @@ data MailingServerConf = MailingServerConf {
   , mscMasterSender    :: SenderConfig
   , mscSlaveSender     :: Maybe SenderConfig
   , mscAmazonConfig    :: Maybe (String, String, String)
+  , testReceivers     :: [Address]
   } deriving (Read, Show)
 
 data SenderConfig = SMTPSender {
@@ -42,6 +44,7 @@ instance Configuration MailingServerConf where
     }
     , mscSlaveSender = Nothing
     , mscAmazonConfig = Nothing
+    , testReceivers   = [Address { addrName = "test",   addrEmail = "your@email.scrive.com" }]
   }
   confOptions = []
   confVerify _ = return $ Right ()

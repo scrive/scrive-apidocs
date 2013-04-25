@@ -6,7 +6,7 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Monoid
-
+import MailingServerConf
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
@@ -16,13 +16,13 @@ import Sender
 import qualified Log (mailingServer)
 
 
-serviceAvailabilityChecker :: CryptoRNGState -> String -> (Sender, Sender) -> MVar Sender -> (forall a. IO a -> IO a)  -> IO ()
-serviceAvailabilityChecker rng dbconf (master, slave) msender interruptible = do
+serviceAvailabilityChecker :: MailingServerConf -> CryptoRNGState -> String -> (Sender, Sender) -> MVar Sender -> (forall a. IO a -> IO a)  -> IO ()
+serviceAvailabilityChecker conf rng dbconf (master, slave) msender interruptible = do
     Log.mailingServer $ "Running service checker"
     mid <- inDB $ do
       token <- random
       now <- getMinutesTime
-      mid <- dbUpdate $ CreateServiceTest token testSender testReceivers now
+      mid <- dbUpdate $ CreateServiceTest token testSender (testReceivers conf) now
       success <- dbUpdate $ AddContentToEmail mid "test" "test" [] mempty
       Log.mailingServer $ "Creating service testing email #" ++ show mid ++ "..."
       when (not success) $
@@ -62,9 +62,4 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender interruptible = do
     second = 1000000
 
     testSender = Address { addrName = "Scrive mailer", addrEmail = "noreply@scrive.com" }
-    testReceivers = [
-        Address { addrName = "aol test",   addrEmail = "jdoe278@aol.com"      }
-      , Address { addrName = "yahoo test", addrEmail = "mailer_000@yahoo.com" }
-      , Address { addrName = "gmail test", addrEmail = "mailer0088@gmail.com" }
-      , Address { addrName = "zoho test",  addrEmail = "mailer_000@zoho.com"  }
-      ]
+

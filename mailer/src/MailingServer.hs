@@ -50,7 +50,7 @@ main = Log.withLogger $ do
         ] ++
         case mscSlaveSender conf of
           Just slave -> [ forkCron True "ServiceAvailabilityChecker" 0
-                            (serviceAvailabilityChecker rng dbconf (sender, createSender slave) msender) ]
+                            (serviceAvailabilityChecker conf rng dbconf (sender, createSender slave) msender) ]
           Nothing    -> []) $ \_ -> do
       waitForTermination
       Log.mailingServer $ "Termination request received"
