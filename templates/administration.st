@@ -780,10 +780,10 @@ userdocuments=
       <div class="tab-header">
       </div>
       <ul class="tabs">
-    <li class="float-left"><a href="/adminonly/useradmin/$user.id$">Användaruppgifter</a></li>
-    <li class="float-left"><a href="/adminonly/useradmin/payments/$user.id$">Payment info</a></li>
-    <li class="float-left"><a href="/adminonly/useradmin/usagestats/$user.id$">Statistics</a></li>
-    <li class="active float-left"><a href="/adminonly/useradmin/documents/$user.id$">Documents</a></li>
+    <li class="float-left"><a href="/adminonly/useradmin/$userid$">Användaruppgifter</a></li>
+    <li class="float-left"><a href="/adminonly/useradmin/payments/$userid$">Payment info</a></li>
+    <li class="float-left"><a href="/adminonly/useradmin/usagestats/$userid$">Statistics</a></li>
+    <li class="active float-left"><a href="/adminonly/useradmin/documents/$userid$">Documents</a></li>
 
         <li class="float-right"/>
       </ul>
@@ -796,7 +796,7 @@ userdocuments=
 </div>
 </div>
 <script>
-  jQuery(".doclist").append(new KontraList(DocumentAdminListDefinition($if(admin)$true$else$false$endif$, $userid$)).el());
+  jQuery(".doclist").append(new KontraList(DocumentAdminListDefinition($if(admin)$true$else$false$endif$, "$userid$")).el());
 </script>
 ####
 

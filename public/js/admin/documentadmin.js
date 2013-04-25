@@ -72,7 +72,7 @@ window.DocumentAdminListDefinition = function(isAdmin, userid) {
     var list = {
         name : "Documents Table",
         schema: new Schema({
-            url: "/adminonly/documentslist" + (userid != undefined ? "?userid=" + userid : ""),
+            url: "/adminonly/documentslist" + (userid != undefined && userid != ""  ? "?userid=" + userid : ""),
             sorting: new Sorting({
                 fields: [
                       "ctime"

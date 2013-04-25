@@ -248,20 +248,26 @@ mailInvitationToSignOrderIntructions=
 mailInvitationToSignContractDefaultHeader=
 $_mailInvitationToSignContractDefaultHeader()$
 <br/>
+$if(!hascustommessage)$
 <div class="editable" name="customtext">
 </div>
+$endif$
 ####
 mailInvitationToSignOfferDefaultHeader=
 $_mailInvitationToSignOfferDefaultHeader()$
 <br/>
+$if(!hascustommessage)$
 <div class="editable" name="customtext">
 </div>
+$endif$
 ####
 mailInvitationToSignOrderDefaultHeader=
 $_mailInvitationToSignOrderDefaultHeader()$
 <br/>
+$if(!hascustommessage)$
 <div class="editable" name="customtext">
 </div>
+$endif$
 ####
 mailInvitationToViewDefaultHeader=
 $_hi()$ <strong>$personname$</strong>,
@@ -387,9 +393,7 @@ newUserMail=
 $_newUserMailTitle()$
 $nicemail(
         mailheader=_newUserMailTitle();
-        mailp1=_newUserMailHeader();
-        mailp2=newUserMailMainP();
-        mailp3=regards()
+        mailp1=newUserMailMainP()
     )$
 ####
 newUserMailMainP=

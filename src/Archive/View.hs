@@ -102,6 +102,7 @@ docFieldsListForJSON userid padqueue doc = do
     J.value "deleted" $ documentDeletedForUser doc userid
     J.value "reallydeleted" $ documentReallyDeletedForUser doc userid
     J.value "canperformsigning" $ userCanPerformSigningAction userid doc
+    J.value "isviewedbyauthor" $ isSigLinkFor userid (getAuthorSigLink doc)
     J.value "objectversion" $ documentobjectversion doc
 
 signatoryFieldsListForJSON :: TemplatesMonad m => PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
