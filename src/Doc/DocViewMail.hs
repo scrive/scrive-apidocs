@@ -221,11 +221,14 @@ mailInvitation forMail
                               F.value "creatorname" $ creatorname
                               F.value "personname" $ Just personname <| personname /= "" |> Nothing
                               F.value "documenttitle" $ documenttitle
+                              F.value "hascustommessage" $ not $ null documentinvitetext
                           else
                             renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
                               F.value "creatorname" creatorname
                               F.value "personname" personname
                               F.value "documenttitle" $ documenttitle
+                              F.value "hascustommessage" $ not $ null documentinvitetext
+
           if null documentinvitetext then
             return defaultHeader
            else
