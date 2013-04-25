@@ -20,7 +20,7 @@
             view.render();
             view.model.bind('change:file', view.render);
             view.model.bind('change:flux', view.render);
-            view.viewmodel.bind('change:showProblems', view.render);
+            view.viewmodel.bind('change:showProblems', view.showProblems);
             $(window).resize(function() {
                 var myTop = view.$el.offset().top;
                 var winHeight = $(window).height();
@@ -43,11 +43,17 @@
             } else {
                 view.$el.html(view.uploadButtons());
             }
+            return view;
+        },
+        showProblems: function() {
+            var view = this;
+            var model = view.viewmodel;
+            var document = view.model;
+            
             if(model.showProblems() && !document.mainfile())
                 view.$el.addClass('redborder');
             else
                 view.$el.removeClass('redborder');
-            return view;
         },
         loading: function() {
             var div = $('<div />');
