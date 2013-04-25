@@ -204,6 +204,8 @@ evidenceOfIntent=
                         Click here
                       </a>
                       to see attached screen capture of their signing view.
+                    $else$
+                      A screen capture was not done for this event.
                     $endif$
                     <a href="$entry.reference.image$">Click here</a> to see attached screen capture of the reference signing view created at $entry.reference.time$.
                   </td>

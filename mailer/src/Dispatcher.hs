@@ -14,10 +14,47 @@ import Sender
 import Mails.Model
 import MinutesTime
 import qualified Log (mailingServer)
+import qualified MemCache
+import qualified Network.AWS.Authentication as AWS
+import Context
+import qualified Data.ByteString as BS
+import Control.Monad.State
 
-dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> IO ()
-dispatcher rng master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rng $ do
-    Log.mailingServer $ "Dispatcher is starting"
+dispatcher :: AWS.S3Action -> CryptoRNGState -> Sender -> MVar Sender -> String -> IO ()
+dispatcher s3action rng master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rng $ do
+  Log.mailingServer $ "Dispatcher is starting"
+  filecache <- MemCache.new BS.length 50000000
+  now' <- getMinutesTime
+  let ctx = Context { ctxs3action    = s3action
+                    , ctxfilecache   = filecache
+                    , ctxtime        = now'
+                    -- FIXME: we should really have a limited MonadAmazon
+                    , ctxmaybeuser           = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxhostpart            = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxresourcehostpart    = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxflashmessages       = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxnormalizeddocuments = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxipnumber            = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxproduction          = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxtemplates           = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxglobaltemplates     = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxlang                = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxmailsconfig         = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxlivedocxconf        = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxlogicaconf          = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxgtconf              = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxxtoken              = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxadminaccounts       = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxsalesaccounts       = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxmaybepaduser        = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxstaticresources     = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxusehttps            = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxrecurlyconfig       = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxsessionid           = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxmixpaneltoken       = error "Dispatcher.dispatcher: Context is limited in here"
+                    , ctxhomebase            = error "Dispatcher.dispatcher: Context is limited in here"
+                    }
+  flip evalStateT ctx $ do
     mails <- dbQuery GetIncomingEmails
     Log.mailingServer $ "Batch of mails to send is " ++ show (length mails) ++ " email(s) long."
     forM_ mails $ \mail@Mail{mailID, mailServiceTest} -> do

@@ -30,7 +30,10 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
                                   return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
                             }}),
 
-                  new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
+                  new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time", special: "rendered",
+                  rendering: function(time) {
+                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                  }}),
                   new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
                             rendering: function(value,_idx,model) {
                                    var res= $("<div/>");

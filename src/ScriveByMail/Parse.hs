@@ -139,12 +139,12 @@ parseSignatory sig =
       prsnr   = msum $ map (flip levLookup $ pairs) persStrings
   in
    if all isJust [fstname, sndname, email]
-   then let ss = [SignatoryField FirstNameFT      (fromJust fstname) True [],
-                  SignatoryField LastNameFT       (fromJust sndname) True [],
-                  SignatoryField EmailFT          (fromJust email  ) True []] ++
-                 [SignatoryField CompanyFT        (a               ) True [] | Just a <- [company], not $ null a] ++
-                 [SignatoryField CompanyNumberFT  (a               ) True [] | Just a <- [cmpnr],   not $ null a] ++
-                 [SignatoryField PersonalNumberFT (a               ) True [] | Just a <- [prsnr],   not $ null a]
+   then let ss = [SignatoryField FirstNameFT      (fromJust fstname) True False [],
+                  SignatoryField LastNameFT       (fromJust sndname) True False [],
+                  SignatoryField EmailFT          (fromJust email  ) True False []] ++
+                 [SignatoryField CompanyFT        (a               ) True False [] | Just a <- [company], not $ null a] ++
+                 [SignatoryField CompanyNumberFT  (a               ) True False [] | Just a <- [cmpnr],   not $ null a] ++
+                 [SignatoryField PersonalNumberFT (a               ) True False [] | Just a <- [prsnr],   not $ null a]
         in if length ss == length pairs
            then Just $ SignatoryDetails (SignOrder 0) ss False False
            else Nothing

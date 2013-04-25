@@ -18,6 +18,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import DB.Derive
 import MagicHash (MagicHash)
+import File.FileID
 
 newtype MailID = MailID Int64
   deriving (Eq, Ord)
@@ -39,8 +40,8 @@ instance Monoid XSMTPAttrs where
 
 data Attachment = Attachment {
     attName    :: String
-  , attContent :: BS.ByteString
-  } deriving (Eq, Ord, Show, Data, Typeable)
+  , attContent :: Either BS.ByteString FileID
+  } deriving (Eq, Ord, Show, Typeable)
 
 data Address = Address {
     addrName  :: String

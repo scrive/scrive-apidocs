@@ -3,9 +3,9 @@ notFound=
 <div class='mainContainer big'>
 <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
 <div class='short-input-section'>
-  <header>
+  <div class="shadowed">
     $_notFound()$
-  </header>
+  </div>
   <div class='short-input-container'>
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>
@@ -26,9 +26,9 @@ internalServerError=
 <div class='mainContainer big'>
 <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
 <div class='short-input-section'>
-  <header>
+  <div class="shadowed">
    $_internalServerError()$
-  </header>
+  </div>
   <div class='short-input-container'>
     <div class='short-input-container-body-wrapper'>
       <div class='short-input-container-body'>
@@ -249,9 +249,11 @@ var google_remarketing_only = true;
 
 ####
 header=
+$if(logged)$
 <script>
   window.BlockingInfo = Blocking();
 </script>
+$endif$
 
 <header class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <nav>
@@ -348,5 +350,15 @@ contactUsVivocha=
   </ul>
 </nav>
 </aside>
-<script src="https://www.vivocha.com/a/scrive/api/vivocha.js"></script>
+$loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
+####
+loadScript=
+<script>
+  jQuery(function(){
+    var script = document.createElement( 'script' );
+    script.type = 'text/javascript';
+    script.src = "$src$";
+    jQuery("head").append( script );
+  })
+</script>
 ####

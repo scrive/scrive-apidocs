@@ -8,14 +8,9 @@ module Doc.DocControl(
     -- Top level handlers
     , handleNewDocument
     , showCreateFromTemplate
-    , handleDownloadFile
     , handleSignShow
     , handleSignShowSaveMagicHash
     , splitUpDocumentWorker
-    , signDocument
-    , signDocumentIphoneCase
-    , rejectDocument
-    , rejectDocumentIphoneCase
     , handleAcceptAccountFromSign
     , handleSigAttach
     , handleDeleteSigAttach
@@ -30,6 +25,7 @@ module Doc.DocControl(
     , handleChangeSignatoryEmail
     , handleRestart
     , handleProlong
+    , handleSignWithEleg
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -37,6 +33,8 @@ module Doc.DocControl(
     , handleShowVerificationPage
     , handleVerify
     , handleMarkAsSaved
+    , handleAfterSigning
+    , readScreenshots
 ) where
 
 import AppView
@@ -58,13 +56,11 @@ import Doc.SignatoryLinkID
 import Doc.DocumentID
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
-import qualified Doc.Screenshot as Screenshot
 import Doc.Tokens.Model
 import Crypto.RNG
 import Attachment.Model
 import InputValidation
 import File.Model
-import File.Storage
 import Kontra
 import KontraLink
 import MagicHash
@@ -73,7 +69,6 @@ import Utils.Monad
 import Utils.Prelude
 import Utils.Read
 import Utils.String
-import Utils.Tuples
 import Redirect
 import User.Model
 import Util.HasSomeUserInfo
@@ -101,13 +96,11 @@ import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS hiding (length, take)
 import qualified Data.Map as Map
 import System.FilePath
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
-import Text.JSON.String (runGetJSON)
 import qualified Text.JSON.Gen as J
 import Text.JSON.FromJSValue
 import Doc.DocDraft() -- Import instances only
@@ -154,8 +147,8 @@ handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  when (documentdeliverymethod document == PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
+  when (signatorylinkdeliverymethod signatorylink == PadDelivery) internalError
   muser <- User.Action.handleAccountSetupFromSign document signatorylink
   case muser of
     Just user -> runJSONGenT $ do
@@ -163,97 +156,25 @@ handleAcceptAccountFromSign documentid
     Nothing -> runJSONGenT $ do
       return ()
 
-{- |
-   Control the signing of a document
-   URL: /s/{docid}/{signatorylinkid1}/{magichash1}
-   Method: POST
- -}
-signDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
-signDocumentIphoneCase did sid _ = signDocument did sid
+{- | Utils for signing with eleg -}
 
-signDocument :: Kontrakcja m
-             => DocumentID      -- ^ The DocumentID of the document to sign
-             -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
-             -> m KontraLink
-signDocument documentid
-             signatorylinkid = do
-  -- This method requires fixes. Right now we emulate author signing
-  -- by digging out his magichash and using that in the same form as
-  -- signatory signing. This is wrong.
-  --
-  -- Instead we want to change it to the following schema:
-  --
-  -- Any operation done on SignatoryLink can be done under one of circumstances:
-  --
-  -- . signatorylinkid is same as requested and magic hash matches the
-  --   one stored in session
-  -- . signatorylinkid is same as requested and maybesignatory is same
-  --   as logged in user
-  --
-  -- The above requires changes to logic in all invoked procedures.
+handleSignWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots -> SignatureProvider
+                     -> m (Either String (Either DBError (Document, Document)))
+handleSignWithEleg documentid signatorylinkid magichash fields screenshots provider = do
+  transactionid <- getDataFnM $ look "transactionid"
+  esigninfo <- case provider of
+    MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash fields transactionid
+    _ -> do
+          signature <- getDataFnM $ look "signature"
+          BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash fields provider signature transactionid
+  case esigninfo of
+    BankID.Problem msg -> return $ Left msg
+    BankID.Mismatch msg sfn sln spn -> do
+      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      handleMismatch document signatorylinkid msg sfn sln spn
+      return $ Left msg
+    BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
 
-  mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
-  magichash <- case mmagichash of
-    Just m -> return m
-    Nothing -> do
-      -- we are author of this document probably
-      doc <- guardRightM $ getDocByDocID documentid
-      (authorlink :: SignatoryLink) <- guardJust $ getSigLinkFor doc signatorylinkid
-      ctx <- getContext
-      when (not (isAuthor authorlink)) $ do
-        Log.debug $ "Signatory id " ++ show signatorylinkid ++ " is not author of document " ++ show documentid ++ " and cannot sign because there is no magichash in session"
-        internalError
-
-      when (fmap userid (ctxmaybeuser ctx) /= maybesignatory authorlink) $ do
-        Log.debug $ "Signatory user id " ++ show (maybesignatory authorlink)
-                 ++ " is not same as logged in user id " ++ show (fmap userid (ctxmaybeuser ctx))
-        internalError
-
-      return (signatorymagichash authorlink)
-
-  fieldsJSON <- guardRightM $ liftM (runGetJSON readJSArray) $ getField' "fields"
-  screenshots <- readScreenshots
-  fields <- guardJustM $ withJSValue fieldsJSON $ fromJSValueCustomMany $ do
-      ft <- fromJSValueM
-      value <- fromJSValueField "value"
-      return $ pairMaybe ft value
-  mprovider <- readField "eleg"
-  edoc <- case mprovider of
-           Nothing -> Right <$> signDocumentWithEmailOrPad documentid signatorylinkid magichash fields screenshots
-           Just provider -> do
-             transactionid <- getDataFnM $ look "transactionid"
-             esigninfo <- case provider of
-               MobileBankIDProvider -> do
-                 BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash fields transactionid
-               _ -> do
-                 signature <- getDataFnM $ look "signature"
-                 BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash fields provider signature transactionid
-             case esigninfo of
-               BankID.Problem msg -> return $ Left msg
-               BankID.Mismatch msg sfn sln spn -> do
-                 document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-                 handleMismatch document signatorylinkid msg sfn sln spn
-                 return $ Left msg
-               BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
-  case edoc of
-    Right (Right (doc, olddoc)) -> do
-      postDocumentPendingChange doc olddoc "web"
-      udoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID documentid
-      handleAfterSigning udoc signatorylinkid
-      siglink <- guardJust $ getSigLinkFor doc signatorylinkid
-      case (signatorylinksignredirecturl siglink) of
-           Nothing -> return LoopBack
-           Just "" -> return LoopBack
-           Just s  -> return $ LinkExternal s
-    Right (Left (DBActionNotAvailable message)) -> do
-      -- The DBActionNotAvailable messages are not intended for end users
-      --addFlash (OperationFailed, message)
-      Log.debug $ "When signing document: " ++ message
-      return LoopBack
-    Left msg -> do
-      addFlash  (OperationFailed, msg)
-      return LoopBack
-    _ -> internalError
 
 handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> String -> String -> String -> m ()
 handleMismatch doc sid msg sfn sln spn = do
@@ -287,30 +208,6 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
       return ()
     _ -> return ()
 
-
-rejectDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
-rejectDocumentIphoneCase did sid _ = rejectDocument did sid
-
-{- |
-   Control rejecting the document
-   URL: /s/{docid}/{signatorylinkid1}
- -}
-rejectDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-rejectDocument documentid siglinkid = do
-  magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken siglinkid
-  customtext <- getCustomTextField "customtext"
-
-  edocs <- rejectDocumentWithChecks documentid siglinkid magichash customtext
-
-  case edocs of
-    Left (DBActionNotAvailable message) -> do
-      addFlash (OperationFailed, message)
-      getHomeOrDesignViewLink
-    Left _ -> internalError
-    Right document -> do
-      postDocumentRejectedChange document siglinkid "web"
-      addFlashM $ modalRejectedView document
-      return $ LoopBack
 
 -- |
 -- Show the document to be signed.
@@ -452,7 +349,7 @@ handleIssueShowPost :: Kontrakcja m => DocumentID -> m (Either KontraLink JSValu
 handleIssueShowPost docid = do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
-  timezone <- getDataFnM (look "timezone") >>= (mkTimeZoneName)
+  timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
   unless (isAuthor (document, muser)) internalError -- still need this because others can read document
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "send"
@@ -468,23 +365,17 @@ handleIssueShowPost docid = do
          l <- lg
          runJSONGenT $ J.value "link" (show l)
 
-readScreenshots :: Kontrakcja m => m SignatoryScreenshots.T
+readScreenshots :: Kontrakcja m => m SignatoryScreenshots.SignatoryScreenshots
 readScreenshots = do
-    json <- either (fail . show) return =<<
-            (runGetJSON readJSObject <$>
-            (maybe (fail "readScreenshots: missing field \"screenshots\"") return =<< getField "screenshots"))
-    maybe (fail "readScreenshots: invalid JSON") return $ withJSValue json $ do
-      first   <- (decodeScreenshot =<<) `fmap` fromJSValueField "first"
-      signing <- (decodeScreenshot =<<) `fmap` fromJSValueField "signing"
-      return SignatoryScreenshots.empty{ SignatoryScreenshots.first = first
-                                       , SignatoryScreenshots.signing = signing
-                                       }
-   where decodeScreenshot (time, s) = do
-          (mt, i) <- RFC2397.decode $ BS.fromString s
-          unless (mt `elem` ["image/jpeg", "image/png"]) Nothing
-          return (fromSeconds time, Screenshot.T{ Screenshot.mimetype = BS.toString mt
-                                                , Screenshot.image = Binary i
-                                                })
+  mss <- join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
+  case mss of
+       Just ss -> do
+         v <- getFieldJSON "screenshots"
+         Log.debug $ "Screenshots json" ++ show v
+         Log.debug $ "Recieved screenshots " ++ show ss
+         return ss
+       _ -> do
+         internalError
 
 handleIssueSign :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
 handleIssueSign document timezone = do
@@ -497,8 +388,6 @@ handleIssueSign document timezone = do
         mndocs <- mapM (forIndividual actor screenshots) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDuringSigning d) $ do
-                addFlashM $ flashDocumentSignedAndSend
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
@@ -510,7 +399,7 @@ handleIssueSign document timezone = do
             return $ LinkIssueDoc (documentid document)
       Left link -> return link
     where
-      forIndividual :: Kontrakcja m => Actor -> SignatoryScreenshots.T -> Document -> m (Either String Document)
+      forIndividual :: Kontrakcja m => Actor -> SignatoryScreenshots.SignatoryScreenshots -> Document -> m (Either String Document)
       forIndividual actor screenshots doc = do
         Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
         mprovider <- readField "eleg"
@@ -553,8 +442,6 @@ handleIssueSend document timezone = do
         mndocs <- mapM (forIndividual user actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDuringSigning d) $ do
-                addFlashM $ flashDocumentSend
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
@@ -574,13 +461,14 @@ handleIssueSend document timezone = do
           Left _ -> return ()
         return mndoc
 
-{- |
-    If the document has a multiple part this will pump csv values through it to create multiple docs, and then
-    save the original as a template if it isn't already.  This will make sure to clean the csv data.  It just returns
-    a list containing the original doc on it's own, if the doc hasn't got a multiple part.
-
-    I feel like this is quite dangerous to do all at once, maybe need a transaction?!
--}
+-- | If the document has a multiple part this will pump csv values
+-- through it to create multiple docs, and then save the original as a
+-- template if it isn't already.  This will make sure to clean the csv
+-- data.  It just returns a list containing the original doc on it's
+-- own, if the doc hasn't got a multiple part.
+--
+-- I feel like this is quite dangerous to do all at once, maybe need a
+-- transaction?!
 splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
 splitUpDocument doc = do
   case find (isJust . signatorylinkcsvupload) (documentsignatorylinks doc) of
@@ -743,7 +631,7 @@ handleResend docid signlinkid  = withUserPost $ do
   ctx <- getContext
   doc <- guardRightM $ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid
   signlink <- guardJust $ getSigLinkFor doc signlinkid
-  customMessage <- getCustomTextField "customtext"
+  customMessage <- getOptionalField  asValidInviteText "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
   _ <- sendReminderEmail customMessage ctx actor doc signlink
   addFlashM $ flashRemindMailSent signlink
@@ -808,18 +696,10 @@ checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-       let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
-                      (authorattachmentfile <$> documentauthorattachments doc) ++
-                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-       when (all (/= fid) allfiles) $
-            internalError
+       when (not $ fileInDocument doc fid) $ internalError
     (_,_,Just did,_) -> do
        doc <- guardRightM $ getDocByDocID did
-       let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc)  ++
-                      (authorattachmentfile <$> documentauthorattachments doc) ++
-                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-       when (all (/= fid) allfiles) $
-            internalError
+       when (not $ fileInDocument doc fid) $ internalError
     (_,_,_,Just attid) -> do
        ctx <- getContext
        case ctxmaybeuser ctx of
@@ -837,20 +717,6 @@ checkFileAccessWith fid msid mmh mdid mattid =
            when (length atts /= 1) $
                 internalError
     _ -> internalError
-
--- | This handler downloads a file by file id. As specified in
--- handlePageOfDocument rules of access need to be obeyd. This handler
--- download file as is.
-handleDownloadFile :: Kontrakcja m => FileID -> String -> m Response
-handleDownloadFile fid _nameForBrowser = do
-  checkFileAccess fid
-  content <- getFileIDContents fid
-  respondWithPDF content
-  where
-    respondWithPDF contents = do
-      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-          res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-      return res2
 
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
 handleDeleteSigAttach docid siglinkid = do
@@ -1004,7 +870,8 @@ handleVerify = do
                     BSL.hPutStr handle content
                     return pth
             _ -> internalError
-      liftIO $ toJSValue <$> GuardTime.verify filepath
+      ctx <- getContext
+      liftIO $ toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do

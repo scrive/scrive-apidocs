@@ -4,6 +4,7 @@ import qualified Data.ByteString as BS
 
 import Doc.SignatoryLinkID
 import Doc.DocumentID
+import File.FileID
 
 data MailAddress = MailAddress {
     fullname    :: String
@@ -16,7 +17,7 @@ data Mail = Mail {
     to          :: [MailAddress]
   , title       :: String
   , content     :: String
-  , attachments :: [(String, BS.ByteString)] -- list of attachments (name,content)
+  , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
   , mailInfo    :: MailInfo
   } deriving (Eq, Ord, Show)
 

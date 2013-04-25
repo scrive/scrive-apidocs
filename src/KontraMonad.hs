@@ -32,3 +32,7 @@ class ( Applicative m
 class (Functor m, Monad m) => KontraMonad m where
   getContext    :: m Context
   modifyContext :: (Context -> Context) -> m ()
+
+instance (Monad m, Functor m) => KontraMonad (StateT Context m) where
+  getContext    = get
+  modifyContext = modify

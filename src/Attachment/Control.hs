@@ -5,6 +5,7 @@ module Attachment.Control
   , handleRename
   , handleShow
   , handleDelete
+  , handleDownloadAttachment
   , jsonAttachment
   , jsonAttachmentsList
   )
@@ -38,6 +39,10 @@ import Doc.Rendering
 import Utils.String
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
+import File.Storage
+import File.Model
+import qualified Data.Map as Map
+import qualified Data.ByteString.UTF8 as BS
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -62,6 +67,31 @@ handleDelete = do
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
     _ <- guardRightM' $ dbUpdate $ DeleteAttachments (userid user) attids actor
     J.runJSONGenT $ return ()
+
+-- | This handler downloads a file by file id. As specified in
+-- handlePageOfDocument rules of access need to be obeyd. This handler
+-- download file as is.
+handleDownloadAttachment :: Kontrakcja m => AttachmentID -> FileID -> String -> m Response
+handleDownloadAttachment attid fid _nameForBrowser = do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+                                            , AttachmentsOfAuthorDeleteValue (userid user) True
+                                            , AttachmentsOfAuthorDeleteValue (userid user) False
+                                            ]
+                                            [ AttachmentFilterByID [attid]
+                                            , AttachmentFilterByFileID [fid]
+                                            ]
+                                            []
+                                            (0,1)
+  case atts of
+       [att] -> getFileIDContents (attachmentfile att) >>= respondWithPDF
+       _ -> internalError
+  where
+    respondWithPDF contents = do
+      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+          res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+      return res2
+
 
 handleCreateNew :: Kontrakcja m => m JSValue
 handleCreateNew = do
@@ -96,8 +126,6 @@ jsonAttachment attid = do
 jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonAttachmentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
-  lang <- ctxlang <$> getContext
-
   params <- getListParamsNew
 
   let (domain,filters) = ([AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid],[])
@@ -106,31 +134,30 @@ jsonAttachmentsList = withUserGet $ do
       searching  = attachmentSearchingFromParams params
       pagination = (listParamsOffset params, listParamsLimit params)
       attachmentsPageSize = 100 :: Int
-  cttime <- getMinutesTime
   allAtts <- dbQuery $ GetAttachments domain (searching ++ filters) sorting pagination
   let atts = PagedList { list       = allAtts
                        , params     = params
                        , pageSize   = attachmentsPageSize
                        , listLength = length allAtts
                        }
-  attsJSONs <- mapM (attForListJSON (timeLocaleForLang lang) cttime user) $ take attachmentsPageSize $ list atts
+  attsJSONs <- mapM (attForListJSON  user) $ take attachmentsPageSize $ list atts
   runJSONGenT $ do
     J.value "list" attsJSONs
     J.value "paging" $ pagingParamsJSON atts
 
-attForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> Attachment -> m JSValue
-attForListJSON tl crtime _user att = do
+attForListJSON :: TemplatesMonad m => User -> Attachment -> m JSValue
+attForListJSON _user att = do
   let link = LinkAttachmentView (attachmentid att)
   runJSONGenT $ do
-    J.object "fields" $ attFieldsListForJSON tl crtime att
+    J.object "fields" $ attFieldsListForJSON att
     J.value "link" $ show link
 
-attFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> Attachment -> JSONGenT m ()
-attFieldsListForJSON tl crtime att = do
+attFieldsListForJSON :: TemplatesMonad m =>  Attachment -> JSONGenT m ()
+attFieldsListForJSON att = do
     J.value "id" $ show $ attachmentid att
     J.value "title" $ attachmenttitle att
-    J.value "time" $ showDateAbbrev tl crtime (attachmentmtime att)
-    J.value "shared" $ show $ attachmentshared att
+    J.value "time" $ formatMinutesTimeRealISO (attachmentmtime att)
+    J.value "shared" $ attachmentshared att
     J.value "file" $ show $ attachmentfile att
 
 attachmentSortingFromParams :: ListParams -> [AscDesc AttachmentOrderBy]

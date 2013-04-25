@@ -23,6 +23,8 @@ import Control.Monad
 
 data GuardTimeConf = GuardTimeConf
     { guardTimeURL ::  String
+    , guardTimeExtendingServiceURL :: String
+    , guardTimeControlPublicationsURL :: String
     } deriving (Eq, Ord, Show, Read)
 
 
@@ -90,12 +92,14 @@ instance ToJSValue VerifyResult where
                                         value "error"   True
                                         value "message" msg
 
-verify :: String -> IO VerifyResult
-verify inputFileName = do
+verify :: GuardTimeConf -> String -> IO VerifyResult
+verify conf inputFileName = do
   let args = [ "-classpath"
              , intercalate ":" (map ("GuardTime/" ++) guardTimeJars)
              , "com.guardtime.pdftools.PdfVerifier"
              , "-j"
+             , "-x", guardTimeExtendingServiceURL conf       -- http://127.0.0.1:8080/gt-extendingservice
+             , "-p", guardTimeControlPublicationsURL conf    -- http://127.0.0.1:8080/gt-controlpublications.bin
              , "-f"
              , inputFileName
              ]

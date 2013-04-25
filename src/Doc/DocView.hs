@@ -120,8 +120,8 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m) => Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
-documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     ctx <- getContext
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
@@ -140,15 +140,22 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
         J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
         J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
         J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
+      J.value "time" $ jsonDate (Just $ documentmtime doc)
+      J.value "ctime" $ jsonDate (Just $ documentctime doc)
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
+      J.value "state" $ show $ documentstatus doc
       J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
                                    [StandardAuthentication] -> "standard"
                                    [ELegAuthentication]     -> "eleg"
                                    _                        -> "mixed"
-      J.value "delivery" $ deliveryJSON $ documentdeliverymethod doc
+      J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
+                                   [EmailDelivery]   -> "email"
+                                   [PadDelivery]     -> "pad"
+                                   [APIDelivery]     -> "api"
+                                   _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
       J.value "invitationmessage" $ documentinvitetext doc
@@ -159,6 +166,13 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
                                     J.value "name"  n
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
+      J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> mviewer
+      J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> mviewer
+      when (isJust mviewer) $
+        J.value "canperformsigning" $ userCanPerformSigningAction (fromJust mviewer) doc
+      J.value "objectversion" $ documentobjectversion doc
+      J.value "process" $ show $ toDocumentProcess (documenttype doc)
+      J.value "isviewedbyauthor" $ isSigLinkFor mviewer (getAuthorSigLink doc)
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
                                     then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
@@ -169,7 +183,6 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
         J.value "signviewbarstextcolour" $ companysignviewbarstextcolour . companyui  =<< mcompany
         J.value "signviewbackgroundcolour" $ companysignviewbackgroundcolour . companyui  =<< mcompany
         J.value "author" $ authorJSON mauthor mcompany
-        J.value "process" $ show $ toDocumentProcess (documenttype doc)
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
         J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
@@ -178,11 +191,6 @@ documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
 authenticationJSON :: AuthenticationMethod -> JSValue
 authenticationJSON StandardAuthentication = toJSValue "standard"
 authenticationJSON ELegAuthentication     = toJSValue "eleg"
-
-deliveryJSON :: DeliveryMethod -> JSValue
-deliveryJSON EmailDelivery = toJSValue "email"
-deliveryJSON PadDelivery = toJSValue "pad"
-deliveryJSON APIDelivery = toJSValue "api"
 
 signatoryJSON :: (TemplatesMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor pq doc viewer siglink = do
@@ -207,7 +215,12 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
     J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink
-    when (not (isPreparation doc) && forauthor && forapi && documentdeliverymethod doc == APIDelivery) $ do
+    J.value "delivery" $ case signatorylinkdeliverymethod siglink of
+                             EmailDelivery   -> "email"
+                             PadDelivery     -> "pad"
+                             APIDelivery     -> "api"
+
+    when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
@@ -224,41 +237,41 @@ signatoryAttachmentJSON sa = do
 
 signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
-  for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfObligatory} -> do
+  for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfShouldBeFilledBySender, sfObligatory} -> do
 
     case sfType of
       FirstNameFT           -> fieldJSON "standard" "fstname"   sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       LastNameFT            -> fieldJSON "standard" "sndname"   sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       EmailFT               -> fieldJSON "standard" "email"     sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       PersonalNumberFT      -> fieldJSON "standard" "sigpersnr" sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CompanyFT             -> fieldJSON "standard" "sigco"     sfValue
                                   ((not $ null $ sfValue)  && (null sfPlacements) &&
                                       (ELegAuthentication /= signatorylinkauthenticationmethod sl) &&
                                       (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  sfValue
                                   (closedF sf && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       SignatureFT label     -> fieldJSON "signature" label sfValue
                                   (closedSignatureF sf && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CustomFT label closed -> fieldJSON "custom" label          sfValue
                                   (closed  && (not $ isPreparation doc))
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       CheckboxFT label      -> fieldJSON "checkbox" label sfValue
                                   False
-                                  sfObligatory sfPlacements
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
-    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= documentdeliverymethod doc)))
+    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
@@ -268,13 +281,14 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: String -> String -> String -> Bool -> Bool -> [FieldPlacement] -> JSValue
-fieldJSON tp name value closed obligatory placements = runJSONGen $ do
+fieldJSON :: String -> String -> String -> Bool -> Bool -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON tp name value closed obligatory filledbysender placements = runJSONGen $ do
     J.value "type" tp
     J.value "name" name
     J.value "value" value
     J.value "closed" closed
     J.value "obligatory" obligatory
+    J.value "shouldbefilledbysender" filledbysender
     J.value "placements" $ map placementJSON placements
 
 
@@ -352,11 +366,7 @@ documentInfoFields  document  = do
   F.value "id" $ show $ documentid document
   F.value "documentid" $ show $ documentid document
   F.value "template" $  isTemplate document
-  -- F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
-  -- F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
-  F.value "emaildeliveryselected" $ documentdeliverymethod document == EmailDelivery
-  F.value "paddeliveryselected" $ documentdeliverymethod document == PadDelivery
-  F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
+  F.value "hasanyattachments" $ not (null $ (documentauthorattachments document)) || not (null (concatMap signatoryattachments $ documentsignatorylinks document))
   documentStatusFields document
 
 documentAuthorInfo :: Monad m => Document -> Fields m ()

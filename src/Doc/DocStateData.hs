@@ -56,9 +56,7 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
-import Utils.Read
 import Utils.Default
-import Control.Monad
 import qualified Data.Set as S
 
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
@@ -157,6 +155,7 @@ data SignatoryField = SignatoryField
   { sfType       :: FieldType
   , sfValue      :: String
   , sfObligatory :: Bool
+  , sfShouldBeFilledBySender :: Bool
   , sfPlacements :: [FieldPlacement]
   } deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -227,6 +226,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkelegdatamismatchfirstname      :: Maybe String
   , signatorylinkelegdatamismatchlastname       :: Maybe String
   , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
+  , signatorylinkdeliverymethod         :: DeliveryMethod
   } deriving (Eq, Ord, Show)
 
 instance HasDefaultValue SignatoryLink where
@@ -253,6 +253,7 @@ instance HasDefaultValue SignatoryLink where
                   , signatorylinkelegdatamismatchfirstname = Nothing
                   , signatorylinkelegdatamismatchlastname = Nothing
                   , signatorylinkelegdatamismatchpersonalnumber = Nothing
+                  , signatorylinkdeliverymethod       = EmailDelivery
                   }
 
 data CSVUpload = CSVUpload {
@@ -311,7 +312,18 @@ data DocumentStatus = Preparation
                     | Timedout
                     | Rejected
                     | DocumentError String
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord)
+
+
+{- Used by API -}
+instance Show DocumentStatus where
+  show Preparation = "Preparation"
+  show Pending = "Pending"
+  show Closed  = "Closed"
+  show Canceled  = "Canceled"
+  show Timedout  = "Timedout"
+  show Rejected = "Rejected"
+  show (DocumentError _) = "DocumentError"
 
 data DocumentProcess = Contract | Offer | Order
   deriving (Eq, Ord, Show, Read, Bounded, Enum)
@@ -393,13 +405,13 @@ data Document = Document {
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
-  , documentdeliverymethod         :: DeliveryMethod
   , documentsharing                :: DocumentSharing
   , documenttags                   :: S.Set DocumentTag
   , documentauthorattachments      :: [AuthorAttachment]
   , documentlang                   :: Lang
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
+  , documentobjectversion          :: Int
   } deriving (Eq, Ord, Show)
 
 
@@ -417,7 +429,6 @@ instance HasDefaultValue Document where
           , documenttimeouttime          = Nothing
           , documentinvitetext           = ""
           , documentsealedfile           = Nothing
-          , documentdeliverymethod       = EmailDelivery
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documenttags                 = S.empty
@@ -425,6 +436,7 @@ instance HasDefaultValue Document where
           , documentlang                 = defaultValue
           , documentstatusclass          = SCDraft
           , documentapicallbackurl       = Nothing
+          , documentobjectversion        = 0
           }
 
 instance HasLang Document where
@@ -473,51 +485,17 @@ instance FromJSValue Double where
     fromJSValue _ = Nothing
 
 instance FromJSValue FieldPlacement where
-  -- Here we do three cases of json representation of FieldPlacement.
-  -- First one is new relative representation, second is old json
-  -- representation for javascript and ajax, third is database
-  -- representation. After ajax is changed and database is migrated
-  -- only first on representation should be left in place.
-  fromJSValue js = msum $ fmap ($ js)
-                     [ do xrel       <- fromJSValueField "xrel"
-                          yrel       <- fromJSValueField "yrel"
-                          wrel       <- fromJSValueField "wrel"
-                          hrel       <- fromJSValueField "hrel"
-                          fsrel      <- fromJSValueField "fsrel"
-                          page       <- fromJSValueField "page"
-                          side       <- fromJSValueField "tip"
-                          return (FieldPlacement <$> xrel <*> yrel
-                                                 <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> Just side)
-                     , do x          <- fromJSValueField "x"
-                          y          <- fromJSValueField "y"
-                          page       <- fromJSValueField "page"
-                          pagewidth  <- fromJSValueField "pagewidth"
-                          pageheight <- fromJSValueField "pageheight"
-                          side       <- fromJSValueField "tip"
-                          let xrel  = (/) <$> x <*> pagewidth
-                          let yrel  = (/) <$> y <*> pageheight
-                          let wrel  = Just 0
-                          let hrel  = Just 0
-                          let fsrel = Just 0
-                          return (FieldPlacement <$> xrel <*> yrel
-                                                 <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> Just side)
-                     , do x          <- fromJSValueField "placementx"
-                          y          <- fromJSValueField "placementy"
-                          page       <- fromJSValueField "placementpage"
-                          pagewidth  <- fromJSValueField "placementpagewidth"
-                          pageheight <- fromJSValueField "placementpageheight"
-                          tipside    <- fromJSValueField "placementtipside"
-                          let xrel  = (/) <$> x <*> pagewidth
-                          let yrel  = (/) <$> y <*> pageheight
-                          let wrel  = Just 0
-                          let hrel  = Just 0
-                          let fsrel = Just 0
-                          return (FieldPlacement <$> xrel <*> yrel
-                                                 <*> wrel <*> hrel <*> fsrel
-                                                 <*> page <*> (Just $ join $ maybeRead <$> tipside))
-                     ]
+  fromJSValueM = do
+                  xrel       <- fromJSValueField "xrel"
+                  yrel       <- fromJSValueField "yrel"
+                  wrel       <- fromJSValueField "wrel"
+                  hrel       <- fromJSValueField "hrel"
+                  fsrel      <- fromJSValueField "fsrel"
+                  page       <- fromJSValueField "page"
+                  side       <- fromJSValueField "tip"
+                  return (FieldPlacement <$> xrel <*> yrel
+                                         <*> wrel <*> hrel <*> fsrel
+                                         <*> page <*> Just side)
 
 instance FromJSValue TipSide where
     fromJSValue js = case fromJSValue js of

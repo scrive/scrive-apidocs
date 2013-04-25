@@ -25,6 +25,7 @@ module Routing ( hGet
                ) where
 
 import Data.Functor
+import Data.Maybe
 import AppView as V
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
@@ -36,7 +37,6 @@ import Text.JSON
 import Util.CSVUtil
 import Util.ZipUtil
 import Control.Monad
-import qualified Log as Log
 import Utils.Read
 import Happstack.Fields
 
@@ -167,11 +167,13 @@ toK6 m a b c d e f = m a b c d e f >>= toResp
 
 
 guardXToken :: Kontra Response -> Kontra Response
-guardXToken = (>>) $ do
-  Context { ctxxtoken } <- getContext
-  xtoken <- guardRightM $ do
-      mxtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
-      return $ maybe (Left $ ("xtoken read failure" :: String)) Right mxtoken
-  unless (xtoken == ctxxtoken) $ do
-    Log.debug $ "xtoken failure: session: " ++ show ctxxtoken ++ " param: " ++ show xtoken
-    internalError
+guardXToken action = do
+  ctx <- getContext
+  xtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
+  if (isJust xtoken && (fromJust xtoken == ctxxtoken ctx))
+    then action
+    else do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
+      modifyContext anonymousContext
+      res <- action
+      modifyContext (\_ -> ctx)
+      return res

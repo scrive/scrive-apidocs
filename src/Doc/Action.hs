@@ -4,7 +4,6 @@ module Doc.Action (
   , postDocumentPendingChange
   , postDocumentRejectedChange
   , postDocumentCanceledChange
-  , getCustomTextField
   , sendReminderEmail
   , sendInvitationEmail1
   , sendAllReminderEmails
@@ -17,7 +16,6 @@ import Control.Logic
 import Crypto.RNG
 import Data.Char
 import DB
-import Utils.Monad
 import Doc.DocSeal
 import Doc.Model
 import Doc.DocInfo
@@ -29,7 +27,6 @@ import Doc.SignatoryLinkID
 import Doc.DocumentID
 import InputValidation
 import File.Model
-import File.Storage
 import Kontra
 import KontraLink
 import Mails.SendMail
@@ -68,7 +65,6 @@ logDocEvent name doc user extraProps = do
     MailProp   email,
     IPProp     ip,
     NameProp   fullname,
-    stringProp "Delivery" (show $ documentdeliverymethod doc),
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),
     numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
@@ -97,23 +93,16 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
   -- Log the current time as the last doc sent time
   asyncLogEvent SetUserProps [UserIDProp (userid author),
                               someProp "Last Doc Sent" now]
-  json <- documentJSON False True False Nothing Nothing doc
+  json <- documentJSON Nothing False True False Nothing Nothing doc
   asyncLogEvent (UploadDocInfo json) [UserIDProp (userid author),
                                       DocIDProp (documentid doc)]
   logDocEvent "Doc Sent" doc author []
 
-  edoc <- if (sendMailsDuringSigning document')
-             then sendInvitationEmails ctx document'
-             else return $ Right $ document'
-  case edoc of
-    Left _ -> do
-      _ <- addDocumentSendStatEvents (documentid document') apistring
-      forM_ (documentsignatorylinks document') $ \sl ->
-        addSignStatInviteEvent document' sl (ctxtime ctx)
-    Right doc2 -> do
-      _ <- addDocumentSendStatEvents (documentid doc2) apistring
-      forM_ (documentsignatorylinks doc2) $ \sl ->
-        addSignStatInviteEvent doc2 sl (ctxtime ctx)
+  sendInvitationEmails ctx document'
+
+  _ <- addDocumentSendStatEvents (documentid document') apistring
+  forM_ (documentsignatorylinks document') $ \sl ->
+    addSignStatInviteEvent document' sl (ctxtime ctx)
 
 postDocumentPendingChange :: Kontrakcja m => Document -> Document -> String -> m ()
 postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistring = do
@@ -147,8 +136,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
     _ -> when (documentcurrentsignorder doc /= documentcurrentsignorder olddoc) $ do
       ctx <- getContext
       Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-      when_ (sendMailsDuringSigning doc) $
-          sendInvitationEmails ctx doc
+      sendInvitationEmails ctx doc
       return ()
   where
     allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
@@ -166,9 +154,8 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   maybe (return ())
         (\user -> logDocEvent "Doc Rejected" doc user [])
         (ctxmaybeuser ctx)
-  customMessage <- getCustomTextField "customtext"
-  when_ (sendMailsDuringSigning doc) $
-    sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
+  customMessage <- getOptionalField  asValidInviteText "customtext"
+  sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
   return ()
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> String -> m ()
@@ -321,16 +308,14 @@ sendDocumentErrorEmail document author = do
    Send emails to all of the invited parties.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendInvitationEmails :: Kontrakcja m => Context -> Document -> m (Either String Document)
+sendInvitationEmails :: Kontrakcja m => Context -> Document -> m ()
 sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
-                      , not $ hasSigned sl]
-  case signlinks of
-    [] -> return $ Left $ "Document " ++ show (documentid document) ++ " has no signatories. Cannot send invitation emails."
-    _ -> do
-      edocs <- forM signlinks (sendInvitationEmail1 ctx document)
-      return $ msum edocs
+                      , signatorylinkdeliverymethod sl == EmailDelivery
+                      , not $ hasSigned sl
+                      ]
+  forM_ signlinks (sendInvitationEmail1 ctx document)
 
 
 {- |
@@ -382,7 +367,6 @@ sendReminderEmail custommessage ctx actor doc siglink = do
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
     dbUpdate $ PostReminderSend doc siglink custommessage actor
-  _ <- dbUpdate $ SetDocumentModificationDate (documentid doc) (ctxtime ctx)
   triggerAPICallbackIfThereIsOne doc
   return siglink
 
@@ -402,7 +386,7 @@ sendClosedEmails document = do
              , attachments = mailattachments
              }
 
-makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, BS.ByteString)]
+makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
   let mainfile = documentsealedfile document `mplus` documentfile document
   let
@@ -415,7 +399,7 @@ makeMailAttachments document = do
   --use the doc title rather than file name for the main file (see jira #1152)
   let filenames = map dropPDFSuffix $ documenttitle document : map filename ($(tail) allfiles)
 
-  filecontents <- mapM getFileContents allfiles
+  let filecontents = map (Right . fileid) allfiles
   return $ zip filenames filecontents
 
 {- |
@@ -424,7 +408,9 @@ makeMailAttachments document = do
 sendRejectEmails :: Kontrakcja m => Maybe String -> Context -> Document -> SignatoryLink -> m ()
 sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
-                                 , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
+                                 , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl
+                                 , signatorylinkdeliverymethod sl == EmailDelivery || isAuthor sl
+                                 ]
   forM_ activatedSignatories $ \sl -> do
     mail <- mailDocumentRejected customMessage ctx document signalink False
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
@@ -444,17 +430,6 @@ sendAllReminderEmails ctx actor user docid = do
             sequence . map (sendReminderEmail Nothing ctx actor doc) $ unsignedsiglinks
           _ -> return []
 
-{- |
-    If the custom text field is empty then that's okay, but if it's invalid
-    then we want to fail.
--}
-getCustomTextField :: Kontrakcja m => String -> m (Maybe String)
-getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
-    where
-    customTextHandler textresult =
-        logIfBad textresult
-            >>= flashValidationMessage
-            >>= withFailureIfBad
 
 {- |
    Try to sign up a new user. Returns the confirmation link for the new user.

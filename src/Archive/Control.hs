@@ -55,6 +55,7 @@ import Control.Monad.Identity
 import Text.JSON.String (runGetJSON)
 import Doc.DocDraft()
 import Data.String.Utils (splitWs)
+import MinutesTime
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
@@ -173,17 +174,17 @@ jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do
   Log.debug $ "Long list " ++ (show $ map fromEnum [SCDraft,SCCancelled,SCRejected,SCTimedout,SCError,SCDeliveryProblem,SCSent,SCDelivered,SCRead,SCOpened,SCSigned])
   user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
-  lang <- ctxlang <$> getContext
   doctype <- getField' "documentType"
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterDeleted False False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
                           "Template"          -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted False, DocumentFilterTemplate])
+                                                 ,[DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted True])
-                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterDeleted True False, DocumentFilterUnsavedDraft False])
+                          "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])
+                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
@@ -193,11 +194,15 @@ jsonDocumentsList = do
                                     (((Nothing ,Just to'),""):_) -> [DocumentFilterByMonthYearTo to']
                                     (((Just from',Nothing),""):_)   -> [DocumentFilterByMonthYearFrom from']
                                     _ -> []
-
+      fltSpec ("mtime", tostr) = case parseMinutesTimeRealISO tostr of
+                                    Just mtime -> [DocumentFilterByModificationTimeAfter mtime]
+                                    _ -> []
       fltSpec ("sender", tostr) = case reads tostr of
                                     ((suid,""):_) -> [DocumentFilterByAuthor suid]
                                     _ -> []
-
+      fltSpec ("cansign", tostr) = case reads tostr of
+                                    ((suid,""):_) -> [DocumentFilterByCanSign suid]
+                                    _ -> []
       fltSpec ("status", scstr) = case reads scstr of
                                     ((statusclasss,""):_) -> [DocumentFilterByStatusClass statusclasss]
                                     _ -> []
@@ -210,13 +215,13 @@ jsonDocumentsList = do
       searching  = docSearchingFromParams params
       pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
-  cttime <- getMinutesTime
+  Log.debug $ "Filtering with " ++ show filters
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
        Just "csv" -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0,-1)
-          let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..] allDocs
+          let docsCSVs = concat $ zipWith docForListCSV  [1..] allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeader
                               , csvContent = docsCSVs
@@ -228,7 +233,7 @@ jsonDocumentsList = do
                                 , pageSize   = docsPageSize
                                 , listLength = allDocsCount
                                 }
-          docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ list docs
+          docsJSONs <- mapM (docForListJSON user padqueue) $ list docs
           return $ Right $ runJSONGen $ do
               value "list" docsJSONs
               value "paging" $ pagingParamsJSON docs

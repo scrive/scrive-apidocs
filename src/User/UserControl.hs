@@ -2,12 +2,10 @@ module User.UserControl where
 
 import Control.Monad.State
 import Data.Functor
-import System.Time
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
-import qualified Text.JSON.Gen as J
 
 import ActionQueue.Core
 import ActionQueue.EmailChangeRequest
@@ -17,7 +15,6 @@ import AppView
 import Crypto.RNG
 import DB hiding (update, query)
 import Doc.Action
-import Doc.Model
 import Company.Model
 import InputValidation
 import Kontra
@@ -40,7 +37,6 @@ import User.Action
 import User.Utils
 import User.History.Model
 import ScriveByMail.Model
-import Payments.Model
 import ListUtil
 import qualified Text.StringTemplates.Fields as F
 import Routing
@@ -382,41 +378,6 @@ handlePasswordReminderPost uid token = do
             value "location" $ show LinkDesignView
         Nothing -> internalError
     Nothing -> runJSONGenT $ value "logged" False
-
-handleBlockingInfo :: Kontrakcja m => m JSValue
-handleBlockingInfo = do
-  muser <- ctxmaybeuser <$> getContext
-  case muser of
-    Nothing -> runJSONGenT $ do
-      J.value "nouser" True
-    Just user -> do
-      admin <- isAdmin <$> getContext
-      time <- ctxtime <$> getContext
-      let utctime = toCalendarTimeInUTC time
-          utcbeginningOfMonth = utctime { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
-          beginningOfMonth = fromClockTime $ toClockTime utcbeginningOfMonth
-
-      docsusedthismonth <- dbQuery $ GetDocsSentBetween (userid user) beginningOfMonth time
-      mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
-      quantity <- case usercompany user of
-        Nothing -> return 1
-        Just cid -> dbQuery $ GetCompanyQuantity cid
-
-      let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
-          status      = maybe "active" (show . ppStatus) mpaymentplan
-          dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
-          canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
-          billingEnds = maybe "" (formatMinutesTimeUTC . ppBillingEndDate) mpaymentplan
-
-      runJSONGenT $ do
-        J.value "adminuser" admin
-        J.value "docsused"  docsusedthismonth
-        J.value "plan"      paymentplan
-        J.value "status"    status
-        J.value "dunning"   dunning
-        J.value "canceled"  canceled
-        J.value "quantity"  quantity
-        J.value "billingEnds" billingEnds
 
 -- please treat this function like a public query form, it's not secure
 handleContactUs :: Kontrakcja m => m KontraLink

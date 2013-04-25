@@ -109,6 +109,7 @@ module DB.SQL2
   , sqlWhereEVVV
   , sqlWhereEq
   , sqlWhereEqE
+  , sqlWhereEqSql
   , sqlWhereNotEq
   , sqlWhereNotEqE
   , sqlWhereIn
@@ -132,6 +133,7 @@ module DB.SQL2
   , sqlRightJoinOn
   , sqlFullJoinOn
   , sqlSet
+  , sqlSetInc
   , sqlSetList
   , sqlSetCmd
   , sqlSetCmdList
@@ -182,10 +184,12 @@ module DB.SQL2
   , kWhyNot1
   , DBExceptionCouldNotParseValues(..)
   , kRun1OrThrowWhyNot
+  , kRunManyOrThrowWhyNot
   , kRunAndFetch1OrThrowWhyNot
 
   , KontraException(..)
   , SomeKontraException(..)
+  , catchKontra
   , DBBaseLineConditionIsFalse(..)
   )
   where
@@ -206,6 +210,7 @@ import Control.Exception.Lifted
 import Control.Applicative
 import Data.Maybe
 import qualified Text.JSON.Gen as JSON
+import Control.Monad.Trans.Control
 
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)
@@ -519,6 +524,11 @@ sqlWhereEqE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a Sql
             => (a -> a -> e) -> SQL -> a -> m ()
 sqlWhereEqE exc name value = sqlWhereEV (exc value, name) $ name <+> "=" <?> value
 
+
+sqlWhereEqSql :: (MonadState v m, SqlWhere v) => SQL -> SQL -> m ()
+sqlWhereEqSql name1 name2 = sqlWhere $ name1 <+> "=" <+> name2
+
+
 sqlWhereNotEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereNotEq name value = sqlWhere $ name <+> "<>" <?> value
 
@@ -649,6 +659,9 @@ sqlSetCmdList name as = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++
 
 sqlSet :: (MonadState v m, SqlSet v, Convertible a SqlValue) => RawSQL -> a -> m ()
 sqlSet name a = sqlSetCmd name (sqlParam a)
+
+sqlSetInc :: (MonadState v m, SqlSet v) => RawSQL -> m ()
+sqlSetInc name = sqlSetCmd name $ SQL (unsafeFromString $ unRawSQL name ++ " + 1") []
 
 sqlSetList :: (MonadState SqlInsert m, Convertible a SqlValue) => RawSQL -> [a] -> m ()
 sqlSetList name as = sqlSetCmdList name (map sqlParam as)
@@ -978,6 +991,11 @@ class (Show e, Typeable e, JSON.ToJSValue e) => KontraException e where
   fromKontraException :: SomeKontraException -> Maybe e
   fromKontraException (SomeKontraException e) = cast e
 
+catchKontra :: (MonadBaseControl IO m, KontraException e) => m a -> (e -> m a) -> m a
+catchKontra m f = m `Control.Exception.Lifted.catch` (\e -> case fromKontraException e of
+                                         Just ke -> f ke
+                                         Nothing -> throw e)
+
 
 data SomeKontraException = forall e. (Show e, KontraException e) => SomeKontraException e
   deriving (Typeable)
@@ -1049,6 +1067,17 @@ decodeListOfExceptionsFromWhere fullquery conds excepts sqlvalues =
   return $ excepts ++
            [matchUpExceptionWithValues (SqlWhyNot (\_ -> return (DBBaseLineConditionIsFalse fullquery)) []
                                                     : enumerateWhyNotExceptions conds) sqlvalues]
+
+kRunManyOrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
+                   => s -> m ()
+kRunManyOrThrowWhyNot sqlcommand = do
+  success <- kRun sqlcommand
+  when (success == 0) $ do
+    listOfExceptions <- kWhyNot1 sqlcommand
+    case listOfExceptions of
+      [] -> kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+      (ex:_) -> kThrow ex
+
 
 kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
                    => s -> m ()

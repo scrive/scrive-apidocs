@@ -1,4 +1,0 @@
-
-
-module Attachment.View
-where

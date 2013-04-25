@@ -150,7 +150,7 @@ testSignStat = do
                     (authorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
                else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
                     (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
-  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
+  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatSignEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents

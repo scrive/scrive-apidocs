@@ -76,6 +76,7 @@ set systemPage
  js   js/storage.js
  js   js/utils/browserinfo.js
  js   js/utils/language.js
+ js   js/utils/time.js
  js   js/loading.js
  js   js/arrows.js
  js   js/flashmessages.js
@@ -103,7 +104,6 @@ set systemPage
  js   js/files.js
  js   js/process.js
  js   js/fields.js
- js   js/signature.js
  js   js/signatories.js
  js   js/documents.js
  js   js/takeScreenshot.js
@@ -149,6 +149,14 @@ set systemPage
  js   js/archive/attachments.js
  js   js/archive/bin.js
  js   js/archive/archive.js
+ js   js/admin/admin.js
+ js   js/admin/companyadmin.js
+ js   js/admin/useradmin.js
+ js   js/admin/documentadmin.js
+ js   js/admin/csvstatsview.js
+ js   js/admin/createuser.js
+ js   js/admin/useradminsales.js
+ js   js/admin/adminstats.js
  js   js/account/mailapi.js
  js   js/account/company.js
  js   js/account/user.js

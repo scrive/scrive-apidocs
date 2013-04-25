@@ -11,19 +11,15 @@
 module Administration.AdministrationView(
               adminMainPage
             , adminUserPage
-            , adminUsersPage
             , adminCompanyPage
-            , adminCompaniesPage
             , adminCompanyBrandingPage
             , adminCompanyUsersPage
             , adminCompanyPaymentPage
-            , adminUsersPageForSales
             , allUsersTable
-            , adminDocuments
             , adminUserUsageStatsPage
             , adminCompanyUsageStatsPage
-            , adminSystemUsageStatsPage
             , adminUserPaymentPage
+            , adminUserDocumentsPage
           ) where
 
 import KontraLink
@@ -49,18 +45,6 @@ adminMainPage :: TemplatesMonad m => Context -> m String
 adminMainPage ctx = renderTemplate "adminsmain" $ do
     F.value "admin" $ isAdmin ctx
 
-{-| Manage users page - can find user here -}
-adminUsersPage :: TemplatesMonad m => m String
-adminUsersPage =
-    renderTemplate "adminusers" $ do
-        F.value "adminlink" $ show $ LinkAdminOnly
-
-{- | Manage companies page - can find a company here -}
-adminCompaniesPage :: TemplatesMonad m => m String
-adminCompaniesPage =
-    renderTemplate "admincompanies" $ do
-        F.value "adminlink" $ show $ LinkAdminOnly
-
 {- | Manage company users page - can find a company user here -}
 adminCompanyUsersPage :: TemplatesMonad m => CompanyID -> m String
 adminCompanyUsersPage cid =
@@ -77,12 +61,6 @@ adminCompanyBrandingPage cid =
         F.value "adminlink" $ show $ LinkAdminOnly
         F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
         F.value "companyid" $ show cid
-
-{-| Manage users page - can find user here -}
-adminUsersPageForSales :: TemplatesMonad m => m String
-adminUsersPageForSales =
-    renderTemplate "adminUsersForSales" $ do
-            F.value "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
 adminUserPage :: TemplatesMonad m => User -> Maybe Company -> m String
@@ -123,6 +101,14 @@ adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =
           CanceledStatus    -> F.value "canceledstatus"    True
           DeactivatedStatus -> F.value "deactivatedstatus" True
 
+
+adminUserDocumentsPage:: TemplatesMonad m => UserID -> Context -> m String
+adminUserDocumentsPage uid ctx =
+    renderTemplate "userdocuments" $ do
+        F.value "userid" $ show $ uid
+        F.value "admin" $ isAdmin ctx
+
+
 {- | Manager company page - can change company info and settings here -}
 adminCompanyPage :: TemplatesMonad m => Company -> Maybe MailAPIInfo -> m String
 adminCompanyPage company mmailapiinfo =
@@ -162,14 +148,6 @@ adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =
           CanceledStatus    -> F.value "canceledstatus"    True
           DeactivatedStatus -> F.value "deactivatedstatus" True
 
-adminSystemUsageStatsPage :: TemplatesMonad m => m String
-adminSystemUsageStatsPage =
-    renderTemplate "statisticsPage" $ do
-      F.value "adminlink"             $ show $ LinkAdminOnly
-      F.value "adminstatisticslink"   $ show $ LinkAdminStatistics
-      F.value "adminstatsbydaylink"   $ show $ LinkAdminStatsByDay
-      F.value "adminstatsbymonthlink" $ show $ LinkAdminStatsByMonth
-
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
 adminUserUsageStatsPage :: TemplatesMonad m => User -> Maybe Company -> Fields m () -> m String
@@ -189,12 +167,6 @@ adminCompanyUsageStatsPage companyid morefields =
         F.value "adminlink" $ show $ LinkAdminOnly
         F.value "companyid" $ show companyid
         morefields
-
-adminDocuments :: TemplatesMonad m => Context -> m String
-adminDocuments ctx = do
-    renderTemplate "admindocumentslist" $ do
-       F.value "adminlink" $ show $ LinkAdminOnly
-       F.value "admin" $ isAdmin ctx
 
 allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats,InviteType)] -> m String
 allUsersTable users =

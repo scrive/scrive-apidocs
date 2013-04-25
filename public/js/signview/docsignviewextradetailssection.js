@@ -102,7 +102,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
      var signatory = this.model;
      var field = this.model.signatures()[0];
      field.bind("change", function() {signatory.trigger("change");});
-     return new SignaturePlacementViewForDrawing({model: field}).el;
+     return new SignaturePlacementViewForDrawing({model: field, height : 102, width: 260}).el;
    },
    render: function() {
        var document = this.model;

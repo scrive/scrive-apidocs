@@ -194,11 +194,13 @@ instance Arbitrary SignatoryLink where
                 then arbitrary
                 else return Nothing
 
+    delivery <- arbitrary
     return $ defaultValue { signatorylinkid            = slid
                           , signatorydetails           = sd
                           , signatorymagichash         = mh
                           , maybesigninfo              = signinfo
                           , maybeseeninfo              = seeninfo
+                          , signatorylinkdeliverymethod = delivery
                           }
 
 instance Arbitrary SignatureProvider where
@@ -277,14 +279,12 @@ instance Arbitrary Document where
                then arbitrary
                else return Preparation
     sls <- arbitrary
-    delivery <- arbitrary
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
     return $ defaultValue  { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
-                           , documentdeliverymethod = delivery
                            , documenttimeouttime = Just (TimeoutTime dtimeouttime)
                            , documentdaystosign = ddaystosign
                            }
@@ -322,9 +322,9 @@ instance Arbitrary SignatoryDetails where
                               , signatoryisauthor = False
                               , signatoryispartner = True
                               , signatoryfields = filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) fields
-                                                  ++ [ SignatoryField FirstNameFT fn True []
-                                                     , SignatoryField LastNameFT  ln True []
-                                                     , SignatoryField EmailFT     em True []]}
+                                                  ++ [ SignatoryField FirstNameFT fn True False []
+                                                     , SignatoryField LastNameFT  ln True False []
+                                                     , SignatoryField EmailFT     em True False []]}
 
 instance Arbitrary FieldPlacement where
   arbitrary = do  -- We loose precision with conversion, so please watch out for this
@@ -359,6 +359,7 @@ instance Arbitrary SignatoryField where
                             , sfValue = v
                             , sfPlacements = p
                             , sfObligatory = True
+                            , sfShouldBeFilledBySender = False
                             }
 
 instance Arbitrary AuthenticationMethod where
@@ -456,13 +457,13 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                         { signatoryisauthor = False
                                         , signatoryispartner = True
                                         , signatorysignorder = SignOrder 1
-                                        , signatoryfields = [ SignatoryField FirstNameFT "Eric" True []
-                                                            , SignatoryField LastNameFT "Normand" True []
-                                                            , SignatoryField EmailFT "eric@scrive.com" True []
-                                                            , SignatoryField CompanyFT "Scrive" True []
-                                                            , SignatoryField CompanyNumberFT "1234" True []
-                                                            , SignatoryField PersonalNumberFT "9101112" True []
-                                                            , SignatoryField (CustomFT "phone" True) "504-302-3742" True []
+                                        , signatoryfields = [ SignatoryField FirstNameFT "Eric" True False []
+                                                            , SignatoryField LastNameFT "Normand" True False []
+                                                            , SignatoryField EmailFT "eric@scrive.com" True False []
+                                                            , SignatoryField CompanyFT "Scrive" True False []
+                                                            , SignatoryField CompanyNumberFT "1234" True False []
+                                                            , SignatoryField PersonalNumberFT "9101112" True False []
+                                                            , SignatoryField (CustomFT "phone" True) "504-302-3742" True False []
                                                             ]
 
                                         }

@@ -1,14 +1,11 @@
 module MinutesTime
        ( MinutesTime
-       , KontraTimeLocale (..)
        , asInt
        , fromSeconds
        , fromMinutes
        , minutesAfter
        , minutesBefore
        , parseMinutesTimeDMY
-       , showDateAbbrev
-       , showDateForHistory
        , showDateDMY
        , showDateDMYYYY
        , showDateOnly
@@ -28,10 +25,12 @@ module MinutesTime
        , formatMinutesTime
        , parseMinutesTimeUTC
        , parseMinutesTimeISO
+       , parseMinutesTimeRealISO
        , parseMinutesTime
        , monthsBefore
        , daysBefore
        , daysAfter
+       , beginingOfMonth
        , toClockTime
        , toUTCTime
        , mtMonth
@@ -39,7 +38,6 @@ module MinutesTime
        , fromClockTime
        ) where
 
-import Data.Char
 import Data.Convertible
 import Data.Time
 import Data.Time.Clock.POSIX
@@ -47,10 +45,11 @@ import Data.Typeable
 import Database.HDBC
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
-import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
+import qualified System.Time as System.Time (toUTCTime, toCalendarTime,toClockTime)
 import Text.Printf
 import System.IO.Unsafe
 import Data.Binary
+import Control.Monad
 
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
@@ -62,28 +61,31 @@ instance Binary MinutesTime where
   get = fmap MinutesTime get
 
 instance Show MinutesTime where
-    show = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z"
+    show = formatMinutesTime "%Y-%m-%d, %H:%M:%S %Z"
 
 -- | Show time in %Y-%m-%d %H:%M:%S %Z format.
 -- This change was requested by Upsales. Should not affect much.
 showMinutesTimeForAPI :: MinutesTime -> String
-showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M:%S %Z" mt
+showMinutesTimeForAPI mt = formatMinutesTime "%Y-%m-%d %H:%M:%S %Z" mt
 
 -- | Show time for files creation
 showMinutesTimeForFileName :: MinutesTime -> String
-showMinutesTimeForFileName mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d-%H-%M" mt
+showMinutesTimeForFileName mt = formatMinutesTime "%Y-%m-%d-%H-%M" mt
 
 
 -- | Show time in "%Y-%m-%d" format.
 showDateOnly :: MinutesTime -> String
 showDateOnly mt | toSeconds mt == 0 = ""
-                | otherwise = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d" mt
+                | otherwise = formatMinutesTime "%Y-%m-%d" mt
 
 formatMinutesTimeISO :: MinutesTime -> String
-formatMinutesTimeISO = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M:%S"
+formatMinutesTimeISO = formatMinutesTime "%Y-%m-%d %H:%M:%S"
 
 parseMinutesTimeISO :: String -> Maybe MinutesTime
 parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S %Z"
+
+parseMinutesTimeRealISO :: String -> Maybe MinutesTime
+parseMinutesTimeRealISO s = (parseMinutesTime "%Y-%m-%dT%H:%M:%S%QZ" s) `mplus` (parseMinutesTime "%Y-%m-%dT%H:%M:%S%Q%z" s)
 
 parseMinutesTimeUTC :: String -> Maybe MinutesTime
 parseMinutesTimeUTC = parseMinutesTime "%Y-%m-%d %H:%M:%S"
@@ -95,73 +97,6 @@ parseMinutesTime format string = do
 
 parseDateOnly :: String -> Maybe MinutesTime
 parseDateOnly = parseMinutesTime "%Y-%m-%d"
-
-{- |
-    Use this to tell formatting functions the locale
-    you would like to use when formatting dates and times.
-    For example, if you say SwedishTimeLocale then october will be abbreviated
-    to "okt", but if you say BritishTimeLocale then october will be
-    abbreviated to "oct".
--}
-data KontraTimeLocale = SwedishTimeLocale | BritishTimeLocale
-
-defaultKontraTimeLocale :: KontraTimeLocale
-defaultKontraTimeLocale = SwedishTimeLocale
-
-getTimeLocale :: KontraTimeLocale -> TimeLocale
-getTimeLocale SwedishTimeLocale = swedishTimeLocale
-getTimeLocale BritishTimeLocale = britishTimeLocale
-
--- | British time locale is like normal one
-britishTimeLocale :: TimeLocale
-britishTimeLocale = defaultTimeLocale { months = map lowerCase $ months defaultTimeLocale
-                                      , wDays = map lowerCase $ wDays defaultTimeLocale }
-  where
-    lowerCase :: (String, String) -> (String, String)
-    lowerCase (a, b) = (map toLower a, map toLower b)
-
--- | Swedish time locale is like normal, but has Swedish month abbreviations.
-swedishTimeLocale :: TimeLocale
-swedishTimeLocale = defaultTimeLocale { months = [ ("januari","jan")
-                                                 , ("februari", "feb")
-                                                 , ("mars", "mar")
-                                                 , ("april", "apr")
-                                                 , ("maj", "maj")
-                                                 , ("juni", "jun")
-                                                 , ("juli", "jul")
-                                                 , ("augusti", "aug")
-                                                 , ("september", "sep")
-                                                 , ("oktober", "okt")
-                                                 , ("november", "nov")
-                                                 , ("december", "dec")
-                                                 ]
-                                      , wDays = [ ("måndag", "mån")
-                                                , ("tisdag", "tis")
-                                                , ("onsdag", "ons")
-                                                , ("torsdag", "tor")
-                                                , ("fredag", "fre")
-                                                , ("lördag", "lör")
-                                                , ("söndag", "sön")
-                                                ]
-                                      }
-
--- | Show date abbreviated according to how far past that date we
--- are. Options are: %H:%M, %d %b and %Y-%m-%d.  See
--- 'formatCalendarTime' to understand the meaning.
-showDateAbbrev :: KontraTimeLocale -> MinutesTime -> MinutesTime -> String
-showDateAbbrev locale current time
-               | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
-                   formatMinutesTime locale "%H:%M %Z" time
-               | ctYear ct1 == ctYear ct =
-                   formatMinutesTime locale "%d %b" time
-               | otherwise =
-                   formatMinutesTime locale "%Y-%m-%d" time
-               where
-                 ct1 = toCalendarTime current
-                 ct = toCalendarTime time
-
-showDateForHistory :: KontraTimeLocale -> MinutesTime -> String
-showDateForHistory locale time = formatMinutesTime locale "%Y-%m-%d %H:%M:%S" time
 
 -- | Convert 'ClockTime' to 'MinutesTime'. Uses just seconds, picoseconds are ignored.
 fromClockTime :: ClockTime -> MinutesTime
@@ -206,8 +141,8 @@ mtYear :: MinutesTime -> String
 mtYear = formatCalendarTime defaultTimeLocale "%Y" . toCalendarTime
 
 -- | Format time according to Swedish rules of time formating.
-formatMinutesTime :: KontraTimeLocale -> String -> MinutesTime -> String
-formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCalendarTime mt)
+formatMinutesTime :: String -> MinutesTime -> String
+formatMinutesTime fmt mt = formatCalendarTime defaultTimeLocale fmt (toCalendarTime mt)
 
 formatMinutesTimeUTC :: MinutesTime -> String
 formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toCalendarTimeInUTC mt)
@@ -224,15 +159,15 @@ parseMinutesTimeDMY = parseMinutesTime "%d-%m-%Y"
 
 -- | Show date as %d-%m-%y.
 showDateDMY :: MinutesTime -> String
-showDateDMY = formatMinutesTime defaultKontraTimeLocale "%d-%m-%y"
+showDateDMY = formatMinutesTime "%d-%m-%y"
 
 showDateDMYYYY :: MinutesTime -> String
-showDateDMYYYY = formatMinutesTime defaultKontraTimeLocale "%d-%m-%Y"
+showDateDMYYYY = formatMinutesTime "%d-%m-%Y"
 
 
 -- | Show date as %Y-%m-%d.
 showDateYMD :: MinutesTime -> String
-showDateYMD = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d"
+showDateYMD = formatMinutesTime "%Y-%m-%d"
 
 -- | Use as:
 --
@@ -251,6 +186,10 @@ daysAfter i mt = minutesAfter (i * 60 * 24) mt
 
 monthsBefore :: Int -> MinutesTime -> MinutesTime
 monthsBefore i mt = daysBefore (i * 31) mt
+
+
+beginingOfMonth :: MinutesTime -> MinutesTime
+beginingOfMonth time = fromClockTime $ System.Time.toClockTime $ (toCalendarTimeInUTC time) { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
 
 -- | Convert a date representation to integer. For date like
 -- "2010-06-12" result will be 20100612. Useful in IntMap for

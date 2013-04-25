@@ -41,6 +41,7 @@ var ApiDemoView = Backbone.View.extend({
             var select = $("<select></select>");
             var none = $("<option value=''></option>")
             var createFromFile = $("<option value='cff' >Create from file</option>");
+            var changeFile = $("<option value='changeFile' >Change file</option>");
             var createFromTemplate = $("<option value='cft'>Create from template</option>");
             var update = $("<option value='u'>Update</option>");
             var ready = $("<option value='g'>Ready</option>");
@@ -48,26 +49,34 @@ var ApiDemoView = Backbone.View.extend({
             var cancel = $("<option value='cc'>Cancel</option>");
             var del = $("<option value='d'>Delete</option>");
             var check = $("<option value='c'>Get</option>");
+            var history = $("<option value='history'>History</option>");
             var list  = $("<option value='l'>List</option>");
             var download  = $("<option value='dl'>Download file</option>");
+            var downloadmf  = $("<option value='dlmf'>Download document file</option>");
             var addtopad  = $("<option value='pq'>Add to padqueue</option>");
+            var reject  = $("<option value='reject'>Reject</option>");
+            var sign  = $("<option value='sign'>Sign</option>");
             var profile  = $("<option value='gp'>Get profile</option>");
+            var payments  = $("<option value='payments'>Get payments info</option>");
             var language  = $("<option value='sl'>Set language</option>");
             var password  = $("<option value='sp'>Set password</option>");
             var updateprofile = $("<option value='up'>Update profile</option>");
             var signup = $("<option value='su'>Signup</option>");
+            var passwordreset = $("<option value='passwordreset'>Reset password</option>");
             var checkclient  = $("<option value='check'>Check client</option>");
 
-            select.append(none).append(createFromFile).append(createFromTemplate).append(update)
-                  .append(ready).append(sendReminder).append(cancel).append(del).append(check)
-                  .append(list).append(download).append(addtopad)
+            select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update)
+                  .append(ready).append(sendReminder).append(cancel).append(del).append(check).append(history)
+                  .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(sign)
                   .append($("<option>---------</option>"))
-                  .append(profile).append(language).append(password).append(signup).append(updateprofile)
+                  .append(profile).append(payments).append(language).append(password).append(signup).append(passwordreset).append(updateprofile)
                   .append($("<option>---------</option>"))
                   .append(checkclient);
             if (model.selectedApiCall() != undefined) {
                 if (model.selectedApiCall().isCreateFromFile())
                     createFromFile.attr("selected", "true");
+                else if (model.selectedApiCall().isChangeMainFile())
+                    changeFile.attr("selected", "true");
                 else if (model.selectedApiCall().isCreateFromTemplate())
                     createFromTemplate.attr("selected", "true");
                 else if (model.selectedApiCall().isUpdate())
@@ -82,20 +91,32 @@ var ApiDemoView = Backbone.View.extend({
                     del.attr("selected", "true");
                 else if (model.selectedApiCall().isGet())
                     check.attr("selected", "true");
+                else if (model.selectedApiCall().isGetHistory())
+                    history.attr("selected", "true");
                 else if (model.selectedApiCall().isList())
                     list.attr("selected", "true");
-                else if (model.selectedApiCall().isDownloadMainFile())
+                else if (model.selectedApiCall().isDownloadFile())
                     download.attr("selected", "true");
+                else if (model.selectedApiCall().isDownloadMainFile())
+                    downloadmf.attr("selected", "true");
                 else if (model.selectedApiCall().isAddToPadQueue())
                     addtopad.attr("selected", "true");
+                else if (model.selectedApiCall().isReject())
+                    reject.attr("selected", "true");
+                else if (model.selectedApiCall().isSign())
+                    sign.attr("selected", "true");
                 else if (model.selectedApiCall().isGetProfile())
                     profile.attr("selected", "true");
+                else if (model.selectedApiCall().isGetPaymentInfo())
+                    payments.attr("selected", "true");
                 else if (model.selectedApiCall().isSetLanguage())
                     language.attr("selected", "true");
                 else if (model.selectedApiCall().isSetPassword())
                     password.attr("selected", "true");
                 else if (model.selectedApiCall().isSignup())
                     signup.attr("selected", "true");
+                else if (model.selectedApiCall().isSendPasswordResetMail())
+                    passwordreset.attr("selected", "true");
                 else if (model.selectedApiCall().isUpdateProfile())
                     updateprofile.attr("selected", "true");
                 else if (model.selectedApiCall().isCheckClient())
@@ -107,6 +128,8 @@ var ApiDemoView = Backbone.View.extend({
                 var v = select.val();
                 if (select.val() == "cff")
                     model.setSelectedApiCall(new CreateFromFileApiCall({oauth : oauth}));
+                else if (select.val() == "changeFile")
+                    model.setSelectedApiCall(new ChangeMainFileApiCall({oauth : oauth}));
                 else if (select.val() == "cft")
                     model.setSelectedApiCall(new CreateFromTemplateApiCall({oauth : oauth}));
                 else if (select.val() == "u")
@@ -121,14 +144,24 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new DeleteApiCall({oauth : oauth}));
                 else if (select.val() == "c")
                     model.setSelectedApiCall(new GetApiCall({oauth : oauth}));
+                else if (select.val() == "history")
+                    model.setSelectedApiCall(new GetHistoryApiCall({oauth : oauth}));
                 else if (select.val() == "l")
                     model.setSelectedApiCall(new ListApiCall({oauth : oauth}));
                 else if (select.val() == "dl")
+                    model.setSelectedApiCall(new DownloadFileApiCall({oauth : oauth}));
+                else if (select.val() == "dlmf")
                     model.setSelectedApiCall(new DownloadMainFileApiCall({oauth : oauth}));
                 else if (select.val() == "pq")
                     model.setSelectedApiCall(new AddToPadQueueApiCall({oauth : oauth}));
+                else if (select.val() == "reject")
+                    model.setSelectedApiCall(new RejectApiCall({oauth : oauth}));
+                else if (select.val() == "sign")
+                    model.setSelectedApiCall(new SignApiCall({oauth : oauth}));
                 else if (select.val() == "gp")
                     model.setSelectedApiCall(new GetProfileApiCall({oauth : oauth}));
+                else if (select.val() == "payments")
+                    model.setSelectedApiCall(new GetPaymentInfoApiCall({oauth : oauth}));
                 else if (select.val() == "sl")
                     model.setSelectedApiCall(new SetLanguageApiCall({oauth : oauth}));
                 else if (select.val() == "sp")
@@ -137,6 +170,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new UpdateProfileApiCall({oauth : oauth}));
                 else if (select.val() == "su")
                     model.setSelectedApiCall(new SignupApiCall({oauth : oauth}));
+                else if (select.val() == "passwordreset")
+                    model.setSelectedApiCall(new SendPasswordResetMailApiCall({oauth : oauth}));
                 else if (select.val() == "check")
                     model.setSelectedApiCall(new CheckClientApiCall({oauth : oauth}));
 

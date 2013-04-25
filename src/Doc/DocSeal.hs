@@ -57,13 +57,13 @@ import EvidenceLog.View
 import Util.Actor
 import Control.Concurrent
 import Control.Monad.Trans.Maybe
-import Data.String.Utils
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Utils.Prelude
 import qualified Codec.Picture.Png as PNG
+import qualified Codec.Picture.Jpg as JPG
 import qualified Codec.Picture.Saving as JPG
-import Utils.Either
+import qualified Codec.Picture.Types as Image
 
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
@@ -80,8 +80,8 @@ personFromSignatoryDetails boxImages details =
                 , Seal.fields = fieldsFromSignatory False [] boxImages details
                 }
 
-personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String) -> Fields m ()
-personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
+personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String) -> Fields m ()
+personFields _doc (person, signinfo,_seeninfo, _ , mprovider, delivery, _initials) = do
    F.value "personname" $ Seal.fullname person
    F.value "signip" $  formatIP (signipnumber signinfo)
    F.value "seenip" $  formatIP (signipnumber signinfo)
@@ -89,17 +89,18 @@ personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    F.value "bankid" $ mprovider == Just BankIDProvider
    F.value "nordea" $ mprovider == Just NordeaProvider
    F.value "telia"  $ mprovider == Just TeliaProvider
-   F.value "email"  $ documentdeliverymethod doc == EmailDelivery
-   F.value "pad"    $ documentdeliverymethod doc == PadDelivery
-   F.value "api"    $ documentdeliverymethod doc == APIDelivery
+   F.value "email"  $ delivery == EmailDelivery
+   F.value "pad"    $ delivery == PadDelivery
+   F.value "api"    $ delivery == APIDelivery
 
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString)
                           -> SignatoryLink
-                          -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)
+                          -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String)
 personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
                                                       , maybesigninfo = Just signinfo
                                                       , maybeseeninfo
                                                       , signatorysignatureinfo
+                                                      , signatorylinkdeliverymethod
                                                       }) =
   ((personFromSignatoryDetails boxImages signatorydetails)
      { Seal.emailverified    = True
@@ -111,6 +112,7 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
     , signinfo
     , isAuthor sl
     , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
+    , signatorylinkdeliverymethod
     , map head $ words $ getFullName signatorydetails
     )
   where fullnameverified = maybe False (\s -> signaturefstnameverified s
@@ -155,12 +157,8 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
-                 , Seal.image_w          = if placementwrel placement /= 0
-                                           then placementwrel placement
-                                           else 12 / 943
-                 , Seal.image_h          = if placementhrel placement /= 0
-                                           then placementhrel placement
-                                           else 12 / 1335
+                 , Seal.image_w          = placementwrel placement
+                 , Seal.image_h          = placementhrel placement
                  , Seal.internal_image_w = 24
                  , Seal.internal_image_h = 24
                  , Seal.includeInSummary = False
@@ -168,57 +166,58 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.keyColor         = Nothing
                  }
     fieldJPEGFromPlacement v placement =
-      case split "|" v of
-        [_,_,""] -> Nothing
-        [w,h,c] -> do
-          wi <- maybeRead w -- NOTE: Maybe monad usage
-          hi <- maybeRead h
-          let content = drop 1 $ dropWhile (\e -> e /= ',') c
-          let content' = if ("image/png" `isInfixOf` take 20 c)
-                         then BS.toString $ B64.encode $ JPG.imageToJpg 100 $ fromRight $ PNG.decodePng $ fromRight $ B64.decode $ BS.fromString content
-                         else content
-          Just $ Seal.FieldJPG
-                 { valueBase64           = content'
-                 , Seal.x                = placementxrel placement
-                 , Seal.y                = placementyrel placement
-                 , Seal.page             = placementpage placement
-                 , Seal.image_w          = if placementwrel placement /= 0
-                                           then placementwrel placement
-                                           else fromIntegral wi / 943
-                 , Seal.image_h          = if placementhrel placement /= 0
-                                           then placementhrel placement
-                                           else fromIntegral hi / 1335
-                 , Seal.internal_image_w = 4 * wi
-                 , Seal.internal_image_h = 4 * hi
-                 , Seal.includeInSummary = True
-                 , Seal.onlyForSummary   = False
-                 , Seal.keyColor         = Just (255,255,255) -- white is transparent
-                 }
-        _ -> Nothing
+          case (imageB64WithSizeFromValue v) of
+              Just (d,iw,ih)  -> Just $ Seal.FieldJPG
+                          { valueBase64           = d
+                          , Seal.x                = placementxrel placement
+                          , Seal.y                = placementyrel placement
+                          , Seal.page             = placementpage placement
+                          , Seal.image_w          = placementwrel placement
+                          , Seal.image_h          = placementhrel placement
+                          , Seal.internal_image_w = iw
+                          , Seal.internal_image_h = ih
+                          , Seal.includeInSummary = True
+                          , Seal.onlyForSummary   = False
+                          , Seal.keyColor         = Just (255,255,255) -- white is transparent
+                          }
+              _ -> Nothing
     fieldJPEGFromSignatureField v =
-      case split "|" v of
-        [_,_,""] -> Nothing
-        [w,h,c] -> do
-          wi <- maybeRead w -- NOTE: Maybe monad usage
-          hi <- maybeRead h
-          let content = drop 1 $ dropWhile (\e -> e /= ',') c
-          let content' = if ("image/png" `isInfixOf` take 20 c)
-                         then BS.toString $ B64.encode $ JPG.imageToJpg 100 $ fromRight $ PNG.decodePng $ fromRight $ B64.decode $ BS.fromString content
-                         else content
-          Just $ Seal.FieldJPG
-                 { valueBase64           = content'
+          case (imageB64WithSizeFromValue v) of
+              Just (d,iw,ih)  -> Just $ Seal.FieldJPG
+                 { valueBase64           = d
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
-                 , Seal.image_w          = fromIntegral wi / 943
-                 , Seal.image_h          = fromIntegral hi / 1335
-                 , Seal.internal_image_w = 4 * wi
-                 , Seal.internal_image_h = 4 * hi
+                 , Seal.image_w          = (fromRational $ toRational iw) / (fromRational $ toRational $ 4 * 943)
+                 , Seal.image_h          = (fromRational $ toRational ih) / (fromRational $ toRational $ 4 * 1335)
+                 , Seal.internal_image_w = iw
+                 , Seal.internal_image_h = ih
                  , Seal.includeInSummary = True
                  , Seal.onlyForSummary   = True
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
-        _ -> Nothing
+              _ -> Nothing
+    imageB64WithSizeFromValue v =
+        let content = drop 1 $ dropWhile (\e -> e /= ',') v
+            imageData img = BS.toString $ B64.encode  $ JPG.imageToJpg 100 img
+            dataWithSize img = case (img) of
+                                (Image.ImageY8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageYA8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageRGB8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageRGBA8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+                                (Image.ImageYCbCr8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
+            mjpegContent =  case (B64.decode $ BS.fromString content) of
+                              Right content' -> if ("image/png" `isInfixOf` take 20 v)
+                                                  then case (PNG.decodePng $ content') of
+                                                            Right img -> Just $ JPG.imageToJpg 100 img
+                                                            Left _ -> Nothing
+                                                  else Just $ content'
+                              Left _ -> Nothing
+        in case mjpegContent of
+             Just content' -> case (JPG.decodeJpeg $ content') of
+                                 Right jpg -> Just $ dataWithSize jpg
+                                 Left _ -> Nothing
+             Nothing -> Nothing
 
 
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]
@@ -349,12 +348,12 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                         , not . signatoryispartner $ signatorydetails s
                     ]
 
-      persons = map (\(a,_,_,_,_,_) -> a) signatories
-      initialsx = map (\(_,_,_,_,_,a) -> a) signatories
+      persons = map (\(a,_,_,_,_,_,_) -> a) signatories
+      initialsx = map (\(_,_,_,_,_,_,a) -> a) signatories
       paddeddocid = pad0 20 (show docid)
 
       initials = intercalate ", " initialsx
-      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
+      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _, _)  = do
           seenDesc <- renderLocalTemplate document "_seenHistEntry" $ do
                         personFields document personInfo
                         documentInfoFields document
@@ -375,8 +374,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                     then [signEvent]
                     else [seenEvent,signEvent]
       invitationSentEntry =
-        if (sendMailsDuringSigning &&^ hasOtherSignatoriesThenAuthor) document
-           then case documentinvitetime document of
+        case documentinvitetime document of
                   Just (SignInfo time ipnumber) -> do
                     -- Here we need to sort signing signatories according to sign order,
                     -- then group them by sign order. Invitation to next group is sent
@@ -392,36 +390,41 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                           documentsignatorylinks $
                           document
 
-                    descs <- flip mapM sortedPeople $ \people ->
-                      renderLocalTemplate document "_invitationSentEntry" $ do
-                        partylist <- lift $ renderListTemplateNormal . map getSmartName $ people
-                        F.value "partyList" partylist
-                        documentInfoFields document
-                        documentAuthorInfo document
-                        case people of
-                          [person] -> do
-                            F.value "oneSignatory" True
-                            F.value "personname" $ getFullName person
-                          _ -> return ()
+                    descs <- flip mapM sortedPeople $ \people -> do
+                      let peopleWithEmailDelivery = filter ((==) EmailDelivery . signatorylinkdeliverymethod) people
+                      case peopleWithEmailDelivery of
+                        [] -> do
+                          -- everybody in this signatory order was Pad delivery or API delivery
+                          return Nothing
+                        _ -> do
+                          tmpl <- renderLocalTemplate document "_invitationSentEntry" $ do
+                            partylist <- lift $ renderListTemplateNormal . map getSmartName $ peopleWithEmailDelivery
+                            F.value "partyList" partylist
+                            documentInfoFields document
+                            documentAuthorInfo document
+                            case peopleWithEmailDelivery of
+                              [person] -> do
+                                F.value "oneSignatory" True
+                                F.value "personname" $ getFullName person
+                              _ -> return ()
+                          return (Just tmpl)
+
                     -- times is offset by one in position wrt
                     -- sortedPeople last element of times is actually
                     -- ignored here
                     let times = time : map (maximum . map (signtime . fromJust . maybesigninfo)) sortedPeople
-                    let mkEntry time' desc = Seal.HistEntry
+                    let mkEntry time' (Just desc) = Just $ Seal.HistEntry
                                             { Seal.histdate = show time'
                                             , Seal.histcomment = pureString desc
                                             , Seal.histaddress = "IP: " ++ show ipnumber
                                             }
-                    return $ zipWith mkEntry times descs
+                        mkEntry _ _ = Nothing
+                    return $ catMaybes $ zipWith mkEntry times descs
                   _ -> do
                     -- document does not have documentinvitetime, what
                     -- does it mean really?
                     return []
-          else do
-            -- either emails were not sent at all during document
-            -- signing or there was nobody to sent invitation to
-            return []
-      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
+      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_,_) -> c)) signatories)
       -- document fields
       lastHistEntry = do
                        desc <- renderLocalTemplate document "_lastHistEntry" (documentInfoFields document)
@@ -564,7 +567,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
         newfilepdf <- Binary <$> case code2 of
           ExitSuccess -> do
-            vr <- liftIO $ GT.verify tmpout
+            vr <- liftIO $ GT.verify ctxgtconf tmpout
             case vr of
                  GT.Valid _ _ -> do
                       res <- liftIO $ BS.readFile tmpout

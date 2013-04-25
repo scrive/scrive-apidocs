@@ -11,6 +11,7 @@ data MailingServerConf = MailingServerConf {
   , mscDBConfig        :: String
   , mscMasterSender    :: SenderConfig
   , mscSlaveSender     :: Maybe SenderConfig
+  , mscAmazonConfig    :: Maybe (String, String, String)
   } deriving (Read, Show)
 
 data SenderConfig = SMTPSender {
@@ -40,6 +41,7 @@ instance Configuration MailingServerConf where
       , localOpenCommand = Nothing
     }
     , mscSlaveSender = Nothing
+    , mscAmazonConfig = Nothing
   }
   confOptions = []
   confVerify _ = return $ Right ()

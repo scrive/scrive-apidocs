@@ -234,3 +234,17 @@ sqlWhereSignatoryLinkMagicHashIs :: (MonadState v m, SqlWhere v)
                                  => MagicHash -> m ()
 sqlWhereSignatoryLinkMagicHashIs mh = sqlWhereE SignatoryTokenDoesNotMatch $
   "signatory_links.token = " <?> mh
+
+data DocumentObjectVersionDoesNotMatch = DocumentObjectVersionDoesNotMatch
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue DocumentObjectVersionDoesNotMatch where
+  toJSValue (DocumentObjectVersionDoesNotMatch) = runJSONGen $ do
+                     value "message" ("Document object version don't match" :: String)
+
+instance KontraException DocumentObjectVersionDoesNotMatch
+
+sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
+                                 => DocumentID -> Int -> m ()
+sqlWhereDocumentObjectVersionIs did object_version = sqlWhereE DocumentObjectVersionDoesNotMatch $
+ ("documents.object_version = " <?> object_version)  <+> ("AND documents.id = " <?> did)

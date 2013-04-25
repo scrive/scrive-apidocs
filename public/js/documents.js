@@ -112,7 +112,23 @@ window.Document = Backbone.Model.extend({
         // author does not sign at all
         signorder = 1;
       }
-      var nsig = new Signatory({"document": document, signs: true, signorder: signorder});
+      var nsigdelivery, nsigauth;
+      if (document.standardAuthentication())
+          nsigauth = "standard";
+      if (document.elegAuthentication())
+          nsigauth = "eleg";
+      if (document.emailDelivery())
+          nsigdelivery = "email";
+      if (document.padDelivery())
+          nsigdelivery = "pad";
+      if (document.apiDelivery())
+          nsigdelivery = "api";
+
+      var nsig = new Signatory({"document": document,
+                                 signs: true,
+                                 signorder: signorder,
+                                 authentication : nsigauth,
+                                 delivery: nsigdelivery});
       signatories[signatories.length] = nsig;
       document.set({"signatories": signatories});
       this.fixSignorder();
@@ -252,7 +268,7 @@ window.Document = Backbone.Model.extend({
         }
         window.takeScreenshot(
             function(canvas) {
-                var shot = [ new Date().getTime()/1000, canvas.toDataURL("image/jpeg",0.7) ];
+                var shot = [ new Date().toISOString(), canvas.toDataURL("image/jpeg",0.7) ];
                 if (first)
                     document.get("screenshots").first = shot;
                 else
@@ -270,17 +286,21 @@ window.Document = Backbone.Model.extend({
             if (field.isClosed()) return;
             fields.push({name: field.name(), value: field.value(), type: field.type()});
         });
-        var url;
-        //        if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
-        //url = "/d/" + document.documentid();
-        //else
-        url = "/s/" + document.documentid() +  "/" + document.viewer().signatoryid();
         return new Submit({
-            sign : "YES",
-            url : url,
+            url : "/api/frontend/sign/" + document.documentid() +  "/" + document.viewer().signatoryid(),
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),
-            fields: JSON.stringify(fields)
+            fields: JSON.stringify(fields),
+            ajax: true,
+            ajaxsuccess : function() {
+              if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "")
+                window.location = document.currentSignatory().signsuccessredirect();
+              else
+                window.location.reload();
+            },
+            ajaxerror : function() {
+              window.location.reload();
+            }
         });
     },
     sendByAuthor: function() {
@@ -410,7 +430,7 @@ window.Document = Backbone.Model.extend({
     standardAuthentication: function() {
           return this.get("authentication") == "standard";
     },
-    elegAuthentication: function() {
+    elegAuthentication : function() {
           return this.get("authentication") == "eleg";
     },
     emailDelivery: function() {

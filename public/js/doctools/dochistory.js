@@ -14,7 +14,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
      return  new KontraList({
         name : "Document history",
         schema: new Schema({
-            url: "/api/frontend/evidencelog/" + this.document().documentid(),
+            url: "/api/frontend/history/" + this.document().documentid(),
             paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 15 }),
             cells : [
                 new Cell({name: localization.archive.documents.columns.status, width:"46px", field:"status",
@@ -22,7 +22,13 @@ var DocumentHistoryModel = Backbone.Model.extend({
                       return jQuery("<div class='icon status "+status+"'></div>");
                   }
                 }),
-                new Cell({name: localization.history.time,  width:"150px",  field:"time"}),
+                new Cell({name: localization.history.time,  width:"150px",  field:"time",
+                  rendering: function(time) {
+                         if (time != undefined && time != "")
+                           return $("<div/>").text(new Date(Date.parse(time)).fullTime());
+                         else return $("<div/>");
+                  }
+                }),
                 new Cell({name: localization.history.party, width:"200px", field:"party"}),
                 new Cell({name: localization.history.description, width:"460px",  field:"text" ,special: "rendered",
                           rendering: function(value) {

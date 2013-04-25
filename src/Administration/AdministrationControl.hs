@@ -89,16 +89,14 @@ adminonlyRoutes =
   fmap onlySalesOrAdmin $ choice $ [
           hGet $ toK0 $ showAdminMainPage
         , dir "createuser" $ hPost $ toK0 $ handleCreateUser
-        , dir "useradminforsales" $ hGet $ toK0 $ showAdminUsersForSales
         , dir "userslist" $ hGet $ toK0 $ jsonUsersList
-        , dir "useradmin" $ hGet $ toK1 $ showAdminUsers . Just
-        , dir "useradmin" $ hGet $ toK0 $ showAdminUsers Nothing
+        , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
         , dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
         , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
         , dir "useradmin" $ dir "payments" $ hGet $ toK1 $ showAdminUserPayments
         , dir "useradmin" $ dir "payments" $ hPost $ toK1 $ handleUserPaymentsChange
-        , dir "companyadmin" $ hGet $ toK0 $ showAdminCompanies
+        , dir "useradmin" $ dir "documents" $ hGet $ toK1 $ showAdminUserDocuments
         , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
         , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
         , dir "companyadmin" $ dir "users" $ hGet $ toK1 $ showAdminCompanyUsers
@@ -109,7 +107,6 @@ adminonlyRoutes =
         , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
 
-        , dir "documents" $ hGet $ toK0 $ showDocuments
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
 
         , dir "allstatscsv" $ hGet $ toK0 $ Stats.handleDocStatsCSV
@@ -120,7 +117,6 @@ adminonlyRoutes =
         , dir "userslistcsv" $ hGet $ toK0 $ handleUsersListCSV
         , dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
 
-        , dir "statistics"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStats
         , dir "statsbyday"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByDayJSON
         , dir "statsbymonth" $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByMonthJSON
 
@@ -145,19 +141,11 @@ showAdminMainPage = onlySalesOrAdmin $ do
     ctx <- getContext
     adminMainPage ctx
 
-{- | Process view for finding a user in basic administration. If provided with userId string as param
-it allows to edit user details -}
-showAdminUsers :: Kontrakcja m => Maybe UserID -> m String
-showAdminUsers Nothing = onlySalesOrAdmin adminUsersPage
-
-showAdminUsers (Just userId) = onlySalesOrAdmin $ do
-  muser <- dbQuery $ GetUserByID userId
-  case muser of
-    Nothing -> internalError
-    Just user -> adminUserPage user =<< getCompanyForUser user
-
-showAdminCompanies :: Kontrakcja m => m String
-showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
+{- | Process view for finding a user in basic administration -}
+showAdminUsers :: Kontrakcja m => UserID -> m String
+showAdminUsers userId = onlySalesOrAdmin $ do
+  user <- guardJustM $ dbQuery $ GetUserByID userId
+  adminUserPage user =<< getCompanyForUser user
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
@@ -178,6 +166,11 @@ showAdminUserPayments userid = onlySalesOrAdmin $ do
   mpaymentplan <- dbQuery $ GetPaymentPlan (Left userid)
   user <- guardJustM $ dbQuery $ GetUserByID userid
   adminUserPaymentPage userid mpaymentplan (usercompany user) recurlySubdomain
+
+showAdminUserDocuments :: Kontrakcja m =>  UserID -> m String
+showAdminUserDocuments userId = onlySalesOrAdmin $ do
+  ctx <- getContext
+  adminUserDocumentsPage userId ctx
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -237,10 +230,6 @@ companyPaginationFromParams pageSize params = (fromIntegral (listParamsOffset pa
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m String
 showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
-
-
-showAdminUsersForSales :: Kontrakcja m => m String
-showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
 handleUsersListCSV :: Kontrakcja m => m CSV
 handleUsersListCSV = onlySalesOrAdmin $ do
@@ -447,7 +436,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
     (_, _, Just plan) -> addCompanyPlanManual companyid plan status
     _ -> return ()
   return $ LinkCompanyAdminPayments companyid
-  
+
 migrateCompanyPlan :: Kontrakcja m => CompanyID -> m ()
 migrateCompanyPlan companyid = do
   migratetype <- getField' "migratetype"
@@ -459,7 +448,7 @@ migrateCompanyPlan companyid = do
           _ <- changePaymentPlanOwner (Right companyid) (Left dest)
           return ()
         _ -> return ()
-        
+
     "companyid" -> do
       mcompanyid <- readField "id"
       case mcompanyid of
@@ -468,7 +457,7 @@ migrateCompanyPlan companyid = do
           return ()
         _ -> return ()
     _ -> return ()
-    
+
 deleteCompanyPlan :: Kontrakcja m => CompanyID -> m ()
 deleteCompanyPlan companyid = do
   dbUpdate $ DeletePaymentPlan (Right companyid)
@@ -534,7 +523,7 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
     (_, _, Just plan) -> addManualPricePlan userid plan status
     _ -> return ()
   return $ LinkUserAdminPayments userid
-  
+
 migratePlan :: Kontrakcja m => UserID -> m ()
 migratePlan userid = do
   migratetype <- getField' "migratetype"
@@ -546,7 +535,7 @@ migratePlan userid = do
           _ <- changePaymentPlanOwner (Left userid) (Left dest)
           return ()
         _ -> return ()
-        
+
     "companyid" -> do
       mcompanyid <- readField "id"
       case mcompanyid of
@@ -555,7 +544,7 @@ migratePlan userid = do
           return ()
         _ -> return ()
     _ -> return ()
-    
+
 deletePlan :: Kontrakcja m => UserID -> m ()
 deletePlan userid = do
   dbUpdate $ DeletePaymentPlan (Left userid)
@@ -794,18 +783,18 @@ Used signatures last 6 months
 Used signatures last 12 months
 -}
 
-showDocuments ::  Kontrakcja m => m  String
-showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
-
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
 
   params <- getListParamsNew
+  muserid <- readField "userid"
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = ((listParamsOffset params),(listParamsLimit params))
       filters    = []
-      domain     = [DocumentsOfWholeUniverse]
+      domain     = case muserid of
+                     Nothing -> [DocumentsOfWholeUniverse]
+                     Just userid ->   [DocumentsVisibleToUser userid]
       docsPageSize = 100
 
   allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
@@ -981,4 +970,4 @@ daveFile fileid' _title = onlyAdmin $ do
           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
           return res2
 
-  
+

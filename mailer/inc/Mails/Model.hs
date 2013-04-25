@@ -51,7 +51,8 @@ instance MonadDB m => DBUpdate m AddContentToEmail Bool where
         kRun_ $ sqlInsert "mail_attachments" $ do
           sqlSet "mail_id" mid
           sqlSetList "name" $ attName <$> attachments
-          sqlSetList "content" $ (Binary . attContent) <$> attachments
+          sqlSetList "content" $ either (Just . Binary) (const Nothing) . attContent <$> attachments
+          sqlSetList "file_id" $ either (const Nothing) (Just) . attContent <$> attachments
     return result
 
 data MarkEventAsRead = MarkEventAsRead EventID MinutesTime
@@ -87,6 +88,7 @@ selectMails query' = do
     sqlResult "mail_id"
     sqlResult "name"
     sqlResult "content"
+    sqlResult "file_id"
     sqlOrderBy "id DESC"
     sqlWhereExists $ sqlSelect "mails_tmp" $
       sqlWhere "mails_tmp.id = mail_attachments.mail_id"
@@ -228,7 +230,10 @@ fetchMailAttachments = kFold decoder Map.empty
   where
     -- Note: this function gets mails in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.
-    decoder acc mid name content = Map.insertWith' (++) mid
+    decoder acc mid name content file_id = Map.insertWith' (++) mid
             [Attachment { attName = name
-                        , attContent = unBinary content
+                        , attContent = case (content, file_id) of
+                                         (Just content', Nothing) -> Left $ unBinary content'
+                                         (Nothing, Just file_id') -> Right file_id'
+                                         _ -> error "fetchMailAttachments: content/file_id mismatch"
                         }] acc

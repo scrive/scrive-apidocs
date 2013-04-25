@@ -2,11 +2,9 @@
 
 module Doc.JSON
        (
-         jsonDocumentForSignatory
-       , jsonDocumentID
+         jsonDocumentID
        , jsonDocumentType
        , jsonSigAttachmentWithFile
-       , jsonDocumentForAuthor
        , dcrFromJSON
        , DocumentCreationRequest(..)
        , InvolvedRequest(..)
@@ -19,13 +17,11 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Doc.DocumentID
 import Utils.Enum
-import KontraLink
 import Control.Monad.Identity
 import Data.Maybe
 import Data.Functor
 import Control.Monad.Reader
 import Doc.DocDraft()
-import Data.List (nub)
 
 parseIsAuthor :: Int -> Maybe Bool
 parseIsAuthor n
@@ -91,34 +87,6 @@ instance SafeEnum DeliveryMethod where
     toSafeEnum 3 = Just APIDelivery
     toSafeEnum _  = Nothing
 
-jsonDocumentForAuthor :: Document -> String -> JSValue
-jsonDocumentForAuthor doc hostpart =
-  runJSONGen $ do
-    value "url"            $ hostpart ++ show (LinkIssueDoc (documentid doc))
-    value "document_id"    $ jsonDocumentID $ documentid doc
-    value "title"          $ documenttitle doc
-    value "type"           $ fromSafeEnumInt $ documenttype doc
-    value "status"         $ fromSafeEnumInt $ documentstatus doc
-    value "designurl"      $ show $ LinkIssueDoc (documentid doc)
-    value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
-                                   [StandardAuthentication] -> (1 :: Int)
-                                   [ELegAuthentication]     -> 2
-                                   _                        -> 0
-    value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
-
-jsonDocumentForSignatory :: Document -> JSValue
-jsonDocumentForSignatory doc =
-  runJSONGen $ do
-    value "document_id"    $ jsonDocumentID $ documentid doc
-    value "title"          $ documenttitle doc
-    value "type"           $ fromSafeEnumInt $ documenttype doc
-    value "status"         $ fromSafeEnumInt $ documentstatus doc
-    value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
-                                   [StandardAuthentication] -> (1 :: Int)
-                                   [ELegAuthentication]     -> 2
-                                   _                        -> 0
-    value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
-
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair
 jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe File -> JSValue
@@ -169,6 +137,7 @@ sfFromJSON (name, jsv) =
       sfType = tp,
       sfValue = val,
       sfObligatory = obl,
+      sfShouldBeFilledBySender = False,
       sfPlacements = [] -- do placements later /Eric
     }
   where

@@ -21,9 +21,9 @@ testMailAttachments = do
       sender = Address "Jarek" "xx@asd.com"
       to = [Address "Genowefa""a1@ss.com", Address "Brunhilda" "b3@dd.com"]
       to_be_sent = fromSeconds 213123
-      attachments = [ Attachment "name1" "content 123"
-                    , Attachment "name2" "contenty 314124"
-                    , Attachment "name3" "contenty 314124 sffadsfa"
+      attachments = [ Attachment "name1" (Left "content 123")
+                    , Attachment "name2" (Left "contenty 314124")
+                    , Attachment "name3" (Left "contenty 314124 sffadsfa")
                     ]
       xsmtpapi = XSMTPAttrs [("arg1","val1"),("arg2","val2"),("arg3","val3"),("arg4","val4")]
       title = "The thing"
@@ -51,9 +51,9 @@ testMailOrder = do
       to1 = [Address "Genowefa" "aa@ss.com", Address "Brunhilda" "b3@dd.com"]
       to2 = [Address "Genowefa2" "a@ss.com", Address "Brunhilda" "b3@dd.com"]
       to_be_sent = fromSeconds 213123
-      attachments = [ Attachment "name1" "content 123"
-                    , Attachment "name2" "contenty 314124"
-                    , Attachment "name3" "contenty 314124 sffadsfa"
+      attachments = [ Attachment "name1" (Left "content 123")
+                    , Attachment "name2" (Left "contenty 314124")
+                    , Attachment "name3" (Left "contenty 314124 sffadsfa")
                     ]
       xsmtpapi = XSMTPAttrs [("arg1","val1"),("arg2","val2"),("arg3","val3"),("arg4","val4")]
       title = "The thing"

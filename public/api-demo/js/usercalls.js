@@ -19,7 +19,7 @@ window.GetProfileApiCall = ApiCall.extend({
                 cache: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
-                    model.setResult(res);
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
                 error : function(res) {
                     model.setResult(JSON.stringify(res.responseText,undefined," "));
@@ -27,6 +27,31 @@ window.GetProfileApiCall = ApiCall.extend({
             });
         }
 });
+
+window.GetPaymentInfoApiCall = ApiCall.extend({
+        defaults: {
+             name : "Get payment if for current user"
+        },
+        initialize: function (args) {
+        },
+        isGetPaymentInfo : function() {return true;},
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"paymentinfo", {
+                type: 'GET',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+
 
 window.SetLanguageApiCall = ApiCall.extend({
         defaults: {
@@ -170,6 +195,39 @@ window.SignupApiCall = ApiCall.extend({
         }
 });
 
+window.SendPasswordResetMailApiCall = ApiCall.extend({
+        defaults: {
+             name : "Send password reset mail",
+             email : LocalStorage.get("api","email"),
+
+
+        },
+        initialize: function (args) {
+        },
+        isSendPasswordResetMail : function() {return true;},
+        email : function() {return this.get("email");},
+        setEmail : function(email) {
+            LocalStorage.set("api","email",email);
+            return this.set({"email" : email});
+        },
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"sendpasswordresetmail", {
+                type: 'POST',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                data : {email : model.email()},
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+
 
 
 window.SetPasswordApiCall = ApiCall.extend({
@@ -217,6 +275,32 @@ window.GetProfileApiCallView = Backbone.View.extend({
             this.model.bind('change', this.render);
             this.prerender();
 
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+window.GetPaymentInfoApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
         },
         prerender : function() {
             var model = this.model;
@@ -292,6 +376,38 @@ window.SignupApiCallView = Backbone.View.extend({
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Email: <BR/></div>").append(emailInput)).append("<BR/>")
                    .append($("<div>Language (en or sv, optional): <BR/></div>").append(langInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+
+window.SendPasswordResetMailApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var emailInput = $("<input type='text'/>").val(model.email());
+            emailInput.change(function() {model.setEmail(emailInput.val()); return false;})
+
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Email: <BR/></div>").append(emailInput)).append("<BR/>")
                    .append($("<div/>").append(button));
             this.render();
         },

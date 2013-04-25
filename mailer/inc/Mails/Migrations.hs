@@ -12,6 +12,7 @@ mailerMigrations :: MonadDB m => [Migration m]
 mailerMigrations = [
     addTestServiceToMails
    , moveAtachmentsToSeparateTable
+   , addFileIdToAttachmentsTable
   ]
 
 addTestServiceToMails :: MonadDB m => Migration m
@@ -54,4 +55,14 @@ moveAtachmentsToSeparateTable =
       Log.debug "Attachments moved to separate table, now dropping attachments column from mails"
 
       kRunRaw "ALTER TABLE mails DROP COLUMN attachments"
+  }
+
+addFileIdToAttachmentsTable :: MonadDB m => Migration m
+addFileIdToAttachmentsTable =
+  Migration {
+    mgrTable = tableMailAttachments
+  , mgrFrom = 1
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE mail_attachments ADD COLUMN file_id BIGINT,"
+             <> "ALTER COLUMN content DROP NOT NULL"
   }

@@ -11,10 +11,17 @@ mailDocumentAwaitingForAuthor=
     $_mailDocumentAwaitingForAuthorTitle()$
     $nicemail(
         mailheader= _mailDocumentAwaitingForAuthorTitle();
-        mailp1 = _mailDocumentAwaitingForAuthorContentSignedBy();
+        mailp1 = mailDocumentAwaitingForAuthorText();
         mailp2 = nicebutton(link=documentlink; text=_mailReviewOnlineDocument());
         footer = legalparagraph()
     )$
+#####
+mailDocumentAwaitingForAuthorText=
+$if(someonesigned)$
+ $_mailDocumentAwaitingForAuthorContentSignedBy()$
+$else$
+ $_mailDocumentAwaitingForAuthorContentReadyForSigning()$
+$endif$
 #####
 mailClosedSignup=
 
@@ -380,9 +387,7 @@ newUserMail=
 $_newUserMailTitle()$
 $nicemail(
         mailheader=_newUserMailTitle();
-        mailp1=_newUserMailHeader();
-        mailp2=newUserMailMainP();
-        mailp3=regards()
+        mailp1=newUserMailMainP()
     )$
 ####
 newUserMailMainP=

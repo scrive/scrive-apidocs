@@ -231,10 +231,8 @@ testEmailChangeFailsIfNoPassword = do
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
+  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
 getRequestChangeEmailActions :: TestEnv [EmailChangeRequest]
 getRequestChangeEmailActions = do

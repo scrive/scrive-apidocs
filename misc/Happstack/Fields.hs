@@ -11,6 +11,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import Utils.Read
 import Utils.String
 import Utils.Monoid
+import qualified Text.JSON as J
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
@@ -30,6 +31,14 @@ getFields name = map BSLU.toString `liftM` fromMaybe [] `liftM` getDataFn' (look
 getField :: (HasRqData m, MonadIO m, ServerMonad m)
          => String -> m (Maybe String)
 getField name = (listToMaybe . reverse) `liftM` getFields name
+
+getFieldJSON :: (HasRqData m, MonadIO m, ServerMonad m)
+         => String -> m (Maybe J.JSValue)
+getFieldJSON name = do
+  res <- getField name
+  case fmap J.decode res of
+     Just (J.Ok js) -> return $ Just js
+     _ -> return $ Nothing
 
 getField' :: (HasRqData m, MonadIO m, ServerMonad m)
           => String -> m String

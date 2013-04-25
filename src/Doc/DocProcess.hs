@@ -110,7 +110,6 @@ contractProcess =
   , processflashmessagerestarted = "flashMessageContractRestarted"
   , processflashmessageprolonged = "flashMessageContractProlonged"
 
-
   -- process specific seal information
   , processsealingtext = "contractsealingtexts"
   , processlasthisentry = "contractLastHistEntry"
