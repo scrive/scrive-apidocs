@@ -258,7 +258,7 @@
 <body class="en legal article ct full">
 <h1>Evidence Documentation</h1>
 <div class="content">
-<p id="top">This documentation (the “Evidence Documentation”) is one of many attachments inside a Scrive PDF (“the Evidence Package”). The Evidence Documentation is a complete instruction manual of how to interpret the different parts of the Evidence Package and is intended to provide an understanding and make use of the Evidence Package as easily as possible and independently of any third party (including independence from Scrive), thus removing the need for any special resources or expertise for the interpretation of the document and making it fully accessible and useful for anyone.</p>
+<p id="top">This documentation (the “Evidence Documentation”) is one of many attachments inserted by the Scrive e-signing system into the PDF once all parties have signed (“the Evidence Package”). The Evidence Documentation is a complete instruction manual of how to interpret the different parts of the Evidence Package and is intended to provide an understanding and make use of the Evidence Package as easily as possible and independently of any third party (including independence from Scrive), thus removing the need for any special resources or expertise for the interpretation of the document and making it fully accessible and useful for anyone.</p>
 
 
 <h2>The importance of evidence quality</h2>
@@ -303,7 +303,7 @@
 
 <h3>Capturing the identity</h3>
 
-	<p>A common and familiar way of capturing an identity is with an identification card (driver’s license, passport etc). But paper has a less apparent ability by which it automatically collects evidence of identity of signing parties. When a signature is signed on paper, the visual representation can be used for signature comparisons while the ink can be analyzed to date the agreement. Additionally, during the paper signing process, the paper automatically captures fingerprints and other biometric materials from the signing parties which can be used to authenticate the signature. </p>
+	<p>A common and familiar way of capturing an identity is with an identification card (driver’s license, passport etc). But paper has a less apparent ability by which it automatically collects evidence of identity of signing parties. When a signature is signed on paper, the visual representation can be used for signature comparisons while the ink can be analysed to date the agreement. Additionally, during the paper signing process, the paper automatically captures fingerprints and other biometric materials from the signing parties which can be used to authenticate the signature. </p>
 	<p>In the case of digitally signed documents there is no automatic collection of identity into the document. Data about the identity of the signing party is only captured and stored inside the document if the signing software is programmed to do so. Thus, the capturing of identity is highly dependent on the design of the software that produces the final document. </p>
 	<p>Questions to ask: What identity data should be captured and how should it be embedded within the document in such a way that it could not be manually altered?</p>
 
@@ -345,17 +345,17 @@
 	<p>In many processes, such as a bidding process, accurate time measurement is important to the transaction, as it can be the difference between an approved or  unapproved bid. Using the paper signing format, the time must be recorded manually which gives way to inaccuracies and disagreements. Digital documents on the other hand can record time with a much higher accuracy. Nevertheless, problems with time accuracy in digital signing formats persist. As a famous Swedish court case shows, recording time is not necessarily the same as a credible time record. Example:</p>
 	<p><em>A company was engaged in a bidding process and sent their bid by fax one minute to 12, in the last minute before the deadline. But the time recorded by the receiving fax machine was one minute past 12, within one minute past the deadline. As this was a bid to a Swedish municipality, Swedish law prohibited acceptance of the bid. The bidding party, convinced that their fax time was correctly set, went to court disputing the case. The case went all the way to the supreme court where the supreme court ruled in favor of the receiving party as it could not be proven that the receiving party actually had the wrong time set on their fax machine. Additionally the telecom company who was responsible for the fax wire had not set their system in such a way that they could prove the time deviation of their system from standard time. Thus, it could not be credibly shown that the time record of the telecom company was accurate.</em></p>
 
-<h2>The Scrive evidence container</h2>
+<h2>The Evidence Package</h2>
 
-	<p>We have now analyzed the important evidence quality characteristics of paper and the potential for additional evidence qualities previously not possible with the paper format. How does Scrive´s solution relate to these issues and how have they been interpreted?</p>
+	<p>We have now analysed the important evidence quality characteristics of paper and the potential for additional evidence qualities previously not possible with the paper format. How does the Evidence Package relate to these issues, what does it solve and how?</p>
 
 <h3>Time Drift Prevention system</h3>
 	<p>As described earlier, capturing time in a credible manner can be very important. As it stands, there are a relatively low number of cases with which time capture is critical, but such things cannot be predicted. Therefore, to eliminate this unnecessary company risk, a quality solution should guarantee a time capture in 100% of all documents signed.</p>
-	<p>At Scrive we keep our systems synchronized with local NTP (Network Time Protocol) systems that are synced to as high a stratum NTP server as possible. This produces an accuracy of time that is virtually impossible to refute. The minimum and maximum poll intervals for the NTP server are left at defaults (minpoll 6, maxpoll 10 on the default Linux NTP server – these settings are seconds to the power of 2). This is because updating too often can be prone to more errors and jitter, and updating after too long can produce bigger corrections due to the larger timespan between updates. With these settings we have had an average drift of 0.000789 seconds and a maximum drift of 0.022 seconds the year 2012.</p>
-	<p>For provability purposes the latest synchronizations and reported time drift at each synchronization is recorded by the Scrive system and inserted into the Evidence Log (as described below).</p>
+        <p>The time of the Scrive e-signing system is synchronized using NTP (Network Time Protocol) and communicates indirectly with servers equipped with reference clocks whose purpose is to define reference time. This allows the Scrive e-signing system to maintain a credible accuracy of time. It also allows the Scrive e-signing system to continuously estimate the error of its clocks compared to reference time. The Scrive e-signing system use the recommended and standard synchronization interval of 64 to 1024 seconds, and with these settings the average estimated error during the year 2012 was 0.000789 seconds and the maximum estimated error was 0.022 seconds.</p>
+        <p>For evidence collection purposes the Scrive e-signing system inserts the clock error estimates into the Evidence Log for each recorded event (as described below).</p>
 
 <h3>Generating the Evidence Container</h3>
-	<p>Scrive provides a set of signing processes that enable the signing parties to come to an agreement. Once all signing parties have signed the agreement the Scrive system will execute the following actions to finalize the “Evidence Container”. The steps are as follows:</p>
+	<p>The Scrive e-signing system provides a set of signing processes that enable the signing parties to come to an agreement. Once all signing parties have signed the agreement the Scrive e-signing system will execute the following actions to finalize the “Evidence Container”. The steps are as follows:</p>
 	<ol>
 		<li><p>Make the agreement into a PDF.</p></li>
 		<li><p>Print additional information added during the signing process into the PDF (visual signature, text, checked checkboxes and more).</p></li>
@@ -363,10 +363,9 @@
 		<li><p>Append the “Evidence Documentation” (as described in this section) as an appendix to the PDF </p></li>
 		<li><p>Append the “Evidence Log” as an appendix to the PDF.</p></li>
 		<li><p>Append the “Evidence of Intent” as an appendix to the PDF.</p></li>
-		<li><p>Append the “Digital Signature Documentation” as an appendix to the PDF.</p></li>
 		<li><p>Sign the Evidence Package (PDF plus appendices) with a digital signature.</p></li>
 	</ol>
-		<p>A detailed description of the steps 3-8 follows below.</p>
+		<p>A detailed description of the steps 3-7 follows below.</p>
 
 <h3>Appending the Verification Page (step 3)</h3>
 	<p>The Verification Page is intended to make the most important metadata of the transaction as accessible as possible. The key details include who signed which documents, when and how. The Verification Page contains the following information:</p>
@@ -390,38 +389,29 @@
 	<p>Full documentation about the Evidence Package is appended as an appendix to the signed PDF (hereinafter the “Evidence Documentation”). The Evidence Documentation is a complete instruction manual of how to interpret the different parts of the Evidence Package and is intended to make understanding and use of the Evidence Package as easy as possible and independently of any third party (including independence from Scrive), thus removing the need for any special resources or expertise for the interpretation of the document and making it fully accessible and useful for anyone.</p>
 
 <h3>Appending the Evidence Log (Step 5)</h3>
-	<p>The Scrive system will record as many of the signatories’ actions as possible as log data (“Transaction Log”) and once the Scrive system has produced the signed PDF, a document containing all data from the Transaction Log is appended as an appendix (“Evidence Log”). Note that the Verification Page only contains selected transaction log data with the intention to make a preselected set of transaction history easily accessible, while the Evidence Log itself contains all transaction log data with the intention to make all transaction history easily accessible. The extensive logging of the parties’ actions and the appending of the Evidence Log is carried out with the intention of optimally enhancing the document quality through the additional metadata of the transaction.</p>
+	<p>The Scrive e-signing system will record as many of the signatories’ actions as possible as log data (“Transaction Log”) and once the Scrive e-signing system has produced the signed PDF, a document containing all data from the Transaction Log is appended as an appendix (“Evidence Log”). Note that the Verification Page only contains selected transaction log data with the intention to make a preselected set of transaction history easily accessible, while the Evidence Log itself contains all transaction log data with the intention to make all transaction history easily accessible. The extensive logging of the parties’ actions and the appending of the Evidence Log is carried out with the intention of optimally enhancing the document quality through the additional metadata of the transaction.</p>
 
 <h3>Appending the Evidence of Intent (Step 6)</h3>
-	<p>The Scrive system will make screenshots of each party’s signing experience as evidence of the intent to sign. When the Scrive system is preparing the Evidence Package it will append the Evidence of Intent which is a document with a brief description of the actions of the signing process, who did what and when, with the screenshots included. The intention behind appending the Evidence of Intent is to provide the parties with evidence of such signing intentions in order to provide additional evidence in the potential situation as exemplified with the blue elephant and the pink sheep example.</p>
+	<p>The Scrive e-signing system will make screenshots of each party’s signing experience as evidence of the intent to sign. When the Scrive e-signing system is preparing the Evidence Package it will append the Evidence of Intent which is a document with a brief description of the actions of the signing process, who did what and when, with the screenshots included. The intention behind appending the Evidence of Intent is to provide the parties with evidence of such signing intentions in order to provide additional evidence in the potential situation as exemplified with the blue elephant and the pink sheep example.</p>
 
-<h3>Appending the Digital Signature Documentation (Step 7)</h3>
-	<p>The Scrive system will also append the Digital Signature Documentation to the Evidence Package. The Digital Signature Documentation contains an algorithm for how to prove the document’s integrity mathematically. With the help of the Digital Signature Documentation the document integrity can be tested mathematically without the help of Scrive or any other third party. This document does require some technical knowledge to be useful.</p>
-	<p>Note: the Digital Signature Documentation is not intended as the primary method for proving the document’s integrity. The use of the Digital Signature Documentation is intended as a last resort after which all other methods of verifying the integrity have failed. To clarify, the intended order for verifying the integrity of a document is:</p>
-		<ol>
-			<li><p>Scrive provides the primary method for verifying the integrity of a signature at www.scrive.com/verify. Here the document owner can upload the document and get an automated validation of the document integrity. This method does not require any technical knowledge to be useful.</p></li>
-			<li><p>If this primary method , for some reason fails to perform the verification of integrity then the digital signature provider, Guardtime, can be contacted directly for verification. This second method also does not require any technical knowledge to be useful.</p></li>
-			<li><p>Finally, if both previous methods have failed, the Digital Signature Documentation can be used to mathematically verify the document integrity.</p></li>
-		</ol>
-
-<h3>Appending the Digital Signature (Step 8)</h3>
+<h3>Appending the Digital Signature (Step 7)</h3>
 	<p>Once all extra documentation has been appended to the document, the document wrapper is digitally signed with an industry standard digital signature from Guardtime.</p>
 
 
 <h2>Summary 1: Legal effects of the Scrive solution</h2>
 
-	<p>To summarize, all the above measures involved in producing the Scrive PDF effectively address the different problems of deteriorating digital document quality.</p>
+	<p>To summarize, all the above measures involved in producing the Evidence Package effectively address the different problems of deteriorating digital document quality.</p>
 
 	<ul>
-		<li><p>Infinite durability (better than paper) is assured with the help of appending the digital signature (step 8) and with the help of the Digital Signature Documentation (step 7).</p></li>
+		<li><p>Infinite durability (better than paper) is assured with the help of appending the digital signature (step 7).</p></li>
 		<li><p>Maximum accessibility is assured by appending the Verification Page to the PDF containing a short documentation (step 3) and appending the full Evidence Documentation document which fully explains all parts of the document and eliminates any need for further expertise or resources (step 4).</p></li>
 		<li><p>Capturing identity is assured by meticulous data collection to the Transaction Logs and then printing selected identity data into both the Verification Page (step 3) and more detailed identity data into the Evidence Log (step 5).</p></li>
 		<li><p>Capturing intent is assured by the screenshot mechanism and by appending the Evidence of Intent document to the PDF (step 6).</p></li>
-		<li><p>Capturing time is assured by the Time Drift Prevention system, the logging of average, max and minimum time drift and the recording of such into the Evidence Log (step 5).</p></li>
+		<li><p>Capturing time is assured by the Time Drift Prevention system, the estimation of maximum clock error and the recording of such into the Evidence Log (step 5).</p></li>
 		<li><p>Collecting additional data to further improve the document quality is carried out by the Time Drift Prevention system and by the redundant collection of logs into the Transaction Log and the final printing of all available data into the Evidence Log (step 5).</p></li>
 	</ul>
 
-	<p>Below you can see a summary table showing how Scrives PDF compares to competing evidence container formats.</p>
+	<p>Below you can see a summary table showing how the Evidence Package ("Scrive EP") compares to competing evidence container formats.</p>
 
 <table>
   <thead>
@@ -482,7 +472,7 @@
       <td class="green">Yes</td>
     </tr>
     <tr>
-      <td class="label">Scrive PDF</td>
+      <td class="label">Scrive EP</td>
       <td class="green">Yes</td>
       <td class="green">Yes</td>
       <td class="green">Yes</td>
@@ -498,15 +488,15 @@
 	<p>The holder of the document is made independent of Scrive because:</p>
 
 	<ol>
-		<li><p>The holder of the document is not dependent on the Scrive logs to prove document durability due to the digital signature appended (step 8) and the Digital Signature Documentation (step 7).</p></li>
-		<li><p>The holder of the document is not dependent on the Scrive logs for additional evidence in case of conflict, as all evidence available to Scrive was made available to the holder of the document through the Evidence Log (step 5).</p></li>
-		<li><p>The holder of the document is not dependent on access to old versions of the Scrive system to prove the original signing environment to prove all parties’ intent to sign. Instead the evidence of intent is made available to the holder of the document through the Evidence of Intent document (step 6).</p></li>
+		<li><p>The holder of the document is not dependent on the Scrive e-signing system logs to prove document durability due to the digital signature appended (step 7).</p></li>
+		<li><p>The holder of the document is not dependent on the Scrive e-signing system logs for additional evidence in case of conflict, as all evidence available to the Scrive e-signing system was made available to the holder of the document through the Evidence Log (step 5).</p></li>
+		<li><p>The holder of the document is not dependent on access to old versions of the Scrive e-signing system to prove the original signing environment to prove all parties’ intent to sign. Instead the evidence of intent is made available to the holder of the document through the Evidence of Intent document (step 6).</p></li>
 		<li><p>Finally, the holder of the document is made independent of other parties and/or Scrive’s expertise to interpret the document, through the Evidence Documentation document that is appended (step 4).</p></li>
 	</ol>
 
 <h2>Appendix: Evidence quality analysis between newer document standards and paper</h2>
 
-	<p>For the reader to be able to put the Scrive evidence container into perspective it could be useful to understand the evidence quality characteristics of documents signed through other types of signing solutions. To give an overview of the quality of available formats the following table describes the differences in critical legal qualities between paper and other newer document formats. A brief elaboration of the strength and weaknesses of each format can be found below the table. </p>
+	<p>For the reader to be able to put the Evidence Package into perspective it could be useful to understand the evidence quality characteristics of documents signed through other types of signing solutions. To give an overview of the quality of available formats the following table describes the differences in critical legal qualities between paper and other newer document formats. A brief elaboration of the strength and weaknesses of each format can be found below the table. </p>
 
 	<table>
   <thead>
@@ -604,7 +594,7 @@
 
 <h3><em>E-signing PDF</em></h3>
 
-	<p>The “e-signing PDF” is a result of the parties using a third party SaaS (software-as-a-service) provider as a platform for executing an agreement. Usually one party uses the software to invite the counterpart to sign inside the SaaS provider’s software and the final product of the procedure is an e-signed PDF produced and stamped by the SaaS provider. This type of software is used as a signing process management tool. Scrive is one of many solutions within this category of solutions. In this section we describe our overall perspective of known solutions, Scrive excluded (to be described in more detail further down):</p>
+	<p>The “e-signing PDF” is a result of the parties using a third party SaaS (software-as-a-service) provider as a platform for executing an agreement. Usually one party uses the software to invite the counterpart to sign inside the SaaS provider’s software and the final product of the procedure is an e-signed PDF produced and stamped by the SaaS provider. This type of software is used as a signing process management tool. The Scrive e-signing system is one of many solutions within this category of solutions. In this section we describe our overall perspective of known solutions, the Scrive e-signing system excluded:</p>
 
 	<ul>
 		<li><p><em>Strengths</em>: These types of services enable identification in many different ways such as email, IP-address, text messaging, photo, fingerprint scanning and more. All of this identity data can be captured and placed into the document. Most e-signing services provide multiple types of identification and could therefore be considered fairly strong in this area. Although of course, the quality of the identification is dependent on what the sending user selects as the method for identification. Most services also collect metadata about the transaction and print it into the document as a time trail describing the actions taken by the parties using IP and time. Thus, metadata collection can be considered fairly strong.</p></li>
@@ -614,11 +604,6 @@
 		<p>To continue, two more problems exist: </p>
 		<p>First, if an e-signing provider does not take measures to ensure the document’s durability (ex. stamping the document with a digital signature), the evidence of the document integrity will lie in the logs at the e-signing service’s database. Thus, customers of the e-signing provider would in effect be giving up the ability to prove the originality of the documents without relying on the good faith of the provider and/or the continued existence of the provider as a business. This is a risky situation for any company to be in as they should have complete and indisputable ownership of their own legal documents. </p>
 		<p>Second, the documents produced by the e-signing provider cannot by default be considered the standard (as the format is still new to the market and standards are still being developed). Given this unfamiliarity it is likely that, without access to clear documentation, both legal and technical expertise would be required to understand all aspects of the document. This is of course problematic as it can potentially skew the power to parties with deeper pockets or more expertise available and can also induce insecurities in a legal process. What if the court cannot fully interpret the document? What if the e-signing provider is no longer in existence to assist with an explanation?</p>
-
-
-
-
-
 </div>
 </body>
 </html>

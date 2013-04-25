@@ -463,7 +463,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
       evidenceOfIntent <- evidenceOfIntentAttachment (documenttitle document) (documentsignatorylinks document)
       -- add signature verification documentation
-      let signatureVerificationAttachment =
+      let _signatureVerificationAttachment =
             Seal.SealAttachment { Seal.fileName = "DigitalSignatureDocumentation.html"
                                 , Seal.mimeType = Nothing
                                 , Seal.fileBase64Content = sigVerFile
@@ -498,7 +498,8 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
             , Seal.staticTexts    = readtexts
-            , Seal.attachments    = [evidenceDocumentationAttachment, evidenceattachment, evidenceOfIntent, signatureVerificationAttachment]
+            , Seal.attachments    = [evidenceDocumentationAttachment, evidenceattachment, evidenceOfIntent] -- , signatureVerificationAttachment]
+                                    -- Omit signatureVerificationAttachment until we mature documents
             , Seal.filesList      =
               [ Seal.FileDesc { fileTitle = documenttitle document
                               , fileRole = mainDocumentText
