@@ -97,6 +97,6 @@ initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   maybeuser <- dbQuery $ GetUserByEmail email
   case maybeuser of
     Nothing -> do
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) Nothing defaultValue
+      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) Nothing defaultValue Nothing
       return ()
     Just _ -> return () -- user exist, do not add it

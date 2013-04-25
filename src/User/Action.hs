@@ -34,6 +34,7 @@ import qualified ScriveByMail.Action as MailAPI
 import ThirdPartyStats.Core
 import Crypto.RNG
 import MinutesTime
+import BrandedDomains
 
 handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign document signatorylink = do
@@ -92,7 +93,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
               ds <- dbQuery $ GetSignatoriesByEmail (Email $ getEmail actvuser) (14 `daysBefore` ctxtime ctx)
-              
+
               forM_ ds $ \(d, s) -> do
                 let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (Just $ userid actvuser) (getEmail actvuser) s
                 dbUpdate $ SaveDocumentForUser d actvuser s actor
@@ -128,7 +129,7 @@ createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email
 createUser email names mcompanyid lang = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid lang
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid lang (bdurl <$> currentBrandedDomain ctx)
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
@@ -138,7 +139,7 @@ createUser email names mcompanyid lang = do
 phoneMeRequest :: Kontrakcja m => Maybe User -> String -> m ()
 phoneMeRequest muser phone = do
   ctx <- getContext
-  let content = case muser of 
+  let content = case muser of
         Just user -> "<p>User " ++ getFirstName user ++ " "
                      ++ getLastName user ++ " "
                      ++ "&l   t;" ++ getEmail user ++ "&gt; "

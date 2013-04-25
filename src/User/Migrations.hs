@@ -121,3 +121,12 @@ dropCustomFooterFromUsers = Migration {
   , mgrFrom = 11
   , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN customfooter"
 }
+
+addAssociatedDomainToUsers :: MonadDB m => Migration m
+addAssociatedDomainToUsers = Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 12
+  , mgrDo = kRunRaw "ALTER TABLE users ADD COLUMN associated_domain TEXT NULL"
+
+}
+

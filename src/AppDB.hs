@@ -143,6 +143,7 @@ kontraMigrations = [
   , addObjectVersionToDocuments
   , addShouldBeFilledBySenderColumnToSignatoryLinkFields
   , addCustomBrandingOptions
+  , addAssociatedDomainToUsers
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

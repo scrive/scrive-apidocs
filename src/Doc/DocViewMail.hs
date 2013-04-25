@@ -345,7 +345,7 @@ documentMail haslang ctx doc mailname otherfields = do
         F.value "ctxlang" (codeFromLang $ ctxlang ctx)
         F.value "documenttitle" $ documenttitle doc
         F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-        F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) mcompany
+        brandingMailFields (currentBrandedDomain ctx) mcompany
         otherfields
     kontramaillocal haslang mailname allfields
 

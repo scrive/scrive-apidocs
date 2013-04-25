@@ -242,6 +242,7 @@ createTestUser = do
                                 (Just pwd)
                                 Nothing
                                 defaultValue
+                                Nothing
     case muser of
         Nothing     -> error "Can't create user"
         (Just user) -> return user

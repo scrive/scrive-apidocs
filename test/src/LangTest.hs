@@ -108,5 +108,5 @@ createTestElegDoc user _ctxtime = do
 createTestUser :: Lang -> TestEnv User
 createTestUser lang = do
     pwd <- createPassword "admin"
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing lang
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing lang Nothing
     return user

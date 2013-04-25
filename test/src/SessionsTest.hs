@@ -134,5 +134,5 @@ addElegTransaction = do
 testUser :: TestEnv UserID
 testUser = do
   pwd <- createPassword "admin"
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) Nothing defaultValue
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) Nothing defaultValue Nothing
   return $ userid user

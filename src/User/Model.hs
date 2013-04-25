@@ -92,7 +92,8 @@ data User = User {
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
   , usercompany                   :: Maybe CompanyID
-  , userisfree          :: Bool
+  , userisfree                    :: Bool
+  , userassociateddomain          :: Maybe String
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
@@ -251,9 +252,9 @@ instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
     kRun_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = signatory_links.user_id AND users.has_accepted_terms_of_service IS NULL)"
     kRun01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Lang
+data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Lang (Maybe String)
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd mcid l) = do
+  update (AddUser (fname, lname) email mpwd mcid l mad) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -278,6 +279,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "lang" l
             sqlSet "deleted" False
             sqlSet "is_free" False
+            sqlSet "associated_domain" mad
             mapM_ (sqlResult . raw) selectUsersSelectorsList
         fetchUsers >>= oneObjectReturnedGuard
 
@@ -438,6 +440,7 @@ selectUsersSelectorsList =
   , "company_name"
   , "company_number"
   , "is_free"
+  , "associated_domain"
   ]
 
 selectUsersSelectors :: SQL
@@ -451,8 +454,7 @@ fetchUsers = kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method company_id
       first_name last_name personal_number company_position phone mobile
-      email lang
-      company_name company_number is_free = User {
+      email lang company_name company_number is_free associated_domain = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -475,4 +477,5 @@ fetchUsers = kFold decoder []
           }
         , usercompany = company_id
         , userisfree = is_free
+        , userassociateddomain = associated_domain
         } : acc

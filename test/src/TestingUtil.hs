@@ -505,6 +505,7 @@ blankUser = User { userid                        = unsafeUserID 0
                  , usersettings  = UserSettings { lang = defaultValue }
                  , usercompany = Nothing
                  , userisfree  = False
+                 , userassociateddomain = Nothing
                  }
 
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
@@ -545,11 +546,11 @@ addNewRandomFile = do
 
 addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing defaultValue
+  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing defaultValue Nothing
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (Just cid) defaultValue
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (Just cid) defaultValue Nothing
 
 addNewRandomUser :: TestEnv User
 addNewRandomUser = do

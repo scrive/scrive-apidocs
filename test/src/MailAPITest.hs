@@ -112,7 +112,7 @@ testError emlfile = do
 
 createTestUser :: TestEnv UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing Nothing defaultValue
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing Nothing defaultValue Nothing
     return userid
 
 test_getUserMailAPI :: TestEnv ()
