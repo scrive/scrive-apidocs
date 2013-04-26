@@ -1,4 +1,4 @@
-module DocStateTest where
+module DocStateTest (docStateTests) where
 
 import Control.Arrow (first)
 import Control.Logic
@@ -20,7 +20,6 @@ import DB.SQL2
 import Doc.SignatoryLinkID
 import Company.Model
 import Doc.Invariants
-import MagicHash
 import MinutesTime
 import Test.HUnit.Base (Assertion)
 import Util.HasSomeUserInfo
@@ -46,30 +45,14 @@ docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
   dataStructureProperties,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
-  testThat "RemoveDocumentAttachment adds to the log" env testRemoveDocumentAttachmentEvidenceLog,
-  testThat "ResetSignatoryDetails adds to the log" env testResetSignatoryDetailsEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
-  testThat "RestoreArchivedDocument adds to the log" env testRestoreArchivedDocumentEvidenceLog,
-  testThat "SetDaysToSign adds to the log" env testSetDaysToSignEvidenceLog,
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
-  testThat "SetDocumentLang adds to the log" env testSetDocumentLangEvidenceLog,
-  testThat "SetDocumentTags adds to the log" env testSetDocumentTagsEvidenceLog,
-  testThat "SetDocumentTitle adds to the log" env testSetDocumentTitleEvidenceLog,
 {-
   testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
   testThat "Set StandardAuthentication adds to the log" env testSetStandardAuthenticationEvidenceLog,
 -}
-{-
-  testThat "Set PadDelivery adds to the log" env testSetPadDeliveryEvidenceLog,
-  testThat "Set EmailDelivery adds to the log" env testSetEmailDeliveryEvidenceLog,
--}
-  testThat "SetInvitationDeliveryStatus adds to the log" env testSetInvitationDeliveryStatusEvidenceLog,
-  testThat "SetInviteText adds to the log" env testSetInviteTextEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
-  testThat "SignableFromDocumentIDWithUpdatedAuthor adds to the log" env testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog,
-  testThat "TemplateFromDocument adds to the log" env testTemplateFromDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
-  testThat "UpdateFieldsForSigning adds to the log" env testUpdateFieldsEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
   testThat "SetDocumentUnsavedDraft and filtering based on unsaved_draft works" env testSetDocumentUnsavedDraft,
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
@@ -77,7 +60,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
-  testThat "MarkDocumentSeen adds to the log" env testMarkDocumentSeenEvidenceLog,
   testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
   testThat "DocumentFromSignatoryData adds to the log" env testDocumentFromSignatoryDataEvidenceLog,
   testThat "SaveSigAttachment adds to the log" env testSaveSigAttachmentEvidenceLog,
@@ -89,11 +71,7 @@ docStateTests env = testGroup "DocState" [
   testThat "ELegAbortDocument adds to the log" env testELegAbortDocumentDocumentEvidenceLog,
 
   testThat "AttachSealedFile adds to the log" env testAttachSealedFileEvidenceLog,
-  testThat "AttachFile adds to the log" env testAttachFileEvidenceLog,
-  testThat "AttachCSVUpload adds to the log" env testAttachCSVUploadEvidenceLog,
   testThat "AddInvitationEvidence adds to the log" env testAddInvitationEvidenceLog,
-  testThat "NewDocument adds to the log" env testNewDocumentEvidenceLog,
-  testThat "AddDocumentAttachment adds to the log" env testAddDocumentAttachmentEvidenceLog,
   testThat "GetDocumentsByCompanyWithFiltering filters" env testGetDocumentsByCompanyWithFilteringFilters,
   testThat "GetDocumentsByCompanyWithFiltering finds" env testGetDocumentsByCompanyWithFilteringFinds,
   testThat "GetDocumentsByCompanyWithFiltering finds with multiple" env testGetDocumentsByCompanyWithFilteringFindsMultiple,
@@ -279,27 +257,6 @@ testRejectDocumentEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RejectDocumentEvidence) lg
 
-testRemoveDocumentAttachmentEvidenceLog :: TestEnv ()
-testRemoveDocumentAttachmentEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  file <- addNewRandomFile
-  _ <- randomUpdate $ \t->AddDocumentAttachment (documentid doc) (fileid file) (systemActor t)
-  success <- randomUpdate $ \t->RemoveDocumentAttachment (documentid doc) (fileid file) (systemActor t)
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == RemoveDocumentAttachmentEvidence) lg
-
-testResetSignatoryDetailsEvidenceLog :: TestEnv ()
-testResetSignatoryDetailsEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- randomUpdate $ \sd t->ResetSignatoryDetails (documentid doc) [sd { signatoryisauthor = True }] (systemActor t)
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  let pos = [AddSignatoryEvidence, RemoveSignatoryEvidence, AddFieldEvidence, RemoveFieldEvidence, ChangeFieldEvidence]
-  assertJust $ find (\e -> evType e `elem` pos) lg
-
 testRestartDocumentEvidenceLog :: TestEnv ()
 testRestartDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -314,25 +271,6 @@ testRestartDocumentEvidenceLog = do
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg2
 
-testRestoreArchivedDocumentEvidenceLog :: TestEnv ()
-testRestoreArchivedDocumentEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isClosed
-  _ <- randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
-
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == RestoreArchivedDocumentEvidence) lg
-
-testSetDaysToSignEvidenceLog :: TestEnv ()
-testSetDaysToSignEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- randomUpdate $ \t->SetDaysToSign (documentid doc) 30 (systemActor t)
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDaysToSignEvidence) lg
-
 testSetDocumentInviteTimeEvidenceLog :: TestEnv ()
 testSetDocumentInviteTimeEvidenceLog = do
   author <- addNewRandomUser
@@ -343,46 +281,6 @@ testSetDocumentInviteTimeEvidenceLog = do
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDocumentInviteTimeEvidence) lg
-
-testSetDocumentLangEvidenceLog :: TestEnv ()
-testSetDocumentLangEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentLang (documentid doc) LANG_SV (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentLang (documentid doc) LANG_EN (systemActor t)
-  assert success1
-  assert success2
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentLangEvidence) lg
-
-testSetDocumentTagsEvidenceLog :: TestEnv ()
-testSetDocumentTagsEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- loop doc
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentTagsEvidence) lg
-    where loop doc = do
-                  ts <- S.fromList <$> rand 10 arbitrary
-                  if documenttags doc == ts
-                    then loop doc
-                    else randomUpdate $ \t->SetDocumentTags (documentid doc) ts (systemActor t)
-
-
-testSetDocumentTitleEvidenceLog :: TestEnv ()
-testSetDocumentTitleEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- loop doc
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentTitleEvidence) lg
-    where loop doc = do
-                  title <- rand 10 arbitrary
-                  if documenttitle doc == title
-                    then loop doc
-                    else randomUpdate $ \t->SetDocumentTitle (documentid doc) title (systemActor t)
 
 {-
 testSetElegitimationAuthenticationEvidenceLog :: TestEnv ()
@@ -408,59 +306,6 @@ testSetStandardAuthenticationEvidenceLog = do
   assertJust $ find (\e -> evType e == SetStandardAuthenticationMethodEvidence) lg
 -}
 
-{-
-testSetPadDeliveryEvidenceLog :: TestEnv ()
-testSetPadDeliveryEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) EmailDelivery (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) PadDelivery (systemActor t)
-  assert success1
-  assert success2
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetPadDeliveryMethodEvidence) lg
-
-testSetEmailDeliveryEvidenceLog :: TestEnv ()
-testSetEmailDeliveryEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) PadDelivery (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) EmailDelivery (systemActor t)
-  assert success1
-  assert success2
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetEmailDeliveryMethodEvidence) lg
--}
-
-testSetInvitationDeliveryStatusEvidenceLog :: TestEnv ()
-testSetInvitationDeliveryStatusEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks))
-  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  success <- loop doc sl
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetInvitationDeliveryStatusEvidence) lg
-    where loop doc sl = do
-                  s <- rand 10 arbitrary
-                  if invitationdeliverystatus sl == s
-                    then loop doc sl
-                    else randomUpdate $ \t->SetInvitationDeliveryStatus (documentid doc) (signatorylinkid sl) s (systemActor t)
-
-testSetInviteTextEvidenceLog :: TestEnv ()
-testSetInviteTextEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- loop doc
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetInvitationTextEvidence) lg
-    where loop doc = do
-                  i <- rand 10 arbitrary
-                  if documentinvitetext doc == i
-                    then loop doc
-                    else randomUpdate $ \t -> SetInviteText (documentid doc) i (systemActor t)
-
 getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
   now <- getMinutesTime
@@ -485,28 +330,6 @@ testSignDocumentEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SignDocumentEvidence) lg
 
-testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog :: TestEnv ()
-testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate &&^ isPreparation)
-  _<- randomUpdate $ \t->SetInviteText (documentid doc) "" (systemActor t)
-  _<- randomUpdate $ \t->SetInviteText (documentid doc) "new invite text" (systemActor t)
-  mdoc <- randomUpdate $ \t->SignableFromDocumentIDWithUpdatedAuthor author (documentid doc) (systemActor t)
-  assertJust mdoc
-  let ndoc = fromJust mdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid ndoc)
-  assertJust $ find (\e -> evType e == SignableFromDocumentIDWithUpdatedAuthorEvidence) lg
-  assertJust $ find (\e -> evType e == SetInvitationTextEvidence) lg
-
-testTemplateFromDocumentEvidenceLog :: TestEnv ()
-testTemplateFromDocumentEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- randomUpdate $ \t->TemplateFromDocument (documentid doc) (systemActor t)
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == TemplateFromDocumentEvidence) lg
-
 testTimeoutDocumentEvidenceLog :: TestEnv ()
 testTimeoutDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -515,21 +338,6 @@ testTimeoutDocumentEvidenceLog = do
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == TimeoutDocumentEvidence) lg
-
-testUpdateFieldsEvidenceLog :: TestEnv ()
-testUpdateFieldsEvidenceLog = doTimes 10 $ do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ isSignable &&^ ((<=) 2 . length . documentsignatorylinks))
-  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  let sf = filter (\f -> (sfValue f == "") && (not $ (sfType f) `elem` [FirstNameFT,LastNameFT, EmailFT])) $ signatoryfields $ signatorydetails sl
-  case sf of
-   (f:_) -> do
-        v <-  rand 10 arbitrary
-        randomUpdate $ \t->UpdateFieldsForSigning (documentid doc) (signatorylinkid sl) [(sfType f,v)] (systemActor t)
-        lg <- dbQuery $ GetEvidenceLog (documentid doc)
-        assertBool "if UpdateFieldsForSigning did change document it should add to the evidence (or not affect anything) " $
-              (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))
-   _ -> return ()
 
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
@@ -549,25 +357,6 @@ testMarkInvitationReadEvidenceLog = do
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == MarkInvitationReadEvidence) lg
-
-testMarkDocumentSeenEvidenceLog :: TestEnv ()
-testMarkDocumentSeenEvidenceLog  = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ (all (isAuthor =>>^ isSignatory) . documentsignatorylinks))
-  let Just sl = getAuthorSigLink doc
-      k = unMagicHash $ signatorymagichash sl
-      mh = unsafeMagicHash (k + 1)
-  success <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  assert success
-  _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
-  _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  assertRaisesKontra (\SignatoryTokenDoesNotMatch {} -> True) $ do
-    _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh (systemActor t)
-    return ()
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  let n = length (filter (\e -> evType e == MarkDocumentSeenEvidence) lg)
-  assertBool ("Should have 3 seen events, but found " ++ show n) $ 3 == n
 
 testErrorDocumentEvidenceLog :: TestEnv ()
 testErrorDocumentEvidenceLog  = do
@@ -650,28 +439,6 @@ testDeleteSigAttachmentEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == DeleteSigAttachmentEvidence) lg
 
-testNewDocumentEvidenceLog :: TestEnv ()
-testNewDocumentEvidenceLog = do
-  (_, _, ed) <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc"
-  assertRight ed
-  let Right d = ed
-      did = documentid d
-  lg <- dbQuery $ GetEvidenceLog did
-  assertJust $ find (\e -> evType e == NewDocumentEvidence) lg
-
-testAddDocumentAttachmentEvidenceLog :: TestEnv ()
-testAddDocumentAttachmentEvidenceLog = do
-  (_, _, ed) <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc"
-  assertRight ed
-  let Right d = ed
-      did = documentid d
-  file <- addNewRandomFile
-  --execute
-  success <- randomUpdate $ \t->AddDocumentAttachment did (fileid file) (systemActor t)
-  assert success
-  lg <- dbQuery $ GetEvidenceLog did
-  assertJust $ find (\e -> evType e == AddDocumentAttachmentEvidence) lg
-
 testAddInvitationEvidenceLog :: TestEnv ()
 testAddInvitationEvidenceLog = do
   author <- addNewRandomUser
@@ -681,26 +448,6 @@ testAddInvitationEvidenceLog = do
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == InvitationEvidence) lg
-
-testAttachCSVUploadEvidenceLog :: TestEnv ()
-testAttachCSVUploadEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
-  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  randomUpdate $ \c t->AttachCSVUpload (documentid doc) (signatorylinkid sl) c (systemActor t)
-
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == AttachCSVUploadEvidence) lg
-
-testAttachFileEvidenceLog :: TestEnv ()
-testAttachFileEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  file <- addNewRandomFile
-  randomUpdate $ \t->AttachFile (documentid doc) (fileid file) (systemActor t)
-
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == AttachFileEvidence) lg
 
 testAttachSealedFileEvidenceLog :: TestEnv ()
 testAttachSealedFileEvidenceLog = do
@@ -1019,20 +766,6 @@ checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
   docsafterestore <- dbQuery (qry author)
   assertEqual "Expecting one doc after restoring" [documentid doc] (map documentid docsafterestore)
-
-checkQueryContainsArchivedDocs :: DBQuery TestEnv q [Document] => (User -> q) -> TestEnv ()
-checkQueryContainsArchivedDocs qry = doTimes 10 $ do
-  company <- addNewCompany
-  author <- addNewRandomCompanyUser (companyid company) True
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPreparation ||^ isClosed))
-  docsbeforearchive <- dbQuery (qry author)
-  assertEqual "Expecting no docs before archive" [] (map documentid docsbeforearchive)
-  randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  docsafterarchive <- dbQuery (qry author)
-  assertEqual "Expecting 1 doc after archive" [documentid doc] (map documentid docsafterarchive)
-  _ <- randomUpdate $ \t -> ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
-  docsafterdelete <- dbQuery (qry author)
-  assertEqual "Expecting no docs after really deleting" [] (map documentid docsafterdelete)
 
 testSetDocumentLangNotLeft :: TestEnv ()
 testSetDocumentLangNotLeft = doTimes 10 $ do
@@ -2019,21 +1752,6 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
     assertEqual "Should have zero documents returned" [] (map documentid docs'''')
    else return ()
 
-testGetDocumentsByAuthorFiltering :: TestEnv ()
-testGetDocumentsByAuthorFiltering = doTimes 10 $ do
-    company <- addNewCompany
-    u1 <- addNewRandomUser -- author
-    u2 <- addNewRandomUser -- some other user
-    _ <- dbUpdate $ SetUserCompany (userid u1) (Just (companyid company))
-    Just u1' <- dbQuery $ GetUserByID (userid u1)
-    _ <- addRandomDocumentWithAuthor u1'
-
-    docs   <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid u1)] [DocumentFilterByAuthor (userid u1)] [] (0,maxBound)
-    nodocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid u1)] [DocumentFilterByAuthor (userid u2)] [] (0,maxBound)
-
-    assertEqual "Should have one document returned" 1 (length docs)
-    assertEqual "Should have no documents" 0 (length nodocs)
-
 testStatusClassSignedWhenAllSigned :: TestEnv ()
 testStatusClassSignedWhenAllSigned = doTimes 10 $ do
   author <- addNewRandomUser
@@ -2041,18 +1759,3 @@ testStatusClassSignedWhenAllSigned = doTimes 10 $ do
   Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
 
   assertEqual "Statusclass for signed documents is signed" SCSigned (documentstatusclass doc')
-
-
-testStatusClassDeliveryProblemWhenUndelivered :: TestEnv ()
-testStatusClassDeliveryProblemWhenUndelivered = doTimes 10 $ do
-  author <- addNewRandomUser
-  time <- getMinutesTime
-  doc <- addRandomDocumentWithAuthorAndCondition author
-            (    isSignable
-             &&^ isPending
-             &&^ ((all isSignatory) . documentsignatorylinks)
-             &&^ ((<=) 2 . length . documentsignatorylinks))
-  _ <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) (signatorylinkid $ last $ documentsignatorylinks doc) Undelivered (systemActor time)
-  Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-
-  assertEqual "Statusclass for signed documents is signed" SCDeliveryProblem (documentstatusclass doc')

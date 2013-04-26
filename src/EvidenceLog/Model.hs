@@ -17,6 +17,7 @@ import DB.SQL2
 import qualified HostClock.Model as HC
 import IPAddress
 import MinutesTime
+import Data.Char (isSpace)
 import Data.Typeable
 import User.Model
 import Util.Actor
@@ -53,22 +54,27 @@ data InsertEvidenceEventForManyDocuments = InsertEvidenceEventForManyDocuments
 eventTextTemplateName :: EvidenceEventType -> String
 eventTextTemplateName e =  (show e) ++ "Text"
 
+includeEventText :: String -> Bool
+includeEventText = not . all isSpace
+
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid maslid mmsg actor) = do
    text <- renderTemplateI (eventTextTemplateName event) $ textFields
-   kRun01 $ sqlInsert "evidence_log" $ do
-      sqlSet "document_id" mdid
-      sqlSet "time" $ actorTime actor
-      sqlSet "text" text
-      sqlSet "event_type" event
-      sqlSet "version_id" versionID
-      sqlSet "user_id" $ actorUserID actor
-      sqlSet "email" $ actorEmail actor
-      sqlSet "request_ip_v4" $ actorIP actor
-      sqlSet "signatory_link_id" $ actorSigLinkID actor
-      sqlSet "api_user" $ actorAPIString actor
-      sqlSet "affected_signatory_link_id" $ maslid
-      sqlSet "message_text" $ mmsg
+   if includeEventText text then
+     kRun01 $ sqlInsert "evidence_log" $ do
+        sqlSet "document_id" mdid
+        sqlSet "time" $ actorTime actor
+        sqlSet "text" text
+        sqlSet "event_type" event
+        sqlSet "version_id" versionID
+        sqlSet "user_id" $ actorUserID actor
+        sqlSet "email" $ actorEmail actor
+        sqlSet "request_ip_v4" $ actorIP actor
+        sqlSet "signatory_link_id" $ actorSigLinkID actor
+        sqlSet "api_user" $ actorAPIString actor
+        sqlSet "affected_signatory_link_id" $ maslid
+        sqlSet "message_text" $ mmsg
+     else return True
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields mdid actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid Nothing Nothing actor)
@@ -76,17 +82,18 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool wh
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyDocuments () where
   update (InsertEvidenceEventForManyDocuments event textFields dids actor) = do
    texts <- forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
-   kRun_ $ sqlInsert "evidence_log" $ do
-      sqlSetList "document_id" dids
-      sqlSet "time" $ actorTime actor
-      sqlSetList "text" texts
-      sqlSet "event_type" event
-      sqlSet "version_id" versionID
-      sqlSet "user_id" $ actorUserID actor
-      sqlSet "email" $ actorEmail actor
-      sqlSet "request_ip_v4" $ actorIP actor
-      sqlSet "signatory_link_id" $ actorSigLinkID actor
-      sqlSet "api_user" $ actorAPIString actor
+   when (any includeEventText texts) $
+     kRun_ $ sqlInsert "evidence_log" $ do
+        sqlSetList "document_id" dids
+        sqlSet "time" $ actorTime actor
+        sqlSetList "text" texts
+        sqlSet "event_type" event
+        sqlSet "version_id" versionID
+        sqlSet "user_id" $ actorUserID actor
+        sqlSet "email" $ actorEmail actor
+        sqlSet "request_ip_v4" $ actorIP actor
+        sqlSet "signatory_link_id" $ actorSigLinkID actor
+        sqlSet "api_user" $ actorAPIString actor
 
 data DocumentEvidenceEvent = DocumentEvidenceEvent {
     evDocumentID :: DocumentID

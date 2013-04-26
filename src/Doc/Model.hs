@@ -1263,10 +1263,11 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
             -- http://www.postgresql.org/docs/9.2/static/functions-datetime.html
             dstTz <- mkTimeZoneName "Europe/Stockholm"
             withTimeZone dstTz $ do
-              kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+              lang :: Lang <- kRunAndFetch1OrThrowWhyNot (flip (:)) $ sqlUpdate "documents" $ do
                 sqlSet "status" Pending
                 sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
                             <+> "+ (interval '1 day') * documents.days_to_sign"
+                sqlResult "lang"
                 sqlWhereDocumentIDIs docid
                 sqlWhereDocumentTypeIs (Signable undefined)
                 sqlWhereDocumentStatusIs Preparation
@@ -1276,6 +1277,7 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
                 PreparationToPendingEvidence
                 (  value "actor" (actorWho actor)
                 >> value "timezone" (maybe "" TimeZoneName.toString mtzn)
+                >> value "lang" (show lang)
                 >> value "timeouttime" (formatMinutesTimeUTC tot))
                 (Just docid)
                 actor
