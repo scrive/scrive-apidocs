@@ -540,7 +540,7 @@ window.Signatory = Backbone.Model.extend({
               }),
               author: this.author(),
               signs: this.signs(),
-              signorder: this.signorder(),
+              signorder: this.signs() ? this.signorder() : 1,
               attachments: _.map(this.attachments(), function(att) {
                   return att.draftData();
               }),
