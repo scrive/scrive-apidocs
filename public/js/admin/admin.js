@@ -43,8 +43,7 @@ var AdminModel = Backbone.Model.extend({
                     return new Tab({
                         name: "CSV Statistics",
                         elems: [$(admin.csvstats().el())],
-                        pagehash : "csvstats",
-                        // This view is static, so we don't have to onActivate.
+                        pagehash : "csvstats"
                     });
   },
   statsTab : function() {

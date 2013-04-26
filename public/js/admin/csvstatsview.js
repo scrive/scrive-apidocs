@@ -47,7 +47,7 @@ var CSVStatsView = Backbone.View.extend({
                 el.append('<p><a href="' + link.url + '">' +
                     link.text + '</a></p>');
             });
-        },
+        }
 
     });
 window.CSVStats = function(args) {

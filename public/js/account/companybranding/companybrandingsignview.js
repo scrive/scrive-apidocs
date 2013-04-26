@@ -115,7 +115,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var buttonsdiv = $('<div style="height: 56px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;margin: 0 10px; background:#ffffff;box-shadow: 1px 1px 5px #505050;"/>');
     buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
     var contentcontent = $('<div/>').css("width","500px").css("margin","auto")
-                              .css("background-image", "url('../img/horizontal-shading-bar.png')").css("background-color","#F0F0F0")
+                              .css("background-image", "url('/img/horizontal-shading-bar.png')").css("background-color","#F0F0F0")
                               .css("background-repeat","no-repeat").css("box-shadow","1px 1px 5px #505050 inset").css("padding-bottom", "10px");
     contentcontent.append(this.contentheader).append(document).append(buttonsdiv);
     var contentpadding = $('<div style="height: 30px; width: 100%;"/>');
