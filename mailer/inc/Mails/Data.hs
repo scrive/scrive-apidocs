@@ -46,7 +46,7 @@ data Attachment = Attachment {
 data Address = Address {
     addrName  :: String
   , addrEmail :: String
-  } deriving (Eq, Ord, Show, Data, Typeable)
+  } deriving (Eq, Ord, Read, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| Address |])
 $(jsonableDeriveConvertible [t| [Address] |])
 
