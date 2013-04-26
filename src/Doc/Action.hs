@@ -10,8 +10,8 @@ module Doc.Action (
   ) where
 
 import Control.Applicative
+import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
-import Control.Monad.IO.Class
 import Control.Logic
 import Crypto.RNG
 import Data.Char
@@ -355,7 +355,7 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
                            mail { to = [getMailAddress signatorydetails]
                                 , mailInfo = Invitation documentid signatorylinkid
                                 })
-     (notifySMS_ ("_smsInvitationToSign" <| isSignatory signatorylink |> "_smsInvitationToView") document signatorylink))
+     (notifySMS_ ("_smsInvitationToSign" <| isSignatory signatorylink |> "_smsInvitationToView") document signatorylink)
 
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
@@ -392,8 +392,7 @@ sendReminderEmail custommessage ctx actor doc siglink = do
                                              then mailattachments
                                              else []
                              })
-    (notifySMS "_smsReminder" doc siglink $ do
-       F.value "link" $ ctxhostpart ctx ++ show (LinkSignDoc doc siglink))
+    (notifySMS_ "_smsReminder" doc siglink)
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
     dbUpdate $ PostReminderSend doc siglink custommessage actor
@@ -510,14 +509,15 @@ sendNotifications sl domail dosms = do
 
 -- SMS helpers
 
-notifySMS :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => String -> Document -> SignatoryLink -> Fields m () -> m ()
+notifySMS :: (CryptoRNG m, MonadDB m, TemplatesMonad m,KontraMonad m) => String -> Document -> SignatoryLink -> Fields m () -> m ()
 notifySMS t doc sl fs = renderLocalTemplate doc t (smsFields doc sl >> fs) >>= simpleSMS (getMobile sl) (Just $ signatorylinkid sl)
 
-notifySMS_ :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => String -> Document -> SignatoryLink -> m ()
+notifySMS_ :: (CryptoRNG m, MonadDB m, TemplatesMonad m,KontraMonad m) => String -> Document -> SignatoryLink -> m ()
 notifySMS_ t doc sl = notifySMS t doc sl $ return ()
 
-smsFields :: TemplatesMonad m => Document -> SignatoryLink -> Fields m ()
+smsFields :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
 smsFields document siglink = do
+    ctx <- lift getContext
     F.value "creatorname" $ getSmartName $ $(fromJust) $ getAuthorSigLink document
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
