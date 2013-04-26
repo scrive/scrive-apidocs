@@ -270,7 +270,8 @@ data EvidenceEventType =
   InvitationDelivered                             |
   InvitationUndelivered                           |
   SignatoryLinkVisited                            |
-  ProlongDocumentEvidence
+  ProlongDocumentEvidence                         |
+  ChangeSignatoryPhoneWhenUndeliveredEvidence
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -348,6 +349,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert InvitationUndelivered                           = return 72
   safeConvert SignatoryLinkVisited                            = return 73
   safeConvert ProlongDocumentEvidence                         = return 74
+  safeConvert ChangeSignatoryPhoneWhenUndeliveredEvidence     = return 75
+
 
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -424,6 +427,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 72 = return InvitationUndelivered
     safeConvert 73 = return SignatoryLinkVisited
     safeConvert 74 = return ProlongDocumentEvidence
+    safeConvert 75 = return ChangeSignatoryPhoneWhenUndeliveredEvidence
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

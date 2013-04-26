@@ -103,6 +103,7 @@ staticRoutes = choice
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
      , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
+     , dir "changephone" $ hPost $ toK2 $ DocControl.handleChangeSignatoryPhone
      -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
      , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
      , dir "prolong" $ hPost $ toK1 $ DocControl.handleProlong

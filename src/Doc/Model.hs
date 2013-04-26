@@ -23,6 +23,7 @@ module Doc.Model
   , CancelDocument(..)
   , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
+  , ChangeSignatoryPhoneWhenUndelivered(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
   , RemoveOldDrafts(..)
@@ -1235,6 +1236,31 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
       _ <- update $ InsertEvidenceEvent
           ChangeSignatoryEmailWhenUndeliveredEvidence
           (value "oldemail" oldemail >> value "newemail" email >> value "actor" (actorWho actor))
+          (Just did)
+          actor
+      updateMTimeAndObjectVersion did (actorTime actor)
+      return ()
+
+data ChangeSignatoryPhoneWhenUndelivered = ChangeSignatoryPhoneWhenUndelivered DocumentID SignatoryLinkID String Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneWhenUndelivered () where
+  update (ChangeSignatoryPhoneWhenUndelivered did slid phone actor) = do
+      oldphone <- kRunAndFetch1OrThrowWhyNot (\acc (m :: String) -> acc ++ [m]) $ sqlUpdate "signatory_link_fields" $ do
+             sqlFrom "signatory_link_fields AS signatory_link_fields_old"
+             sqlWhere "signatory_link_fields.id = signatory_link_fields_old.id"
+             sqlSet "value" phone
+             sqlResult "signatory_link_fields_old.value"
+             sqlWhereEq "signatory_link_fields.signatory_link_id" slid
+             sqlWhereEq "signatory_link_fields.type" MobileFT
+      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+          sqlSet "invitation_delivery_status" Unknown
+          sqlSet "user_id" $ SqlNull
+          sqlWhereEq "signatory_links.id" slid
+          sqlWhereExists $ sqlSelect "documents" $ do
+              sqlWhere "documents.id = signatory_links.document_id"
+              sqlWhereDocumentStatusIs Pending
+      _ <- update $ InsertEvidenceEvent
+          ChangeSignatoryPhoneWhenUndeliveredEvidence
+          (value "oldphone" oldphone >> value "newphone" phone >> value "actor" (actorWho actor))
           (Just did)
           actor
       updateMTimeAndObjectVersion did (actorTime actor)

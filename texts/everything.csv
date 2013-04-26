@@ -621,6 +621,7 @@
 "_modalResendCompanyAccountInviteConfirm","Skicka","Send"
 "_pendingcompanyaccount","Väntar","Pending"
 "_changeEmail","Ändra e-post","Change email"
+"_changePhone","Ändra mobilnummer","Change phone number"
 "_changeEmailRequestExplanation","Din e-post och ditt användarnamn är samma i Scrive. Genom att ändra e-post kommer du också att ändra ditt användarnamn vid inloggning.  För att bekräfta din nya adress skickar vi ett bekräftelsemail. Vänligen följ instruktionerna för att fullfölja ändringen.","Your email and user name are the same in Scrive. By changing the email you will also change the username for logging in. To verify your new address we will send you a confirmation mail. Please follow the instructions in the email to complete the change."
 "_newemail","Ny e-post","New email"
 "_newemailagain","Ny e-post igen","New email again"

@@ -388,6 +388,7 @@ javascriptLocalisation =
                 delivery : "$_mobileDelivery()$"
          }
          , changeEmail : "$_changeEmail()$"
+         , changePhone : "$_changePhone()$"
          , onlyPDF : "$_onlyPDF()$"
          , newPasswordModal: {
              modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"

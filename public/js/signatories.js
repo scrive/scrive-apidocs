@@ -146,6 +146,9 @@ window.Signatory = Backbone.Model.extend({
     emailField : function() {
         return this.field("email", "standard");
     },
+    mobileField : function() {
+        return this.field("mobile", "standard");
+    },
     fstnameField : function() {
         return this.field("fstname", "standard");
     },
@@ -163,6 +166,9 @@ window.Signatory = Backbone.Model.extend({
     },
     email: function() {
         return this.emailField().value();
+    },
+    mobile: function() {
+        return this.mobileField().value();
     },
     fstname: function() {
         return this.fstnameField().value();
@@ -434,6 +440,13 @@ window.Signatory = Backbone.Model.extend({
                 url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),
                 method: "POST",
                 email: email
+         });
+    },
+    changePhone: function(phone) {
+        return new Submit({
+                url: "/changephone/" + this.document().documentid() + "/" + this.signatoryid(),
+                method: "POST",
+                phone: phone
          });
     },
     remindMail: function() {

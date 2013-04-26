@@ -77,6 +77,15 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
           && signatory.undeliveredInvitation()
           && signatory.document().signingInProcess()
           && signatory.document().pending()
+          && signatory.emailDelivery();
+ },
+ hasChangePhoneOption: function() {
+   var signatory = this.signatory();
+   return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+          && signatory.undeliveredInvitation()
+          && signatory.document().signingInProcess()
+          && signatory.document().pending()
+          && signatory.mobileDelivery();
  },
  hasPadOptions : function() {
    var signatory = this.signatory();
@@ -97,6 +106,7 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
  hasAnyOptions : function() {
     return  this.hasRemindOption()
          || this.hasChangeEmailOption()
+         || this.hasChangePhoneOption()
          || this.hasGiveForSigningOnThisDeviceOption()
          || this.hasAddToPadQueueOption()
          || this.hasRemoveFromPadQueueOption()
@@ -200,6 +210,38 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     container.append(fstbutton.input());
     return container;
   },
+  changePhoneOption : function() {
+    var signatory = this.model.signatory();
+    var container = $("<div class='change-email-box'/>");
+    var fstbutton = Button.init({
+                            size: "tiny",
+                            color: "blue",
+                            text: localization.changePhone,
+                            onClick: function() {
+                                mixpanel.track('Click change phone',
+                                               {'Signatory index':signatory.signIndex()});
+                                var input = $("<input type='text'/>");
+                                input.val(signatory.mobile());
+                                var sndbutton = Button.init({
+                                    size: "tiny",
+                                    color: "blue",
+                                    text: localization.send,
+                                    onClick: function() {
+                                        trackTimeout('Accept',
+                                                     {'Signatory index':signatory.signIndex(),
+                                                      'Accept' : 'change phone'},
+                                                     function() {
+                                                         signatory.changePhone(input.val()).send();
+                                                     });
+                                    }
+                                    });
+                                container.empty().append(input).append(sndbutton.input());
+                                return false;
+                             }
+                          });
+    container.append(fstbutton.input());
+    return container;
+  },
   giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model.signatory();
                  var button = $("<label  class='clickable giveForSigning'/>");
@@ -286,6 +328,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       optionbox.append(this.remiderOption());
     if (this.model.hasChangeEmailOption())
       optionbox.append(this.changeEmailOption());
+    if (this.model.hasChangePhoneOption())
+      optionbox.append(this.changePhoneOption());
     if (this.model.hasGiveForSigningOnThisDeviceOption())
       optionbox.append(this.giveForSigningOnThisDeviceOption());
     if (this.model.hasAddToPadQueueOption())

@@ -23,6 +23,7 @@ module Doc.DocControl(
     , prepareEmailPreview
     , handleResend
     , handleChangeSignatoryEmail
+    , handleChangeSignatoryPhone
     , handleRestart
     , handleProlong
     , handleSignWithEleg
@@ -650,6 +651,30 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
           muser <- dbQuery $ GetUserByEmail (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
           dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
+          mnewdoc <- dbQuery $ GetDocumentByDocumentID docid
+
+          case mnewdoc of
+            Just newdoc -> do
+              -- get (updated) siglink from updated document
+              sl <- guardJust (getSigLinkFor newdoc slid)
+              ctx <- getContext
+              _ <- sendInvitationEmail1 ctx newdoc sl
+              return $ LoopBack
+            _ -> return LoopBack
+    _ -> return LoopBack
+
+--This only works for undelivered mails. We shoulkd check if current user is author
+handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleChangeSignatoryPhone docid slid = withUserPost $ do
+  mphone <- getOptionalField asValidPhone "phone"
+  case mphone of
+    Just phone -> do
+      edoc <- getDocByDocIDForAuthor docid
+      case edoc of
+        Left _ -> return LoopBack
+        Right _ -> do
+          actor <- guardJustM $ mkAuthorActor <$> getContext
+          dbUpdate $ ChangeSignatoryPhoneWhenUndelivered docid slid phone actor
           mnewdoc <- dbQuery $ GetDocumentByDocumentID docid
 
           case mnewdoc of
