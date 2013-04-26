@@ -125,6 +125,7 @@ testSendingDocumentSendsInvites = do
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
     && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
+    && all (\sl -> signatorylinkdeliverymethod sl == EmailDelivery) (documentsignatorylinks d)
     && isSignable d)
 
   req <- mkRequest POST [ ("send", inText "True")
