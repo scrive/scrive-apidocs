@@ -403,7 +403,8 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
        let placementsJSON = case (JSON.decode placements) of
                                Ok js -> js
                                _ -> JSNull
-       let (placements' :: [FieldPlacement]) = fromMaybe [] $ fromJSValueCustomMany parseFields placementsJSON
+       let (placements' :: [FieldPlacement]) = fromMaybe (error $ "Could not parse placements from " ++ placements) $
+                                               fromJSValueCustomMany parseFields placementsJSON
        kRun $ sqlUpdate "signatory_link_fields" $ do
           sqlSet "placements" placements'
           sqlWhereEq "id" fid
