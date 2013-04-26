@@ -355,8 +355,7 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
                            mail { to = [getMailAddress signatorydetails]
                                 , mailInfo = Invitation documentid signatorylinkid
                                 })
-     (notifySMS ("_smsInvitationToSign" <| isSignatory signatorylink |> "_smsInvitationToView") document signatorylink $
-        F.value "link" $ ctxhostpart ctx ++ show (LinkSignDoc document signatorylink))
+     (notifySMS_ ("_smsInvitationToSign" <| isSignatory signatorylink |> "_smsInvitationToView") document signatorylink))
 
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
@@ -523,7 +522,7 @@ smsFields document siglink = do
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
     F.value "partylist" $ map getSmartName $ partyList document
-
+    F.value "link" $ ctxhostpart ctx ++ show (LinkSignDoc document siglink)
 
 simpleSMS :: (CryptoRNG m, MonadDB m) => String -> Maybe SignatoryLinkID -> String -> m ()
 simpleSMS number slid msg = do
