@@ -181,7 +181,6 @@ window.CompanyBrandingView = Backbone.View.extend({
     $(this.el).children().detach();
   },
   render: function() {
-    console.log("Rerendering")
     var model = this.model;
 
     if (!model.ready() || model.emailBranding() == undefined || model.signviewBranding() == undefined) {
