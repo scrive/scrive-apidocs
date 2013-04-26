@@ -68,13 +68,13 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
           && signatory.signs()
           && signatory.reachedBySignorder()
           && (signatory.document().signingInProcess() || signatory.document().closed())
-          && !signatory.undeliveredEmail()
+          && !signatory.undeliveredInvitation()
           && !signatory.padDelivery();
  },
  hasChangeEmailOption: function() {
    var signatory = this.signatory();
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-          && signatory.undeliveredEmail()
+          && signatory.undeliveredInvitation()
           && signatory.document().signingInProcess()
           && signatory.document().pending()
  },

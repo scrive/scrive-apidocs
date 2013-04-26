@@ -263,11 +263,11 @@ window.Signatory = Backbone.Model.extend({
           return new Date(Date.parse(this.get("readdate")));
         return undefined;
     },
-    deliveredEmail: function() {
-        return this.get("deliveredEmail");
+    deliveredInvitation: function() {
+        return this.get("deliveredInvitation");
     },
-    undeliveredEmail: function() {
-          return this.get("undeliveredEmail");
+    undeliveredInvitation: function() {
+          return this.get("undeliveredInvitation");
     },
     signorder: function() {
          return this.get("signorder");
