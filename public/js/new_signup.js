@@ -160,7 +160,7 @@
             size  : 'tiny',
             color : 'blue',
             text: localization.signup + " ›",
-            style : "width:60px;",
+            style : "width:80px;",
             onClick: function() {
               self.clearValidationMessages();
               if (emailInput.input().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))

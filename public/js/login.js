@@ -421,7 +421,7 @@ var LoginBrandedView = Backbone.View.extend({
                   color : "blue",
                   text  : localization.loginModal.sendNewPassword + " ›",
                   cssClass : "recovery-password-submit",
-                  style : "width:60px;",
+                  style : "width:80px;",
                   onClick : function() {
                         model.sendPasswordReminder();
                     }

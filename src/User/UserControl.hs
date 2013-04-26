@@ -40,6 +40,9 @@ import ScriveByMail.Model
 import ListUtil
 import qualified Text.StringTemplates.Fields as F
 import Routing
+import BrandedDomains
+import Analytics.Include
+
 
 handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
@@ -345,19 +348,30 @@ handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token Ac
     This is where we get to when the user clicks the link in their password reminder
     email.  This'll show them the usual landing page, but with option to changing their password.
 -}
-handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink ThinPage)
+handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink (Either Response ThinPage))
 handlePasswordReminderGet uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
     Just user -> do
       switchLang (getLang user)
       let changePassLink = show $ LinkPasswordReminder uid token
-      content <- renderTemplate "changePasswordPage" $ do
-                    F.value "linkchangepassword" $ changePassLink
-      return $ Right $ ThinPage content
+      ctx <- getContext
+      case (currentBrandedDomain ctx) of
+        Just bd -> do
+          ad <- getAnalyticsData
+          content <- renderTemplate "changePasswordPageWithBranding" $ do
+                        F.value "linkchangepassword" $ changePassLink
+                        F.value "logolink" $ bdlogolink bd
+                        standardPageFields ctx kontrakcja ad
+          Right . Left <$> simpleHtmlResonseClrFlash content
+        Nothing -> do
+          content <- renderTemplate "changePasswordPage" $ do
+                        F.value "linkchangepassword" $ changePassLink
+          return $ Right $ Right $ ThinPage content
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
       Left <$> getHomeOrDesignViewLink
+
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handlePasswordReminderPost uid token = do

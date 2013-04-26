@@ -58,6 +58,31 @@ changePasswordPage=
 </div>
 </div>
 ###
+###
+changePasswordPageWithBranding=
+$doctype()$
+<html>
+  <head>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents()$
+  </head>
+  <body>
+  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
+      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+      </div>
+  </div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery('.inner').append(new NewPassword({
+                        linkchangepassword: "$linkchangepassword$",
+                        branded : true,
+                        logolink:   "$logolink$"
+                       }).el());
+  });
+</script>
+  </body>
+</html>
+###
 signupPage=
 <div class='mainContainer big'>
 <div class="inner">
