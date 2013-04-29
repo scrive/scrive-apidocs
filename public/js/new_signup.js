@@ -60,12 +60,12 @@
         $("#page-signup").removeClass("button-red").addClass("button-gray");
         var self = this;
         var model = this.model;
-        var header = $("<div class='shadowed signup'/>");
+        var header = $("<div class='shadowed'/>");
         header.append($("<h1/>").append(localization.getStartedInstantly));
         header.append($("<h2/>").append(localization.freeDocumentPerMonth));
         $(this.el).append(header);
 
-        var content = $("<div class='short-input-container recovery-container'/>");
+        var content = $("<div class='short-input-container'/>");
         var wrapper = $("<div class='short-input-container-body-wrapper'/>");
         var body = $("<div class='short-input-container-body'/>");
         content.append(wrapper.append(body));
@@ -120,7 +120,7 @@
         var self = this;
         var model = this.model;
 
-        var header = $("<div class='shadowed recovery'/>");
+        var header = $("<div class='shadowed'/>");
         header.append($("<img alt='logo'/>").attr('src',model.logolink()));
         header.append($("<div class='divider-line'/>"));
         header.append($("<label/>").text(localization.esigningpoweredbyscrive));
@@ -179,9 +179,9 @@
     var model = new SignupModel(args);
     var view;
     if (args.branded)
-            view = new SignupBrandedView({model : model, el : $("<div class='short-input-section'/>") });
+            view = new SignupBrandedView({model : model, el : $("<div class='signup short-input-section'/>") });
           else
-            view = new SignupView({model : model, el : $("<div class='short-input-section'/>")});
+            view = new SignupView({model : model, el : $("<div class='signup short-input-section'/>")});
     this.el = function() {return $(view.el);}
   };
 
