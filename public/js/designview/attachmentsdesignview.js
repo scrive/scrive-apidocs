@@ -219,7 +219,7 @@ window.DesignAuthorAttachmentsPopup = {
          var document = args.document;
          var model = new DesignAuthorAttachments({ document : document  });
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")});
-         Confirmation.popup({
+         var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.authorattachments.selectAttachments,
               acceptText: localization.save,
@@ -238,11 +238,22 @@ window.DesignAuthorAttachmentsPopup = {
                           counter++;
                       });
                       submit.sendAjax(
-                        function() {window.location.reload()},
-                        function() {LoadingDialog.close(); new FlashMessage({color: "red", content: localization.authorattachments.invalidAttachments });}
+                        function() {
+                            document.recall(function() {
+                                document.trigger("change:attachments");
+                                LoadingDialog.close();
+                                popup.close();
+                            });
+                        },
+                        function() {
+                            new FlashMessage({
+                                color: "red", 
+                                content: localization.authorattachments.invalidAttachments
+                            });
+                        }
                       );
+                      LoadingDialog.open();
                   });
-                  LoadingDialog.open();
                   return false;
             }
          });
@@ -435,7 +446,7 @@ window.DesignSignatoryAttachmentsPopup = {
          var document = args.document;
          var model = new DesignSignatoryAttachments({ document : document  });
          var view = new DesignSignatoryAttachmentsView({model : model, el : $("<div/>")});
-         Confirmation.popup({
+         var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
               acceptText: localization.save,
@@ -452,8 +463,13 @@ window.DesignSignatoryAttachmentsPopup = {
                           description: att.description()
                         }));
                   });
-                  document.trigger("change:attachments");
                   document.save();
+                  document.afterSave(function() {
+                      document.recall(function() {
+                          document.trigger("change:attachments");
+                          popup.reject();
+                      });
+                  });
                   return true;
             }
 

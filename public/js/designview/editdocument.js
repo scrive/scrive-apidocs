@@ -118,26 +118,26 @@
             img.attr('src', '/img/textbox.png');
 
             if(author) {
-                draggebleField(div, author.newField("standard"));
+                draggebleField(div, author.field('email', 'standard'));
             }
 
-            div.append(
-                wra.append(
-                    txt.append(img)
-                        .append('free-text box')));
+            div.append(wra);
+            wra.append(txt);
+            txt.append(img);
+            txt.append('free-text box');
 
             return div;
         },
-    hide: function() {
-        var view = this;
-        view.$el.toggleClass('hidden', true);
-        return view;
-    },
-    unhide: function() {
-        var view = this;
-        view.$el.toggleClass('hidden', false);
-        return view;
-    }
+        hide: function() {
+            var view = this;
+            view.$el.toggleClass('hidden', true);
+            return view;
+        },
+        unhide: function() {
+            var view = this;
+            view.$el.toggleClass('hidden', false);
+            return view;
+        }
     });
 
     window.DesignViewDraggablesView = function(args) {

@@ -43,6 +43,7 @@
             } else {
                 view.$el.html(view.uploadButtons());
             }
+            view.showProblems();
             return view;
         },
         showProblems: function() {
@@ -334,6 +335,10 @@
    
             div.append(circle);
             div.append(label);
+
+            div.click(function() {
+                Avtal24Popup();
+            });
 
             return div;
         },

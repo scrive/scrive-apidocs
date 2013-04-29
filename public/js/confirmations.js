@@ -82,7 +82,7 @@ var ConfirmationModel = Backbone.Model.extend({
             return this.get("extraOption");
   },
   close : function() {
-    this.trigger("close");
+      this.view.reject();
   }
 });
 

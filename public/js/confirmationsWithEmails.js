@@ -156,7 +156,10 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   },
   onEdit: function() {
       return this.get("onEdit");
-  }
+  },
+    close: function() {
+        this.view.reject();
+    }
 
 });
 

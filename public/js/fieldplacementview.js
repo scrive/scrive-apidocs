@@ -67,6 +67,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, h
                 field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper,verticaloffset);
         },
         stop: function() {
+            console.log('stop');
             if( placement!=undefined && !droppedInside ) {
                 placement.remove();
             }
@@ -82,6 +83,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, h
                 field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset);
         },
         onDrop: function(page, x, y, w, h) {
+            console.log('drop');
             droppedInside = true;
             var signatory = field.signatory();
             if( !_.find(signatory.fields(), function(f) { return f==field; })) {
@@ -150,6 +152,7 @@ var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear);
+        this.model.bind('change:field', this.render);
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -214,12 +217,45 @@ var TextTypeSetterView = Backbone.View.extend({
         return $("<div class='title'/>").text(localization.designview.textFields.textField);
     },
     subtitle : function() {
+        var view = this;
         var box = $("<div class='subtitle'/>");
-        var name = this.model.field().signatory().nameInDocument();
-        if (this.model.field().signatory().nameOrEmail() != "")
-            name = this.model.field().signatory().nameOrEmail();
-        var text = localization.designview.textFields.forThis + " " + name;
+        var model = view.model;
+        var field = model.field();
+        var sig = field.signatory();
+        var doc = sig.document();
+        
+        var signame = sig.nameOrEmail() || sig.nameInDocument();
+        var fldname = field.nicename();
+
+        var name = signame + ': ' + fldname;
+
+        var options = [];
+
+        _.each(doc.signatories(), function(s) {
+            options.push({name: s.nameOrEmail() || sig.nameInDocument(),
+                          value: null});
+            _.each(s.fields(), function(f) {
+                if(f !== field)
+                    options.push({name: '   ' + f.nicename(),
+                                  value: f,
+                                 leftMargin: 16});
+            });
+        });
+
+        var selector = new Select({
+            name: name,
+            options: options,
+            onSelect: function(f) {
+                if(f) {
+                    view.model.setField(f);
+                }
+            }
+        });
+        
+        var text = localization.designview.textFields.forThis + " ";
         box.text(text);
+        box.append(selector.input());
+        
         return box;
     },
     place : function() {
@@ -235,8 +271,6 @@ var TextTypeSetterView = Backbone.View.extend({
            container.css("position", "absolute");
            var body = $("<div class='checkboxTypeSetter-body'/>");
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
-           container.append(arrow);
-           container.append(body);
 
            body.append(this.title());
            body.append(this.subtitle());
@@ -244,6 +278,10 @@ var TextTypeSetterView = Backbone.View.extend({
 
            body.append(this.doneOption());
            body.append(this.help());
+        container.html('');
+           container.append(arrow);
+           container.append(body);
+
            this.place();
            return this;
     }
@@ -276,6 +314,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear, this);
+        this.model.bind('change:field', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.view = this;
         this.render();
@@ -412,7 +451,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         place.empty();
         place.append(new TextPlacementView({model: placement.field()}).el);
-
+        place.unbind('click');
         if (document.allowsDD()) {
             draggebleField(place, placement);
             place.click(function(){

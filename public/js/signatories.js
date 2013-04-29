@@ -89,25 +89,16 @@ window.Signatory = Backbone.Model.extend({
                     hash.signatory = signatory;
                     return hash;
         };
-        var fields = _.map(args.fields, function(field) {
+        var fields = _.map(signatory.get('fields'), function(field) {
                 return new Field(extendedWithSignatory(field));
         });
-        // Make sure that all basic fields are initiated
-        for(var i = 0; i < this.defaults.fields.length; i++)
-        {   var isSet = false;
-            for(var j=0;j < args.fields.length;j++ )
-                if (this.defaults.fields[i].name == args.fields[j].name)
-                    isSet = true;
-            if (!isSet)
-                fields.push(new Field(extendedWithSignatory(this.defaults.fields[i])));
-        }
-
+        
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });
-        this.set({"fields": fields,
-                  "attachments": attachments
-        });
+        signatory.set({"fields": fields,
+                       "attachments": attachments
+                      });
 
         //this.bind("change", function() {signatory.document().trigger("change:signatories")});
         //this.bind("change:role", function() {signatory.document().trigger("change:signatories-roles")});
@@ -121,8 +112,7 @@ window.Signatory = Backbone.Model.extend({
     signIndex: function() {
         var allSignatories = this.document().signatories();
         var index = 1;
-        for (var i = 0; i < allSignatories.length; i++)
-        {
+        for (var i = 0; i < allSignatories.length; i++) {
             if (allSignatories[i] === this)
                 return index;
             if (allSignatories[i].signs()) index++;
@@ -598,6 +588,23 @@ window.Signatory = Backbone.Model.extend({
             return 'signatory';
         else
             return 'viewer';
+    },
+    giveSixStandardFields: function() {
+        var signatory = this;
+        var stdfields = [{name: "fstname",   type : "standard"},
+                         {name: "sndname",   type : "standard"},
+                         {name: "email",     type : "standard"},
+                         {name: "sigco",     type : "standard"},
+                         {name: "sigpersnr", type : "standard"},
+                         {name: "sigcompnr", type : "standard"}
+                        ];
+
+        var fields = _.map(stdfields, function(f) {
+            f.signatory = signatory;
+            return new Field(f);
+        });
+        signatory.set({fields:fields});
+        return signatory;
     }
 
 });

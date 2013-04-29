@@ -19,6 +19,13 @@
             view.render();
             view.mail.bind('change', view.changeMail);
             view.model.document().bind('change', view.render);
+            view.model.document().bind('change:attachments', function() {
+                view.mail = view.model.document().inviteMail();
+                view.mail.bind('ready', function() {
+                    view.render();
+                    view.afterInsertion();
+                });
+            });
         },
         render: function() {
             var view = this;
@@ -297,10 +304,13 @@
                 onClick: function() {
                     doc.save();
                     doc.afterSave(function() {
-                        ConfirmationWithEmail.popup({
+                        var popup = ConfirmationWithEmail.popup({
                             editText: '',
                             title: localization.editInviteDialogHead,
-                            mail: doc.inviteMail()
+                            mail: doc.inviteMail(),
+                            onAccept: function() {
+                                popup.close();
+                            }
                         });
                     });
                 }

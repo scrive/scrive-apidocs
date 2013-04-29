@@ -9,8 +9,7 @@
 
     var DesignViewModel = Backbone.Model.extend({
         defaults : {
-            step : 1,
-            newSingle : null
+            step : 1
         },
         initialize: function (args) {
             var model = this;
@@ -37,13 +36,6 @@
             this.set({participantDetail : s});
             console.log(s);
             return this;
-        },
-        newSingle: function() {
-            return this.get('newSingle');
-        },
-        setNewSingle: function(sig) {
-            this.set({newSingle:sig});
-            return sig;
         },
         setShowProblems: function(b) {
             this.set({showProblems:b});

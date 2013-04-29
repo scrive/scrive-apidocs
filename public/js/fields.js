@@ -43,7 +43,7 @@ window.FieldPlacement = Backbone.Model.extend({
                 }
          };
          document.bind('file:change',tryToAddToPage);
-         tryToAddToPage();
+        setTimeout(tryToAddToPage,0);
     },
     xrel : function() {
         return this.get("xrel");
@@ -65,6 +65,9 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     field : function(){
         return this.get("field");
+    },
+    setField: function(f) {
+        this.set({field:f});
     },
     file : function(){
         return this.get("file");
@@ -391,7 +394,6 @@ window.Field = Backbone.Model.extend({
             .validateData(this.value());
     }
 });
-
 
 window.FieldStandardView = Backbone.View.extend({
     initialize: function (args) {

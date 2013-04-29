@@ -4,7 +4,8 @@
 
 window.SelectOptionModel = Backbone.Model.extend({
   defaults : {
-    onSelect : function(){return false;}
+      onSelect : function(){return false;},
+      leftMargin: 0
   },
   initialize: function(args){
   },
@@ -20,7 +21,10 @@ window.SelectOptionModel = Backbone.Model.extend({
   selected : function() {
        if (this.get("onSelect")(this.value()) == true)
            this.trigger("done");
-  }
+  },
+    leftMargin: function() {
+        return this.get('leftMargin');
+    }
 });
 
 window.SelectModel = Backbone.Model.extend({
@@ -82,6 +86,9 @@ window.SelectModel = Backbone.Model.extend({
      if (!this.expanded() && this.onOpen() && this.options().length > 0)
        this.set({"expanded" : true});
   },
+    unexpand: function() {
+        this.set({expanded:false});
+    },
   expandOnHover : function() {
      return this.get("expandOnHover");
   },
@@ -108,6 +115,7 @@ window.SelectOptionView = Backbone.View.extend({
     render: function () {
         var model = this.model;
         var a = $("<span/>").text(this.model.name());
+        a.css({'margin-left':this.model.leftMargin()});
         var attrs = model.extraAttrs() ? model.extraAttrs() : {};
         $.each(attrs, function(attr, val) {
           a.attr(attr, val);
@@ -235,6 +243,7 @@ window.Select = function(args) {
               view : function()  {return view;},
               clear : function() {view.clear(); model.destroy();},
               open : function()  {model.expand();},
+              close : function() {model.unexpand();},
               input : function() {return $(view.el);}
             });
 };

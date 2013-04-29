@@ -221,30 +221,22 @@
 
 
 .design-view-action-participant-new-box {
-    margin: 0 0 8px 0;
     width: 970px;
-    height: 50px;
     position: relative;
     overflow: hidden;
     line-height: 1em;
 }
 
 .design-view-action-participant-new-box-buttons {
-    height: 50px;
-    background: #eee;
     z-index: 100;
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
+    text-align: right;
 }
 
 .design-view-action-participant-new-single {
-    position: absolute;
+    display: inline-block;
     height: 100%;
-    width: 128px;
-    top: 0;
-    left: 48px;
+    margin-right: 16px;
 }
 
 .design-view-action-participant-new-single-text {
@@ -253,11 +245,8 @@
 }
 
 .design-view-action-participant-new-multi {
-    position: absolute;
+    display: inline-block;
     height: 100%;
-    width: 128px;
-    top: 0;
-    right: 48px;
 }
 
 .design-view-action-participant-new-multi-text {
@@ -314,7 +303,7 @@
 
 .design-view-action-participant-details-information-field {
     .design-view-action-participant-details-field;
-    margin-right: 8px;
+    margin-right: -1px;
     margin-bottom: 8px;
     &.redborder {
         border:1px solid red;
@@ -329,7 +318,7 @@
     // .design-view-action-participant-details-field;
     .box-sizing(border-box);
     display: inline-block;
-    margin-right: 16px;
+    margin-right: 28px;
     width: 225px;
     vertical-align: middle;
     height: 36px;
@@ -338,6 +327,14 @@
         width: 225px;
     }
     margin-bottom: 8px;
+}
+
+.design-view-action-participant-new-field-selector {
+    .box-sizing(border-box);
+    height: 36px;
+    width: 256px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .design-view-action-participant-details-information-add-field {
