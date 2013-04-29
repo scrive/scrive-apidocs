@@ -1,25 +1,17 @@
 nicemail=
-<center style="background-color: $nicemailemailbackgroundcolour()$;">
-  <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable" style="height: 100%; margin: 0; padding: 0; width: 100%;">
+<center>
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable" style="margin: 0; padding: 0; width: 100%; vertical-align: top; background-color: $nicemailemailbackgroundcolour()$; line-height: 0px;">
     <tr>
       <td align="center" valign="top">
         <!-- // Begin Template Header \\ -->
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="background-color: transparent; border-bottom: 0; padding: 24px 0 8px;">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="background-color: transparent; border-bottom: 0;">
           <tr>
             <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
               <!-- // Begin Module: Standard Header Image \\ -->
               <table>
                 <tr>
-                  <td style="height: 30px;">
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px; margin-top: 50px; margin-bottom: 20px;" id="headerImage campaign-icon" />
-                  </td>
-                </tr>
-                <tr>
-                  <td style="height: 30px;">
+                  <td style="padding-top: 48px; padding-bottom: 24px;">
+                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px;" id="headerImage campaign-icon" />
                   </td>
                 </tr>
               </table>
@@ -31,7 +23,7 @@ nicemail=
     </tr>
 
     <tr>
-      <td align="center" valign="top">
+      <td align="center" valign="top" style="padding-bottom: 30px;">
         <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer" style="border: 4px solid $nicemailbordercolour()$; background-color: $nicemailbgcolour()$;">
           <tr>
             <td></td>
@@ -132,7 +124,7 @@ nicemail=
 
           $if(footer)$
           <tr>
-            <td align="center" valign="top">
+            <td>
               <!-- // Begin Template Footer \\ -->
 
               <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="background-color: $nicemailbgcolour()$; border-top: 0;">
@@ -145,7 +137,7 @@ nicemail=
 
                         <td colspan="2" valign="top">
                           <br />
-                          <div style="color: $if(!companybrand.textcolor)$#999999$else$$companybrand.textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 125%; text-align: justify; padding: 0 40px">
+                          <div style="color: $if(!companybrand.textcolor)$#999999$else$$companybrand.textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 16px; text-align: justify; padding: 0 40px; padding-top: 20px; padding-bottom: 20px;">
                             $footer:noescape()$
                           </div>
 
