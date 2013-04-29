@@ -35,41 +35,8 @@ var StatsModel = Backbone.Model.extend({
             })});
         return this.dayTable();
     },
-
-    monthTable : function() {
-        if (this.get("monthTable") != undefined) return this.get("monthTable");
-
-        this.set({"monthTable":
-            new KontraList({
-                name: "Past 6 Months Table",
-                timeout: 30000,
-                schema: new Schema({
-                    url: "/adminonly/statsbymonth",
-                    cells: [
-                        new Cell({name: "Month",
-                            width: "100px", field: "date"}),
-                        new Cell({name: "Closed documents",
-                            width: "70px", field: "closed", tdclass: "num"}),
-                        new Cell({name: "Sent documents",
-                            width: "70px", field: "sent", tdclass: "num"}),
-                        new Cell({name: "Closed signatures",
-                            width: "70px", field: "signatures", tdclass: "num"}),
-                        new Cell({name: "Average signatures per document",
-                            width: "70px", field: "avg", tdclass: "num",
-                            rendering: function(_, _, doc) {
-                                return jQuery("<span>").text(doc.field("avg").toFixed(2));
-                            }
-                        }),
-                        new Cell({name: "New users (TOS)",
-                            width: "70px",  field: "users", tdclass: "num"})
-                    ]
-                })
-            })});
-        return this.monthTable();
-  },
   refresh : function() {
       this.dayTable().recall();
-      this.monthTable().recall();
   }
 });
 
@@ -84,8 +51,6 @@ var StatsView = Backbone.View.extend({
        var subbox = $("<div class='tab-content account usagestats'/>");
        subbox.append($("<h2/>").text("30 days"));
        subbox.append($("<div class='jsdaytable'></div>").append(model.dayTable().el()));
-       subbox.append($("<h2/>").text("6 months"));
-       subbox.append($("<div class='jsmonthtable'></div>").append(model.monthTable().el()));
        container.append(subbox);
        return this;
     }
