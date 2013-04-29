@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "DEV RUNNER:" 
+echo "DEV RUNNER:"
 echo ""
 
 echo "STARTING MAILER SERVER"
@@ -10,6 +10,14 @@ echo "STARTING MAILER SERVER"
     sleep 1
 
 echo ""
+echo "STARTING SMS SERVER"
+    dist/build/messenger-server/messenger-server &
+    echo $! > _mailer_pid
+    echo "started sms sender with pid $(cat _mailer_pid)"
+    sleep 1
+
+echo ""
+
 echo "STARTING CRON SERVER"
     dist/build/cron/cron &
     echo $! > _cron_pid
@@ -25,4 +33,4 @@ echo "STARTING MAIN SERVER"
 
 wait
 
-   
+
