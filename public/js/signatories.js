@@ -504,18 +504,11 @@ window.Signatory = Backbone.Model.extend({
        return signature;
     },
     addField : function(f) {
-        var fields = this.fields();
-        fields.push(f);
-        this.set({"fields": fields});
+        this.fields().push(f);
         this.trigger("change:fields");
     },
     deleteField: function(field) {
-       var newfields = new Array();
-       for (var i = 0; i < this.fields().length; i++)
-          if (field !== this.fields()[i])
-             newfields.push(this.fields()[i]);
-       this.set({fields: newfields});
-
+        this.set({fields : _.without(this.fields(), field)});
     },
     csv: function() {
         return this.get("csv");

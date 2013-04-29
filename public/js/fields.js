@@ -17,32 +17,31 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     initialize : function(args){
         var placement = this;
+        _.bindAll(placement);
         placement.addToPage();
-        if (this.tip() == undefined)
+        if (this.tip() === undefined)
           this.set({"tip" : args.field.defaultTip()});
-        args.field.bind('removed', function() {
-            placement.trigger("removed");
-            placement.remove();
-        });
+        this.setField(args.field);
     },
     placed : function() {
-          return this.get("placed");
+        return this.get("placed");
     },
     addToPage : function() {
-         if (this.placed()) return;
-         var placement = this;
-         var field = placement.field();
-         var signatory = field.signatory();
-         var document = signatory.document();
-         var pageno = this.get("page");
-         var tryToAddToPage = function() {
-                if (document.file() && document.file().page(pageno) != undefined) {
-                    document.file().page(pageno).addPlacement(placement);
-                    placement.set({placed : true});
-                    document.off('file:change',tryToAddToPage);
-                }
-         };
-         document.bind('file:change',tryToAddToPage);
+        if (this.placed())
+            return;
+        var placement = this;
+        var field = placement.field();
+        var signatory = field.signatory();
+        var document = signatory.document();
+        var pageno = this.get("page");
+        var tryToAddToPage = function() {
+            if (document.file() && document.file().page(pageno) != undefined) {
+                document.file().page(pageno).addPlacement(placement);
+                placement.set({placed : true});
+                document.off('file:change',tryToAddToPage);
+            }
+        };
+        document.bind('file:change',tryToAddToPage);
         setTimeout(tryToAddToPage,0);
     },
     xrel : function() {
@@ -67,6 +66,15 @@ window.FieldPlacement = Backbone.Model.extend({
         return this.get("field");
     },
     setField: function(f) {
+        var oldfield = this.field();
+        if(oldfield) {
+            oldfield.unbind('removed', this.remove);
+            oldfield.removePlacement(this);
+        }
+        if(f) {
+            f.bind('removed', this.remove);
+            f.addPlacement(this);
+        }
         this.set({field:f});
     },
     file : function(){
@@ -82,6 +90,7 @@ window.FieldPlacement = Backbone.Model.extend({
        this.set({"withTypeSetter" : false}, {silent: true});
     },
     remove : function() {
+       this.trigger("removed");
        var document = this.field().signatory().document();
        var page = document.file().page(this.get("page"));
        page.removePlacement(this);
@@ -132,7 +141,7 @@ window.Field = Backbone.Model.extend({
         //this.bind("change",function() {
         //    field.signatory().document().trigger("change:signatories");
         //});
-        args.signatory.bind("removed",function() {
+        args.signatory.bind("removed", function() {
             field.trigger("removed");
             field.off();
         });
@@ -346,21 +355,18 @@ window.Field = Backbone.Model.extend({
       this.trigger("ready");
     },
     remove: function(){
-      _.each(this.placements(),function(placement) {
-            placement.remove();
-        });
       this.signatory().deleteField(this);
       this.trigger("removed");
     },
     draftData : function() {
       return {
-                 type : this.type()
-               , name : this.name()
-               , value : this.value()
-               , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
-               , obligatory : this.obligatory()
-               , shouldbefilledbysender : this.shouldbefilledbysender()
-             };
+          type : this.type()
+          , name : this.name()
+          , value : this.value()
+          , placements : _.invoke(this.placements(), 'draftData')
+          , obligatory : this.obligatory()
+          , shouldbefilledbysender : this.shouldbefilledbysender()
+      };
     },
    hasPlacements : function() {
       return this.get("placements").length > 0;

@@ -150,7 +150,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, h
 
 var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear');
+        _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.bind('change:field', this.render);
         var view = this;
@@ -216,7 +216,7 @@ var TextTypeSetterView = Backbone.View.extend({
     title : function() {
         return $("<div class='title'/>").text(localization.designview.textFields.textField);
     },
-    subtitle : function() {
+    selector : function() {
         var view = this;
         var box = $("<div class='subtitle'/>");
         var model = view.model;
@@ -235,7 +235,7 @@ var TextTypeSetterView = Backbone.View.extend({
             options.push({name: s.nameOrEmail() || sig.nameInDocument(),
                           value: null});
             _.each(s.fields(), function(f) {
-                if(f !== field)
+                if(f !== field && f.isText())
                     options.push({name: '   ' + f.nicename(),
                                   value: f,
                                  leftMargin: 16});
@@ -245,6 +245,7 @@ var TextTypeSetterView = Backbone.View.extend({
         var selector = new Select({
             name: name,
             options: options,
+            cssClass: 'text-field-placement-setter-field-selector',
             onSelect: function(f) {
                 if(f) {
                     view.model.setField(f);
@@ -273,7 +274,7 @@ var TextTypeSetterView = Backbone.View.extend({
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
 
            body.append(this.title());
-           body.append(this.subtitle());
+           body.append(this.selector());
            body.append(this.obligatoryOption());
 
            body.append(this.doneOption());
@@ -876,7 +877,7 @@ var SignaturePlacementView = Backbone.View.extend({
         if (this.model.field().signatory().fstnameField() != undefined)
           this.model.field().signatory().fstnameField().bind('change', this.render);
         if (this.model.field().signatory().sndnameField() != undefined)
-        this.model.field().signatory().sndnameField().bind('change', this.render);
+            this.model.field().signatory().sndnameField().bind('change', this.render);
         this.model.bind('change', this.render);
         this.resizable = args.resizable;
         this.render();
