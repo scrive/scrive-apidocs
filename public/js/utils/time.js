@@ -50,7 +50,7 @@ if (!Date.prototype.toTimeAbrev) {
         function pad(n) { return n < 10 ? '0' + n : n }
 
         if (this.getUTCFullYear() == curr.getUTCFullYear() && this.getUTCMonth() == curr.getUTCMonth() && this.getUTCDate() == curr.getUTCDate())
-          return pad(this.getHours()) + ":" + pad(this.getMinutes() + 1);
+          return pad(this.getHours()) + ":" + pad(this.getMinutes());
         if (this.getUTCFullYear() == curr.getFullYear())
           return this.getDate() + " " + monthName(this.getMonth())
         else
@@ -62,7 +62,7 @@ if (!Date.prototype.fullTime) {
     Date.prototype.fullTime = function() {
         var curr = new Date();
         function pad(n) { return n < 10 ? '0' + n : n }
-        return this.getFullYear() + "-" + pad(this.getMonth() + 1) + "-" + pad(this.getDate()) + " " + pad(this.getHours()) + ":" + pad(this.getMinutes() + 1) + ":" + pad(this.getSeconds())
+        return this.getFullYear() + "-" + pad(this.getMonth() + 1) + "-" + pad(this.getDate()) + " " + pad(this.getHours()) + ":" + pad(this.getMinutes()) + ":" + pad(this.getSeconds())
 
     };
 }
