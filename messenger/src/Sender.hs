@@ -41,11 +41,11 @@ instance Eq Sender where
 
 createSender :: SenderConfig -> Sender
 createSender mc = case mc of
-  SMSSender{..}   -> createExternalSender "GlobalMouth" smsSenderUser smsSenderPassword
+  GlobalMouthSender{..}   -> createGlobalMouthSender gmSenderUser gmSenderPassword
   LocalSender{}  -> createLocalSender mc
 
-createExternalSender :: String -> String -> String -> Sender
-createExternalSender name user password = Sender { senderName = name, sendSMS = send }
+createGlobalMouthSender :: String -> String -> Sender
+createGlobalMouthSender user password = Sender { senderName = "GlobalMouth", sendSMS = send }
   where
     send :: CryptoRNG m => ShortMessage -> m Bool
     send sms@ShortMessage{..} = do

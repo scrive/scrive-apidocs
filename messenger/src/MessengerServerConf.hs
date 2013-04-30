@@ -12,10 +12,10 @@ data MessengerServerConf = MessengerServerConf
   , mscMasterSender    :: SenderConfig
   } deriving (Read, Show)
 
-data SenderConfig = SMSSender
-  { serviceName        :: String
-  , smsSenderUser      :: String
-  , smsSenderPassword  :: String
+data SenderConfig = GlobalMouthSender
+  {
+    gmSenderUser      :: String
+  , gmSenderPassword  :: String
   }
   | LocalSender
   { localDirectory     :: FilePath

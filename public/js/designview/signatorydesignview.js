@@ -248,10 +248,12 @@ var SignatoryDesignView = Backbone.View.extend({
         makeField(signatory.fstnameField());
         makeField(signatory.sndnameField());
         makeField(signatory.emailField());
+        makeField(signatory.mobileField());
         _.each(signatory.fields(),function(field){
             if (field != signatory.fstnameField() &&
                 field != signatory.sndnameField() &&
                 field != signatory.emailField()   &&
+                field != signatory.mobileField()   &&
                 !field.isSignature() && !field.isCheckbox())
                 makeField(field);
         });

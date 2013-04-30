@@ -37,8 +37,7 @@ tableSMSes = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblForeignKeys =  [ tblForeignKeyColumn "signatory_link_id" "signatory_links" "id"
-                      ]
+  , tblForeignKeys =  [ ]
   }
 
 tableSMSEvents :: Table
