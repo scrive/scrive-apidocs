@@ -44,10 +44,6 @@ main = Log.withLogger $ do
      withCronJobs
        ([ forkCron_ True "SMS Dispatcher" 5 $ dispatcher rng sender msender dbconf
         , forkCron_ True "SMS Cleaner" (60*60*24) $ cleaner rng dbconf
-        ] {- ++
-        case mscSlaveSender conf of
-          Just slave -> [ forkCron "ServiceAvailabilityChecker" 0
-                            (serviceAvailabilityChecker rng dbconf (sender, createSender slave) msender) ]
-          Nothing    -> [] -}) $ \_ -> do
-      waitForTermination
-      Log.messengerServer $ "Termination request received"
+        ]) $ \_ -> do
+            waitForTermination
+            Log.messengerServer $ "Termination request received"

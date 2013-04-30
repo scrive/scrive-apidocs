@@ -10,7 +10,6 @@ data MessengerServerConf = MessengerServerConf
   { mscHttpBindAddress :: (Word32, Word16)
   , mscDBConfig        :: String
   , mscMasterSender    :: SenderConfig
-  , mscSlaveSender     :: Maybe SenderConfig
   } deriving (Read, Show)
 
 data SenderConfig = SMSSender
@@ -23,13 +22,6 @@ data SenderConfig = SMSSender
   , localOpenCommand   :: Maybe String
   } deriving (Read, Show)
 
--- SMTPSender {
---     serviceName = "SendGrid"
---   , smtpAddr = "smtps://smtp.sendgrid.net"
---   , smtpUser= "duzyrak@gmail.com"
---   , smtpPassword = "zimowisko"
--- }
-
 instance Configuration MessengerServerConf where
   confDefault = MessengerServerConf {
       mscHttpBindAddress = (0x7f000001, 6668)
@@ -38,7 +30,6 @@ instance Configuration MessengerServerConf where
         localDirectory = "/tmp"
       , localOpenCommand = Nothing
     }
-    , mscSlaveSender = Nothing
   }
   confOptions = []
   confVerify _ = return $ Right ()

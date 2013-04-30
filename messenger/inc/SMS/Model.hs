@@ -7,20 +7,17 @@ import Data.Monoid
 
 import DB
 import DB.SQL2
-import MagicHash
 import MinutesTime
 import OurPrelude
 import Control.Monad.State.Lazy
-import Doc.SignatoryLinkID
 
 sqlSelectSMSes :: State SqlSelect () -> SqlSelect
 sqlSelectSMSes refine = sqlSelect "smses" $ do
                     sqlResult "smses.id"
-                    sqlResult "smses.token"
                     sqlResult "smses.originator"
                     sqlResult "smses.msisdn"
                     sqlResult "smses.body"
-                    sqlResult "smses.signatory_link_id"
+                    sqlResult "smses.data"
                     --sqlResult "smses.to_be_sent"
                     --sqlResult "smses.sent"
                     sqlOrderBy "id DESC"
@@ -37,30 +34,28 @@ fetchSMSes = kFold decoder []
   where
     -- Note: this function gets mails in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.
-    decoder acc smsid token originator msisdn body siglink
+    decoder acc smsid originator msisdn body sdata
      = ShortMessage {
          smID         = smsid
-       , smToken      = token
        , smOriginator = originator
        , smMSISDN     = msisdn
        , smBody       = body
-       , smSignatoryLinkID = siglink
+       , smData       = sdata
        } : acc
 
-data CreateSMS = CreateSMS MagicHash String String String (Maybe SignatoryLinkID) MinutesTime
+data CreateSMS = CreateSMS String String String String MinutesTime
 instance MonadDB m => DBUpdate m CreateSMS ShortMessageID where
-  update (CreateSMS token originator msisdn body siglink to_be_sent) =
-    $fromJust `fmap` insertSMS token originator msisdn body siglink to_be_sent
+  update (CreateSMS originator msisdn body sdata to_be_sent) =
+    $fromJust `fmap` insertSMS originator msisdn body sdata to_be_sent
 
-insertSMS :: MonadDB m => MagicHash -> String -> String -> String -> Maybe SignatoryLinkID -> MinutesTime -> m (Maybe ShortMessageID)
-insertSMS token originator msisdn body siglink to_be_sent =
+insertSMS :: MonadDB m => String -> String -> String -> String -> MinutesTime -> m (Maybe ShortMessageID)
+insertSMS originator msisdn body sdata to_be_sent =
   getOne $ mkSQL INSERT tableSMSes [
-      sql "token" token
-    , sql "originator" originator
+      sql "originator" originator
     , sql "msisdn" msisdn
     , sql "body" body
     , sql "to_be_sent" to_be_sent
-    , sql "signatory_link_id" siglink
+    , sql "data" sdata
     ] <> SQL "RETURNING id" []
 
 data GetIncomingSMSes = GetIncomingSMSes
@@ -97,7 +92,7 @@ instance MonadDB m => DBUpdate m UpdateWithSMSEvent Bool where
 
 
 data GetUnreadSMSEvents = GetUnreadSMSEvents
-instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID, SMSEvent, Maybe SignatoryLinkID)] where
+instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID, SMSEvent, String)] where
   query GetUnreadSMSEvents = do
     kRun_ $ sqlSelect "sms_events" $ do
       sqlJoinOn "smses" "smses.id = sms_events.sms_id"
@@ -105,13 +100,13 @@ instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID,
       sqlResult "sms_events.id"
       sqlResult "sms_events.sms_id"
       sqlResult "sms_events.event"
-      sqlResult "smses.signatory_link_id"
+      sqlResult "smses.data"
 
       sqlWhere "sms_events.event_read IS NULL"
       sqlOrderBy "sms_events.id DESC"
     kFold fetchEvents []
     where
-      fetchEvents acc eid smsid event siglink = (eid, smsid, event, siglink) : acc
+      fetchEvents acc eid smsid event sdata = (eid, smsid, event, sdata) : acc
 
 data DeleteSMS = DeleteSMS ShortMessageID
 instance MonadDB m => DBUpdate m DeleteSMS Bool where

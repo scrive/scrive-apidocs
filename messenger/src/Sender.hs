@@ -96,50 +96,6 @@ sendSMS2 (user, password) originator msisdn body ref = do
                   z -> z
     urlEncode = URL.encode . map (fromIntegral . ord)
 
-{-
-createExternalSender :: String -> String -> (Mail -> [String]) -> Sender
-createExternalSender name program createargs = Sender { senderName = name, sendMail = send }
-  where
-    send :: CryptoRNG m => Mail -> m Bool
-    send mail@Mail{..} = do
-      content <- assembleContent mail
-      liftIO $ do
-        (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
-        let receivers = intercalate ", " (map addrEmail mailTo)
-        case code of
-          ExitFailure retcode -> do
-            Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
-            return False
-          ExitSuccess -> do
-            let subject = filter (not . (`elem` "\r\n")) mailTitle
-            Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
-            Log.mailContent $ unlines [
-                "Subject: " ++ subject
-              , "To: " ++ intercalate ", " (map addrEmail mailTo)
-              , "Attachments: " ++ show (length mailAttachments)
-              , htmlToTxt mailContent
-              ]
-            return True
--}
-
-{-
-createSMTPSender :: SenderConfig -> Sender
-createSMTPSender config = createExternalSender (serviceName config) "curl" createargs
-  where
-    mailRcpt addr = [
-        "--mail-rcpt"
-      , "<" ++ addrEmail addr ++ ">"
-      ]
-    createargs Mail{mailFrom, mailTo} =
-      [ "-s", "-S"                   -- show no progress information but show error messages
-      , "-k", "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
-      , "--user"
-      , smtpUser config ++ ":" ++ smtpPassword config
-      , smtpAddr config
-      , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
-      ] ++ concatMap mailRcpt mailTo
--}
-
 createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
   where
@@ -151,8 +107,7 @@ createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
       let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
       let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ smMSISDN ++ "</title></head><body>" ++
                     "ID: " ++ show smID ++ "<br>" ++
-                    "Token: " ++ show smToken ++ "<br>" ++
-                    "SigLinkID: " ++ maybe "" show smSignatoryLinkID ++ "<br>" ++
+                    "Data: " ++ show smData ++ "<br>" ++
                     "<br>" ++
                     "Originator: " ++ smOriginator ++ "<br>" ++
                     "MSISDN: " ++ smMSISDN ++ "<br>" ++
@@ -173,9 +128,3 @@ createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
             }
             return ()
         return True
-
-{-
-    toLatin = BSC.unpack
-            . IConv.convertFuzzy IConv.Transliterate "utf8" "latin1"
-            . BSU.fromString
--}

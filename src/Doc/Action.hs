@@ -26,7 +26,7 @@ import Doc.DocViewMail
 import Doc.SignatoryLinkID
 import qualified Text.StringTemplates.Fields as F
 import Doc.DocumentID
-import SMS (scheduleSMS, SMS(..), sms)
+import SMS.SMS (scheduleSMS, SMS(..), sms)
 import InputValidation
 import File.Model
 import Kontra
@@ -510,7 +510,7 @@ sendNotifications sl domail dosms = do
 -- SMS helpers
 
 notifySMS :: (CryptoRNG m, MonadDB m, TemplatesMonad m,KontraMonad m) => String -> Document -> SignatoryLink -> Fields m () -> m ()
-notifySMS t doc sl fs = renderLocalTemplate doc t (smsFields doc sl >> fs) >>= simpleSMS (getMobile sl) (Just $ signatorylinkid sl)
+notifySMS t doc sl fs = renderLocalTemplate doc t (smsFields doc sl >> fs) >>= simpleSMS (getMobile sl) (Invitation (documentid doc) (signatorylinkid sl))
 
 notifySMS_ :: (CryptoRNG m, MonadDB m, TemplatesMonad m,KontraMonad m) => String -> Document -> SignatoryLink -> m ()
 notifySMS_ t doc sl = notifySMS t doc sl $ return ()
@@ -524,10 +524,10 @@ smsFields document siglink = do
     F.value "partylist" $ map getSmartName $ partyList document
     F.value "link" $ ctxhostpart ctx ++ show (LinkSignDoc document siglink)
 
-simpleSMS :: (CryptoRNG m, MonadDB m) => String -> Maybe SignatoryLinkID -> String -> m ()
-simpleSMS number slid msg = do
+simpleSMS :: (CryptoRNG m, MonadDB m) => String -> MessageData -> String -> m ()
+simpleSMS number sdata msg = do
   _ <- scheduleSMS sms{ smsMSISDN = number
                       , smsBody = msg
-                      , smsSignatoryLinkID = slid
+                      , smsData = sdata
                       }
   return ()
