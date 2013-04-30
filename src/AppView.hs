@@ -123,6 +123,8 @@ brandingFields mbd mcompany = do
   F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
   F.value "custombarshighlightcolour" $ mcolour bdbarssecondarycolour companycustombarssecondarycolour
   F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
+  F.value "customdomainlogolink" $ bdlogolink <$> mbd
+
  where
    mcolour df cuf =  (join $ cuf <$> companyui <$> mcompany) `mplus` (df <$> mbd)
 

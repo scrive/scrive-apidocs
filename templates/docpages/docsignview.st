@@ -35,7 +35,10 @@ $doctype()$
                       $endif$
                   });
                 $if(!usestandardheaders)$
-                  jQuery('.signview').prepend(new DocumentSignViewHeader({model : docview.model, mainview : docview.view}).el)
+                  jQuery('.signview').prepend(new DocumentSignViewHeader({model : docview.model,
+                                                                          mainview : docview.view,
+                                                                          customdomainlogolink : $if(customdomainlogolink)$ "$customdomainlogolink$" $else$ undefined $endif$
+                                                                         }).el)
                   jQuery('.signview').append(new DocumentSignViewFooter({model : docview.model,  mainview : docview.view}).el)
                 $endif$
                 jQuery(".body-container").replaceWith(docview.view.el);

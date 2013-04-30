@@ -7,6 +7,7 @@
 window.DocumentSignViewHeader = Backbone.View.extend({
  initialize: function(args) {
      this.mainview = args.mainview;
+     this.customdomainlogolink = args.customdomainlogolink;
      _.bindAll(this, 'render' ,'refresh');
      this.model.document().bind('reset', this.render);
      this.model.document().bind('change', this.render);
@@ -71,9 +72,19 @@ window.DocumentSignViewHeader = Backbone.View.extend({
 
     if((this.useStandardBranding() || document.signviewlogo() == undefined)) {
        if (this.usedStandardLogo != true) {
-         maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
-         this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
+         if (this.customdomainlogolink == undefined || this.customdomainlogolink == "") {
+          maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
+          this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
+         }
+         else {
+          maindiv.removeClass('withstandardlogo').addClass('withcustomlogo');
+          var img = $("<img class='logo'></img>");
+          img.load(function(){  view.refresh();  });
+          img.attr('src',this.customdomainlogolink);
+          this.logowrapper.empty().append(img);
+         }
          this.usedStandardLogo = true;
+
        }
     }
     else {
