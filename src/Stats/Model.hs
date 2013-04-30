@@ -16,6 +16,7 @@ module Stats.Model
          GetUserStatEvents(..),
          UserStatQuantity(..),
          RemoveInactiveUserLoginEvents(..),
+         ClearTimeoutStats(..),
 
          SignStatQuantity(..),
          SignStatEvent(..),
@@ -457,6 +458,18 @@ instance MonadDB m => DBUpdate m RemoveInactiveUserLoginEvents Bool where
   update (RemoveInactiveUserLoginEvents uid) = do
     n <- kRun $ SQL "DELETE FROM user_stat_events WHERE quantity = ? AND EXISTS (SELECT 1 FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL)" [toSql UserLogin, toSql uid]
     return $ n > 0
+
+data ClearTimeoutStats = ClearTimeoutStats DocumentID
+instance MonadDB m => DBUpdate m ClearTimeoutStats () where
+  update (ClearTimeoutStats docid) =
+    kRun_ $ sqlDelete "doc_stat_events" $ do
+        sqlWhereEq "document_id" docid
+        sqlWhereAny $ do
+          sqlWhereEq "quantity" DocStatTimeout
+          sqlWhereEq "quantity" DocStatEmailSignatureTimeout
+          sqlWhereEq "quantity" DocStatElegSignatureTimeout
+          sqlWhereEq "quantity" DocStatPadSignatureTimeout
+
 
 {------ Signatory Stats ------}
 

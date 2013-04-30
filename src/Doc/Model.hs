@@ -425,7 +425,7 @@ documentFilterToSQL (DocumentFilterTemplate) = do
 
 documentFilterToSQL (DocumentFilterDeleted flag1 flag2) = do
   sqlWhereEq "signatory_links.deleted" flag1
-  sqlWhereEq "signatory_links.deleted" flag2
+  sqlWhereEq "signatory_links.really_deleted" flag2
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
