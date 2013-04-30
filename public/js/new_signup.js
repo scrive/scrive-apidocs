@@ -179,7 +179,7 @@
     var model = new SignupModel(args);
     var view;
     if (args.branded)
-            view = new SignupBrandedView({model : model, el : $("<div class='signup short-input-section'/>") });
+            view = new SignupBrandedView({model : model, el : $("<div class='short-input-section' />") });
           else
             view = new SignupView({model : model, el : $("<div class='signup short-input-section'/>")});
     this.el = function() {return $(view.el);}
