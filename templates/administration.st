@@ -799,7 +799,6 @@ userdocuments=
   jQuery(".doclist").append(new KontraList(DocumentAdminListDefinition($if(admin)$true$else$false$endif$, "$userid$")).el());
 </script>
 ####
-
 companyusagestats=
 <div class="mainContainer" >
   <div class="body-container">

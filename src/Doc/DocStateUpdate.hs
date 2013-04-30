@@ -34,6 +34,7 @@ import Redirect
 import DB
 import DB.TimeZoneName (TimeZoneName)
 import Stats.Control
+import Stats.Model (ClearTimeoutStats(..))
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -63,6 +64,7 @@ prolongDocument doc = withUser $ \user -> do
   if isSigLinkFor user $ getAuthorSigLink doc
     then do
       dbUpdate $ ProlongDocument (documentid doc) actor
+      dbUpdate $ ClearTimeoutStats (documentid doc)
       return (Right ())
     else return $ Left DBResourceNotAvailable
 
