@@ -23,12 +23,11 @@ newtype SMSEventID = SMSEventID Int64
 $(newtypeDeriveUnderlyingReadShow ''SMSEventID)
 $(newtypeDeriveConvertible ''SMSEventID)
 
-data GlobalMouthEvent =
-    GM_Delivered
-  | GM_Undelivered String          -- ^ reason
+data SMSEventType =
+    SMSDelivered
+  | SMSUndelivered String          -- ^ reason
     deriving (Eq, Ord, Show, Data, Typeable)
 
-data SMSEvent =
-    GlobalMouthEvent String GlobalMouthEvent -- ^ phone number, event
+data SMSEvent = SMSEvent String SMSEventType -- ^ phone number, event
   deriving (Eq, Ord, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| SMSEvent |])

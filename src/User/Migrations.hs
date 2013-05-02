@@ -130,3 +130,10 @@ addAssociatedDomainToUsers = Migration {
 
 }
 
+dropMobileFromUsers :: MonadDB m => Migration m
+dropMobileFromUsers = Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 13
+  , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN mobile"
+
+}

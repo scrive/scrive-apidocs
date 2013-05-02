@@ -1353,13 +1353,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () wher
     return ()
 
 
-data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
+data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
-  update (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues actor) =
-    listToMaybe <$> update (DocumentFromSignatoryDataV docid [(fstname,sndname,email,company,personalnumber,companynumber,fieldvalues)] actor)
+  update (DocumentFromSignatoryData docid fstname sndname email mobile company personalnumber companynumber fieldvalues actor) =
+    listToMaybe <$> update (DocumentFromSignatoryDataV docid [(fstname,sndname,email, mobile, company,personalnumber,companynumber,fieldvalues)] actor)
 
 data DocumentFromSignatoryDataV = DocumentFromSignatoryDataV DocumentID
-                                  [(String,String,String,String,String,String,[String])] Actor
+                                  [(String,String,String,String,String,String,String,[String])] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m DocumentFromSignatoryDataV [Document] where
   update (DocumentFromSignatoryDataV docid csvdata actor) = do
     mdocument <- query $ GetDocumentByDocumentID docid
@@ -1393,8 +1393,8 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m Docu
      toNewSigLink csvdata1 mh sl
          | isJust (signatorylinkcsvupload sl) = (pumpData csvdata1 sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
          | otherwise = sl { signatorymagichash = mh }
-     pumpData (fstname,sndname,email,company,personalnumber,companynumber,fieldvalues) siglink =
-       replaceSignatoryData siglink fstname sndname email "" company personalnumber companynumber fieldvalues
+     pumpData (fstname,sndname,email,mobile,company,personalnumber,companynumber,fieldvalues) siglink =
+       replaceSignatoryData siglink fstname sndname email mobile company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
@@ -1679,8 +1679,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
   update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
   magichash <- random
-
+  Log.debug $ show user
   authorDetails <- signatoryDetailsFromUser user (True, True)
+  Log.debug $ show authorDetails
   let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
   let authorlink = authorlink0 {

@@ -23,10 +23,10 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.DocViewSMS
 import Doc.SignatoryLinkID
-import qualified Text.StringTemplates.Fields as F
 import Doc.DocumentID
-import SMS.SMS (scheduleSMS, SMS(..), sms)
+import SMS.SMS (scheduleSMS)
 import InputValidation
 import File.Model
 import Kontra
@@ -37,7 +37,6 @@ import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
 import Text.StringTemplates.Templates
-import Templates
 import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
@@ -269,7 +268,7 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
                     msg
                     isbad
             scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress sigdets]})
-          (notifySMS_ "_smsMismatchSignatory" document signatorylink)
+          (scheduleSMS =<<  smsMismatchSignatory document signatorylink)
 
 sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> [String] -> String -> String -> m ()
 sendDataMismatchEmailAuthor ctx document author messages badname bademail = do
@@ -280,7 +279,7 @@ sendDataMismatchEmailAuthor ctx document author messages badname bademail = do
       (do
         mail <- mailMismatchAuthor ctx document authorname messages badname bademail (getLang author)
         scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]})
-      (notifySMS_ "_smsMismatchAuthor" document authorlink)
+      (scheduleSMS =<<  smsMismatchAuthor document authorlink)
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
@@ -303,7 +302,7 @@ sendDocumentErrorEmail document author = do
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
                                    to = [getMailAddress authorlink]
                                  })
-        (notifySMS_ "smsDocumentErrorAuthor" document authorlink)
+        (scheduleSMS =<< smsDocumentErrorAuthor document authorlink)
 
     -- | Helper function to send emails to invited parties
     -- ??: Should this be in DocControl or in an email-specific file?
@@ -319,7 +318,7 @@ sendDocumentErrorEmail document author = do
                                    to = [getMailAddress signatorydetails]
                                  , mailInfo = Invitation documentid  signatorylinkid
                                  })
-         (notifySMS_ "smsDocumentErrorSignatory" document signatorylink)
+         (scheduleSMS =<<  smsDocumentErrorSignatory document signatorylink)
 
 {- |
    Send emails to all of the invited parties.
@@ -355,7 +354,7 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
                            mail { to = [getMailAddress signatorydetails]
                                 , mailInfo = Invitation documentid signatorylinkid
                                 })
-     (notifySMS_ ("_smsInvitationToSign" <| isSignatory signatorylink |> "_smsInvitationToView") document signatorylink)
+     (scheduleSMS =<< smsInvitation document signatorylink)
 
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
@@ -372,7 +371,7 @@ sendInvitationEmail1 ctx document authorsiglink =
             mail <- mailDocumentAwaitingForAuthor ctx document $ getLang document
             scheduleEmailSendout (ctxmailsconfig ctx) $
                                  mail { to = [getMailAddress authorsiglink] })
-          (notifySMS_ "_smsInvitationToAuthor" document authorsiglink)
+          (scheduleSMS =<<  smsInvitationToAuthor document authorsiglink)
        return $ Right document
      else return $ Right document
 
@@ -392,7 +391,7 @@ sendReminderEmail custommessage ctx actor doc siglink = do
                                              then mailattachments
                                              else []
                              })
-    (notifySMS_ "_smsReminder" doc siglink)
+    (scheduleSMS =<< smsReminder doc siglink)
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
     dbUpdate $ PostReminderSend doc siglink custommessage actor
@@ -416,7 +415,7 @@ sendClosedEmails document = do
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
                                       })
-          (notifySMS_ "_smsClosedNotification" document sl)
+          (scheduleSMS =<< smsClosedNotification document sl)
 
 makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
@@ -450,8 +449,7 @@ sendRejectEmails customMessage ctx document signalink = do
          scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
                                   to = [getMailAddress sl]
                                 })
-      (notifySMS "_smsRejectNotification" document sl $ do
-         F.value "rejectorName" $ getSmartName signalink)
+      (scheduleSMS =<<  smsRejectNotification document sl signalink)
 
 {- |
    Send reminder to all parties in document. No custom text
@@ -506,28 +504,3 @@ sendNotifications sl domail dosms = do
     EmailDelivery   -> domail
     MobileDelivery  -> dosms
     _               -> return ()
-
--- SMS helpers
-
-notifySMS :: (CryptoRNG m, MonadDB m, TemplatesMonad m,KontraMonad m) => String -> Document -> SignatoryLink -> Fields m () -> m ()
-notifySMS t doc sl fs = renderLocalTemplate doc t (smsFields doc sl >> fs) >>= simpleSMS (getMobile sl) (Invitation (documentid doc) (signatorylinkid sl))
-
-notifySMS_ :: (CryptoRNG m, MonadDB m, TemplatesMonad m,KontraMonad m) => String -> Document -> SignatoryLink -> m ()
-notifySMS_ t doc sl = notifySMS t doc sl $ return ()
-
-smsFields :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
-smsFields document siglink = do
-    ctx <- lift getContext
-    F.value "creatorname" $ getSmartName $ $(fromJust) $ getAuthorSigLink document
-    F.value "personname" $ getSmartName siglink
-    F.value "documenttitle" $ documenttitle document
-    F.value "partylist" $ map getSmartName $ partyList document
-    F.value "link" $ ctxhostpart ctx ++ show (LinkSignDoc document siglink)
-
-simpleSMS :: (CryptoRNG m, MonadDB m) => String -> MessageData -> String -> m ()
-simpleSMS number sdata msg = do
-  _ <- scheduleSMS sms{ smsMSISDN = number
-                      , smsBody = msg
-                      , smsData = sdata
-                      }
-  return ()

@@ -81,7 +81,6 @@ userJSON ctx user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $
     value "email" $ getEmail user
     value "personalnumber" $ getPersonalNumber user
     value "phone" $ userphone $ userinfo user
-    value "mobile" $ usermobile $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
     value "usercompanyname" $ getCompanyName (user,mcompany)

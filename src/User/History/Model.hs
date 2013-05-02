@@ -47,12 +47,12 @@ data UserHistoryEvent = UserHistoryEvent {
   }
   deriving (Eq, Show)
 
-data UserHistoryEventType = UserLoginAttempt 
-                          | UserLoginSuccess 
-                          | UserPasswordSetup 
-                          | UserPasswordSetupReq 
-                          | UserAccountCreated 
-                          | UserDetailsChange 
+data UserHistoryEventType = UserLoginAttempt
+                          | UserLoginSuccess
+                          | UserPasswordSetup
+                          | UserPasswordSetupReq
+                          | UserAccountCreated
+                          | UserDetailsChange
                           | UserTOSAccept
                           | UserPadLoginAttempt
                           | UserPadLoginSuccess
@@ -133,7 +133,7 @@ instance MonadDB m => DBUpdate m LogHistoryPadLoginSuccess Bool where
     time
     (Just userid)
 
-    
+
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
 instance MonadDB m => DBUpdate m LogHistoryPasswordSetup Bool where
   update (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
@@ -158,7 +158,7 @@ instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
     userid
     UserHistoryEvent {
         uheventtype = UserAccountCreated
-      , uheventdata = Just $ JSArray $ [runJSONGen $ do 
+      , uheventdata = Just $ JSArray $ [runJSONGen $ do
           value "field" ("email" :: String)
           value "oldval" ("" :: String)
           value "newval" $ unEmail email
@@ -201,33 +201,29 @@ instance MonadDB m => DBUpdate m LogHistoryUserInfoChanged Bool where
       _  -> update $ LogHistoryDetailsChanged userid ip time diff mpuser
 
 diffUserInfos :: UserInfo -> UserInfo -> [(String, String, String)]
-diffUserInfos old new = fstNameDiff 
-  ++ sndNameDiff 
-  ++ personalNumberDiff 
-  ++ companyPositionDiff 
-  ++ phoneDiff 
-  ++ mobileDiff 
+diffUserInfos old new = fstNameDiff
+  ++ sndNameDiff
+  ++ personalNumberDiff
+  ++ companyPositionDiff
+  ++ phoneDiff
   ++ emailDiff
   where
     fstNameDiff = if (userfstname old) /= (userfstname new)
       then [("first_name", userfstname old, userfstname new)]
       else []
-    sndNameDiff = if (usersndname old) /= (usersndname new) 
+    sndNameDiff = if (usersndname old) /= (usersndname new)
       then [("last_name", usersndname old, usersndname new)]
       else []
-    personalNumberDiff = if (userpersonalnumber old) /= (userpersonalnumber new) 
+    personalNumberDiff = if (userpersonalnumber old) /= (userpersonalnumber new)
       then [("personal_number", userpersonalnumber old, userpersonalnumber new)]
       else []
-    companyPositionDiff = if (usercompanyposition old) /= (usercompanyposition new) 
+    companyPositionDiff = if (usercompanyposition old) /= (usercompanyposition new)
       then [("company_position", usercompanyposition old, usercompanyposition new)]
       else []
-    phoneDiff = if (userphone old) /= (userphone new) 
+    phoneDiff = if (userphone old) /= (userphone new)
       then [("phone", userphone old, userphone new)]
       else []
-    mobileDiff = if (usermobile old) /= (usermobile new) 
-      then [("mobile", usermobile old, usermobile new)]
-      else []
-    emailDiff = if (useremail old) /= (useremail new) 
+    emailDiff = if (useremail old) /= (useremail new)
       then [("email", unEmail $ useremail old, unEmail $ useremail new)]
       else []
 

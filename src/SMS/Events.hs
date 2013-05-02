@@ -1,17 +1,14 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Mails.Events
--- Maintainer  :  mariusz@skrivapa.se
+-- Module      :  SMS.Events
+-- Maintainer  :  gracjan@scrive.com
 -- Stability   :  development
 -- Portability :  portable
 --
--- Sendgrid events interface. 'processEvents' is used when sendgrid contacts us.
--- mailinfo param is set when we are sending mails.
+-- Interface for passing delivered/undelivered events for SMS
 -----------------------------------------------------------------------------
 module SMS.Events (
     processEvents
-  , smsDeliveredInvitation
-  , smsDeferredInvitation
   , smsUndeliveredInvitation
   ) where
 
@@ -65,11 +62,11 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
               -- change email address, we don't want to send him emails reporting
               -- success/failure for old signatory address, so we need to compare
               -- addresses here (for dropped/bounce events)
-              handleEv (GlobalMouthEvent phone ev) = do
+              handleEv (SMSEvent phone ev) = do
                 Log.cron $ signphone ++ " == " ++ phone
                 runTemplatesT (getLang doc, templates) $ case ev of
-                  GM_Delivered -> handleDeliveredInvitation (host, mc) doc slid
-                  GM_Undelivered _ -> when (signphone == phone) $ handleUndeliveredInvitation (host, mc) doc slid
+                  SMSDelivered -> handleDeliveredInvitation (host, mc) doc slid
+                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredInvitation (host, mc) doc slid
           handleEv eventType
     processEvent (eid, _ , _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
@@ -106,22 +103,6 @@ handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
       }
     Nothing -> return ()
-
-smsDeliveredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
-smsDeliveredInvitation hostpart doc signlink =
-  kontramail "invitationMailDeliveredAfterDeferred" $ do
-    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
-    F.value "email" $ getEmail signlink
-    F.value "documenttitle" $ documenttitle doc
-    F.value "ctxhostpart" hostpart
-
-smsDeferredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
-smsDeferredInvitation hostpart doc sl = kontramail "invitationMailDeferred" $ do
-  F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
-  F.value "counterpartname" $ getFullName sl
-  F.value "counterpartemail" $ getEmail sl
-  F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-  F.value "ctxhostpart" hostpart
 
 smsUndeliveredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
 smsUndeliveredInvitation hostpart doc signlink =

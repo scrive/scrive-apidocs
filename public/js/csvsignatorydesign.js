@@ -129,7 +129,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
        return box;
     },
     // we fix the order of the standard fields
-    csvheaderorder: ['fstname', 'sndname', 'email', 'sigco', 'sigpersnr', 'sigcompnr'],
+    csvheaderorder: ['fstname', 'sndname', 'email', 'mobile',  'sigco', 'sigpersnr', 'sigcompnr'],
     dataTable : function() {
       var model = this.model;
       var table = $("<table class='csvDataTable'/>");

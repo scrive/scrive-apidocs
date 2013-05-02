@@ -497,7 +497,7 @@ splitUpDocument doc = do
 splitUpDocumentWorker :: (MonadDB m, TemplatesMonad m, CryptoRNG m, MonadBase IO m)
                       => Document -> Actor -> [[String]] -> m [Document]
 splitUpDocumentWorker doc actor csvbody = do
-  let preparedData = map (\xs -> let pxs = xs ++ repeat "" in ((pxs!!0),(pxs!!1),(pxs!!2),(pxs!!3),(pxs!!4),(pxs!!5),(drop 6 xs))) csvbody
+  let preparedData = map (\xs -> let pxs = xs ++ repeat "" in ((pxs!!0),(pxs!!1),(pxs!!2),(pxs!!3),(pxs!!4),(pxs!!5),(pxs!!6),(drop 7 xs))) csvbody
   dbUpdate $ DocumentFromSignatoryDataV (documentid doc) preparedData actor
 
 

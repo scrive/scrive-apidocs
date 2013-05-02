@@ -54,7 +54,7 @@ getCSVCustomFields sl =
 cleanCSVContents :: Bool -> Int -> [[String]] -> ([CSVProblem], CleanCSVData)
 cleanCSVContents eleg customfieldcount contents =
   let mincols = (if eleg then 5 else 3) :: Int
-      maxcols = 6 + customfieldcount
+      maxcols = 7 + customfieldcount
       cleanData = zipWith (cleanRow mincols maxcols) [0..]
       mheader = lookForHeader . cleanData $ take 1 contents
       bodyrows = if isJust mheader then drop 1 contents else contents
@@ -118,6 +118,7 @@ cleanCSVContents eleg customfieldcount contents =
       [ (checkIfEmpty >=>  asValidName,  FirstNameNotValid )
       , (checkIfEmpty >=>  asValidName,  SecondNameNotValid )
       , (checkIfEmpty >=>  asValidEmail, EmailNotValid )
+      , (return                        , ValueNotValid) -- Phone number
       , (                  asValidCompanyName, ValueNotValid)
       , ((checkIfEmpty <| eleg |> return), ValueNotValid)
        ] ++ repeat (asValidFieldValue, ValueNotValid)

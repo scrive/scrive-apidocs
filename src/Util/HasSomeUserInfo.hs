@@ -37,14 +37,14 @@ instance HasSomeUserInfo UserInfo where
   getFirstName      = userfstname
   getLastName       = usersndname
   getPersonalNumber = userpersonalnumber
-  getMobile         = usermobile
+  getMobile         = userphone
 
 instance HasSomeUserInfo User where
   getEmail          = strip . unEmail . useremail . userinfo
   getFirstName      = userfstname         . userinfo
   getLastName       = usersndname         . userinfo
   getPersonalNumber = userpersonalnumber  . userinfo
-  getMobile         = usermobile          . userinfo
+  getMobile         = userphone          . userinfo
 
 instance HasSomeUserInfo SignatoryDetails where
   getEmail          = strip . getValueOfType EmailFT

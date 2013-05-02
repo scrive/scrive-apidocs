@@ -29,13 +29,13 @@ handleGlobalMouthEvents = flip E.catch (\(e :: SomeException) -> Log.messengerSe
   Log.messengerServer $ "   xreason=" ++ xreason
 
   let event = case xdelivered of
-                "true" -> GM_Delivered
-                "false" -> GM_Undelivered xreason
+                "true" -> SMSDelivered
+                "false" -> SMSUndelivered xreason
                 _ -> error "Unknown report"
 
   case xref of
     Just xref' -> do
-              let ev = GlobalMouthEvent xmsisdn event
+              let ev = SMSEvent xmsisdn event
               Log.messengerServer $ "UpdateWithSMSEvent " ++ show xref' ++ " " ++ show ev
               res <- dbUpdate (UpdateWithSMSEvent xref' ev)
               Log.messengerServer $ "UpdateWithSMSEvent " ++ show xref' ++ " " ++ show ev ++ " => " ++ show res

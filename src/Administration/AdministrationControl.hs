@@ -688,7 +688,6 @@ getUserInfoChange = do
   muserpersonalnumber  <- getField "userpersonalnumber"
   musercompanyposition <- getField "usercompanyposition"
   muserphone           <- getField "userphone"
-  musermobile          <- getField "usermobile"
   museremail           <- fmap Email <$> getField "useremail"
   musercompanyname     <- getField "usercompanyname"
   musercompanynumber   <- getField "usercompanynumber"
@@ -698,7 +697,6 @@ getUserInfoChange = do
       , userpersonalnumber  = fromMaybe userpersonalnumber muserpersonalnumber
       , usercompanyposition = fromMaybe usercompanyposition musercompanyposition
       , userphone           = fromMaybe userphone muserphone
-      , usermobile          = fromMaybe usermobile musermobile
       , useremail           = fromMaybe useremail museremail
       , usercompanyname     = fromMaybe usercompanyname musercompanyname
       , usercompanynumber   = fromMaybe usercompanynumber musercompanynumber

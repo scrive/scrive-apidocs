@@ -202,7 +202,6 @@ userFields u =  do
         F.value "personalnumber"   $ getPersonalNumber u
         F.value "companyposition"  $ usercompanyposition $ userinfo u
         F.value "phone"            $ userphone $ userinfo u
-        F.value "mobile"           $ usermobile $ userinfo u
         F.value "email"            $ getEmail u
         F.value "langsv"           $ LANG_SV == getLang u
         F.value "langen"           $ LANG_EN == getLang u

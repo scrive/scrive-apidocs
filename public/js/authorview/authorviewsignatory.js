@@ -157,11 +157,10 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                      }
                  });
              } else if( signatory.mobileDelivery()) {
-                 ConfirmationWithSMS.popup({
+                 Confirmation.popup({
                      title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
-                     sms: signatory.remindSMS(),
+                     content: $("<div>").text(localization.reminder.mobileQuestion),
                      acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-                     editText: localization.reminder.formOwnMessage,
                      rejectText: localization.cancel,
                      onAccept: function(customtext) {
                          trackTimeout('Accept',
@@ -169,7 +168,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                        'Signatory index' : signatory.signIndex(),
                                        'Delivery method' : 'Mobile'},
                                       function() {
-                                          signatory.remind(customtext).send();
+                                          signatory.remind().send();
                                       });
                      }
                  });

@@ -59,11 +59,6 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0"  value="$user.phone$" name="userphone" />
 		  </td>
 		</tr>
-		<tr> <td>Mobile:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.mobile$" name="usermobile" />
-		  </td>
-		</tr>
 		<tr> <td>Email:</td>
 		  <td>
 		    <input type="text" style="width:200px;margin:0"  value="$user.email$" name="useremail" />
