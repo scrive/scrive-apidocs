@@ -20,12 +20,11 @@ module Util.SignatoryLinkUtils (
   hasSigned,
   isAuthor,
   isSignatory,
-  isViewer,
   isDeletedFor,
   getSigLinkFor,
   validSigLink,
   getSignatoryPartnerLinks,
-  hasSeen,  
+  hasSeen,
   hasUser,
   SignatoryLinkIdentity,
   MaybeSignatoryLink(..),
@@ -62,7 +61,7 @@ instance SignatoryLinkIdentity UserID where
 
 instance SignatoryLinkIdentity (SignatoryLink -> Bool) where
   isJustSigLinkFor p sl = p sl
-  
+
 --instance MaybeSignatoryLink a => SignatoryLinkIdentity (a -> Bool) where
 --  isJustSigLinkFor p sl = p sl
 
@@ -82,7 +81,7 @@ instance SignatoryLinkIdentity User where
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isJustSigLinkFor (Just a) sl = isSigLinkFor a sl
   isJustSigLinkFor Nothing  _  = False
-  
+
 instance SignatoryLinkIdentity MagicHash where
   isJustSigLinkFor mh sl = mh == signatorymagichash sl
 
@@ -183,19 +182,13 @@ isSignatory :: (MaybeSignatoryLink msl) => msl -> Bool
 isSignatory = isSigLinkFor (signatoryispartner . signatorydetails)
 
 {- |
-   Is the user able to view the doc?
- -}
-isViewer :: (MaybeSignatoryLink msl) => msl -> Bool
-isViewer msl = isJust (getMaybeSignatoryLink msl)
-
-{- |
    Is the document deleted for this signatory link?
  -}
 isDeletedFor :: (MaybeSignatoryLink a) => a -> Bool
 isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
 
 
-{- 
+{-
   Checks if siglink with magic hash is valid for this document
 -}
 
@@ -207,7 +200,7 @@ validSigLink _ _ _ = False
    Gets the signatory links from the document that are
    signing the document, rather than just viewing.
 -}
-getSignatoryPartnerLinks :: HasSignatoryLinks hsl => hsl -> [SignatoryLink] 
+getSignatoryPartnerLinks :: HasSignatoryLinks hsl => hsl -> [SignatoryLink]
 getSignatoryPartnerLinks = filterSigLinksFor (signatoryispartner . signatorydetails)
 
 {- |
