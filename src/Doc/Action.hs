@@ -322,7 +322,7 @@ sendInvitationEmails ctx document = do
 sendInvitationEmailsToViewers :: Kontrakcja m => Context -> Document -> m ()
 sendInvitationEmailsToViewers ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
-                      , isViewer sl
+                      , not $ isSignatory sl
                       , not $ isAuthor sl
                       , signatorylinkdeliverymethod sl == EmailDelivery
                       ]
