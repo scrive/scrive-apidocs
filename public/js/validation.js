@@ -16,12 +16,12 @@ window.Validation = Backbone.Model.extend({
     validateData: function(text, elem) {
             if (!this.get("validates").call(this, text)) {
                this.fail(text, elem);
-               return false;       
+               return false;
             }
             else if (this.get("next") != undefined)
-               return this.get("next").validateData(text,elem); 
+               return this.get("next").validateData(text,elem);
             else
-               return true; 
+               return true;
     },
     fail : function(text, elem) {
         if (this.get("callback") != undefined)
@@ -46,7 +46,7 @@ window.NotEmptyValidation = Validation.extend({
 
                     if (/^\s*$/.test(t)) // only spaces
                         return false;
-                    
+
                     return true;
             },
            message: "The value cannot be empty!"
@@ -72,7 +72,7 @@ window.PhoneValidation = Validation.extend({
                  * mobile phone number is required to have 11 digits
                  * including country code. Prefix it with plus sign.
                  */
-                var z = t.replace(/ -./, "");
+                var z = t.replace(/-/g, "").replace(/\s/g, "");
                 return /^\+[0-9]{9,}$/i.test(z);
             },
             message: "Wrong phone number format!"
@@ -161,12 +161,12 @@ window.PasswordValidation = Validation.extend({
     },
     initialize: function() {
         this.set({"next": new Validation({
-            callback: this.get("callback"), 
-            message: this.get("message_max"), 
+            callback: this.get("callback"),
+            message: this.get("message_max"),
             validates: function(t) { return t.length <= 250; }})});
 
         this.concat(new DigitsLettersValidation({
-            callback: this.get("callback"), 
+            callback: this.get("callback"),
             message: this.get("message_digits")
         }));
 
@@ -193,8 +193,8 @@ jQuery.fn.validate = function(validationObject){
             if ($(this).attr('type') == 'checkbox' || $(this).hasClass('checkbox')) {
                 if (!validationObject.validateData($(this), $(this))) {
                     validates = false;
-                    return false; 
-                } 
+                    return false;
+                }
             } else if (!validationObject.validateData($(this).val(), $(this))) {
                 validates = false;
                 return false;

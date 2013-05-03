@@ -23,6 +23,10 @@ data SMS = SMS {
 scheduleSMS :: MonadDB m => SMS -> m ()
 scheduleSMS msg@SMS{..} = do
     now <- getMinutesTime
-    sid <- dbUpdate $ CreateSMS "Scrive" smsMSISDN smsBody (show smsData) now
+    sid <- dbUpdate $ CreateSMS "Scrive" (filter goodChars smsMSISDN) smsBody (show smsData) now
     Log.debug $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
     return ()
+  where
+    goodChars ' ' = False
+    goodChars '-' = False
+    goodChars _   = True
