@@ -46,7 +46,7 @@ main = Log.withLogger $ do
      msender <- newMVar sender
      withCronJobs
        ([ forkCron_ True "Dispatcher" 5 $ dispatcher s3config rng sender msender dbconf
-        , forkCron_ True "Cleaner" (60*60*24) $ cleaner rng dbconf
+        , forkCron_ True "Cleaner" (60*60) $ cleaner rng dbconf
         ] ++
         case mscSlaveSender conf of
           Just slave -> [ forkCron True "ServiceAvailabilityChecker" 0
