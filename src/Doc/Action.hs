@@ -101,6 +101,7 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
   logDocEvent "Doc Sent" doc author []
 
   sendInvitationEmails ctx document'
+  sendInvitationEmailsToViewers ctx document'
 
   _ <- addDocumentSendStatEvents (documentid document') apistring
   forM_ (documentsignatorylinks document') $ \sl ->
@@ -327,9 +328,19 @@ sendDocumentErrorEmail document author = do
 sendInvitationEmails :: Kontrakcja m => Context -> Document -> m ()
 sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
+                      , isSignatory sl
                       , isCurrentSignatory (documentcurrentsignorder document) sl
                       , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery]
                       , not $ hasSigned sl
+                      ]
+  forM_ signlinks (sendInvitationEmail1 ctx document)
+
+sendInvitationEmailsToViewers :: Kontrakcja m => Context -> Document -> m ()
+sendInvitationEmailsToViewers ctx document = do
+  let signlinks = [sl | sl <- documentsignatorylinks document
+                      , not $ isSignatory sl
+                      , not $ isAuthor sl
+                      , signatorylinkdeliverymethod sl == EmailDelivery
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
 
