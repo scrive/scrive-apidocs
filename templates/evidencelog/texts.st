@@ -7,7 +7,7 @@ RemoveDocumentAttachmentEvidenceText=
 ###
 AddDocumentAttachmentEvidenceText=
 ###
-PendingToAwaitingAuthorEvidenceText=Scrive emailed a notification to the author of the signing process($email$) that all other parties have signed and the author is next to sign.
+PendingToAwaitingAuthorEvidenceText=Scrive emailed a notification to the author of the signing process ($email$) that all other parties have signed and the author is next to sign.
 ###
 UpdateFieldsEvidenceText=
 ###
@@ -15,7 +15,7 @@ SetElegitimationIdentificationEvidenceText=
 ###
 SetEmailIdentificationEvidenceText=
 ###
-TimeoutDocumentEvidenceText=The due date for signing the document passed. Thepossibility to sign was disabled by Scrive.
+TimeoutDocumentEvidenceText=The due date for signing the document passed. The possibility to sign was disabled by Scrive.
 ###
 SignDocumentEvidenceText=The document was signed by $actor$ $if(!eleg)$ by clicking the sign button.$else$
         using e-legitimation.
