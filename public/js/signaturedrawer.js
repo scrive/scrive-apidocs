@@ -229,9 +229,6 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         var h = $("<h1>").text(localization.pad.drawSignatureBoxHeader);
         return $("<div class='header'/>").append(h);
     },
-    separator: function() {
-        return $("<div style='width:90%;margin:auto;height:1px;background-color: #999999'/>");
-    },
     drawingBox : function() {
         var div = $("<div class='signatureDrawingBoxWrapper'>");
         this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width});
@@ -247,7 +244,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         var document = signatory.document();
         return Button.init({
                     color : 'green',
-                    size: 'tiny',
+                    size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                     text: localization.signature.confirmSignature,
                     onClick : function(){
                         view.drawer.saveImage();
@@ -261,7 +258,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         var view = this;
         return Button.init({
                 color : 'red',
-                size: 'tiny',
+                size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                 text: localization.pad.cleanImage,
                 onClick : function() {
                     view.drawer.clear();
@@ -285,9 +282,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     render: function () {
         var box = $(this.el);
         box.append(this.header());
-        //box.append(this.separator());
         box.append(this.drawingBox());
-        //box.append(this.separator());
         box.append(this.footer());
         return this;
     }
@@ -329,18 +324,6 @@ window.SignatureDrawerPopup = function(args){
           };
         if ($(window).scrollLeft() > 60) ol.left = 60 - $(window).scrollLeft();
         self.overlay.overlay(ol);
-        /* window.onorientationchange = function() {
-           if (opened) {
-             var png = self.dw.drawer.getPNG();
-             self.overlay.data("overlay").close();
-             setTimeout(function() {
-               var s = new SignatureDrawerPopup(args);
-               s.dw.drawer.setPNG(png);
-               window.scrollTo(0,s.overlay.offset().top - 30);
-              },100);
-           }
-        }; */
-
 };
 
 })(window);

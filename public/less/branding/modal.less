@@ -75,6 +75,11 @@
   width: 500px;
   float: left;
 }
+
+.modal-container.small-screen .modal-title {
+  font-size: 32px;
+}
+
 /* There was background image here - maybe till 5 I 2013 someone will want to bring it back. Else remove class and element generation from js*/
 .modal-icon.message {
     height: 31px;
@@ -111,6 +116,15 @@
     }
   }
 }
+
+.modal-container.small-screen .modal-content {
+   font-size: 22px;
+   line-height: 30px;
+  .body {
+      padding: 40px 83px;
+    }
+}
+
 .modal-footer {
   height: 32px;
   padding: 20px 25px;
@@ -129,6 +143,13 @@
     }
   }
 }
+
+.modal-container.small-screen .modal-footer label  {
+   font-size: 22px;
+}
+
+
+
 .modal-footer .left {
   float: left;
 }

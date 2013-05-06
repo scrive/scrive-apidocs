@@ -145,9 +145,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
        mixpanel.people.set(ps);
 
        mixpanel.track('View sign view');
-
        this.rejectButton = Button.init({
-                                        size: "small",
+                                        size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                                         color: "red",
                                         shape : "rounded",
                                         width: 260,
@@ -179,12 +178,12 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         }
                                 });
        this.signButton = Button.init({
-                            size: "small",
+                            size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                             shape : "rounded",
                             color: "blue",
                             width: 260,
                             text: document.process().processLocalization().signbuttontext,
-                            icon: $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
+                            icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
 
                                 var valid =  model.tasks().notCompleatedTasks().length == 1 && model.tasks().notCompleatedTasks()[0] == model.signtask();

@@ -174,11 +174,13 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     render: function () {
        var model = this.model;
        var view = this;
-       var container = $("<div class='modal-container' style='width:800px'/>");
+       var container = $("<div class='modal-container'/>").css('width',BrowserInfo.isSmallScreen() ? "980px" : "800px");
+       if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
        container.css("top",$(window).scrollTop());
        container.css("margin-top",50);
-       container.css("left",$(window).scrollLeft());
-       container.css("margin-left",Math.floor(($(window).width() - 800) / 2));
+       container.css("left","0px");
+       var left = Math.floor(($(window).width() - (BrowserInfo.isSmallScreen() ? 980 : 800)) / 2);
+       container.css("margin-left",left > 20 ? left : 20);
 
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
@@ -210,9 +212,13 @@ var ConfirmationWithEmailView = Backbone.View.extend({
          this.editOption.css("font-family",model.textfont());
        }
        footer.append(cancelOption);
-	   footer.append(this.editOption);
+
+       if (!BrowserInfo.isSmallScreen()) // We skip editing message on small screens
+         footer.append(this.editOption);
+
        var accept = Button.init({color:model.acceptColor(),
-                                 size: "tiny",
+                                 size: BrowserInfo.isSmallScreen() ? "small" : "tiny",
+                                 style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  cssClass: "float-right",
                                  shape: "rounded",
                                  text: this.model.acceptText(),

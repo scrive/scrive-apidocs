@@ -1,20 +1,5 @@
-/* Basic buttons
- * Usage
- *  var button =  Button.init({
- *                   color: "red | green | blue | black",
- *                   size: "tiny | small | big",
- *                   text: "Text that will be put inside of button"
- *                   onClick* : "Function to be called when button is clicked" })
- *  will return Button object.
- *
- * It exports method input that returns jQuery object to be inserted anywere you want
- *
- * button.input()
-*/
-
 $(function(){
 
-/* InfoTextInput model. Has value, infotext and information if its focused  */
 var ConfirmationModel = Backbone.Model.extend({
   defaults : {
       title  : "",
@@ -23,7 +8,7 @@ var ConfirmationModel = Backbone.Model.extend({
       acceptColor : "green",
       content  : jQuery("<p/>"),
       cantCancel : false,
-      width: 640,
+      width: BrowserInfo.isSmallScreen() ? 980 : 640,
       acceptVisible : true,
       extraOption : undefined,
       textfont : undefined,
@@ -124,10 +109,12 @@ var ConfirmationView = Backbone.View.extend({
        var view = this;
        var model = this.model;
        var container = $("<div class='modal-container'/>");
+       if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
        container.css("top",$(window).scrollTop());
        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
-       container.css("left",$(window).scrollLeft());
-       container.css("margin-left",Math.floor(($(window).width() - model.width()) / 2));
+       container.css("left","0px");
+       var left = Math.floor(($(window).width() - model.width()) / 2);
+       container.css("margin-left",left > 20 ? left : 20);
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
        container.width(model.width());
