@@ -738,6 +738,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             var height = this.height;
             var image = field.value();
             box.empty();
+            box.unbind("click");
             box.attr("style","");
             box.addClass('signatureBox').addClass('forDrawing');
             if (image == "")

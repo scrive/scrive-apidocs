@@ -178,22 +178,6 @@ var SignatureDrawer = Backbone.View.extend({
           this.canvas[0].width = this.canvas[0].width;
           this.empty  = true;
     },
-    getPNG : function() {
-      if (this.empty) return undefined;
-      return  this.canvas[0].toDataURL("image/png",1.0);
-    },
-    setPNG : function(png) {
-      var self = this;
-      var signature = this.model;
-      this.clear();
-      if (png != undefined) {
-         var img = new Image();
-         img.type = 'image/png';
-         img.src = png;
-         img.onload = function() {self.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);};
-         this.empty = false;
-      }
-    },
     render: function () {
         var signature = this.model;
         var view = this;
@@ -207,6 +191,7 @@ var SignatureDrawer = Backbone.View.extend({
         this.picture =  this.canvas[0].getContext('2d');
         if (this.model.value() != "" && this.model.valueTMP() != undefined && this.model.valueTMP() != "") {
           var img = new Image();
+          img.type = 'image/png';
           img.src = this.model.valueTMP() ;
           this.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);
           this.empty = false;
@@ -220,7 +205,7 @@ var SignatureDrawer = Backbone.View.extend({
 var SignatureDrawerWrapper = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.overlay = args.overlay;
+        this.onClose = args.onClose;
         this.height = args.height;
         this.width = args.width;
         this.render();
@@ -248,8 +233,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                     text: localization.signature.confirmSignature,
                     onClick : function(){
                         view.drawer.saveImage();
-                        view.overlay.data('overlay').close();
-                        view.overlay.detach();
+                        view.onClose();
                         return false;
                     }
             }).input();
@@ -297,33 +281,36 @@ window.SignatureDrawerPopup = function(args){
             alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
             return;
         }
-        self.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/></div>");
-        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, overlay : self.overlay});
-        self.overlay.append(self.dw.el);
-        $('body').append(self.overlay );
-        var opened = true;
-        var ol = {
-            mask:  {
-                color: '#ffffff',
-                loadSpeed: 0,
-                opacity: 0.1
-            },
-            onClose : function() {
-              opened = false;
+        self.overlay = $("<div class='modal'></div>");
+
+        var width = BrowserInfo.isSmallScreen() ? 980 : 900;
+        var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
+
+        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
+        container.css("top",$(window).scrollTop());
+        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
+        container.css("left","0px");
+        var left = Math.floor(($(window).width() - width) / 2);
+        container.css("margin-left",left > 20 ? left : 20);
+
+        var close =  function() {
+              console.log("Closing");
+              self.overlay.removeClass('active');
               document.ontouchmove = function(e){
                  return true;
               }
-              self.overlay.detach();
-            },
-            top: "10%",
-            resizable: false,
-            closeOnClick: false,
-            closeOnEsc: false,
-            load: true,
-            fixed:false
-          };
-        if ($(window).scrollLeft() > 60) ol.left = 60 - $(window).scrollLeft();
-        self.overlay.overlay(ol);
+              setTimeout(function() {self.overlay.detach();},500);
+            };
+
+        var closeButton = $("<div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/>").click(close);
+
+        container.append(closeButton);
+        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, onClose : close});
+        container.append(self.dw.el);
+        self.overlay.append(container);
+
+        $('body').append(self.overlay );
+        self.overlay.addClass('active');
 };
 
 })(window);
