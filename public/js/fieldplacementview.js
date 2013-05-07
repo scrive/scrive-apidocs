@@ -167,6 +167,9 @@ var TextTypeSetterView = Backbone.View.extend({
         this.model.bind('removed', this.clear);
         this.model.bind('change:field', this.render);
         var view = this;
+        view.optional = new FieldOptionsView({
+            model: view.model
+        });
         this.fixPlaceFunction = function(){
             view.place();
         }
@@ -182,6 +185,9 @@ var TextTypeSetterView = Backbone.View.extend({
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
+        return this.optional.el;
+        
+
         var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
         var checkbox = $("<div class='checkbox'>");
         var label = $("<label/>").text(localization.designview.textFields.obligatory);

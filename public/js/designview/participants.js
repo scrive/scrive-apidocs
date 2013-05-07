@@ -10,6 +10,7 @@
         initialize: function() {
             var view = this;
             _.bindAll(view);
+            view.bind('refresh', view.refresh);
             view.render();
         },
         render: function() {
@@ -33,28 +34,71 @@
                 }
             });
             
-            return view;
+            return button.input();
+        },
+        reset: function() {
+            this.selected = null;
+            this.customName = null;
         },
         popup: function() {
             var view = this;
-            var confirmation = Confirmation.popup({
+            var sig = view.model;
+            view.reset();
+            view.confirmation = Confirmation.popup({
                 title: 'Add field',
                 acceptText: 'Save',
                 content: view.popupContent(),
                 onAccept: function() {
                     view.acceptPopup();
-                    confirmation.clear();
+                    view.confirmation.close();
                 }
             });
         },
         acceptPopup: function() {
-            
+            var view = this;
+            var sig = view.model;
+
+            if(view.selected) {
+                var name = view.selected === '--custom' ? view.customName : view.selected;
+                var type = view.standardPlaceholders[view.selected] ? 'standard' : 'custom';
+                
+                var field = new Field({
+                    name: name,
+                    type: type,
+                    signatory: sig
+                });
+
+                sig.addField(field);
+            }
         },
         popupContent: function() {
             var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-new-field-popup-content');
+
+            if(!view.content) {
+                var div = $('<div />');
+                div.addClass('design-view-action-participant-new-field-popup-content');
+                view.content = div;
+            }
+
+            view.refresh();
             
+            return view.content;
+        },
+        refresh: function() {
+            var view = this;
+
+            var div = view.content;
+            
+            var top = $('<div />');
+            top.addClass('design-view-action-participant-new-field-popup-content-top');
+            top.html(view.selectBox());            
+
+            var bottom = $('<div />');
+            bottom.addClass('design-view-action-participant-new-field-popup-content-bottom');
+            bottom.html(view.customField());            
+
+            div.html(top);
+            div.append(bottom);
 
             return div;
         },
@@ -68,7 +112,7 @@
                 if(!sig.field(f[0], f[1]))
                     options.push({
                         name: view.placeholder(f[0]),
-                        value: f
+                        value: f[0]
                     });
             });
 
@@ -77,33 +121,65 @@
                 value: '--custom'
             });
 
+            var name;
+
+            if(!view.selected)
+                name = 'Add new field';
+            else if(view.selected === '--custom')
+                name = 'Custom field';
+            else
+                name = view.placeholder(view.selected);
+
             var select = new Select({
                 options: options,
-                name: 'Add new field',
+                name: name,
                 onSelect: function(v) {
-                    if(v === '--custom') {
-                        sig.addNewCustomField();
-                    } else {
-                        var f = sig.addNewField(v[1]);
-                        f.setName(v[0]);
-                    }
-                    select.close();
-                    console.log(sig.fields());
+                    view.selected = v;
+                    view.trigger('refresh');
                 }
             });
 
             return select.view().el;
         },
+        customField: function() {
+            var view = this;
+            var sig = view.model;
+
+            var div = $('<div />');
+
+            if(view.selected === '--custom') {
+                var title = $('<div />');
+                title.addClass('design-view-action-participant-new-field-popup-content-bottom-title');
+                
+                var input = InfoTextInput.init({
+                    cssClass: 'design-view-action-participant-new-field-popup-content-bottom-input',
+                    infotext: 'Field name',
+                    value: '',
+                    onChange: function() {
+                        view.customName = input.value();
+                    },
+                    onEnter: function() {
+                        view.acceptPopup();
+                        view.confirmation.clear();
+                    }
+                });
+
+                div.append(title);
+                div.append(input.input());
+            }
+
+            return div.children();
+        },
         standardFields: [
             ["sigpersnr", "standard"],
-            ["sigcompnr", "standard"]
+            ["sigcompnr", "standard"],
+            ["mobile", "standard"]
         ],
         //TODO: Translate me
         standardPlaceholders: {
-            email: 'Email',
-            sigco: 'Company',
             sigcompnr: 'Company number',
-            sigpersnr: 'Person number'
+            sigpersnr: 'Person number',
+            mobile: 'Phone'
         },
         placeholder: function(name) {
             return this.standardPlaceholders[name] || name;
@@ -161,7 +237,7 @@
             var order = model.signorder();
 
             var options = [];
-            for(i=1;i<=model.document().maxPossibleSignOrder() + 1;i++)
+            for(i=1;i<=model.document().maxPossibleSignOrder();i++)
                 options.push({name: englishOrdinal(i) + ' to receive document',
                               value: i});
             
@@ -198,6 +274,7 @@
                 name: deliveryTexts[delivery],
                 onSelect: function(v) {
                     sig.setDelivery(v);
+                    sig.ensureMobile();
                     return true;
                 }
             });
@@ -207,14 +284,14 @@
         detailsParticipationFieldsRole: function() {
             var view = this;
             var sig = view.model;
-            var role = sig.signs();
+            var role = sig.signs() ? 'signatory' : 'viewer';
 
             var roleTexts = {
-                true : "for signing",
-                false : "for viewing"
+                'signatory' : "for signing",
+                'viewer'    : "for viewing"
             };
 
-            var roleTypes = [true, false];
+            var roleTypes = ['signatory', 'viewer'];
 
             var select = new Select({
                 options: _.map(roleTypes, function(t) {
@@ -222,9 +299,9 @@
                 }),
                 name: roleTexts[role],
                 onSelect: function(v) {
-                    if(v)
+                    if(v === 'signatory')
                         sig.makeSignatory();
-                    else
+                    else if(v === 'viewer')
                         sig.makeViewer();
                     return true;
                 }
@@ -251,6 +328,7 @@
                 name: authTexts[auth],
                 onSelect: function(v) {
                     sig.setAuthentication(v);
+                    sig.ensurePersNr();
                     return true;
                 }
             });
@@ -403,6 +481,8 @@
         }
     });
 
+    // TODO: These icons could probably be a single View with different params
+
     // order icon + order selection 
     var DesignViewOrderIconView = Backbone.View.extend({
         className: 'design-view-action-participant-icon-order',
@@ -467,7 +547,8 @@
         icons: {
             email: '/img/email.png',
             pad: '/img/pad2.png',
-            api: '/img/pad2.png'
+            api: '/img/pad2.png',
+            mobile: '/img/phone2.png'
         },
         render: function() {
             var view = this;
@@ -529,6 +610,8 @@
             view.newFieldSelector = new DesignViewNewFieldSelector({model:view.model});
             view.viewmodel.bind('change:showProblems', view.render);
             view.model.bind('change:fields', view.render);
+            view.model.bind('change:authentication', view.render);
+            view.model.bind('change:delivery', view.render);
             view.render();
         },
         render: function() {
@@ -589,34 +672,25 @@
                 });
                 div.append(csvButton.input());
             } else {
+                // always show these three fields first
                 div.append(view.detailsFullNameField());
                 div.append(view.detailsInformationField('email', 'standard', 'Email'));
                 div.append(view.detailsInformationField('sigco', 'standard', 'Company'));
 
-                console.log(sig.fields());
-                
                 $.each(sig.fields(), function(i, e) {
                     if(e.name() !== 'fstname' && 
                        e.name() !== 'sndname' &&
                        e.name() !== 'sigco'   &&
                        e.name() !== 'email')
-                        div.append(view.detailsInformationField(e.name(), e.type(), view.placeholder(e.name())));
+                        div.append(view.detailsInformationField(e.name(), e.type(), e.nicename()));
                 });
+
+                div.append(view.newFieldSelector.el);
             }
 
             div.append(view.newFieldSelector.el);
             
             return div;
-        },
-        //TODO: Translate me
-        standardPlaceholders: {
-            email: 'Email',
-            sigco: 'Company',
-            sigcompnr: 'Company number',
-            sigpersnr: 'Person number'
-        },
-        placeholder: function(name) {
-            return this.standardPlaceholders[name] || name;
         },
         detailsFullNameField: function() {
             var view = this;
@@ -651,8 +725,13 @@
                 model: sig.fstnameField()
             });
 
+            var closer = $('<div />');
+            closer.addClass('design-view-action-participant-details-information-closer');
+
             div.append(input);
             div.append(options.el);
+            div.append(closer);
+
             return div.children();
         },
         detailsInformationField: function(name, type, placeholder) {
@@ -691,8 +770,22 @@
             else
                 input.removeClass('redborder');
 
+            var closer = $('<div />');
+            closer.addClass('design-view-action-participant-details-information-closer');
+
+            if(field.canBeRemoved()) {
+                var txt = $('<div />');
+                txt.addClass('design-view-action-participant-details-information-closer-x');
+                txt.text('x');
+                closer.html(txt);
+                closer.click(function() {
+                    sig.deleteField(field);
+                });
+            }
+
             div.append(input);
             div.append(options.el);
+            div.append(closer);
 
             return div.children();
         }
@@ -748,7 +841,7 @@
             if(!view.active) {
                 view.active = true;
                 if(!view.opened) {
-                    view.innerDiv.animate({height: view.detailsView.$el.height() + 50}, {
+                    view.innerDiv.animate({height: view.detailsView.$el.outerHeight() + 56}, {
                         duration: 250,
                         easing: "linear",
                         complete: function() {
@@ -765,7 +858,7 @@
                     });
                 } else {
                     // don't animate, just set them
-                    view.innerDiv.css({height: view.detailsView.$el.height() + 50,
+                    view.innerDiv.css({height: view.detailsView.$el.outerHeight() + 56,
                                        overflow:'visible',
                                        'z-index': 500});
                     view.active = false;
@@ -1004,5 +1097,7 @@
     window.DesignViewParticipantsView = function(args) {
         return new DesignViewParticipantsView(args);
     }
+
+    window.FieldOptionsView = FieldOptionsView;
 
 }(window));

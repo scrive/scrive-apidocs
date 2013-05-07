@@ -66,12 +66,7 @@ window.Signatory = Backbone.Model.extend({
         fields: [{name: "fstname",   type : "standard"},
                  {name: "sndname",   type : "standard"},
                  {name: "email",     type : "standard"},
-// remove
-                                  {name: "mobile",    type : "standard"},
                  {name: "sigco",     type : "standard"}
-                 //{name: "sigpersnr", type : "standard"},
-                 //{name: "sigcompnr", type : "standard"},
-                 //{name: "signature", type : "signature"}
         ],
         current: false,
         attachments: [],
@@ -583,6 +578,7 @@ window.Signatory = Backbone.Model.extend({
         else
             return 'viewer';
     },
+    // called when creating a multisend signatory
     giveStandardFields: function() {
         var signatory = this;
         var stdfields = [{name: "fstname",   type : "standard"},
@@ -600,6 +596,55 @@ window.Signatory = Backbone.Model.extend({
         });
         signatory.set({fields:fields});
         return signatory;
+    },
+    ensurePersNr: function() {
+        var signatory = this;
+        var pn = signatory.personalnumberField();
+        if(signatory.needsPersonalNumber()) {
+            if(!pn) {
+                signatory.addField(new Field({name:'sigpersnr',
+                                              type: 'standard',
+                                              obligatory: true,
+                                              shouldbefilledbysender: false,
+                                              signatory: signatory}));
+            } else {
+                pn.makeObligatoryM();
+            }
+        } else {
+            // we remove it if we don't use eleg
+            // this should probably be smarter, like remembering if the author added it
+            if(pn && pn.value() === '') {
+                signatory.deleteField(pn);
+            }
+        }
+    },
+    needsPersonalNumber: function() {
+        return this.elegAuthentication();
+    },
+    ensureMobile: function() {
+        var signatory = this;
+        var pn = signatory.mobileField();
+        if(signatory.needsMobile()) {
+            if(!pn) {
+                signatory.addField(new Field({name:'mobile',
+                                              type: 'standard',
+                                              obligatory: true,
+                                              shouldbefilledbysender: true,
+                                              signatory: signatory}));
+            } else {
+                pn.makeObligatoryM();
+                pn.setShouldBeFilledBySender(true);
+            }
+        } else {
+            // we remove it if we don't use SMS
+            // this should probably be smarter, like remembering if the author added it
+            if(pn && pn.value() === '') {
+                signatory.deleteField(pn);
+            }
+        }
+    },
+    needsMobile: function() {
+        return this.mobileDelivery();
     }
 
 });

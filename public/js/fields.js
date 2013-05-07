@@ -406,6 +406,29 @@ window.Field = Backbone.Model.extend({
         return this.validation(forSigning)
             .setCallback(callback)
             .validateData(this.value());
+    },
+    basicFields: ['fstname', 'sndname', 'email', 'sigco'],
+    isBasic: function() {
+        var field = this;
+        return field.isStandard() && _.contains(field.basicFields, field.name());
+    },
+    requiredForParticipation: function() {
+        var field = this;
+        var sig = field.signatory();
+        
+        if(field.isSSN() && sig.needsPersonalNumber())
+            return true;
+        if(field.isMobile() && sig.needsMobile())
+            return true;
+        return false;
+    },
+    canBeRemoved: function() {
+        if(this.isBasic())
+            return false;
+        else if(this.requiredForParticipation())
+            return false;
+        else
+            return true;
     }
 });
 
