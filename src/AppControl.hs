@@ -296,7 +296,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxtime = minutestime
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
-        , ctxs3action = AWS.mkAWSAction $ amazonConfig appConf
         , ctxproduction = production appConf
         , ctxtemplates = localizedVersion userlang templates2
         , ctxglobaltemplates = templates2

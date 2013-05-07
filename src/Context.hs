@@ -9,7 +9,6 @@ import Doc.JpegPages
 import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
-import qualified Network.AWS.Authentication as AWS
 import Templates
 import qualified MemCache
 import FlashMessage
@@ -32,7 +31,6 @@ data Context = Context
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MemCache.MemCache FileID JpegPages -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
-    , ctxs3action            :: AWS.S3Action -- ^
     , ctxproduction          :: Bool -- ^ Is this server the production server?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlang
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
