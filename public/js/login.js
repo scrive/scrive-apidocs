@@ -360,13 +360,13 @@ var LoginBrandedView = Backbone.View.extend({
       body.append(last_position);
 
       if (!model.pad()) {
-        var toogleOption = $("<label class='s-forgot-password' style='border-bottom: 1px solid #666666;font-style:italic;'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();return false;});
-        last_position.append($("<div style='display:inline-block;width:220px;text-align:left;vertical-align: bottom;margin-left:10px;'/>").append(toogleOption));
+        var toogleOption = $("<label class='s-forgot-password' style='border-bottom: 1px solid #999999;color:#999999;font-style:italic;font-size:12.5px;line-height: 16px;'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();return false;});
+        last_position.append($("<div style='display:inline-block;width:224px;text-align:left;vertical-align: bottom;margin-left:4px;'/>").append(toogleOption));
       }
 
       var loginButton = Button.init({
                   size  : "tiny",
-                  color : "blue",
+                  color : "light-blue",
                   text  : localization.loginModal.login + " ›",
                   style : "width:60px;",
                   onClick : loginFunction
@@ -418,7 +418,7 @@ var LoginBrandedView = Backbone.View.extend({
 
      var remindButton = Button.init({
                   size  : "tiny",
-                  color : "blue",
+                  color : "light-blue",
                   text  : localization.loginModal.sendNewPassword + " ›",
                   cssClass : "recovery-password-submit",
                   style : "width:80px;",
@@ -428,7 +428,7 @@ var LoginBrandedView = Backbone.View.extend({
                 });
 
       body.append($("<div class='position'/>").append(emailinput.input()));
-      body.append($("<div class='position' style='text-align:right'/>").append(remindButton.input()));
+      body.append($("<div class='position' style='text-align:right;margin-right:4px;'/>").append(remindButton.input()));
 
       return content;
 

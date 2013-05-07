@@ -58,6 +58,23 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     }
   }
 
+  &.button-light-blue {
+    background : #0768A9;
+    .box-shadow(inset  #0768A9 0 0 0 0px);
+    border-color:  #0768A9;
+    &:hover {
+      background : #53B7E9;
+      .box-shadow(inset #53B7E9 0 0 0 2px);
+      border-color: #53B7E9;
+    }
+    &:active {
+      background : #53B7E9;
+      .box-shadow(inset #53B7E9 0 0 0 2px);
+      border-color: #53B7E9;
+    }
+  }
+
+
   &.button-red {
     .gradient(hsl(@redH,@redS,30%), hsl(@redH,@redS,25%), hsl(@redH,@redS,@redL));
     border-color: hsl(@redH,@redS,30%);
@@ -96,10 +113,17 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     padding: 8px 12px;
     &:hover {.box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 1px)}
     &:active, &.active {.box-shadow(inset hsl(@blueH,@blueS,50%) 0 0 0 1px)}
+
     &.button-gray {.box-shadow(inset hsl(0,0,80%) 0 0 0 1px)}
     &.button-gray:hover {.box-shadow(inset hsl(0,0,70%) 0 0 0 1px)}
     &.button-gray:active,
     &.button-gray.active, {.box-shadow(inset hsl(0,0,80%) 0 0 0 1px)}
+
+    &.button-light-blue {.box-shadow(inset #0768A9 0 0 0 1px)}
+    &.button-light-blue:hover {.box-shadow(inset #53B7E9 0 0 0 1px)}
+    &.button-light-blue:active,
+    &.button-light-blue.active, {.box-shadow(inset #53B7E9 0 0 0 1px)}
+
     &.button-red{.box-shadow(inset hsl(@redH,60%,67%) 0 0 0 1px)}
     &.button-red:hover{.box-shadow(inset hsl(@redH,66%,73%) 0 0 0 1px)}
     &.button-red:active,

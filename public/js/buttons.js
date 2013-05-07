@@ -86,6 +86,9 @@ var ButtonView = Backbone.View.extend({
             $(this.el).addClass("button-green");
         else if (this.model.color() == "black")
             $(this.el).addClass("button-gray");
+        else if (this.model.color() == "light-blue")
+            $(this.el).addClass("button-light-blue");
+
 
         if (this.model.isRounded()) {
             $(this.el).addClass("button-round");
