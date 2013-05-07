@@ -62,6 +62,7 @@ import Control.Exception.Lifted
 import Control.Monad.Base
 import Data.Typeable
 import qualified Log as Log
+import qualified Amazon as AWS
 
 -- | Respond with a 200 Created status
 data Ok a = Ok a
@@ -190,7 +191,7 @@ instance ToAPIResponse FormEncoded where
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
 
 newtype APIMonad m a = AM { runAPIMonad :: m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadIO, TemplatesMonad, Log.MonadLog)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadIO, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad)
 
 instance MonadTrans APIMonad where
   lift = AM

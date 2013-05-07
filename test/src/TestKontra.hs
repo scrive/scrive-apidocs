@@ -38,6 +38,7 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
+import qualified Amazon as AWS
 import Control.Monad.Trans.Control.Util
 import Configuration
 import Crypto.RNG
@@ -119,12 +120,14 @@ instance MonadBaseControl IO TestEnv where
 
 runTestKontraHelper :: Request -> Context -> Kontra a -> TestEnv (a, Context, FilterFun Response)
 runTestKontraHelper rq ctx tk = do
+  filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
+      amazoncfg = AWS.AmazonConfig Nothing filecache
   nex <- getNexus
   rng <- getCryptoRNGState
   mres <- liftIO . ununWebT $ runServerPartT
     (runOurServerPartT . runDBT nex (DBEnvSt Nothing [] Nothing) . runCryptoRNGT rng $
-      runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
+      AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
     Just (Left _, _) -> fail "This should never happen since we don't use Happstack's finishWith"

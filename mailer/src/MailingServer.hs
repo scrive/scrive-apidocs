@@ -22,6 +22,8 @@ import ServiceChecker
 import Utils.Cron
 import Utils.IO
 import Utils.Network
+import qualified Data.ByteString.Char8 as BS
+import qualified MemCache
 import qualified Log (withLogger, mailingServer)
 import qualified Amazon as AWS
 
@@ -29,7 +31,8 @@ main :: IO ()
 main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
-  let s3config = AWS.mkAWSAction $ mscAmazonConfig conf
+  fcache <- MemCache.new BS.length 52428800
+  let amazonconf = AWS.AmazonConfig (mscAmazonConfig conf) fcache
   rng <- newCryptoRNGState
   withPostgreSQL (mscDBConfig conf) $
     performDBChecks Log.mailingServer mailerTables mailerMigrations
@@ -45,7 +48,7 @@ main = Log.withLogger $ do
          dbconf = mscDBConfig conf
      msender <- newMVar sender
      withCronJobs
-       ([ forkCron_ True "Dispatcher" 5 $ dispatcher s3config rng sender msender dbconf
+       ([ forkCron_ True "Dispatcher" 5 $ dispatcher rng sender msender dbconf amazonconf
         , forkCron_ True "Cleaner" (60*60*24) $ cleaner rng dbconf
         ] ++
         case mscSlaveSender conf of
