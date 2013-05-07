@@ -27,6 +27,9 @@ window.BrowserInfo = {
     isIE7orLower : function() {
       return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "7.0");
     },
+    isIE6orLower : function() {
+      return $.browser.msie && ($.browser.version > "3" && $.browser.version < "7.0");
+    },
     isSmallScreen : function() {
       return true//window.outerWidth != undefined && window.outerWidth < 600;
     }

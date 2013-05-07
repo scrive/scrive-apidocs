@@ -56,6 +56,7 @@ set systemPage
  less less/attachmentview.less
  less less/verification.less
  js   libs/jquery.min.js
+ js   libs/jquery-migrate.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js

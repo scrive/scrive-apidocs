@@ -20,7 +20,10 @@ window.Calendar = Backbone.Model.extend({
                 onchange(dist);
             },
             min: 0,
-            max: this.get("maxValue")
+            max: this.get("maxValue"),
+            onShow : function(a,b,c) {
+              $("#calroot").css("top",activator.offset().top);
+            }
         });
     },
     setDays : function(days) {

@@ -310,6 +310,7 @@ var DesignViewView = Backbone.View.extend({
         selectdaysbox.append(daysinput);
         selectdaysbox.append($("<span/>").text(localization.days));
         var calendarbutton = $("<div class='calendarbutton'/>");
+        selectdaysbox.append(calendarbutton);
         var calendar = new Calendar({on : calendarbutton,
                                     change: function(days) {
                                        document.setDaystosign(days);
@@ -326,7 +327,6 @@ var DesignViewView = Backbone.View.extend({
                                {'Days Before Expiration':days});
             }
         });
-        selectdaysbox.append(calendarbutton);
         return box;
     },
     editInvitationOption: function() {

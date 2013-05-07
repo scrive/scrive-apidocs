@@ -182,35 +182,15 @@ safeReady(function() {
 
 //Checking
 $(document).ready(function() {
-    if ($.browser.msie) {
-        var ver = parseInt($.browser.version, 10);
-        if( ver < 7 && ver > 0 ) {
-            /*
-             * If we could not make sense of User agent string from
-             * Explorer, then just let the person sign. No need to be
-             * too picky on people that are spohisticated.
-             */
-            mixpanel.track('Old IE popup', {'Browser version' : ver});
-            var alertModal = $("<div class='modal-container' style='height:80px'>" +
-                                 "<div class='modal-body' style='padding:20px;font-size:13pt'>" +
-                                   "<div class='modal-icon decline' style='margin-top:0px'></div>" +
-                                   "<div>" + localization.ie6NotSupported + "</div>" +
-                                 "</div>" +
-                               "</div>");
+    if (BrowserInfo.isIE6orLower()) {
+            mixpanel.track('Old IE popup', {'Browser version' : $.browser.version});
+            var alertModal = $("<div class='modal active'><div class='modal-container' style='top:400px'><div class='modal-body'><div class='modal-content'><div class='body'>" +
+                             "<center>" +
+                                "<h6 class='loadingmessage'>"+localization.ie6NotSupported+"</h6>" +
+                             "</center>" +
+                        "</div></div></div></div></div>");
             $("body").html("");
             $("body").append(alertModal);
-            alertModal.overlay({
-                load: true,
-                closeOnClick: false,
-                closeOnEsc: false,
-                fixed: false,
-                mask: {
-                    color: '#000000',
-                    loadSpeed: 0,
-                    opacity: 0.90
-                }
-            });
-        }
     }
 });
 
