@@ -182,12 +182,14 @@
             var sig = view.model;
             var delivery = sig.delivery();
 
+            // TODO: translate
             var deliveryTexts = {
                 email : "by email",
-                pad : "on this tablet"
+                pad : "on this tablet",
+                mobile : "by SMS"
             };
 
-            var deliveryTypes = ['email', 'pad'];
+            var deliveryTypes = ['email', 'pad', 'mobile'];
 
             var select = new Select({
                 options: _.map(deliveryTypes, function(t) {
@@ -331,7 +333,7 @@
                         signs:true
                     });
 
-                    sig.giveSixStandardFields();
+                    sig.giveStandardFields();
 
                     CsvSignatoryDesignPopup.popup({
                         signatory: sig,

@@ -460,6 +460,7 @@ window.Signatory = Backbone.Model.extend({
     addNewCustomField: function() {
        return this.addNewField("custom", true);
     },
+    // TODO: unused
     newCheckbox: function() {
        var checkbox = this.newField("checkbox", false);
        if(this.author())
@@ -483,6 +484,7 @@ window.Signatory = Backbone.Model.extend({
     newField : function(t,f) {
         return new Field({signatory: this, fresh: (f != undefined ? f : true) , type : t});
     },
+    // TODO: unused
     newSignature: function() {
        var signature = this.newField("signature", false);
        signature.makeObligatory();
@@ -500,14 +502,6 @@ window.Signatory = Backbone.Model.extend({
        return signature;
     },
     addField : function(f) {
-        /*
-        var newfields = [];
-        _.each(this.fields(), function(field) {
-            newfields.push(field);
-        });
-        newfields.push(f);
-        this.set({fields:newfields});
-        */
         this.fields().push(f);
         this.trigger("change:fields");
     },
@@ -589,14 +583,15 @@ window.Signatory = Backbone.Model.extend({
         else
             return 'viewer';
     },
-    giveSixStandardFields: function() {
+    giveStandardFields: function() {
         var signatory = this;
         var stdfields = [{name: "fstname",   type : "standard"},
                          {name: "sndname",   type : "standard"},
                          {name: "email",     type : "standard"},
                          {name: "sigco",     type : "standard"},
                          {name: "sigpersnr", type : "standard"},
-                         {name: "sigcompnr", type : "standard"}
+                         {name: "sigcompnr", type : "standard"},
+                         {name: "mobile"   , type : "standard"}
                         ];
 
         var fields = _.map(stdfields, function(f) {

@@ -64,7 +64,6 @@ emptySignatoryFields = [
         , SignatoryField LastNameFT  "" True  True  []
         , SignatoryField CompanyFT   "" False False []
         , SignatoryField EmailFT     "" True  True  []
-        , sf MobileFT
         ]
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] -> [String]
