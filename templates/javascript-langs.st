@@ -941,7 +941,7 @@ javascriptLocalisation =
              , customiseSignViewFooterBackgroundColour : "$_customiseSignViewFooterBackgroundColour()$"
              , customiseSignViewBackgroundColour : "$_customiseSignViewBackgroundColour()$"
              , signviewBranding : "$_signviewBranding()$"
-             , serviceBranding : "Service branding"
+             , serviceBranding : "$_serviceBranding()$"
              , customiseBorderColourLabel : "$_customiseBorderColourLabel()$"
              , customiseButtonColourLabel : "$_customiseButtonColourLabel()$"
              , customiseEmailBackgroundColour : "$_customiseEmailBackgroundColourLabel()$"

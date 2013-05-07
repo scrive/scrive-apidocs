@@ -158,7 +158,7 @@
 
         var signupButton = Button.init({
             size  : 'tiny',
-            color : 'blue',
+            color : 'light-blue',
             text: localization.signup + " ›",
             style : "width:80px;",
             onClick: function() {
@@ -169,7 +169,7 @@
           });
 
         body.append($("<div class='position'/>").append(emailInput.input()));
-        body.append($("<div class='position' style='text-align:right'/>").append(signupButton.input()));
+        body.append($("<div class='position' style='text-align:right;margin-right:4px;'/>").append(signupButton.input()));
         $(this.el).append(content);
       }
   });
