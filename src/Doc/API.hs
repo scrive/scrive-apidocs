@@ -161,7 +161,7 @@ apiCallCreateFromFile = api $ do
                                       Left _ -> return (Left m)
       file <- dbUpdate $ NewFile filename pdfcontent
       return (Just file, filename)
-  Just doc <- dbUpdate $ NewDocument user title doctype 1 actor
+  Just doc <- dbUpdate $ NewDocument user title doctype 0 actor
   when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
   case mfile of
     Nothing -> return ()

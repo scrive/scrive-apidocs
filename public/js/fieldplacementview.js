@@ -20,29 +20,40 @@ window.createFieldPlacementPlacedView = function (args) {
     else return new TextPlacementPlacedView(args);
 };
 
-window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, heightFunction)
+window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction)
 {
     var droppedInside = false;
     var helper;
     var field;
     var placement;
-
-    if( fieldOrPlacement.field !=undefined ) {
-        placement = fieldOrPlacement;
-        field = placement.field();
-    }
-    else {
-        placement = undefined;
-        field = fieldOrPlacement;
-    }
     var verticaloffset = 0;
-    if (field.isText())
-       verticaloffset = -2;
-    else if (field.isSignature())
-       verticaloffset = 1;
+
+    var setFP = function() {
+        if(typeof fieldOrPlacementFN === 'function') {
+            fieldOrPlacement = fieldOrPlacementFN();
+        } else {
+            fieldOrPlacement = fieldOrPlacementFN;
+        }
+
+        if( fieldOrPlacement.field !=undefined ) {
+            placement = fieldOrPlacement;
+            field = placement.field();
+        }
+        else {
+            placement = undefined;
+            field = fieldOrPlacement;
+        }
+        if (field.isText())
+            verticaloffset = -2;
+        else if (field.isSignature())
+            verticaloffset = 1;
+        
+    };
+
     dragHandler.draggable({
         appendTo: ".mainContainer",
         helper: function(event) {
+            setFP();
             helper = createFieldPlacementView({model: field, height : heightFunction != undefined ? heightFunction() : undefined, width: widthFunction != undefined ? widthFunction() : undefined}).el;
             return helper;
         },
@@ -67,7 +78,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, h
                 field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper,verticaloffset);
         },
         stop: function() {
-            console.log('stop');
             if( placement!=undefined && !droppedInside ) {
                 placement.remove();
             }
@@ -83,12 +93,14 @@ window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, h
                 field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset);
         },
         onDrop: function(page, x, y, w, h) {
-            console.log('drop');
             droppedInside = true;
             var signatory = field.signatory();
             if( !_.find(signatory.fields(), function(f) { return f==field; })) {
                 signatory.addField(field);
             }
+
+            field.setSignatory(signatory);
+
             var fontSizeText = $(helper).css("font-size");
             var fontSize = parseFloat(fontSizeText) || 16;
 
@@ -143,6 +155,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, h
                     withTypeSetter : true
                 });
                 field.addPlacement(newPlacement);
+                signatory.trigger('drag:checkbox');
             }
         }
     });
@@ -232,7 +245,7 @@ var TextTypeSetterView = Backbone.View.extend({
         var options = [];
 
         _.each(doc.signatories(), function(s) {
-            options.push({name: s.nameOrEmail() || sig.nameInDocument(),
+            options.push({name: s.nameOrEmail() || s.nameInDocument(),
                           value: null});
             _.each(s.fields(), function(f) {
                 if(f !== field && f.isText())
@@ -478,11 +491,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
     }
 });
 
-
-
-
-
-
 var CheckboxPlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
@@ -515,6 +523,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear);
+        this.model.field().bind('change', this.render);
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -530,7 +539,41 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         $(window).unbind('resize',this.fixPlaceFunction);
         this.model.typeSetter = undefined;
     },
+    selector : function() {
+        var view = this;
+        var box = $("<div class='subtitle'/>");
+        var model = view.model;
+        var field = model.field();
+        var sig = field.signatory();
+        var doc = sig.document();
+        
+        var signame = sig.nameOrEmail() || sig.nameInDocument();
 
+        var options = [];
+
+        _.each(doc.signatories(), function(s) {
+            if(s !== sig)
+                options.push({name: s.nameOrEmail() || s.nameInDocument(),
+                              value: s});
+        });
+
+        var selector = new Select({
+            name: signame,
+            options: options,
+            cssClass: 'signature-field-placement-setter-field-selector',
+            onSelect: function(s) {
+                field.signatory().deleteField(field);
+                field.setSignatory(s);
+                s.addField(field);
+            }
+        });
+        
+        var text = localization.designview.textFields.forThis + " ";
+        box.text(text);
+        box.append(selector.input());
+        
+        return box;
+    },
     nameEditor: function() {
       var view = this;
       var field = this.model.field();
@@ -633,6 +676,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     render: function() {
            var view = this;
            var container = $(this.el);
+        container.empty();
            container.addClass("checkboxTypeSetter-container");
            container.css("position", "absolute");
            var body = $("<div class='checkboxTypeSetter-body'/>");
@@ -641,7 +685,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            container.append(body);
 
            body.append(this.title());
-           body.append(this.subtitle());
+           body.append(this.selector());
            body.append(this.nameEditor());
            body.append(this.precheckedOption());
            body.append(this.obligatoryOption());
@@ -659,6 +703,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         _.bindAll(this, 'render' , 'clear', 'addTypeSetter');
         this.model.bind('removed', this.clear);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.field().bind('change', this.render);
         this.model.view = this;
         this.render();
     },
@@ -869,6 +914,138 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
     }
 });
 
+var SignatureTypeSetterView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this);
+        this.model.bind('removed', this.clear);
+        this.model.field().bind('change:signatory', this.render);
+        var view = this;
+        this.fixPlaceFunction = function(){
+            view.place();
+        }
+        $(window).scroll(view.fixPlaceFunction); // To deal with resize;
+        $(window).resize(view.fixPlaceFunction);
+        this.render();
+    },
+    clear: function() {
+        this.off();
+        $(this.el).remove();
+        $(window).unbind('scroll',this.fixPlaceFunction);
+        $(window).unbind('resize',this.fixPlaceFunction);
+        this.model.typeSetter = undefined;
+    },
+    obligatoryOption : function() {
+        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
+        var checkbox = $("<div class='checkbox'>");
+        var label = $("<label/>").text(localization.designview.textFields.obligatory);
+        var field = this.model.field();
+        option.append(checkbox).append(label);
+        if (field.isObligatory())
+            checkbox.addClass("checked");
+        checkbox.click(function(){
+            if (field.isObligatory()) {
+                    checkbox.removeClass("checked");
+                    field.makeOptional();
+            } else {
+                    checkbox.addClass("checked");
+                    field.makeObligatory();
+            }
+        });
+
+        return option;
+    },
+    help : function() {
+        return $("<div class='help'/>").text(localization.designview.textFields.help);
+    },
+    doneOption : function() {
+        var view = this;
+        var field = this.model.field();
+        return Button.init({color:"green",
+                            size: "tiny",
+                            text: localization.designview.textFields.done,
+                            style: "position: relative;  z-index: 107;margin-top: 4px;",
+                            onClick : function() {
+                                var done = field.name() != undefined && field.name() != "";
+                                done = done && _.all(field.signatory().fields(), function(f) {
+                                    return f.name() != field.name() || f.type() != field.type() || f == field;
+                                });
+                                if (done) {
+                                    field.makeReady();
+                                    view.clear();
+                                } else {
+                                    view.nameinput.addClass('redborder');
+                                }
+                                return false;
+                            }
+                           }).input();
+    },
+    title : function() {
+        return $("<div class='title'/>").text(localization.designview.textFields.textField);
+    },
+    selector : function() {
+        var view = this;
+        var box = $("<div class='subtitle'/>");
+        var model = view.model;
+        var field = model.field();
+        var sig = field.signatory();
+        var doc = sig.document();
+        
+        var signame = sig.nameOrEmail() || sig.nameInDocument();
+
+        var options = [];
+
+        _.each(doc.signatories(), function(s) {
+            if(s !== sig)
+                options.push({name: s.nameOrEmail() || s.nameInDocument(),
+                              value: s});
+        });
+
+        var selector = new Select({
+            name: signame,
+            options: options,
+            cssClass: 'signature-field-placement-setter-field-selector',
+            onSelect: function(s) {
+                field.signatory().deleteField(field);
+                field.setSignatory(s);
+                s.addField(field);
+            }
+        });
+        
+        var text = localization.designview.textFields.forThis + " ";
+        box.text(text);
+        box.append(selector.input());
+        
+        return box;
+    },
+    place : function() {
+        var placement = this.model;
+        var el = $(placement.view.el);
+        var offset = el.offset();
+        $(this.el).css("left", offset.left + el.width() + 18);
+        $(this.el).css("top", offset.top - 19);
+    },
+    render: function() {
+           var view = this;
+           var container = $(this.el);
+           container.addClass("checkboxTypeSetter-container");
+           container.css("position", "absolute");
+           var body = $("<div class='checkboxTypeSetter-body'/>");
+           var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+
+           body.append(this.title());
+           body.append(this.selector());
+           body.append(this.obligatoryOption());
+
+           body.append(this.doneOption());
+           body.append(this.help());
+        container.html('');
+           container.append(arrow);
+           container.append(body);
+
+           this.place();
+           return this;
+    }
+});
 
 var SignaturePlacementView = Backbone.View.extend({
     initialize: function (args) {
@@ -879,6 +1056,7 @@ var SignaturePlacementView = Backbone.View.extend({
         if (this.model.field().signatory().sndnameField() != undefined)
             this.model.field().signatory().sndnameField().bind('change', this.render);
         this.model.bind('change', this.render);
+        this.model.field().bind('change:signatory', this.render);
         this.resizable = args.resizable;
         this.render();
     },
@@ -935,16 +1113,25 @@ var SignaturePlacementView = Backbone.View.extend({
             }
             if (this.resizable) {
                 if (box.hasClass("ui-resizable")) box.resizable("destroy");
-                box.resizable({stop : function(e, ui) {
-                                _.each(placement.field().placements(), function(p) {
-                                p.fixWHRel(Math.floor(ui.size.width),Math.floor(ui.size.height));
-                               })}});
+                box.resizable({
+                    stop: function(e, ui) {
+                        _.each(placement.field().placements(), function(p) {
+                            p.fixWHRel(Math.floor(ui.size.width),Math.floor(ui.size.height));
+                            if(p.typeSetter)
+                                p.typeSetter.place();
+                        });
+                    },
+                    resize: function(e, ui) {
+                        if(placement.typeSetter)
+                            placement.typeSetter.place();
+                    }
+                    
+                });
                 $(".ui-resizable-se",box).css("z-index","0");
             }
             return this;
     }
 });
-
 
 var SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
@@ -972,13 +1159,30 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         this.off();
         $(this.el).remove();
     },
+    hasTypeSetter : function(){
+        return this.model.typeSetter != undefined;
+    },
+    addTypeSetter : function() {
+         var placement = this.model;
+         if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
+             placement.typeSetter = new SignatureTypeSetterView({model : placement});
+             $('body').append(placement.typeSetter.el);
+         }
+    },
+    closeTypeSetter : function() {
+         var placement = this.model;
+         if (this.hasTypeSetter()) {
+             placement.typeSetter.clear();
+         }
+    },
     render: function() {
-        console.log("Rendering placement");
+        var view = this;
         var placement = this.model;
         var field = placement.field();
         var signatory = field.signatory();
         var document = signatory.document();
         var place = $(this.el);
+
         place.addClass('placedfield');
         if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
@@ -1002,7 +1206,25 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             var parentWidth = place.parent().width();
             var parentHeight = place.parent().height();
             draggebleField(place, placement, function() {return placement.wrel() * parentWidth;}, function() {return placement.hrel() * parentHeight;});
+
+            place.click(function(){
+                if (!view.hasTypeSetter())
+                    view.addTypeSetter();
+                else
+                    view.closeTypeSetter();
+                return false;
+            });
         }
+        if (placement.withTypeSetter()) {
+          this.addTypeSetter();
+          placement.cleanTypeSetter();
+
+        }
+
+        setTimeout(function() {
+            placement.typeSetter.place();
+        }, 0);
+
         return this;
     }
 });

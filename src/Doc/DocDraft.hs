@@ -39,7 +39,6 @@ data DraftData = DraftData {
     , process :: Maybe DocumentProcess
     } deriving Show
 
-
 instance FromJSValue DocumentProcess where
   fromJSValue j = fromJSValue j >>= maybeRead
 
@@ -144,8 +143,10 @@ mergeSignatories docdraft docAuthor tmps =
                 _ -> (a,b,c,d,e,f)
 
         in case (atmp) of
-                ([authorTMP]) -> Just $ map mapDeliveryMethod $ map mapAuthenticationMethod $
-                                      map toSignatoryDetails2 $ (setAuthorConstantDetails authorTMP) : notatmps
+                ([authorTMP]) -> Just $ map (mapDeliveryMethod . 
+                                             mapAuthenticationMethod . 
+                                             toSignatoryDetails2) $
+                                              (setAuthorConstantDetails authorTMP) : notatmps
                 _ -> Nothing
 
 

@@ -67,15 +67,17 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     setField: function(f) {
         var oldfield = this.field();
-        if(oldfield) {
-            oldfield.unbind('removed', this.remove);
-            oldfield.removePlacement(this);
+        if(oldfield !== f) {
+            if(f) {
+                f.bind('removed', this.remove);
+                f.addPlacement(this);
+            }
+            if(oldfield) {
+                oldfield.unbind('removed', this.remove);
+                oldfield.removePlacement(this);
+            }
+            this.set({field:f});
         }
-        if(f) {
-            f.bind('removed', this.remove);
-            f.addPlacement(this);
-        }
-        this.set({field:f});
     },
     file : function(){
         return this.get("file");
@@ -130,9 +132,10 @@ window.Field = Backbone.Model.extend({
     },
     initialize : function(args){
         var field = this;
+        _.bindAll(field);
         var extendedWithField =   function(hash){
-                    hash.field = field;
-                    return hash;
+            hash.field = field;
+            return hash;
         };
         var placements =  _.map(args.placements, function(placement){
                 return new FieldPlacement(extendedWithField(placement));
@@ -141,10 +144,8 @@ window.Field = Backbone.Model.extend({
         //this.bind("change",function() {
         //    field.signatory().document().trigger("change:signatories");
         //});
-        args.signatory.bind("removed", function() {
-            field.trigger("removed");
-            field.off();
-        });
+        if(args.signatory)
+            args.signatory.bind("removed", field.remove);
     },
     type : function() {
         return this.get("type");
@@ -163,6 +164,10 @@ window.Field = Backbone.Model.extend({
     },
     shouldbefilledbysender : function() {
         return this.get("shouldbefilledbysender");
+    },
+    setShouldBeFilledBySender : function(s) {
+        this.set({shouldbefilledbysender:s});
+        return this;
     },
     setValue : function(value) {
         this.set({"value" : value});
@@ -184,6 +189,14 @@ window.Field = Backbone.Model.extend({
     },
     signatory : function(){
         return this.get("signatory");
+    },
+    setSignatory: function(sig) {
+        var oldsig = this.signatory();
+        if(oldsig)
+            oldsig.unbind('removed', this.remove);
+        this.set({signatory:sig});
+        sig.bind('removed', this.remove);
+        return this;
     },
     canBeIgnored: function(){
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
@@ -355,8 +368,9 @@ window.Field = Backbone.Model.extend({
       this.trigger("ready");
     },
     remove: function(){
-      this.signatory().deleteField(this);
-      this.trigger("removed");
+        this.signatory().deleteField(this);
+        this.off();
+        this.trigger("removed");
     },
     draftData : function() {
       return {
@@ -371,18 +385,12 @@ window.Field = Backbone.Model.extend({
    hasPlacements : function() {
       return this.get("placements").length > 0;
    },
-   addPlacement : function(placement) {
-      var newplacements = new Array(); //Please don't ask why we rewrite this array
-      for(var i=0;i<this.placements().length;i++)
-         newplacements.push(this.placements()[i]);
-      newplacements.push(placement);
-      this.set({placements : newplacements});
+    addPlacement : function(placement) {
+        this.placements().push(placement);
+        this.trigger('change:placements');
     },
    removePlacement : function(placement) {
-       var newplacements = new Array();
-       for(var i=0;i<this.placements().length;i++)
-          if (placement !== this.placements()[i])
-             newplacements.push(this.placements()[i]);
+       var newplacements = _.without(this.placements(), placement);
        this.set({placements : newplacements});
        if (this.isCheckbox() && newplacements.length == 0)
            this.signatory().deleteField(this);
@@ -460,6 +468,9 @@ window.FieldStandardView = Backbone.View.extend({
     }
 });
 
+
+// this is unused in new design view
+// Eric
 window.FieldDesignView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'cleanredborder');

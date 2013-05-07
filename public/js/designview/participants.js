@@ -16,9 +16,47 @@
             var view = this;
             var sig = view.model;
 
-            view.$el.html(view.selectBox());
+            view.$el.html(view.createNewButton());
 
             return view;
+        },
+        createNewButton: function() {
+            var view = this;
+            var sig = view.model;
+
+            var button = Button.init({
+                color: 'blue',
+                size: 'tiny',
+                text: '+ Add field',
+                onClick: function() {
+                    view.popup();
+                }
+            });
+            
+            return view;
+        },
+        popup: function() {
+            var view = this;
+            var confirmation = Confirmation.popup({
+                title: 'Add field',
+                acceptText: 'Save',
+                content: view.popupContent(),
+                onAccept: function() {
+                    view.acceptPopup();
+                    confirmation.clear();
+                }
+            });
+        },
+        acceptPopup: function() {
+            
+        },
+        popupContent: function() {
+            var view = this;
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-new-field-popup-content');
+            
+
+            return div;
         },
         selectBox: function() {
             var view = this;
@@ -495,12 +533,14 @@
             var view = this;
             var sig = view.model;
 
-            var div = $('<div />');
+            if(!sig.isRemoved) {
+                var div = $('<div />');
 
-            div.append(view.detailsInformation());
-            div.append(view.participation.el);
-            
-            view.$el.html(div.children());
+                div.append(view.detailsInformation());
+                div.append(view.participation.el);
+                
+                view.$el.html(div.children());
+            }
             return view;
         },
         detailsInformation: function() {
@@ -679,6 +719,7 @@
                                                                      viewmodel: view.viewmodel});
 
             viewmodel.bind('change:participantDetail', view.updateOpened);
+            viewmodel.bind('change:step', view.render);
             sig.bind('change:fields', view.updateOpened);
             view.render();
         },
@@ -686,7 +727,6 @@
             var view = this;
             var sig = view.model;
             var viewmodel = view.viewmodel;
-            console.log(view.opened);
 
             var div = $('<div />');
 
@@ -694,57 +734,77 @@
 
             div.append(view.inner());
 
-            view.updateOpened();
+            setTimeout(function() {
+                view.updateOpened();
+            }, 0);
 
             view.$el.html(div.children());
             return view;
         },
         open: function() {
             var view = this;
-            if(!view.opened) {
-                view.innerDiv.animate({height: view.detailsView.$el.height() + 50}, {
-                    duration: 250,
-                    easing: "linear",
-                    complete: function() {
-                        view.innerDiv.css({overflow:'visible',
-                                           'z-index': 500});
-                        $(window).resize();
-                    },
-                    step: function() {
-                        // we change the position of the document box, so we need to trigger resize
-                        $(window).resize();
-                    }
-                });
-                view.opened = true;
+            if(!view.active) {
+                view.active = true;
+                if(!view.opened) {
+                    view.innerDiv.animate({height: view.detailsView.$el.height() + 50}, {
+                        duration: 250,
+                        easing: "linear",
+                        complete: function() {
+                            view.innerDiv.css({overflow:'visible',
+                                               'z-index': 500});
+                            $(window).resize();
+                            view.opened = true;
+                            view.active = false;
+                        },
+                        step: function() {
+                            // we change the position of the document box, so we need to trigger resize
+                            $(window).resize();
+                        }
+                    });
+                } else {
+                    // don't animate, just set them
+                    view.innerDiv.css({height: view.detailsView.$el.height() + 50,
+                                       overflow:'visible',
+                                       'z-index': 500});
+                    view.active = false;
+                }
             } else {
-                // don't animate, just set them
-                view.innerDiv.css({height: view.detailsView.$el.height() + 50,
-                                   overflow:'visible',
-                                   'z-index': 500});
+                setTimeout(function() {
+                    view.open();
+                }, 0);
             }
             return view;
         },
         close: function() {
             var view = this;
-            if(view.opened) {
-                view.innerDiv.css({'overflow': 'hidden',
-                                   'z-index': 1});
-                view.innerDiv.animate({height:50}, {
-                    duration: 250,
-                    easing: "linear",
-                    step: function() {
-                        // we change the position of the document box, so we need to trigger resize
-                        $(window).resize();
-                    },
-                    complete: function() {
-                        $(window).resize();
-                    }
-                });
-                view.opened = false;
+            if(!view.active) {
+                view.active = true;
+                if(view.opened) {
+                    view.innerDiv.css({'overflow': 'hidden',
+                                       'z-index': 1});
+                    view.innerDiv.animate({height:50}, {
+                        duration: 250,
+                        easing: "linear",
+                        step: function() {
+                            // we change the position of the document box, so we need to trigger resize
+                            $(window).resize();
+                        },
+                        complete: function() {
+                            $(window).resize();
+                        }
+                    });
+                    view.active = false;
+                    view.opened = false;
+                } else {
+                    view.innerDiv.css({height:50, 
+                                       overflow:'hidden',
+                                       'z-index': 1});
+                    view.active = false;
+                }
             } else {
-                view.innerDiv.css({height:50, 
-                                   overflow:'hidden',
-                                   'z-index': 1});
+                setTimeout(function() {
+                    view.close();
+                }, 0);
             }
             return view;
         },
@@ -755,6 +815,8 @@
                 view.open();
             else
                 view.close();
+
+            $(window).resize();
             return view;
         },
         inner: function() {
@@ -892,15 +954,24 @@
             _.bindAll(view);
             view.render();
             field.bind('change:obligatory', view.render);
+            field.bind('change:shouldbefilledbysender', view.render);
         },
         render: function() {
             var view = this;
             var field = view.model;
-            var selected = field.obligatory() ? 'signatory' : 'optional';
-            var values = ['optional', 'signatory'];
+            var selected;
+            if(field.isOptional()) {
+                selected = 'optional';
+            } else if(field.shouldbefilledbysender()) {
+                selected = 'sender';
+            } else {
+                selected = 'signatory';
+            }
+            var values = ['optional', 'signatory', 'sender'];
             var options = {
                 optional  : {name : 'Optional'                , value : 'optional'},
-                signatory : {name : 'Mandatory for signatory' , value : 'signatory'}
+                signatory : {name : 'Mandatory for recipient' , value : 'signatory'},
+                sender    : {name : 'Mandatory for sender'    , value : 'sender'}
             };
             var select = new Select({
                 options: _.map(_.filter(values, function(v) {
@@ -910,10 +981,15 @@
                 }),
                 name: options[selected].name,
                 onSelect: function(v) {
-                    if(v === 'optional')
+                    if(v === 'optional') {
                         field.makeOptionalM();
-                    else if(v === 'signatory')
+                    } else if(v === 'signatory') {
                         field.makeObligatoryM();
+                        field.setShouldBeFilledBySender(false);
+                    } else if(v === 'sender') {
+                        field.makeObligatoryM();
+                        field.setShouldBeFilledBySender(true);
+                    }
                     return true;
                 }
             });

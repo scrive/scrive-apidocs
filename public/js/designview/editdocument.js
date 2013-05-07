@@ -48,7 +48,6 @@
             var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
-            var author = doc.author();
 
             var div = $('<div />');
             div.addClass('design-view-action-document-draggables-checkbox');
@@ -61,14 +60,22 @@
             img.addClass('design-view-action-document-draggables-checkbox-icon');
             img.attr('src', '/img/checkbox.png');
 
-            if(author) {
-                draggebleField(div, author.newCheckbox());
+            // a function because author is not yet defined
+            var getcheckbox = function() {
+                var field = new Field({fresh: false, 
+                                       type: 'checkbox', 
+                                       signatory: viewmodel.document().author(),
+                                       name: viewmodel.document().newCheckboxName()});
+                //viewmodel.document().author().addField(field);
+                return field;
             }
 
-            div.append(
-                wra.append(
-                    txt.append(img)
-                        .append('checkbox')));
+            draggebleField(div, getcheckbox);
+
+            div.append(wra);
+            wra.append(txt);
+            txt.append(img);
+            txt.append('checkbox');
 
             return div;
         },
@@ -89,22 +96,25 @@
             img.addClass('design-view-action-document-draggables-checkbox-icon');
             img.attr('src', '/img/signature.png');
 
-            if(author) {
-                draggebleField(div, author.newSignature());
-            }
+            var getsignature = function() {
+                var signature = new Field({fresh:false,
+                                           type:'signature',
+                                           signatory: viewmodel.document().author(),
+                                           name: viewmodel.document().newSignatureName()});
+                return signature;
+            };
+            draggebleField(div, getsignature);
 
-            div.append(
-                wra.append(
-                    txt.append(img)
-                        .append('signature box')));
+            div.append(wra);
+            wra.append(txt);
+            txt.append(img);
+            txt.append('signature box'); 
 
             return div;
         },
         text: function() {
             var view      = this;
             var viewmodel = view.model;
-            var doc       = viewmodel.document();
-            var author    = doc.author();
 
             var div = $('<div />');
             div.addClass('design-view-action-document-draggables-textbox');
@@ -117,9 +127,11 @@
             img.addClass('design-view-action-document-draggables-textbox-icon');
             img.attr('src', '/img/textbox.png');
 
-            if(author) {
-                draggebleField(div, author.field('email', 'standard'));
-            }
+            var gettext = function() {
+                return viewmodel.document().author().field('email', 'standard');
+            };
+
+            draggebleField(div, gettext);
 
             div.append(wra);
             wra.append(txt);

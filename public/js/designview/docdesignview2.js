@@ -34,7 +34,6 @@
         },
         setParticipantDetail: function(s) {
             this.set({participantDetail : s});
-            console.log(s);
             return this;
         },
         setShowProblems: function(b) {
@@ -43,7 +42,6 @@
         },
         showProblems: function() {
             return this.get('showProblems');
-            return this;
         }
     });
 

@@ -60,15 +60,12 @@ signatoryLinkClearField field =  case sfType field of
 
 emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [
-          sf FirstNameFT
-        , sf LastNameFT
-        , sf CompanyFT
-        , sf PersonalNumberFT
-        , sf CompanyNumberFT
-        , sf EmailFT
+          SignatoryField FirstNameFT "" True  True  []
+        , SignatoryField LastNameFT  "" True  True  []
+        , SignatoryField CompanyFT   "" False False []
+        , SignatoryField EmailFT     "" True  True  []
         , sf MobileFT
         ]
-  where sf t = SignatoryField t "" True False []
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] -> [String]
 checkResetSignatoryData doc sigs =

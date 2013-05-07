@@ -354,8 +354,9 @@ window.Document = Backbone.Model.extend({
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
-          authentication: this.get("authentication"),
-          delivery: this.get("delivery"),
+          // removed because we should store per signatory
+          //authentication: this.get("authentication"),
+          //delivery: this.get("delivery"),
           apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
@@ -505,6 +506,7 @@ window.Document = Backbone.Model.extend({
        return this.set({"template": true}, {silent: true});
     },
     recall: function(successCallback) {
+        console.log('recall');
         var self = this;
         var fetchOptions = { data: self.viewer().forFetch(),
                              processData: true,
@@ -524,9 +526,8 @@ window.Document = Backbone.Model.extend({
 
     },
     author: function() {
-      for (var i = 0; i < this.signatories().length; i++)
-          if (this.signatories()[i].author())
-              return this.signatories()[i];
+        return _.find(this.signatories(),
+                      function(s) { return s.author(); });
     },
     authorCanSignFirst : function() {
         if (!this.author().signs() || this.padDelivery())
@@ -733,6 +734,32 @@ window.Document = Backbone.Model.extend({
         return _.some(sigs, function(sig) {
             return sig.hasProblems(forSigning);
         });
+    },
+    newCheckboxName: function() {
+        var document = this;
+        var allnames = [];
+        _.each(document.signatories(), function(s) {
+            _.each(s.fields(), function(f) {
+                allnames.push(f.name());
+            });
+        });
+        var i = 1;
+        while(_.contains(allnames, 'checkbox-' + i))
+            i++;
+        return 'checkbox-' + i;
+    },
+    newSignatureName: function() {
+        var document = this;
+        var allnames = [];
+        _.each(document.signatories(), function(s) {
+            _.each(s.fields(), function(f) {
+                allnames.push(f.name());
+            });
+        });
+        var i = 1;
+        while(_.contains(allnames, 'signature-' + i))
+            i++;
+        return 'signature-' + i;
     }
 
 });

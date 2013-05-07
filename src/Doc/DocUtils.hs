@@ -206,25 +206,14 @@ signatoryDetailsFromUser user (is_author, is_partner) = do
   return $ SignatoryDetails
     { signatorysignorder = SignOrder 1
     , signatoryfields =
-        [ toSF FirstNameFT $ getFirstName user
-        , toSF LastNameFT $ getLastName user
-        , toSF EmailFT $ getEmail user
-        , toSF MobileFT $ getMobile user
-        , toSF CompanyFT $ getCompanyName (user, mcompany)
-        , toSF PersonalNumberFT $ getPersonalNumber user
-        , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
+        [ SignatoryField FirstNameFT (getFirstName user) True True []
+        , SignatoryField LastNameFT (getLastName user) True True []
+        , SignatoryField EmailFT (getEmail user) True True []
+        , SignatoryField CompanyFT (getCompanyName (user, mcompany)) False False []
         ]
     , signatoryispartner = is_partner
     , signatoryisauthor = is_author
     }
-    where
-      toSF t v = SignatoryField
-                 { sfType = t
-                 , sfValue = v
-                 , sfPlacements = []
-                 , sfObligatory = True
-                 , sfShouldBeFilledBySender = False
-                 }
 
 
 {- |
@@ -336,42 +325,7 @@ filterFieldDefsByID :: [(String, SignatoryField)]
 filterFieldDefsByID fielddefs sigid =
     [x | (s, x) <- fielddefs, s == sigid]
 
-makeSignatory ::[(String, String, FieldPlacement)]
-                -> [(String, SignatoryField)]
-                -> String
-                -> String
-                -> String
-                -> String
-                -> String
-                -> SignOrder
-                -> Bool
-                -> Bool
-                -> String
-                -> String
-                -> String
-                -> SignatoryDetails
-makeSignatory pls fds sid sfn  ssn  se sm sso sauthor spartner sc  spn  scn = SignatoryDetails {
-    signatorysignorder = sso
-  , signatoryfields = [
-      sf FirstNameFT sfn "fstname"
-    , sf LastNameFT ssn "sndname"
-    , sf EmailFT se "email"
-    , sf MobileFT sm "mobile"
-    , sf CompanyFT sc "company"
-    , sf PersonalNumberFT spn "personalnumber"
-    , sf CompanyNumberFT scn "companynumber"
-    ] ++ filterFieldDefsByID fds sid
-  , signatoryisauthor = sauthor
-  , signatoryispartner = spartner
-  }
-  where
-    sf ftype value texttype = SignatoryField {
-        sfType = ftype
-      , sfValue = value
-      , sfPlacements = filterPlacementsByID pls sid texttype
-      , sfObligatory = True
-      , sfShouldBeFilledBySender = False
-    }
+
 
 documentDeletedForUser :: Document -> UserID -> Bool
 documentDeletedForUser doc uid = fromMaybe False (fmap signatorylinkdeleted $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))

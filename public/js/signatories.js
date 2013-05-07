@@ -99,9 +99,6 @@ window.Signatory = Backbone.Model.extend({
         signatory.set({"fields": fields,
                        "attachments": attachments
                       });
-
-        //this.bind("change", function() {signatory.document().trigger("change:signatories")});
-        //this.bind("change:role", function() {signatory.document().trigger("change:signatories-roles")});
     },
     document: function() {
         return this.get("document");
@@ -473,13 +470,13 @@ window.Signatory = Backbone.Model.extend({
        /* Generate unique name for a checkbox. Checkbox names are really important for API,
           for humans checkbox names are pure annoyance.
         */
-       var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
+        var sigs = this.document().signatories();
+       var allnames = _.flatten(_.map(sigs, function(s) {
+           return _.invoke(s.fields(), 'name');
+       }));
        var i = 1;
-       while(_.any(allfields, function(f) {
-           return f.name() == "checkbox-" + i;
-       })) {
+       while(_.contains(allnames, 'checkbox-' + i))
            i++;
-       }
        checkbox.setName("checkbox-" + i);
        return checkbox;
     },
@@ -493,17 +490,24 @@ window.Signatory = Backbone.Model.extend({
        /* Generate unique name for a signature. Signature names are really important for API,
           for humans signature names are pure annoyance.
         */
-       var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
+       var allnames = _.flatten(_.map(this.document().signatories(), function(s) {
+           return _.invoke(s.fields(), 'name');
+       }));
        var i = 1;
-       while(_.any(allfields, function(f) {
-           return f.name() == "signature-" + i;
-       })) {
+       while(_.contains(allnames, 'signature-' + i))
            i++;
-       }
        signature.setName("signature-" + i);
        return signature;
     },
     addField : function(f) {
+        /*
+        var newfields = [];
+        _.each(this.fields(), function(field) {
+            newfields.push(field);
+        });
+        newfields.push(f);
+        this.set({fields:newfields});
+        */
         this.fields().push(f);
         this.trigger("change:fields");
     },
@@ -528,6 +532,7 @@ window.Signatory = Backbone.Model.extend({
        return this.get("inpadqueue");
     },
     removed : function() {
+        this.isRemoved = true;
         this.trigger("removed");
         this.off();
     },
@@ -546,8 +551,10 @@ window.Signatory = Backbone.Model.extend({
                   return att.draftData();
               }),
               csv: this.csv(),
-              signsuccessredirect : this.signsuccessredirect()
-
+              signsuccessredirect : this.signsuccessredirect(),
+              authentication: this.authentication(),
+              delivery: this.delivery()
+            
         };
     },
     delivery: function() {
