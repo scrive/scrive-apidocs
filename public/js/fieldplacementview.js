@@ -894,8 +894,8 @@ var SignaturePlacementView = Backbone.View.extend({
                 img.attr("height",height);
                 box.append(img);
             }
-            box.resizable("destroy");
             if (this.resizable) {
+                if (box.hasClass("ui-resizable")) box.resizable("destroy");
                 box.resizable({stop : function(e, ui) {
                                 _.each(placement.field().placements(), function(p) {
                                 p.fixWHRel(Math.floor(ui.size.width),Math.floor(ui.size.height));

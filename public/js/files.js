@@ -199,8 +199,7 @@ var FilePageView = Backbone.View.extend({
               var left = helper.offset().left - $(self.el).offset().left - 1;
               var height = $(self.el).height();
               var width = $(self.el).width();
-              var options = $(ui.draggable).data("draggable").options;
-              var onDrop = options.onDrop;
+              var onDrop = $(ui.draggable).draggable( "option", "onDrop" );
               onDrop(page,left,top,width,height);
               return false;
           }
