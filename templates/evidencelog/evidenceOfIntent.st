@@ -200,9 +200,7 @@ evidenceOfIntent=
                   <td class="column3">
                     $entry.signatory$ signed the document.
                     $if(entry.signing.image)$
-                      <a href="$entry.signing.image$">
-                        Click here
-                      </a>
+                      <a href="$entry.signing.image$">Click here</a>
                       to see attached screen capture of their signing view.
                     $else$
                       A screen capture was not done for this event.
