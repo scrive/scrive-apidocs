@@ -8,6 +8,7 @@ var SignatureDrawer = Backbone.View.extend({
         this.model.view = this;
         this.height = args.height;
         this.width = args.width;
+        this.modal = args.modal;
         this.empty = true;
         this.render();
     },
@@ -17,7 +18,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
              e.preventDefault();
         }
-        modal.css("-ms-touch-action","none")
+        this.modal.css("-ms-touch-action","none")
     },
     stopDrawing : function() {
         var view = this;
@@ -26,7 +27,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
             return true;
         }
-        modal.css("-ms-touch-action","auto")
+        this.modal.css("-ms-touch-action","auto")
     },
     modal : function() {
       return this.get("modal");
@@ -216,7 +217,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         this.onClose = args.onClose;
         this.height = args.height;
         this.width = args.width;
-        this.model = args.modal;
+        this.modal = args.modal;
         this.render();
     },
     header: function() {
@@ -299,7 +300,7 @@ window.SignatureDrawerPopup = function(args){
         container.css("top",$(window).scrollTop());
         container.css("margin-top",$(window).height() > 700 ? 200 : 100);
         container.css("left","0px");
-        var left = Math.floor(($(window).width() - width) / 2);
+        var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
         container.css("margin-left",left > 20 ? left : 20);
 
         var close =  function() {

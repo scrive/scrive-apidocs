@@ -41,7 +41,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement, widthFunction, h
     else if (field.isSignature())
        verticaloffset = 1;
     dragHandler.draggable({
-        appendTo: "body",
+        appendTo: ".mainContainer",
         helper: function(event) {
             helper = createFieldPlacementView({model: field, height : heightFunction != undefined ? heightFunction() : undefined, width: widthFunction != undefined ? widthFunction() : undefined}).el;
             return helper;
