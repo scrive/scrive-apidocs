@@ -68,7 +68,7 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var labelText = 'Document name';
+            var labelText = localization.designview.documentName;
 
             var div = $('<div />');
             div.addClass('design-view-action-process-left-column-document-name');
@@ -102,17 +102,20 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var labelText = 'Document type';
+            var labelText = localization.designview.documentType;
 
             var process = doc.process();
-            var processName = 'Contract';
+            var processName = localization.process.contract.name;
             if(process)
                 processName = process.process();
 
             var processText = {
-                Contract : { name : 'Contract' , value : 'Contract' },
-                Offer    : { name : 'Offer'    , value : 'Offer'    },
-                Order    : { name : 'Order'    , value : 'Order'    }
+                Contract : { name : localization.process.contract.name,
+                             value : 'Contract' },
+                Offer    : { name : localization.process.offer.name,
+                             value : 'Offer'    },
+                Order    : { name : localization.process.order.name,
+                             value : 'Order'    }
             };
 
             var processTypes = ['Contract', 'Offer', 'Order'];
@@ -156,7 +159,7 @@
             if(language)
                 lang = language.simpleCode();
 
-            var labelText = 'Recipient\'s language';
+            var labelText = localization.designview.recipientsLanguage;
 
             var languageText = {
                 en : {name: 'English', value: 'en'},
@@ -199,7 +202,7 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var labelText = 'Signing deadline';
+            var labelText = localization.designview.signingDeadline;
 
             var div = $('<div />');
             div.addClass('design-view-action-process-left-column-deadline');
@@ -238,7 +241,7 @@
             var div = $('<div />');
             div.addClass('design-view-action-process-left-column-attachments');
 
-            var labelText = 'Attachments';
+            var labelText = localization.attachments;
 
             var label = $('<div />');
             label.addClass('design-view-action-process-left-column-attachments-label');
@@ -247,7 +250,7 @@
             var authorAttachmentButton = Button.init({
                 color: 'blue',
                 size: 'tiny',
-                text: 'Add/remove',
+                text: localization.designview.addRemove,
                 cssClass: 'design-view-action-process-left-column-attachments-author-button',
                 onClick: function() {
                     document.save();
@@ -258,7 +261,7 @@
             var sigAttachmentButton = Button.init({
                 color: 'blue',
                 size: 'tiny',
-                text: 'Request',
+                text: localization.designview.request,
                 cssClass: 'design-view-action-process-left-column-attachments-signatory-button',
                 onClick: function() {
                     document.save();
@@ -281,7 +284,7 @@
 
             var label = $('<div />');
             label.addClass('design-view-action-process-right-column-invitation-label');
-            label.text('Edit invitation:');
+            label.text(localization.designview.editInvitation);
             view.editInvitationLabel = label;
 
             var wrapper = $('<div />');
@@ -299,7 +302,7 @@
 
             var previewButton = Button.init({
                 color: 'blue',
-                text: 'Preview invitation',
+                text: localization.designview.previewInvitation,
                 size: 'tiny',
                 onClick: function() {
                     doc.save();

@@ -137,7 +137,7 @@
             div.addClass('design-view-document-remove-button-label');
             var txt = $('<div />');
             txt.addClass('design-view-document-remove-button-label-text');
-            txt.text('Remove this document');
+            txt.text(localization.designview.removeThisDocument);
             div.append(txt);
             return div;
 
@@ -161,7 +161,7 @@
             var div = $('<div />');
             div.addClass('design-view-document-buttons-title');
 
-            div.text('Choose a document');
+            div.text(localization.designview.chooseDocument);
 
             return div;
         },
@@ -195,7 +195,7 @@
 
             label.append(line1);
 
-            line1.text('Open a PDF file');
+            line1.text(localization.designview.openPDF);
    
             div.append(circle);
             div.append(label);
@@ -236,69 +236,6 @@
                 });
             });
 
-            /*
-            var upbutton = UploadButton.init({
-                button: div,
-                name: "file",
-                color : "black",
-                shape : "rounded",
-                size : "small",
-                width: 110,
-                height: 170,
-                text: localization.uploadButton,
-                submitOnUpload: true,
-                onClick : function () {
-                    // TODO: fix this thing in Firefox
-                    console.log('click');
-                    upbutton.clickFile();
-                    return true;
-                },
-                onError: function() {
-                    document.trigger('change');
-                },
-                onAppend: function(input) {
-                    document.setFlux();
-                    document.save();
-
-                    document.afterSave( function() {
-                        new Submit({
-                            method : "POST",
-                            url : url,
-                            ajax: true,
-                            ajaxtimeout : 40000,
-                            ajaxerror: function(d,a){
-                                if(a === 'parsererror') { // file too large
-                                    new FlashMessage({content: localization.fileTooLarge, color: "red"});
-                                    document.unsetFlux();
-                                    //mixpanel.track('Error',
-                                    //               {Message: 'main file too large'});
-
-                                }
-                                else {
-                                    new FlashMessage({content: localization.couldNotUpload, color: "red"});
-                                    document.unsetFlux();
-                                    //mixpanel.track('Error',
-                                    //               {Message: 'could not upload main file'});
-                                }
-                                //LoadingDialog.close();
-                                document.trigger('change');
-                            },
-                            ajaxsuccess: function() {
-                                document.save();
-                                document.afterSave(function() {
-                                    document.recall();
-                                });
-                                //trackTimeout('Upload main file', {}, function() {
-                                //LoadingDialog.close();
-                                //window.location.reload();
-                                //});
-                            }
-                        }).addInputs(input).send();
-                    });
-                }
-            });
-            */
-
             return div;
         },
         orText: function() {
@@ -330,15 +267,13 @@
             label.append(line1);
             label.append(line2);
 
-            line1.text('Create from Avtal24');
-            line2.text('(offsite)');
+            line1.text(localization.avtal24.buy);
+            line2.text('(' + localization.designview.offsite + ')');
    
             div.append(circle);
             div.append(label);
 
-            div.click(function() {
-                Avtal24Popup();
-            });
+            div.click(Avtal24Popup);
 
             return div;
         },

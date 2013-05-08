@@ -41,7 +41,7 @@
             div.addClass('design-view-action-document-draggables-instructions');
             div.append($('<div />')
                        .addClass('design-view-action-document-draggables-instructions-text')
-                       .text('Drag & drop actions'));
+                       .text(localization.designview.dAndDactions));
             return div;
         },
         checkbox: function() {
@@ -75,7 +75,7 @@
             div.append(wra);
             wra.append(txt);
             txt.append(img);
-            txt.append('checkbox');
+            txt.append(localization.designview.checkbox);
 
             return div;
         },
@@ -108,7 +108,7 @@
             div.append(wra);
             wra.append(txt);
             txt.append(img);
-            txt.append('signature box'); 
+            txt.append(localization.designview.signatureBox);
 
             return div;
         },
@@ -136,7 +136,7 @@
             div.append(wra);
             wra.append(txt);
             txt.append(img);
-            txt.append('free-text box');
+            txt.append(localization.designview.freeTextBox);
 
             return div;
         },

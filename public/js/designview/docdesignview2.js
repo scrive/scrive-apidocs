@@ -14,7 +14,21 @@
         initialize: function (args) {
             var model = this;
             _.bindAll(model);
-      
+            model.currentColorIndex = 0;
+            model.colors = [
+                '#ff0000',
+                '#ff7400',
+                '#009999',
+                '#00CC00',
+                '#ffd700',
+                '#f3fd00',
+                '#7908aa',
+                '#3e13af',
+                '#53df00',
+                '#00a779',
+                '#ffsc00',
+                '#ea0037'
+            ];
         },
         document : function() {
             return this.get("document");
@@ -42,6 +56,17 @@
         },
         showProblems: function() {
             return this.get('showProblems');
+        },
+        currentColor: function() {
+            return this.colors[this.currentColorIndex % this.colors.length];
+        },
+        advanceColor: function() {
+            this.currentColorIndex++;
+            return this;
+        },
+        resetColor: function() {
+            this.currentColorIndex = 0;
+            return this;
         }
     });
 
@@ -76,7 +101,7 @@
                 .addClass('design-view-tab1')
                 .append($('<div />')
                         .addClass('design-view-tab1-text')
-                        .text('Edit participants'));
+                        .text(localization.designview.editParticipants));
             div.click(function() {
                 model.setStep(1);
             });
@@ -90,10 +115,10 @@
                 .addClass('design-view-tab2')
                 .append($('<div />')
                         .addClass('design-view-tab2-text')
-                        .text('Edit document ')
+                        .text(localization.designview.editDocument + ' ')
                         .append($('<span />')
                                 .addClass('design-view-tab2-text-optional')
-                                .text('(optional)')));
+                                .text('(' + localization.designview.optional + ')')));
             div.click(function() {
                 model.setStep(2);
             });
@@ -107,10 +132,10 @@
                 .addClass('design-view-tab3')
                 .append($('<div />')
                         .addClass('design-view-tab3-text')
-                        .text('Edit signing process ')
+                        .text(localization.designview.editSigningProcess + ' ')
                         .append($('<span />')
                                 .addClass('design-view-tab3-text-optional')
-                                .text('(optional)')));
+                                .text('(' + localization.designview.optional + ')')));
             div.click(function() {
                 model.setStep(3);
             });
@@ -147,7 +172,6 @@
                 view.$el.html(view.processView.el);
                 view.processView.afterInsertion();
             } else {
-                console.log("don't know what step this is: " + model.step());
                 view.$el.children().detach();
                 view.$el.html('');
             }
@@ -196,7 +220,7 @@
                        .append($('<img />')
                                .addClass('design-view-button1-icon')
                                .attr('src', '/img/save.png'))
-                       .append('Save as draft'));
+                       .append(localization.saveAsDraft));
 
             div.click(function() {
                 viewmodel.document().save();
@@ -216,7 +240,7 @@
                        .append($('<img />')
                                .addClass('design-view-button2-icon')
                                .attr('src', '/img/template.png'))
-                       .append('Save as template'));
+                       .append(localization.saveAsTemplate));
 
             div.click(function() {
                 viewmodel.document().makeTemplate();
@@ -232,7 +256,7 @@
             div.addClass('design-view-button3');
             div.append($('<div />')
                        .addClass('design-view-button3-text')
-                       .append('Start signing'));
+                       .append(localization.designview.startSigning));
             
             div.click(view.finalClick);
 

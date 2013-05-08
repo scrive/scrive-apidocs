@@ -645,6 +645,13 @@ window.Signatory = Backbone.Model.extend({
     },
     needsMobile: function() {
         return this.mobileDelivery();
+    },
+    color: function() {
+        return this.get('color');
+    },
+    setColor: function(c) {
+        this.set({color:c});
+        return this;
     }
 
 });

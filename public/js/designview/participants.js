@@ -28,7 +28,7 @@
             var button = Button.init({
                 color: 'blue',
                 size: 'tiny',
-                text: '+ Add field',
+                text: '+ ' + localization.designview.addField,
                 onClick: function() {
                     view.popup();
                 }
@@ -45,8 +45,8 @@
             var sig = view.model;
             view.reset();
             view.confirmation = Confirmation.popup({
-                title: 'Add field',
-                acceptText: 'Save',
+                title: localization.designview.addField,
+                acceptText: localization.save,
                 content: view.popupContent(),
                 onAccept: function() {
                     view.acceptPopup();
@@ -117,16 +117,16 @@
             });
 
             options.push({
-                name: 'Custom field',
+                name: localization.designview.customField,
                 value: '--custom'
             });
 
             var name;
 
             if(!view.selected)
-                name = 'Add new field';
+                name = localization.designview.addField;
             else if(view.selected === '--custom')
-                name = 'Custom field';
+                name = localization.designview.customField;
             else
                 name = view.placeholder(view.selected);
 
@@ -153,7 +153,7 @@
                 
                 var input = InfoTextInput.init({
                     cssClass: 'design-view-action-participant-new-field-popup-content-bottom-input',
-                    infotext: 'Field name',
+                    infotext: localization.designview.fieldName,
                     value: '',
                     onChange: function() {
                         view.customName = input.value();
@@ -177,9 +177,9 @@
         ],
         //TODO: Translate me
         standardPlaceholders: {
-            sigcompnr: 'Company number',
-            sigpersnr: 'Person number',
-            mobile: 'Phone'
+            sigcompnr: localization.companyNumber,
+            sigpersnr: localization.personamNumber,
+            mobile: localization.phone
         },
         placeholder: function(name) {
             return this.standardPlaceholders[name] || name;
@@ -214,7 +214,7 @@
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-participation-header');
-            div.text('Define participation:');
+            div.text(localization.designview.defineParticipation);
             return div;
         },
         detailsParticipationFields: function() {
@@ -238,12 +238,14 @@
 
             var options = [];
             for(i=1;i<=model.document().maxPossibleSignOrder();i++)
-                options.push({name: englishOrdinal(i) + ' to receive document',
+                options.push({name: englishOrdinal(i) + ' ' + 
+                              localization.designview.toReceiveDocument,
                               value: i});
             
             var select = new Select({
                 options: options,
-                name: englishOrdinal(order) + ' to receive document',
+                name: englishOrdinal(order) + ' ' + 
+                    localization.designview.toReceiveDocument,
                 onSelect: function(v) {
                     model.setSignOrder(v);
                     return true;
@@ -260,9 +262,9 @@
 
             // TODO: translate
             var deliveryTexts = {
-                email : "by email",
-                pad : "on this tablet",
-                mobile : "by SMS"
+                email : localization.designview.byEmail,
+                pad : localization.designview.onThisTablet,
+                mobile : localization.designview.bySMS
             };
 
             var deliveryTypes = ['email', 'pad', 'mobile'];
@@ -287,8 +289,8 @@
             var role = sig.signs() ? 'signatory' : 'viewer';
 
             var roleTexts = {
-                'signatory' : "for signing",
-                'viewer'    : "for viewing"
+                'signatory' : localization.designview.forSigning,
+                'viewer'    : localization.designview.forViewing
             };
 
             var roleTypes = ['signatory', 'viewer'];
@@ -315,8 +317,8 @@
             var auth = sig.authentication();
 
             var authTexts = {
-                standard : "with no additional ID control",
-                eleg : "with Elegitimation"
+                standard : localization.designview.noIDControl,
+                eleg : localization.designview.withEleg
             };
 
             var authTypes = ['standard', 'eleg'];
@@ -373,7 +375,7 @@
             var button = Button.init({
                 color: 'blue',
                 size: 'tiny',
-                text: '+ Add party',
+                text: '+ ' + localization.designview.addParty,
                 onClick: function() {
                     model.setParticipantDetail(null);
                     
@@ -401,7 +403,7 @@
             var button = Button.init({
                 color: 'blue',
                 size: 'tiny',
-                text: '+ Add multisend',
+                text: '+ ' + localization.designview.addMultisend,
                 onClick: function() {
                     model.setParticipantDetail(null);
                     
@@ -659,7 +661,7 @@
             if(sig.isCsv()) {
                 var csvButton = Button.init({
                     color: 'blue',
-                    text: 'View CSV',
+                    text: localization.designview.viewCSV,
                     size: 'tiny',
                     onClick: function() {
                         CsvSignatoryDesignPopup.popup({
@@ -681,7 +683,8 @@
                     if(e.name() !== 'fstname' && 
                        e.name() !== 'sndname' &&
                        e.name() !== 'sigco'   &&
-                       e.name() !== 'email')
+                       e.name() !== 'email'   && 
+                       e.isText())
                         div.append(view.detailsInformationField(e.name(), e.type(), e.nicename()));
                 });
 
@@ -702,7 +705,7 @@
             var input = $('<input />');
             input.addClass('design-view-action-participant-details-information-field');
             input.val(value);
-            input.attr('placeholder', 'Full name');
+            input.attr('placeholder', localization.designview.fullName);
 
             input.bind('keypress keydown keyup change input', function() {
                 setTimeout(function() {
@@ -995,9 +998,11 @@
         },
         color: function() {
             var view = this;
+            var sig = view.model;
             return $('<div />')
                 .addClass('design-view-action-participant-info-color')
-                .text('');
+                .text('')
+                .css('background-color', sig.color() || 'black');
         },
         email: function() {
             var view = this;
@@ -1064,9 +1069,12 @@
             }
             var values = ['optional', 'signatory', 'sender'];
             var options = {
-                optional  : {name : 'Optional'                , value : 'optional'},
-                signatory : {name : 'Mandatory for recipient' , value : 'signatory'},
-                sender    : {name : 'Mandatory for sender'    , value : 'sender'}
+                optional  : {name : localization.designview.optional,
+                             value : 'optional'},
+                signatory : {name : localization.designview.mandatoryForRecipient,
+                             value : 'signatory'},
+                sender    : {name : localization.designview.MandatoryForSender,
+                             value : 'sender'}
             };
             var select = new Select({
                 options: _.map(_.filter(values, function(v) {

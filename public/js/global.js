@@ -221,3 +221,8 @@ function englishOrdinal(n) {
         v=n%100;
     return n+(s[(v-20)%10]||s[v]||s[0]);
 }
+
+function swedishOrdinal(n) {
+    var letter = (n === 1 || n === 2) ? 'a' : 'e';
+    return '' + n + ':' + letter;
+}
