@@ -168,7 +168,7 @@ function parseQueryString() {
 safeReady(function() {
   $("form").live('submit', function() {
     var form = $(this);
-    if ($("input[name='xtoken']",form).size() == 0 && $(form).attr('method').toUpperCase() == 'POST') {
+    if ($("input[name='xtoken']",form).size() == 0 && $(form).attr('method') != undefined && $(form).attr('method').toUpperCase() == 'POST') {
       var tokenTag = $('<input type="hidden" name="xtoken">');
       var token = Cookies.get("xtoken");
       if (token && token.length > 0) {
