@@ -15,6 +15,7 @@ data BrandedDomain = BrandedDomain {
                         , bdbarstextcolour :: String
                         , bdbarssecondarycolour :: String
                         , bdbackgroundcolour :: String
+                        , bdbackgroundcolorexternal :: Maybe String
                       } deriving (Read, Eq, Ord, Show)
 
 findBrandedDomain :: String -> BrandedDomains -> Maybe BrandedDomain

@@ -24,7 +24,7 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body>
+  <body $if(background)$ style="background: $background$" $endif$ >
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -66,7 +66,7 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body>
+  <body $if(background)$ style="background: $background$" $endif$>
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>

@@ -362,6 +362,7 @@ handlePasswordReminderGet uid token = do
           content <- renderTemplate "changePasswordPageWithBranding" $ do
                         F.value "linkchangepassword" $ changePassLink
                         F.value "logolink" $ bdlogolink bd
+                        F.value "background" $ bdbackgroundcolorexternal $ bd
                         standardPageFields ctx kontrakcja ad
           Right . Left <$> simpleHtmlResonseClrFlash content
         Nothing -> do
