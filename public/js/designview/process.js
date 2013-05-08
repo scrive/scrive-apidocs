@@ -105,7 +105,7 @@
             var labelText = localization.designview.documentType;
 
             var process = doc.process();
-            var processName = localization.process.contract.name;
+            var processName = 'Contract';
             if(process)
                 processName = process.process();
 

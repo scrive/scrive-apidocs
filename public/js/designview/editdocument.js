@@ -41,7 +41,7 @@
             div.addClass('design-view-action-document-draggables-instructions');
             div.append($('<div />')
                        .addClass('design-view-action-document-draggables-instructions-text')
-                       .text(localization.designview.dAndDactions));
+                       .text(localization.designview.dAndDActions));
             return div;
         },
         checkbox: function() {
