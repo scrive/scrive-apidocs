@@ -18,7 +18,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
              e.preventDefault();
         }
-        this.modal.css("-ms-touch-action","none")
+        this.modal.css("-ms-touch-action","none");
     },
     stopDrawing : function() {
         var view = this;
@@ -27,7 +27,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
             return true;
         }
-        this.modal.css("-ms-touch-action","auto")
+        this.modal.css("-ms-touch-action","auto");
     },
     modal : function() {
       return this.get("modal");
