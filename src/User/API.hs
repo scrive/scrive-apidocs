@@ -302,13 +302,13 @@ apiCallPaymentInfo = api $ do
       dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
       canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
       billingEnds = (formatMinutesTimeRealISO . ppBillingEndDate) <$> mpaymentplan
-      docTotal = if (Just DeactivatedStatus == (ppStatus <$> mpaymentplan))
-                  then 0
-                  else if (Just EnterprisePricePlan == (ppPricePlan <$> mpaymentplan))
-                        then 5000000
-                        else if ((Just FreePricePlan /= (ppPricePlan <$> mpaymentplan)) && (Just ActiveStatus == (ppStatus <$> mpaymentplan)))
-                              then 100
-                              else 3
+      docTotal = case (ppStatus <$> mpaymentplan, ppPricePlan <$> mpaymentplan) of
+        (Just DeactivatedStatus, _)   -> 0
+        (Just CanceledStatus, _)      -> 3
+        (_, Just EnterprisePricePlan) -> 5000000
+        (_, Just FreePricePlan)       -> 3
+        (_, Nothing)                  -> 3
+        (_, _)                        -> 100
   fmap Ok $ runJSONGenT $ do
         value "adminuser" admin
         value "docsUsed"  docsusedthismonth
