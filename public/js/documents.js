@@ -503,7 +503,7 @@ window.Document = Backbone.Model.extend({
        return this.get("template") == true;
     },
     makeTemplate: function() {
-       return this.set({"template": true}, {silent: true});
+       return this.set({"template": true});
     },
     recall: function(successCallback) {
         console.log('recall');

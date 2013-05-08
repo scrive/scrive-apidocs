@@ -203,9 +203,15 @@
             
             var div = $('<div />');
             div.addClass('design-view-button-bar-inner');
-            div.append(view.saveAsDraft());
-            div.append(view.saveAsTemplate());
-            div.append(view.send());
+
+
+            if(model.document().isTemplate()) {
+                div.append(view.saveAsTemplate());
+            } else {
+                div.append(view.saveAsDraft());
+                div.append(view.saveAsTemplate());
+                div.append(view.send());
+            }
 
             return div;
         },
