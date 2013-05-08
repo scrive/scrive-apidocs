@@ -17,6 +17,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
              e.preventDefault();
         }
+        modal.css("-ms-touch-action","none")
     },
     stopDrawing : function() {
         var view = this;
@@ -25,7 +26,10 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
             return true;
         }
-
+        modal.css("-ms-touch-action","auto")
+    },
+    modal : function() {
+      return this.get("modal");
     },
     lineWith : function() {
         return 3;
@@ -140,6 +144,10 @@ var SignatureDrawer = Backbone.View.extend({
             this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation();e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e));});
             this.canvas[0].addEventListener('touchmove',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
             this.canvas[0].addEventListener('touchend',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e));});
+           } else if (navigator.msPointerEnabled) {
+            this.canvas[0].addEventListener("MSPointerDown",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e)); return false;},true);
+            this.canvas[0].addEventListener("MSPointerMove",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e)); return false;},true);
+            this.canvas[0].addEventListener("MSPointerUp",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e)); return false;},true);
            } else {
             this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e),e);});
             this.canvas.mousemove(function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
@@ -208,6 +216,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         this.onClose = args.onClose;
         this.height = args.height;
         this.width = args.width;
+        this.model = args.modal;
         this.render();
     },
     header: function() {
@@ -216,7 +225,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     },
     drawingBox : function() {
         var div = $("<div class='signatureDrawingBoxWrapper'>");
-        this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width});
+        this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width, modal : this.modal});
         div.append(this.drawer.el);
         div.width(820);
         div.height(820 * this.height / this.width);
@@ -281,7 +290,7 @@ window.SignatureDrawerPopup = function(args){
             alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
             return;
         }
-        self.overlay = $("<div class='modal'></div>");
+        var modal = $("<div class='modal'></div>");
 
         var width = BrowserInfo.isSmallScreen() ? 980 : 900;
         var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
@@ -295,22 +304,22 @@ window.SignatureDrawerPopup = function(args){
 
         var close =  function() {
               console.log("Closing");
-              self.overlay.removeClass('active');
+              modal.removeClass('active');
               document.ontouchmove = function(e){
                  return true;
               }
-              setTimeout(function() {self.overlay.detach();},500);
+              setTimeout(function() {modal.detach();},500);
             };
 
         var closeButton = $("<div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/>").click(close);
 
         container.append(closeButton);
-        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, onClose : close});
+        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, onClose : close, modal : modal});
         container.append(self.dw.el);
-        self.overlay.append(container);
+        modal.append(container);
 
-        $('body').append(self.overlay );
-        self.overlay.addClass('active');
+        $('body').append(modal );
+        modal.addClass('active');
 };
 
 })(window);

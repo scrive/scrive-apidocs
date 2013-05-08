@@ -337,8 +337,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         _.each(document.currentSignatory().fields(), function(field) {
                             if (field.isEmail() && (!new EmailValidation().validateData(field.value())))
                                 res = false;
-                            if (field.isMobile() && (!new PhoneValidation().validateData(field.value())))
-                                res = false;
                             if (field.isFstName() && field.value() == "")
                                 res = false;
                             if (field.isSndName() && field.value() == "")

@@ -31,7 +31,7 @@ window.BrowserInfo = {
       return $.browser.msie && ($.browser.version > "3" && $.browser.version < "7.0");
     },
     isSmallScreen : function() {
-      return true//window.outerWidth != undefined && window.outerWidth < 600;
+     return (window.outerWidth < 760) || (screen.width < 760) ;
     }
 };
 
