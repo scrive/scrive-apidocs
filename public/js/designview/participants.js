@@ -874,13 +874,15 @@
 
             var div = $('<div />');
 
-            div.append(view.closeBox());
+            if(!sig.isRemoved) {
+                div.append(view.closeBox());
 
-            div.append(view.inner());
-
-            setTimeout(function() {
-                view.updateOpened();
-            }, 0);
+                div.append(view.inner());
+                
+                setTimeout(function() {
+                    view.updateOpened();
+                }, 0);
+            }
 
             view.$el.html(div.children());
             return view;
@@ -992,6 +994,9 @@
                 
                 div.click(function() {
                     viewmodel.setParticipantDetail(null);
+                    _.each(sig.fields(), function(field) {
+                        field.removeAllPlacements();
+                    });
                     sig.document().removeSignatory(sig);
                 });
             }
@@ -1001,6 +1006,7 @@
             var view = this;
             var sig = view.model;
             var viewmodel = view.viewmodel;
+            
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-info-box');

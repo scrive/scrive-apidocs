@@ -99,6 +99,7 @@
             div.append(view.removeDocumentButtonIcon());
             div.click(function() {
                 doc.setFlux();
+                doc.removePlacements();
                 doc.save();
                 doc.afterSave( function() {
                     new Submit({

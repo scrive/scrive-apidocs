@@ -96,6 +96,7 @@ window.FieldPlacement = Backbone.Model.extend({
        var document = this.field().signatory().document();
        var page = document.file().page(this.get("page"));
        page.removePlacement(this);
+        this.set({placed:false});
        this.field().removePlacement(this);
        this.off();
     },

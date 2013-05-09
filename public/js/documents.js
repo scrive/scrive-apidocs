@@ -760,6 +760,14 @@ window.Document = Backbone.Model.extend({
         while(_.contains(allnames, 'signature-' + i))
             i++;
         return 'signature-' + i;
+    },
+    removePlacements: function() {
+        var document = this;
+        _.each(document.signatories(), function(sig) {
+            _.each(sig.fields(), function(field) {
+                field.removeAllPlacements();
+            });
+        });
     }
 
 });
