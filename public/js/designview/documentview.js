@@ -124,7 +124,7 @@
             var view = this;
             var div = $('<div />');
             div.addClass('design-view-document-remove-button-icon');
-            var img = $('<div />');
+            var img = $('<img />');
             img.addClass('design-view-document-remove-button-icon-img');
             img.attr('src', '/img/trash.png');
             div.append(img);
