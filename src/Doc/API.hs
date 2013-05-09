@@ -97,7 +97,7 @@ versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
 
   dir "createfromfile"     $ hPost $ toK0 $ apiCallCreateFromFile,
-  dir "createfromtemplate" $ hPost $ toK1 $ apiCallCreateFromTemplate,
+  dir "createfromtemplate" $ hPostAllowHttp $ toK1 $ apiCallCreateFromTemplate,
   dir "update"             $ hPost $ toK1 $ apiCallUpdate,
   dir "ready"              $ hPost $ toK1 $ apiCallReady,
   dir "cancel"             $ hPost $ toK1 $ apiCallCancel,
