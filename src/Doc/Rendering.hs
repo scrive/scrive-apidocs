@@ -206,7 +206,7 @@ preCheckPDFHelper content tmppath =
     checkNormalize = do
       liftIO $ BS.writeFile sourcepath content
 
-      (exitcode,stdout1,stderr1) <- liftIO $ readProcessWithExitCode' "mubusy"
+      (exitcode,stdout1,stderr1) <- liftIO $ readProcessWithExitCode' "mutool"
                                    [ "clean"
                                    , "-ggg"
                                    , sourcepath
