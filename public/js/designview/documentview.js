@@ -172,8 +172,8 @@
             div.addClass('design-view-document-buttons-buttons');
 
             div.append(view.uploadFile());
-            div.append(view.orText());
-            div.append(view.avtalButton());
+            //div.append(view.orText());
+            //div.append(view.avtalButton());
 
             return div;
         },

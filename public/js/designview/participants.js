@@ -26,7 +26,7 @@
             var sig = view.model;
 
             var button = Button.init({
-                color: 'blue',
+                color: 'black',
                 size: 'tiny',
                 text: '+ ' + localization.designview.addField,
                 onClick: function() {
@@ -362,8 +362,8 @@
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-new-box-buttons');
-            div.append(view.single());
             div.append(view.multi());
+            div.append(view.single());
             return div;
         },
         single: function() {
@@ -373,7 +373,7 @@
             div.addClass('design-view-action-participant-new-single');
 
             var button = Button.init({
-                color: 'blue',
+                color: 'green',
                 size: 'tiny',
                 text: '+ ' + localization.designview.addParty,
                 onClick: function() {
@@ -401,7 +401,7 @@
             div.addClass('design-view-action-participant-new-multi');
 
             var button = Button.init({
-                color: 'blue',
+                color: 'black',
                 size: 'tiny',
                 text: '+ ' + localization.designview.addMultisend,
                 onClick: function() {
@@ -502,9 +502,20 @@
             var view = this;
             var sig = view.model;
 
+            var max = sig.document().maxPossibleSignOrder();
+
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-order-inner')
                 .text(sig.signorder());
+
+            div.click(function() {
+                var o = sig.signorder() + 1;
+                if(o > max)
+                    o = 1;
+                sig.setSignOrder(o);
+                return false;
+            });
+
             view.$el.html(div);
 
             return view;
@@ -535,6 +546,15 @@
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-role-icon')
                         .attr('src', view.icons[role]));
+
+            div.click(function() {
+                if(role === 'viewer')
+                    sig.makeSignatory();
+                else
+                    sig.makeViewer();
+                return false;
+            });
+
             view.$el.html(div);
 
             return view;
@@ -567,6 +587,18 @@
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-device-icon')
                         .attr('src', view.icons[delivery]));
+            div.click(function() {
+                if(delivery === 'email')
+                    sig.setDelivery('pad');
+                else if(delivery === 'pad')
+                    sig.setDelivery('mobile');
+                else
+                    sig.setDelivery('email');
+
+                sig.ensureMobile();
+
+                return false;
+            });
             view.$el.html(div);
 
             return view;
@@ -597,6 +629,16 @@
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-auth-icon')
                         .attr('src', view.icons[auth]));
+
+            div.click(function() {
+                if(auth === 'standard')
+                    sig.setAuthentication('eleg');
+                else
+                    sig.setAuthentication('standard');
+                sig.ensurePersNr();
+                return false;
+            });
+
             view.$el.html(div);
 
             return view;

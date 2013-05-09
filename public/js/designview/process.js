@@ -34,6 +34,7 @@
 
             div.append(view.leftColumn());
             div.append(view.rightColumn());
+            div.append(view.attachments());
 
             view.$el.html(div.children());
 
@@ -49,7 +50,7 @@
             div.append(view.documentType());
             div.append(view.language());
             div.append(view.deadline());
-            div.append(view.attachments());
+            //div.append(view.attachments());
 
             return div;
         },
@@ -269,7 +270,7 @@
                 }
             });
 
-            div.append(label);
+            //div.append(label);
             div.append(authorAttachmentButton.input());
             div.append(sigAttachmentButton.input());
 
