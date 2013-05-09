@@ -14,6 +14,7 @@ import File.Storage (getFileIDContents)
 import Kontra (KontraMonad)
 import Control.Monad.IO.Class
 import qualified PdfModel as P
+import qualified Amazon as AWS
 
 data Attachment = Attachment
   { name     :: BS.ByteString
@@ -21,7 +22,7 @@ data Attachment = Attachment
   , content  :: BSL.ByteString
   } deriving (Eq, Ord, Show)
 
-fetch :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [Attachment]
+fetch :: (KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => Document -> m [Attachment]
 fetch doc = do
   case documentsealedfile doc of
     Nothing -> return []

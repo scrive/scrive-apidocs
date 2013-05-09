@@ -345,7 +345,7 @@ Executable mailing-server
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc mailer/src mailer/inc src docconv/src
+  Hs-source-dirs: inc misc mailer/src mailer/inc docconv/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
   if !flag(allow-warnings)

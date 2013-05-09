@@ -64,7 +64,7 @@ import qualified Codec.Picture.Png as PNG
 import qualified Codec.Picture.Jpg as JPG
 import qualified Codec.Picture.Saving as JPG
 import qualified Codec.Picture.Types as Image
-
+import qualified Amazon as AWS
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails boxImages details =
@@ -226,7 +226,7 @@ listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
-findOutAttachmentDesc :: (KontraMonad m, MonadIO m, MonadDB m, TemplatesMonad m) => Document -> m [Seal.FileDesc]
+findOutAttachmentDesc :: (KontraMonad m, MonadIO m, MonadDB m, TemplatesMonad m, AWS.AmazonMonad m) => Document -> m [Seal.FileDesc]
 findOutAttachmentDesc document = do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
@@ -305,7 +305,7 @@ evidenceOfIntentAttachment title sls = do
                                , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString html
                                }
 
-sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m)
+sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -518,7 +518,7 @@ presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath 
             }
 
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
              => Document
              -> m (Either String Document)
 sealDocument document = do
@@ -541,7 +541,7 @@ collectClockErrorStatistics elog = do
       starttime = minimum (map evTime elog) `min` (1 `daysBefore` endtime)
   dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
-sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
+sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
                  => Document
                  -> File
                  -> m (Either String Document)
@@ -611,7 +611,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
 
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)

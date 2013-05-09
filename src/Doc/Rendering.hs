@@ -41,6 +41,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Char8 as BSC
 import qualified Log
+import qualified Amazon as AWS
 import qualified MemCache as MemCache
 import qualified SealSpec as Seal
 import Redirect
@@ -69,7 +70,7 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: (KontraMonad m, MonadDB m, MonadIO m)
+convertPdfToJpgPages :: (KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
                      => FileID
                      -> Int
                      -> m JpegPages

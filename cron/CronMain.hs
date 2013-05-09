@@ -4,6 +4,7 @@ module CronMain where
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.Reader
 import System.Environment
 import qualified System.Time
 import Data.Maybe (catMaybes)
@@ -55,7 +56,8 @@ main = Log.withLogger $ do
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   rng <- newCryptoRNGState
 
-  let runScheduler = runQueue rng (dbConfig appConf) (SchedulerData appConf templates)
+  let amazoncfg = AWS.AmazonConfig (amazonConfig appConf) undefined
+      runScheduler x = withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng $ AWS.runAmazonMonadT (amazoncfg) $ runReaderT (unAQ x) (SchedulerData appConf templates)
       inDB = liftIO . withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng
   -- Asynchronous event dispatcher; if you want to add a consumer to the event
   -- dispatcher, please combine the two into one dispatcher function rather
@@ -111,7 +113,7 @@ main = Log.withLogger $ do
            handleSyncWithRecurly (hostpart appConf) (mailsConfig appConf)
              temps (recurlyAPIKey $ recurlyConfig appConf) mtime
            handleSyncNoProvider mtime
-     ] ++ (if AWS.isAWSConfigOk appConf
+     ] ++ (if AWS.isAWSConfigOk $ amazonConfig appConf
            then [forkCron_ True "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon]
            else []) ++
      [ forkCron_ True "removeOldDrafts" (60 * 60) $ do

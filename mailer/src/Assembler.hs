@@ -28,9 +28,9 @@ import Crypto.RNG.Utils
 import Mails.Model
 import File.Storage
 import DB
-import KontraMonad
+import qualified Amazon as AWS
 
-assembleContent :: (MonadIO m, CryptoRNG m, MonadDB m, KontraMonad m) => Mail -> m BSL.ByteString
+assembleContent :: (MonadIO m, CryptoRNG m, MonadDB m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
   let datafields = do
