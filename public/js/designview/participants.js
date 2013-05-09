@@ -457,8 +457,12 @@
 
             var doc = model.document();
             var sigs = doc.signatories();
+
+            model.resetColor();
             
             $.each(model.document().signatories(), function(i, s) {
+                s.setColor(model.currentColor());
+                model.advanceColor();
                 view.participants.push(new DesignViewParticipantView({model  : s, 
                                                                       number : i,
                                                                       viewmodel : model
@@ -1073,7 +1077,7 @@
                              value : 'optional'},
                 signatory : {name : localization.designview.mandatoryForRecipient,
                              value : 'signatory'},
-                sender    : {name : localization.designview.MandatoryForSender,
+                sender    : {name : localization.designview.mandatoryForSender,
                              value : 'sender'}
             };
             var select = new Select({

@@ -16,18 +16,12 @@
             _.bindAll(model);
             model.currentColorIndex = 0;
             model.colors = [
-                '#ff0000',
-                '#ff7400',
+                '#ff3377',
                 '#009999',
-                '#00CC00',
                 '#ffd700',
-                '#f3fd00',
                 '#7908aa',
-                '#3e13af',
                 '#53df00',
-                '#00a779',
-                '#ffsc00',
-                '#ea0037'
+                '#990000'
             ];
         },
         document : function() {

@@ -470,6 +470,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
+        if(field.signatory().color())
+            place.css('border', '1px solid ' + field.signatory().color());
+
         if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
 
@@ -517,6 +520,8 @@ var CheckboxPlacementView = Backbone.View.extend({
             var field =   this.model;
             var box = $(this.el);
             box.addClass('placedcheckbox');
+            if(field.signatory().color())
+                box.css('border', '1px solid ' + field.signatory().color());
             if (field.value() != "")
                 box.addClass("checked");
             else
@@ -1123,6 +1128,7 @@ var SignaturePlacementView = Backbone.View.extend({
                 img.attr("height",height);
                 box.append(img);
             }
+        box.css('border', '1px solid ' + (placement.field().signatory().color() || '#999'));
             if (this.resizable) {
                 if (box.hasClass("ui-resizable")) box.resizable("destroy");
                 box.resizable({
