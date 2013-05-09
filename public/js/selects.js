@@ -24,6 +24,9 @@ window.SelectOptionModel = Backbone.Model.extend({
   },
     leftMargin: function() {
         return this.get('leftMargin');
+    },
+    offset: function() {
+        return this.get('offset');
     }
 });
 
@@ -96,7 +99,10 @@ window.SelectModel = Backbone.Model.extend({
        if (this.get("onOpen") != undefined)
         return this.get("onOpen")();
        return true;
-  }
+  },
+    offset: function() {
+        return this.get('offset');
+    }
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -114,8 +120,12 @@ window.SelectOptionView = Backbone.View.extend({
     },
     render: function () {
         var model = this.model;
-        var a = $("<span/>").text(this.model.name());
+        var a = $("<span/>").html(this.model.name());
         a.css({'margin-left':this.model.leftMargin()});
+        if(model.offset()!==undefined) {
+            a.css('display', 'block');
+            a.css('margin-top', model.offset());
+        }
         var attrs = model.extraAttrs() ? model.extraAttrs() : {};
         $.each(attrs, function(attr, val) {
           a.attr(attr, val);
@@ -160,9 +170,11 @@ var SelectView = Backbone.View.extend({
         if (this.model.iconClass() != undefined)
             label.append($("<div class='select-icon'>").addClass(this.model.iconClass()));
         else
-            label.text(this.model.name());
+            label.html(this.model.name());
         if (this.model.textWidth() != undefined)
             label.css("width",this.model.textWidth());
+        if(this.model.offset())
+            label.css('margin-top', this.model.offset());
         button.append(label);
         button.append("<div class='select-button-right' />");
         return button;
@@ -232,7 +244,8 @@ window.Select = function(args) {
                                         expandSide : args.expandSide,
                                         onOpen : args.onOpen,
                                         extraNameAttrs: args.extraNameAttrs,
-                                        expandOnHover : args.expandOnHover
+                                        expandOnHover : args.expandOnHover,
+                                        offset : args.offset
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)

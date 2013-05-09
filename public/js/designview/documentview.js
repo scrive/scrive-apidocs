@@ -93,6 +93,9 @@
         removeDocumentButton: function() {
             var view = this;
             var doc = view.model;
+
+
+
             var div = $('<div />');
             div.addClass('design-view-document-remove-button-wrapper');
             div.append(view.removeDocumentButtonLabel());
@@ -181,6 +184,48 @@
         uploadFile : function() {
             var view = this;
             var document = view.model;
+
+            var url = "/api/frontend/changemainfile/" + document.documentid();
+
+            return Button.init({
+                color: 'green',
+                size: 'big',
+                text: localization.designview.openPDF,
+                onClick: function() {
+                    document.save();
+                    FileUpload.upload({
+                        action: url,
+                        name: 'file',
+                        mimetype: 'application/pdf',
+                        beforeUpload: function() {
+                            document.setFlux();
+                        },
+                        success: function(d) {
+                            document.save();
+                            document.afterSave(function() {
+                                document.recall();
+                            });
+                        },
+                        error: function(d, a){
+                            console.log(d);
+                            if(a === 'parsererror') { // file too large
+                                new FlashMessage({content: localization.fileTooLarge, color: "red"});
+                                document.unsetFlux();
+                                //mixpanel.track('Error',
+                                //               {Message: 'main file too large'});
+                                
+                            } else {
+                                new FlashMessage({content: localization.couldNotUpload, color: "red"});
+                                document.unsetFlux();
+                                //mixpanel.track('Error',
+                                //               {Message: 'could not upload main file'});
+                            }
+                            document.trigger('change');
+                        }
+                    });
+                }
+            }).input();
+
             var div = $('<div />');
             div.addClass('design-view-document-buttons-upload-button');
             
@@ -201,7 +246,7 @@
             div.append(circle);
             div.append(label);
 
-            var url = "/api/frontend/changemainfile/" + document.documentid();
+
 
             div.click(function() {
                 document.save();

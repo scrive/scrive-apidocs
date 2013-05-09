@@ -521,7 +521,7 @@ var CheckboxPlacementView = Backbone.View.extend({
             var box = $(this.el);
             box.addClass('placedcheckbox');
             if(field.signatory().color())
-                box.css('border', '1px solid ' + field.signatory().color());
+                box.css('border', '2px solid ' + field.signatory().color());
             if (field.value() != "")
                 box.addClass("checked");
             else

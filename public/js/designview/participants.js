@@ -487,8 +487,6 @@
         }
     });
 
-    // TODO: These icons could probably be a single View with different params
-
     // order icon + order selection 
     var DesignViewOrderIconView = Backbone.View.extend({
         className: 'design-view-action-participant-icon-order',
@@ -497,24 +495,23 @@
             _.bindAll(view);
             view.model.bind('change:signorder', view.render);
             view.render();
-        },
-        render: function() {
-            var view = this;
-            var sig = view.model;
-
-            var max = sig.document().maxPossibleSignOrder();
-
-            var div = $('<div />')
-                .addClass('design-view-action-participant-icon-order-inner')
-                .text(sig.signorder());
-
-            div.click(function() {
+            view.$el.click(function() {
+                var sig = view.model;
+                var max = sig.document().maxPossibleSignOrder();
                 var o = sig.signorder() + 1;
                 if(o > max)
                     o = 1;
                 sig.setSignOrder(o);
                 return false;
             });
+        },
+        render: function() {
+            var view = this;
+            var sig = view.model;
+
+            var div = $('<div />')
+                .addClass('design-view-action-participant-icon-order-inner')
+                .text(sig.signorder());
 
             view.$el.html(div);
 
@@ -530,6 +527,14 @@
             _.bindAll(view);
             view.model.bind('change:role', view.render);
             view.render();
+            view.$el.click(function() {
+                if(view.model.role() === 'viewer')
+                    view.model.makeSignatory();
+                else
+                    view.model.makeViewer();
+                return false;
+            });
+
         },
         icons: {
             viewer: '/img/viewer.png',
@@ -547,14 +552,6 @@
                         .addClass('design-view-action-participant-icon-role-icon')
                         .attr('src', view.icons[role]));
 
-            div.click(function() {
-                if(role === 'viewer')
-                    sig.makeSignatory();
-                else
-                    sig.makeViewer();
-                return false;
-            });
-
             view.$el.html(div);
 
             return view;
@@ -569,6 +566,18 @@
             _.bindAll(view);
             view.model.bind('change:delivery', view.render);
             view.render();
+            view.$el.click(function() {
+                if(view.model.delivery() === 'email')
+                    view.model.setDelivery('pad');
+                else if(view.model.delivery() === 'pad')
+                    view.model.setDelivery('mobile');
+                else
+                    view.model.setDelivery('email');
+
+                view.model.ensureMobile();
+
+                return false;
+            });
         },
         icons: {
             email: '/img/email.png',
@@ -587,18 +596,6 @@
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-device-icon')
                         .attr('src', view.icons[delivery]));
-            div.click(function() {
-                if(delivery === 'email')
-                    sig.setDelivery('pad');
-                else if(delivery === 'pad')
-                    sig.setDelivery('mobile');
-                else
-                    sig.setDelivery('email');
-
-                sig.ensureMobile();
-
-                return false;
-            });
             view.$el.html(div);
 
             return view;
@@ -613,6 +610,16 @@
             _.bindAll(view);
             view.model.bind('change:authentication', view.render);
             view.render();
+            view.$el.click(function() {
+                var sig = view.model;
+                var auth = sig.authentication()
+                if(auth === 'standard')
+                    sig.setAuthentication('eleg');
+                else
+                    sig.setAuthentication('standard');
+                sig.ensurePersNr();
+                return false;
+            });
         },
         icons: {
             standard: '/img/noauth.png',
@@ -629,15 +636,6 @@
                 .append($('<img />')
                         .addClass('design-view-action-participant-icon-auth-icon')
                         .attr('src', view.icons[auth]));
-
-            div.click(function() {
-                if(auth === 'standard')
-                    sig.setAuthentication('eleg');
-                else
-                    sig.setAuthentication('standard');
-                sig.ensurePersNr();
-                return false;
-            });
 
             view.$el.html(div);
 
@@ -1012,8 +1010,8 @@
             div.addClass('design-view-action-participant-info-box');
             div.append(view.color());
             div.append(view.name());
-            div.append(view.email());
             div.append(view.company());
+            div.append(view.email());
             div.append(view.orderIcon.el);
             div.append(view.roleIcon.el);
             div.append(view.deviceIcon.el);
@@ -1122,19 +1120,24 @@
             var values = ['optional', 'signatory', 'sender'];
             var options = {
                 optional  : {name : localization.designview.optional,
-                             value : 'optional'},
+                             value : 'optional',
+                             leftMargin: 9,
+                             offset: 6},
                 signatory : {name : localization.designview.mandatoryForRecipient,
-                             value : 'signatory'},
+                             value : 'signatory',
+                             leftMargin: 9,
+                             offset: 0},
                 sender    : {name : localization.designview.mandatoryForSender,
-                             value : 'sender'}
+                             value : 'sender',
+                             leftMargin: 9,
+                             offset: 0}
             };
             var select = new Select({
-                options: _.map(_.filter(values, function(v) {
-                    return v !== selected;
-                }), function(v) {
+                options: _.map(_.without(values, selected), function(v) {
                     return options[v];
                 }),
                 name: options[selected].name,
+                offset: options[selected].offset,
                 onSelect: function(v) {
                     if(v === 'optional') {
                         field.makeOptionalM();

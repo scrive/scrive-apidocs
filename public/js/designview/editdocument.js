@@ -18,8 +18,8 @@
             
             var div = $('<div />');
 
-            div.append(view.arrow());
-            div.append(view.instructions());
+            //div.append(view.arrow());
+            //div.append(view.instructions());
             div.append(view.checkbox());
             div.append(view.signature());
             div.append(view.text());
@@ -93,7 +93,7 @@
             txt.addClass('design-view-action-document-draggables-signature-text');
 
             var img = $('<img />');
-            img.addClass('design-view-action-document-draggables-checkbox-icon');
+            img.addClass('design-view-action-document-draggables-signature-icon');
             img.attr('src', '/img/signature.png');
 
             var getsignature = function() {

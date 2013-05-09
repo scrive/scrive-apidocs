@@ -5,7 +5,6 @@
 .design-view-action-participant-container {
     .box-sizing(border-box);
     margin: 0 -1px -1px 0;
-    padding: 16px 10px;
     width: 100%;
     background-color: white;
     //border-right: 1px solid #ccc;
@@ -17,8 +16,7 @@
 
 .design-view-action-participant-box {
     .box-sizing(border-box);
-    margin: 0 0 8px 0;
-    width: 100%;
+    margin: 16px 6px 8px 16px;
     position: relative;
 }
 
@@ -97,15 +95,15 @@
     .box-sizing(border-box);
     position: absolute;
     top: 0px;
-    left: 244px;
-    width: 220px;
+    left: 444px;
+    width: 320px;
     height: 100%;
     border-left: 1px solid #eee;
 }
 
 .design-view-action-participant-info-email-inner {
     line-height: 1em;
-    .center-vh(224px, 1em);
+    .center-vh(320px, 1em);
     left: 10px;
     overflow: hidden;
     margin-left: 0;
@@ -115,7 +113,7 @@
     .box-sizing(border-box);
     position: absolute;
     top: 0px;
-    left: 464px;
+    left: 244px;
     margin-left: 3px;
     width: 200px;
     height: 100%;
@@ -205,7 +203,7 @@
 .design-view-action-participant-details-field {
     .box-sizing(border-box);
     border: 1px solid #ccc;
-    width: 225px;
+    width: 200px;
     padding: 8px;
     height: 36px;
     background: white;
@@ -221,7 +219,6 @@
 
 
 .design-view-action-participant-new-box {
-    width: 970px;
     position: relative;
     overflow: hidden;
     line-height: 1em;
@@ -233,14 +230,13 @@
 
 .design-view-action-participant-new-box-buttons {
     z-index: 100;
-    width: 100%;
     text-align: right;
+    margin: 0px 32px 16px 0px;
 }
 
 .design-view-action-participant-new-single {
     display: inline-block;
     height: 100%;
-    margin-right: 16px;
 }
 
 .design-view-action-participant-new-single-text {
@@ -251,6 +247,7 @@
 .design-view-action-participant-new-multi {
     display: inline-block;
     height: 100%;
+    margin-right: 16px;
 }
 
 .design-view-action-participant-new-multi-text {
@@ -287,7 +284,7 @@
 
 .design-view-action-participant-details-information {
     .box-sizing(border-box);
-    margin: 8px 0 0 8px;
+    margin: 16px 0 0 16px;
     .clearfix;
 }
 
@@ -322,12 +319,25 @@
     // .design-view-action-participant-details-field;
     .box-sizing(border-box);
     display: inline-block;
-    width: 225px;
+    width: 100px;
     vertical-align: middle;
     height: 36px;
     .select-opts {
         .box-sizing(border-box);
-        width: 225px;
+        width: 96px;
+        li {
+            text-indent: 0;
+            line-height: 12px;
+            font-size: 10px;
+            color: #888;
+        }
+    }
+    .select-button .select-button-label {
+        text-indent: 0;
+        line-height: 12px;
+        font-size: 10px;
+        margin-left: 4px;
+        color: #888;
     }
     margin-bottom: 8px;
 }
@@ -357,7 +367,7 @@
 .design-view-action-participant-details-participation {
     .box-sizing(border-box);
     display: block;
-    margin-left: 8px;
+    margin: 16px 0 16px 16px;
 }
 
 .design-view-action-participant-details-participation-header {
@@ -424,7 +434,7 @@
 }
 
 .design-view-action-participant-details-information-closer {
-     width: 28px;
+     width: 15px;
      height: 28px;
      display: inline-block;
      text-align: center;
