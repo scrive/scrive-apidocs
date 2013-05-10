@@ -21,6 +21,7 @@ window.FieldPlacement = Backbone.Model.extend({
         placement.addToPage();
         if (this.tip() === undefined)
           this.set({"tip" : args.field.defaultTip()});
+        this.setSignatory(args.field.signatory());
         this.setField(args.field);
     },
     placed : function() {
@@ -118,6 +119,12 @@ window.FieldPlacement = Backbone.Model.extend({
         tip : this.get("tip")
       };
       return draft;
+    },
+    signatory: function() {
+        return this.get('signatory');
+    },
+    setSignatory: function(s) {
+        return this.set({signatory:s});
     }
 });
 

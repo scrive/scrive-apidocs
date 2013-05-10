@@ -165,7 +165,7 @@ var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this);
         this.model.bind('removed', this.clear);
-        this.model.bind('change:field', this.render);
+        this.model.bind('change:field change:signatory', this.render);
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -246,35 +246,28 @@ var TextTypeSetterView = Backbone.View.extend({
         var box = $("<div class='subtitle'/>");
         var model = view.model;
         var field = model.field();
-        var sig = field.signatory();
+        var sig = field?field.signatory():model.signatory();
         var doc = sig.document();
         
         var signame = sig.nameOrEmail() || sig.nameInDocument();
-        var fldname = field.nicename();
 
-        var name = signame + ': ' + fldname;
+        var name = signame;
 
-        var options = [];
-
-        _.each(doc.signatories(), function(s) {
-            options.push({name: s.nameOrEmail() || s.nameInDocument(),
-                          value: null});
-            _.each(s.fields(), function(f) {
-                if(f !== field && f.isText())
-                    options.push({name: '   ' + f.nicename(),
-                                  value: f,
-                                 leftMargin: 16});
-            });
+        var options = _.map(doc.signatories(), function(s) {
+            return {name: s.nameOrEmail() || s.nameInDocument(),
+                    value: s};
         });
 
         var selector = new Select({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-selector',
-            onSelect: function(f) {
-                if(f) {
-                    view.model.setField(f);
-                }
+            onSelect: function(s) {
+                var name = field?field.name():'email';
+                var type = field?field.type():'standard';
+                var oldfield = s.field(name, type);
+                model.setField(oldfield);
+                model.setSignatory(s);
             }
         });
         
@@ -283,6 +276,34 @@ var TextTypeSetterView = Backbone.View.extend({
         box.append(selector.input());
         
         return box;
+    },
+    fieldSelector: function() {
+        var placement = this.model;
+        var field = placement.field();
+
+        var signatory = placement.signatory();
+
+        var fields = signatory ? signatory.fields() : [];
+
+        var name = field ? field.nicename() : 'Select field';
+
+        var options = [];
+        _.each(fields, function(f) {
+            if(f.isText())
+                options.push({name: f.nicename(),
+                              value: f});
+        });
+
+        var selector = new Select({
+            name: name,
+            options: options,
+            cssClass: 'text-field-placement-setter-field-field-selector',
+            onSelect: function(f) {
+                placement.setField(f);
+            }
+        });
+
+        return selector.input();
     },
     place : function() {
         var placement = this.model;
@@ -300,6 +321,7 @@ var TextTypeSetterView = Backbone.View.extend({
 
            body.append(this.title());
            body.append(this.selector());
+        body.append(this.fieldSelector());
            body.append(this.obligatoryOption());
 
            body.append(this.doneOption());
@@ -316,7 +338,8 @@ var TextTypeSetterView = Backbone.View.extend({
 var TextPlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        this.model.bind('removed', this.clear);
+        if(this.model)
+            this.model.bind('removed', this.clear);
         this.render();
     },
     clear: function() {
@@ -327,12 +350,14 @@ var TextPlacementView = Backbone.View.extend({
             var field =   this.model;
             var box = $(this.el);
             box.addClass('placedfieldvalue value');
+        if(field) {
             box.text(field.nicetext());
             field.bind('change', function() {
                 box.text(field.nicetext());
-
             });
-
+        } else {
+            box.text('unset field');
+        }
     }
 });
 
@@ -340,7 +365,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear, this);
-        this.model.bind('change:field', this.render);
+        this.model.bind('change:field change:signatory', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.view = this;
         this.render();
@@ -469,20 +494,21 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var view = this;
         var placement = this.model;
         var field =  placement.field();
-        var document = field.signatory().document();
+        var signatory = field?field.signatory():placement.signatory();
+        var document = signatory.document();
         var place = $(this.el);
 
         place.addClass('placedfield');
-        if(field.signatory().color())
-            place.css('border', '1px solid ' + field.signatory().color());
+        if(signatory.color())
+            place.css('border', '1px solid ' + signatory.color());
 
-        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
+        if ((signatory == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
 
         this.updatePosition();
 
         place.empty();
-        place.append(new TextPlacementView({model: placement.field()}).el);
+        place.append(new TextPlacementView({model: field}).el);
         place.unbind('click');
         if (document.allowsDD()) {
             draggebleField(place, placement);
@@ -494,7 +520,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                 return false;
             });
         }
-        if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
+        if (field && signatory.canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
             place.click(function() {
                 return view.startInlineEditing();
             });

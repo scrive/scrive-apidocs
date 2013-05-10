@@ -1103,14 +1103,18 @@
             var field = view.model;
             _.bindAll(view);
             view.render();
-            field.bind('change:obligatory', view.render);
-            field.bind('change:shouldbefilledbysender', view.render);
+            if(field) {
+                field.bind('change:obligatory', view.render);
+                field.bind('change:shouldbefilledbysender', view.render);
+            }
         },
         render: function() {
             var view = this;
             var field = view.model;
             var selected;
-            if(field.isOptional()) {
+            if(!field) {
+                selected = 'optional';
+            } else if(field.isOptional()) {
                 selected = 'optional';
             } else if(field.shouldbefilledbysender()) {
                 selected = 'sender';
@@ -1139,14 +1143,16 @@
                 name: options[selected].name,
                 offset: options[selected].offset,
                 onSelect: function(v) {
-                    if(v === 'optional') {
-                        field.makeOptionalM();
-                    } else if(v === 'signatory') {
-                        field.makeObligatoryM();
-                        field.setShouldBeFilledBySender(false);
-                    } else if(v === 'sender') {
-                        field.makeObligatoryM();
-                        field.setShouldBeFilledBySender(true);
+                    if(field) {
+                        if(v === 'optional') {
+                            field.makeOptionalM();
+                        } else if(v === 'signatory') {
+                            field.makeObligatoryM();
+                            field.setShouldBeFilledBySender(false);
+                        } else if(v === 'sender') {
+                            field.makeObligatoryM();
+                            field.setShouldBeFilledBySender(true);
+                        }
                     }
                     return true;
                 }
