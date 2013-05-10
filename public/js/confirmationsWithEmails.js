@@ -202,6 +202,10 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var content = $("<div class='modal-content'>");
 	   var mailview = new MailView({model: model.mail(), el : $("<div/>")});
        content.append($("<div class='body'/>").html($(mailview.el)));
+        // added by Eric to not let anything be clickable in the email
+        content.find('*').click(function(){
+            return false;
+        });
        body.append(content);
 
 	   //Modal footer
