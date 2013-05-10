@@ -99,7 +99,7 @@ versionedAPI _version = choice [
   dir "createfromfile"     $ hPost $ toK0 $ apiCallCreateFromFile,
   dir "createfromtemplate" $ hPostAllowHttp $ toK1 $ apiCallCreateFromTemplate,
   dir "update"             $ hPost $ toK1 $ apiCallUpdate,
-  dir "ready"              $ hPost $ toK1 $ apiCallReady,
+  dir "ready"              $ hPostAllowHttp $ toK1 $ apiCallReady,
   dir "cancel"             $ hPost $ toK1 $ apiCallCancel,
   dir "reject"             $ hPost $ toK2 $ apiCallReject,
   dir "sign"               $ hPost $ toK2 $ apiCallSign,
