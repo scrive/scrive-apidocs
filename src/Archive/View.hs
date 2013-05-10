@@ -125,6 +125,7 @@ signatoryFieldsListForJSON padqueue doc sl = do
       PadDelivery   -> "pad"
       APIDelivery   -> "api"
       MobileDelivery-> "mobile"
+      EmailAndMobileDelivery-> "email+mobile"
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl

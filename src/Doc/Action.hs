@@ -330,7 +330,7 @@ sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isSignatory sl
                       , isCurrentSignatory (documentcurrentsignorder document) sl
-                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery]
+                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       , not $ hasSigned sl
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
@@ -340,7 +340,7 @@ sendInvitationEmailsToViewers ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , not $ isSignatory sl
                       , not $ isAuthor sl
-                      , signatorylinkdeliverymethod sl == EmailDelivery
+                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
 
@@ -419,14 +419,19 @@ sendClosedEmails document = do
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
       ml <- handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
-      sendNotifications sl
-          (do
+      let sendMail = do
             mail <- mailDocumentClosed ctx document ml sl
             scheduleEmailSendout (ctxmailsconfig ctx) $
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
-                                      })
-          (scheduleSMS =<< smsClosedNotification document sl)
+                                      }
+      let sendSMS withMail = (scheduleSMS =<< smsClosedNotification document sl withMail)
+      case (isGood $ asValidEmail $ getEmail sl,isGood $  asValidPhone $ getMobile sl) of
+           (False,False) -> return ()
+           (True,False) -> sendMail
+           (False,True) -> sendSMS False
+           (True,True) -> sendMail >> sendSMS True
+
 
 makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
@@ -514,4 +519,5 @@ sendNotifications sl domail dosms = do
   case signatorylinkdeliverymethod sl of
     EmailDelivery   -> domail
     MobileDelivery  -> dosms
+    EmailAndMobileDelivery -> domail >> dosms
     _               -> return ()

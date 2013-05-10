@@ -53,9 +53,9 @@ smsReminder :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink ->
 smsReminder doc sl = do
   (SMS (getMobile sl) (Invitation (documentid doc) (signatorylinkid sl))) <$> renderLocalTemplate doc "_smsReminder" (smsFields doc sl)
 
-smsClosedNotification :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
-smsClosedNotification doc sl = do
-  (SMS (getMobile sl) None) <$> renderLocalTemplate doc "_smsClosedNotification" (smsFields doc sl)
+smsClosedNotification :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Bool -> m SMS
+smsClosedNotification doc sl withEmail = do
+  (SMS (getMobile sl) None) <$> renderLocalTemplate doc "_smsClosedNotification" (smsFields doc sl >> F.value "withEmail" withEmail)
 
 smsRejectNotification :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> SignatoryLink -> m SMS
 smsRejectNotification doc sl rejector = do

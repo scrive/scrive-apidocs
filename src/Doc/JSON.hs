@@ -83,10 +83,13 @@ instance SafeEnum DeliveryMethod where
     fromSafeEnum PadDelivery   = 2
     fromSafeEnum APIDelivery   = 3
     fromSafeEnum MobileDelivery= 4
+    fromSafeEnum EmailAndMobileDelivery = 5
+
     toSafeEnum 1 = Just EmailDelivery
     toSafeEnum 2 = Just PadDelivery
     toSafeEnum 3 = Just APIDelivery
     toSafeEnum 4 = Just MobileDelivery
+    toSafeEnum 5 = Just EmailAndMobileDelivery
     toSafeEnum _  = Nothing
 
 
