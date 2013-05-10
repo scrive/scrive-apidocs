@@ -78,6 +78,7 @@ import Util.CSVUtil
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Util.MonadUtils
 import Stats.Control
 import User.Utils
@@ -623,6 +624,7 @@ handleProlong :: Kontrakcja m => DocumentID -> m KontraLink
 handleProlong docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
   guardRightM $ prolongDocument doc
+  triggerAPICallbackIfThereIsOne doc
   addFlashM $ flashDocumentProlonged doc
   return $ LinkIssueDoc (documentid doc)
 

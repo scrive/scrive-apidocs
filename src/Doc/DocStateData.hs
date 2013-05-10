@@ -88,6 +88,7 @@ data StatusClass = SCDraft
                   | SCRead
                   | SCOpened
                   | SCSigned
+                  | SCProlonged
                   deriving (Eq, Ord, Enum, Bounded)
 
 instance Show StatusClass where
@@ -102,6 +103,7 @@ instance Show StatusClass where
   show SCRead = "read"
   show SCOpened = "opened"
   show SCSigned = "signed"
+  show SCProlonged = "prolonged"
 
 instance Read StatusClass where
   readsPrec _ str =
