@@ -383,6 +383,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
          if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
              placement.typeSetter = new TextTypeSetterView({model : placement});
              $('body').append(placement.typeSetter.el);
+             setTimeout(function() {
+                 placement.typeSetter.place();
+             }, 0);
          }
     },
     closeTypeSetter : function() {
@@ -752,6 +755,10 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
          if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
              placement.typeSetter = new CheckboxTypeSetterView({model : placement});
              $('body').append(placement.typeSetter.el);
+            setTimeout(function() {
+                placement.typeSetter.place();
+            }, 0);
+
          }
     },
     closeTypeSetter : function() {
@@ -997,7 +1004,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
                            }).input();
     },
     title : function() {
-        return $("<div class='title'/>").text(localization.designview.textFields.textField);
+        return $("<div class='title'/>").text(localization.designview.signatureBox);
     },
     selector : function() {
         var view = this;
@@ -1185,6 +1192,10 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
          if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
              placement.typeSetter = new SignatureTypeSetterView({model : placement});
              $('body').append(placement.typeSetter.el);
+            setTimeout(function() {
+                placement.typeSetter.place();
+            }, 0);
+
          }
     },
     closeTypeSetter : function() {
@@ -1235,13 +1246,11 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         }
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
+
           placement.cleanTypeSetter();
 
         }
 
-        setTimeout(function() {
-            placement.typeSetter.place();
-        }, 0);
 
         return this;
     }
