@@ -33,8 +33,8 @@
             var div = $('<div />');
 
             div.append(view.leftColumn());
+            div.append(view.middleColumn());
             div.append(view.rightColumn());
-            div.append(view.attachments());
 
             view.$el.html(div.children());
 
@@ -54,13 +54,23 @@
 
             return div;
         },
+        middleColumn: function() {
+            var view = this;
+
+            var div = $('<div />');
+            div.addClass('design-view-action-process-middle-column');
+            view.middleColumnDiv = div;
+            div.append(view.invitationBox());
+
+            return div;
+        },
         rightColumn: function() {
             var view = this;
 
             var div = $('<div />');
             div.addClass('design-view-action-process-right-column');
-            view.rightColumnDiv = div;
-            div.append(view.invitationBox());
+
+            div.append(view.attachments());
 
             return div;
         },
@@ -73,7 +83,6 @@
 
             var div = $('<div />');
             div.addClass('design-view-action-process-left-column-document-name');
-
 
             var label = $('<div />');
             label.addClass('design-view-action-process-left-column-document-name-label');
@@ -348,21 +357,21 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var lwidth = view.editInvitationLabel.outerWidth();
-            var cwidth = view.rightColumnDiv.width();
+            var cwidth = view.middleColumnDiv.width();
 
             view.invitationEditor.tinymce({
                 script_url: '/tiny_mce/tiny_mce.js',
                 theme: "advanced",
-                theme_advanced_toolbar_location: "top",
+                theme_advanced_toolbar_location: "external",
                 theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
                 theme_advanced_buttons2: "",
                 convert_urls: false,
                 theme_advanced_toolbar_align: "middle",
                 plugins: "noneditable,paste",
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
-                width: cwidth-lwidth-8, // automatically adjust for different swed/eng text
+                width: cwidth, // automatically adjust for different swed/eng text
                 oninit : function(ed) {
+                    $('.mceExternalToolbar').remove();
                     $(ed.getDoc()).blur(function(e) {
                         doc.setInvitationMessage(ed.getBody().innerHTML);
                     });
