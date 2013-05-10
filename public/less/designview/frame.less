@@ -22,6 +22,7 @@ body.designview .mainContainer {
     height: 80px;
     border-bottom: 1px solid #ccc;
     font-size:20px;
+    cursor: pointer;
 }
 
 .design-view-tab1 {
@@ -60,7 +61,7 @@ body.designview .mainContainer {
 .design-view-tab3 {
     .box-sizing(border-box);
     display: inline-block;
-    width: 33%;
+    width: 34%;
     height: 100%;
     position: relative;
 }
@@ -113,54 +114,25 @@ body.designview .mainContainer {
     position: relative;
 }
 
-// bar across top of entire document area
-.design-view-document-remove-button-container {
+.design-view-button-remove {
     .box-sizing(border-box);
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 60px;
-    width: 100%;
-}
-
-.design-view-document-remove-button-wrapper {
-    height: 60px;
-    width: 240px;
-    position: absolute;
-    top: 0;
-    right: 35px;
+    height: 100%;
+    width: 20%;
     cursor: pointer;
+    display: inline-block;
+    position: relative;
+    border-right: 1px solid #ccc;
 }
 
-.design-view-document-remove-button-label {
+.design-view-button-remove-label {
     .box-sizing(border-box);
-    position: absolute;
-    top: 0px;
-    right: 60px;
-    height: 60px;
-    width: 175px;
-    border: 1px solid #eee;
-}
-
-.design-view-document-remove-button-label-text {
-    .box-sizing(border-box);
-    .center-vh(100%, 1em);
+    .center-vh(100%, 39px);
     text-align: center;
 }
 
-.design-view-document-remove-button-icon {
+.design-view-button-remove-icon-img {
     .box-sizing(border-box);
-    height: 60px;
-    width: 60px;
-    border: 1px solid #eee;
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-.design-view-document-remove-button-icon-img {
-    .box-sizing(border-box);
-    .center-vh(32px, 39px);
+    margin-right: 8px;
 }
 
 
@@ -202,6 +174,7 @@ body.designview .mainContainer {
 
 .design-view-button1-icon {
     vertical-align: middle;
+    margin-right: 8px;
 }
 
 .design-view-button2 {
@@ -221,6 +194,7 @@ body.designview .mainContainer {
 
 .design-view-button2-icon {
     vertical-align: middle;
+    margin-right: 8px;
 }
 
 .design-view-button3 {

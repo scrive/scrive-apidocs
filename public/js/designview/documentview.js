@@ -79,72 +79,8 @@
             var document = view.model;
             var div = $('<div />');
             div.addClass('design-view-document-pages');
-            div.append(view.removeDocumentButtons());
             div.append(KontraFile.init({file: document.mainfile()}).view.el);
             return div;
-        },
-        removeDocumentButtons: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-document-remove-button-container');
-            div.append(view.removeDocumentButton());
-            return div;
-        },
-        removeDocumentButton: function() {
-            var view = this;
-            var doc = view.model;
-
-
-
-            var div = $('<div />');
-            div.addClass('design-view-document-remove-button-wrapper');
-            div.append(view.removeDocumentButtonLabel());
-            div.append(view.removeDocumentButtonIcon());
-            div.click(function() {
-                doc.setFlux();
-                doc.removePlacements();
-                doc.save();
-                doc.afterSave( function() {
-                    new Submit({
-                        method : "POST",
-                        url :  "/api/frontend/changemainfile/" + doc.documentid(),
-                        ajax: true,
-                        onSend: function() {
-                            
-                        },
-                        ajaxerror: function(d,a){
-                            doc.recall();
-                        },
-                        ajaxsuccess: function() {
-                            doc.recall();
-
-                        }}).send();
-                });
-
-            });
-            return div;
-        },
-        removeDocumentButtonIcon: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-document-remove-button-icon');
-            var img = $('<img />');
-            img.addClass('design-view-document-remove-button-icon-img');
-            img.attr('src', '/img/trash.png');
-            div.append(img);
-            
-            return div;
-        },
-        removeDocumentButtonLabel: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-document-remove-button-label');
-            var txt = $('<div />');
-            txt.addClass('design-view-document-remove-button-label-text');
-            txt.text(localization.designview.removeThisDocument);
-            div.append(txt);
-            return div;
-
         },
         uploadButtons: function() {
             var view = this;
@@ -176,8 +112,6 @@
             div.addClass('design-view-document-buttons-buttons');
 
             div.append(view.uploadFile());
-            //div.append(view.orText());
-            //div.append(view.avtalButton());
 
             return div;
         },
@@ -211,117 +145,20 @@
                             if(a === 'parsererror') { // file too large
                                 new FlashMessage({content: localization.fileTooLarge, color: "red"});
                                 document.unsetFlux();
-                                //mixpanel.track('Error',
-                                //               {Message: 'main file too large'});
+                                mixpanel.track('Error',
+                                               {Message: 'main file too large'});
                                 
                             } else {
                                 new FlashMessage({content: localization.couldNotUpload, color: "red"});
                                 document.unsetFlux();
-                                //mixpanel.track('Error',
-                                //               {Message: 'could not upload main file'});
+                                mixpanel.track('Error',
+                                               {Message: 'could not upload main file'});
                             }
                             document.trigger('change');
                         }
                     });
                 }
             }).input();
-
-            var div = $('<div />');
-            div.addClass('design-view-document-buttons-upload-button');
-            
-            var circle = $('<img />');
-            circle.addClass('design-view-document-buttons-upload-button-circle');
-            circle.attr('src', '/img/circle.png');
-
-            var label = $('<div />');
-            label.addClass('design-view-document-buttons-upload-button-label');
-            
-            var line1 = $('<div />');
-            line1.addClass('design-view-document-buttons-upload-button-line1');
-
-            label.append(line1);
-
-            line1.text(localization.designview.openPDF);
-   
-            div.append(circle);
-            div.append(label);
-
-
-
-            div.click(function() {
-                document.save();
-                FileUpload.upload({
-                    action: url,
-                    name: 'file',
-                    mimetype: 'application/pdf',
-                    beforeUpload: function() {
-                        document.setFlux();
-                    },
-                    success: function(d) {
-                        document.save();
-                        document.afterSave(function() {
-                            document.recall();
-                        });
-                    },
-                    error: function(d, a){
-                        console.log(d);
-                        if(a === 'parsererror') { // file too large
-                            new FlashMessage({content: localization.fileTooLarge, color: "red"});
-                            document.unsetFlux();
-                            //mixpanel.track('Error',
-                            //               {Message: 'main file too large'});
-                            
-                        } else {
-                            new FlashMessage({content: localization.couldNotUpload, color: "red"});
-                            document.unsetFlux();
-                            //mixpanel.track('Error',
-                            //               {Message: 'could not upload main file'});
-                        }
-                        document.trigger('change');
-                    }
-                });
-            });
-
-            return div;
-        },
-        orText: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-document-buttons-or-text');
-
-            div.text('- or -');
-
-            return div;
-        },
-        avtalButton: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-document-buttons-avtal-button');
-            var circle = $('<img />');
-            circle.addClass('design-view-document-buttons-avtal-button-circle');
-            circle.attr('src', '/img/circle.png');
-
-            var label = $('<div />');
-            label.addClass('design-view-document-buttons-avtal-button-label');
-            
-            var line1 = $('<div />');
-            line1.addClass('design-view-document-buttons-avtal-button-line1');
-
-            var line2 = $('<div />');
-            line2.addClass('design-view-document-buttons-avtal-button-line2');
-
-            label.append(line1);
-            label.append(line2);
-
-            line1.text(localization.avtal24.buy);
-            line2.text('(' + localization.designview.offsite + ')');
-   
-            div.append(circle);
-            div.append(label);
-
-            div.click(Avtal24Popup);
-
-            return div;
         },
         afterInsert: function() {
             $(window).resize();

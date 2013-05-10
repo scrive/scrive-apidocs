@@ -96,6 +96,9 @@
                 .append($('<div />')
                         .addClass('design-view-tab1-text')
                         .text(localization.designview.editParticipants));
+            if(model.step() === 1)
+                div.css({'border-top': '4px solid #ccc',
+                         'border-bottom': '4px solid #fff'});
             div.click(function() {
                 model.setStep(1);
             });
@@ -113,6 +116,9 @@
                         .append($('<span />')
                                 .addClass('design-view-tab2-text-optional')
                                 .text('(' + localization.designview.optional + ')')));
+            if(model.step() === 2)
+                div.css({'border-top': '4px solid #ccc',
+                         'border-bottom': '4px solid #fff'});
             div.click(function() {
                 model.setStep(2);
             });
@@ -130,6 +136,9 @@
                         .append($('<span />')
                                 .addClass('design-view-tab3-text-optional')
                                 .text('(' + localization.designview.optional + ')')));
+            if(model.step() === 3)
+                div.css({'border-top': '4px solid #ccc',
+                         'border-bottom': '4px solid #fff'});
             div.click(function() {
                 model.setStep(3);
             });
@@ -181,7 +190,7 @@
             var view = this;
             _.bindAll(view);
             view.render();
-            view.model.document().bind('change:template', view.render);
+            view.model.document().bind('change:template change:file', view.render);
         },
         render: function() {
             var view = this;
@@ -201,9 +210,13 @@
 
             if(model.document().isTemplate()) {
                 div.append(view.saveAsTemplate());
+                if(model.document().mainfile())
+                    div.append(view.removeDocumentButton());
             } else {
                 div.append(view.saveAsDraft());
                 div.append(view.saveAsTemplate());
+                if(model.document().mainfile())
+                    div.append(view.removeDocumentButton());
                 div.append(view.send());
             }
 
@@ -261,6 +274,56 @@
             div.click(view.finalClick);
 
             return div;
+        },
+        removeDocumentButton: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var doc = viewmodel.document();
+
+            var div = $('<div />');
+            div.addClass('design-view-button-remove');
+            div.append(view.removeDocumentButtonLabel());
+            div.click(function() {
+                doc.setFlux();
+                doc.removePlacements();
+                doc.save();
+                doc.afterSave( function() {
+                    new Submit({
+                        method : "POST",
+                        url :  "/api/frontend/changemainfile/" + doc.documentid(),
+                        ajax: true,
+                        onSend: function() {
+                            
+                        },
+                        ajaxerror: function(d,a){
+                            doc.recall();
+                        },
+                        ajaxsuccess: function() {
+                            doc.recall();
+
+                        }}).send();
+                });
+
+            });
+            return div;
+        },
+        removeDocumentButtonIcon: function() {
+            var view = this;
+
+            var img = $('<img />');
+            img.addClass('design-view-button-remove-icon-img');
+            img.attr('src', '/img/trash.png');
+            
+            return img;
+        },
+        removeDocumentButtonLabel: function() {
+            var view = this;
+            var div = $('<div />');
+            div.addClass('design-view-button-remove-label');
+            div.append(view.removeDocumentButtonIcon());
+            div.append(localization.designview.removeThisDocument);
+            return div;
+
         },
         finalClick: function() {
             var view = this;

@@ -19,7 +19,7 @@
             view.render();
             view.mail.bind('change', view.changeMail);
             view.model.document().bind('change', view.render);
-            view.model.document().bind('change:attachments', function() {
+            view.model.document().bind('change:attachments change:file', function() {
                 view.mail = view.model.document().inviteMail();
                 view.mail.bind('ready', function() {
                     view.render();
@@ -292,6 +292,9 @@
 
             var div = $('<div />');
 
+            var topLine = $('<div />');
+            topLine.addClass('design-view-action-process-right-column-invitation-topline');
+
             var label = $('<div />');
             label.addClass('design-view-action-process-right-column-invitation-label');
             label.text(localization.designview.editInvitation);
@@ -306,39 +309,35 @@
                 var editableContent = view.mail.content().find(".editable").html();
                 textarea.html(editableContent);
             }
+            textarea.hide();
             wrapper.html(textarea);
 
             view.invitationEditor = textarea;
 
-            var previewButton = Button.init({
-                color: 'blue',
-                text: localization.designview.previewInvitation,
-                size: 'tiny',
-                onClick: function() {
-                    doc.save();
-                    doc.afterSave(function() {
-                        var popup = ConfirmationWithEmail.popup({
-                            editText: '',
-                            title: localization.editInviteDialogHead,
-                            mail: doc.inviteMail(),
-                            onAccept: function() {
-                                popup.close();
-                            }
-                        });
+            var previewLink = $('<a />');
+            previewLink.addClass('design-view-action-process-right-column-invitation-link');
+            previewLink.text(localization.designview.previewInvitation);
+            previewLink.click(function() {
+                doc.save();
+                doc.afterSave(function() {
+                    var popup = ConfirmationWithEmail.popup({
+                        editText: '',
+                        title: localization.editInviteDialogHead,
+                        mail: doc.inviteMail(),
+                        onAccept: function() {
+                            popup.close();
+                        }
                     });
-                }
+                });
             });
 
-            var buttonWrapper = $('<div />');
-            buttonWrapper.addClass('design-view-action-process-right-column-invitation-button-wrapper');
-            buttonWrapper.append(previewButton.input());
-            view.invitationPreviewButton = buttonWrapper;
-            
-            div.append(label);
-            div.append(wrapper);
-            div.append(buttonWrapper);
+            topLine.append(label);
+            topLine.append(previewLink);
 
-            return div.children();;
+            div.append(topLine);
+            div.append(wrapper);
+
+            return div.children();
         },
         changeMail: function() {
             var view = this;
@@ -358,6 +357,8 @@
             var doc = viewmodel.document();
 
             var cwidth = view.middleColumnDiv.width();
+
+            view.invitationEditor.show();
 
             view.invitationEditor.tinymce({
                 script_url: '/tiny_mce/tiny_mce.js',
@@ -380,6 +381,7 @@
                     doc.setInvitationMessage(inst.getBody().innerHTML);
                 }
             });
+
 
             return view;
         }
