@@ -505,7 +505,10 @@
 			}
 			else//{// save a byte!
 			*/
-			 alert(s);
+                    /* Edited by Eric Normand to make it more user-friendly */
+			 //alert(s);
+
+            if(!this.trigger('onError', this, this)) return false;
 			//}// save a byte!
 		}
  }; //} });
