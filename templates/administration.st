@@ -281,7 +281,7 @@ admincompany=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="/adminonly">Go back to main admin page</a>
-    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly#companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
     <form action="" method="POST">
@@ -390,7 +390,7 @@ admincompanybranding=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="/adminonly">Go back to main admin page</a>
-    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly#companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
@@ -418,7 +418,7 @@ admincompanypayments=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="/adminonly">Go back to main admin page</a>
-    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly#companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
@@ -517,7 +517,7 @@ admincompanyusers=
 <div class="mainContainer" >
   <div class="body-container">
   <a href="/adminonly">Go back to main admin page</a>
-  <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
+  <a style="padding-left:100px" href="/adminonly#companyadmin">Go back to company admin page</a>
   <br/>
   <br/>
 
@@ -803,7 +803,7 @@ companyusagestats=
 <div class="mainContainer" >
   <div class="body-container">
     <a href="/adminonly">Go back to main admin page</a>
-    <a style="padding-left:100px" href="/adminonly/companyadmin">Go back to company admin page</a>
+    <a style="padding-left:100px" href="/adminonly#companyadmin">Go back to company admin page</a>
     <br/>
     <br/>
       <div class="tab-viewer">
