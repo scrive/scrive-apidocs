@@ -124,10 +124,7 @@
                         method : "POST",
                         url : "/api/frontend/changemainfile/" + document.documentid(),
                         ajaxsuccess: function(d) {
-                            document.save();
-                            document.afterSave(function() {
-                                document.recall();
-                            });
+                            document.recall();
                         },
                         ajaxerror: function(d, a){
                             console.log(d);
@@ -155,7 +152,10 @@
                                      onAppend: function(input, title, multifile) {
                                        document.setFlux();
                                        submit.addInputs(input);
-                                       submit.sendAjax();
+                                       document.save();
+                                       document.afterSave(function() {
+                                           submit.sendAjax();
+                                        });
                                      }
                        }).input();
         },
