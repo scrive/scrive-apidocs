@@ -28,7 +28,6 @@ ignore  less/branding/main.less
 ignore  less/designview/util.less
 ignore  libs/html5shiv.js
 ignore  css/fonts
-ignore js/designview/docdesignview.js
 
 set systemPage
  css css/calendar.css
@@ -138,14 +137,11 @@ set systemPage
  js   js/signview/docsignviewpad.js
  js   js/signview/docsignviewattachments.js
  js   js/signview/docsignview.js
- js   js/avtal24popup.js
- js   js/designview/signatorydesignview.js
- js   js/designview/signatoriesdesignview.js
  js   js/designview/docdesignviewpad.js
  js   js/designview/participants.js
  js   js/designview/editdocument.js
  js   js/designview/documentview.js
- js   js/designview/docdesignview2.js
+ js   js/designview/docdesignview.js
  js   js/designview/attachmentsdesignview.js
  js   js/designview/process.js
  js   js/mobilebankid.js
