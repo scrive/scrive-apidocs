@@ -557,7 +557,7 @@
             });
         },
         verificationBeforeSendingOrSigning : function() {
-            return !model.document().hasProblems();
+            return !this.model.document().hasProblems();
         }
     });
 

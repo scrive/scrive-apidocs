@@ -1,4 +1,4 @@
-/* 
+/*
  * Participants tab of design view.
  *
  */
@@ -33,7 +33,7 @@
                     view.popup();
                 }
             });
-            
+
             return button.input();
         },
         reset: function() {
@@ -61,7 +61,7 @@
             if(view.selected) {
                 var name = view.selected === '--custom' ? view.customName : view.selected;
                 var type = view.standardPlaceholders[view.selected] ? 'standard' : 'custom';
-                
+
                 var field = new Field({
                     name: name,
                     type: type,
@@ -81,21 +81,21 @@
             }
 
             view.refresh();
-            
+
             return view.content;
         },
         refresh: function() {
             var view = this;
 
             var div = view.content;
-            
+
             var top = $('<div />');
             top.addClass('design-view-action-participant-new-field-popup-content-top');
-            top.html(view.selectBox());            
+            top.html(view.selectBox());
 
             var bottom = $('<div />');
             bottom.addClass('design-view-action-participant-new-field-popup-content-bottom');
-            bottom.html(view.customField());            
+            bottom.html(view.customField());
 
             div.html(top);
             div.append(bottom);
@@ -150,7 +150,7 @@
             if(view.selected === '--custom') {
                 var title = $('<div />');
                 title.addClass('design-view-action-participant-new-field-popup-content-bottom-title');
-                
+
                 var input = InfoTextInput.init({
                     cssClass: 'design-view-action-participant-new-field-popup-content-bottom-input',
                     infotext: localization.designview.fieldName,
@@ -185,7 +185,7 @@
             return this.standardPlaceholders[name] || name;
         },
     });
-            
+
     var DesignViewParticipation = Backbone.View.extend({
         className: 'design-view-action-participant-details-participation',
         initialize: function() {
@@ -219,7 +219,7 @@
         },
         detailsParticipationFields: function() {
             var view = this;
-            
+
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-participation-fields');
             div.append(view.detailsParticipationFieldsSignOrder());
@@ -231,20 +231,20 @@
         detailsParticipationFieldsSignOrder: function() {
             var view = this;
             var model = view.model;
-            
+
             var i;
 
             var order = model.signorder();
 
             var options = [];
             for(i=1;i<=model.document().maxPossibleSignOrder();i++)
-                options.push({name: englishOrdinal(i) + ' ' + 
+                options.push({name: englishOrdinal(i) + ' ' +
                               localization.designview.toReceiveDocument,
                               value: i});
-            
+
             var select = new Select({
                 options: options,
-                name: englishOrdinal(order) + ' ' + 
+                name: englishOrdinal(order) + ' ' +
                     localization.designview.toReceiveDocument,
                 onSelect: function(v) {
                     model.setSignOrder(v);
@@ -252,7 +252,7 @@
                 }
             });
             select.view().$el.addClass('design-view-action-participant-details-participation-order');
-            
+
             return select.view().el;
         },
         detailsParticipationFieldsDelivery: function() {
@@ -264,10 +264,11 @@
             var deliveryTexts = {
                 email : localization.designview.byEmail,
                 pad : localization.designview.onThisTablet,
-                mobile : localization.designview.bySMS
+                mobile : localization.designview.bySMS,
+                email_mobile : localization.designview.byEmailAndSMS
             };
 
-            var deliveryTypes = ['email', 'pad', 'mobile'];
+            var deliveryTypes = ['email', 'pad', 'mobile', 'email_mobile'];
 
             var select = new Select({
                 options: _.map(deliveryTypes, function(t) {
@@ -378,7 +379,7 @@
                 text: '+ ' + localization.designview.addParty,
                 onClick: function() {
                     model.setParticipantDetail(null);
-                    
+
                     var doc = model.document();
                     var sig = new Signatory({
                         document:doc,
@@ -406,7 +407,7 @@
                 text: '+ ' + localization.designview.addMultisend,
                 onClick: function() {
                     model.setParticipantDetail(null);
-                    
+
                     var doc = model.document();
                     var sig = new Signatory({
                         document:doc,
@@ -459,11 +460,11 @@
             var sigs = doc.signatories();
 
             model.resetColor();
-            
+
             $.each(model.document().signatories(), function(i, s) {
                 s.setColor(model.currentColor());
                 model.advanceColor();
-                view.participants.push(new DesignViewParticipantView({model  : s, 
+                view.participants.push(new DesignViewParticipantView({model  : s,
                                                                       number : i,
                                                                       viewmodel : model
                                                                      }));
@@ -487,7 +488,7 @@
         }
     });
 
-    // order icon + order selection 
+    // order icon + order selection
     var DesignViewOrderIconView = Backbone.View.extend({
         className: 'design-view-action-participant-icon-order',
         initialize: function(args) {
@@ -519,7 +520,7 @@
         }
     });
 
-    // role icon + role selection 
+    // role icon + role selection
     var DesignViewRoleIconView = Backbone.View.extend({
         className: 'design-view-action-participant-icon-role',
         initialize: function(args) {
@@ -558,7 +559,7 @@
         }
     });
 
-    // delivery icon + delivery selection 
+    // delivery icon + delivery selection
     var DesignViewDeviceIconView = Backbone.View.extend({
         className: 'design-view-action-participant-icon-device',
         initialize: function(args) {
@@ -571,6 +572,8 @@
                     view.model.setDelivery('pad');
                 else if(view.model.delivery() === 'pad')
                     view.model.setDelivery('mobile');
+                else if(view.model.delivery() === 'mobile')
+                    view.model.setDelivery('email_mobile');
                 else
                     view.model.setDelivery('email');
 
@@ -583,7 +586,8 @@
             email: '/img/email.png',
             pad: '/img/pad2.png',
             api: '/img/pad2.png',
-            mobile: '/img/phone2.png'
+            mobile: '/img/phone2.png',
+            email_mobile : '/img/email_mobile.png'
         },
         render: function() {
             var view = this;
@@ -602,7 +606,7 @@
         }
     });
 
-    // auth icon + auth selection 
+    // auth icon + auth selection
     var DesignViewAuthIconView = Backbone.View.extend({
         className: 'design-view-action-participant-icon-auth',
         initialize: function(args) {
@@ -669,7 +673,7 @@
 
                 div.append(view.detailsInformation());
                 div.append(view.participation.el);
-                
+
                 view.$el.html(div.children());
             }
             return view;
@@ -677,7 +681,7 @@
         detailsInformation: function() {
             var view = this;
             var sig = view.model;
-            
+
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information');
             div.append(view.detailsInformationHeader());
@@ -688,17 +692,17 @@
         detailsInformationHeader: function() {
             var view = this;
             var sig = view.model;
-            
+
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-header');
             div.text('Information');
-            
+
             return div;
         },
         detailsInformationFields: function() {
             var view = this;
             var sig = view.model;
-            
+
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-fields');
 
@@ -724,10 +728,10 @@
                 div.append(view.detailsInformationField('sigco', 'standard', 'Company'));
 
                 $.each(sig.fields(), function(i, e) {
-                    if(e.name() !== 'fstname' && 
+                    if(e.name() !== 'fstname' &&
                        e.name() !== 'sndname' &&
                        e.name() !== 'sigco'   &&
-                       e.name() !== 'email'   && 
+                       e.name() !== 'email'   &&
                        e.isText())
                         div.append(view.detailsInformationField(e.name(), e.type(), e.nicename()));
                 });
@@ -736,7 +740,7 @@
             }
 
             div.append(view.newFieldSelector.el);
-            
+
             return div;
         },
         detailsFullNameField: function() {
@@ -767,7 +771,7 @@
                     sig.sndnameField().setValue(s);
                 },0); // do this with the current value (not value before keypress)
             });
-            
+
             var options = new FieldOptionsView({
                 model: sig.fstnameField()
             });
@@ -807,7 +811,7 @@
                         input.removeClass('redborder');
                 },0);
             });
-            
+
             var options = new FieldOptionsView({
                 model: field
             });
@@ -847,7 +851,7 @@
             var viewmodel = args.viewmodel;
             view.viewmodel = args.viewmodel;
             _.bindAll(view);
-            
+
             view.orderIcon  = new DesignViewOrderIconView ({model:view.model,
                                                             viewmodel: view.viewmodel});
             view.roleIcon   = new DesignViewRoleIconView  ({model:view.model,
@@ -876,7 +880,7 @@
                 div.append(view.closeBox());
 
                 div.append(view.inner());
-                
+
                 setTimeout(function() {
                     view.updateOpened();
                 }, 0);
@@ -940,7 +944,7 @@
                     view.active = false;
                     view.opened = false;
                 } else {
-                    view.innerDiv.css({height:50, 
+                    view.innerDiv.css({height:50,
                                        overflow:'hidden',
                                        'z-index': 1});
                     view.active = false;
@@ -984,12 +988,12 @@
 
             if(!sig.author()) {
                 div.addClass('design-view-action-participant-close')
-                
+
                 var txt = $('<div />');
                 txt.addClass('design-view-action-participant-close-x');
                 txt.text('x');
                 div.html(txt);
-                
+
                 div.click(function() {
                     viewmodel.setParticipantDetail(null);
                     _.each(sig.fields(), function(field) {
@@ -1004,7 +1008,7 @@
             var view = this;
             var sig = view.model;
             var viewmodel = view.viewmodel;
-            
+
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-info-box');
@@ -1034,7 +1038,7 @@
             var txt = $('<div />');
             txt.addClass('design-view-action-participant-info-name-inner');
             txt.text(sig.name());
-            
+
             var f = function() {
                 txt.text(sig.name());
             };

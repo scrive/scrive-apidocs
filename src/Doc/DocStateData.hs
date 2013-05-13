@@ -123,14 +123,15 @@ instance FromJSValue DeliveryMethod where
     Just "pad"   -> Just PadDelivery
     Just "api"   -> Just APIDelivery
     Just "mobile"-> Just MobileDelivery
-    Just "email+mobile"-> Just EmailAndMobileDelivery
+    Just "email_mobile"-> Just EmailAndMobileDelivery
     _            -> Nothing
-    
+
 instance ToJSValue DeliveryMethod where
   toJSValue EmailDelivery  = toJSValue "email"
   toJSValue PadDelivery    = toJSValue "pad"
   toJSValue APIDelivery    = toJSValue "api"
   toJSValue MobileDelivery = toJSValue "mobile"
+  toJSValue EmailAndMobileDelivery = toJSValue "email_mobile"
 
 data DeliveryMethod = EmailDelivery
                     | PadDelivery

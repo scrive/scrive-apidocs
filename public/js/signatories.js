@@ -87,7 +87,7 @@ window.Signatory = Backbone.Model.extend({
         var fields = _.map(signatory.get('fields'), function(field) {
                 return new Field(extendedWithSignatory(field));
         });
-        
+
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });
@@ -381,6 +381,9 @@ window.Signatory = Backbone.Model.extend({
     mobileDelivery : function() {
           return this.get("delivery") == "mobile";
     },
+    emailMobileDelivery : function() {
+          return this.get("delivery") == "email_mobile";
+    },
     apiDelivery : function() {
           return this.get("delivery") == "api";
     },
@@ -543,7 +546,7 @@ window.Signatory = Backbone.Model.extend({
               signsuccessredirect : this.signsuccessredirect(),
               authentication: this.authentication(),
               delivery: this.delivery()
-            
+
         };
     },
     delivery: function() {
@@ -644,7 +647,7 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsMobile: function() {
-        return this.mobileDelivery();
+        return this.mobileDelivery() || this.emailMobileDelivery();
     },
     color: function() {
         return this.get('color');

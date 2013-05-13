@@ -1094,6 +1094,7 @@
 "_designViewByEmail","change me","by email"
 "_designViewOnThisTablet","change me","on this tablet"
 "_designViewBySMS","change me","by SMS"
+"_designViewbyEmailAndSMS","change me","by email and SMS"
 "_designViewForSigning","change me","for signing"
 "_designViewForViewing","change me","for viewing"
 "_designViewNoIDControl","change me","with no additional ID control"

@@ -356,6 +356,7 @@ javascriptLocalisation =
              , byEmail: "$_designViewByEmail()$"
              , onThisTablet: "$_designViewOnThisTablet()$"
              , bySMS: "$_designViewBySMS()$"
+             , byEmailAndSMS : "$_designViewbyEmailAndSMS()$"
              , forSigning: "$_designViewForSigning()$"
              , forViewing: "$_designViewForViewing()$"
              , noIDControl: "$_designViewNoIDControl()$"
