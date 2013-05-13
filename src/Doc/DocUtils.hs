@@ -210,7 +210,12 @@ signatoryDetailsFromUser user (is_author, is_partner) = do
         , SignatoryField LastNameFT (getLastName user) True True []
         , SignatoryField EmailFT (getEmail user) True True []
         , SignatoryField CompanyFT (getCompanyName (user, mcompany)) False False []
-        ]
+        ] ++
+        (if (not $ null $ getPersonalNumber user) then [SignatoryField PersonalNumberFT (getPersonalNumber user) False False []] else [])
+          ++
+        (if (not $ null $ getMobile user) then [SignatoryField MobileFT (getMobile user) False False []] else [])
+          ++
+        (if (not $ null $ getCompanyNumber (user, mcompany)) then [SignatoryField CompanyNumberFT (getCompanyNumber (user, mcompany)) False False []] else [])
     , signatoryispartner = is_partner
     , signatoryisauthor = is_author
     }
