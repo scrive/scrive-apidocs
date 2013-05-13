@@ -50,7 +50,7 @@
             var view = this;
             var model = view.viewmodel;
             var document = view.model;
-            
+
             if(model.showProblems() && !document.mainfile())
                 view.$el.addClass('redborder');
             else
@@ -120,34 +120,23 @@
             var document = view.model;
 
             var url = "/api/frontend/changemainfile/" + document.documentid();
-
-            return Button.init({
-                color: 'green',
-                size: 'big',
-                text: localization.designview.openPDF,
-                onClick: function() {
-                    document.save();
-                    FileUpload.upload({
-                        action: url,
-                        name: 'file',
-                        mimetype: 'application/pdf',
-                        beforeUpload: function() {
-                            document.setFlux();
-                        },
-                        success: function(d) {
+            var submit = new Submit({
+                        method : "POST",
+                        url : "/api/frontend/changemainfile/" + document.documentid(),
+                        ajaxsuccess: function(d) {
                             document.save();
                             document.afterSave(function() {
                                 document.recall();
                             });
                         },
-                        error: function(d, a){
+                        ajaxerror: function(d, a){
                             console.log(d);
                             if(a === 'parsererror') { // file too large
                                 new FlashMessage({content: localization.fileTooLarge, color: "red"});
                                 document.unsetFlux();
                                 mixpanel.track('Error',
                                                {Message: 'main file too large'});
-                                
+
                             } else {
                                 new FlashMessage({content: localization.couldNotUpload, color: "red"});
                                 document.unsetFlux();
@@ -156,9 +145,19 @@
                             }
                             document.trigger('change');
                         }
-                    });
-                }
-            }).input();
+             });
+            return UploadButton.init({    color: 'green',
+                                     size: 'big',
+                                     text: localization.uploadButton,
+                                     width: 180,
+                                     name: 'file',
+                                     maxlength: 2,
+                                     onAppend: function(input, title, multifile) {
+                                       document.setFlux();
+                                       submit.addInputs(input);
+                                       submit.sendAjax();
+                                     }
+                       }).input();
         },
         afterInsert: function() {
             $(window).resize();
