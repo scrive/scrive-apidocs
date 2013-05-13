@@ -1,4 +1,4 @@
-/* 
+/*
  * New Design view
  *
  * Eric Normand
@@ -195,7 +195,7 @@
         render: function() {
             var view = this;
             var model = view.model;
-            
+
             view.$el.html(view.inner());
 
             return view;
@@ -203,7 +203,7 @@
         inner: function() {
             var view = this;
             var model = view.model;
-            
+
             var div = $('<div />');
             div.addClass('design-view-button-bar-inner');
 
@@ -225,7 +225,7 @@
         saveAsDraft: function() {
             var view = this;
             var viewmodel = view.model;
-            
+
             var div = $('<div />');
             div.addClass('design-view-button1');
             div.append($('<div />')
@@ -264,13 +264,13 @@
         },
         send: function() {
             var view = this;
-            
+
             var div = $('<div />');
             div.addClass('design-view-button3');
             div.append($('<div />')
                        .addClass('design-view-button3-text')
                        .append(localization.designview.startSigning));
-            
+
             div.click(view.finalClick);
 
             return div;
@@ -293,7 +293,7 @@
                         url :  "/api/frontend/changemainfile/" + doc.documentid(),
                         ajax: true,
                         onSend: function() {
-                            
+
                         },
                         ajaxerror: function(d,a){
                             doc.recall();
@@ -313,7 +313,7 @@
             var img = $('<img />');
             img.addClass('design-view-button-remove-icon-img');
             img.attr('src', '/img/trash.png');
-            
+
             return img;
         },
         removeDocumentButtonLabel: function() {
@@ -349,13 +349,13 @@
                 view.performValidationActions(isSigning);
                 return;
             }
-            
+
             if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
                 mixpanel.track('Open blocking popup');
                 mixpanel.people.set({
                     'Blocking Popup': new Date()
                 });
-                
+
                 BlockingInfo.createPopup();
                 return false;
             }
@@ -405,7 +405,7 @@
                     }
                 }
             }
-                
+
         },
         signConfirmation : function() {
             var view = this;
@@ -419,7 +419,7 @@
                 var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
                 var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
                 var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
-                var callback = function(submit) {   
+                var callback = function(submit) {
                     document.afterSave(function(){
                         submit.sendAjax(function(resp) {
                             var link = JSON.parse(resp).link;
@@ -557,15 +557,7 @@
             });
         },
         verificationBeforeSendingOrSigning : function() {
-            var view = this;
-            var model = view.model;
-            var document = model.document();
-
-            if(document.hasProblems()) {
-                return false;
-            } else {
-                return true;
-            }
+            return !model.document().hasProblems();
         }
     });
 

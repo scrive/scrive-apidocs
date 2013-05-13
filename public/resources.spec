@@ -146,7 +146,6 @@ set systemPage
  js   js/designview/editdocument.js
  js   js/designview/documentview.js
  js   js/designview/docdesignview2.js
- js   js/designview/documentstep.js
  js   js/designview/attachmentsdesignview.js
  js   js/designview/process.js
  js   js/mobilebankid.js
