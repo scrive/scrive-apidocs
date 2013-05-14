@@ -659,6 +659,14 @@ window.Signatory = Backbone.Model.extend({
     needsEmail: function() {
         return this.emailDelivery() || this.emailMobileDelivery();
     },
+    ensureEmail: function() {
+        var signatory = this;
+        var email = signatory.emailField();
+        if(signatory.needsEmail()) {
+            email.makeObligatoryM();
+            email.setShouldBeFilledBySender(true);
+        }
+    },
     needsSignature: function() {
         return this.padDelivery();
     },

@@ -278,6 +278,7 @@
                     sig.setDelivery(v);
                     sig.ensureMobile();
                     sig.ensureSignature();
+                    sig.ensureEmail();
                     return true;
                 }
             });
@@ -387,6 +388,7 @@
                     });
                     doc.addExistingSignatory(sig);
                     model.setParticipantDetail(sig);
+                    sig.ensureEmail();
                     return false;
                 }
             });
