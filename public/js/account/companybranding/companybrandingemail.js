@@ -24,13 +24,13 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
         emailemailbackgroundcolour: new CompanyBrandingColour({
           companyuiattribute: 'emailemailbackgroundcolour',
           customised: companyui.emailemailbackgroundcolour().trim() != '',
-          defaultcolour: "#FFFFFF",
+          defaultcolour: companyui.domaincustomlogo()!= "" ? companyui.domainmailsbackgroundcolor() : "#FFFFFF",
           colour: companyui.emailemailbackgroundcolour(),
           label: localization.companyBranding.customiseEmailBackgroundColour
         }),
         emailtextcolour: new CompanyBrandingColour({
           customised: companyui.emailtextcolour().trim() != '',
-          defaultcolour: "#333333",
+          defaultcolour: companyui.domainmailstextcolor()!= "" ? companyui.domainmailstextcolor() : "#333333",
           colour: companyui.emailtextcolour(),
           label: localization.companyBranding.customiseTextColour
         }),
@@ -47,7 +47,7 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
         }),
         emailbuttoncolour: new CompanyBrandingColour({
           customised: companyui.emailbuttoncolour() != '',
-          defaultcolour: '#3E5474',
+          defaultcolour: companyui.domainmailsbuttoncolor()!= "" ? companyui.domainmailsbuttoncolor() : '#3E5474',
           colour: companyui.emailbuttoncolour(),
           label: localization.companyBranding.customiseButtonColourLabel
         })
@@ -185,8 +185,12 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
       this.subjectspan.css('color', btcolour);
       this.poweredbyscrivespan.css('color', btcolour);
       this.emailpreviewfooter.css('color', btcolour);
-    }
-    else {
+    } else if (this.model.companyui().domainmailstextcolor() != "") {
+      this.subjectspan.css('color', this.model.companyui().domainmailstextcolor());
+      this.poweredbyscrivespan.css('color', this.model.companyui().domainmailstextcolor());
+      this.emailpreviewfooter.css('color', this.model.companyui().domainmailstextcolor());
+
+    } else {
       this.subjectspan.css('color', '');
       this.poweredbyscrivespan.css('color', '');
       this.emailpreviewfooter.css('color', '');
@@ -210,8 +214,16 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
                            .css('-webkit-box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px')
                            .css('-moz-box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px')
                            .css('-ms-box-shadow', 'inset ' +' #CCCCCC' + ' 0 0 0 1px')
-                           .css('-o-box-shadow','inset ' + '#CCCCCC' + ', 0 0 0 1px')
+                           .css('-o-box-shadow','inset ' + '#CCCCCC' + ' 0 0 0 1px')
                            .css('box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px');
+    } else if (this.model.companyui().domainmailsbuttoncolor() != "") {
+           this.emailpreviewbutton.css('background',  this.model.companyui().domainmailsbuttoncolor())
+                           .css('border', '2px solid '+ this.model.companyui().domainmailsbuttoncolor())
+                           .css('-webkit-box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
+                           .css('-moz-box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
+                           .css('-ms-box-shadow', 'inset ' +this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
+                           .css('-o-box-shadow','inset ' +this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
+                           .css('box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px');
     } else {
     this.emailpreviewbutton.css({'background': 'hsl(215 , 30%, 35%)',
                                  'border': '2px solid hsl(215, 30%, 23%)',
@@ -231,7 +243,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.changeBTColour(this.model.emailtextcolour().colour(),this.model.emailtextcolour().customised());
     this.changeBorderColour(this.model.emailbordercolour().colour());
     this.changeFont(this.model.emailfont().font());
-    this.changeButtonColour(this.model.emailbuttoncolour().colour(),this.model.emailtextcolour().customised());
+    this.changeButtonColour(this.model.emailbuttoncolour().colour(),this.model.emailbuttoncolour().customised());
     this.changeEmailBackgroundColour(this.model.emailemailbackgroundcolour().colour());
   }
 });

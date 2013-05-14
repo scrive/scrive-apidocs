@@ -447,7 +447,9 @@ javascriptLocalisation =
          , signupModal: {
              modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
            , mainHeader : "$_signupModalMainHeader()$"
+           , alreadyHaveAnAccount : "$_alreadyHaveAccount()$"
          }
+         , visitOurPricingPage : "$_visitOurPricingPage()$"
          , accountSetupModal: {
              modalAccountSetupBodyAccept: "$_modalAccountSetupBodyAccept()$"
            , modalAccountSetupBodyTOS   : "$_modalAccountSetupBodyTOS()$"
@@ -761,7 +763,7 @@ javascriptLocalisation =
            , noUser : "$_cantSendReminderNoUser()$"
            , tooMuch : "$_cantSendReminderTooMuch()$"
            , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
-
+           , dontHaveAccount : "$_dontHaveAccount()$"
       }
       , blocking : {
           free: {

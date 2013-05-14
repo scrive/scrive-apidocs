@@ -30,7 +30,10 @@ window.CompanyUI = Backbone.Model.extend({
         domainbarscolour: args.domainbarscolour,
         domainbarstextcolour: args.domainbarstextcolour,
         domainbarssecondarycolour : args.domainbarssecondarycolour,
-        domainbackgroundcolour: args.domainbackgroundcolour
+        domainbackgroundcolour: args.domainbackgroundcolour,
+        domainmailsbackgroundcolor: args.domainmailsbackgroundcolor,
+        domainmailsbuttoncolor: args.domainmailsbuttoncolor,
+        domainmailstextcolor: args.domainmailstextcolor
       }, {silent: true});
     }
   },
@@ -102,6 +105,15 @@ window.CompanyUI = Backbone.Model.extend({
   },
   domainbackgroundcolour : function() {
     return this.get('domainbackgroundcolour');
+  },
+  domainmailsbackgroundcolor: function() {
+    return this.get('domainmailsbackgroundcolor');
+  },
+  domainmailsbuttoncolor: function() {
+    return this.get('domainmailsbuttoncolor');
+  },
+  domainmailstextcolor: function() {
+    return this.get('domainmailstextcolor');
   },
   editable: function() {
     return this.get('editable');

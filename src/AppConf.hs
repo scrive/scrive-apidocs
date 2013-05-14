@@ -91,7 +91,7 @@ instance Configuration AppConf where
     -- annoying way!
     , precogPathPrefix   = Dev
     , ntpServers         = defaultNtpServers
-    , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" Nothing]
+    , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#CCCCCCC" "#AAAAAA" "blue"]
     }
   confOptions = [
   {-

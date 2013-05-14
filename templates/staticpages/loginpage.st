@@ -24,7 +24,7 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body $if(background)$ style="background: $background$" $endif$ >
+  <body style="background: $background$" >
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -35,6 +35,7 @@ $doctype()$
                                          branded : true,
                                          referer:   "$referer$",
                                          logolink:   "$logolink$",
+                                         buttoncolorclass : "$buttoncolorclass$",
                                          autofocus: true}).el());
       mixpanel.register({
         Context : 'Login page - branded'
@@ -66,7 +67,7 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body $if(background)$ style="background: $background$" $endif$>
+  <body style="background: $background$">
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -76,7 +77,8 @@ $doctype()$
     jQuery('.inner').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
                         branded : true,
-                        logolink:   "$logolink$"
+                        logolink:   "$logolink$",
+                        buttoncolorclass : "$buttoncolorclass$"
                        }).el());
   });
 </script>
@@ -104,7 +106,7 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body>
+  <body style="background: $background$">
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -114,7 +116,9 @@ $doctype()$
       jQuery('.inner').append(new Signup({
                                          branded : true,
                                          logolink:   "$logolink$",
-                                         autofocus: true}).el());
+                                         buttoncolorclass : "$buttoncolorclass$",
+                                         autofocus: true
+                            }).el());
     });
   </script>
 

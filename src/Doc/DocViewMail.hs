@@ -353,11 +353,12 @@ brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe Company -> Fields 
 brandingMailFields mbd mcompany = do
   when (isJust mcompany) $ do
     F.value "background"  $ companyemailbackgroundcolour $ companyui $ fromJust mcompany
-    F.value "textcolor" $ companyemailtextcolour $ companyui $ fromJust mcompany
+    F.value "textcolor" $ (companyemailtextcolour $ companyui $ fromJust mcompany) `mplus`(bdmailstextcolor <$> mbd)
     F.value "font"  $ companyemailfont $ companyui $ fromJust mcompany
     F.value "bordercolour"  $ companyemailbordercolour $ companyui $ fromJust mcompany
-    F.value "buttoncolour"  $ companyemailbuttoncolour $ companyui $ fromJust mcompany
-    F.value "emailbackgroundcolour"  $ companyemailemailbackgroundcolour $ companyui $ fromJust mcompany
+    F.value "buttoncolour"  $ (companyemailbuttoncolour $ companyui $ fromJust mcompany) `mplus` (bdmailsbuttoncolor <$> mbd)
+    F.value "skipbuttonborder" $ isNothing (companyemailbuttoncolour $ companyui $ fromJust mcompany) && isJust (bdmailsbuttoncolor <$> mbd)
+    F.value "emailbackgroundcolour"  $ (companyemailemailbackgroundcolour $ companyui $ fromJust mcompany) `mplus` (bdmailsbackgroundcolor <$> mbd)
   when (isJust mcompany || isJust mbd) $ do
     F.value "logo" $ (isJust $ join $ companyemaillogo <$> companyui <$> mcompany) || (isJust $ mbd)
     F.value "logoLink" $ if (isJust $ join $ companyemaillogo <$> companyui <$> mcompany)

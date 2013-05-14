@@ -26,6 +26,9 @@
     logolink : function() {
      return this.get("logolink");
     },
+    buttoncolorclass: function() {
+     return this.get("buttoncolorclass");
+    },
     validatePassword: function() {
       var password = this.password();
       var password2 = this.password2();
@@ -137,22 +140,22 @@
 
     render: function () {
       var model = this.model;
-      // var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
-      // $(this.el).append(header);
 
-      var header = $("<div class='shadowed recovery'/>");
+
+
+
+      var content = $("<div style='width:'/>");
+      var wrapper = $("<div/>");
+      var body = $("<div/>");
+      var header = $("<div style='margin-bottom: 103px'/>");
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
-      header.append($("<label/>").text(localization.esigningpoweredbyscrive));
+      header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
       $(this.el).append(header);
 
-
-      var content = $("<div class='short-input-container login' style='border:none;background:none;'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper' style='border:none;background:none;'/>");
-      var body = $("<div class='short-input-container-body' style='border:none;background:none;'/>");
       content.append(wrapper.append(body));
 
-      body.append($("<div class='position first' style='text-align: left;'/>").append($("<label style='padding-left:10px;'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader + ":")));
+      body.append($("<div class='position first' style='text-align: left;height: 30px;'/>").append($("<label style='padding-left:10px;'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader + ":")));
 
 
       var passwordInput = InfoTextInput.init({
@@ -164,7 +167,7 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      passwordInput.input().attr("autocomplete","false");
+      passwordInput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
       body.append($("<div class='position'/>").append(passwordInput.input()));
 
       var password2Input = InfoTextInput.init({
@@ -176,20 +179,20 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      password2Input.input().attr("autocomplete","false");
-      body.append($("<div class='position'/>").append(password2Input.input()));
+      password2Input.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
+      body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.input()));
 
       var changePasswordButton = Button.init({
           size  : 'tiny',
-          color : 'blue',
+          color : model.buttoncolorclass(),
           text  : localization.newPasswordModal.modalNewPasswordViewFooterSave,
-          style : "width:80px;",
+            style : "width:245px;",
           onClick : function() {
             model.resetPassword();
           }
         });
 
-     body.append($("<div class='position' style='text-align:right'/>").append(changePasswordButton.input()));
+     body.append($("<div class='position' style='text-align:center;margin-top:10px'/>").append(changePasswordButton.input()));
      $(this.el).append(content);
     }
   });
@@ -200,7 +203,7 @@
     var view;
 
     if (args.branded)
-      view = new NewPasswordBrandedView({model: model, el: $("<div class='short-input-section'/>")});
+      view = new NewPasswordBrandedView({model: model, el: $("<div style='width:275px;margin:20px auto'/>")});
     else
       view = new NewPasswordView({model: model, el: $("<div class='short-input-section'/>")});
 

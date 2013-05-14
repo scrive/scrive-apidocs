@@ -43,6 +43,9 @@ var LoginModel = Backbone.Model.extend({
   logolink : function() {
      return this.get("logolink");
   },
+  buttoncolorclass: function() {
+     return this.get("buttoncolorclass");
+  },
   referer : function() {
     return this.get("referer");
   },
@@ -290,10 +293,10 @@ var LoginBrandedView = Backbone.View.extend({
     },
     loginSection : function() {
       var model = this.model;
-      var content = $("<div class='short-input-container login' style='border:none;background:none;'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper' style='border:none;background:none;'/>");
-      var body = $("<div class='short-input-container-body' style='border:none;background:none;'/>");
-      var header = $("<div class='shadowed'/>");
+      var content = $("<div style='width:'/>");
+      var wrapper = $("<div/>");
+      var body = $("<div/>");
+      var header = $("<div style='margin-bottom: 103px'/>");
       content.append(wrapper.append(body));
       $(this.el).append(header);
 
@@ -304,9 +307,9 @@ var LoginBrandedView = Backbone.View.extend({
       model.setEmail(Cookies.get('last_login_email'));
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
-      header.append($("<label/>").text(localization.esigningpoweredbyscrive));
+      header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
 
-      body.append($("<div class='position first' style='text-align: left;'/>").append($("<label style='padding-left:10px;'/>").text(localization.login + ":")));
+      body.append($("<div class='position first' style='text-align: left;height:30px'/>").append($("<label style='padding-left:10px;'/>").text(localization.login + ":")));
 
 
 
@@ -315,14 +318,13 @@ var LoginBrandedView = Backbone.View.extend({
               infotext: localization.loginModal.email,
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
-              cssClass : "big-input",
               inputtype : "text",
               name : "email",
               onEnter : loginFunction
 
       });
-      emailinput.input().attr("autocomplete","false");
-      body.append($("<div class='position'/>").append(emailinput.input()));
+      emailinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
+      body.append($("<div class='position' style='margin-bottom:6px;'/>").append(emailinput.input()));
       emailinput.input().click();
       emailinput.input().focus(
           function() {
@@ -337,12 +339,11 @@ var LoginBrandedView = Backbone.View.extend({
               value : model.password(),
               onChange : function(v) {model.setPassword(v);} ,
               inputtype : "password",
-              cssClass : "big-input",
               name : "password",
               onEnter : loginFunction
 
       });
-      passwordinput.input().attr("autocomplete","false");
+      passwordinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
       body.append($("<div class='position'/>").append(passwordinput.input()));
 
       // Automatically focus the appropriate login field.
@@ -356,45 +357,51 @@ var LoginBrandedView = Backbone.View.extend({
           });
       }
 
-      var last_position = $("<div class='position' style='text-align:left'/>");
-      body.append(last_position);
+      var fp_position = $("<div class='position' style='text-align:left;height:30px;'/>");
+      body.append(fp_position);
 
       if (!model.pad()) {
-        var toogleOption = $("<label class='s-forgot-password' style='border-bottom: 1px solid #999999;color:#999999;font-style:italic;font-size:12.5px;line-height: 16px;'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();return false;});
-        last_position.append($("<div style='display:inline-block;width:224px;text-align:left;vertical-align: bottom;margin-left:4px;'/>").append(toogleOption));
+        var toogleOption = $("<label class='s-forgot-password' style='border-bottom: 1px solid #999999;color:#999999;font-style:italic;font-size:10px;line-height: 12px;'/>").text(localization.loginModal.forgotpassword + "?").click(function(){ model.toogleView();return false;});
+        fp_position.append($("<div style='display:inline-block;width:224px;text-align:left;vertical-align: bottom;margin-left:4px;'/>").append(toogleOption));
       }
+      var button_position = $("<div class='position' style='text-align:center'/>");
+      body.append(button_position);
 
       var loginButton = Button.init({
                   size  : "tiny",
-                  color : "light-blue",
+                  color : model.buttoncolorclass(),
                   text  : localization.loginModal.login + " ›",
-                  style : "width:60px;",
+                  style : "width:245px;",
                   onClick : loginFunction
                 });
 
-      last_position.append(loginButton.input());
+      button_position.append(loginButton.input());
 
+
+
+      var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.loginModal.dontHaveAccount);
+      var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+      body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(dontHaveAccount).append(paymentsPage));
 
       return content;
     },
     reminderSection : function() {
       var model = this.model;
       //Content
-      var content = $("<div class='short-input-container login' style='border:none;background:none;'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper' style='border:none;background:none;'/>");
-      var body = $("<div class='short-input-container-body' style='border:none;background:none;'/>");
-      var header = $("<div class='shadowed'/>");
+      var content = $("<div style='width:'/>");
+      var wrapper = $("<div/>");
+      var body = $("<div/>");
+      var header = $("<div style='margin-bottom: 103px'/>");
 
-      var header = $("<div class='shadowed recovery'/>");
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
-      header.append($("<label/>").text(localization.esigningpoweredbyscrive));
+      header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
 
       $(this.el).append(header);
 
       content.append(wrapper.append(body));
 
-      body.append($("<div class='position first' style='text-align: left;'/>").append($("<label style='padding-left:10px;'/>").text(localization.resetYourPassword + ":")));
+      body.append($("<div class='position first' style='text-align: left;height:30px''/>").append($("<label style='padding-left:10px;'/>").text(localization.resetYourPassword + ":")));
 
       var emailinput = InfoTextInput.init({
               infotext: localization.loginModal.email,
@@ -402,11 +409,10 @@ var LoginBrandedView = Backbone.View.extend({
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
               name : "email",
-              cssClass : "big-input",
               onEnter : function() { model.sendPasswordReminder();}
 
       });
-      emailinput.input().attr("autocomplete","false");
+      emailinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");;
         emailinput.input().focus(
           function() {
               emailinput.input().select();
@@ -418,17 +424,17 @@ var LoginBrandedView = Backbone.View.extend({
 
      var remindButton = Button.init({
                   size  : "tiny",
-                  color : "light-blue",
+                  color : model.buttoncolorclass(),
                   text  : localization.loginModal.sendNewPassword + " ›",
                   cssClass : "recovery-password-submit",
-                  style : "width:80px;",
+                  style : "width:245px;",
                   onClick : function() {
                         model.sendPasswordReminder();
                     }
                 });
 
       body.append($("<div class='position'/>").append(emailinput.input()));
-      body.append($("<div class='position' style='text-align:right;margin-right:4px;'/>").append(remindButton.input()));
+      body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(remindButton.input()));
 
       return content;
 
@@ -451,7 +457,7 @@ window.Login = function(args) {
           var model = new LoginModel(args);
           var view;
           if (args.branded)
-            view = new LoginBrandedView({model : model, el : $("<div class='short-input-section'/>") });
+            view = new LoginBrandedView({model : model, el : $("<div style='width:275px;margin:20px auto'/>") });
           else
             view = new LoginView({model : model, el : $("<div class='short-input-section'/>")});
 
