@@ -15,7 +15,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    emailInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.emailField();
-     return !new EmailValidation().validateData(field.value())) && (!field.hasPlacements() || !field.obligatory());
+     return field != undefined && !new EmailValidation().validateData(field.value()) && (!field.hasPlacements() || !field.obligatory());
    },
    emailInput : function() {
      var signatory = this.model;
@@ -35,7 +35,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    fstNameInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.fstnameField();
-     return (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
+     return field != undefined &&  (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
    },
    fstNameInput : function() {
      var signatory = this.model;
@@ -54,7 +54,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    sndNameInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.sndnameField();
-     return (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
+     return field != undefined && (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
    },
    sndNameInput : function() {
      var signatory = this.model;
@@ -73,7 +73,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    ssnInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.personalnumberField();
-     return (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory()) && this.model.document().elegAuthentication()
+     return field != undefined && (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory()) && this.model.document().elegAuthentication()
    },
    ssnInput : function() {
      var signatory = this.model;
