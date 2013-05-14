@@ -770,8 +770,11 @@
                 },0); // do this with the current value (not value before keypress)
             });
 
+            var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
+
             var options = new FieldOptionsView({
-                model: sig.fstnameField()
+                model: sig.fstnameField(),
+                options: optionOptions
             });
 
             var closer = $('<div />');
@@ -810,8 +813,23 @@
                 },0);
             });
 
+            var optionOptions = ['optional', 'signatory', 'sender'];
+
+            if(sig.author())
+                optionOptions = _.without(optionOptions, 'signatory');
+
+            if(name === 'email')
+                optionOptions = _.without(optionOptions, 'optional');
+
+            if(name === 'mobile' && sig.needsMobile())
+                optionOptions = ['sender'];
+
+            if(name === 'sigpersnr' && sig.needsPersonalNumber())
+                optionOptions = _.without(optionOptions, 'optional');
+
             var options = new FieldOptionsView({
-                model: field
+                model: field,
+                options = optionOptions
             });
 
             if(viewmodel.showProblems() && !field.isValid())
@@ -1102,6 +1120,7 @@
         className: 'design-view-action-participant-details-information-field-options-wrapper',
         initialize: function(args) {
             var view = this;
+            view.options = args.options;
             var field = view.model;
             _.bindAll(view);
             view.render();
@@ -1123,7 +1142,7 @@
             } else {
                 selected = 'signatory';
             }
-            var values = ['optional', 'signatory', 'sender'];
+            var values = view.options;
             var options = {
                 optional  : {name : localization.designview.optional,
                              value : 'optional',
