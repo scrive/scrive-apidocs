@@ -812,6 +812,7 @@
                                                      onClick: function() {
                                                          mixpanel.track('Click enterprise plan');
                                                      }});
+            this.noheaders = args.noheaders;
             //this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
             view.model.bind('fetch', this.render);
         },
@@ -823,8 +824,8 @@
             var header = $('<header />')
                 .append($('<h1 />').text(model.header()))
                 .append($('<h2 />').text('')); //localization.payments.subheader
-
-            div.append(header);
+            if (!this.noheaders)
+              div.append(header);
             //div.append($('<h3 />').text(localization.payments.chooseplan));
 
             div.append(view.teamBox.el)

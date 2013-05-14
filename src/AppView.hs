@@ -135,7 +135,17 @@ internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage = renderTemplate_ "internalServerError" >>= renderFromBody kontrakcja
 
 priceplanPage :: Kontrakcja m => m Response
-priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
+priceplanPage = do
+  ctx <- getContext
+  case currentBrandedDomain ctx of
+       Nothing -> renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
+       Just bd -> do
+          ad <- getAnalyticsData
+          content <- renderTemplate "priceplanPageWithBranding" $ do
+            F.value "logolink" $ bdlogolink bd
+            F.value "background" $ bdbackgroundcolorexternal $ bd
+            standardPageFields ctx kontrakcja ad
+          simpleHtmlResonseClrFlash content
 
 {- |
     Render a template as an entire page.
