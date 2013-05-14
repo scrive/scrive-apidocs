@@ -175,7 +175,6 @@
             ["sigcompnr", "standard"],
             ["mobile", "standard"]
         ],
-        //TODO: Translate me
         standardPlaceholders: {
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
@@ -260,7 +259,6 @@
             var sig = view.model;
             var delivery = sig.delivery();
 
-            // TODO: translate
             var deliveryTexts = {
                 email : localization.designview.byEmail,
                 pad : localization.designview.onThisTablet,
