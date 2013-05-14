@@ -25,7 +25,7 @@ $doctype()$
   <body style="background: $background$">
     <div style='width:275px;margin:20px auto;'>
       <div style="margin-bottom: 63px">
-        <img alt="logo" src="$logolink$">
+        <img alt="logo" src="$logolink$"/>
         <div class="divider-line"></div>
         <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
       </div>
