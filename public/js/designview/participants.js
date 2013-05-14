@@ -1173,12 +1173,12 @@
                 onSelect: function(v) {
                     if(field) {
                         if(v === 'optional') {
-                            field.makeOptionalM();
+                            field.makeOptional();
                         } else if(v === 'signatory') {
-                            field.makeObligatoryM();
+                            field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
                         } else if(v === 'sender') {
-                            field.makeObligatoryM();
+                            field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
                         }
                     }

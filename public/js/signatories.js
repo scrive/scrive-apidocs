@@ -573,7 +573,7 @@ window.Signatory = Backbone.Model.extend({
                                               shouldbefilledbysender: false,
                                               signatory: signatory}));
             } else {
-                pn.makeObligatoryM();
+                pn.makeObligatory();
             }
         } else {
             // we remove it if we don't use eleg
@@ -597,7 +597,7 @@ window.Signatory = Backbone.Model.extend({
                                               shouldbefilledbysender: true,
                                               signatory: signatory}));
             } else {
-                pn.makeObligatoryM();
+                pn.makeObligatory();
                 pn.setShouldBeFilledBySender(true);
             }
         } else {
@@ -625,7 +625,7 @@ window.Signatory = Backbone.Model.extend({
         var signatory = this;
         var email = signatory.emailField();
         if(signatory.needsEmail()) {
-            email.makeObligatoryM();
+            email.makeObligatory();
             email.setShouldBeFilledBySender(true);
         }
     },
