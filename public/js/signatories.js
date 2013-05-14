@@ -458,46 +458,8 @@ window.Signatory = Backbone.Model.extend({
     addNewCustomField: function() {
        return this.addNewField("custom", true);
     },
-    // TODO: unused
-    newCheckbox: function() {
-       var checkbox = this.newField("checkbox", false);
-       if(this.author())
-           checkbox.makeOptional();
-       else
-           checkbox.makeObligatory();
-
-       /* Generate unique name for a checkbox. Checkbox names are really important for API,
-          for humans checkbox names are pure annoyance.
-        */
-        var sigs = this.document().signatories();
-       var allnames = _.flatten(_.map(sigs, function(s) {
-           return _.invoke(s.fields(), 'name');
-       }));
-       var i = 1;
-       while(_.contains(allnames, 'checkbox-' + i))
-           i++;
-       checkbox.setName("checkbox-" + i);
-       return checkbox;
-    },
     newField : function(t,f) {
         return new Field({signatory: this, fresh: (f != undefined ? f : true) , type : t});
-    },
-    // TODO: unused
-    newSignature: function() {
-       var signature = this.newField("signature", false);
-       signature.makeObligatory();
-
-       /* Generate unique name for a signature. Signature names are really important for API,
-          for humans signature names are pure annoyance.
-        */
-       var allnames = _.flatten(_.map(this.document().signatories(), function(s) {
-           return _.invoke(s.fields(), 'name');
-       }));
-       var i = 1;
-       while(_.contains(allnames, 'signature-' + i))
-           i++;
-       signature.setName("signature-" + i);
-       return signature;
     },
     addField : function(f) {
         this.fields().push(f);
