@@ -65,7 +65,8 @@
                 var field = new Field({
                     name: name,
                     type: type,
-                    signatory: sig
+                    signatory: sig,
+                    obligatory: false
                 });
 
                 sig.addField(field);
@@ -276,6 +277,7 @@
                 onSelect: function(v) {
                     sig.setDelivery(v);
                     sig.ensureMobile();
+                    sig.ensureSignature();
                     return true;
                 }
             });
@@ -821,6 +823,9 @@
             if(name === 'email')
                 optionOptions = _.without(optionOptions, 'optional');
 
+            if(name === 'email' && sig.needsEmail())
+                optionOptions = ['sender'];
+
             if(name === 'mobile' && sig.needsMobile())
                 optionOptions = ['sender'];
 
@@ -829,7 +834,7 @@
 
             var options = new FieldOptionsView({
                 model: field,
-                options = optionOptions
+                options : optionOptions
             });
 
             if(viewmodel.showProblems() && !field.isValid())

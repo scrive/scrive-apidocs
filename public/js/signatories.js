@@ -616,7 +616,7 @@ window.Signatory = Backbone.Model.extend({
         } else {
             // we remove it if we don't use eleg
             // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '') {
+            if(pn && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             }
         }
@@ -641,7 +641,7 @@ window.Signatory = Backbone.Model.extend({
         } else {
             // we remove it if we don't use SMS
             // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '') {
+            if(pn && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             }
         }
@@ -655,6 +655,32 @@ window.Signatory = Backbone.Model.extend({
     setColor: function(c) {
         this.set({color:c});
         return this;
+    },
+    needsEmail: function() {
+        return this.emailDelivery() || this.emailMobileDelivery();
+    },
+    needsSignature: function() {
+        return this.padDelivery();
+    },
+    ensureSignature: function() {
+        var signatory = this;
+        var document = signatory.document();
+        var signatures = signatory.signatures();
+        // remove the unplaced signatures
+        _.each(signatures, function(s) {
+            if(!s.hasPlacements())
+                signatory.deleteField(s);
+        });
+        signatures = signatory.signatures();
+
+        if(signatory.needsSignature()) {
+            if(signatures.length === 0)
+                signatory.addField(new Field({name:document.newSignatureName(),
+                                              type: 'signature',
+                                              obligatory: true,
+                                              shouldbefilledbysender: false,
+                                              signatory: signatory}));
+        }
     }
 
 });

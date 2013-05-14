@@ -156,6 +156,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 field.addPlacement(newPlacement);
                 signatory.trigger('drag:checkbox');
             }
+            signatory.ensureSignature();
         }
     });
 }
