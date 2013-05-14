@@ -129,8 +129,16 @@ personExFromSignatoryLink _ (SignatoryLink { signatorydetails
 
 fieldsFromSignatory :: Bool -> [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> SignatoryDetails -> [Seal.Field]
 fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signatoryfields} =
-  concatMap makeSealField  signatoryfields
+  silenceJPEGFieldsFromFirstSignature $ concatMap makeSealField  signatoryfields
   where
+    silenceJPEGFieldsToTheEnd [] = []
+    silenceJPEGFieldsToTheEnd (field@(Seal.FieldJPG{}):xs) = (field { Seal.includeInSummary = False }) : silenceJPEGFieldsToTheEnd xs
+    silenceJPEGFieldsToTheEnd (x:xs) = x : silenceJPEGFieldsToTheEnd xs
+    silenceJPEGFieldsFromFirstSignature [] = []
+    silenceJPEGFieldsFromFirstSignature (field@(Seal.FieldJPG{Seal.includeInSummary = True}):xs) =
+      field : silenceJPEGFieldsToTheEnd xs
+    silenceJPEGFieldsFromFirstSignature (x:xs) = x : silenceJPEGFieldsFromFirstSignature xs
+
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case sfType sf of
        SignatureFT _ -> case (sfPlacements sf) of

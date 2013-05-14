@@ -44,6 +44,7 @@ createExternalSender name program createargs = Sender { senderName = name, sendM
     send mail@Mail{..} = do
       content <- assembleContent mail
       liftIO $ do
+        Log.mailingServer $ "Curl call: " ++ show (program, createargs mail)
         (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
         let receivers = intercalate ", " (map addrEmail mailTo)
         case code of
@@ -71,9 +72,12 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
     createargs Mail{mailFrom, mailTo} =
       [ "-s", "-S"                   -- show no progress information but show error messages
       , "-k", "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
-      , "--user"
-      , smtpUser config ++ ":" ++ smtpPassword config
-      , smtpAddr config
+      ] ++ (if null (smtpUser config) && null (smtpPassword config)
+           then [] else
+           [ "--user"
+           , smtpUser config ++ ":" ++ smtpPassword config
+           ]) ++
+      [ smtpAddr config
       , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 

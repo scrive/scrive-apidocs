@@ -93,7 +93,7 @@ nicemail=
                                   </td>
                                   <td style="width: 32px;">
                                   </td>
-                                  <td style="float: right; width: 330px;color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
+                                  <td style="float: right; width: 330px; color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
                                     $nicemailparagraph(p=mailp1;l=mailp2;spacing=mailspacing1)$
                                     $nicemailparagraph(p=mailp2;l=mailp3;spacing=mailspacing2)$
                                     $nicemailparagraph(p=mailp3;l=mailp4;spacing=mailspacing3)$

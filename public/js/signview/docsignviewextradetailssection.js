@@ -15,7 +15,8 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    emailInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.emailField();
-     return (!new EmailValidation().validateData(field.value())) && (!field.hasPlacements() || !field.obligatory());
+       return (!signatory.document().emailDelivery() ||
+               !new EmailValidation().validateData(field.value())) && (!field.hasPlacements() || !field.obligatory());
    },
    emailInput : function() {
      var signatory = this.model;

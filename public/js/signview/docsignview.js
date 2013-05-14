@@ -70,6 +70,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   hasExtraDetailsSection : function() {
     if (!this.document().currentSignatoryCanSign()) return false;
+    if (!this.document().emailDelivery()) return true;
     var res = false;
     _.each(this.document().currentSignatory().fields(), function(field) {
       if (field.isEmail() && field.value() == "" && !field.hasPlacements())
