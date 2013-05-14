@@ -36,7 +36,6 @@ $doctype()$
       mixpanel.track('View Price Plan Page | Branded');
     </script>
 
- </div>
   </body>
 </html>
 ####
