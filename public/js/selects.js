@@ -250,6 +250,9 @@ window.Select = function(args) {
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)
               input.addClass(args.cssClass);
+          if (args.style != undefined)
+              input.attr("style",args.style);
+
           var view = new SelectView({model : model, el : input});
           return new Object({
               model : function() {return model;},

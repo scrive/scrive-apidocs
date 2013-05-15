@@ -356,6 +356,9 @@ window.Signatory = Backbone.Model.extend({
     signatures: function() {
         return this.fieldsByType("signature");
     },
+    hasSignatureField : function() {
+      return this.signatures().lenght > 0 ;
+    },
     hasPlacedSignatures: function() {
         return _.any(this.signatures(), function(signature) {
             return signature.hasPlacements();

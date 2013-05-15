@@ -182,36 +182,10 @@ var TextTypeSetterView = Backbone.View.extend({
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
-        var view = this;
-
-        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
-        var box = new FieldOptionsView({
-            model: view.model.field()
-        });
-
-        option.append(box.el);
-
-        return option;
-
-
-
-        var checkbox = $("<div class='checkbox'>");
-        var label = $("<label/>").text(localization.designview.textFields.obligatory);
-        var field = this.model.field();
-        option.append(checkbox).append(label);
-        if (field.isObligatory())
-            checkbox.addClass("checked");
-        checkbox.click(function(){
-            if (field.isObligatory()) {
-                    checkbox.removeClass("checked");
-                    field.makeOptional();
-            } else {
-                    checkbox.addClass("checked");
-                    field.makeObligatory();
-            }
-        });
-
-        return option;
+        return $("<div style='display:block;margin-top:4px;'/>").append(
+          new FieldOptionsView({
+              model: this.model.field()
+          }).el);
     },
     help : function() {
         return $("<div class='help'/>").text(localization.designview.textFields.help);
@@ -262,6 +236,7 @@ var TextTypeSetterView = Backbone.View.extend({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-selector',
+            style: "z-index: 109;",
             onSelect: function(s) {
                 var name = field?field.name():'email';
                 var type = field?field.type():'standard';
@@ -298,6 +273,7 @@ var TextTypeSetterView = Backbone.View.extend({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
+            style: "z-index: 108;",
             onSelect: function(f) {
                 placement.setField(f);
             }

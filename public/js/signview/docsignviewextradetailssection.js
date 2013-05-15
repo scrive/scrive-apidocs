@@ -74,7 +74,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    },
    signatureInputAvaible : function() {
        var signatory = this.model;
-       if( signatory.document().padDelivery() ) {
+       if( signatory.document().padDelivery() && signatory.hasSignatureField()) {
            return ! signatory.anySignatureHasImageOrPlacement();
        }
        else {
