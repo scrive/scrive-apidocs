@@ -167,6 +167,7 @@ Executable kontrakcja-server
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
+  Build-depends: attoparsec == 0.10.4.0
   Build-depends: AES == 0.2.8
   Build-depends: cryptohash == 0.7.5
   Build-depends: Crypto == 4.2.*

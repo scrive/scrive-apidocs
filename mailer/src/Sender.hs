@@ -44,7 +44,6 @@ createExternalSender name program createargs = Sender { senderName = name, sendM
     send mail@Mail{..} = do
       content <- assembleContent mail
       liftIO $ do
-        Log.mailingServer $ "Curl call: " ++ show (program, createargs mail)
         (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
         let receivers = intercalate ", " (map addrEmail mailTo)
         case code of

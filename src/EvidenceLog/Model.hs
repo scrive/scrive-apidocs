@@ -197,8 +197,8 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType =
-  AddSigAttachmentEvidence                        |
-  RemoveSigAttachmentsEvidence                    |
+  AddSigAttachmentEvidence                        | -- not used anymore
+  RemoveSigAttachmentsEvidence                    | -- not used anymore
   RemoveDocumentAttachmentEvidence                |
   AddDocumentAttachmentEvidence                   |
   PendingToAwaitingAuthorEvidence                 |
