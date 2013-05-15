@@ -164,42 +164,72 @@
 
       var content = $("<div class='short-input-container'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper float-left'/>");
-      var acceptButtonBox = $("<div class='short-input-container-right float-right'></div>");
+
       var body = $("<div class='short-input-container-body'/>");
-      $(this.el).append(content.append(wrapper.append(body)).append(acceptButtonBox));
+      $(this.el).append(content.append(wrapper.append(body)));
 
 
 
-      var firstNameInput = InfoTextInput.init({
-        infotext: localization.account.accountDetails.fstname,
-        value: model.fstname(),
-        onChange: function(v) {model.setFstname(v);},
+      var nameInput = InfoTextInput.init({
+        infotext: localization.account.accountDetails.fullname,
+        value: model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
+        onChange: function(v) {
+          var words = v.split(' ');
+          var firstName = words[0]
+          if (firstName === undefined) {
+            firstName = '';
+          }
+          var lastName = words.splice(1).join(' ');
+          model.setFstname(firstName);
+          model.setSndname(lastName);
+        },
         inputtype: 'text',
-        name: 'fstname',
+        name: 'fullname',
         cssClass : "big-input"
       });
 
       model.addValidator(function() {
-        return firstNameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.firstNameField}));
+        return nameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.fullNameField}));
       });
 
-      body.append($("<div class='position first'/>").append(firstNameInput.input()));
+      body.append($("<div class='position first'/>").append(nameInput.input()));
 
-      var lastNameInput = InfoTextInput.init({
-        infotext: localization.account.accountDetails.sndname,
-        value: model.sndname(),
-        onChange: function(v) {model.setSndname(v);},
+      var companyInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupCompany,
+        value: model.company(),
+        onChange: function(v) {model.setCompany(v);},
         inputtype: 'text',
-        name: 'sndname',
+        name: 'company',
+        cssClass : "med-input med-input-left"
+       });
+      if (this.model.companyFilled())
+        companyInput.input().attr("readonly","true");
+      var companyrow = $("<div class='position'/>").append(companyInput.input());
+
+      var positionInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupPosition,
+        value: "",
+        onChange: function(v) {model.setPosition(v);},
+        inputtype: 'text',
+        name: 'position',
+        cssClass : "med-input"
+       });
+
+      companyrow.append(positionInput.input());
+
+      body.append(companyrow);
+
+      var phoneInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupPhone,
+        value: "",
+        onChange: function(v) {model.setPhone(v);},
+        inputtype: 'text',
+        name: 'phone',
         cssClass : "big-input"
-      });
+       });
 
-      model.addValidator(function() {
-        return lastNameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.lastNameField}));
-      });
-
-      body.append($("<div class='position'/>").append(lastNameInput.input()));
-
+      var phonerow = $("<div class='position'/>").append(phoneInput.input());
+      body.append(phonerow);
 
       var passwordInput = InfoTextInput.init({
         infotext: localization.accountSetupModal.modalAccountSetupChoosePassword,
@@ -207,7 +237,7 @@
         onChange: function(v) {model.setPassword(v);},
         inputtype: 'password',
         name: 'password',
-        cssClass : "big-input"
+        cssClass : "med-input med-input-left"
       });
 
       model.addValidator(function() {
@@ -217,18 +247,13 @@
                                                               message_digits: localization.validation.passwordNeedsLetterAndDigit}));
       });
 
-      body.append($("<div class='position'/>")
-                    .append($("<label style='text-align:left;margin-left: 5px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
-                    .append(passwordInput.input()));
-
-
       var password2Input = InfoTextInput.init({
         infotext: localization.accountSetupModal.modalAccountSetupRepeatPassword,
         value: "",
         onChange: function(v) {model.setPassword(v);},
         inputtype: 'password',
         name: 'password2',
-        cssClass : "big-input"
+        cssClass : "med-input"
       });
 
       model.addValidator(function() {
@@ -237,7 +262,10 @@
                                                                  'with': passwordInput.input()}));
       });
 
-      body.append($("<div class='position'/>").append(password2Input.input()));
+      body.append($("<div class='position'/>")
+                    .append($("<label style='text-align:left;margin-left: 5px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
+                    .append(passwordInput.input())
+                    .append(password2Input.input()));
 
       var tosAccept = $("<div class='position checkbox-box' style='text-align: left;'/>");
       var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
@@ -258,53 +286,6 @@
 
       body.append(tosAccept);
 
-
-      var optionaldescriptionrow = $("<div class='position' style='text-align:left;'/>")
-        .append($("<label style='text-align:left;margin-left: 5px'></label>").text(localization.accountSetupModal.modalAccountOptionalPositions));
-      body.append(optionaldescriptionrow);
-
-      var companyInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupCompany,
-        value: model.company(),
-        onChange: function(v) {model.setCompany(v);},
-        inputtype: 'text',
-        name: 'position',
-        cssClass : "big-input"
-       });
-      if (this.model.companyFilled())
-        companyInput.input().attr("readonly","true");
-      var companyrow = $("<div class='position'/>").append(companyInput.input());
-
-      body.append(companyrow);
-
-      var positionInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupPosition,
-        value: "",
-        onChange: function(v) {model.setPosition(v);},
-        inputtype: 'text',
-        name: 'position',
-        cssClass : "big-input"
-       });
-
-      var positionrow = $("<div class='position'/>").append(positionInput.input());
-
-      body.append(positionrow);
-
-      var phoneInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupPhone,
-        value: "",
-        onChange: function(v) {model.setPhone(v);},
-        inputtype: 'text',
-        name: 'phone',
-        cssClass : "big-input"
-       });
-
-      var phonerow = $("<div class='position'/>").append(phoneInput.input());
-      body.append(phonerow);
-
-
-
-
       var acceptButton = Button.init({
           size: 'small',
           color: 'blue',
@@ -315,7 +296,8 @@
           }
         });
 
-      acceptButtonBox.append($("<h3></h3>").append(localization.signupModal.mainHeader)).append(acceptButton.input());
+      body.append($('<div class="position"/>').append(acceptButton.input()));
+      // acceptButtonBox.append($("<h3></h3>").append(localization.signupModal.mainHeader)).append(acceptButton.input());
 
     }
   });
