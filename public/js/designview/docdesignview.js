@@ -586,15 +586,64 @@
             view.buttonBar   = new DesignViewButtonBarView({model : view.model});
             view.documentView = new DesignViewDocumentView({model : view.model.document(),
                                                             viewmodel : view.model});
+            $(window).on('resize scroll', view.affix);
             view.render();
+        },
+        fix: function() {
+            var view = this;
+            if(view.fixed)
+                return;
+            view.fixed = true;
+            view.topBarHeight = view.topBar.outerHeight();
+            view.topBar.css({position:'fixed',
+                             top: 0,
+                             left: 0});
+            view.docView.css({'padding-top' : 20 + view.topBarHeight});
+        },
+        unfix: function() {
+            var view = this;
+            if(!view.fixed)
+                return;
+            view.fixed = false;
+            view.topBar.css({position:'relative',
+                             top: 'none',
+                             left: 'none'});
+            view.docView.css({'padding-top' : 20});
+        },
+        affix: function() {
+            var view = this;
+            var model = view.model;
+
+            var st = $(window).scrollTop();
+            var docTop = view.docView.offset().top + view.topBarHeight;
+            var top = view.$el.offset().top;
+            var barHeight = view.topBar.outerHeight();
+            var barTop = view.topBar.offset().top;
+
+            if(view.fixed && barTop + barHeight < docTop) {
+                view.unfix();
+            } else if(st > top) {
+                view.fix();
+            } else {
+                view.unfix();
+            }
         },
         frame: function() {
             var view = this;
+            var topBar = $('<div />');
+            topBar.addClass('design-view-frame-top-bar');
+            topBar.append(view.tabsView.el);
+            topBar.append(view.actionsView.el);
+            view.topBar = topBar;
             var div = $('<div/>');
-            div.append(view.tabsView.el);
-            div.append(view.actionsView.el);
+            div.append(topBar);
+            //div.append(view.tabsView.el);
+            //div.append(view.actionsView.el);
             div.append(view.documentView.el);
             div.append(view.buttonBar.el);
+
+            view.docView = view.documentView.$el;
+
             return div.children();
         },
         render: function() {
@@ -622,9 +671,11 @@
         this.el = function() {
             return $(view.el);
         };
+
         this.afterInsert = function() {
             view.afterInsert();
         };
+
     }
 
 })(window);
