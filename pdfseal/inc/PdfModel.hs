@@ -4,6 +4,7 @@
 module PdfModel where
 import Prelude hiding (String)
 import qualified Prelude as P
+import Control.Applicative ((<|>), (<$>), many)
 import Control.Monad.State.Strict
 -- import "mtl" Control.Monad.ST
 import System.IO
@@ -19,7 +20,7 @@ import qualified Data.ByteString.Internal as BSB
 import qualified Data.IntMap as IntMap
 import Data.Maybe
 import Matrix
-import qualified ReadP as P
+import qualified Data.Attoparsec.ByteString as A
 import qualified Data.Char as Char
 
 import System.IO.MMap
@@ -39,7 +40,6 @@ trace _ x = x
 
 traceM :: (Monad m) => P.String -> m ()
 traceM msg = trace msg (return ())
-
 
 pdfStandardEncoding :: [(Char,Char)]
 pdfStandardEncoding = map (\(a,b) -> (Char.chr a, Char.chr b)) [
@@ -218,7 +218,7 @@ unicodeToStandardEncoding x | x <= ' ' = ' '
     Just c -> c
     Nothing -> '?'
 
-type MyReadP a = P.ReadP a
+type Parser = A.Parser
 
 data Document = Document
                    { documentHeader :: BS.ByteString                  -- header
@@ -812,11 +812,12 @@ binarizeXRefTable table = concatMap z table
         last' n x = drop (length x - n) x
 
 
-writeBody   :: (BS.ByteString -> IO ())     -- write action
-            -> (IO Int)                     -- tell offset action
+writeBody   :: (Monad m)
+            => (BS.ByteString -> m ())     -- write action
+            -> (m Int)                     -- tell offset action
             -> (Int,Int)
             -> Body                         -- (objno,entry)
-            -> IO (Int,Int)
+            -> m (Int,Int)
 writeBody write tell' (highest,prevoffset) (Body trailer' objects) = do
     (_,r) <- foldM (writeObject write tell') (IntMap.empty,IntMap.empty) (IntMap.toList objects)
     v <- tell'
@@ -837,7 +838,7 @@ writeBody write tell' (highest,prevoffset) (Body trailer' objects) = do
     return (k,v)
 
 
-writeDocument :: (BS.ByteString -> IO ()) -> IO Int -> Document -> IO ()
+writeDocument :: (Monad m) => (BS.ByteString -> m ()) -> m Int -> Document -> m ()
 writeDocument write tell' (Document version bodies) = do
     write $ BSC.concat [BSC.pack "%", version, BSC.pack "\n"]
     foldM_ (writeBody write tell') (0,0) (reverse bodies)
@@ -850,6 +851,11 @@ writeFileX file document' = do
             (hClose)
             (\handle' -> writeDocument (\x -> BS.hPutStr handle' x >> hFlush handle')
                         (liftM fromIntegral $ hTell handle') document')
+
+writeByteString :: Document -> BS.ByteString
+writeByteString doc = flip evalState (0,BS.empty) $ do
+  writeDocument (\bs -> modify (\(npos,cnt) -> (npos+BS.length bs, cnt `BS.append` bs))) (gets fst) doc
+  gets snd
 
 importObjects :: Document -> [RefID] -> State Document [RefID]
 importObjects doc refids = do
@@ -1066,15 +1072,15 @@ mapM2 :: Monad m => (a -> m a1) -> [a] -> m [a1]
 mapM2 f xs = sequence2 (map f xs)
 
 -- the body should be the parsed body, kind of fixed point operator
-xparse :: Body -> BS.ByteString -> P.ReadP Body
+xparse :: Body -> BS.ByteString -> Parser Body
 xparse body bin = do
     xref <- parseRegular
     when (xref/=BSC.pack "xref") $ do
                     traceM ("In place of 'xref' got " ++ show xref)
-                    P.pfail
+                    fail "xparse"
 
     traceM "Got past xref"
-    p <- P.manyRev parseXRefSection
+    p <- manyRev parseXRefSection
     traceM "Got past xref section"
     _ <- parseOperatorEq "trailer"
     traceM "Got past xref trailer token"
@@ -1102,7 +1108,7 @@ xparse body bin = do
                              usedEntry = UsedEntry gen indir
                          in -- return (objno',offset',usedEntry)
                            return (obj,offset',usedEntry)
-                    else P.pfail
+                    else fail "xparse"
 
         findLength :: Body -> Value -> Int
         findLength (Body _ objects) (Dict d) = {-# SCC "xparse.findLength" #-}
@@ -1138,18 +1144,18 @@ xparse body bin = do
         parseIndirA bin' off = -- trace ("Indir at offset " ++ show off) $
             --case P.readP_to_S parseIndir1 (BS.unpack (BS.drop (fromIntegral off) bin')) of
             let bin'' = BS.drop (fromIntegral off) bin' in
-            case P.readP_to_S parseIndir1 bin'' of
-                ((_,      thing@(_obj,_gen,Indir _e Nothing)),_):_ -> thing
-                ((ntokens,(obj,gen,Indir e (Just _))),_):_ ->
+            case A.feed (A.parse parseIndir1 bin'') BS.empty of
+                A.Done _ thing@(_obj,_gen,Indir _e Nothing) -> thing
+                A.Done rest (obj,gen,Indir e (Just _)) ->
                     let len = findLength body e
-                        dt = cut ntokens len bin''
+                        dt = BS.take (fromIntegral len) rest
                         indir = (obj,gen,Indir e (Just (BSL.fromChunks [dt])))
                     in indir
-                _ -> error $ "Cannot parse Indir at offset " ++ show off ++ ", beginning: " ++ take 300 (BSC.unpack bin'')
-        cut off len = BS.take (fromIntegral len) . BS.drop (fromIntegral off)
+                e -> error $ "Cannot parse Indir at offset " ++ show off ++ ", beginning: " ++ take 300 (BSC.unpack bin'') ++ ", error: " ++ es
+                      where Left es = A.eitherResult e
 
-        parseIndir1 :: MyReadP (Int,(Int,Int,Indir))
-        parseIndir1 = P.countsym $ do
+        parseIndir1 :: Parser (Int,Int,Indir)
+        parseIndir1 = do
             obj <- parseNatural -- should check if naturals match with reference
             gen <- parseNatural
             _ <- parseOperatorEq "obj"
@@ -1158,11 +1164,11 @@ xparse body bin = do
                              (withStream e >>= \indir -> return (obj,gen,indir))
         withStream e = do
             _ <- parseOperatorEq "stream"
-            _ <- P.munch isspacenoteol
-            (P.string (BS.pack [0x0d,0x0a]) >> return ())
-                P.<++ (P.char 0x0d >> return ())
-                P.<++ (P.char 0x0a >> return ())
-                P.<++ (return ())
+            _ <- A.takeWhile isspacenoteol
+            (A.string (BS.pack [0x0d,0x0a]) >> return ())
+                <|> (A.word8 0x0d >> return ())
+                <|> (A.word8 0x0a >> return ())
+                <|> (return ())
             return (Indir e (Just undefined))
 
 
@@ -1171,70 +1177,73 @@ xparse body bin = do
 -- | Parse body from bin starting xref at offset
 parseBody :: Integral a => BS.ByteString -> a -> Maybe Body
 parseBody bin startxref = case aparse of
-    [(body',_)] -> Just body'
+    Right body' -> Just body'
     _ -> Nothing
     where
-        aparse = P.readP_to_S (xparse body bin) xref
-        [(body,_)] = aparse
+        aparse = A.parseOnly (xparse body bin) xref
+        Right body = aparse
         xref = BS.drop (fromIntegral startxref) bin
 
 
 -- | Parses PDF element: dictionary, array, number, string, hexstring, operators.
-parseValue :: MyReadP Value
-parseValue = P.choice [ (P.<++) (parseRef >>= return . Ref) (parseRegular >>= return . mkop)
-               , parseDict >>= return . Dict
-               , parseArray >>= return . Array
-               , parseString >>= \raw -> let str = String False raw in traceM (show str) >> return str
-               , parseHexString >>= return . String True
-               , parseName >>= return . Name
-               -- , parse_execarray >>= return . ExecArray
-               ]
+parseValue :: Parser Value
+parseValue = msum [ parseRef >>= return . Ref
+                  , parseRegular >>= return . mkop
+                  , parseDict >>= return . Dict
+                  , parseArray >>= return . Array
+                  , parseString >>= \raw -> let str = String False raw in traceM (show str) >> return str
+                  , parseHexString >>= return . String True
+                  , parseName >>= return . Name
+                  -- , parse_execarray >>= return . ExecArray
+                  ]
 
 -- | Parses nonnegative integer number given in decimal
-parseNatural :: MyReadP Int
+parseNatural :: Parser Int
 parseNatural = do
     s <- parseRegular
     r 0 (BS.unpack s)
     where r !n (x:xs) | x>=n0 && x<=n9 = r (n*10 + fromIntegral (x-n0)) xs
-                     | otherwise = P.pfail
+                     | otherwise = fail "parseNatural"
           r !n [] = return n
           n0 = 48
           n9 = 48 + 9
 
 -- | Parse sequence of regular characters. This may constitute operator or number.
-parseRegular :: P.ReadP BS.ByteString
+parseRegular :: Parser BS.ByteString
 parseRegular = do
     parseSpace
-    v <- P.munch1 isregular
+    v <- A.takeWhile1 isregular
     return v
 
-parseNumber :: MyReadP Double
-parseNumber = beforedot 0
+parseNumber :: Parser Double
+parseNumber = do
+  s <- (A.word8 (BSB.c2w '-') >> return negate) <|> return id
+  s <$> beforedot 0
     where
         c0 = BSB.c2w '0'
         c9 = BSB.c2w '9'
         dot = BSB.c2w '.'
-        beforedot :: Integer -> MyReadP Double
+        beforedot :: Integer -> Parser Double
         beforedot value' = (do
-                c <- P.satisfy (\c -> c >= c0 && c <= c9)
+                c <- A.satisfy (\c -> c >= c0 && c <= c9)
                 beforedot (value'*10 + fromIntegral (c - c0)))
-            P.+++ (do
-                _ <- P.char dot
+            <|> (do
+                _ <- A.word8 dot
                 afterdot value' 1)
-            P.+++ (do
-                v <- P.look
-                if BSC.null v
+            <|> (do
+                v <- A.peekWord8
+                if isNothing v
                     then return (fromIntegral value')
-                    else P.pfail)
-        afterdot :: Integer -> Integer -> MyReadP Double
+                    else fail "parseNumber")
+        afterdot :: Integer -> Integer -> Parser Double
         afterdot value' divider = (do
-                c <- P.satisfy (\c -> c >= c0 && c <= c9)
+                c <- A.satisfy (\c -> c >= c0 && c <= c9)
                 afterdot (value'*10 + fromIntegral (c - c0)) (divider*10))
-            P.+++ (do
-                v <- P.look
-                if BSC.null v
+            <|> (do
+                v <- A.peekWord8
+                if isNothing v
                     then return (fromIntegral value' / fromIntegral divider)
-                    else P.pfail)
+                    else fail "parseNumber")
 
 
 mkop :: BS.ByteString -> Value
@@ -1242,18 +1251,18 @@ mkop name'
     | name'==BSC.pack "true" = Boolean True
     | name'==BSC.pack "false" = Boolean False
     | name'==BSC.pack "null" = Null
-    | [(flt,_)] <- P.readP_to_S parseNumber name' = Number flt
+    | Right flt <- A.parseOnly parseNumber name' = Number flt
     | otherwise = Operator name'
 
 -- | Parse operator given as 'name'.
-parseOperatorEq :: [Char] -> MyReadP BS.ByteString
+parseOperatorEq :: [Char] -> Parser BS.ByteString
 parseOperatorEq name' = parseRegular >>= \x ->
      if x==BSC.pack name'
          then return x
-         else P.pfail
+         else fail "parseOperatorEq"
 
 -- | Parse reference ID of the form n g R
-parseRef :: MyReadP RefID
+parseRef :: Parser RefID
 parseRef = do
     refno <- parseNatural
     gener' <- parseNatural
@@ -1262,62 +1271,62 @@ parseRef = do
 
 
 -- | Parse string delimited by ( ) or < > (hexstring).
-parseString :: MyReadP BS.ByteString
+parseString :: Parser BS.ByteString
 parseString = do
     parseSpace
-    _ <- P.char (BSB.c2w '(')
+    _ <- A.word8 (BSB.c2w '(')
     x <- string_p1
-    _ <- P.char (BSB.c2w ')')
+    _ <- A.word8 (BSB.c2w ')')
     return (BS.concat x)
     where
-        string_p1 = fmap reverse $ P.manyRev (string_char_p P.<++ string_bs_p P.<++ string_string_p)
-        string_char_p = P.munch1 (\x -> x/=BSB.c2w '(' &&
+        string_p1 = fmap reverse $ manyRev (string_char_p <|> string_bs_p <|> string_string_p)
+        string_char_p = A.takeWhile1 (\x -> x/=BSB.c2w '(' &&
                                    x/=BSB.c2w '\\' &&
                                    x/=BSB.c2w ')')
 
         string_bs_p = do
-                _ <- P.char (o '\\')
-                P.choice [ P.char (o 'f') >> return (BSC.singleton '\f')
-                         , P.char (o 'r') >> return (BSC.singleton '\r')
-                         , P.char (o 'n') >> return (BSC.singleton '\n')
-                         , P.char (o 't') >> return (BSC.singleton '\t')
-                         , P.char (o 'b') >> return (BSC.singleton '\b')
+                _ <- A.word8 (o '\\')
+                msum     [ A.word8 (o 'f') >> return (BSC.singleton '\f')
+                         , A.word8 (o 'r') >> return (BSC.singleton '\r')
+                         , A.word8 (o 'n') >> return (BSC.singleton '\n')
+                         , A.word8 (o 't') >> return (BSC.singleton '\t')
+                         , A.word8 (o 'b') >> return (BSC.singleton '\b')
                            -- \\\n or \\\r or \\\r\n all result in \n
-                         , P.char (o '\r') >>
-                                  (P.char (o '\n') P.<++ return (o '\n')) >> return (BSC.singleton '\n')
-                         , P.char (o '\n') >> return (BSC.singleton '\n')
+                         , A.word8 (o '\r') >>
+                                  (A.word8 (o '\n') <|> return (o '\n')) >> return (BSC.singleton '\n')
+                         , A.word8 (o '\n') >> return (BSC.singleton '\n')
                          , (do
                              o1 <- octDigit
                              o2 <- octDigit
                              o3 <- octDigit
                              return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48)))
-                            P.<++
+                            <|>
                            (do
                              o2 <- octDigit
                              o3 <- octDigit
                              return $ BS.singleton ((o2-48)*8 + (o3-48)))
-                            P.<++
+                            <|>
                            (do
                              o3 <- octDigit
                              return $ BS.singleton ((o3-48)))
-                         ] P.<++ do
-                              next <- P.get
+                         ] <|> do
+                              next <- A.anyWord8
                               traceM ("Backslash used before " ++ show (BSB.w2c next))
                               return (BS.singleton next)
         string_string_p = do
-             _ <- P.char (o '(')
+             _ <- A.word8 (o '(')
              x <- string_p1
-             _ <- P.char (o ')')
+             _ <- A.word8 (o ')')
              return (BS.concat ([BSC.singleton '('] ++ x ++ [BSC.singleton ')']))
         o = BSB.c2w
-        octDigit = P.satisfy (\x -> BSB.c2w '0' <= x && x <= BSB.c2w '7')
+        octDigit = A.satisfy (\x -> BSB.c2w '0' <= x && x <= BSB.c2w '7')
 
-parseHexString :: MyReadP BS.ByteString
+parseHexString :: Parser BS.ByteString
 parseHexString = do
     parseSpace
-    _ <- P.char (c '<')
-    x <- P.munch (\y -> ishexchar y || isspace y)
-    _ <- P.char (c '>')
+    _ <- A.word8 (c '<')
+    x <- A.takeWhile (\y -> ishexchar y || isspace y)
+    _ <- A.word8 (c '>')
     return (BS.pack (hexdecode (filter ishexchar (BS.unpack x))))
     where
         hexdecode [] = []
@@ -1331,29 +1340,29 @@ parseHexString = do
         c = BSB.c2w
 
 -- | Parse array [ ]
-parseArray :: MyReadP ArrayData
+parseArray :: Parser ArrayData
 parseArray = do
     parseSpace
-    _ <- P.char (BSB.c2w '[')
-    e <- P.manyRev parseValue
+    _ <- A.word8 (BSB.c2w '[')
+    e <- manyRev parseValue
     parseSpace
-    _ <- P.char (BSB.c2w ']')
+    _ <- A.word8 (BSB.c2w ']')
     return (reverse e)
 
 -- | Parse dictionary << >>
-parseDict :: MyReadP DictData
+parseDict :: Parser DictData
 parseDict = do
     parseSpace
-    _ <- P.string (BSC.pack "<<")
-    e <- P.manyRev pair
+    _ <- A.string (BSC.pack "<<")
+    e <- manyRev pair
     parseSpace
-    _ <- P.string (BSC.pack ">>")
+    _ <- A.string (BSC.pack ">>")
     return (e)
     where
         pair = liftM2 (,) parseName parseValue
 
 -- | Skips whitespace characters
-parseSpace :: MyReadP ()
+parseSpace :: Parser ()
 {-
 parseSpace = ((P.satisfy isspace >> parseSpace) P.+++
              (P.char (BSB.c2w '%') >> skipTillEOL >> parseSpace)) P.+++ return ()
@@ -1361,17 +1370,17 @@ parseSpace = ((P.satisfy isspace >> parseSpace) P.+++
 -}
 
 
-parseSpace = P.munch isspace >>
-                 ((P.char (BSB.c2w '%') >> P.munch (not . iseol) >> parseSpace) P.<++ return ())
+parseSpace = A.takeWhile isspace >>
+                 ((A.word8 (BSB.c2w '%') >> A.takeWhile (not . iseol) >> parseSpace) <|> return ())
 
 
 
 -- | Parse PDF name. Name is in undecoded form, retaining all # characters.
-parseName :: MyReadP BS.ByteString
+parseName :: Parser BS.ByteString
 parseName = do
     parseSpace
-    _ <- P.char (BSB.c2w '/')
-    s <- P.munch isregular
+    _ <- A.word8 (BSB.c2w '/')
+    s <- A.takeWhile isregular
     return s
 
 
@@ -1429,14 +1438,12 @@ printIfParsedDifferent :: P.String -> P.String -> IO ()
 printIfParsedDifferent ainput aoutput = do
   let input = BSC.pack ainput
       output = BSC.pack aoutput
-  case P.readP_to_S parseString input of
-    [(output',_)] -> do
+  case A.parseOnly parseString input of
+    Right output' -> do
       when (output/=output') $
            putStrLn $ "Parsed " ++ BSC.unpack input ++ " as " ++ show output' ++ " expected " ++ show output
-    [] -> do
-      putStrLn $ "Cannot at all parse " ++ BSC.unpack input
-    xs -> do
-      putStrLn $ "Many parses for " ++ BSC.unpack input ++ ": " ++ show (map fst xs)
+    Left e -> do
+      putStrLn $ "Parse error for " ++ BSC.unpack input ++ ": " ++ e
 
 testReadParseString :: IO ()
 testReadParseString = do
@@ -1449,3 +1456,66 @@ testReadParseString = do
   printIfParsedDifferent "(\\1q\\01q\\001q\\1)" "\x01q\x01q\x01q\x01"
   printIfParsedDifferent "(\\\rA\\\nA\\\r\nA)" "\nA\nA\nA"
   printIfParsedDifferent "(\\q\\h\\p\\v)" "qhpv"
+
+manyRev :: Parser a -> Parser [a]
+manyRev p = reverse <$> many p
+
+
+concatPdfFiles :: [P.String] -> P.String -> IO ()
+concatPdfFiles filenames outputname = do
+  documents <- mapM parseFile filenames
+  let document' = concatenatePdfDocuments (map fromJust documents)
+  writeFileX outputname document'
+
+findRefIdOfRootPages :: Document -> RefID
+findRefIdOfRootPages document' = pagesrefid
+   where
+        firstBody = head (documentBodies document')
+        trailer' = bodyTrailer firstBody
+        root = case Prelude.lookup (BSC.pack "Root") trailer' of
+                 Just (Ref root') -> root'
+                 x -> error ("/Root is wrong: " ++ show x)
+        catalog = case PdfModel.lookup root document' of
+                    Just (Indir (Dict catalog') _) -> catalog'
+                    x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
+        pagesrefid = case Prelude.lookup (BSC.pack "Pages") catalog of
+                       Just (Ref pagesrefid') -> pagesrefid'
+                       x -> error ("lookup of /Pages in catalog returned " ++ show x)
+
+
+getCountFromRefID :: RefID -> State Document Double
+getCountFromRefID ref = do
+  document' <- get
+  let dt = case PdfModel.lookup ref document' of
+             Just (Indir (Dict dt') _) -> dt'
+             x -> error ("lookup of " ++ show ref ++ " in document returned " ++ show x)
+      vl = case Prelude.lookup (BSC.pack "Count") dt of
+             Just (Number ct') -> ct'
+             x -> error ("lookup of /Count at " ++ show ref ++ " returned " ++ show x ++ " dict is " ++ show dt)
+  return vl
+
+setParent :: RefID -> RefID -> State Document ()
+setParent parent ref = do
+  document' <- get
+  let dt = case PdfModel.lookup ref document' of
+             Just (Indir (Dict dt') _) -> dt'
+             x -> error ("lookup of " ++ show ref ++ " in document returned " ++ show x)
+  setObject ref (Dict (dt ++ [ entry "Parent" parent ]))
+
+concatenatePdfDocuments :: [Document] -> Document
+concatenatePdfDocuments documents =
+  flip execState (documentF (BSC.pack "PDF-1.4")) $ do
+    let rootPages = map (findRefIdOfRootPages) documents
+    importedRootPages' <- zipWithM (\doc ref -> importObjects doc [ref]) documents rootPages
+    let importedRootPages = concat importedRootPages'
+    counts <- mapM getCountFromRefID importedRootPages
+    newTopPages <- addObject $ dict [ entry "Type" "Pages"
+                                    , entryn "Count" (sum counts)
+                                    , entrya "Kids" importedRootPages
+                                    ]
+    mapM_ (setParent newTopPages) importedRootPages
+    catalog <- addObject $ catalog_dict newTopPages
+    trailer (trailer_dict catalog)
+
+concatTest :: IO ()
+concatTest = concatPdfFiles ["test/pdfs/ratb.pdf", "test/pdfs/simple.pdf", "test/pdfs/telia.pdf"] "test/pdfs/concatenated.pdf"
