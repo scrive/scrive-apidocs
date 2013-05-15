@@ -605,6 +605,7 @@
             if(!view.fixed)
                 return;
             view.fixed = false;
+            view.topBarHeight = view.topBar.outerHeight();
             view.topBar.css({position:'relative',
                              top: 'none',
                              left: 'none'});
@@ -620,9 +621,7 @@
             var barHeight = view.topBar.outerHeight();
             var barTop = view.topBar.offset().top;
 
-            if(view.fixed && barTop + barHeight < docTop) {
-                view.unfix();
-            } else if(st > top) {
+            if(st > top) {
                 view.fix();
             } else {
                 view.unfix();
