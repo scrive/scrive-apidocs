@@ -63,7 +63,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                  email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
                                 ];
 
-                  if (vresult.every(function(a) {return a;})) {
+                  if (_.every(vresult, function(a) {return a;})) {
 
                     new Submit({
                         url: "/account/companyaccounts",
