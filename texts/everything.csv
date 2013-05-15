@@ -1107,7 +1107,7 @@
 "_designViewAddMultisend","Lägg till massutskick","Add multisend"
 "_designViewViewCSV","Se CSV","View CSV"
 "_designViewFullName","Namn","Full name"
-"_designViewOptional","Valbar","Optional"
+"_designViewOptional","valbar","optional"
 "_designViewMandatoryForRecipient","Obligatorisk<br> för mottagaren","Mandatory<br> for recipient"
 "_designViewMandatoryForSender","Obligatorisk<br> för avsändaren","Mandatory<br> for sender"
 "_designViewDocumentName","Dokumentnamn","Document name"

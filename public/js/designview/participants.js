@@ -917,7 +917,7 @@
             if(!view.active) {
                 view.active = true;
                 if(!view.opened) {
-                    view.innerDiv.animate({height: view.detailsView.$el.outerHeight() + 56}, {
+                    view.innerDiv.animate({height: view.detailsView.$el.outerHeight() + 53}, {
                         duration: 250,
                         easing: "linear",
                         complete: function() {
@@ -934,7 +934,7 @@
                     });
                 } else {
                     // don't animate, just set them
-                    view.innerDiv.css({height: view.detailsView.$el.outerHeight() + 56,
+                    view.innerDiv.css({height: view.detailsView.$el.outerHeight() + 53,
                                        overflow:'visible',
                                        'z-index': 500});
                     view.active = false;

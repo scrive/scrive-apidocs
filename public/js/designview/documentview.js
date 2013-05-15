@@ -143,7 +143,7 @@
                             document.trigger('change');
                         }
              });
-            return UploadButton.init({    color: 'green',
+            var input = UploadButton.init({    color: 'green',
                                      size: 'big',
                                      text: localization.uploadButton,
                                      width: 180,
@@ -158,6 +158,8 @@
                                         });
                                      }
                        }).input();
+            input.addClass('design-view-document-buttons-upload-button');
+            return input;
         },
         afterInsert: function() {
             $(window).resize();

@@ -97,11 +97,19 @@
                         .addClass('design-view-tab1-text')
                         .text(localization.designview.editParticipants));
             if(model.step() === 1)
-                div.css({'border-top': '4px solid #ccc',
-                         'border-bottom': '4px solid #fff'});
+                div.addClass('tab-active');
             div.click(function() {
                 model.setStep(1);
             });
+
+            div.mouseenter(function() {
+                div.addClass('tab-hover');
+            });
+
+            div.mouseleave(function() {
+                div.removeClass('tab-hover');
+            });
+
             return div;
         },
         tab2: function () {
@@ -117,11 +125,19 @@
                                 .addClass('design-view-tab2-text-optional')
                                 .text('(' + localization.designview.optional + ')')));
             if(model.step() === 2)
-                div.css({'border-top': '4px solid #ccc',
-                         'border-bottom': '4px solid #fff'});
+                div.addClass('tab-active');
             div.click(function() {
                 model.setStep(2);
             });
+
+            div.mouseenter(function() {
+                div.addClass('tab-hover');
+            });
+
+            div.mouseleave(function() {
+                div.removeClass('tab-hover');
+            });
+
             return div;
         },
         tab3: function () {
@@ -137,11 +153,19 @@
                                 .addClass('design-view-tab3-text-optional')
                                 .text('(' + localization.designview.optional + ')')));
             if(model.step() === 3)
-                div.css({'border-top': '4px solid #ccc',
-                         'border-bottom': '4px solid #fff'});
+                div.addClass('tab-active');
             div.click(function() {
                 model.setStep(3);
             });
+
+            div.mouseenter(function() {
+                div.addClass('tab-hover');
+            });
+
+            div.mouseleave(function() {
+                div.removeClass('tab-hover');
+            });
+
             return div;
         }
     });
