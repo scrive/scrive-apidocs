@@ -163,7 +163,8 @@
       //$(this.el).append(header);
 
       var content = $("<div class='short-input-container'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper float-left'/>");
+      var wrapper = $("<div class='short-input-container-body-wrapper'/>");
+      wrapper.css('margin','auto');
 
       var body = $("<div class='short-input-container-body'/>");
       $(this.el).append(content.append(wrapper.append(body)));

@@ -135,26 +135,14 @@ accountSetupPage=
       </head>
       <body style='background: none repeat scroll 0 0 #FFFFFF;'>
 
-      <header class="site thin">
-        <nav>
-          <ul class="ct thin">
-            <li id="branding">
-              <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="22" $endif$ /></a>
-              <div id="tagline" class="h3"></div>
-            </li>
-            <li class="float-right page-first" style="margin-top: 30px;text-align : right; line-height: 20px">
-              <div style='font-size: 14.5px'>
-                 <div>Scrive help desk</div>
-                 <div>+46 8 519 779 00</div>
-              </div>
-            </li>
-          </ul>
-        </nav>
-      </header>
+      $flashmessages()$
 
-       $flashmessages()$
-
-        <div class='mainContainer big' style='min-height: 712px;'>
+        <div class='mainContainer'>
+        <div style="width: 120px; margin: 100px auto 0px;">
+          <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$">
+            <img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="22" $endif$ />
+          </a>
+        </div>
         <script type="text/javascript">
           jQuery(document).ready(function() {
             jQuery('.mainContainer').append( new AccountSetup({
