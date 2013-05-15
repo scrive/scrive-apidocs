@@ -356,17 +356,11 @@ window.Field = Backbone.Model.extend({
         return "left";
       return "right";
     },
-    makeOptionalM : function() {
+    makeOptional : function() {
         this.set({"obligatory":false});
     },
-    makeObligatoryM : function() {
-        this.set({"obligatory":true});
-    },
-    makeOptional : function() {
-        this.set({"obligatory":false}, {silent: true});
-    },
     makeObligatory : function() {
-        this.set({"obligatory":true}, {silent: true});
+        this.set({"obligatory":true});
     },
     isReady: function(){
       return this.get("fresh") == false;

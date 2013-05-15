@@ -458,46 +458,8 @@ window.Signatory = Backbone.Model.extend({
     addNewCustomField: function() {
        return this.addNewField("custom", true);
     },
-    // TODO: unused
-    newCheckbox: function() {
-       var checkbox = this.newField("checkbox", false);
-       if(this.author())
-           checkbox.makeOptional();
-       else
-           checkbox.makeObligatory();
-
-       /* Generate unique name for a checkbox. Checkbox names are really important for API,
-          for humans checkbox names are pure annoyance.
-        */
-        var sigs = this.document().signatories();
-       var allnames = _.flatten(_.map(sigs, function(s) {
-           return _.invoke(s.fields(), 'name');
-       }));
-       var i = 1;
-       while(_.contains(allnames, 'checkbox-' + i))
-           i++;
-       checkbox.setName("checkbox-" + i);
-       return checkbox;
-    },
     newField : function(t,f) {
         return new Field({signatory: this, fresh: (f != undefined ? f : true) , type : t});
-    },
-    // TODO: unused
-    newSignature: function() {
-       var signature = this.newField("signature", false);
-       signature.makeObligatory();
-
-       /* Generate unique name for a signature. Signature names are really important for API,
-          for humans signature names are pure annoyance.
-        */
-       var allnames = _.flatten(_.map(this.document().signatories(), function(s) {
-           return _.invoke(s.fields(), 'name');
-       }));
-       var i = 1;
-       while(_.contains(allnames, 'signature-' + i))
-           i++;
-       signature.setName("signature-" + i);
-       return signature;
     },
     addField : function(f) {
         this.fields().push(f);
@@ -611,12 +573,12 @@ window.Signatory = Backbone.Model.extend({
                                               shouldbefilledbysender: false,
                                               signatory: signatory}));
             } else {
-                pn.makeObligatoryM();
+                pn.makeObligatory();
             }
         } else {
             // we remove it if we don't use eleg
             // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '') {
+            if(pn && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             }
         }
@@ -635,13 +597,13 @@ window.Signatory = Backbone.Model.extend({
                                               shouldbefilledbysender: true,
                                               signatory: signatory}));
             } else {
-                pn.makeObligatoryM();
+                pn.makeObligatory();
                 pn.setShouldBeFilledBySender(true);
             }
         } else {
             // we remove it if we don't use SMS
             // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '') {
+            if(pn && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             }
         }
@@ -655,6 +617,40 @@ window.Signatory = Backbone.Model.extend({
     setColor: function(c) {
         this.set({color:c});
         return this;
+    },
+    needsEmail: function() {
+        return this.emailDelivery() || this.emailMobileDelivery();
+    },
+    ensureEmail: function() {
+        var signatory = this;
+        var email = signatory.emailField();
+        if(signatory.needsEmail()) {
+            email.makeObligatory();
+            email.setShouldBeFilledBySender(true);
+        }
+    },
+    needsSignature: function() {
+        return this.padDelivery();
+    },
+    ensureSignature: function() {
+        var signatory = this;
+        var document = signatory.document();
+        var signatures = signatory.signatures();
+        // remove the unplaced signatures
+        _.each(signatures, function(s) {
+            if(!s.hasPlacements())
+                signatory.deleteField(s);
+        });
+        signatures = signatory.signatures();
+
+        if(signatory.needsSignature()) {
+            if(signatures.length === 0)
+                signatory.addField(new Field({name:document.newSignatureName(),
+                                              type: 'signature',
+                                              obligatory: true,
+                                              shouldbefilledbysender: false,
+                                              signatory: signatory}));
+        }
     }
 
 });

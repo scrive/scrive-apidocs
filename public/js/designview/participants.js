@@ -65,7 +65,8 @@
                 var field = new Field({
                     name: name,
                     type: type,
-                    signatory: sig
+                    signatory: sig,
+                    obligatory: false
                 });
 
                 sig.addField(field);
@@ -175,7 +176,6 @@
             ["sigcompnr", "standard"],
             ["mobile", "standard"]
         ],
-        //TODO: Translate me
         standardPlaceholders: {
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
@@ -260,7 +260,6 @@
             var sig = view.model;
             var delivery = sig.delivery();
 
-            // TODO: translate
             var deliveryTexts = {
                 email : localization.designview.byEmail,
                 pad : localization.designview.onThisTablet,
@@ -278,6 +277,8 @@
                 onSelect: function(v) {
                     sig.setDelivery(v);
                     sig.ensureMobile();
+                    sig.ensureSignature();
+                    sig.ensureEmail();
                     return true;
                 }
             });
@@ -387,6 +388,7 @@
                     });
                     doc.addExistingSignatory(sig);
                     model.setParticipantDetail(sig);
+                    sig.ensureEmail();
                     return false;
                 }
             });
@@ -772,8 +774,11 @@
                 },0); // do this with the current value (not value before keypress)
             });
 
+            var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
+
             var options = new FieldOptionsView({
-                model: sig.fstnameField()
+                model: sig.fstnameField(),
+                options: optionOptions
             });
 
             var closer = $('<div />');
@@ -812,8 +817,26 @@
                 },0);
             });
 
+            var optionOptions = ['optional', 'signatory', 'sender'];
+
+            if(sig.author())
+                optionOptions = _.without(optionOptions, 'signatory');
+
+            if(name === 'email')
+                optionOptions = _.without(optionOptions, 'optional');
+
+            if(name === 'email' && sig.needsEmail())
+                optionOptions = ['sender'];
+
+            if(name === 'mobile' && sig.needsMobile())
+                optionOptions = ['sender'];
+
+            if(name === 'sigpersnr' && sig.needsPersonalNumber())
+                optionOptions = _.without(optionOptions, 'optional');
+
             var options = new FieldOptionsView({
-                model: field
+                model: field,
+                options : optionOptions
             });
 
             if(viewmodel.showProblems() && !field.isValid())
@@ -1104,6 +1127,7 @@
         className: 'design-view-action-participant-details-information-field-options-wrapper',
         initialize: function(args) {
             var view = this;
+            view.options = args.options;
             var field = view.model;
             _.bindAll(view);
             view.render();
@@ -1125,7 +1149,7 @@
             } else {
                 selected = 'signatory';
             }
-            var values = ['optional', 'signatory', 'sender'];
+            var values = view.options;
             var options = {
                 optional  : {name : localization.designview.optional,
                              value : 'optional',
@@ -1149,12 +1173,12 @@
                 onSelect: function(v) {
                     if(field) {
                         if(v === 'optional') {
-                            field.makeOptionalM();
+                            field.makeOptional();
                         } else if(v === 'signatory') {
-                            field.makeObligatoryM();
+                            field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
                         } else if(v === 'sender') {
-                            field.makeObligatoryM();
+                            field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
                         }
                     }
