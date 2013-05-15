@@ -361,9 +361,14 @@ apiCallDelete did =  api $ do
   ctx <- getContext
   (user, actor, _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
-  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
-  when (not $ (auid == userid user)) $ do
-        throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+  mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
+                       _ -> return Nothing
+  let msl = getSigLinkFor doc user
+  let haspermission = (isJust msl)
+                   || (isJust mauser && isJust (usercompany user) && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+  when (not haspermission) $ do
+         throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
   dbUpdate $ ArchiveDocument (userid user) did actor
   _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user) (ctxtime ctx)
   case (documentstatus doc) of

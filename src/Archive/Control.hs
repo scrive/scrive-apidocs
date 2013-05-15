@@ -49,7 +49,6 @@ import qualified Data.ByteString as BSS
 import Data.Char
 import File.Storage as F
 import qualified Log as Log
-import Data.List (find)
 import Control.Logic
 import Control.Monad.Identity
 import Text.JSON.String (runGetJSON)
@@ -64,7 +63,7 @@ handleDelete = do
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
     docs <- guardRightM' $ getDocsByDocIDs docids
     forM_ docs $ \doc -> do
-              let usl = (find (isSigLinkFor user) $ documentsignatorylinks doc)
+              let usl = getSigLinkFor doc user
                   csl = (getAuthorSigLink $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
                   msl =  usl `mplus` csl
               when (isNothing msl) $ do
