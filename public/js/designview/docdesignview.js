@@ -515,20 +515,14 @@
             var document = model.document();
             var signatory = document.currentSignatory();
             var box = $('<div />');
-            var padDesignViewUtil = undefined;
-            if (!document.padDelivery()) {
-                var content = $("<p/>").append($("<span/>").append(document.process().processLocalization().confirmsendtext));
-                if (!document.authorIsOnlySignatory())
+            var content = $("<p/>").append($("<span/>").append(document.process().processLocalization().confirmsendtext));
+            if (!document.authorIsOnlySignatory())
                     content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
-                content.append($("<span>?</span>"));
-                box.append(DocumentDataFiller.fill(document,content));
-            }
-            else {
-                var padDesignViewUtil = new PadDesignViewUtils({document : document});
-                box.append(padDesignViewUtil.el());
-            }
+            content.append($("<span>?</span>"));
+            box.append(DocumentDataFiller.fill(document,content));
+
             Confirmation.popup({
-                title : (!document.padDelivery()) ? document.process().processLocalization().confirmsendtitle : localization.pad.howDoYouWantToSign,
+                title : document.process().processLocalization().confirmsendtitle,
                 acceptButton : Button.init({
                     size: "tiny",
                     color : "green",
@@ -544,10 +538,7 @@
                         document.afterSave(function() {
                             document.sendByAuthor().sendAjax(function(resp) {
                                 var link = JSON.parse(resp).link;
-                                if (padDesignViewUtil != undefined)
-                                    padDesignViewUtil.postSendAction(link);
-                                else
-                                    window.location = link;
+                                window.location = link;
                             });
                         });
                     }
