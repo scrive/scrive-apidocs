@@ -32,16 +32,18 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
      field.bind("change", function() {iti.setValue(field.value())});
      return iti.input();
    },
-   fstNameInputAvaible : function() {
+   nameInputAvaible : function() {
      var signatory = this.model;
-     var field = signatory.fstnameField();
-     return field != undefined &&  (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
+     var field1 = signatory.fstnameField();
+     var field2 = signatory.sndnameField();
+     return field1 != undefined && (field1.value() == "" || field1.value() == undefined) && (!field1.hasPlacements() || !field1.obligatory()) &&
+            field2 != undefined && (field2.value() == "" || field2.value() == undefined) && (!field2.hasPlacements() || !field2.obligatory())
    },
-   fstNameInput : function() {
+   nameInput : function() {
      var signatory = this.model;
      var field = signatory.fstnameField();
      var iti =  InfoTextInput.init({
-                                 infotext: localization.fstname,
+                                 infotext: localization.name,
                                  value: field.value(),
                                  onChange : function(value) {
                                      field.setValue(value);
@@ -50,25 +52,6 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
                             });
      field.bind("change", function() {iti.setValue(field.value())});
      return iti.input();
-   },
-   sndNameInputAvaible : function() {
-     var signatory = this.model;
-     var field = signatory.sndnameField();
-     return field != undefined && (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
-   },
-   sndNameInput : function() {
-     var signatory = this.model;
-     var field = this.model.sndnameField();
-     var iti = InfoTextInput.init({
-                                 infotext: localization.sndname,
-                                 value: field.value(),
-                                 onChange : function(value) {
-                                     field.setValue(value);
-                                     signatory.trigger("change");
-                                 }
-                            });
-     field.bind("change", function() {iti.setValue(field.value())});
-     return iti.input();;
    },
    ssnInputAvaible : function() {
      var signatory = this.model;
@@ -112,10 +95,8 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
        var description = $("<div class='column spacing descriptionbox'/>").text(localization.docsignview.filladitionfieldsdescription);
        description.css(this.textstyle);
        this.fillBox = $("<div class='column spacing fillbox'/>");
-       if (this.fstNameInputAvaible())
-        this.fillBox.append(this.fstNameInput());
-       if (this.sndNameInputAvaible())
-        this.fillBox.append(this.sndNameInput());
+       if (this.nameInputAvaible())
+        this.fillBox.append(this.nameInput());
        if (this.emailInputAvaible())
         this.fillBox.append(this.emailInput());
        if (this.ssnInputAvaible())

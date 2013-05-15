@@ -76,8 +76,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
         res = true;
       if (field.isFstName() && field.value() == "" && !field.hasPlacements())
         res = true;
-      if (field.isSndName() && field.value() == "" && !field.hasPlacements())
-        res = true;
       if (field.isSSN() && field.value() == "" && !field.hasPlacements() && field.signatory().document().elegAuthentication())
         res = true;
     });
@@ -338,8 +336,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             if (field.isEmail() && (!new EmailValidation().validateData(field.value())))
                                 res = false;
                             if (field.isFstName() && field.value() == "")
-                                res = false;
-                            if (field.isSndName() && field.value() == "")
                                 res = false;
                             if (field.isSSN()    && (field.value() == "") && field.signatory().document().elegAuthentication())
                                 res = false;

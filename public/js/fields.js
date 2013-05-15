@@ -423,7 +423,7 @@ window.Field = Backbone.Model.extend({
     requiredForParticipation: function() {
         var field = this;
         var sig = field.signatory();
-        
+
         if(field.isSSN() && sig.needsPersonalNumber())
             return true;
         if(field.isMobile() && sig.needsMobile())
