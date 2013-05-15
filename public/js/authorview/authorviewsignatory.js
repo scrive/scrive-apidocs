@@ -172,6 +172,22 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                       });
                      }
                  });
+             } else if( signatory.emailMobileDelivery()) {
+                 Confirmation.popup({
+                     title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
+                     content: $("<div>").text(localization.reminder.emailMobileQuestion),
+                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                     rejectText: localization.cancel,
+                     onAccept: function(customtext) {
+                         trackTimeout('Accept',
+                                      {'Accept' : 'send reminder',
+                                       'Signatory index' : signatory.signIndex(),
+                                       'Delivery method' : 'Email and Mobile'},
+                                      function() {
+                                          signatory.remind().send();
+                                      });
+                     }
+                 });
              }
          });
          return button;
