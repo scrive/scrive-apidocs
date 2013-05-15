@@ -62,7 +62,6 @@ emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [
           SignatoryField FirstNameFT "" True  True  []
         , SignatoryField LastNameFT  "" True  True  []
-        , SignatoryField CompanyFT   "" False False []
         , SignatoryField EmailFT     "" True  True  []
         ]
 
