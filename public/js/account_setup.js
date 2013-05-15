@@ -72,6 +72,12 @@
     setTosValidator: function(validator) {
       this.set('tosValidator', validator);
     },
+    buttoncolorclass : function() {
+      return this.get("buttoncolorclass");
+    },
+    branded : function() {
+      return this.get("branded");
+    },
     callme: function() {
       return this.get('callme');
     },
@@ -289,7 +295,7 @@
 
       var acceptButton = Button.init({
           size: 'small',
-          color: 'blue',
+          color: this.model.buttoncolorclass(),
           text: localization.signupModal.modalAccountSetupFooter,
           onClick: function() {
             view.clearValidationMessages();
@@ -298,8 +304,6 @@
         });
 
       body.append($('<div class="position"/>').append(acceptButton.input()));
-      // acceptButtonBox.append($("<h3></h3>").append(localization.signupModal.mainHeader)).append(acceptButton.input());
-
     }
   });
 

@@ -396,7 +396,7 @@ javascriptLocalisation =
               , invalidnamechars: "$_nameInvalidChars()$"
               , firstNameField: "$_firstNameField()$"
               , lastNameField: "$_lastNameField()$"
-              , fullNameField: "$_fullNameField()$"
+              , fullNameField: "$_fullName()$"
               , companyNumberInvalidChars: "$_companyNumberInvalidChars()$"
               , companyNumberTooShort: "$_companyNumberTooShort()$"
               , companyNumberTooLong: "$_companyNumberTooLong()$"

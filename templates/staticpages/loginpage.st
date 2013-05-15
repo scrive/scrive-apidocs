@@ -133,17 +133,24 @@ accountSetupPage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body style='background: none repeat scroll 0 0 #FFFFFF;'>
+      <body style="background: $if(custombackground)$$custombackground$$else$none repeat scroll 0 0 #FFFFFF;$endif$">
 
       $flashmessages()$
 
-        <div class='mainContainer'>
-        <div style="width: 120px; margin: 100px auto 0px;">
-          <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$">
-            <img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="22" $endif$ />
-          </a>
+      <div style='width:275px;margin:20px auto;'>
+        <div style="margin-bottom: 63px">
+          $if(customlogo)$
+            <img alt="logo" src="$customlogolink$"/>
+            <div class="divider-line"></div>
+            <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+          $else$
+            <img src="/img/logo.png" width="120" height="22" style='margin: 10px 80px'/>
+          $endif$
         </div>
-        <script type="text/javascript">
+      </div>
+      <div class='mainContainer'>
+
+      <script type="text/javascript">
           jQuery(document).ready(function() {
             jQuery('.mainContainer').append( new AccountSetup({
                                                   fstname: "$fstname$",
@@ -152,6 +159,8 @@ accountSetupPage=
                                                   userid : "$userid$",
                                                   signupmethod : "$signupmethod$",
                                                   companyFilled : $if(company)$true$else$false$endif$,
+                                                  buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$blue$endif$",
+                                                  branded : $if(hasbrandeddomain)$true$else$false$endif$
                                                   })
                                               .el());
             jQuery('.short-input-section input:first').focus();

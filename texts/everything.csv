@@ -1064,7 +1064,6 @@
 "_nameTooLong","får innehålla maximalt 100 tecken.","may contain up to 100 characters."
 "_firstNameField","Förnamn","First name"
 "_lastNameField","Efternamn","Last name"
-"_fullNameField","Namn","Full name"
 "_companyNumberInvalidChars","Organisationsnumret får endast innehålla bokstäver, siffror samt bindestreck.","Company number may only contain letters, digits and dash symbol."
 "_companyNumberTooShort","Organisationsnumret måste innehålla minst 4 tecken.","Company number must be at least 4 characters long."
 "_companyNumberTooLong","Organisationsnumret får inte vara längre än 50 tecken.","Company number must be at most 50 characters long."
