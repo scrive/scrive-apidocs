@@ -182,7 +182,7 @@
         value: model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
         onChange: function(v) {
           var words = v.split(' ');
-          var firstName = words[0]
+          var firstName = words[0];
           if (firstName === undefined) {
             firstName = '';
           }
@@ -311,7 +311,7 @@
       mixpanel.track('Visit account setup');
     var model = new AccountSetupModel(args);
     var view =  new AccountSetupView({model: model, el: $("<div class='short-input-section account-setup'/>")});
-    this.el = function() {return $(view.el);}
+    this.el = function() {return $(view.el);};
   };
 
 })(window);
