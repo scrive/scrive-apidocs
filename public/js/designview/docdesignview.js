@@ -620,8 +620,9 @@
             var top = view.$el.offset().top;
             var barHeight = view.topBar.outerHeight();
             var barTop = view.topBar.offset().top;
-
-            if(st > top) {
+            if(st > top && st + barHeight < docTop) {
+                view.unfix();
+            } if(st > top) {
                 view.fix();
             } else {
                 view.unfix();
