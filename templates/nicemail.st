@@ -191,7 +191,7 @@ nicebutton=
 <table>
   <tr>
     <td bgcolor="$if(!buttoncolour)$rgb(62,85,116)$else$$buttoncolour$$endif$">
-<a href="$link$" class="button-blue" style="
+<a href="$link$" class="button-blue notclickableinpreview" style="
     $if(!buttoncolour)$
      background-color: rgb(62,85,116); background: rgb(62,85,116); border: 2px solid rgb(62,85,116); -webkit-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -moz-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -ms-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -o-box-shadow: inset rgb(62,85,116) 0 0 0 1px; box-shadow: inset rgb(62,85,116) 0 0 0 1px;
     $else$

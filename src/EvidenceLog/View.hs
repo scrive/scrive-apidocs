@@ -97,6 +97,7 @@ simpleEvents InvitationUndelivered        = True
 simpleEvents ReminderSend                 = True
 simpleEvents ResealedPDF                  = True
 simpleEvents CancelDocumenElegEvidence    = True
+simpleEvents ProlongDocumentEvidence      = True
 simpleEvents _                            = False
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
@@ -116,6 +117,7 @@ getEvidenceEventStatusClass InvitationUndelivered        = SCDeliveryProblem
 getEvidenceEventStatusClass ReminderSend                 = SCSent
 getEvidenceEventStatusClass ResealedPDF                  = SCSigned
 getEvidenceEventStatusClass CancelDocumenElegEvidence    = SCCancelled
+getEvidenceEventStatusClass ProlongDocumentEvidence      = SCProlonged
 getEvidenceEventStatusClass _                            = SCError
 
 -- Clean some events that should not be shown. Like reading after signing.

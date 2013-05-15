@@ -30,6 +30,8 @@ simpliefiedTextReminderSend                 = $_simpliefiedTextReminderSend()$
 simpliefiedTextResealedPDF                  = $_simpliefiedTextResealedPDF()$
 #####
 simpliefiedTextCancelDocumenElegEvidence    = $_simpliefiedTextCancelDocumenElegEvidence()$
+#####
+simpliefiedTextProlongDocumentEvidence      = $_simpliefiedTextProlongDocumentEvidence()$
 ##### UTILS
 #####
 notNamedParty = $_notNamedParty()$
