@@ -309,9 +309,9 @@
     .design-view-action-participant-details-field;
     margin-bottom: 8px;
     border-right-color : transparent;
+    width: 240px;
     &.redborder {
         border:1px solid red;
-
     }
 }
 
@@ -320,29 +320,15 @@
 }
 
 .design-view-action-participant-details-information-field-options {
-    // .design-view-action-participant-details-field;
     .box-sizing(border-box);
     display: inline-block;
-    width: 100px;
+    width: 200px;
     vertical-align: middle;
     height: 36px;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-opts {
-        .box-sizing(border-box);
-        width: 100px;
-        li {
-            text-indent: 0;
-            line-height: 12px;
-            font-size: 10px;
-            color: #888;
-        }
-    }
-    .select-button .select-button-label {
-        text-indent: 0;
-        line-height: 12px;
-        font-size: 10px;
-        margin-left: 4px;
-        color: #888;
+        z-index: 1000;
+        width: 100%;
     }
     margin-bottom: 8px;
 }
@@ -444,8 +430,9 @@
 
 .design-view-action-participant-details-information-closer {
      width: 19px;
-     height: 20px;
+     height: 19px;
      display: inline-block;
+     margin-right: 12px;
      &.active {
       background: url("/img/editor-view-remove-field.png");
       cursor: pointer;
