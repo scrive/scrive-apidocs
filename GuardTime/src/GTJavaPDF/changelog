@@ -1,0 +1,23 @@
+2013-03-28 release (0.3.2-scrive)
+* Bugfix in iText 2.1.7.
+
+2012-06-12 release (0.3.1-scrive)
+* Support for custom signer names in stamper and bundler.
+* Support for JSON output in verifier.
+
+2012-03-21 release (0.3.1)
+* Support for cropped PDF documents.
+
+2012-02-07 release (0.3)
+* Support for authenticated GW names.
+* Support for PDF attachments.
+* Upgraded to GT API 0.4.4.
+* Upgraded to BC API 1.45.
+
+2011-04-14 relase (0.2)
+* First public release.
+* Also verification.
+
+2008-10-10 release (0.1)
+* GuardTime internal release.
+* Siging only.
