@@ -40,21 +40,19 @@
 }
 
 .design-view-action-participant-close {
-    position: absolute;
-    right: 0;
-    top: 15px;
-    width: 20px;
-    height: 20px;
-    border: 1px solid #eee;
-    z-index: 100;
-    cursor: pointer;
-}
-
-.design-view-action-participant-close-x {
-    line-height: 1em;
-    text-align: center;
-    .box-sizing(border-box);
-    .center-vh(100%, 1em);
+     position: absolute;
+     margin-right: 12px;
+     margin-top: -5px;
+     right : 0px;
+     width: 19px;
+     height: 20px;
+     background: url("/img/editor-view-remove-party.png");
+     display: inline-block;
+     cursor: pointer;
+     z-index : 501;
+     &:hover {
+      background: url("/img/editor-view-remove-party-hover.png");
+     }
 }
 
 .design-view-action-participant-info-box {
@@ -206,7 +204,7 @@
 .design-view-action-participant-details-field {
     .box-sizing(border-box);
     border: 1px solid #ccc;
-    width: 200px;
+    width: 196px;
     padding: 8px;
     height: 36px;
     background: #white;
@@ -444,12 +442,16 @@
 }
 
 .design-view-action-participant-details-information-closer {
-     width: 16px;
-     height: 28px;
+     width: 19px;
+     height: 20px;
      display: inline-block;
-     text-align: center;
-     vertical-align: middle;
-     cursor: pointer;
+     &.active {
+      background: url("/img/editor-view-remove-field.png");
+      cursor: pointer;
+      &:hover {
+        background: url("/img/editor-view-remove-field-hover.png");
+      }
+    }
 }
 
 .design-view-action-participant-new-field-popup-content-top {

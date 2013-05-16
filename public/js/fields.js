@@ -285,7 +285,7 @@ window.Field = Backbone.Model.extend({
             return new PhoneValidation({message: msg});
         }
 
-        if (forSigning && this.signatory().author() && this.signatory().document().elegAuthentication() && this.isSSN()) {
+        if (forSigning && this.signatory().author() && this.signatory().elegAuthentication() && this.isSSN()) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
         }

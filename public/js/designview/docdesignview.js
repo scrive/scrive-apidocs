@@ -254,9 +254,6 @@
             div.addClass('design-view-button1');
             div.append($('<div />')
                        .addClass('design-view-button1-text')
-                       .append($('<img />')
-                               .addClass('design-view-button1-icon')
-                               .attr('src', '/img/save.png'))
                        .append(localization.saveAsDraft));
 
             div.click(function() {
@@ -274,9 +271,6 @@
             div.addClass('design-view-button2');
             div.append($('<div />')
                        .addClass('design-view-button2-text')
-                       .append($('<img />')
-                               .addClass('design-view-button2-icon')
-                               .attr('src', '/img/template.png'))
                        .append(localization.saveAsTemplate));
 
             div.click(function() {
@@ -331,20 +325,10 @@
             });
             return div;
         },
-        removeDocumentButtonIcon: function() {
-            var view = this;
-
-            var img = $('<img />');
-            img.addClass('design-view-button-remove-icon-img');
-            img.attr('src', '/img/trash.png');
-
-            return img;
-        },
         removeDocumentButtonLabel: function() {
             var view = this;
             var div = $('<div />');
             div.addClass('design-view-button-remove-label');
-            div.append(view.removeDocumentButtonIcon());
             div.append(localization.designview.removeThisDocument);
             return div;
 
@@ -437,7 +421,7 @@
             var document = model.document();
             var signatory = document.currentSignatory();
             var acceptButton;
-            if (document.elegAuthentication()) {
+            if (signatory.elegAuthentication()) {
                 acceptButton = $("<span style='margin-top: -8px;'/>");
                 var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
                 var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
@@ -514,13 +498,13 @@
             var content = $("<span/>");
             if (document.authorIsOnlySignatory())
                 content = $(document.process().processLocalization().signatorysignmodalcontentauthoronly);
-            else if (document.elegAuthentication())
+            else if (signatory.elegAuthentication())
                 content = $(document.process().processLocalization().signatorysignmodalcontentdesignvieweleg);
             else
                 content = $(document.process().processLocalization().signatorysignmodalcontent);
 
             DocumentDataFiller.fill(document, content);
-            if (document.elegAuthentication()) {
+            if (signatory.elegAuthentication()) {
                 var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
                 var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
                 var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
