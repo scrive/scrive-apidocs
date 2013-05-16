@@ -45,6 +45,7 @@ tableDocStatEvents = tblTable {
                        { fkOnDelete = ForeignKeyCascade }
                      , (tblForeignKeyColumn "company_id" "companies" "id")
                      ]
+  , tblIndexes = [ tblIndexOnColumn "time" ]
   }
 
 tableUserStatEvents :: Table
@@ -81,6 +82,7 @@ tableUserStatEvents = tblTable {
                        { fkOnDelete = ForeignKeyCascade }
                      , (tblForeignKeyColumn "company_id" "companies" "id")
                      ]
+  , tblIndexes = [ tblIndexOnColumn "time" ]
   }
 
 tableSignStatEvents :: Table
@@ -118,4 +120,5 @@ tableSignStatEvents = tblTable {
                      , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
                        { fkOnDelete = ForeignKeyCascade }
                      ]
+  , tblIndexes = [ tblIndexOnColumn "time" ]
   }
