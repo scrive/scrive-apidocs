@@ -135,7 +135,7 @@
 
         content.append(wrapper.append(body));
 
-        body.append($("<div class='position first' style='text-align: left;heigth:30px;'/>").append($("<label style='padding-left:10px;'/>").text(localization.signup + ":")));
+        body.append($("<div class='position first' style='text-align: left;height:30px;'/>").append($("<label style='padding-left:10px;'/>").text(localization.signup + ":")));
 
 
         var emailInput = InfoTextInput.init({
