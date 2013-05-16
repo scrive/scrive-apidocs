@@ -912,8 +912,10 @@
             var view = this;
             if(!view.active) {
                 view.active = true;
+                var detailsHeight = view.detailsView.$el.outerHeight();
+                var totalHeight = detailsHeight + 58;
                 if(!view.opened) {
-                    view.innerDiv.animate({height: view.detailsView.$el.outerHeight() + 53}, {
+                    view.innerDiv.animate({height: totalHeight}, {
                         duration: 250,
                         easing: "linear",
                         complete: function() {
@@ -930,7 +932,7 @@
                     });
                 } else {
                     // don't animate, just set them
-                    view.innerDiv.css({height: view.detailsView.$el.outerHeight() + 53,
+                    view.innerDiv.css({height: totalHeight,
                                        overflow:'visible',
                                        'z-index': 500});
                     view.active = false;
@@ -949,7 +951,7 @@
                 if(view.opened) {
                     view.innerDiv.css({'overflow': 'hidden',
                                        'z-index': 1});
-                    view.innerDiv.animate({height:50}, {
+                    view.innerDiv.animate({height:58}, {
                         duration: 250,
                         easing: "linear",
                         step: function() {
@@ -963,7 +965,7 @@
                     view.active = false;
                     view.opened = false;
                 } else {
-                    view.innerDiv.css({height:50,
+                    view.innerDiv.css({height:58,
                                        overflow:'hidden',
                                        'z-index': 1});
                     view.active = false;
