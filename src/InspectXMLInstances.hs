@@ -29,7 +29,7 @@ import Text.JSON
 import ScriveByMail.Model
 
 instance (InspectXML a, Show a) => InspectXML [a] where
-    inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"
+    inspectXML l = "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
 
 instance (InspectXML a, Show a) => InspectXML (Maybe a) where
     inspectXML Nothing = "Nothing"
@@ -47,9 +47,14 @@ $(deriveInspectXML ''User)
 $(deriveInspectXML ''UserHistory)
 $(deriveInspectXML ''UserHistoryEvent)
 $(deriveInspectXML ''SignatoryLink)
-$(deriveInspectXML ''SignatoryField)
 $(deriveInspectXML ''SignatoryDetails)
 
+instance InspectXML SignatoryField where
+  inspectXML field =
+    (show $ sfType field) ++ " " ++ inspectXML (sfValue field) ++ ", " ++
+    (if sfObligatory field then "obligatory, " else "optional, ") ++
+    (if sfShouldBeFilledBySender field then "filled by sender, " else "") ++
+    "<br/>placements: " ++ inspectXML (sfPlacements field)
 
 --Link creating types
 instance InspectXML DocumentID where
@@ -65,10 +70,19 @@ instance InspectXML FileID where
 instance InspectXML (S.Set DocumentTag) where
   inspectXML = inspectXML . S.toList
 
---Standard classes - we will just call show with some escaping
 instance InspectXML String where
+  inspectXML str = "\"" ++ escape str ++ "\""
+        where escapeChar '<' = "&lt;"
+              escapeChar '>' = "&gt;"
+              escapeChar '&' = "&amp;"
+              escapeChar '"' = "\\\""
+              escapeChar '\\' = "\\\\"
+              escapeChar c   = [c]
+              escape = concatMap escapeChar
 instance InspectXML BS.ByteString where
   inspectXML = inspectXML . BS.toString
+
+--Standard classes - we will just call show with some escaping
 instance InspectXML Bool where
 instance InspectXML Char where
 instance InspectXML Int where
