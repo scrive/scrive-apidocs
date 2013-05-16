@@ -237,14 +237,17 @@
             var order = model.signorder();
 
             var options = [];
-            for(i=1;i<=model.document().maxPossibleSignOrder();i++)
-                options.push({name: englishOrdinal(i) + ' ' +
+            for(i=1;i<=model.document().maxPossibleSignOrder();i++) {
+                var ordinal = localization.code == 'sv' ? swedishOrdinal(i) : englishOrdinal(i);
+                options.push({name: ordinal + ' ' +
                               localization.designview.toReceiveDocument,
                               value: i});
+            }
 
+            var ordinal = localization.code == 'sv' ? swedishOrdinal(order) : englishOrdinal(order);
             var select = new Select({
                 options: options,
-                name: englishOrdinal(order) + ' ' +
+                name: ordinal + ' ' +
                     localization.designview.toReceiveDocument,
                 onSelect: function(v) {
                     model.setSignOrder(v);
