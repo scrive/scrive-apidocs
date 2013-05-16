@@ -16,6 +16,7 @@ class InspectXML a where
     inspectXML = concatMap escape . show
         where escape '<' = "&lt;"
               escape '>' = "&gt;"
+              escape '&' = "&amp;"
               escape c   = [c]
 
 table :: [Char] -> [Char] -> [Char]
