@@ -65,8 +65,7 @@ window.Signatory = Backbone.Model.extend({
         author: false,
         fields: [{name: "fstname",   type : "standard"},
                  {name: "sndname",   type : "standard"},
-                 {name: "email",     type : "standard"},
-                 {name: "sigco",     type : "standard"}
+                 {name: "email",     type : "standard"}
         ],
         current: false,
         attachments: [],

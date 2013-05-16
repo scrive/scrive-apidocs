@@ -174,11 +174,13 @@
         standardFields: [
             ["sigpersnr", "standard"],
             ["sigcompnr", "standard"],
-            ["mobile", "standard"]
+            ["sigco",     "standard"],
+            ["mobile",    "standard"]
         ],
         standardPlaceholders: {
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
+            sigco: localization.company,
             mobile: localization.phone
         },
         placeholder: function(name) {
@@ -1100,14 +1102,16 @@
             div.addClass('design-view-action-participant-info-company');
             var txt = $('<div />');
             txt.addClass('design-view-action-participant-info-company-inner');
-            txt.text(sig.company());
-
-            var f = function() {
+            if(sig.companyField()) {
                 txt.text(sig.company());
-            };
-
-            sig.companyField().bind('change:value', f);
-
+                
+                var f = function() {
+                    txt.text(sig.company());
+                };
+                
+                
+                sig.companyField().bind('change:value', f);
+            }
             div.append(txt);
             return div;
         }
