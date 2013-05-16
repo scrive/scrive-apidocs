@@ -120,18 +120,7 @@ window.Document = Backbone.Model.extend({
         // author does not sign at all
         signorder = 1;
       }
-      var nsigdelivery, nsigauth;
-      if (document.standardAuthentication())
-          nsigauth = "standard";
-      if (document.elegAuthentication())
-          nsigauth = "eleg";
-      if (document.emailDelivery())
-          nsigdelivery = "email";
-      if (document.padDelivery())
-          nsigdelivery = "pad";
-      if (document.apiDelivery())
-          nsigdelivery = "api";
-
+      var nsigdelivery= "email", nsigauth= "standard";
       var nsig = new Signatory({"document": document,
                                  signs: true,
                                  signorder: signorder,
@@ -437,56 +426,6 @@ window.Document = Backbone.Model.extend({
     signorder: function() {
       return this.get("signorder");
     },
-    standardAuthentication: function() {
-          return this.get("authentication") == "standard";
-    },
-    elegAuthentication : function() {
-          return this.get("authentication") == "eleg";
-    },
-    emailDelivery: function() {
-          return this.get("delivery") == "email";
-    },
-    padDelivery : function() {
-          return this.get("delivery") == "pad";
-    },
-    mobileDelivery : function() {
-          return this.get("delivery") == "mobile";
-    },
-    apiDelivery : function() {
-          return this.get("delivery") == "api";
-    },
-    setStandardAuthentication: function() {
-          this.set({"authentication": "standard"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.set({"authentication":"standard"}, {silent: true});});
-          this.trigger("change:authenticationdelivery");
-    },
-    setElegAuthentication : function() {
-          this.set({"authentication":"eleg"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.set({"authentication":"eleg"}, {silent: true});});
-          this.trigger("change:authenticationdelivery");
-    },
-    setEmailDelivery: function() {
-          this.set({"delivery": "email"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.set({"delivery":"email"}, {silent: true});});
-          this.trigger("change:authenticationdelivery");
-    },
-    setPadDelivery : function() {
-          this.set({"delivery":"pad"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.clearAttachments();});
-          _.each(this.signatories(), function(sig) {sig.set({"delivery":"pad"}, {silent: true});});
-          this.trigger("change:authenticationdelivery");
-    },
-    setMobileDelivery : function() {
-          this.set({"delivery":"mobile"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.clearAttachments();});
-          _.each(this.signatories(), function(sig) {sig.set({"delivery":"mobile"}, {silent: true});});
-          this.trigger("change:authenticationdelivery");
-    },
-    setAPIDelivery : function() {
-          this.set({"delivery":"api"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.set({"delivery":"api"}, {silent: true});});
-          this.trigger("change:authenticationdelivery");
-    },
     elegTBS: function() {
         var text = this.title() + " " + this.documentid();
         _.each(this.signatories(), function(signatory) {
@@ -530,7 +469,7 @@ window.Document = Backbone.Model.extend({
                       function(s) { return s.author(); });
     },
     authorCanSignFirst : function() {
-        if (!this.author().signs() || this.padDelivery())
+        if (!this.author().signs())
             return false;
         if (this.author().hasPlacedSignatures()) {
             // We don't support drawing signature in design view

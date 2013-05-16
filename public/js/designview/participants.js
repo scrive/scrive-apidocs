@@ -161,7 +161,7 @@
                     },
                     onEnter: function() {
                         view.acceptPopup();
-                        view.confirmation.clear();
+                        view.confirmation.close();
                     }
                 });
 
@@ -848,11 +848,7 @@
             closer.addClass('design-view-action-participant-details-information-closer');
 
             if(field.canBeRemoved()) {
-                var txt = $('<div />');
-                txt.addClass('design-view-action-participant-details-information-closer-x');
-                txt.text('x');
-                closer.html(txt);
-                closer.click(function() {
+                closer.addClass("active").click(function() {
                     sig.deleteField(field);
                 });
             }
@@ -1011,11 +1007,6 @@
 
             if(!sig.author()) {
                 div.addClass('design-view-action-participant-close')
-
-                var txt = $('<div />');
-                txt.addClass('design-view-action-participant-close-x');
-                txt.text('x');
-                div.html(txt);
 
                 div.click(function() {
                     viewmodel.setParticipantDetail(null);

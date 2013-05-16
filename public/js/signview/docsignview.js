@@ -50,7 +50,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.document().ready() && this.document().mainfile() == undefined;
   },
   hasRejectOption : function() {
-      return !this.document().padDelivery();
+      return !this.document().currentSignatory().padDelivery();
   },
   hasMainFileSection : function() {
       return   !this.justSaved()
@@ -76,10 +76,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
         res = true;
       if (field.isFstName() && field.value() == "" && !field.hasPlacements())
         res = true;
-      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && field.signatory().document().elegAuthentication())
+      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && field.signatory().elegAuthentication())
         res = true;
     });
-    if( !res && this.document().padDelivery() && this.document().currentSignatory().hasSignatureField()) {
+    if( !res && this.document().currentSignatory().padDelivery() && this.document().currentSignatory().hasSignatureField()) {
         res =  !this.document().currentSignatory().anySignatureHasImageOrPlacement();
     }
     return res;
@@ -95,14 +95,18 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && this.justSaved()
-             && !this.document().padDelivery()
+             && !this.currentSignatory().padDelivery()
+             && !this.currentSignatory().mobileDelivery()
+             && !this.currentSignatory().emailMobileDelivery()
              && window.PromoteScriveView != undefined;
   },
   hasCreateAccountSection : function() {
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && !this.document().currentSignatory().saved()
-             && !this.document().padDelivery()
+             && !this.document().currentSignatory().padDelivery()
+             && !this.document().currentSignatory().mobileDelivery()
+             && !this.document().currentSignatory().emailMobileDelivery()
              && window.CreateAccountAfterSignView != undefined;
   },
   instructionssection : function() {
@@ -337,7 +341,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 res = false;
                             if (field.isFstName() && field.value() == "")
                                 res = false;
-                            if (field.isSSN()    && (field.value() == "") && field.signatory().document().elegAuthentication())
+                            if (field.isSSN()    && (field.value() == "") && field.signatory().elegAuthentication())
                                 res = false;
                              if (field.isSignature() && (field.value() == "")
                                  && field.placements().length == 0 && !document.currentSignatory().anySignatureHasImageOrPlacement()
