@@ -142,7 +142,7 @@ phoneMeRequest muser phone = do
   let content = case muser of
         Just user -> "<p>User " ++ getFirstName user ++ " "
                      ++ getLastName user ++ " "
-                     ++ "&l   t;" ++ getEmail user ++ "&gt; "
+                     ++ "&lt;" ++ getEmail user ++ "&gt; "
                      ++ "has requested a call on "
                      ++ "&lt;" ++ phone ++ "&gt;.  "
                      ++ "They have just signed the TOS, "
