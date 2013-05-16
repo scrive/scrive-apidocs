@@ -179,7 +179,7 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
 data GetDocHistCSV = GetDocHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
   query (GetDocHistCSV start end) = do
-    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.type, ds.process" <>
+    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.type, ds.process," <>
                      "       creat.time, " <>
                      "       send.time, " <>
                      "       close.time, " <>
