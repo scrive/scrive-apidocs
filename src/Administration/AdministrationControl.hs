@@ -329,7 +329,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we need to create a company and make this account an admin
       --we also need to tie all the existing docs to the company
       newuser <- guardJustM $ do
-        company <- dbUpdate $ CreateCompany Nothing
+        company <- dbUpdate $ CreateCompany
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
         _ <- dbUpdate
                   $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
@@ -357,7 +357,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we need to create a company and make this account a standard user
       --we also need to tie all the existing docs to the company
       newuser <- guardJustM $ do
-        company <- dbUpdate $ CreateCompany Nothing
+        company <- dbUpdate $ CreateCompany
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
         -- cancel payment plan since they are now not admin
         mplan <- dbQuery $ GetPaymentPlan (Left uid)

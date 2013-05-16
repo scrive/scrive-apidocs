@@ -80,10 +80,8 @@ instance Arbitrary UserID where
 instance Arbitrary Company where
   arbitrary = do
     a <- arbitrary
-    b <- arbitrary
     d <- arbitrary
     return $ Company { companyid  = a
-                     , companyexternalid = b
                      , companyinfo = d
                      , companyui = emptyCompanyUI
                      }
@@ -111,9 +109,6 @@ instance Arbitrary Company where
 
 instance Arbitrary CompanyID where
   arbitrary = unsafeCompanyID . abs <$> arbitrary
-
-instance Arbitrary ExternalCompanyID where
-  arbitrary = ExternalCompanyID <$> arbitrary
 
 instance Arbitrary CompanyInfo where
   arbitrary = do
@@ -508,8 +503,7 @@ testThat s env = testCase s . runTestEnv env
 
 addNewCompany :: TestEnv Company
 addNewCompany = do
-    eid <- rand 10 arbitrary
-    Company{companyid = cid} <- dbUpdate $ CreateCompany eid
+    Company{companyid = cid} <- dbUpdate $ CreateCompany
     companyname <- rand 10 $ arbString 3 30
     companynumber <- rand 10 $ arbString 3 30
     companyaddress <- rand 10 $ arbString 3 30

@@ -31,6 +31,15 @@ removeServiceIDFromCompanies = Migration {
     kRunRaw "ALTER TABLE companies DROP COLUMN service_id"
 }
 
+removeExternalIDFromCompanies :: MonadDB m => Migration m
+removeExternalIDFromCompanies = Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 11
+  , mgrDo = do
+    kRunRaw "DROP INDEX idx_companies_external_id"
+    kRunRaw "ALTER TABLE companies DROP COLUMN external_id"
+}
+
 addEmailBrandingToCompany :: MonadDB m => Migration m
 addEmailBrandingToCompany =
   Migration {

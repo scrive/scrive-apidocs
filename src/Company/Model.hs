@@ -1,18 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 module Company.Model (
     module Company.CompanyID
-  , ExternalCompanyID(..)
   , Company(..)
   , CompanyInfo(..)
   , CompanyUI(..)
   , GetCompanies(..)
   , GetCompany(..)
   , GetCompanyByUserID(..)
-  , GetCompanyByExternalID(..)
   , CreateCompany(..)
   , SetCompanyInfo(..)
   , UpdateCompanyUI(..)
-  , GetOrCreateCompanyWithExternalID(..)
   , GetCompanyByEmailDomain(..)
   , SetCompanyEmailDomain(..)
   , SetCompanyIPAddressMaskList(..)
@@ -30,14 +27,8 @@ import User.UserID
 import IPAddress
 import OurPrelude
 
--- to be removed, only upsales used that
-newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }
-  deriving (Eq, Ord, Show)
-$(newtypeDeriveConvertible ''ExternalCompanyID)
-
 data Company = Company {
     companyid         :: CompanyID
-  , companyexternalid :: Maybe ExternalCompanyID
   , companyinfo       :: CompanyInfo
   , companyui         :: CompanyUI
   } deriving (Eq, Ord, Show, Typeable)
@@ -133,14 +124,6 @@ instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
       sqlWhereEq "id" cid
     fetchCompanies >>= oneObjectReturnedGuard
 
-data GetCompanyByExternalID = GetCompanyByExternalID ExternalCompanyID
-instance MonadDB m => DBQuery m GetCompanyByExternalID (Maybe Company) where
-  query (GetCompanyByExternalID ecid) = do
-    kRun_ $ sqlSelect "companies" $ do
-      selectCompaniesSelectors
-      sqlWhereEq "external_id" ecid
-    fetchCompanies >>= oneObjectReturnedGuard
-
 data GetCompanyByUserID = GetCompanyByUserID UserID
 instance MonadDB m => DBQuery m GetCompanyByUserID (Maybe Company) where
   query (GetCompanyByUserID uid) = do
@@ -150,11 +133,11 @@ instance MonadDB m => DBQuery m GetCompanyByUserID (Maybe Company) where
       sqlWhereEq "users.id" uid
     fetchCompanies >>= oneObjectReturnedGuard
 
-data CreateCompany = CreateCompany (Maybe ExternalCompanyID)
+data CreateCompany = CreateCompany
 instance MonadDB m => DBUpdate m CreateCompany Company where
-  update (CreateCompany mecid) = do
+  update (CreateCompany) = do
     kRun_ $ sqlInsert "companies" $ do
-      sqlSet "external_id" mecid
+      sqlSetCmd "id" "DEFAULT"
       selectCompaniesSelectors
     fetchCompanies >>= exactlyOneObjectReturnedGuard
 
@@ -207,14 +190,6 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
       sqlSet "custom_backgroundcolour" $ companycustombackgroundcolour cui
       sqlWhereEq "id" cid
 
-data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID ExternalCompanyID
-instance MonadDB m => DBUpdate m GetOrCreateCompanyWithExternalID Company where
-  update (GetOrCreateCompanyWithExternalID ecid) = do
-    mc <- query $ GetCompanyByExternalID ecid
-    case mc of
-      Just c  -> return c
-      Nothing -> update $ CreateCompany $ Just ecid
-
 data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
 instance MonadDB m => DBUpdate m SetCompanyEmailDomain Bool where
   update (SetCompanyEmailDomain cid mdomain) = do
@@ -236,7 +211,6 @@ instance MonadDB m => DBQuery m GetCompanyByEmailDomain (Maybe Company) where
 selectCompaniesSelectors :: (SqlResult command) => State command ()
 selectCompaniesSelectors = do
   sqlResult "companies.id"
-  sqlResult "companies.external_id"
   sqlResult "companies.name"
   sqlResult "companies.number"
   sqlResult "companies.address"
@@ -268,7 +242,7 @@ selectCompaniesSelectors = do
 fetchCompanies :: MonadDB m => m [Company]
 fetchCompanies = kFold decoder []
   where
-    decoder acc cid eid name number address zip' city country
+    decoder acc cid name number address zip' city country
       email_domain ip_address_mask_list email_font
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
@@ -276,7 +250,6 @@ fetchCompanies = kFold decoder []
       signview_backgroundcolour custom_logo custom_barscolour custom_barstextcolour
       custom_barssecondarycolour custom_backgroundcolour  = Company {
         companyid = cid
-      , companyexternalid = eid
       , companyinfo = CompanyInfo {
           companyname = name
         , companynumber = number

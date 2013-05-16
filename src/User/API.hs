@@ -185,7 +185,7 @@ apiCallCreateCompany :: Kontrakcja m => m Response
 apiCallCreateCompany =  api $  do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
-  company <- dbUpdate $ CreateCompany Nothing
+  company <- dbUpdate $ CreateCompany
   mailapikey <- random
   _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)

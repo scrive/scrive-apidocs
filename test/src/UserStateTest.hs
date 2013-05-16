@@ -134,7 +134,7 @@ test_addUser_repeatedEmailReturnsNothing = do
 
 test_getCompanyAccounts :: TestEnv ()
 test_getCompanyAccounts = do
-  Company{companyid = cid} <- dbUpdate $ CreateCompany Nothing
+  Company{companyid = cid} <- dbUpdate $ CreateCompany
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
   users <- forM emails $ \email -> do
     Just user <- addNewCompanyUser "Emily" "Green" email cid
@@ -167,7 +167,7 @@ test_getInviteInfo = do
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Company{companyid} <- dbUpdate $ CreateCompany Nothing
+  Company{companyid} <- dbUpdate $ CreateCompany
   res <- dbUpdate $ SetUserCompany userid (Just $ companyid)
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID userid

@@ -239,7 +239,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
 
   -- Company:
   <> ", c.id AS company_id"
-  <> ", c.external_id"
   <> ", c.name"
   <> ", c.number"
   <> ", c.address"
@@ -265,7 +264,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone
-     email lang company_name company_number is_free associated_domain cid eid
+     email lang company_name company_number is_free associated_domain cid
      name number address zip' city country email_domain ip_address_mask inviter_id
      invite_time invite_type
      = (
@@ -296,7 +295,6 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
         , case cid of
             (Just _) -> Just Company {
                 companyid = $(fromJust) cid
-              , companyexternalid = eid
               , companyinfo = CompanyInfo {
                   companyname = $(fromJust) name
                 , companynumber = $(fromJust) number

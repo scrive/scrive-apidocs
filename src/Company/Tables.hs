@@ -5,10 +5,9 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 11
+  , tblVersion = 12
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("address", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -39,7 +38,6 @@ tableCompanies = tblTable {
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
           <> "  id              BIGSERIAL NOT NULL"
-          <> ", external_id     TEXT       NULL"
           <> ", name            TEXT   NOT NULL DEFAULT ''"
           <> ", number          TEXT   NOT NULL DEFAULT ''"
           <> ", address         TEXT   NOT NULL DEFAULT ''"
@@ -70,5 +68,4 @@ tableCompanies = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblIndexes = [ tblIndexOnColumn "external_id" ]
   }
