@@ -76,7 +76,7 @@ docFieldsListForJSON userid padqueue doc = do
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ formatMinutesTimeRealISO (documentmtime doc)
     J.value "ctime" $ formatMinutesTimeRealISO (documentctime doc)
-    J.value "timeouttime" $ formatMinutesTimeRealISO <$> unTimeoutTime <$> documenttimeouttime doc
+    J.value "timeouttime" $ formatMinutesTimeRealISO <$> documenttimeouttime doc
     J.value "template" $ isTemplate doc
     J.value "partiescount" $ length $ (documentsignatorylinks doc)
     J.value "type" $ case documenttype doc of

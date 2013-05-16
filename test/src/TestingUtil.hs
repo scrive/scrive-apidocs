@@ -143,9 +143,6 @@ instance Arbitrary MailsDeliveryStatus where
                        , Deferred
                        ]
 
-instance Arbitrary TimeoutTime where
-  arbitrary = TimeoutTime <$> arbitrary
-
 instance Arbitrary MinutesTime where
   arbitrary = fromSeconds <$> arbitrary
 
@@ -290,7 +287,7 @@ instance Arbitrary Document where
     return $ defaultValue  { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
-                           , documenttimeouttime = Just (TimeoutTime dtimeouttime)
+                           , documenttimeouttime = Just dtimeouttime
                            , documentdaystosign = ddaystosign
                            }
 

@@ -1299,7 +1299,7 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
                 sqlWhereDocumentTypeIs (Signable undefined)
                 sqlWhereDocumentStatusIs Preparation
 
-              Just (TimeoutTime tot) <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
+              Just tot <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
               _ <- update $ InsertEvidenceEvent
                 PreparationToPendingEvidence
                 (  value "actor" (actorWho actor)

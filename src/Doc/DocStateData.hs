@@ -26,7 +26,6 @@ module Doc.DocStateData (
   , SignatoryDetails(..)
   , SignatoryLink(..)
   , SignatureInfo(..)
-  , TimeoutTime(..)
   , AuthorAttachment(..)
   , SignatoryAttachment(..)
   , StatusClass(..)
@@ -58,13 +57,6 @@ import Text.JSON
 import Control.Applicative
 import Utils.Default
 import qualified Data.Set as S
-
-newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
-  deriving (Eq, Ord, Typeable)
-$(newtypeDeriveConvertible ''TimeoutTime)
-
-instance Show TimeoutTime where
-  show (TimeoutTime t) = show t
 
 newtype SignOrder = SignOrder { unSignOrder :: Integer }
   deriving (Eq, Ord)
@@ -416,7 +408,7 @@ data Document = Document {
   , documentctime                  :: MinutesTime
   , documentmtime                  :: MinutesTime
   , documentdaystosign             :: Int
-  , documenttimeouttime            :: Maybe TimeoutTime
+  , documenttimeouttime            :: Maybe MinutesTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
   , documentsharing                :: DocumentSharing

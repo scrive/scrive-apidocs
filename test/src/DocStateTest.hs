@@ -886,7 +886,7 @@ testGetTimedOutButPendingDocuments = doTimes 1 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ (isJust . documenttimeouttime))
   _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
 
-  let t = unTimeoutTime $ fromJust $ documenttimeouttime doc
+  let t = fromJust $ documenttimeouttime doc
   --execute
   docsA <- dbQuery $ GetTimeoutedButPendingDocumentsChunk ((-10) `minutesAfter` t) 100
   docsB <- dbQuery $ GetTimeoutedButPendingDocumentsChunk (10 `minutesAfter` t) 100
