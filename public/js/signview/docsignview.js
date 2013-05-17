@@ -95,9 +95,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && this.justSaved()
-             && !this.currentSignatory().padDelivery()
-             && !this.currentSignatory().mobileDelivery()
-             && !this.currentSignatory().emailMobileDelivery()
+             && !this.document().currentSignatory().padDelivery()
+             && !this.document().currentSignatory().mobileDelivery()
+             && !this.document().currentSignatory().emailMobileDelivery()
              && window.PromoteScriveView != undefined;
   },
   hasCreateAccountSection : function() {
