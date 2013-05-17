@@ -14,7 +14,7 @@
     border-right: 4px solid #fff;
     border-bottom-left-radius: 15px;
     border-bottom-right-radius: 15px;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.05);
+    .box-shadow(0 4px 0 rgba(0, 0, 0, 0.05));
 }
 
 .design-view-action-participant-box {
@@ -32,7 +32,7 @@
     overflow: hidden;
     border: 4px solid #fff;
     width: 970px;
-    height: 50px;
+    height: 58px;
     position: relative;
     z-index: 1;
     border-radius: 4px;
@@ -40,21 +40,19 @@
 }
 
 .design-view-action-participant-close {
-    position: absolute;
-    right: 0;
-    top: 15px;
-    width: 20px;
-    height: 20px;
-    border: 1px solid #eee;
-    z-index: 100;
-    cursor: pointer;
-}
-
-.design-view-action-participant-close-x {
-    line-height: 1em;
-    text-align: center;
-    .box-sizing(border-box);
-    .center-vh(100%, 1em);
+     position: absolute;
+     margin-right: 12px;
+     margin-top: -5px;
+     right : 0px;
+     width: 19px;
+     height: 20px;
+     background: url("/img/editor-view-remove-party.png");
+     display: inline-block;
+     cursor: pointer;
+     z-index : 501;
+     &:hover {
+      background: url("/img/editor-view-remove-party-hover.png");
+     }
 }
 
 .design-view-action-participant-info-box {
@@ -62,7 +60,7 @@
     position: absolute;
     left: 0;
     top: 0px;
-    height: 42px;
+    height: 50px;
     width: 100%;
     background: #fafafa;
     z-index: 100;
@@ -76,7 +74,8 @@
     background-color: green;
     position: absolute;
     top: 17px;
-    left: 17px;
+    left: 13px;
+    border: 4px solid white;
 }
 
 .design-view-action-participant-info-name {
@@ -138,7 +137,7 @@
 
 .design-view-action-participant-icon-order {
     .box-sizing(border-box);
-    border-left: 1px solid #eee;
+    border-left: 1px dashed #ddd;
     width: 44px;
     height: 50px;
     position: absolute;
@@ -155,7 +154,7 @@
 .design-view-action-participant-icon-role {
     .box-sizing(border-box);
     display: inline-block;
-    border-left: 1px solid #eee;
+    border-left: 1px dashed #ddd;
     width: 44px;
     height: 50px;
     position: absolute;
@@ -171,7 +170,7 @@
 .design-view-action-participant-icon-device {
     .box-sizing(border-box);
     display: inline-block;
-    border-left: 1px solid #eee;
+    border-left: 1px dashed #ddd;
     width: 44px;
     height: 50px;
     position: absolute;
@@ -187,7 +186,7 @@
 .design-view-action-participant-icon-auth {
     .box-sizing(border-box);
     display: inline-block;
-    border-left: 1px solid #eee;
+    border-left: 1px dashed #ddd;
     width: 44px;
     height: 50px;
     position: absolute;
@@ -206,7 +205,7 @@
 .design-view-action-participant-details-field {
     .box-sizing(border-box);
     border: 1px solid #ccc;
-    width: 200px;
+    width: 196px;
     padding: 8px;
     height: 36px;
     background: #white;
@@ -310,9 +309,9 @@
     .design-view-action-participant-details-field;
     margin-bottom: 8px;
     border-right-color : transparent;
+    width: 240px;
     &.redborder {
         border:1px solid red;
-
     }
 }
 
@@ -321,29 +320,15 @@
 }
 
 .design-view-action-participant-details-information-field-options {
-    // .design-view-action-participant-details-field;
     .box-sizing(border-box);
     display: inline-block;
-    width: 100px;
+    width: 200px;
     vertical-align: middle;
     height: 36px;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-opts {
-        .box-sizing(border-box);
-        width: 100px;
-        li {
-            text-indent: 0;
-            line-height: 12px;
-            font-size: 10px;
-            color: #888;
-        }
-    }
-    .select-button .select-button-label {
-        text-indent: 0;
-        line-height: 12px;
-        font-size: 10px;
-        margin-left: 4px;
-        color: #888;
+        z-index: 1000;
+        width: 100%;
     }
     margin-bottom: 8px;
 }
@@ -444,12 +429,17 @@
 }
 
 .design-view-action-participant-details-information-closer {
-     width: 16px;
-     height: 28px;
+     width: 19px;
+     height: 19px;
      display: inline-block;
-     text-align: center;
-     vertical-align: middle;
-     cursor: pointer;
+     margin-right: 12px;
+     &.active {
+      background: url("/img/editor-view-remove-field.png");
+      cursor: pointer;
+      &:hover {
+        background: url("/img/editor-view-remove-field-hover.png");
+      }
+    }
 }
 
 .design-view-action-participant-new-field-popup-content-top {

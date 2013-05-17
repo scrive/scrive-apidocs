@@ -23,6 +23,9 @@ $doctype()$
     $standardHeaderContents()$
   </head>
   <body style="background: $background$">
+    <div style='width:920px;margin: 0px auto;position: relative;top:20px;'>
+      <label style='float:right' class='label-with-link'>$_loginOrSignup()$</label>
+    </div>
     <div style='width:275px;margin:20px auto;'>
       <div style="margin-bottom: 63px">
         <img alt="logo" src="$logolink$"/>

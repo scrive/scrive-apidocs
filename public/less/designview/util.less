@@ -30,3 +30,16 @@
     -webkit-box-sizing: @bs;
     box-sizing: @bs;
 }
+
+.box-shadow(@a) {
+    -moz-box-shadow: @a;
+    -webkit-box-shadow: @a;
+    box-shadow: @a;
+}
+
+.rounded(@radius: 2px) {
+  -webkit-border-radius: @radius;
+  -moz-border-radius: @radius;
+  border-radius: @radius;
+  -moz-background-clip: padding; -webkit-background-clip: padding-box; background-clip: padding-box; 
+}

@@ -41,6 +41,10 @@
             } else if(document.mainfile()) {
                 view.$el.html(view.renderDocument());
             } else {
+                if (view.file != undefined) {
+                  view.file.destroy();
+                  view.file = undefined;
+                }
                 view.$el.html(view.uploadButtons());
             }
             view.showProblems();
@@ -57,6 +61,8 @@
                 view.$el.removeClass('redborder');
         },
         loading: function() {
+            var wrapper = $('<div />');
+            wrapper.addClass('design-view-document-buttons-wrapper');
             var div = $('<div />');
             div.addClass('design-view-document-loading');
             var inner = $('<div />');
@@ -72,18 +78,23 @@
 	        trail  : 74,     // Afterglow percentage
 	        shadow : false   // Whether to render a shadow
             }).spin(inner.get(0));
-            return div;
+            wrapper.append(div);
+            return wrapper;
         },
         renderDocument: function() {
             var view = this;
             var document = view.model;
             var div = $('<div />');
             div.addClass('design-view-document-pages');
-            div.append(KontraFile.init({file: document.mainfile()}).view.el);
+            if (this.file == undefined)
+              this.file = KontraFile.init({file: document.mainfile()})
+            div.append(this.file.view.el);
             return div;
         },
         uploadButtons: function() {
             var view = this;
+            var wrapper = $('<div />');
+            wrapper.addClass('design-view-document-buttons-wrapper');
             var div = $('<div />');
             div.addClass('design-view-document-buttons');
 
@@ -94,7 +105,8 @@
             inner.append(view.title());
             inner.append(view.buttons());
 
-            return div;
+            wrapper.append(div);
+            return wrapper;
         },
         title: function() {
             var view = this;
@@ -146,7 +158,7 @@
             var input = UploadButton.init({    color: 'green',
                                      size: 'big',
                                      text: localization.uploadButton,
-                                     width: 180,
+                                     width: 220,
                                      name: 'file',
                                      maxlength: 2,
                                      onAppend: function(input, title, multifile) {

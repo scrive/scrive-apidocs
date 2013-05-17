@@ -76,7 +76,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var container = $("<div class='instructions' />");
     if (document.currentSignatory() != undefined &&
        document.currentSignatory().name()!="" &&
-       !document.padDelivery() &&
+       !document.currentSignatory().padDelivery() &&
        document.currentSignatory().canSign() &&
        !document.currentSignatory().author()) {
       var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
@@ -91,7 +91,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.styleText(subheadline);
     container.append(subheadline.text(this.subtext()));
 
-    if (document.padDelivery() && document.isSignedNotClosed())
+    if (document.currentSignatory().padDelivery() && document.isSignedNotClosed())
          container.append(this.giveToNextPadSignatoryOption());
 
     var smallerbit = $("<div class='smaller-bits'/>");
@@ -103,7 +103,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
 
 
-    if (!this.model.document().padDelivery()) {
+    if (!document.currentSignatory().padDelivery()) {
         var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
         this.styleText(link);
         smallerbit.append(link);

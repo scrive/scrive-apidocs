@@ -9,6 +9,9 @@ body.designview .mainContainer {
     margin-bottom: 0;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     font-weight: 300;
+    input, .select {
+        font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    }
 }
 
 .design-view-frame {
@@ -16,7 +19,7 @@ body.designview .mainContainer {
     border: 1px solid #ccc;
     border-bottom: none;
     position: relative;
-    background-color: white;
+    background-color: #fafafa;
 }
 
 .design-view-frame-top-bar {
@@ -110,9 +113,17 @@ body.designview .mainContainer {
     .clearfix();
     width: 1018px;
     margin: 0 auto;
-    background: white;
+    position: relative;
 }
 
+.design-view-action-container-shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    .box-shadow(0 4px 0 rgba(0,0,0,0.05) inset);
+}
 
 
 
@@ -137,26 +148,6 @@ body.designview .mainContainer {
     position: relative;
 }
 
-.design-view-button-remove {
-    .box-sizing(border-box);
-    height: 100%;
-    width: 20%;
-    cursor: pointer;
-    display: inline-block;
-    position: relative;
-    border-right: 1px solid #ccc;
-}
-
-.design-view-button-remove-label {
-    .box-sizing(border-box);
-    .center-vh(100%, 39px);
-    text-align: center;
-}
-
-.design-view-button-remove-icon-img {
-    .box-sizing(border-box);
-    margin-right: 8px;
-}
 
 
 /// @BUTTONS ///
@@ -176,7 +167,8 @@ body.designview .mainContainer {
     width: 1018px;
     height: 100%;
     margin: auto;
-    background: white;
+    background: #FAFAFA;
+    .box-shadow(0 -4px 0 rgba(0,0,0,0.05));
 }
 
 
@@ -188,16 +180,7 @@ body.designview .mainContainer {
     height: 100%;
     position: relative;
     cursor: pointer;
-}
-
-.design-view-button1-text {
-    .center-vh(100%,32px);
-    text-align: center;
-}
-
-.design-view-button1-icon {
-    vertical-align: middle;
-    margin-right: 8px;
+    background: white;
 }
 
 .design-view-button2 {
@@ -208,16 +191,18 @@ body.designview .mainContainer {
     height: 100%;
     position: relative;
     cursor: pointer;
+    background: white;
 }
 
-.design-view-button2-text {
-    .center-vh(100%,29px);
-    text-align: center;
-}
-
-.design-view-button2-icon {
-    vertical-align: middle;
-    margin-right: 8px;
+.design-view-button-remove {
+    .box-sizing(border-box);
+    height: 100%;
+    width: 20%;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    border-right: 1px solid #ccc;
+    background-color: white;
 }
 
 .design-view-button3 {
@@ -229,9 +214,16 @@ body.designview .mainContainer {
     height: 100%;
     position: relative;
     cursor: pointer;
+    background: #7A94B8;
+    font-size: 18px;
+    font-weight: 400;
+    color: white;
 }
 
-.design-view-button3-text {
+.design-view-button1-text,
+.design-view-button2-text,
+.design-view-button3-text,
+.design-view-button-remove-label {
     .center-vh(100%,1em);
     text-align: center;
 }

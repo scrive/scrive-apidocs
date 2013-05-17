@@ -351,16 +351,15 @@ documentMail haslang ctx doc mailname otherfields = do
 
 brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe Company -> Fields m ()
 brandingMailFields mbd mcompany = do
-  when (isJust mcompany) $ do
-    F.value "background"  $ companyemailbackgroundcolour $ companyui $ fromJust mcompany
-    F.value "textcolor" $ (companyemailtextcolour $ companyui $ fromJust mcompany) `mplus`(bdmailstextcolor <$> mbd)
-    F.value "font"  $ companyemailfont $ companyui $ fromJust mcompany
-    F.value "bordercolour"  $ companyemailbordercolour $ companyui $ fromJust mcompany
-    F.value "buttoncolour"  $ (companyemailbuttoncolour $ companyui $ fromJust mcompany) `mplus` (bdmailsbuttoncolor <$> mbd)
-    F.value "skipbuttonborder" $ isNothing (companyemailbuttoncolour $ companyui $ fromJust mcompany) && isJust (bdmailsbuttoncolor <$> mbd)
-    F.value "emailbackgroundcolour"  $ (companyemailemailbackgroundcolour $ companyui $ fromJust mcompany) `mplus` (bdmailsbackgroundcolor <$> mbd)
-  when (isJust mcompany || isJust mbd) $ do
-    F.value "logo" $ (isJust $ join $ companyemaillogo <$> companyui <$> mcompany) || (isJust $ mbd)
-    F.value "logoLink" $ if (isJust $ join $ companyemaillogo <$> companyui <$> mcompany)
-                            then (show <$> LinkCompanyEmailLogo <$> companyid <$> mcompany)
-                            else (bdlogolink <$> mbd)
+    F.value "background"  $ companyemailbackgroundcolour <$> companyui <$> mcompany
+    F.value "textcolor" $ (join $ companyemailtextcolour <$> companyui <$> mcompany) `mplus`(bdmailstextcolor <$> mbd)
+    F.value "font"  $ companyemailfont <$> companyui <$> mcompany
+    F.value "bordercolour"  $ companyemailbordercolour <$> companyui <$> mcompany
+    F.value "buttoncolour"  $ (join $ companyemailbuttoncolour <$> companyui <$> mcompany) `mplus` (bdmailsbuttoncolor <$> mbd)
+    F.value "skipbuttonborder" $ isNothing (join $ companyemailbuttoncolour <$> companyui <$> mcompany) && isJust (bdmailsbuttoncolor <$> mbd)
+    F.value "emailbackgroundcolour"  $ (join $ companyemailemailbackgroundcolour <$> companyui <$> mcompany) `mplus` (bdmailsbackgroundcolor <$> mbd)
+    when (isJust mcompany || isJust mbd) $ do
+      F.value "logo" $ (isJust $ join $ companyemaillogo <$> companyui <$> mcompany) || (isJust $ mbd)
+      F.value "logoLink" $ if (isJust $ join $ companyemaillogo <$> companyui <$> mcompany)
+                              then (show <$> LinkCompanyEmailLogo <$> companyid <$> mcompany)
+                              else (bdlogolink <$> mbd)
