@@ -202,7 +202,7 @@
                 view.$el.children().detach();
                 view.$el.html('');
             }
-            
+
             var shadow = $('<div />');
             shadow.addClass('design-view-action-container-shadow');
             view.$el.append(shadow);

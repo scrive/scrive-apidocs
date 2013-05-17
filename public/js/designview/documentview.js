@@ -41,6 +41,10 @@
             } else if(document.mainfile()) {
                 view.$el.html(view.renderDocument());
             } else {
+                if (view.file != undefined) {
+                  view.file.destroy();
+                  view.file = undefined;
+                }
                 view.$el.html(view.uploadButtons());
             }
             view.showProblems();
@@ -79,7 +83,9 @@
             var document = view.model;
             var div = $('<div />');
             div.addClass('design-view-document-pages');
-            div.append(KontraFile.init({file: document.mainfile()}).view.el);
+            if (this.file == undefined)
+              this.file = KontraFile.init({file: document.mainfile()})
+            div.append(this.file.view.el);
             return div;
         },
         uploadButtons: function() {

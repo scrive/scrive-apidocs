@@ -577,6 +577,7 @@ window.Document = Backbone.Model.extend({
           signatoryid: self.viewer().signatoryid()
         };
         console.log(args.daystosign);
+     if (self.file() != undefined) self.file().off();
      return {
        title: args.title,
        file: function() {
