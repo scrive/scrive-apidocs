@@ -489,8 +489,8 @@ window.Signatory = Backbone.Model.extend({
     },
     removed : function() {
         this.isRemoved = true;
-        this.trigger("removed");
         this.off();
+        this.trigger("removed");
     },
     hasUser: function() {
         return this.get("hasUser");

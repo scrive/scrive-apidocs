@@ -166,6 +166,8 @@ var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this);
         this.model.bind('removed', this.clear);
+        this.model.field().signatory().bind("change:fields",this.render);
+        this.model.field().signatory().document().bind("change:signatories",this.render);
         this.model.bind('change:field change:signatory', this.render);
         var view = this;
         this.fixPlaceFunction = function(){
@@ -267,6 +269,9 @@ var TextTypeSetterView = Backbone.View.extend({
                 var name = field?field.name():'email';
                 var type = field?field.type():'standard';
                 var oldfield = s.field(name, type);
+                if (oldfield == undefined)
+                  oldfield = s.field('email', 'standard');
+                s.bind("change:fields",view.render);
                 model.setField(oldfield);
                 model.setSignatory(s);
             }
@@ -575,6 +580,8 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear);
         this.model.field().bind('change', this.render);
+        this.model.field().signatory().bind("change:fields",this.render);
+        this.model.field().signatory().document().bind("change:signatories",this.render);
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -974,6 +981,9 @@ var SignatureTypeSetterView = Backbone.View.extend({
         _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.field().bind('change:signatory', this.render);
+        this.model.field().signatory().bind("change:fields",this.render);
+        this.model.field().signatory().document().bind("change:signatories",this.render);
+
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
