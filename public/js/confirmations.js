@@ -120,6 +120,10 @@ var ConfirmationView = Backbone.View.extend({
        container.width(model.width());
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
+       if (BrowserInfo.isSmallScreen()) {
+         title.css('font-size', '42px');
+         title.css('font-style', 'bold');
+       }
        title.append(this.model.title());
        if (model.textcolor())
          title.css("color",model.textcolor());

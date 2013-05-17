@@ -95,9 +95,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && this.justSaved()
-             && !this.currentSignatory().padDelivery()
-             && !this.currentSignatory().mobileDelivery()
-             && !this.currentSignatory().emailMobileDelivery()
+             && !this.document().currentSignatory().padDelivery()
+             && !this.document().currentSignatory().mobileDelivery()
+             && !this.document().currentSignatory().emailMobileDelivery()
              && window.PromoteScriveView != undefined;
   },
   hasCreateAccountSection : function() {
@@ -403,6 +403,11 @@ var DocumentSignViewView = Backbone.View.extend({
       $(this.el).append(this.container);
       $(this.el).append("<div class='clearfix'/>");
       $(this.el).append("<div class='spacer40'/>");
+
+      /* Hide the address bar for mobile devices, by scrolling */
+      if (BrowserInfo.isSmallScreen()) {
+        window.scrollTo(0,1);
+      }
     },
     setBackgroundColour: function() {
       var color = this.model.document().signviewbackgroundcolour();
