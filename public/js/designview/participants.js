@@ -174,11 +174,13 @@
         standardFields: [
             ["sigpersnr", "standard"],
             ["sigcompnr", "standard"],
-            ["mobile", "standard"]
+            ["sigco",     "standard"],
+            ["mobile",    "standard"]
         ],
         standardPlaceholders: {
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
+            sigco: localization.company,
             mobile: localization.phone
         },
         placeholder: function(name) {
@@ -912,8 +914,10 @@
             var view = this;
             if(!view.active) {
                 view.active = true;
+                var detailsHeight = view.detailsView.$el.outerHeight();
+                var totalHeight = detailsHeight + 58;
                 if(!view.opened) {
-                    view.innerDiv.animate({height: view.detailsView.$el.outerHeight() + 53}, {
+                    view.innerDiv.animate({height: totalHeight}, {
                         duration: 250,
                         easing: "linear",
                         complete: function() {
@@ -930,7 +934,7 @@
                     });
                 } else {
                     // don't animate, just set them
-                    view.innerDiv.css({height: view.detailsView.$el.outerHeight() + 53,
+                    view.innerDiv.css({height: totalHeight,
                                        overflow:'visible',
                                        'z-index': 500});
                     view.active = false;
@@ -949,7 +953,7 @@
                 if(view.opened) {
                     view.innerDiv.css({'overflow': 'hidden',
                                        'z-index': 1});
-                    view.innerDiv.animate({height:50}, {
+                    view.innerDiv.animate({height:58}, {
                         duration: 250,
                         easing: "linear",
                         step: function() {
@@ -963,7 +967,7 @@
                     view.active = false;
                     view.opened = false;
                 } else {
-                    view.innerDiv.css({height:50,
+                    view.innerDiv.css({height:58,
                                        overflow:'hidden',
                                        'z-index': 1});
                     view.active = false;
@@ -1098,14 +1102,16 @@
             div.addClass('design-view-action-participant-info-company');
             var txt = $('<div />');
             txt.addClass('design-view-action-participant-info-company-inner');
-            txt.text(sig.company());
-
-            var f = function() {
+            if(sig.companyField()) {
                 txt.text(sig.company());
-            };
-
-            sig.companyField().bind('change:value', f);
-
+                
+                var f = function() {
+                    txt.text(sig.company());
+                };
+                
+                
+                sig.companyField().bind('change:value', f);
+            }
             div.append(txt);
             return div;
         }
@@ -1119,6 +1125,7 @@
         initialize: function(args) {
             var view = this;
             view.options = args.options;
+            view.extraClass = args.extraClass;
             var field = view.model;
             _.bindAll(view);
             view.render();
@@ -1142,18 +1149,15 @@
             }
             var values = view.options;
             var options = {
-                optional  : {name : localization.designview.optional,
-                             value : 'optional',
-                             leftMargin: 9,
-                             offset: 6},
+                optional  : {name : localization.designview.optionalField,
+                             value : 'optional'
+                            },
                 signatory : {name : localization.designview.mandatoryForRecipient,
                              value : 'signatory',
-                             leftMargin: 9,
-                             offset: 0},
+                            },
                 sender    : {name : localization.designview.mandatoryForSender,
                              value : 'sender',
-                             leftMargin: 9,
-                             offset: 0}
+                            }
             };
             var select = new Select({
                 options: _.map(_.without(values, selected), function(v) {
@@ -1177,6 +1181,8 @@
                 }
             });
             select.view().$el.addClass('design-view-action-participant-details-information-field-options');
+            if(view.extraClass)
+                select.view().$el.addClass(view.extraClass);
             view.$el.html(select.view().el);
             return view;
         }

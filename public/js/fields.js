@@ -411,7 +411,7 @@ window.Field = Backbone.Model.extend({
             .setCallback(callback)
             .validateData(this.value());
     },
-    basicFields: ['fstname', 'sndname', 'email', 'sigco'],
+    basicFields: ['fstname', 'sndname', 'email'],
     isBasic: function() {
         var field = this;
         return field.isStandard() && _.contains(field.basicFields, field.name());
