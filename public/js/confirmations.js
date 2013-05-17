@@ -166,6 +166,13 @@ var ConfirmationView = Backbone.View.extend({
                                      return false;
                                 }
             }).input();
+       if (BrowserInfo.isSmallScreen()) {
+         this.acceptButton.css({
+           'padding-left': '35px', 
+           'padding-right': '35px', 
+           'font-size': 'xx-large'
+         });
+       }
        this.renderAcceptButton();
        footer.append( this.acceptButton);
        container.append(header);
