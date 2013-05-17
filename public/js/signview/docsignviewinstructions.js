@@ -84,8 +84,8 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
        !document.currentSignatory().author()) {
       var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
       if (BrowserInfo.isSmallScreen()) {
-      headline.css('font-size', '36px');
-        headline.css('margin-bottom', '20px');
+        headline.css('font-size', '64px');
+        headline.css('margin-bottom', '40px');
       }
       this.styleText(headline);
       container.append(headline.text(this.welcomeText()));
@@ -93,7 +93,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     var headline = $("<div class='headline' />");
     if (BrowserInfo.isSmallScreen()) {
-      headline.css('font-size', '36px');
+      headline.css('font-size', '42px');
     }
     this.styleText(headline);
     container.append(headline.text(this.text()));
