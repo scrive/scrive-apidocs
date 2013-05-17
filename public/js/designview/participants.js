@@ -174,11 +174,13 @@
         standardFields: [
             ["sigpersnr", "standard"],
             ["sigcompnr", "standard"],
-            ["mobile", "standard"]
+            ["sigco",     "standard"],
+            ["mobile",    "standard"]
         ],
         standardPlaceholders: {
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
+            sigco: localization.company,
             mobile: localization.phone
         },
         placeholder: function(name) {
@@ -1100,14 +1102,16 @@
             div.addClass('design-view-action-participant-info-company');
             var txt = $('<div />');
             txt.addClass('design-view-action-participant-info-company-inner');
-            txt.text(sig.company());
-
-            var f = function() {
+            if(sig.companyField()) {
                 txt.text(sig.company());
-            };
-
-            sig.companyField().bind('change:value', f);
-
+                
+                var f = function() {
+                    txt.text(sig.company());
+                };
+                
+                
+                sig.companyField().bind('change:value', f);
+            }
             div.append(txt);
             return div;
         }
@@ -1121,6 +1125,7 @@
         initialize: function(args) {
             var view = this;
             view.options = args.options;
+            view.extraClass = args.extraClass;
             var field = view.model;
             _.bindAll(view);
             view.render();
@@ -1144,18 +1149,15 @@
             }
             var values = view.options;
             var options = {
-                optional  : {name : localization.designview.optional,
-                             value : 'optional',
-                             leftMargin: 9,
-                             offset: 6},
+                optional  : {name : localization.designview.optionalField,
+                             value : 'optional'
+                            },
                 signatory : {name : localization.designview.mandatoryForRecipient,
                              value : 'signatory',
-                             leftMargin: 9,
-                             offset: 0},
+                            },
                 sender    : {name : localization.designview.mandatoryForSender,
                              value : 'sender',
-                             leftMargin: 9,
-                             offset: 0}
+                            }
             };
             var select = new Select({
                 options: _.map(_.without(values, selected), function(v) {
@@ -1179,6 +1181,8 @@
                 }
             });
             select.view().$el.addClass('design-view-action-participant-details-information-field-options');
+            if(view.extraClass)
+                select.view().$el.addClass(view.extraClass);
             view.$el.html(select.view().el);
             return view;
         }

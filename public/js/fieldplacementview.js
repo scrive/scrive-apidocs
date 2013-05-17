@@ -182,9 +182,34 @@ var TextTypeSetterView = Backbone.View.extend({
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
+        var view = this;
+        var field = this.model.field();
+        var sig = field.signatory();
+
+        var optionOptions = ['optional', 'signatory', 'sender'];
+
+        if(sig.author())
+            optionOptions = _.without(optionOptions, 'signatory');
+        
+        if(name === 'email')
+            optionOptions = _.without(optionOptions, 'optional');
+        
+        if(name === 'email' && sig.needsEmail())
+            optionOptions = ['sender'];
+        
+        if(name === 'mobile' && sig.needsMobile())
+            optionOptions = ['sender'];
+        
+        if(name === 'sigpersnr' && sig.needsPersonalNumber())
+            optionOptions = _.without(optionOptions, 'optional');
+        
+
+
         return $("<div style='display:block;margin-top:4px;'/>").append(
           new FieldOptionsView({
-              model: this.model.field()
+              model: this.model.field(),
+              extraClass: 'typesetter-obligatory-option',
+              options: optionOptions
           }).el);
     },
     help : function() {
