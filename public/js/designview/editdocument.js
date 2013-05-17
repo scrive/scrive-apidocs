@@ -15,7 +15,7 @@
         },
         render: function() {
             var view = this;
-            
+
             var div = $('<div />');
 
             //div.append(view.arrow());
@@ -62,15 +62,15 @@
 
             // a function because author is not yet defined
             var getcheckbox = function() {
-                var field = new Field({fresh: false, 
-                                       type: 'checkbox', 
+                var field = new Field({fresh: false,
+                                       type: 'checkbox',
                                        signatory: viewmodel.document().author(),
                                        name: viewmodel.document().newCheckboxName()});
                 //viewmodel.document().author().addField(field);
                 return field;
             }
 
-            draggebleField(div, getcheckbox);
+            draggebleField(div, getcheckbox,undefined, undefined,true);
 
             div.append(wra);
             wra.append(txt);
@@ -103,7 +103,7 @@
                                            name: viewmodel.document().newSignatureName()});
                 return signature;
             };
-            draggebleField(div, getsignature);
+            draggebleField(div, getsignature,undefined, undefined,true);
 
             div.append(wra);
             wra.append(txt);
@@ -131,7 +131,7 @@
                 return viewmodel.document().author().field('email', 'standard');
             };
 
-            draggebleField(div, gettext);
+            draggebleField(div, gettext,undefined, undefined,true);
 
             div.append(wra);
             wra.append(txt);

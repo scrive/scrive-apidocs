@@ -20,7 +20,7 @@ window.createFieldPlacementPlacedView = function (args) {
     else return new TextPlacementPlacedView(args);
 };
 
-window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction)
+window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize)
 {
     var droppedInside = false;
     var helper;
@@ -51,6 +51,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     };
 
     dragHandler.draggable({
+        cursorAt : cursorNormalize ? { top :7 , left :7} : undefined,
         helper: function(event) {
             setFP();
             helper = createFieldPlacementView({model: field, height : heightFunction != undefined ? heightFunction() : undefined, width: widthFunction != undefined ? widthFunction() : undefined}).el;
@@ -190,19 +191,19 @@ var TextTypeSetterView = Backbone.View.extend({
 
         if(sig.author())
             optionOptions = _.without(optionOptions, 'signatory');
-        
+
         if(name === 'email')
             optionOptions = _.without(optionOptions, 'optional');
-        
+
         if(name === 'email' && sig.needsEmail())
             optionOptions = ['sender'];
-        
+
         if(name === 'mobile' && sig.needsMobile())
             optionOptions = ['sender'];
-        
+
         if(name === 'sigpersnr' && sig.needsPersonalNumber())
             optionOptions = _.without(optionOptions, 'optional');
-        
+
 
 
         return $("<div style='display:block;margin-top:4px;'/>").append(
