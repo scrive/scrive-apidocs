@@ -1127,4 +1127,4 @@
 "_dontHaveAccount","Vill du bli användare?<a href='/sv/signup'> Skapa ett konto.</a>","Don't have an account?<a href='/en/signup'> Sign up for free.</a>"
 "_alreadyHaveAccount","Redan användare? <a href='/sv/login'> Logga in.</a>","Already have an account? <a href='/en/login'> Log in.</a>"
 "_visitOurPricingPage","Läs mer om våra <a href='/sv/pricing'>priser och abbonemang.</a>","View our <a href='/en/pricing'>Pricing & payments</a> page."
-"_loginOrSignup","<a href='/sv/login'> Log in </a> or <a href='/sv/signup'>sign up here</a>","<a href='/sv/login'> Log in </a> or <a href='/sv/signup'>sign up here</a>"
+"_loginOrSignup","<a href='/sv/login'> Logga in </a> eller <a href='/sv/signup'> skapa konto här</a>","<a href='/sv/login'> Log in </a> or <a href='/sv/signup'>sign up here</a>"
