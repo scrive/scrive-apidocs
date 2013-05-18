@@ -62,6 +62,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   hasSignatoriesSection : function() {
       return    !this.justSaved()
              && !this.document().closed()
+             && !BrowserInfo.isSmallScreen()
              && _.filter(this.document().signatories(),function(sig) {return sig.signs();}).length > 1;
   },
   hasAuthorAttachmentsSection : function() {
