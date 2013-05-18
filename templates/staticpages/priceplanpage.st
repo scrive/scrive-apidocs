@@ -35,7 +35,13 @@ $doctype()$
     </div>
     <div class="js-price-plan price-plan"></div>
     <script>
-      PricePage({noheaders: true}).show('.js-price-plan');
+      PricePage({noheaders: true,
+                 includeenterprise: false,
+                 buttoncolorclass : "$buttoncolorclass$",
+                 headercolour: "$headercolour$",
+                 textcolour: "$textcolour$",
+                 pricecolour: "$pricecolour$"
+                 }).show('.js-price-plan');
       mixpanel.track('View Price Plan Page | Branded');
     </script>
 

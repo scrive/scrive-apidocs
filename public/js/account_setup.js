@@ -78,6 +78,9 @@
     branded : function() {
       return this.get("branded");
     },
+    servicelinkcolour : function() {
+      return this.get("servicelinkcolour");
+    },
     callme: function() {
       return this.get('callme');
     },
@@ -285,9 +288,13 @@
       });
       tosAccept.append(tosCBox);
       var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
+      var toslink = $("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS);
+      if (model.servicelinkcolour()) {
+        toslink.css('color', model.servicelinkcolour());
+      }
       tosAccept.append($('<label/>')
                   .append($("<span/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
-                  .append($("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS))
+                  .append(toslink)
                 );
       tosAccept.append($('<br/>'));
 

@@ -121,6 +121,7 @@ companyUIJson ctx company editable = runJSONGenT $ do
     value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
     value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
     value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
+    value "servicelinkcolour" $ fromMaybe "" $ bdservicelinkcolour <$> currentBrandedDomain ctx
     value "editable" editable
 
 
