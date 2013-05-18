@@ -106,14 +106,15 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     var smallerbit = $("<div class='smaller-bits'/>");
 
-    if (document.timeouttime() != undefined && document.signingInProcess()) {
+    if (document.timeouttime() != undefined && document.signingInProcess() &&
+        !BrowserInfo.isSmallScreen()) {
         var duedate = $("<div class='duedate' />");
         this.styleText(duedate);
         smallerbit.append(duedate.text(this.dueDateDescription()));
     }
 
 
-    if (!document.currentSignatory().padDelivery()) {
+    if (!document.currentSignatory().padDelivery() || BrowserInfo.isSmallScreen()) {
         var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
         this.styleText(link);
         smallerbit.append(link);

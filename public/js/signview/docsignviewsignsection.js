@@ -186,7 +186,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                 });
        this.signButton = Button.init({
                             size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
-                            shape : "rounded",
+                            shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "blue",
                             width: BrowserInfo.isSmallScreen() ?  404 : 206,
                             text: document.process().processLocalization().signbuttontext,
@@ -208,28 +208,23 @@ window.DocumentSignSignSection = Backbone.View.extend({
       var signButton = this.signButton.input();
       if (BrowserInfo.isSmallScreen()) {
         signButton.css({
-          'padding-left': '45px',
-          'padding-right': '45px',
+          'padding-left': '33%',
+          'padding-right': '33%',
           'font-size': '100px',
-          'height': '80px',
+          'height': '100px',
           'max-height': '120px',
-          'line-height': '65px',
-          'padding-top': '45px',
-          'padding-bottom': '45px',
-          'border-top-left-radius': '64px',
-          'border-top-right-radius': '64px',
-          'border-top-bottom-radius': '64px',
-          'border-top-top-radius': '64px',
-          '-webkit-border-top-left-radius': '64px',
-          '-webkit-border-top-right-radius': '64px',
-          '-webkit-border-top-bottom-radius': '64px',
-          '-webkit-border-top-top-radius': '64px'
+          'line-height': '85px',
+          'padding-top': '55px',
+          'padding-bottom': '55px'
         });
       }
 
       if (model.hasRejectOption()) {
         if (BrowserInfo.isSmallScreen()) {
-          box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
+          box.css({
+            "text-align": "center",
+            "padding": '0px'
+          }).append(signButton);
         } else {
           box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
           box.append($("<div class='signwrapper sign'>").append(signButton));
