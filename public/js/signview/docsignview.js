@@ -474,6 +474,11 @@ var DocumentSignViewView = Backbone.View.extend({
 
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrow().view().el);
+
+     if (BrowserInfo.isSmallScreen()) {
+       $('.mainContainer').css('margin-top', '10px');
+     }
+
      return this;
 
     }
