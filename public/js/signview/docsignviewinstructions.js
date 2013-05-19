@@ -85,7 +85,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
       if (BrowserInfo.isSmallScreen()) {
         headline.css('font-size', '64px');
-        headline.css('margin-bottom', '40px');
+        headline.css('margin-bottom', '50px');
       }
       this.styleText(headline);
       container.append(headline.text(this.welcomeText()));
@@ -114,7 +114,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
 
 
-    if (!document.currentSignatory().padDelivery() || BrowserInfo.isSmallScreen()) {
+    if (!document.currentSignatory().padDelivery() && !BrowserInfo.isSmallScreen()) {
         var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
         this.styleText(link);
         smallerbit.append(link);

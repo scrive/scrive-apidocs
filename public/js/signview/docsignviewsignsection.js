@@ -51,7 +51,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var guardModel = this.guardModel;
     return Button.init({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
-      shape : "rounded",
       color: "blue",
       text: document.process().processLocalization().signbuttontext,
       onClick: function() {
@@ -103,6 +102,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var content = $("<div />");
     content.append(this.createPreambleElems());
 
+    // TODO TO CSS
     if (BrowserInfo.isSmallScreen()) {
         var p = content.find('p');
         p.css('font-size', '42px');
@@ -122,6 +122,40 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       textfont : this.model.usebranding() ? document.signviewtextfont() : undefined,
       content: this.createContentElems
     });
+
+    // Re-adjust the signing modal for small screen devices.
+    if (BrowserInfo.isSmallScreen()) {
+      // Remove the modal header but keep the close button
+      var modalHeader = $('.modal-container .modal-header');
+      var close = modalHeader.find('.modal-close').detach();
+      modalHeader.remove();
+      close.css('margin', '25px 25px 0 0');
+      $('.modal-container').prepend(close);
+
+      // Remove the modal footer but keep the button
+      var modalFooter = $('.modal-container .modal-footer');
+      var signButton = modalFooter.find('.button').detach();
+      modalFooter.remove();
+
+      $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
+
+
+      if (BrowserInfo.isSmallScreen()) {
+        signButton.css({
+          'padding-left': '33%',
+          'padding-right': '33%',
+          'font-size': '100px',
+          'height': '100px',
+          'max-height': '120px',
+          'margin-right': '5px',
+          'line-height': '85px',
+          'padding-top': '55px',
+          'padding-bottom': '55px'
+        });
+      }
+
+      $('.modal-container').append(signButton);
+    }
   }
 });
 
