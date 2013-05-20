@@ -197,7 +197,7 @@
                 // add in the edit process view
                 view.$el.children().detach();
                 view.$el.html(view.processView.el);
-                view.processView.afterInsertion();
+                view.processView.setupTinyMCE();
             } else {
                 view.$el.children().detach();
                 view.$el.html('');

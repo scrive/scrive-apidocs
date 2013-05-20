@@ -164,6 +164,9 @@ window.Document = Backbone.Model.extend({
     authorattachments: function() {
         return this.get("authorattachments");
     },
+    removeattachment : function(a) {
+        this.set({"authorattachments": _.without(this.authorattachments(),[a]) });
+    },
     evidenceattachments: function() {
         return this.get("evidenceattachments");
     },

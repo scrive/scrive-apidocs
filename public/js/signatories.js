@@ -313,6 +313,10 @@ window.Signatory = Backbone.Model.extend({
     attachments: function() {
         return this.get("attachments");
     },
+    removeAttachment : function(a) {
+        this.set({"attachments": _.without(this.attachments(),[a]) });
+        this.document().trigger('change:attachments');
+    },
     addAttachment: function(att) {
         this.get("attachments").push(att);
     },

@@ -1,13 +1,13 @@
-/** 
+/**
 
     Setting options on the document.
-    
+
     This is the third tab in the design view.
 
 **/
 
 (function(window) {
-    /** 
+    /**
         model is DocViewModel
     **/
     var DesignViewProcessView = Backbone.View.extend({
@@ -19,17 +19,10 @@
             view.render();
             view.mail.bind('change', view.changeMail);
             view.model.document().bind('change', view.render);
-            view.model.document().bind('change:attachments change:file', function() {
-                view.mail = view.model.document().inviteMail();
-                view.mail.bind('ready', function() {
-                    view.render();
-                    view.afterInsertion();
-                });
-            });
         },
         render: function() {
             var view = this;
-            
+
             var div = $('<div />');
 
             div.append(view.leftColumn());
@@ -37,7 +30,7 @@
             div.append(view.rightColumn());
 
             view.$el.html(div.children());
-
+            view.setupTinyMCE();
             return view;
         },
         leftColumn: function() {
@@ -256,7 +249,7 @@
             var label = $('<div />');
             label.addClass('design-view-action-process-left-column-attachments-label');
             label.text(labelText + ':');
-            
+
             var authorAttachmentButton = Button.init({
                 color: 'blue',
                 size: 'tiny',
@@ -282,6 +275,14 @@
             //div.append(label);
             div.append(authorAttachmentButton.input());
             div.append(sigAttachmentButton.input());
+            if (this.attachmentList != undefined)
+            {
+              this.attachmentList.destroy();
+              this.attachmentList = undefined;
+            }
+            this.attachmentList = new DesignAttachmentsList({document : document});
+
+            div.append(this.attachmentList.el());
 
             return div;
         },
@@ -302,7 +303,7 @@
 
             var wrapper = $('<div />');
             wrapper.addClass('design-view-action-process-right-column-invitation-wrapper');
-            
+
             var textarea = $('<textarea />');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
             if(view.mail.ready()) {
@@ -345,11 +346,7 @@
                 var editableContent = view.mail.content().find(".editable").html();
                 view.invitationEditor.html(editableContent);
             }
-            view.afterInsertion();
-        },
-        // this needs to be called AFTER it gets put into the document
-        afterInsertion: function() {
-            this.setupTinyMCE();
+            view.setupTinyMCE();
         },
         setupTinyMCE: function() {
             var view = this;
@@ -364,16 +361,16 @@
                 script_url: '/tiny_mce/tiny_mce.js',
                 theme: "advanced",
                 theme_advanced_toolbar_location: "external",
-                theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-                theme_advanced_buttons2: "",
+                theme_advanced_buttons1: "",
+                //theme_advanced_buttons2: "",
                 convert_urls: false,
                 theme_advanced_toolbar_align: "middle",
                 plugins: "noneditable,paste",
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
                 width: cwidth, // automatically adjust for different swed/eng text
                 oninit : function(ed) {
-                    $('.mceExternalToolbar').remove();
-                    $(ed.getDoc()).blur(function(e) {
+                    $('.mceExternalToolbar').css('z-index','-1000');
+                       $(ed.getDoc()).blur(function(e) {
                         doc.setInvitationMessage(ed.getBody().innerHTML);
                     });
                 },
