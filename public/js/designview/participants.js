@@ -199,6 +199,12 @@
             view.model.document().bind('change:signorder', view.render);
             view.render();
         },
+        destroy : function() {
+          this.model.unbind('change', this.render);
+          this.model.document().unbind('change:signorder', this.render);
+          this.off();
+          this.remove();
+        },
         render: function() {
             var view = this;
             var signatory = view.model;
@@ -454,6 +460,7 @@
         },
         reset: function() {
             var view = this;
+            if (view.participants != undefined) _.each(view.participants,function(pv) {pv.destroy();});
             view.setup();
             view.render();
         },
@@ -512,6 +519,11 @@
                 sig.setSignOrder(o);
                 return false;
             });
+        },
+        destroy : function() {
+          this.model.unbind('change:signorder', this.render);
+          this.off();
+          this.remove();
         },
         render: function() {
             var view = this;
@@ -670,6 +682,15 @@
             view.model.bind('change:authentication', view.render);
             view.model.bind('change:delivery', view.render);
             view.render();
+        },
+        destroy : function() {
+          this.viewmodel.unbind('change:showProblems', this.render);
+          this.model.unbind('change:fields', this.render);
+          this.model.unbind('change:authentication', this.render);
+          this.model.unbind('change:delivery', this.render);
+          this.off();
+          if (this.participation != undefined) this.participation.destroy();
+          this.remove();
         },
         render: function() {
             var view = this;
@@ -893,6 +914,17 @@
             sig.bind('change:fields', view.updateOpened);
             view.render();
         },
+        destroy : function() {
+          this.viewmodel.unbind('change:participantDetail', this.updateOpened);
+          this.viewmodel.unbind('change:step', this.render);
+          this.model.unbind('change:fields', this.updateOpened);
+          this.off();
+          if (this.detailsView != undefined)
+            this.detailsView.destroy();
+          if (this.orderIcon != undefined)
+            this.orderIcon.destroy();
+
+        },
         render: function() {
             var view = this;
             var sig = view.model;
@@ -1107,12 +1139,12 @@
             txt.addClass('design-view-action-participant-info-company-inner');
             if(sig.companyField()) {
                 txt.text(sig.company());
-                
+
                 var f = function() {
                     txt.text(sig.company());
                 };
-                
-                
+
+
                 sig.companyField().bind('change:value', f);
             }
             div.append(txt);

@@ -98,6 +98,7 @@ window.Document = Backbone.Model.extend({
         var document = this;
         var signatories = document.signatories();
         signatories[signatories.length] = sig;
+        var time = new Date().getTime();
         document.trigger('change:signatories');
         document.trigger('change:signorder');
     },
