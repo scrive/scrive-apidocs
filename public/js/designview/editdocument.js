@@ -152,6 +152,78 @@
         }
     });
 
+    /**
+       model is field
+     **/
+    var FieldOptionsView = Backbone.View.extend({
+        className: 'design-view-action-participant-details-information-field-options-wrapper',
+        initialize: function(args) {
+            var view = this;
+            view.options = args.options;
+            view.extraClass = args.extraClass;
+            var field = view.model;
+            _.bindAll(view);
+            view.render();
+            if(field) {
+                field.bind('change:obligatory', view.render);
+                field.bind('change:shouldbefilledbysender', view.render);
+            }
+        },
+        render: function() {
+            var view = this;
+            var field = view.model;
+            var selected;
+            if(!field) {
+                selected = 'optional';
+            } else if(field.isOptional()) {
+                selected = 'optional';
+            } else if(field.shouldbefilledbysender()) {
+                selected = 'sender';
+            } else {
+                selected = 'signatory';
+            }
+            var values = view.options;
+            var options = {
+                optional  : {name : localization.designview.optionalField,
+                             value : 'optional'
+                            },
+                signatory : {name : localization.designview.mandatoryForRecipient,
+                             value : 'signatory',
+                            },
+                sender    : {name : localization.designview.mandatoryForSender,
+                             value : 'sender',
+                            }
+            };
+            var select = new Select({
+                options: _.map(_.without(values, selected), function(v) {
+                    return options[v];
+                }),
+                name: options[selected].name,
+                offset: options[selected].offset,
+                onSelect: function(v) {
+                    if(field) {
+                        if(v === 'optional') {
+                            field.makeOptional();
+                        } else if(v === 'signatory') {
+                            field.makeObligatory();
+                            field.setShouldBeFilledBySender(false);
+                        } else if(v === 'sender') {
+                            field.makeObligatory();
+                            field.setShouldBeFilledBySender(true);
+                        }
+                    }
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-information-field-options');
+            if(view.extraClass)
+                select.view().$el.addClass(view.extraClass);
+            view.$el.html(select.view().el);
+            return view;
+        }
+    });
+
+
     window.DesignViewDraggablesView = function(args) {
         return new DesignViewDraggablesView(args);
     }

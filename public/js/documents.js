@@ -709,6 +709,8 @@ window.Document = Backbone.Model.extend({
             _.each(sig.fields(), function(field) {
                 _.each(field.placements(), function(placement) {
                     placement.cleanTypeSetter();
+                    if(placement.view)
+                        placement.view.clear();
                 });
             });
         });

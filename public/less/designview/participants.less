@@ -300,9 +300,9 @@
 }
 
 .design-view-action-participant-details-information-field-wrapper {
-    .box-sizing(border-box);
-    float: left;
-    width: 50%;
+    display: inline-block;
+    position: relative;
+    margin-right: 15px;
 }
 
 .design-view-action-participant-details-information-field {
@@ -322,13 +322,13 @@
 .design-view-action-participant-details-information-field-options {
     .box-sizing(border-box);
     display: inline-block;
-    width: 200px;
+    width: 60px;
     vertical-align: middle;
     height: 36px;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-opts {
         z-index: 1000;
-        width: 100%;
+        width: 200px;
     }
     margin-bottom: 8px;
 }
@@ -430,14 +430,16 @@
 
 .design-view-action-participant-details-information-closer {
      width: 19px;
-     height: 19px;
+     height: 20px;
      display: inline-block;
-     margin-right: 12px;
+     position: absolute;
+     top: -8px;
+     left: -8px;
      &.active {
-      background: url("/img/editor-view-remove-field.png");
+      background: url("/img/editor-view-remove-party.png");
       cursor: pointer;
       &:hover {
-        background: url("/img/editor-view-remove-field-hover.png");
+        background: url("/img/editor-view-remove-party-hover.png");
       }
     }
 }

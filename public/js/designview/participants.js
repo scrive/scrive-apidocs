@@ -778,6 +778,8 @@
 
             var value = sig.name();
             var div = $('<div />');
+            div.addClass('design-view-action-participant-details-information-field-wrapper');
+
             var input = $('<input />');
             input.addClass('design-view-action-participant-details-information-field');
             input.val(value);
@@ -810,11 +812,11 @@
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
 
+            div.append(closer);
             div.append(input);
             div.append(options.el);
-            div.append(closer);
 
-            return div.children();
+            return div;
         },
         detailsInformationField: function(name, type, placeholder) {
             var view = this;
@@ -828,6 +830,7 @@
             var value = field.value();
 
             var div = $('<div />');
+            div.addClass('design-view-action-participant-details-information-field-wrapper');
             var input = $('<input />');
             input.addClass('design-view-action-participant-details-information-field');
             input.val(value);
@@ -879,11 +882,11 @@
                 });
             }
 
+            div.append(closer);
             div.append(input);
             div.append(options.el);
-            div.append(closer);
 
-            return div.children();
+            return div;
         }
     });
 
@@ -1184,21 +1187,24 @@
             }
             var values = view.options;
             var options = {
-                optional  : {name : localization.designview.optionalField,
+                optional  : {abbrev : localization.designview.optionalFieldAbbrev,
+                             name: localization.designview.optionalField,
                              value : 'optional'
                             },
                 signatory : {name : localization.designview.mandatoryForRecipient,
-                             value : 'signatory',
+                             abbrev : localization.designview.mandatoryForRecipientAbbrev,
+                             value : 'signatory'
                             },
                 sender    : {name : localization.designview.mandatoryForSender,
-                             value : 'sender',
+                             abbrev: localization.designview.mandatoryForSenderAbbrev,
+                             value : 'sender'
                             }
             };
             var select = new Select({
-                options: _.map(_.without(values, selected), function(v) {
+                options: _.map(values, function(v) {
                     return options[v];
                 }),
-                name: options[selected].name,
+                name: options[selected].abbrev,
                 offset: options[selected].offset,
                 onSelect: function(v) {
                     if(field) {
