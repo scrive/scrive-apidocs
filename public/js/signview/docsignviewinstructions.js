@@ -98,8 +98,15 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.styleText(headline);
     container.append(headline.text(this.text()));
     var subheadline = $("<div class='subheadline' />");
+    if (BrowserInfo.isSmallScreen()) {
+      subheadline.css({
+        'font-size': '30px',
+        'margin-top': '25px'
+      });
+    }
     this.styleText(subheadline);
     container.append(subheadline.text(this.subtext()));
+
 
     if (document.currentSignatory().padDelivery() && document.isSignedNotClosed())
          container.append(this.giveToNextPadSignatoryOption());

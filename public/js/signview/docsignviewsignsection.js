@@ -140,19 +140,18 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
 
 
-      if (BrowserInfo.isSmallScreen()) {
-        signButton.css({
-          'padding-left': '33%',
-          'padding-right': '33%',
-          'font-size': '100px',
-          'height': '100px',
-          'max-height': '120px',
-          'margin-right': '5px',
-          'line-height': '85px',
-          'padding-top': '55px',
-          'padding-bottom': '55px'
-        });
-      }
+      signButton.css({
+        'padding-left': '32%',
+        'padding-right': '32%',
+        'font-size': '100px',
+        'height': '100px',
+        'max-height': '120px',
+        'margin-right': '15px',
+        'margin-bottom': '15px',
+        'line-height': '85px',
+        'padding-top': '55px',
+        'padding-bottom': '55px'
+      });
 
       $('.modal-container').append(signButton);
     }
