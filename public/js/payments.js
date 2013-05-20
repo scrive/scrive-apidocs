@@ -368,7 +368,7 @@
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
 
-            var buttoncolour = model.buttoncolorclass()
+            var buttoncolour = model.buttoncolorclass();
             if (buttoncolour == 'red')
               button.addClass('button-red');
             else if (buttoncolour == 'green')
@@ -504,7 +504,7 @@
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
 
-            var buttoncolour = model.buttoncolorclass()
+            var buttoncolour = model.buttoncolorclass();
             if (buttoncolour == 'red')
               button.addClass('button-red');
             else if (buttoncolour == 'green')
@@ -881,10 +881,17 @@
             //this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
             view.model.bind('fetch', this.render);
         },
+        fixlinkstyle: function() {
+          if (this.model.pricecolour()) {
+            $('.stylablelink').css('color', this.model.pricecolour());
+          }
+        },
         render: function() {
             var view = this;
             var model = view.model;
             var div = $('<div />'); // container div
+
+            view.fixlinkstyle();
 
             var header = $('<header />')
                 .append($('<h1 />').text(model.header()))

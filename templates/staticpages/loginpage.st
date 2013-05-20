@@ -140,13 +140,13 @@ accountSetupPage=
       $flashmessages()$
 
       <div style='width:275px;margin:20px auto;'>
-        <div style="margin-bottom: 63px">
+        <div style="margin-bottom: 50px; margin-top: 50px;">
           $if(customlogo)$
             <img alt="logo" src="$customlogolink$"/>
             <div class="divider-line"></div>
             <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
           $else$
-            <img src="/img/logo.png" width="120" height="22" style='margin: 10px 80px'/>
+            <img src="/img/Scrive-logo.png" style='margin: 50px 30px 0px;'/>
           $endif$
         </div>
       </div>
