@@ -279,12 +279,6 @@ window.Field = Backbone.Model.extend({
             return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
-        if ( this.isMobile() && this.value() != undefined && this.value() != "") {
-            var msg = localization.designview.validation.missingOrWrongMobile;
-            this.setValue(this.value().trim());
-            return new PhoneValidation({message: msg});
-        }
-
         if (forSigning && this.signatory().author() && this.signatory().elegAuthentication() && this.isSSN()) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
