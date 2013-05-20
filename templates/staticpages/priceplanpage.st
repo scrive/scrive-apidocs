@@ -23,11 +23,11 @@ $doctype()$
     $standardHeaderContents()$
   </head>
   <body style="background: $background$">
-    <div style='width:920px;margin: 0px auto;position: relative;top:20px;'>
-      <label style='float:right' class='label-with-link'>$_loginOrSignup()$</label>
+    <div style='width:920px;margin: 0px auto;position: relative;top:120px; left: 185px;'>
+      <label style='float:left' class='label-with-link'>$_loginOrSignup()$</label>
     </div>
     <div style='width:275px;margin:20px auto;'>
-      <div style="margin-bottom: 63px">
+      <div style="margin-bottom: 50px; margin-top: 50px;">
         <img alt="logo" src="$logolink$"/>
         <div class="divider-line"></div>
         <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
