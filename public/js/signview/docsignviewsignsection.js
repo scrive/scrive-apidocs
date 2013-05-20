@@ -106,7 +106,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (BrowserInfo.isSmallScreen()) {
         var p = content.find('p');
         p.css('font-size', '42px');
-        p.css('line-height', '43px');
+        p.css('line-height', '51px');
+        p.css('margin-top', '20px');
     }
     return content;
   },
