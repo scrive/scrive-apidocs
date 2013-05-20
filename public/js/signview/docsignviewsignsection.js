@@ -142,16 +142,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
 
       signButton.css({
-        'padding-left': '32%',
-        'padding-right': '32%',
         'font-size': '100px',
         'height': '100px',
+        'width': '80%',
         'max-height': '120px',
-        'margin-right': '15px',
-        'margin-bottom': '15px',
+        'margin-right': '55px',
+        'margin-bottom': '55px',
         'line-height': '85px',
-        'padding-top': '55px',
-        'padding-bottom': '55px'
       });
 
       $('.modal-container').append(signButton);
