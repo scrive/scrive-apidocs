@@ -105,6 +105,9 @@ window.File = Backbone.Model.extend({
     broken : function(){
         return this.get("broken");
     },
+    draftData : function() {
+      return {id : this.fileid(), name: this.name()};
+    },
     parse : function(response)
     {
         if (response.error != undefined)

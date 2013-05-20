@@ -21,9 +21,10 @@ var DesignAttachmentsListView = Backbone.View.extend({
     aarow : function(a) {
       var self = this;
       var tr = $("<tr/>");
-      var name = $("<td/>").text(a.name());
-      var remove = $("<td/>").append($("<div class='design-view-action-participant-details-information-closer active'/>").click(function() {self.model.removeattachment(a);}));
-      return tr.append(name).append(remove);
+      var icon = $("<td class='icon-td'/>").append("<div class='author-attachment-icon'>");
+      var name = $("<td class='name-td'/>").text(a.name() + " " + localization.designview.attached);
+      var remove = $("<td class='remove-td'/>").append($("<div class='remove-icon'/>").click(function() {self.model.removeattachment(a);}));
+      return tr.append(icon).append(name).append(remove);
     },
     sarow : function(sig,a) {
       var text = sig.nameOrEmail();
@@ -31,11 +32,11 @@ var DesignAttachmentsListView = Backbone.View.extend({
         text = localization.csv.title;
       if (text == "")
         text = sig.nameInDocument();
-
+      var icon = $("<td class='icon-td'/>").append("<div class='signatory-attachment-icon'>");
       var tr = $("<tr/>");
-      var name = $("<td/>").text(a.name() + " (Requested from " + text + ")");
-      var remove = $("<td/>").append($("<div class='design-view-action-participant-details-information-closer active'/>").click(function() {sig.removeAttachment(a);}));
-      return tr.append(name).append(remove);
+      var name = $("<td class='name-td'/>").text(a.name() + " "+localization.designview.requestedFrom+" " + text.trim() + ".");
+      var remove = $("<td class='remove-td'/>").append($("<div class='remove-icon'/>").click(function() {sig.removeAttachment(a);}));
+      return tr.append(icon).append(name).append(remove);
     },
     render: function () {
         console.log("Rendering attachments list");
@@ -48,9 +49,10 @@ var DesignAttachmentsListView = Backbone.View.extend({
         if (authorattachments.length != 0 || sattachments.length != 0 )
         {
             var table= $("<table/>");
-            var th1 = $("<th class='name'>");
-            var th2 = $("<th class='remove'>");
-            var thead = $("<thead/>").append(th1).append(th2);
+            var th1 = $("<th class='icon-td'>");
+            var th2 = $("<th class='name-td'>");
+            var th3 = $("<th class='remove-td'>");
+            var thead = $("<thead/>").append($("<tr/>").append(th1).append(th2).append(th3));
             var tbody = $("<tbody/>");
             _.each(authorattachments, function(a) { tbody.append(view.aarow(a));});
             _.each(document.signatories(),function(s) {_.each(s.attachments(),function(a) { tbody.append(view.sarow(s,a));}); });

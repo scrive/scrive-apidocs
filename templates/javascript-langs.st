@@ -387,6 +387,8 @@ javascriptLocalisation =
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
              , openPDF: "$_designViewOpenPDF()$"
              , chooseDocument: "$_designViewChooseDocument()$"
+             , attached : "$_designViewAttached()$"
+             , requestedFrom : "$_designViewRequestedFrom()$"
            }
 
          , validation : {

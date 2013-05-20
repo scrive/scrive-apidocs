@@ -347,14 +347,12 @@ window.Document = Backbone.Model.extend({
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
-          // removed because we should store per signatory
-          //authentication: this.get("authentication"),
-          //delivery: this.get("delivery"),
           apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
           process : this.process().process(),
-          template: this.isTemplate()
+          template: this.isTemplate(),
+          authorattachments : _.map(this.authorattachments(), function(a) {return a.draftData()})
       };
     },
     status: function() {

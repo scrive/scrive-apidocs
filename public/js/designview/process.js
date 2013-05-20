@@ -18,7 +18,7 @@
             view.mail = view.model.document().inviteMail();
             view.render();
             view.mail.bind('change', view.changeMail);
-            view.model.document().bind('change', view.render);
+            view.model.document().bind('change', function() {console.log("Change to document"); view.render() });
         },
         render: function() {
             var view = this;

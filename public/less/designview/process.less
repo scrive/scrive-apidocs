@@ -103,16 +103,61 @@
 
 .design-view-action-process-left-column-attachments {
     display: inline-block;
-    margin-top: 20px;
+    width : 310px;
 }
 
+.designview-attachemnts-list {
+  margin-top: 40px;
+  .icon-td {
+    width:24px;
+    .author-attachment-icon {
+      width: 18px;
+      height: 20px;
+      display: inline-block;
+      margin-right: 6px;
+      background: url("/img/editor-view-attachment-added.png");
+      vertical-align : middle;
+    }
+    .signatory-attachment-icon{
+      width: 18px;
+      height: 20px;
+      display: inline-block;
+      margin-right: 6px;
+      background: url("/img/editor-view-attachment-requested.png");
+      vertical-align : middle;
+
+    }
+  }
+  .name-td {
+    width:275px;
+    line-height: 16px;
+  }
+  .remove-td {
+    width: 11px;
+    .remove-icon {
+     width: 11px;
+     height: 11px;
+     display: inline-block;
+     background: url("/img/editor-view-remove-field.png") repeat scroll -5px -5px transparent;;
+     cursor: pointer;
+     vertical-align : middle;
+     &:hover {
+        background: url("/img/editor-view-remove-field-hover.png") repeat scroll -5px -5px transparent;;
+      }
+
+    }
+  }
+}
 
 .design-view-action-process-left-column-attachments-author-button {
-
+  float: left;
+  min-width:100px;
 }
 
 .design-view-action-process-left-column-attachments-signatory-button {
-    margin-left: 4px;
+  float: right;
+  min-width: 100px;
+
 }
 
 .design-view-action-process-middle-column {
@@ -131,7 +176,7 @@
     margin-top: 18px;
     width: 34%;
     min-height: 170px;
-    padding: 8px 16px;
+    padding: 0px 16px 8px 16px;
     vertical-align: top;
 }
 
