@@ -33,6 +33,10 @@
         },
         render: function() {
             var view = this;
+            if(view.file) {
+                view.file.destroy();
+                view.file = undefined;
+            }
             var model = view.viewmodel;
             var document = view.model;
             view.$el.children().detach();
@@ -41,10 +45,6 @@
             } else if(document.mainfile()) {
                 view.$el.html(view.renderDocument());
             } else {
-                if (view.file != undefined) {
-                  view.file.destroy();
-                  view.file = undefined;
-                }
                 view.$el.html(view.uploadButtons());
             }
             view.showProblems();
@@ -86,7 +86,7 @@
             var document = view.model;
             var div = $('<div />');
             div.addClass('design-view-document-pages');
-            if (this.file == undefined)
+            if (!this.file)
               this.file = KontraFile.init({file: document.mainfile()})
             div.append(this.file.view.el);
             return div;
