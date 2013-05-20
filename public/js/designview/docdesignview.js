@@ -660,6 +660,63 @@
             return $(view.el);
         };
 
+        // Show the NJ promo. This code will go away as soon as 
+        // Viktor and me can figure out some sort of requirements
+        // and how to control different promos in an efficient way.
+        if (Cookies.get('njpromo') && Cookies.get('njpromo') == 'true') {
+          Cookies.set('njpromo', 'false');
+
+          var modal = $('<div />');
+          modal.append($('<img src="/img/njpromo_fake.png" />'));
+
+          var acceptButton = new Button.init({
+            size: "big",
+            color: "green",
+            text: localization.promo.accept,
+            onClick: function() {
+              if (alreadyClicked(this))
+                return false;
+
+              $('.promomodal img').attr('src', '/img/njpromo_ok.png');
+              acceptButton.hide();
+              declineButton.hide();
+
+              modal.append(new Button.init({
+                size: "big",
+                color: "green",
+                text: "Ok!",
+                onClick: function() {
+                  Promo.close();
+                }
+              }).input().css({
+                'float': 'right',
+                'margin': '20px 0px 20px'
+              }));
+            }
+          }).input().css({
+            'float': 'right',
+            'margin': '20px 0px 20px'
+          });
+
+          var declineButton = new Button.init({
+            size: "tiny",
+            text: localization.promo.decline,
+            onClick: function() {
+              if (alreadyClicked(this))
+                return false;
+
+              Promo.close(); 
+            }
+          }).input().css({
+            'margin': '46px 0px',
+            'float': 'left'
+          });
+
+          modal.append(acceptButton);
+          modal.append(declineButton);
+          Promo.open(modal);
+        }
+
         this.afterInsert = function() {
             view.afterInsert();
         };

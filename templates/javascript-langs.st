@@ -549,6 +549,10 @@ javascriptLocalisation =
            , title : "$_avtal24Title()$"
            , description : "$_avtal24Description()$"
           }
+        , promo : {
+             accept : "$_promoAccept()$"
+           , decline : "$_promoDecline()$"
+        }
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"

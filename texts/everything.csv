@@ -470,6 +470,8 @@
 "_phone","Telefon","Phone"
 "_placeFieldName","placera","place"
 "_poweredByScrive","Med vänliga hälsningar","Best regards"
+"_promoAccept","Ja tack!","Yes, please sign me up!"
+"_promoDecline","Nej, tack","No, thanks"
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på <a href=""$link$"">den här länken</a><br/>        2. Granska online<br/>        3. Signera (eller avvisa)<br/>         4. Färdig <BR/> $footer:noescape()$","<i>To continue</i><br/>        1. Click <a href=""$link$"">this link</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte signerat eller avvisat dokument <strong>$documenttitle$</strong> ännu.","<strong>$author$</strong> would like to remind you that you haven't signed or rejected the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInstruction","1. Klicka på <a href=""$link$"">den här länken</a><br/>        2. Granska online<br/>        3.  Acceptera offert (eller avvisa)<br/>        4. Färdig","1. Click <a href=""$link$"">this link</a><br/>        2. Review online<br/>        3.  Accept the offer (or reject)<br/>        4. Done"
