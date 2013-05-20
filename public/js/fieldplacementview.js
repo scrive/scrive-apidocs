@@ -198,10 +198,10 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                              value : 'optional'
                             },
                 signatory : {name : localization.designview.mandatoryForRecipient,
-                             value : 'signatory',
+                             value : 'signatory'
                             },
                 sender    : {name : localization.designview.mandatoryForSender,
-                             value : 'sender',
+                             value : 'sender'
                             }
             };
             var select = new Select({
