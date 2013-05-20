@@ -703,11 +703,13 @@ window.Document = Backbone.Model.extend({
             i++;
         return 'signature-' + i;
     },
-    removePlacements: function() {
+    removeTypeSetters: function() {
         var document = this;
         _.each(document.signatories(), function(sig) {
             _.each(sig.fields(), function(field) {
-                field.removeAllPlacements();
+                _.each(field.placements(), function(placement) {
+                    placement.cleanTypeSetter();
+                });
             });
         });
     }

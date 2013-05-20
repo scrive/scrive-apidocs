@@ -345,8 +345,10 @@ var TextTypeSetterView = Backbone.View.extend({
 var TextPlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        if(this.model)
+        var view = this;
+        if(this.model) {
             this.model.bind('removed', this.clear);
+        }
         this.render();
     },
     clear: function() {
@@ -371,9 +373,15 @@ var TextPlacementView = Backbone.View.extend({
 var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
+        var view = this;
         this.model.bind('removed', this.clear, this);
         this.model.bind('change:field change:signatory', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.bind('change:withTypeSetter', function() {
+            if(!view.model.withTypeSetter())
+                view.closeTypeSetter();
+        });
+
         this.model.view = this;
         this.render();
     },
@@ -758,11 +766,17 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
 var CheckboxPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear', 'addTypeSetter');
+        _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.field().bind('change', this.render);
         this.model.view = this;
+        var view = this;
+        this.model.bind('change:withTypeSetter', function() {
+            if(!view.model.withTypeSetter())
+                view.closeTypeSetter();
+        });
+
         this.render();
     },
     updatePosition: function() {
@@ -1201,10 +1215,13 @@ var SignaturePlacementView = Backbone.View.extend({
 
 var SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'clear');
+        _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.view = this;
+        var view = this;
+        this.model.bind('change:withTypeSetter', view.closeTypeSetter);
+
         this.render();
     },
     updatePosition: function() {

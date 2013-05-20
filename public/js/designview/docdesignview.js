@@ -307,7 +307,7 @@
             div.append(view.removeDocumentButtonLabel());
             div.click(function() {
                 doc.setFlux();
-                doc.removePlacements();
+                doc.removeTypeSetters();
                 doc.save();
                 doc.afterSave( function() {
                     new Submit({

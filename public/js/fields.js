@@ -90,7 +90,7 @@ window.FieldPlacement = Backbone.Model.extend({
       return this.get("withTypeSetter") == true;
     },
     cleanTypeSetter : function() {
-       this.set({"withTypeSetter" : false}, {silent: true});
+       this.set({"withTypeSetter" : false});
     },
     remove : function() {
        this.trigger("removed");
