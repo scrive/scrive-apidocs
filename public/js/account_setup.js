@@ -273,11 +273,11 @@
       });
 
       body.append($("<div class='position'/>")
-                    .append($("<label style='text-align:left;margin-left: 5px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
+                    .append($("<label style='text-align:left;margin-left: 32px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
                     .append(passwordInput.input())
                     .append(password2Input.input()));
 
-      var tosAccept = $("<div class='position checkbox-box' style='text-align: left;'/>");
+      var tosAccept = $("<div class='checkbox-box' style='text-align: left;'/>");
       var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
       if (model.accepted()) tosCBox.addClass('checked');
       tosCBox.click(function() { tosCBox.toggleClass('checked'); model.setAccepted(tosCBox.hasClass('checked'));});
