@@ -11,7 +11,8 @@ var LoginModel = Backbone.Model.extend({
         visible : true,
         rememberPassword : false,
         autofocus: false,
-        logolink : ""
+        logolink : "",
+        servicelinkcolour : ''
   },
   reminderView : function() {
      return this.get("reminderView") == true;
@@ -42,6 +43,9 @@ var LoginModel = Backbone.Model.extend({
   },
   logolink : function() {
      return this.get("logolink");
+  },
+  servicelinkcolour : function() {
+     return this.get("servicelinkcolour");
   },
   buttoncolorclass: function() {
      return this.get("buttoncolorclass");
@@ -381,6 +385,10 @@ var LoginBrandedView = Backbone.View.extend({
 
       var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.loginModal.dontHaveAccount);
       var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+      if (model.servicelinkcolour()) {
+        dontHaveAccount.find('a').css('color', model.servicelinkcolour());
+        paymentsPage.find('a').css('color', model.servicelinkcolour());
+      }
       body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(dontHaveAccount).append(paymentsPage));
 
       return content;

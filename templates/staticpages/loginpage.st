@@ -36,6 +36,7 @@ $doctype()$
                                          referer:   "$referer$",
                                          logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
+                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
                                          autofocus: true}).el());
       mixpanel.register({
         Context : 'Login page - branded'
@@ -117,6 +118,7 @@ $doctype()$
                                          branded : true,
                                          logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
+                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
                                          autofocus: true
                             }).el());
     });
@@ -160,7 +162,8 @@ accountSetupPage=
                                                   signupmethod : "$signupmethod$",
                                                   companyFilled : $if(company)$true$else$false$endif$,
                                                   buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$blue$endif$",
-                                                  branded : $if(hasbrandeddomain)$true$else$false$endif$
+                                                  branded : $if(hasbrandeddomain)$true$else$false$endif$,
+                                                  servicelinkcolour: $if(customservicelinkcolour)$"$customservicelinkcolour$"$else$null$endif$
                                                   })
                                               .el());
             jQuery('.short-input-section input:first').focus();
