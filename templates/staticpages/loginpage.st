@@ -140,7 +140,7 @@ accountSetupPage=
       $flashmessages()$
 
       <div style='width:275px;margin:20px auto;'>
-        <div style="margin-bottom: 63px">
+        <div style="margin-bottom: 50px; margin-top: 50px;">
           $if(customlogo)$
             <img alt="logo" src="$customlogolink$"/>
             <div class="divider-line"></div>

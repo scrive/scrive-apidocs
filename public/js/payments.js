@@ -368,7 +368,7 @@
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
 
-            var buttoncolour = model.buttoncolorclass()
+            var buttoncolour = model.buttoncolorclass();
             if (buttoncolour == 'red')
               button.addClass('button-red');
             else if (buttoncolour == 'green')
@@ -504,7 +504,7 @@
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
 
-            var buttoncolour = model.buttoncolorclass()
+            var buttoncolour = model.buttoncolorclass();
             if (buttoncolour == 'red')
               button.addClass('button-red');
             else if (buttoncolour == 'green')
