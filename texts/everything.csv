@@ -680,6 +680,7 @@
 "_modalAccountSetupPosition","Befattning","Position"
 "_waitingForSignature","Väntar på signatur","Waiting for signature"
 "_followArrowToSign","Följ den gröna pilen för att e-signera","Follow the green arrow to e-sign"
+"_goBack","Gå tillbaka","Go back"
 "_reviewDocument","Dokument för granskning","Document for review"
 "_signedNotClosed","Du har signerat","You have signed"
 "_signedNotClosedSubText","När alla har signerat kommer dokumentet skickas till din angivna e-post adress.","When every party has signed the finalised document will be sent to your email."

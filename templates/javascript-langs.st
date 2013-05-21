@@ -145,6 +145,7 @@ javascriptLocalisation =
               }
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
+            , goBack: "$_goBack()$"
             , process : {
                 contract: {
                    name: "$_contractname()$",
