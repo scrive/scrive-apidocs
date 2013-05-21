@@ -102,7 +102,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var content = $("<div />");
     content.append(this.createPreambleElems());
 
-    // TODO TO CSS
     if (BrowserInfo.isSmallScreen()) {
         var p = content.find('p');
         p.css('font-size', '42px');
@@ -187,7 +186,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                                         color: "red",
                                         shape : "rounded",
-                                        width: BrowserInfo.isSmallScreen() ?  304 : 206,
+                                        width: 206,
                                         text: document.process().processLocalization().rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
