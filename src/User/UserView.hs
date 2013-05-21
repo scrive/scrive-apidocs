@@ -9,6 +9,7 @@ module User.UserView (
     -- mails
     newUserMail,
     mailNewAccountCreatedByAdmin,
+    accessNewAccountMail,
     resetPasswordMail,
     mailEmailChangeRequest,
 
@@ -215,6 +216,15 @@ userSeesSubscriptionDashboard user = useriscompanyadmin user || isNothing (userc
 activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =
   renderTemplate "activatePageViewNotValidLink" $ F.value "email" email
+
+accessNewAccountMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
+accessNewAccountMail ctx user setpasslink = do
+  kontramail "accessNewAccountMail" $ do
+    F.value "personname"   $ getFullName user
+    F.value "personemail"  $ getEmail user
+    F.value "passwordlink" $ show setpasslink
+    F.value "ctxhostpart"  $ ctxhostpart ctx
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
 resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do

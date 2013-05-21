@@ -60,6 +60,18 @@ changePasswordPage=
 </div>
 </div>
 ###
+accessNewAccountPage=
+<div class='mainContainer big'>
+<div class="inner">
+<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery('.inner').append(new NewPassword({linkchangepassword: "$linkchangepassword$"}).el());
+  });
+</script>
+</div>
+</div>
+###
 ###
 changePasswordPageWithBranding=
 $doctype()$

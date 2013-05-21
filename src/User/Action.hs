@@ -11,6 +11,7 @@ import Data.Functor
 import Data.Maybe
 import qualified Control.Exception.Lifted as E
 
+import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
 import Company.CompanyID
 import DB
 import Doc.Model
@@ -43,7 +44,7 @@ handleAccountSetupFromSign document signatorylink = do
       lastname = getLastName signatorylink
       email = getEmail signatorylink
   muser <- dbQuery $ GetUserByEmail (Email email)
-  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (ctxlang ctx))
+  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (documentlang document))
                 return
                 muser
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
@@ -66,15 +67,10 @@ handleActivate mfstname msndname actvuser signupmethod = do
   phone <-  fromMaybe "" <$> getField "phone"
   companyname <- fromMaybe "" <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
-  mpassword <- getRequiredField asValidPassword "password"
-  mpassword2 <- getRequiredField asValidPassword "password2"
-  case (mtos, mfstname, msndname, mpassword, mpassword2) of
-    (Just tos, Just fstname, Just sndname, Just password, Just password2) -> do
-      case checkPasswordsMatch password password2 of
-        Right () ->
+  case (mtos, mfstname, msndname) of
+    (Just tos, Just fstname, Just sndname) -> do
           if tos
             then do
-              passwordhash <- createPassword password
               _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
                   userfstname = fstname
                 , usersndname = sndname
@@ -86,7 +82,6 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
                 ((userinfo actvuser) { userfstname = fstname , usersndname = sndname })
                 (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
               _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
               _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
@@ -106,6 +101,10 @@ handleActivate mfstname msndname actvuser signupmethod = do
                   dbUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
 
+              link <- newAccessNewAccountLink $ userid actvuser
+              mail <- accessNewAccountMail ctx actvuser link
+              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress actvuser] }
+
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
@@ -117,10 +116,6 @@ handleActivate mfstname msndname actvuser signupmethod = do
               Log.debug $ "No TOS accepted. We cant activate user."
               addFlashM flashMessageMustAcceptTOS
               return Nothing
-        Left flash -> do
-          Log.debug $ "Create account attempt failed (params checkup)"
-          addFlashM flash
-          return Nothing
     _ -> do
         Log.debug $ "Create account attempt failed (params missing)"
         return Nothing

@@ -2,6 +2,28 @@ module ActionQueue.Tables where
 
 import DB
 
+tableAccessNewAccounts :: Table
+tableAccessNewAccounts = tblTable {
+    tblName = "access_new_accounts"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+    [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+     , ("expires", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
+     , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+     ] -> return TVRvalid
+    [] -> do
+      kRunRaw $ "CREATE TABLE access_new_accounts ("
+        <> "  user_id BIGINT NOT NULL"
+        <> ", expires TIMESTAMPTZ NOT NULL"
+        <> ", token BIGINT NOT NULL"
+        <> ", CONSTRAINT pk_access_new_accounts PRIMARY KEY (user_id)"
+        <> ")"
+      return TVRcreated
+    _ -> return TVRinvalid
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
+  }
+
 tablePasswordReminders :: Table
 tablePasswordReminders = tblTable {
     tblName = "password_reminders"

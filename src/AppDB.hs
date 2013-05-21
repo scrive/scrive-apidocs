@@ -177,6 +177,7 @@ kontraTables = [
   , tableAccessToken
   , tablePrivilege
   , tablePasswordReminders
+  , tableAccessNewAccounts
   , tableEmailChangeRequests
   , tableUserAccountRequests
   , tablePaymentPlans
