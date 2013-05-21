@@ -52,16 +52,23 @@
     font-weight: bold;
     margin-left: auto;
     margin-right: auto;
+
+    &.small-screen {
+      .headline {
+        font-size: 64px;
+        margin-bottom: 30px;
+        line-height: 75px;
+      }
+    }
+
     .headline {
       text-transform: uppercase;
       color: black;
       font-size: x-large;
       margin-bottom: 5px;
-
-      /* make the instructions more readable on small screens */
-      .small-screen {
-        font-size: 42px;
-        margin-bottom: 13px;
+  
+      .name {
+        white-space: nowrap;
       }
     }
     .giveForSigning {
@@ -661,6 +668,17 @@
     margin : auto;
   }
 
+  .pagefooter.small-screen .poweredbyscrive {
+    .text {
+      font-size: x-large;
+    }
+    .logo {
+        background-image : url("../img/logo.png");
+        width: 120px;
+        height: 21px;
+    }
+  }
+
   .pagefooter .poweredbyscrive {
     margin: 00px auto;
     text-align : center;
@@ -774,7 +792,6 @@
       width: 620px;
       margin: auto;
   }
-
 
   .sbox {
       padding: 10px;

@@ -65,6 +65,12 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       maindiv.css("display", "none");
       return this;
     }
+
+    if (BrowserInfo.isSmallScreen()) {
+      maindiv.css("display", "none");
+      return this;
+    }
+
     maindiv.css("display","block");
 
     // Setting logo
@@ -218,6 +224,9 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       return this;
     }
     maindiv.css("display","block");
+    
+    if (BrowserInfo.isSmallScreen())
+      maindiv.addClass("small-screen");
 
    // Background color of top bar
     if((this.useStandardBranding() || document.signviewbarscolour() == undefined)) {
@@ -272,7 +281,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     }
     else {
       if (this.usedStandardDescription != false ) {
-        var pbstext = $("<span class='text' />").text("Powered by ");
+        var pbstext = $("<span class='text' />").text(BrowserInfo.isSmallScreen() ? "E-Signing powered by " : "Powered by ");
         var pbslogo = $("<span class='logo' />");
         this.pbs.empty().append(pbstext).append(pbslogo);
         this.usedStandardDescription = false;

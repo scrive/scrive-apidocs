@@ -12,7 +12,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.render();
   },
   welcomeText : function() {
-    return localization.docsignview.welcome + " " + this.model.document().currentSignatory().name();
+    return localization.docsignview.welcome + 
+           " <span class='name'>" + 
+           this.model.document().currentSignatory().name() + 
+           "</span>";
   },
   // Big instruction or information about document state
   text: function() {
@@ -83,17 +86,14 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
        document.currentSignatory().canSign() &&
        !document.currentSignatory().author()) {
       var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
-      if (BrowserInfo.isSmallScreen()) {
-      headline.css('font-size', '36px');
-        headline.css('margin-bottom', '20px');
-      }
       this.styleText(headline);
-      container.append(headline.text(this.welcomeText()));
+      container.append(headline.html(this.welcomeText()));
     }
 
     var headline = $("<div class='headline' />");
     if (BrowserInfo.isSmallScreen()) {
-      headline.css('font-size', '36px');
+      headline.css('font-size', '42px');
+      headline.css('margin-bottom', '0px');
     }
     this.styleText(headline);
     container.append(headline.text(this.text()));
@@ -101,19 +101,21 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.styleText(subheadline);
     container.append(subheadline.text(this.subtext()));
 
+
     if (document.currentSignatory().padDelivery() && document.isSignedNotClosed())
          container.append(this.giveToNextPadSignatoryOption());
 
     var smallerbit = $("<div class='smaller-bits'/>");
 
-    if (document.timeouttime() != undefined && document.signingInProcess()) {
+    if (document.timeouttime() != undefined && document.signingInProcess() &&
+        !BrowserInfo.isSmallScreen()) {
         var duedate = $("<div class='duedate' />");
         this.styleText(duedate);
         smallerbit.append(duedate.text(this.dueDateDescription()));
     }
 
 
-    if (!document.currentSignatory().padDelivery()) {
+    if (!document.currentSignatory().padDelivery() && !BrowserInfo.isSmallScreen()) {
         var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
         this.styleText(link);
         smallerbit.append(link);

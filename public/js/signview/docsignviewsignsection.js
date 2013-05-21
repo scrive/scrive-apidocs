@@ -51,7 +51,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var guardModel = this.guardModel;
     return Button.init({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
-      shape : "rounded",
       color: "blue",
       text: document.process().processLocalization().signbuttontext,
       onClick: function() {
@@ -106,7 +105,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (BrowserInfo.isSmallScreen()) {
         var p = content.find('p');
         p.css('font-size', '42px');
-        p.css('line-height', '43px');
+        p.css('line-height', '51px');
+        p.css('margin-top', '20px');
     }
     return content;
   },
@@ -122,6 +122,36 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       textfont : this.model.usebranding() ? document.signviewtextfont() : undefined,
       content: this.createContentElems
     });
+
+    // Re-adjust the signing modal for small screen devices.
+    if (BrowserInfo.isSmallScreen()) {
+      // Remove the modal header but keep the close button
+      var modalHeader = $('.modal-container .modal-header');
+      var close = modalHeader.find('.modal-close').detach();
+      modalHeader.remove();
+      close.css('margin', '25px 25px 0 0');
+      $('.modal-container').prepend(close);
+
+      // Remove the modal footer but keep the button
+      var modalFooter = $('.modal-container .modal-footer');
+      var signButton = modalFooter.find('.button').detach();
+      modalFooter.remove();
+
+      $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
+
+      signButton.css({
+        'font-size': '100px',
+        'height': '100px',
+        'width': '80%',
+        'max-height': '120px',
+        'margin-right': '60px',
+        'margin-bottom': '55px',
+        'line-height': '105px',
+        'padding-bottom': '35px'
+      });
+
+      $('.modal-container').append(signButton);
+    }
   }
 });
 
@@ -156,7 +186,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                                         color: "red",
                                         shape : "rounded",
-                                        width: 304,
+                                        width: 206,
                                         text: document.process().processLocalization().rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
@@ -186,9 +216,9 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                 });
        this.signButton = Button.init({
                             size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
-                            shape : "rounded",
+                            shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "blue",
-                            width: 304,
+                            width: BrowserInfo.isSmallScreen() ?  404 : 206,
                             text: document.process().processLocalization().signbuttontext,
                             icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
@@ -208,18 +238,26 @@ window.DocumentSignSignSection = Backbone.View.extend({
       var signButton = this.signButton.input();
       if (BrowserInfo.isSmallScreen()) {
         signButton.css({
-          'padding-left': '35px',
-          'padding-right': '35px',
-          'font-size': 'xx-large'
+          'padding-left': '33%',
+          'padding-right': '33%',
+          'font-size': '100px',
+          'height': '100px',
+          'max-height': '120px',
+          'line-height': '85px',
+          'padding-top': '55px',
+          'padding-bottom': '55px'
         });
       }
 
-      if (model.hasRejectOption()) {
+      if (model.hasRejectOption() && !BrowserInfo.isSmallScreen()) {
         box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
         box.append($("<div class='signwrapper sign'>").append(signButton));
       }
       else {
         box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
+        if (BrowserInfo.isSmallScreen()) {
+          box.css("padding", "0px");
+        }
       }
       box.append($("<div class='clearfix' />"));
 
