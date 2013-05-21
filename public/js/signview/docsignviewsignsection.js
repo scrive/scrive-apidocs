@@ -140,15 +140,15 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
       $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
 
-
       signButton.css({
         'font-size': '100px',
         'height': '100px',
         'width': '80%',
         'max-height': '120px',
-        'margin-right': '55px',
+        'margin-right': '60px',
         'margin-bottom': '55px',
-        'line-height': '85px',
+        'line-height': '105px',
+        'padding-bottom': '35px'
       });
 
       $('.modal-container').append(signButton);
@@ -250,19 +250,15 @@ window.DocumentSignSignSection = Backbone.View.extend({
         });
       }
 
-      if (model.hasRejectOption()) {
-        if (BrowserInfo.isSmallScreen()) {
-          box.css({
-            "text-align": "center",
-            "padding": '0px'
-          }).append(signButton);
-        } else {
-          box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
-          box.append($("<div class='signwrapper sign'>").append(signButton));
-        }
+      if (model.hasRejectOption() && !BrowserInfo.isSmallScreen()) {
+        box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
+        box.append($("<div class='signwrapper sign'>").append(signButton));
       }
       else {
         box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
+        if (BrowserInfo.isSmallScreen()) {
+          box.css("padding", "0px");
+        }
       }
       box.append($("<div class='clearfix' />"));
 
