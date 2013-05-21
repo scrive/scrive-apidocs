@@ -12,6 +12,7 @@ window.Calendar = Backbone.Model.extend({
         var onchange = this.get("change");
         activator.dateinput({
             format: 'dd-mm-yy',
+            value : new Date(new Date().getTime() + args.days * 24 * 60 * 60 * 1000),
             change: function() {
                 var ONE_DAY = 1000 * 60 * 60 * 24;
                 var date_ms = activator.data("dateinput").getValue().getTime();

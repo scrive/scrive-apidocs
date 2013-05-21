@@ -213,24 +213,40 @@
             label.addClass('design-view-action-process-left-column-deadline-label');
             label.text(labelText + ':');
             console.log(doc.daystosign());
-            var field = InfoTextInput.init({
+            var calendarbutton = $("<div class='calendarbutton'/>");
+            var calendar = new Calendar({on : calendarbutton,
+                                         days : doc.daystosign(),
+                                         change: function(days) {
+                                            if (days != doc.daystosign()) {
+                                              doc.setDaystosign(days);
+                                              if (view.daysinputfield != undefined)
+                                                  view.daysinputfield.setValue(days)
+                                            }
+                                          }
+                        });
+
+            view.daysinputfield = InfoTextInput.init({
                 infotext: doc.daystosign(),
                 value: doc.daystosign(),
                 onChange: function(v) {
-                    // TODO: this does not seem to connect to the saved document
                     v = parseInt(v);
-                    doc.setDaystosign(v);
+                    if (v != undefined && !isNaN(v) && v != doc.daystosign()) {
+                      doc.setDaystosign(v);
+                      calendar.setDays(v);
+                    }
                 }
             });
-            field.input().addClass('design-view-action-process-left-column-deadline-field');
+            view.daysinputfield.input().addClass('design-view-action-process-left-column-deadline-field');
 
             var tag = $('<div />');
             tag.addClass('design-view-action-process-left-column-deadline-tag');
             tag.text('day(s)');
 
             div.append(label);
-            div.append(field.input());
+            div.append(view.daysinputfield.input());
             div.append(tag);
+            div.append(calendarbutton);
+
 
             return div;
         },
