@@ -12,7 +12,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.render();
   },
   welcomeText : function() {
-    return localization.docsignview.welcome + " " + this.model.document().currentSignatory().name();
+    return localization.docsignview.welcome + 
+           " <span class='name'>" + 
+           this.model.document().currentSignatory().name() + 
+           "</span>";
   },
   // Big instruction or information about document state
   text: function() {
@@ -83,12 +86,8 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
        document.currentSignatory().canSign() &&
        !document.currentSignatory().author()) {
       var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
-      if (BrowserInfo.isSmallScreen()) {
-        headline.css('font-size', '64px');
-        headline.css('margin-bottom', '50px');
-      }
       this.styleText(headline);
-      container.append(headline.text(this.welcomeText()));
+      container.append(headline.html(this.welcomeText()));
     }
 
     var headline = $("<div class='headline' />");
