@@ -393,6 +393,9 @@ javascriptLocalisation =
              , chooseDocument: "$_designViewChooseDocument()$"
              , attached : "$_designViewAttached()$"
              , requestedFrom : "$_designViewRequestedFrom()$"
+             , draggablehelp1 : "$_designviewdraggablehelp1()$"
+             , draggablehelp2 : "$_designviewdraggablehelp2()$"
+             , days :"$_designviewdays()$"
            }
 
          , validation : {

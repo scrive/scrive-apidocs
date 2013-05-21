@@ -18,8 +18,8 @@
 
             var div = $('<div />');
 
-            //div.append(view.arrow());
-            //div.append(view.instructions());
+            div.append(view.help1());
+            div.append(view.help2());
             div.append(view.checkbox());
             div.append(view.signature());
             div.append(view.text());
@@ -28,20 +28,22 @@
 
             return view;
         },
-        arrow: function() {
-            var div = $('<div />');
-            div.addClass('design-view-action-document-draggables-arrow');
-            div.append($('<img />')
-                       .addClass('design-view-action-document-draggables-arrow-img')
-                       .attr('src', '/img/dragarrow.png'));
+        help1: function() {
+            var div = $("<div class='design-view-action-document-draggables-help'/>");
+            div.append($("<div class='wrapper'>")
+              .append($("<span class='number'/>").text("1."))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp1))
+              .append($("<img src='/img/place-fields-help1.png'/>")));
             return div;
         },
-        instructions: function() {
-            var div = $('<div />');
-            div.addClass('design-view-action-document-draggables-instructions');
-            div.append($('<div />')
-                       .addClass('design-view-action-document-draggables-instructions-text')
-                       .text(localization.designview.dAndDActions));
+        help2: function() {
+            var div = $("<div class='design-view-action-document-draggables-help' style='margin-right:80px'/>");
+            div.append($("<div class='wrapper'>")
+              .append($("<span class='number'/>").text("2."))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp1))
+              .append($("<img src='/img/place-fields-help2.png'/>")));
+
+
             return div;
         },
         checkbox: function() {
@@ -58,7 +60,7 @@
 
             var img = $('<img />');
             img.addClass('design-view-action-document-draggables-checkbox-icon');
-            img.attr('src', '/img/checkbox.png');
+            img.attr('src', '/img/place-fields-checkbox.png');
 
             // a function because author is not yet defined
             var getcheckbox = function() {
@@ -94,7 +96,7 @@
 
             var img = $('<img />');
             img.addClass('design-view-action-document-draggables-signature-icon');
-            img.attr('src', '/img/signature.png');
+            img.attr('src', '/img/place-fields-signaturebox.png');
 
             var getsignature = function() {
                 var signature = new Field({fresh:false,
@@ -125,7 +127,7 @@
 
             var img = $('<img />');
             img.addClass('design-view-action-document-draggables-textbox-icon');
-            img.attr('src', '/img/textbox.png');
+            img.attr('src', '/img/place-fields-customfield.png');
 
             var gettext = function() {
                 return viewmodel.document().author().field('email', 'standard');

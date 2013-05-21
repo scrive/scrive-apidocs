@@ -488,15 +488,14 @@
         render: function() {
             var view = this;
             var model = view.model;
-
-            var div = $('<div />');
+            view.$el.children().detach();
+            var box = $("<div class='design-view-action-participant-container-participants-box'>");
+            box.css("max-height",($(window).height() - 460) + "px");
             $.each(view.participants, function(i, p) {
-                div.append(p.el);
+               box.append(p.el);
             });
 
-            div.append(view.addNew.el);
-
-            view.$el.html(div.children());
+            view.$el.append(box).append(view.addNew.el);
 
             return view;
         }
