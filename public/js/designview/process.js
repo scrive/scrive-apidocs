@@ -163,8 +163,8 @@
             var labelText = localization.designview.recipientsLanguage;
 
             var languageText = {
-                en : {name: 'English', value: 'en'},
-                sv : {name: 'Swedish', value: 'sv'}
+                en : {name: localization.languages.en, value: 'en'},
+                sv : {name: localization.languages.sv, value: 'sv'}
             };
 
             var languages = ['sv', 'en'];
