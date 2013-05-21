@@ -240,7 +240,7 @@
 
             var tag = $('<div />');
             tag.addClass('design-view-action-process-left-column-deadline-tag');
-            tag.text('day(s)');
+            tag.text(localization.designview.days);
 
             div.append(label);
             div.append(view.daysinputfield.input());
