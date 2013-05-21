@@ -53,9 +53,15 @@
     margin-left: auto;
     margin-right: auto;
 
-    .small-screen {
+    &.small-screen {
       padding-top: 55px;
       padding-bottom: 35px;
+
+      .headline {
+        font-size: 64px;
+        margin-bottom: 30px;
+        line-height: 75px;
+      }
     }
 
     .headline {
@@ -63,11 +69,9 @@
       color: black;
       font-size: x-large;
       margin-bottom: 5px;
-
-      /* make the instructions more readable on small screens */
-      .small-screen {
-        font-size: 42px;
-        margin-bottom: 13px;
+  
+      .name {
+        white-space: nowrap;
       }
     }
     .giveForSigning {
@@ -791,7 +795,6 @@
       width: 620px;
       margin: auto;
   }
-
 
   .sbox {
       padding: 10px;
