@@ -718,6 +718,17 @@ window.Document = Backbone.Model.extend({
                 });
             });
         });
+    },
+    killAllPlacements: function() {
+        var document = this;
+        _.each(document.signatories(), function(sig) {
+            _.each(sig.fields(), function(field) {
+                _.each(field.placements(), function(placement) {
+                    placement.die();
+                });
+            });
+        });
+        
     }
 
 });
