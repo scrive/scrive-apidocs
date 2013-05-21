@@ -244,6 +244,9 @@ window.Document = Backbone.Model.extend({
     {
         this.set({invitationmessage: customtext},{silent: true});
     },
+    invitationmessage : function() {
+        return this.get("invitationmessage");
+    },
     inviteMail: function() {
                 return new Mail({
                                                 document: this,

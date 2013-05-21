@@ -15,14 +15,12 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
-            view.mail = view.model.document().inviteMail();
             view.render();
-            view.mail.bind('change', view.changeMail);
-            view.model.document().bind('change', function() {console.log("Change to document"); view.render() });
+            view.model.document().bind('change', view.render);
         },
         render: function() {
             var view = this;
-
+            console.log("Rendering process");
             var div = $('<div />');
 
             div.append(view.leftColumn());
@@ -280,7 +278,7 @@
               this.attachmentList.destroy();
               this.attachmentList = undefined;
             }
-            this.attachmentList = new DesignAttachmentsList({document : document});
+            this.attachmentList = new DesignAttachmentsList({viewmodel : viewmodel});
 
             div.append(this.attachmentList.el());
 
@@ -306,12 +304,8 @@
 
             var textarea = $('<textarea />');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
-            if(view.mail.ready()) {
-                var editableContent = view.mail.content().find(".editable").html();
-                textarea.html(editableContent);
-            }
             textarea.hide();
-            wrapper.html(textarea);
+            wrapper.append(textarea);
 
             view.invitationEditor = textarea;
 
@@ -340,21 +334,13 @@
 
             return div.children();
         },
-        changeMail: function() {
-            var view = this;
-            if(view.mail.ready()) {
-                var editableContent = view.mail.content().find(".editable").html();
-                view.invitationEditor.html(editableContent);
-            }
-            view.setupTinyMCE();
-        },
         setupTinyMCE: function() {
             var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
             var cwidth = view.middleColumnDiv.width();
-
+            view.invitationEditor.html(doc.invitationmessage());
             view.invitationEditor.show();
 
             view.invitationEditor.tinymce({

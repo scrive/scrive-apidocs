@@ -6,15 +6,17 @@
 var DesignAttachmentsListView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.bind('change:attachments', this.render);
-        this.model.bind('change:signatories', this.render);
-
+        this.model.document().bind('change:attachments', this.render);
+        this.model.document().bind('change:signatories', this.render);
+        this.model.bind('change:step', this.render);
         this.model = args.model;
         this.render();
     },
     destroy : function() {
-        this.model.unbind('change:attachments', this.render);
-        this.model.unbind('change:signatories', this.render);
+        this.model.document().unbind('change:attachments', this.render);
+        this.model.document().unbind('change:signatories', this.render);
+        this.model.unbind('change:step', this.render);
+
         this.off();
         this.remove();
     },
@@ -23,7 +25,7 @@ var DesignAttachmentsListView = Backbone.View.extend({
       var tr = $("<tr/>");
       var icon = $("<td class='icon-td'/>").append("<div class='author-attachment-icon'>");
       var name = $("<td class='name-td'/>").text(a.name() + " " + localization.designview.attached);
-      var remove = $("<td class='remove-td'/>").append($("<div class='remove-icon'/>").click(function() {self.model.removeattachment(a);}));
+      var remove = $("<td class='remove-td'/>").append($("<div class='remove-icon'/>").click(function() {self.model.document().removeattachment(a);}));
       return tr.append(icon).append(name).append(remove);
     },
     sarow : function(sig,a) {
@@ -41,7 +43,7 @@ var DesignAttachmentsListView = Backbone.View.extend({
     render: function () {
         console.log("Rendering attachments list");
         var view = this;
-        var document = this.model;
+        var document = this.model.document();
         this.container = $(this.el);
         this.container.empty();
         var authorattachments = document.authorattachments();
@@ -63,7 +65,7 @@ var DesignAttachmentsListView = Backbone.View.extend({
 
 
 window.DesignAttachmentsList = function(args) {
-    var view = new DesignAttachmentsListView({model : args.document, el : $("<div class=designview-attachemnts-list/>")});
+    var view = new DesignAttachmentsListView({model : args.viewmodel, el : $("<div class=designview-attachemnts-list/>")});
     this.el = function() {return $(view.el);};
     this.destroy = function() { view.destroy();}
 
