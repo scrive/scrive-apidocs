@@ -338,7 +338,7 @@
 "_modalRejectedViewHeader","Du har avvisat dokumentet <strong>$documenttitle$</strong>","You have rejected the document <strong>$documenttitle$</strong>"
 "_name","Namn","Name"
 "_nameFieldName","namn","name"
-"_newUserMailContentBodyFirst","Du har skapat ett konto i Scrive. Klicka på följande länk för att aktivera ditt konto: <a href=""$ctxhostpart$$activatelink$"">$ctxhostpart$$activatelink$</a>","You have created an account with Scrive. Please click the button to activate the account."
+"_newUserMailContentBodyFirst","Du har skapat ett konto i Scrive. Klicka på knappen för att aktivera ditt konto.","You have created an account in Scrive. Press the button to activate your account."
 "_newUserMailContentBodySecond","Klicka på länken för att aktivera ditt konto. Länken är giltig i 14 dagar:","Click to activate the account. The link is valid for 14 days:"
 "_newUserMailContentBodyUserName","Användarnamn:<br/>","Username:<br/>"
 "_newUserMailTitle","Vänligen aktivera ditt konto","Please activate your account"
