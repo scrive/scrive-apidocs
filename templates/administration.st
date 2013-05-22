@@ -203,6 +203,7 @@ adminuserpayments=
                       <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
                       <option value="form"         $if(formplan)$selected="selected"$endif$>Online Forms</option>
                       <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="trial"        $if(trialplan)$selected="selected"$endif$>Trial</option>
                     </select>
 		  </td>
 		</tr>
@@ -241,6 +242,7 @@ adminuserpayments=
                       <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
                       <option value="form"         $if(formplan)$selected="selected"$endif$>Online Forms</option>
                       <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="trial"        $if(trialplan)$selected="selected"$endif$>Trial</option>
                     </select>
 		  </td>
 		</tr>
@@ -478,6 +480,7 @@ admincompanypayments=
                       <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
                       <option value="form"         $if(formplan)$selected="selected"$endif$>Online Forms</option>
                       <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="trial"        $if(trialplan)$selected="selected"$endif$>Trial</option>
                     </select>
 		  </td>
 		</tr>

@@ -306,6 +306,7 @@ apiCallPaymentInfo = api $ do
         (Just DeactivatedStatus, _)   -> 0
         (Just CanceledStatus, _)      -> 3
         (_, Just EnterprisePricePlan) -> 5000000
+        (_, Just TrialPricePlan)      -> 5000000
         (_, Just FreePricePlan)       -> 3
         (_, Nothing)                  -> 3
         (_, _)                        -> 100
