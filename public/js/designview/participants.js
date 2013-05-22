@@ -185,7 +185,7 @@
         },
         placeholder: function(name) {
             return this.standardPlaceholders[name] || name;
-        },
+        }
     });
 
     var DesignViewParticipation = Backbone.View.extend({
