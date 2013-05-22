@@ -8,7 +8,12 @@ jQuery(function(){
   var dv = new DesignView({
                         id:"$documentid$"
                   });
-  jQuery(".body-container").replaceWith(dv.el());
+  
+  jQuery(".body-container").replaceWith(
+    jQuery('<div />').append(BlockingInfo.el())
+                     .append(dv.el())
+                     .children()
+  );
   dv.afterInsert();
 });
   mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
