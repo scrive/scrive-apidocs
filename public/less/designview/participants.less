@@ -202,11 +202,8 @@
 
 // input boxes in participants
 .design-view-action-participant-details-field {
-    .box-sizing(border-box);
     border: 1px solid #ccc;
-    width: 196px;
-    padding: 8px;
-    height: 36px;
+    width: 194px;
     background: #white;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     &:focus {
@@ -302,17 +299,36 @@
 
 }
 
+.design-view-action-participant-new-field-name-input-wrapper {
+
+}
+
+.design-view-action-participant-new-field-name-input {
+    width: 230px;
+    display: inline-block;
+    vertical-align: top;
+    margin-bottom: 8px;
+}
+
+.design-view-action-participant-new-field-select {
+    width: 298px;
+    display: inline-block;
+    vertical-align: top;
+    margin-bottom: 8px;
+}
+
 .design-view-action-participant-details-information-field-wrapper {
     display: inline-block;
     position: relative;
     margin-right: 15px;
+    vertical-align: top;
 }
 
 .design-view-action-participant-details-information-field {
     .design-view-action-participant-details-field;
     margin-bottom: 8px;
     border-right-color : transparent;
-    width: 240px;
+    width: 228px;
     &.redborder {
         border:1px solid red;
     }
@@ -327,7 +343,6 @@
     display: inline-block;
     width: 60px;
     vertical-align: middle;
-    height: 36px;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-button.select-exp {
             z-index: 1003;
@@ -453,6 +468,7 @@
      position: absolute;
      top: -8px;
      left: -8px;
+     z-index: 2;
      &.active {
       background: url("/img/editor-view-remove-party.png");
       cursor: pointer;

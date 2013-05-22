@@ -168,6 +168,9 @@ window.Field = Backbone.Model.extend({
     type : function() {
         return this.get("type");
     },
+    setType : function(t) {
+        this.set({type:t});
+    },
     name : function() {
         return this.get("name");
     },
@@ -335,6 +338,12 @@ window.Field = Backbone.Model.extend({
     },
     isSSN : function() {
         return  this.isStandard() && this.name() == "sigpersnr";
+    },
+    isBlank: function() {
+        return this.type() === '' && this.name() === '';
+    },
+    noName: function() {
+        return this.name() === '';
     },
     isStandard: function() {
         return  this.type() == "standard";
