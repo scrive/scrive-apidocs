@@ -71,14 +71,19 @@ var QueueRequest = Backbone.Model.extend({
        this.set({"send" : true});
        var queueRequest = this;
        var submit = this.get("submit");
+       var successCallback = submit.get("ajaxsuccess");
+       var errorCallback = submit.get("ajaxerror");
+
        submit.set({   ajax : true
                    ,  ajaxerror: function(res) {
                         queueRequest.set({result:false, errorCode : res.status});
                         queueRequest.trigger("error");
+                        if (errorCallback != undefined) errorCallback();
                        }
                    ,  ajaxsuccess: function() {
                         queueRequest.set({result:true});
                         queueRequest.trigger("success");
+                        if (successCallback != undefined) successCallback();
                        }
                    , ajaxtimeout : 9900
                   });
