@@ -49,8 +49,10 @@
                 acceptText: localization.save,
                 content: view.popupContent(),
                 onAccept: function() {
-                    view.acceptPopup();
-                    view.confirmation.close();
+                    if (view.acceptPopup())
+                      view.confirmation.close();
+                    else
+                      return false;
                 }
             });
         },
@@ -61,7 +63,11 @@
             if(view.selected) {
                 var name = view.selected === '--custom' ? view.customName : view.selected;
                 var type = view.standardPlaceholders[view.selected] ? 'standard' : 'custom';
-
+                if ((view.selected === '--custom') && (view.customName == undefined || view.customName.trim() == "")) {
+                  if (view.input != undefined)
+                    view.input.input().addClass("redborder");
+                  return false;
+                }
                 var field = new Field({
                     name: name,
                     type: type,
@@ -70,6 +76,7 @@
                 });
 
                 sig.addField(field);
+                return true;
             }
         },
         popupContent: function() {
@@ -152,21 +159,22 @@
                 var title = $('<div />');
                 title.addClass('design-view-action-participant-new-field-popup-content-bottom-title');
 
-                var input = InfoTextInput.init({
+                this.input = InfoTextInput.init({
                     cssClass: 'design-view-action-participant-new-field-popup-content-bottom-input',
                     infotext: localization.designview.fieldName,
                     value: '',
                     onChange: function() {
-                        view.customName = input.value();
+                        view.input.input().removeClass('redborder');
+                        view.customName = view.input.value();
                     },
                     onEnter: function() {
-                        view.acceptPopup();
-                        view.confirmation.close();
+                        if (view.acceptPopup())
+                          view.confirmation.close();
                     }
                 });
 
                 div.append(title);
-                div.append(input.input());
+                div.append(this.input.input());
             }
 
             return div.children();
