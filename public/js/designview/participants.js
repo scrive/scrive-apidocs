@@ -490,7 +490,7 @@
             var model = view.model;
             view.$el.children().detach();
             var box = $("<div class='design-view-action-participant-container-participants-box'>");
-            box.css("max-height",($(window).height() - 460) + "px");
+            //box.css("max-height",($(window).height() - 460) + "px");
             $.each(view.participants, function(i, p) {
                box.append(p.el);
             });

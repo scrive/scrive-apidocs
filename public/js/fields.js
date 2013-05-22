@@ -13,7 +13,8 @@ window.FieldPlacement = Backbone.Model.extend({
       wrel: 0,
       hrel: 0,
       fsrel: 0,
-      withTypeSetter : false
+      withTypeSetter : false,
+        alive: true
     },
     initialize : function(args){
         var placement = this;
@@ -36,11 +37,13 @@ window.FieldPlacement = Backbone.Model.extend({
         var document = signatory.document();
         var pageno = this.get("page");
         var tryToAddToPage = function() {
-            if (document.file() && document.file().page(pageno) != undefined) {
+            if (placement.alive() && document.file() && document.file().page(pageno) != undefined) {
                 document.file().page(pageno).addPlacement(placement);
                 placement.set({placed : true});
                 document.off('file:change',tryToAddToPage);
             }
+            if(!placement.alive())
+                document.off('file:change',tryToAddToPage);
         };
         document.bind('file:change',tryToAddToPage);
         setTimeout(tryToAddToPage,0);
@@ -126,6 +129,12 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     setSignatory: function(s) {
         return this.set({signatory:s});
+    },
+    die: function() {
+        this.set({alive:false});
+    },
+    alive: function() {
+        return this.get('alive');
     }
 });
 

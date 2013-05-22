@@ -136,6 +136,7 @@
                         method : "POST",
                         url : "/api/frontend/changemainfile/" + document.documentid(),
                         ajaxsuccess: function(d) {
+                            document.killAllPlacements();
                             document.recall();
                         },
                         ajaxerror: function(d, a){
@@ -164,6 +165,7 @@
                                      onAppend: function(input, title, multifile) {
                                        document.setFlux();
                                        submit.addInputs(input);
+                                         
                                        document.save();
                                        document.afterSave(function() {
                                            submit.sendAjax();
