@@ -13,7 +13,7 @@ window.ToolTip= {
            var arrow = $("<div class='tooltip-arrow'/>");
            var container = $("<div class='tooltip-container'/>");
            if (args.theme != undefined)
-             container.addClass(args.theme + "-theme")
+             container.addClass(args.theme + "-theme");
            container.append(arrow);
            container.append(body);
             $(args.on).mouseenter(function(e) {
