@@ -315,6 +315,7 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
                     , fileMustBeAdded : "$_fileMustBeAdded()$"
+                    , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
              , authentication : {
                       selectmethod: "$_signStepsBodyFunctionsBoxChooseAuthentication()$"

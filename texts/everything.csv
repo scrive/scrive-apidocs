@@ -1140,3 +1140,4 @@
 "_designviewdraggablehelp2","Klicka på fält för att markera och ändra","Click field to select and edit"
 "_designviewdays","Dag(ar)","Day(s)"
 "_designviewsaved","Ditt dokument har sparats som ett utkast. Du kan se dina utkast i arkivet.","Your document has been saved as a draft. You can find your drafts in your Archive."
+"_validationPleaseSelectField","(change me)","Please complete or remove the fields added to the document."

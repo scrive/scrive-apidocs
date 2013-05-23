@@ -636,6 +636,7 @@
         detailsInformationCustomFieldName: function(field) {
             var view = this;
             var sig = view.model;
+            var viewmodel = view.viewmodel;
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
@@ -653,6 +654,11 @@
                 value: '',
                 onEnter: setter
             });
+
+            if(viewmodel.showProblems() && !field.isValid())
+                $(input.input()).addClass('redborder');
+            else
+                $(input.input()).removeClass('redborder');
 
             var button = Button.init({
                 color: 'black',
@@ -753,12 +759,9 @@
             var input = InfoTextInput.init({
                 cssClass: 'design-view-action-participant-details-information-field',
                 infotext: localization.designview.fullName,
-                value: value
-            });
-
-            input.input().bind('keypress keydown keyup change input', function() {
-                setTimeout(function() {
-                    var str = input.val().trim();
+                value: value,
+                onChange: function(val) {
+                    var str = val.trim();
                     var i = str.indexOf(' ');
                     var f, s;
                     if(i >= 0) {
@@ -770,7 +773,7 @@
                     }
                     sig.fstnameField().setValue(f);
                     sig.sndnameField().setValue(s);
-                },0); // do this with the current value (not value before keypress)
+                }
             });
 
             var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
@@ -806,18 +809,15 @@
             var input = InfoTextInput.init({
                 cssClass: 'design-view-action-participant-details-information-field',
                 infotext: placeholder || name,
-                value: value
-            }).input();
-
-            input.bind('keyup keydown keypress change input', function() {
-                setTimeout(function() {
-                    field.setValue(input.val().trim());
+                value: value,
+                onChange: function(val) {
+                    field.setValue(val.trim());
                     if(viewmodel.showProblems() && !field.isValid())
-                        input.addClass('redborder');
+                        input.input().addClass('redborder');
                     else
                         input.removeClass('redborder');
-                },0);
-            });
+                }
+            }).input();
 
             var optionOptions = ['optional', 'signatory', 'sender'];
 
