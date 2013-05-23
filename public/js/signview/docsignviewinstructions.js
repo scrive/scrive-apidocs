@@ -93,6 +93,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var headline = $("<div class='headline' />");
     if (BrowserInfo.isSmallScreen()) {
       headline.css('font-size', '42px');
+<<<<<<< HEAD
+=======
+      headline.css('margin-bottom', '0px');
+>>>>>>> staging
     }
     this.styleText(headline);
     container.append(headline.text(this.text()));

@@ -145,6 +145,7 @@ javascriptLocalisation =
               }
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
+            , goBack: "$_goBack()$"
             , process : {
                 contract: {
                    name: "$_contractname()$",
@@ -314,6 +315,7 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
                     , fileMustBeAdded : "$_fileMustBeAdded()$"
+                    , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
              , authentication : {
                       selectmethod: "$_signStepsBodyFunctionsBoxChooseAuthentication()$"
@@ -349,6 +351,7 @@ javascriptLocalisation =
              , editDocument: "$_designViewEditDocument()$"
              , optional: "$_designViewOptional()$"
              , optionalField: "$_designViewOptionalField()$"
+             , optionalFieldAbbrev: "$_designViewOptionalFieldAbbrev()$"
              , editSigningProcess: "$_designViewEditSigningProcess()$"
              , startSigning: "$_designViewStartSigning()$"
              , addField: "$_designViewAddField()$"
@@ -370,7 +373,9 @@ javascriptLocalisation =
              , fullName: "$_designViewFullName()$"
              , optional: "$_designViewOptional()$"
              , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
+             , mandatoryForRecipientAbbrev: "$_designViewMandatoryForRecipientAbbrev()$"
              , mandatoryForSender: "$_designViewMandatoryForSender()$"
+             , mandatoryForSenderAbbrev: "$_designViewMandatoryForSenderAbbrev()$"
              , documentName: "$_designViewDocumentName()$"
              , documentType: "$_designViewDocumentType()$"
              , recipientsLanguage: "$_designViewRecipientsLanguage()$"
@@ -387,6 +392,12 @@ javascriptLocalisation =
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
              , openPDF: "$_designViewOpenPDF()$"
              , chooseDocument: "$_designViewChooseDocument()$"
+             , attached : "$_designViewAttached()$"
+             , requestedFrom : "$_designViewRequestedFrom()$"
+             , draggablehelp1 : "$_designviewdraggablehelp1()$"
+             , draggablehelp2 : "$_designviewdraggablehelp2()$"
+             , days :"$_designviewdays()$"
+             , saved : "$_designviewsaved()$"
            }
 
          , validation : {
@@ -549,6 +560,10 @@ javascriptLocalisation =
            , title : "$_avtal24Title()$"
            , description : "$_avtal24Description()$"
           }
+        , promo : {
+             accept : "$_promoAccept()$"
+           , decline : "$_promoDecline()$"
+        }
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"

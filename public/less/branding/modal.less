@@ -6,7 +6,7 @@
   right: 0;
   background: rgba(250,250,250,.8);
   height: 100%;
-  z-index: 1000;
+  z-index: 2000;
   -webkit-transition: opacity .5s ease-in;
   -moz-transition: opacity .5s ease-in;
   -o-transition: opacity .5s ease-in;
@@ -22,6 +22,9 @@
       -o-transform: scale(1.0);
       transform: scale(1.0);
     }
+  }
+  &.promomodal {
+    background: rgba(25,25,25,.8);
   }
 }
 
@@ -58,6 +61,10 @@
   -moz-transform: scale(0.1);
   -o-transform: scale(0.1);
   transform: scale(0.1);
+
+  .promomodal & {
+    width: 800px;
+  }
 }
 
 .modal-header {
@@ -109,6 +116,9 @@
 
 .modal-content {
   border-bottom: 1px solid @blue-border;
+  .promomodal & {
+    border-bottom: none;
+  }
  .body {
     padding: 20px 83px;
     p {

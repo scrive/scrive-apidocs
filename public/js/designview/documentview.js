@@ -33,6 +33,10 @@
         },
         render: function() {
             var view = this;
+            if(view.file) {
+                view.file.destroy();
+                view.file = undefined;
+            }
             var model = view.viewmodel;
             var document = view.model;
             view.$el.children().detach();
@@ -82,7 +86,9 @@
             var document = view.model;
             var div = $('<div />');
             div.addClass('design-view-document-pages');
-            div.append(KontraFile.init({file: document.mainfile()}).view.el);
+            if (!this.file)
+              this.file = KontraFile.init({file: document.mainfile()})
+            div.append(this.file.view.el);
             return div;
         },
         uploadButtons: function() {
@@ -130,6 +136,7 @@
                         method : "POST",
                         url : "/api/frontend/changemainfile/" + document.documentid(),
                         ajaxsuccess: function(d) {
+                            document.killAllPlacements();
                             document.recall();
                         },
                         ajaxerror: function(d, a){
@@ -158,6 +165,7 @@
                                      onAppend: function(input, title, multifile) {
                                        document.setFlux();
                                        submit.addInputs(input);
+                                         
                                        document.save();
                                        document.afterSave(function() {
                                            submit.sendAjax();

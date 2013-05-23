@@ -78,6 +78,9 @@
     branded : function() {
       return this.get("branded");
     },
+    servicelinkcolour : function() {
+      return this.get("servicelinkcolour");
+    },
     callme: function() {
       return this.get('callme');
     },
@@ -181,7 +184,7 @@
         infotext: localization.account.accountDetails.fullname,
         value: model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
         onChange: function(v) {
-          var words = v.split(' ');
+          var words = _.filter(v.split(' '), function(x) { return x.trim() != '';});
           var firstName = words[0];
           if (firstName === undefined) {
             firstName = '';
@@ -196,7 +199,9 @@
       });
 
       model.addValidator(function() {
-        return nameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.fullNameField}));
+        return nameInput.input().validate(new UserNameValidation({callback: view.validationCallback,
+                                                                  firstName: localization.validation.firstNameField,
+                                                                  lastName: localization.validation.lastNameField}));
       });
 
       body.append($("<div class='position first'/>").append(nameInput.input()));
@@ -270,11 +275,11 @@
       });
 
       body.append($("<div class='position'/>")
-                    .append($("<label style='text-align:left;margin-left: 5px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
+                    .append($("<label style='text-align:left;margin-left: 32px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
                     .append(passwordInput.input())
                     .append(password2Input.input()));
 
-      var tosAccept = $("<div class='position checkbox-box' style='text-align: left;'/>");
+      var tosAccept = $("<div class='checkbox-box' style='text-align: left;'/>");
       var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
       if (model.accepted()) tosCBox.addClass('checked');
       tosCBox.click(function() { tosCBox.toggleClass('checked'); model.setAccepted(tosCBox.hasClass('checked'));});
@@ -285,9 +290,13 @@
       });
       tosAccept.append(tosCBox);
       var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
+      var toslink = $("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS);
+      if (model.servicelinkcolour()) {
+        toslink.css('color', model.servicelinkcolour());
+      }
       tosAccept.append($('<label/>')
                   .append($("<span/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
-                  .append($("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS))
+                  .append(toslink)
                 );
       tosAccept.append($('<br/>'));
 

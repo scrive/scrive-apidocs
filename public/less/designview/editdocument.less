@@ -15,32 +15,38 @@
     .box-shadow(0 4px 0 rgba(0,0,0,0.05));
 }
 
-.design-view-action-document-draggables-arrow {
+.design-view-action-document-draggables-help {
     .box-sizing(border-box);
-    display: inline-block;
     height: 100%;
-}
-
-.design-view-action-document-draggables-arrow-img {
-    margin-top: -30px;
-}
-
-.design-view-action-document-draggables-instructions {
-    .box-sizing(border-box);
+    width: 200px;
     display: inline-block;
-    height: 100%;
-    width: 90px;
     position: relative;
-}
-
-.design-view-action-document-draggables-instructions-text {
-    .box-sizing(border-box);
-    text-align: right;
-    .center-vh(100%, 2em);
+    margin: 0 8px 0 0;
+    .wrapper {
+        .box-sizing(border-box);
+        .center-vh(100%, 36px);
+        .number {
+          display : inline-block;
+          width:14px;
+          vertical-align: top;
+          line-height: 16px;
+          text-align : left;
+        }
+        .text {
+          display : inline-block;
+          width: 140px;
+          line-height: 16px;
+          vertical-align: top;
+          margin-right: 10px;
+          text-align : left;
+        }
+    }
 }
 
 @draggable-width: 133px;
-@draggable-background: #ddd;
+@draggable-background: #FAFAFA;
+
+
 
 .design-view-action-document-draggables-checkbox {
     .box-sizing(border-box);
@@ -55,12 +61,14 @@
 .design-view-action-document-draggables-checkbox-wrapper {
     .box-sizing(border-box);
     .center-vh(100%, 56px);
+    border: 4px solid #FFFFFF;
+    border-radius: 4px 4px 4px 4px;
     background-color: @draggable-background;
 }
 
 .design-view-action-document-draggables-checkbox-text {
     .box-sizing(border-box);
-    .center-vh(100%, 33px);
+    .center-vh(100%, 38px);
 }
 
 .design-view-action-document-draggables-checkbox-icon {
@@ -81,12 +89,14 @@
 .design-view-action-document-draggables-signature-wrapper {
     .box-sizing(border-box);
     .center-vh(100%, 56px);
+    border: 4px solid #FFFFFF;
+    border-radius: 4px 4px 4px 4px;
     background-color: @draggable-background;
 }
 
 .design-view-action-document-draggables-signature-text {
     .box-sizing(border-box);
-    .center-vh(100%, 33px);
+    .center-vh(100%, 38px);
 }
 
 .design-view-action-document-draggables-signature-icon {
@@ -108,18 +118,20 @@
 .design-view-action-document-draggables-textbox-wrapper {
     .box-sizing(border-box);
     .center-vh(100%, 56px);
+    border: 4px solid #FFFFFF;
+    border-radius: 4px 4px 4px 4px;
     background-color: @draggable-background;
 }
 
 .design-view-action-document-draggables-textbox-text {
     .box-sizing(border-box);
-    .center-vh(100%, 33px);
+    .center-vh(100%, 38px);
 }
 
 .design-view-action-document-draggables-textbox-icon {
     vertical-align: middle;
     margin-right: 8px;
-  
+
 }
 
 .typesetter-obligatory-option {

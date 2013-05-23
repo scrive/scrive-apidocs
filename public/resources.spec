@@ -87,6 +87,7 @@ set systemPage
  js   js/utils/time.js
  js   js/utils/cookie.js
  js   js/loading.js
+ js   js/promo.js
  js   js/arrows.js
  js   js/flashmessages.js
  js   js/infotextinputs.js
@@ -142,7 +143,9 @@ set systemPage
  js   js/designview/editdocument.js
  js   js/designview/documentview.js
  js   js/designview/docdesignview.js
- js   js/designview/attachmentsdesignview.js
+ js   js/designview/authoraattachmentsdesign.js
+ js   js/designview/signatoryattachmentsdesignview.js
+ js   js/designview/attachmentslist.js
  js   js/designview/process.js
  js   js/mobilebankid.js
  js   js/bankid.js

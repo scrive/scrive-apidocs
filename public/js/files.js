@@ -105,6 +105,9 @@ window.File = Backbone.Model.extend({
     broken : function(){
         return this.get("broken");
     },
+    draftData : function() {
+      return {id : this.fileid(), name: this.name()};
+    },
     parse : function(response)
     {
         if (response.error != undefined)
@@ -182,6 +185,11 @@ var FilePageView = Backbone.View.extend({
         this.model.bind('change:dragables', this.renderDragables);
         this.render();
     },
+    destroy : function() {
+      this.off();
+      this.model.off();
+      $(this.el).remove();
+    },
     makeDropable : function() {
       var self = this;
       var page = self.model;
@@ -210,7 +218,6 @@ var FilePageView = Backbone.View.extend({
         var page = this.model;
         var container = $(this.el);
         var file = page.file();
-
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (!placement.placed() && placement.page()==page.number()) {
@@ -257,6 +264,11 @@ var FileView = Backbone.View.extend({
                           cache : false});
         this.render();
     },
+    destroy : function() {
+      this.off();
+      _.each(this.pageviews, function(pv) {pv.destroy();});
+      $(this.el).remove();
+    },
     vline: function() {
       if (this.vlinediv != undefined)
         return this.vlinediv;
@@ -280,6 +292,7 @@ var FileView = Backbone.View.extend({
             var waitbox = $("<div class='waiting4page'/>");
             docbox.append(waitbox);
         } else {
+            _.each(this.pageviews, function(p) {p.destroy(); });
             this.pageviews = [];
             _.each(file.pages(),function(page){
                  var pageview = new FilePageView({model : page, el: $("<div/>")});
@@ -308,10 +321,6 @@ var FileView = Backbone.View.extend({
          setTimeout(function() {view.startReadyCheckerFirstPage()},1000);
     },
     ready : function() {
-        //console.log("Document view checking ...")
-        //console.log("File is ready " + this.model.ready())
-        //console.log("Pages length "  +  (this.pageviews.length) + " " + (this.model.pages().length))
-        //console.log("All pages ready "  +  _.all(this.pageviews, function(pv) {return pv.ready();}))
         return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
     },
     readyFirstPage : function () {
@@ -320,22 +329,11 @@ var FileView = Backbone.View.extend({
     moveCoordinateAxes : function(helper,verticaloffset) {
       var self = this;
       _.defer(function() {
-        /*
-         * The 'helper' contains *old* coordinates when called, so we
-         * need to give it a chance to update and then use them for
-         * positioning of guidelines.
-         */
 
         var top = helper.offset().top - $(self.el).offset().top + helper.height() + verticaloffset;
         var left = helper.offset().left - $(self.el).offset().left;
         var height = $(self.el).height();
         var width = $(self.el).width();
-
-        /*
-         * Here we need to also set width/height of lines. With width we
-         * could go away with 100%, but height needs to be dynamically
-         * adjusted to have same height as rendered image.
-         */
         self.hline().css({ top: top + "px",
                            width: width + "px"});
         self.vline().css({ left: left + "px",
@@ -375,6 +373,9 @@ window.KontraFile = {
             addFields: args.addFields || false,
             el : $("<div class='document-pages'/>")
         });
+        this.destroy = function() {
+            this.view.destroy();
+        };
         return this;
     }
 };

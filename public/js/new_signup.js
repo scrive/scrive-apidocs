@@ -2,7 +2,8 @@
 
   var SignupModel = Backbone.Model.extend({
     defaults: {
-        logolink : ""
+        logolink : "",
+        servicelinkcolour : ''
     },
     autofocus: function() {
       return this.get('autofocus');
@@ -15,6 +16,9 @@
     },
     logolink : function() {
      return this.get("logolink");
+    },
+    servicelinkcolour : function() {
+      return this.get("servicelinkcolour");
     },
     buttoncolorclass: function() {
      return this.get("buttoncolorclass");
@@ -173,6 +177,11 @@
 
         var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
         var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);
+        if (model.servicelinkcolour()) {
+          dontHaveAccount.find('a').css('color', model.servicelinkcolour());
+          paymentsPage.find('a').css('color', model.servicelinkcolour());
+        }
+
         body.append($("<div class='position' style='text-align:center;margin-top:20px;'/>").append(dontHaveAccount).append(paymentsPage));
 
         $(this.el).append(content);

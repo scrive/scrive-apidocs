@@ -1,13 +1,13 @@
-/** 
+/**
 
     Setting options on the document.
-    
+
     This is the third tab in the design view.
 
 **/
 
 (function(window) {
-    /** 
+    /**
         model is DocViewModel
     **/
     var DesignViewProcessView = Backbone.View.extend({
@@ -15,21 +15,12 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
-            view.mail = view.model.document().inviteMail();
             view.render();
-            view.mail.bind('change', view.changeMail);
             view.model.document().bind('change', view.render);
-            view.model.document().bind('change:attachments change:file', function() {
-                view.mail = view.model.document().inviteMail();
-                view.mail.bind('ready', function() {
-                    view.render();
-                    view.afterInsertion();
-                });
-            });
         },
         render: function() {
             var view = this;
-            
+            console.log("Rendering process");
             var div = $('<div />');
 
             div.append(view.leftColumn());
@@ -37,7 +28,7 @@
             div.append(view.rightColumn());
 
             view.$el.html(div.children());
-
+            view.setupTinyMCE();
             return view;
         },
         leftColumn: function() {
@@ -172,8 +163,8 @@
             var labelText = localization.designview.recipientsLanguage;
 
             var languageText = {
-                en : {name: 'English', value: 'en'},
-                sv : {name: 'Swedish', value: 'sv'}
+                en : {name: localization.languages.en, value: 'en'},
+                sv : {name: localization.languages.sv, value: 'sv'}
             };
 
             var languages = ['sv', 'en'];
@@ -222,24 +213,40 @@
             label.addClass('design-view-action-process-left-column-deadline-label');
             label.text(labelText + ':');
             console.log(doc.daystosign());
-            var field = InfoTextInput.init({
+            var calendarbutton = $("<div class='calendarbutton'/>");
+            var calendar = new Calendar({on : calendarbutton,
+                                         days : doc.daystosign(),
+                                         change: function(days) {
+                                            if (days != doc.daystosign()) {
+                                              doc.setDaystosign(days);
+                                              if (view.daysinputfield != undefined)
+                                                  view.daysinputfield.setValue(days)
+                                            }
+                                          }
+                        });
+
+            view.daysinputfield = InfoTextInput.init({
                 infotext: doc.daystosign(),
                 value: doc.daystosign(),
                 onChange: function(v) {
-                    // TODO: this does not seem to connect to the saved document
                     v = parseInt(v);
-                    doc.setDaystosign(v);
+                    if (v != undefined && !isNaN(v) && v != doc.daystosign()) {
+                      doc.setDaystosign(v);
+                      calendar.setDays(v);
+                    }
                 }
             });
-            field.input().addClass('design-view-action-process-left-column-deadline-field');
+            view.daysinputfield.input().addClass('design-view-action-process-left-column-deadline-field');
 
             var tag = $('<div />');
             tag.addClass('design-view-action-process-left-column-deadline-tag');
-            tag.text('day(s)');
+            tag.text(localization.designview.days);
 
             div.append(label);
-            div.append(field.input());
+            div.append(view.daysinputfield.input());
             div.append(tag);
+            div.append(calendarbutton);
+
 
             return div;
         },
@@ -256,7 +263,7 @@
             var label = $('<div />');
             label.addClass('design-view-action-process-left-column-attachments-label');
             label.text(labelText + ':');
-            
+
             var authorAttachmentButton = Button.init({
                 color: 'blue',
                 size: 'tiny',
@@ -282,6 +289,14 @@
             //div.append(label);
             div.append(authorAttachmentButton.input());
             div.append(sigAttachmentButton.input());
+            if (this.attachmentList != undefined)
+            {
+              this.attachmentList.destroy();
+              this.attachmentList = undefined;
+            }
+            this.attachmentList = new DesignAttachmentsList({viewmodel : viewmodel});
+
+            div.append(this.attachmentList.el());
 
             return div;
         },
@@ -302,15 +317,11 @@
 
             var wrapper = $('<div />');
             wrapper.addClass('design-view-action-process-right-column-invitation-wrapper');
-            
+
             var textarea = $('<textarea />');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
-            if(view.mail.ready()) {
-                var editableContent = view.mail.content().find(".editable").html();
-                textarea.html(editableContent);
-            }
             textarea.hide();
-            wrapper.html(textarea);
+            wrapper.append(textarea);
 
             view.invitationEditor = textarea;
 
@@ -339,41 +350,29 @@
 
             return div.children();
         },
-        changeMail: function() {
-            var view = this;
-            if(view.mail.ready()) {
-                var editableContent = view.mail.content().find(".editable").html();
-                view.invitationEditor.html(editableContent);
-            }
-            view.afterInsertion();
-        },
-        // this needs to be called AFTER it gets put into the document
-        afterInsertion: function() {
-            this.setupTinyMCE();
-        },
         setupTinyMCE: function() {
             var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
             var cwidth = view.middleColumnDiv.width();
-
+            view.invitationEditor.html(doc.invitationmessage());
             view.invitationEditor.show();
 
             view.invitationEditor.tinymce({
                 script_url: '/tiny_mce/tiny_mce.js',
                 theme: "advanced",
                 theme_advanced_toolbar_location: "external",
-                theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-                theme_advanced_buttons2: "",
+                theme_advanced_buttons1: "",
+                //theme_advanced_buttons2: "",
                 convert_urls: false,
                 theme_advanced_toolbar_align: "middle",
                 plugins: "noneditable,paste",
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
                 width: cwidth, // automatically adjust for different swed/eng text
                 oninit : function(ed) {
-                    $('.mceExternalToolbar').remove();
-                    $(ed.getDoc()).blur(function(e) {
+                    $('.mceExternalToolbar').css('z-index','-1000');
+                       $(ed.getDoc()).blur(function(e) {
                         doc.setInvitationMessage(ed.getBody().innerHTML);
                     });
                 },

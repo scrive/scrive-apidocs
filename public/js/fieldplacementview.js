@@ -20,7 +20,7 @@ window.createFieldPlacementPlacedView = function (args) {
     else return new TextPlacementPlacedView(args);
 };
 
-window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction)
+window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize)
 {
     var droppedInside = false;
     var helper;
@@ -51,6 +51,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     };
 
     dragHandler.draggable({
+        cursorAt : cursorNormalize ? { top :7 , left :7} : undefined,
         helper: function(event) {
             setFP();
             helper = createFieldPlacementView({model: field, height : heightFunction != undefined ? heightFunction() : undefined, width: widthFunction != undefined ? widthFunction() : undefined}).el;
@@ -161,10 +162,83 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     });
 }
 
+    /**
+       model is field
+     **/
+    var FieldOptionsView = Backbone.View.extend({
+        className: 'design-view-action-participant-details-information-field-options-wrapper',
+        initialize: function(args) {
+            var view = this;
+            view.options = args.options;
+            view.extraClass = args.extraClass;
+            var field = view.model;
+            _.bindAll(view);
+            view.render();
+            if(field) {
+                field.bind('change:obligatory', view.render);
+                field.bind('change:shouldbefilledbysender', view.render);
+            }
+        },
+        render: function() {
+            var view = this;
+            var field = view.model;
+            var selected;
+            if(!field) {
+                selected = 'optional';
+            } else if(field.isOptional()) {
+                selected = 'optional';
+            } else if(field.shouldbefilledbysender()) {
+                selected = 'sender';
+            } else {
+                selected = 'signatory';
+            }
+            var values = view.options;
+            var options = {
+                optional  : {name : localization.designview.optionalField,
+                             value : 'optional'
+                            },
+                signatory : {name : localization.designview.mandatoryForRecipient,
+                             value : 'signatory'
+                            },
+                sender    : {name : localization.designview.mandatoryForSender,
+                             value : 'sender'
+                            }
+            };
+            var select = new Select({
+                options: _.map(_.without(values, selected), function(v) {
+                    return options[v];
+                }),
+                name: options[selected].name,
+                offset: options[selected].offset,
+                onSelect: function(v) {
+                    if(field) {
+                        if(v === 'optional') {
+                            field.makeOptional();
+                        } else if(v === 'signatory') {
+                            field.makeObligatory();
+                            field.setShouldBeFilledBySender(false);
+                        } else if(v === 'sender') {
+                            field.makeObligatory();
+                            field.setShouldBeFilledBySender(true);
+                        }
+                    }
+                    return true;
+                }
+            });
+            select.view().$el.addClass('design-view-action-participant-details-information-field-options');
+            if(view.extraClass)
+                select.view().$el.addClass(view.extraClass);
+            view.$el.html(select.view().el);
+            return view;
+        }
+    });
+
 var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this);
         this.model.bind('removed', this.clear);
+        this.model.field().signatory().bind("change:fields",this.render);
+        this.model.field().signatory().document().bind("change:signatories",this.render);
         this.model.bind('change:field change:signatory', this.render);
         var view = this;
         this.fixPlaceFunction = function(){
@@ -179,6 +253,10 @@ var TextTypeSetterView = Backbone.View.extend({
         $(this.el).remove();
         $(window).unbind('scroll',this.fixPlaceFunction);
         $(window).unbind('resize',this.fixPlaceFunction);
+        this.model.unbind('removed', this.clear);
+        this.model.field().signatory().unbind("change:fields",this.render);
+        this.model.field().signatory().document().unbind("change:signatories",this.render);
+        this.model.unbind('change:field change:signatory', this.render);
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
@@ -190,19 +268,19 @@ var TextTypeSetterView = Backbone.View.extend({
 
         if(sig.author())
             optionOptions = _.without(optionOptions, 'signatory');
-        
+
         if(name === 'email')
             optionOptions = _.without(optionOptions, 'optional');
-        
+
         if(name === 'email' && sig.needsEmail())
             optionOptions = ['sender'];
-        
+
         if(name === 'mobile' && sig.needsMobile())
             optionOptions = ['sender'];
-        
+
         if(name === 'sigpersnr' && sig.needsPersonalNumber())
             optionOptions = _.without(optionOptions, 'optional');
-        
+
 
 
         return $("<div style='display:block;margin-top:4px;'/>").append(
@@ -266,6 +344,9 @@ var TextTypeSetterView = Backbone.View.extend({
                 var name = field?field.name():'email';
                 var type = field?field.type():'standard';
                 var oldfield = s.field(name, type);
+                if (oldfield == undefined)
+                  oldfield = s.field('email', 'standard');
+                s.bind("change:fields",view.render);
                 model.setField(oldfield);
                 model.setSignatory(s);
             }
@@ -301,6 +382,7 @@ var TextTypeSetterView = Backbone.View.extend({
             style: "z-index: 108;",
             onSelect: function(f) {
                 placement.setField(f);
+                f.addPlacement(placement);
             }
         });
 
@@ -339,13 +421,19 @@ var TextTypeSetterView = Backbone.View.extend({
 var TextPlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        if(this.model)
+        var view = this;
+        if(this.model) {
             this.model.bind('removed', this.clear);
+        }
         this.render();
     },
     clear: function() {
         this.off();
         $(this.el).remove();
+        if(this.model) {
+            this.model.unbind('removed', this.clear);
+        }
+
     },
     render: function() {
             var field =   this.model;
@@ -364,10 +452,18 @@ var TextPlacementView = Backbone.View.extend({
 
 var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear');
+        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateColor');
+        var view = this;
+        var placement = this.model;
+        var field =  placement.field();
+        var signatory = field?field.signatory():placement.signatory();
         this.model.bind('removed', this.clear, this);
         this.model.bind('change:field change:signatory', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.bind('clean', this.closeTypeSetter);
+        signatory.document().bind('change:signatories',this.updateColor);
+
+
         this.model.view = this;
         this.render();
     },
@@ -398,8 +494,16 @@ var TextPlacementPlacedView = Backbone.View.extend({
         }
     },
     clear: function() {
+        var placement = this.model;
+        var field =  placement.field();
+        var signatory = field?field.signatory():placement.signatory();
         this.off();
         $(this.el).remove();
+        this.model.unbind('removed', this.clear, this);
+        this.model.unbind('change:field change:signatory', this.render);
+        this.model.unbind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.unbind('clean', this.closeTypeSetter);
+        this.model.field().signatory().document().unbind('change:signatories',this.updateColor);
     },
     hasTypeSetter : function(){
         return this.model.typeSetter != undefined;
@@ -491,6 +595,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
         }
         return false;
     },
+    updateColor : function() {
+       var placement = this.model;
+       var field =  placement.field();
+       var signatory = field?field.signatory():placement.signatory();
+       if(signatory.color())
+            $(this.el).css('border', '1px solid ' + signatory.color());
+    },
     render: function() {
         var view = this;
         var placement = this.model;
@@ -500,8 +611,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
-        if(signatory.color())
-            place.css('border', '1px solid ' + signatory.color());
+        this.updateColor();
 
         if ((signatory == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');
@@ -529,7 +639,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
-          placement.cleanTypeSetter();
         }
 
         return this;
@@ -538,23 +647,30 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
 var CheckboxPlacementView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'clear');
+        _.bindAll(this, 'render', 'clear', 'updateColor');
         this.model.bind('removed', this.clear);
+        this.model.signatory().document().bind('change:signatories',this.updateColor);
+
         this.render();
     },
     clear: function() {
         this.off();
+        this.model.unbind('removed', this.clear);
+        this.model.signatory().document().unbind('change:signatories',this.updateColor);
         $(this.el).remove();
+    },
+    updateColor : function() {
+      if(this.model.signatory().color())
+                $(this.el).css({'border': '2px solid ' + this.model.signatory().color(),
+                         'background-position': '-1px -1px',
+                         'width': 10,
+                         'height': 10});
     },
     render: function() {
             var field =   this.model;
             var box = $(this.el);
             box.addClass('placedcheckbox');
-            if(field.signatory().color())
-                box.css({'border': '2px solid ' + field.signatory().color(),
-                         'background-position': '-1px -1px',
-                         'width': 10,
-                         'height': 10});
+            this.updateColor();
             if (field.value() != "")
                 box.addClass("checked");
             else
@@ -574,6 +690,8 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear);
         this.model.field().bind('change', this.render);
+        this.model.field().signatory().bind("change:fields",this.render);
+        this.model.field().signatory().document().bind("change:signatories",this.render);
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -585,6 +703,10 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     clear: function() {
         this.off();
         $(this.el).remove();
+        this.model.unbind('removed', this.clear);
+        this.model.field().unbind('change', this.render);
+        this.model.field().signatory().unbind("change:fields",this.render);
+        this.model.field().signatory().document().unbind("change:signatories",this.render);
         $(window).unbind('scroll',this.fixPlaceFunction);
         $(window).unbind('resize',this.fixPlaceFunction);
         this.model.typeSetter = undefined;
@@ -750,12 +872,18 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
 var CheckboxPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear', 'addTypeSetter');
+        _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.field().bind('change', this.render);
         this.model.view = this;
+        var view = this;
+        this.model.bind('change:withTypeSetter', this.closeTypeSetterIfNeeded);
         this.render();
+    },
+    closeTypeSetterIfNeeded : function() {
+       if(!this.model.withTypeSetter())
+                this.closeTypeSetter();
     },
     updatePosition: function() {
         var placement = this.model;
@@ -775,6 +903,12 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
     },
     clear: function() {
         this.off();
+        this.model.unbind('removed', this.clear);
+        this.model.unbind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.field().unbind('change', this.render);
+        this.model.unbind('change:withTypeSetter', this.closeTypeSetterIfNeeded);
+
+
         $(this.el).remove();
     },
     hasTypeSetter : function(){
@@ -837,7 +971,6 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         }
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
-          placement.cleanTypeSetter();
         }
         return this;
     }
@@ -866,6 +999,8 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
     },
     clear: function() {
         this.off();
+        this.model.unbind('removed', this.clear);
+        this.model.unbind('change', this.render);
         $(this.el).remove();
     },
     render: function() {
@@ -973,6 +1108,9 @@ var SignatureTypeSetterView = Backbone.View.extend({
         _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.field().bind('change:signatory', this.render);
+        this.model.field().signatory().bind("change:fields",this.render);
+        this.model.field().signatory().document().bind("change:signatories",this.render);
+
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -984,6 +1122,10 @@ var SignatureTypeSetterView = Backbone.View.extend({
     clear: function() {
         this.off();
         $(this.el).remove();
+        this.model.unbind('removed', this.clear);
+        this.model.field().unbind('change:signatory', this.render);
+        this.model.field().signatory().unbind("change:fields",this.render);
+        this.model.field().signatory().document().unbind("change:signatories",this.render);
         $(window).unbind('scroll',this.fixPlaceFunction);
         $(window).unbind('resize',this.fixPlaceFunction);
         this.model.typeSetter = undefined;
@@ -1103,7 +1245,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
 
 var SignaturePlacementView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'clear');
+        _.bindAll(this, 'render', 'clear', 'updateColor');
         this.model.bind('removed', this.clear);
         if (this.model.field().signatory().fstnameField() != undefined)
           this.model.field().signatory().fstnameField().bind('change', this.render);
@@ -1111,11 +1253,21 @@ var SignaturePlacementView = Backbone.View.extend({
             this.model.field().signatory().sndnameField().bind('change', this.render);
         this.model.bind('change', this.render);
         this.model.field().bind('change:signatory', this.render);
+        this.model.field().signatory().document().bind('change:signatories', this.updateColor);
         this.resizable = args.resizable;
         this.render();
     },
     clear: function() {
         this.off();
+        this.model.field().unbind('change:signatory', this.render);
+        this.model.unbind('change', this.render);
+        this.model.unbind('removed', this.clear);
+        this.model.field().signatory().document().unbind('change:signatories', this.updateColor);
+
+        if (this.model.field().signatory().fstnameField() != undefined)
+          this.model.field().signatory().fstnameField().unbind('change', this.render);
+        if (this.model.field().signatory().sndnameField() != undefined)
+            this.model.field().signatory().sndnameField().unbind('change', this.render);
         $(this.el).remove();
     },
     header : function() {
@@ -1134,6 +1286,9 @@ var SignaturePlacementView = Backbone.View.extend({
         if (placement.field().value() == "")
             box.text(localization.signature.placeFor(sname));
         return box;
+    },
+    updateColor : function() {
+      $(this.el).css('border', '2px solid ' + (this.model.field().signatory().color() || '#999'));
     },
     render: function() {
             var placement = this.model;
@@ -1165,7 +1320,7 @@ var SignaturePlacementView = Backbone.View.extend({
                 img.attr("height",height);
                 box.append(img);
             }
-        box.css('border', '2px solid ' + (placement.field().signatory().color() || '#999'));
+        this.updateColor();
             if (this.resizable) {
                 if (box.hasClass("ui-resizable")) box.resizable("destroy");
                 box.resizable({
@@ -1190,9 +1345,10 @@ var SignaturePlacementView = Backbone.View.extend({
 
 var SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'clear');
+        _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.bind('change:withTypeSetter', this.closeTypeSetter);
         this.model.view = this;
         this.render();
     },
@@ -1213,6 +1369,9 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
     clear: function() {
         this.off();
         $(this.el).remove();
+        this.model.unbind('removed', this.clear);
+        this.model.unbind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.unbind('change:withTypeSetter', this.closeTypeSetter);
     },
     hasTypeSetter : function(){
         return this.model.typeSetter != undefined;
@@ -1277,7 +1436,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         if (placement.withTypeSetter()) {
           this.addTypeSetter();
 
-          placement.cleanTypeSetter();
 
         }
 

@@ -125,6 +125,7 @@ brandingFields mbd mcompany = do
   F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
   F.value "customdomainlogolink" $ bdlogolink <$> mbd
   F.value "customdomainbdbuttonclass" $ bdbuttonclass <$> mbd
+  F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd
   F.value "hasbrandeddomain" $ isJust mbd
  where
    mcolour df cuf =  (join $ cuf <$> companyui <$> mcompany) `mplus` (df <$> mbd)
@@ -146,6 +147,10 @@ priceplanPage = do
           content <- renderTemplate "priceplanPageWithBranding" $ do
             F.value "logolink" $ bdlogolink bd
             F.value "background" $ bdbackgroundcolorexternal $ bd
+            F.value "buttoncolorclass" $ bdbuttonclass bd
+            F.value "headercolour" $ bdheadercolour bd
+            F.value "textcolour" $ bdtextcolour bd
+            F.value "pricecolour" $ bdpricecolour bd
             standardPageFields ctx kontrakcja ad
           simpleHtmlResonseClrFlash content
 

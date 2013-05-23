@@ -99,7 +99,11 @@
             if(model.step() === 1)
                 div.addClass('tab-active');
             div.click(function() {
+                var prevStep = model.step();
                 model.setStep(1);
+                if (prevStep == 1)
+                  model.trigger('step1-refreshed');
+
             });
 
             div.mouseenter(function() {
@@ -180,7 +184,11 @@
             view.draggablesView   = new DesignViewDraggablesView({ model : view.model});
             view.processView = DesignViewProcessView({ model : view.model });
             view.model.bind('change:step', view.render);
+            view.model.bind('step1-refreshed', view.closeAllParticipants);
             view.render();
+        },
+        closeAllParticipants : function() {
+            this.participantsView.closeAllParticipants();
         },
         render: function() {
             var view = this;
@@ -197,12 +205,12 @@
                 // add in the edit process view
                 view.$el.children().detach();
                 view.$el.html(view.processView.el);
-                view.processView.afterInsertion();
+                view.processView.setupTinyMCE();
             } else {
                 view.$el.children().detach();
                 view.$el.html('');
             }
-            
+
             var shadow = $('<div />');
             shadow.addClass('design-view-action-container-shadow');
             view.$el.append(shadow);
@@ -261,7 +269,16 @@
                        .append(localization.saveAsDraft));
 
             div.click(function() {
-                viewmodel.document().save();
+                viewmodel.document().save(function() {
+                  new Submit({
+                                          ajax : 'true',
+                                          method : 'POST',
+                                          url : '/d/save/' + viewmodel.document().documentid(),
+                                          ajaxsuccess : function() {
+                                              new FlashMessage({color: "green", content : localization.designview.saved})
+                                          }
+                                        }).send();
+                });
                 viewmodel.setShowProblems(false);
             });
 
@@ -307,7 +324,7 @@
             div.append(view.removeDocumentButtonLabel());
             div.click(function() {
                 doc.setFlux();
-                doc.removePlacements();
+                doc.removeTypeSetters();
                 doc.save();
                 doc.afterSave( function() {
                     new Submit({
@@ -659,6 +676,63 @@
         this.el = function() {
             return $(view.el);
         };
+
+        // Show the NJ promo. This code will go away as soon as
+        // Viktor and me can figure out some sort of requirements
+        // and how to control different promos in an efficient way.
+        if (Cookies.get('njpromo') && Cookies.get('njpromo') == 'true') {
+          Cookies.set('njpromo', 'false');
+
+          var modal = $('<div />');
+          modal.append($('<img src="/img/njpromo_fake.png" />'));
+
+          var acceptButton = new Button.init({
+            size: "big",
+            color: "green",
+            text: localization.promo.accept,
+            onClick: function() {
+              if (alreadyClicked(this))
+                return false;
+
+              $('.promomodal img').attr('src', '/img/njpromo_ok.png');
+              acceptButton.hide();
+              declineButton.hide();
+
+              modal.append(new Button.init({
+                size: "big",
+                color: "green",
+                text: "Ok!",
+                onClick: function() {
+                  Promo.close();
+                }
+              }).input().css({
+                'float': 'right',
+                'margin': '20px 0px 20px'
+              }));
+            }
+          }).input().css({
+            'float': 'right',
+            'margin': '20px 0px 20px'
+          });
+
+          var declineButton = new Button.init({
+            size: "tiny",
+            text: localization.promo.decline,
+            onClick: function() {
+              if (alreadyClicked(this))
+                return false;
+
+              Promo.close();
+            }
+          }).input().css({
+            'margin': '46px 0px',
+            'float': 'left'
+          });
+
+          modal.append(acceptButton);
+          modal.append(declineButton);
+          Promo.open(modal);
+        }
 
         this.afterInsert = function() {
             view.afterInsert();

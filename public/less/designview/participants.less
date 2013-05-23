@@ -19,7 +19,7 @@
 
 .design-view-action-participant-box {
     .box-sizing(border-box);
-    margin: 16px 6px 8px 16px;
+    margin: 14px 6px 8px 16px;
     position: relative;
 }
 
@@ -41,9 +41,8 @@
 
 .design-view-action-participant-close {
      position: absolute;
-     margin-right: 12px;
+     left : 959px;
      margin-top: -5px;
-     right : 0px;
      width: 19px;
      height: 20px;
      background: url("/img/editor-view-remove-party.png");
@@ -203,11 +202,8 @@
 
 // input boxes in participants
 .design-view-action-participant-details-field {
-    .box-sizing(border-box);
     border: 1px solid #ccc;
-    width: 196px;
-    padding: 8px;
-    height: 36px;
+    width: 194px;
     background: #white;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     &:focus {
@@ -220,6 +216,10 @@
 /// @NEW BOX ///
 
 
+.design-view-action-participant-container-participants-box {
+    // overflow-y : auto;
+    // overflow-x : visible;
+}
 
 .design-view-action-participant-new-box {
     position: relative;
@@ -299,17 +299,39 @@
 
 }
 
+.design-view-action-participant-new-field-name-input-wrapper {
+
+}
+
+.design-view-action-participant-new-field-name-input {
+    width: 230px;
+    display: inline-block;
+    vertical-align: top;
+    margin-bottom: 8px;
+}
+
+.design-view-action-participant-new-field-select {
+    width: 298px;
+    display: inline-block;
+    vertical-align: top;
+    margin-bottom: 8px;
+    &.redborder {
+        border:1px solid red;
+    }
+}
+
 .design-view-action-participant-details-information-field-wrapper {
-    .box-sizing(border-box);
-    float: left;
-    width: 50%;
+    display: inline-block;
+    position: relative;
+    margin-right: 15px;
+    vertical-align: top;
 }
 
 .design-view-action-participant-details-information-field {
     .design-view-action-participant-details-field;
     margin-bottom: 8px;
     border-right-color : transparent;
-    width: 240px;
+    width: 228px;
     &.redborder {
         border:1px solid red;
     }
@@ -322,13 +344,18 @@
 .design-view-action-participant-details-information-field-options {
     .box-sizing(border-box);
     display: inline-block;
-    width: 200px;
+    width: 60px;
     vertical-align: middle;
-    height: 36px;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+     }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
+            z-index: 1002;
+            width: 200px;
+     }
+    .select-button .select-button-label {
+        text-indent: 3px;
     }
     margin-bottom: 8px;
 }
@@ -375,10 +402,13 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+        }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-    }
+            z-index: 1002;
+            width: 100%;
+        }
 }
 
 .design-view-action-participant-details-participation-delivery {
@@ -386,12 +416,12 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+     }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-        li {
-            z-index: 1000;
-        }
+            z-index: 1002;
+            width: 100%;
     }
 }
 
@@ -400,10 +430,13 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+        }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-    }
+            z-index: 1002;
+            width: 100%;
+        }
 }
 
 .design-view-action-participant-details-participation-auth {
@@ -411,10 +444,13 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+        }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-    }
+            z-index: 1002;
+            width: 100%;
+        }
 }
 
 .design-view-action-participant-buttons {
@@ -430,14 +466,17 @@
 
 .design-view-action-participant-details-information-closer {
      width: 19px;
-     height: 19px;
+     height: 20px;
      display: inline-block;
-     margin-right: 12px;
+     position: absolute;
+     top: -8px;
+     left: -8px;
+     z-index: 2;
      &.active {
-      background: url("/img/editor-view-remove-field.png");
+      background: url("/img/editor-view-remove-party.png");
       cursor: pointer;
       &:hover {
-        background: url("/img/editor-view-remove-field-hover.png");
+        background: url("/img/editor-view-remove-party-hover.png");
       }
     }
 }

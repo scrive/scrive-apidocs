@@ -13,7 +13,8 @@ window.FieldPlacement = Backbone.Model.extend({
       wrel: 0,
       hrel: 0,
       fsrel: 0,
-      withTypeSetter : false
+      withTypeSetter : false,
+        alive: true
     },
     initialize : function(args){
         var placement = this;
@@ -36,11 +37,13 @@ window.FieldPlacement = Backbone.Model.extend({
         var document = signatory.document();
         var pageno = this.get("page");
         var tryToAddToPage = function() {
-            if (document.file() && document.file().page(pageno) != undefined) {
+            if (placement.alive() && document.file() && document.file().page(pageno) != undefined) {
                 document.file().page(pageno).addPlacement(placement);
                 placement.set({placed : true});
                 document.off('file:change',tryToAddToPage);
             }
+            if(!placement.alive())
+                document.off('file:change',tryToAddToPage);
         };
         document.bind('file:change',tryToAddToPage);
         setTimeout(tryToAddToPage,0);
@@ -90,7 +93,8 @@ window.FieldPlacement = Backbone.Model.extend({
       return this.get("withTypeSetter") == true;
     },
     cleanTypeSetter : function() {
-       this.set({"withTypeSetter" : false}, {silent: true});
+       this.set({"withTypeSetter" : false});
+        this.trigger('clean');
     },
     remove : function() {
        this.trigger("removed");
@@ -125,6 +129,12 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     setSignatory: function(s) {
         return this.set({signatory:s});
+    },
+    die: function() {
+        this.set({alive:false});
+    },
+    alive: function() {
+        return this.get('alive');
     }
 });
 
@@ -157,6 +167,9 @@ window.Field = Backbone.Model.extend({
     },
     type : function() {
         return this.get("type");
+    },
+    setType : function(t) {
+        this.set({type:t});
     },
     name : function() {
         return this.get("name");
@@ -255,6 +268,21 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name();
 
+        if( field.isBlank() ) {
+            var msg = localization.designview.validation.pleaseSelectField;
+            return new Validation({validates: function() {
+                return field.type() && field.name();
+            }, message: msg});
+        }
+
+        if(field.noName()) {
+            var msg = localization.designview.validation.notReadyField;
+            return new Validation({validates: function() {
+                return !field.noName();
+            }, message: msg});
+            
+        }
+
         if (   this.isEmail()
             && !this.signatory().isCsv()
             && (this.signatory().emailDelivery() || this.signatory().emailMobileDelivery())
@@ -326,6 +354,12 @@ window.Field = Backbone.Model.extend({
     isSSN : function() {
         return  this.isStandard() && this.name() == "sigpersnr";
     },
+    isBlank: function() {
+        return this.type() === '' && this.name() === '';
+    },
+    noName: function() {
+        return this.name() === '';
+    },
     isStandard: function() {
         return  this.type() == "standard";
     },
@@ -359,7 +393,7 @@ window.Field = Backbone.Model.extend({
         this.set({"obligatory":true});
     },
     isReady: function(){
-      return this.get("fresh") == false;
+      return this.get("fresh") == false && this.name() !== '' && this.type() !== '';
     },
     makeReady : function() {
       this.set({fresh: false});

@@ -101,13 +101,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   createContentElems: function() {
     var content = $("<div />");
     content.append(this.createPreambleElems());
-
-    // TODO TO CSS
     if (BrowserInfo.isSmallScreen()) {
         var p = content.find('p');
-        p.css('font-size', '42px');
-        p.css('line-height', '51px');
-        p.css('margin-top', '20px');
+        p.css('font-size', '52px');
+        p.css('line-height', '72px');
+        p.css('margin-top', '40px');
     }
     return content;
   },
@@ -130,8 +128,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var modalHeader = $('.modal-container .modal-header');
       var close = modalHeader.find('.modal-close').detach();
       modalHeader.remove();
-      close.css('margin', '25px 25px 0 0');
-      $('.modal-container').prepend(close);
+      close.css('margin', '45px 475px 30px 30px');
+      close.css('background', 'none');
+      close.css('font-size', '55px');
+      close.css('color', 'red');
+      close.css('width', '420px');
+      close.css('height', '90px');
+      close.text(localization.goBack);
 
       // Remove the modal footer but keep the button
       var modalFooter = $('.modal-container .modal-footer');
@@ -145,13 +148,16 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         'height': '100px',
         'width': '80%',
         'max-height': '120px',
-        'margin-right': '60px',
-        'margin-bottom': '55px',
+        'margin-right': '48px',
+        'margin-bottom': '65px',
+        'margin-top': '40px',
         'line-height': '105px',
-        'padding-bottom': '35px'
+        'padding-bottom': '55px',
+        'padding-top': '50px'
       });
 
       $('.modal-container').append(signButton);
+      $('.modal-container').append(close);
     }
   }
 });
@@ -187,7 +193,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                                         color: "red",
                                         shape : "rounded",
-                                        width: BrowserInfo.isSmallScreen() ?  304 : 206,
+                                        width: 206,
                                         text: document.process().processLocalization().rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
@@ -262,7 +268,9 @@ window.DocumentSignSignSection = Backbone.View.extend({
       }
       box.append($("<div class='clearfix' />"));
 
+    setTimeout(function() {
       document.takeFirstScreenshot();
+    }, 1500);
    }
 });
 

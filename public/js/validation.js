@@ -99,27 +99,51 @@ window.NameValidation = Validation.extend({
 
 window.UserNameValidation = Validation.extend({
     initialize: function(args) {
-      this.set('fieldName', args.fieldName);
+      this.set('firstName', args.firstName);
+      this.set('lastName', args.lastName);
     },
-    fieldName: function() {
-      return this.get('fieldName');
+    firstName: function() {
+      return this.get('firstName');
+    },
+    lastName: function() {
+      return this.get('lastName');
     },
     defaults: {
             validates: function(t) {
-                var t = $.trim(t);
+                var words = _.filter(t.split(' '), function(x) { return x.trim() != '';});
+                var firstName = words[0];
+                if (firstName === undefined) {
+                  firstName = '';
+                }
 
-                if (t.length === 0) {
-                    this.setMessage(this.fieldName() + ' ' + localization.validation.required);
+                var lastName = words.splice(1).join(' ');
+
+                if (firstName.length === 0) {
+                    this.setMessage(this.firstName() + ' ' + localization.validation.required);
                     return false;
                 }
-                if (t.length > 100) {
-                    this.setMessage(this.fieldName() + ' ' + localization.validation.toolong);
+                if (firstName.length > 100) {
+                    this.setMessage(this.firstName() + ' ' + localization.validation.toolong);
                     return false;
                 }
+                if (lastName.length === 0) {
+                    this.setMessage(this.lastName() + ' ' + localization.validation.required);
+                    return false;
+                }
+                if (lastName.length > 100) {
+                    this.setMessage(this.lastName() + ' ' + localization.validation.toolong);
+                    return false;
+                }
+
                 // we want to match international characters
                 // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
-                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(t)) {
-                    this.setMessage(this.fieldName() + ' ' + localization.validation.invalidnamechars);
+
+                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(firstName)) {
+                    this.setMessage(this.firstName() + ' ' + localization.validation.invalidnamechars);
+                    return false;
+                }
+                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(lastName)) {
+                    this.setMessage(this.lastName() + ' ' + localization.validation.invalidnamechars);
                     return false;
                 }
 

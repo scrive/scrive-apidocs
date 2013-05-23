@@ -24,6 +24,9 @@ import Text.JSON.FromJSValue
 import qualified Data.Set as Set
 import Utils.Read
 import qualified Log
+import File.FileID
+import Control.Monad
+
 
 data DraftData = DraftData {
       title :: String
@@ -37,6 +40,7 @@ data DraftData = DraftData {
     , tags :: Maybe [DocumentTag]
     , apicallbackurl :: Maybe String
     , process :: Maybe DocumentProcess
+    , authorattachments :: Maybe [FileID]
     } deriving Show
 
 instance FromJSValue DocumentProcess where
@@ -73,6 +77,7 @@ instance FromJSValue DraftData where
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
         process' <- fromJSValueField "process"
+        authorattachments' <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
         case (title', daystosign') of
             (Just t, Just daystosign)
              | daystosign >= minDaysToSign && daystosign <= maxDaysToSign ->
@@ -88,6 +93,7 @@ instance FromJSValue DraftData where
                                     , tags = tags'
                                     , apicallbackurl = apicallbackurl'
                                     , process = process'
+                                    , authorattachments = authorattachments'
                                  }
             _ -> return Nothing
 
@@ -112,6 +118,11 @@ applyDraftDataToDocument doc draft actor = do
       when_ (isJust (process draft) && fromJust (process draft) /= toDocumentProcess (documenttype doc)) $ do
            Log.debug "Changing document process"
            dbUpdate $ SetDocumentProcess  (documentid doc) (fromJust (process draft)) actor
+      when_ (isJust $ authorattachments draft) $ do
+           forM_ (documentauthorattachments doc) $ \att -> do
+              when_ (not $ (authorattachmentfile att) `elem` (fromJust $ authorattachments draft)) $ do
+                dbUpdate $ RemoveDocumentAttachment (documentid doc) (authorattachmentfile att) actor
+
       case (mergeSignatories draft (fromJust $ getAuthorSigLink doc) (signatories draft)) of
            Nothing   -> return $ Left "Problem with author details while sending draft"
            Just sigs -> do
@@ -143,8 +154,8 @@ mergeSignatories docdraft docAuthor tmps =
                 _ -> (a,b,c,d,e,f)
 
         in case (atmp) of
-                ([authorTMP]) -> Just $ map (mapDeliveryMethod . 
-                                             mapAuthenticationMethod . 
+                ([authorTMP]) -> Just $ map (mapDeliveryMethod .
+                                             mapAuthenticationMethod .
                                              toSignatoryDetails2) $
                                               (setAuthorConstantDetails authorTMP) : notatmps
                 _ -> Nothing

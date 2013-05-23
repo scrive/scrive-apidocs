@@ -98,6 +98,7 @@ window.Document = Backbone.Model.extend({
         var document = this;
         var signatories = document.signatories();
         signatories[signatories.length] = sig;
+        var time = new Date().getTime();
         document.trigger('change:signatories');
         document.trigger('change:signorder');
     },
@@ -162,6 +163,9 @@ window.Document = Backbone.Model.extend({
     },
     authorattachments: function() {
         return this.get("authorattachments");
+    },
+    removeattachment : function(a) {
+        this.set({"authorattachments": _.without(this.authorattachments(),[a]) });
     },
     evidenceattachments: function() {
         return this.get("evidenceattachments");
@@ -238,7 +242,11 @@ window.Document = Backbone.Model.extend({
     },
     setInvitationMessage: function(customtext)
     {
-        this.set({invitationmessage: customtext},{silent: true});
+        this.set({invitationmessage: $(customtext).text() != "" ? customtext : ""},{silent: true});
+
+    },
+    invitationmessage : function() {
+        return this.get("invitationmessage");
     },
     inviteMail: function() {
                 return new Mail({
@@ -321,11 +329,12 @@ window.Document = Backbone.Model.extend({
               ajaxtimeout : 120000
           });
     },
-    save: function() {
+    save: function(callback) {
          this.get("saveQueue").add(new Submit({
               url: "/api/frontend/update/" + this.documentid(),
               method: "POST",
-              json: JSON.stringify(this.draftData())
+              json: JSON.stringify(this.draftData()),
+              ajaxsuccess : function() {if (callback != undefined) callback();}
           }), function(ec) {if (ec == 403) window.location.reload()});
     },
     afterSave: function(f) {
@@ -343,14 +352,12 @@ window.Document = Backbone.Model.extend({
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
-          // removed because we should store per signatory
-          //authentication: this.get("authentication"),
-          //delivery: this.get("delivery"),
           apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
           process : this.process().process(),
-          template: this.isTemplate()
+          template: this.isTemplate(),
+          authorattachments : _.map(this.authorattachments(), function(a) {return a.draftData()})
       };
     },
     status: function() {
@@ -577,6 +584,7 @@ window.Document = Backbone.Model.extend({
           signatoryid: self.viewer().signatoryid()
         };
         console.log(args.daystosign);
+     if (self.file() != undefined) self.file().off();
      return {
        title: args.title,
        file: function() {
@@ -700,13 +708,28 @@ window.Document = Backbone.Model.extend({
             i++;
         return 'signature-' + i;
     },
-    removePlacements: function() {
+    removeTypeSetters: function() {
         var document = this;
         _.each(document.signatories(), function(sig) {
             _.each(sig.fields(), function(field) {
-                field.removeAllPlacements();
+                _.each(field.placements(), function(placement) {
+                    placement.cleanTypeSetter();
+                    if(placement.view)
+                        placement.view.clear();
+                });
             });
         });
+    },
+    killAllPlacements: function() {
+        var document = this;
+        _.each(document.signatories(), function(sig) {
+            _.each(sig.fields(), function(field) {
+                _.each(field.placements(), function(placement) {
+                    placement.die();
+                });
+            });
+        });
+
     }
 
 });

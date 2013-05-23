@@ -25,6 +25,7 @@ $doctype()$
     $standardHeaderContents()$
   </head>
   <body style="background: $background$" >
+  $flashmessages()$
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -36,6 +37,7 @@ $doctype()$
                                          referer:   "$referer$",
                                          logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
+                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
                                          autofocus: true}).el());
       mixpanel.register({
         Context : 'Login page - branded'
@@ -117,6 +119,7 @@ $doctype()$
                                          branded : true,
                                          logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
+                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
                                          autofocus: true
                             }).el());
     });
@@ -138,13 +141,13 @@ accountSetupPage=
       $flashmessages()$
 
       <div style='width:275px;margin:20px auto;'>
-        <div style="margin-bottom: 63px">
+        <div style="margin-bottom: 50px; margin-top: 50px;">
           $if(customlogo)$
             <img alt="logo" src="$customlogolink$"/>
             <div class="divider-line"></div>
             <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
           $else$
-            <img src="/img/logo.png" width="120" height="22" style='margin: 10px 80px'/>
+            <img src="/img/Scrive-logo.png" style='margin: 50px 30px 0px;'/>
           $endif$
         </div>
       </div>
@@ -160,7 +163,8 @@ accountSetupPage=
                                                   signupmethod : "$signupmethod$",
                                                   companyFilled : $if(company)$true$else$false$endif$,
                                                   buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$blue$endif$",
-                                                  branded : $if(hasbrandeddomain)$true$else$false$endif$
+                                                  branded : $if(hasbrandeddomain)$true$else$false$endif$,
+                                                  servicelinkcolour: $if(customservicelinkcolour)$"$customservicelinkcolour$"$else$null$endif$
                                                   })
                                               .el());
             jQuery('.short-input-section input:first').focus();
