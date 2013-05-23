@@ -754,27 +754,28 @@
 
             var value = sig.name();
             var div = $('<div />');
-            var input = $('<input />');
-            input.addClass('design-view-action-participant-details-information-field');
-            input.val(value);
-            input.attr('placeholder', localization.designview.fullName);
+            var infoinput = InfoTextInput.init( { infotext: localization.designview.fullName,
+                                                  value: value,
+                                                  cssClass: 'design-view-action-participant-details-information-field',
 
-            input.bind('keypress keydown keyup change input', function() {
-                setTimeout(function() {
-                    var str = input.val().trim();
-                    var i = str.indexOf(' ');
-                    var f, s;
-                    if(i >= 0) {
-                        f = str.slice(0,i).trim();
-                        s = str.slice(i+1).trim();
-                    } else {
-                        f = str.trim();
-                        s = '';
-                    }
-                    sig.fstnameField().setValue(f);
-                    sig.sndnameField().setValue(s);
-                },0); // do this with the current value (not value before keypress)
-            });
+                                                  onChange:  function() {
+                                                      setTimeout(function() {
+                                                          var str = input.val().trim();
+                                                          var i = str.indexOf(' ');
+                                                          var f, s;
+                                                          if(i >= 0) {
+                                                              f = str.slice(0,i).trim();
+                                                              s = str.slice(i+1).trim();
+                                                          } else {
+                                                              f = str.trim();
+                                                              s = '';
+                                                          }
+                                                          sig.fstnameField().setValue(f);
+                                                          sig.sndnameField().setValue(s);
+                                                      },0); // do this with the current value (not value before keypress)
+                                                  }
+                                                });
+            var input = infoinput.input();
 
             var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
 
@@ -784,7 +785,6 @@
             });
 
             var closer = $('<div />');
-            closer.addClass('design-view-action-participant-details-information-closer');
 
             div.append(input);
             div.append(options.el);
@@ -804,20 +804,20 @@
             var value = field.value();
 
             var div = $('<div />');
-            var input = $('<input />');
-            input.addClass('design-view-action-participant-details-information-field');
-            input.val(value);
-            input.attr('placeholder', placeholder || name);
-
-            input.bind('keyup keydown keypress change input', function() {
-                setTimeout(function() {
-                    field.setValue(input.val().trim());
-                    if(viewmodel.showProblems() && !field.isValid())
-                        input.addClass('redborder');
-                    else
-                        input.removeClass('redborder');
-                },0);
-            });
+            var infoinput = InfoTextInput.init( { infotext: placeholder || name,
+                                                  value: value,
+                                                  cssClass: 'design-view-action-participant-details-information-field',
+                                                  onChange: function() {
+                                                      setTimeout(function() {
+                                                          field.setValue(input.val().trim());
+                                                          if(viewmodel.showProblems() && !field.isValid())
+                                                              input.addClass('redborder');
+                                                          else
+                                                              input.removeClass('redborder');
+                                                      },0);
+                                                  }
+                                                });
+            var input = infoinput.input();
 
             var optionOptions = ['optional', 'signatory', 'sender'];
 
