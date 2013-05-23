@@ -426,16 +426,19 @@ var TextTypeSetterView = Backbone.View.extend({
         }
 
         _.each(signatory.document().signatories(), function(signatory) {
-            _.each(signatory.fields(), function(field) {
-                if(field.isText() && isUnique(field))
-                    allFieldOptions.push({name: field.name(),
-                                          type: field.type()});
+            _.each(signatory.fields(), function(f) {
+                if(f.isText() && isUnique(f) && f.name() !== '')
+                    allFieldOptions.push({name: f.name(),
+                                          type: f.type()});
             });
         });
 
-        var options = [{name: localization.designview.customField,
-                        value: {name: '--custom',
-                                type: '--custom'}}];
+        var options = [];
+
+        if(!field || field.name() !== '') 
+            options.push({name: localization.designview.customField,
+                          value: {name: '--custom',
+                                  type: '--custom'}});
 
         _.each(allFieldOptions, function(o) {
             options.push({name: view.fieldNames[o.name] || o.name,
@@ -471,7 +474,6 @@ var TextTypeSetterView = Backbone.View.extend({
 
                     signatory.addField(f);
                     f.addedByMe = true;
-
                 } else if(f) {
                     placement.setField(f);
                     f.addPlacement(placement);
