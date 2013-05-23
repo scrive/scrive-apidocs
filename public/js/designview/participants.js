@@ -678,6 +678,7 @@
         detailsInformationNewField: function(field) {
             var view = this;
             var sig = view.model;
+            var viewmodel = view.viewmodel;
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
@@ -721,6 +722,11 @@
             });
 
             $(select.view().el).addClass('design-view-action-participant-new-field-select');
+
+            if(viewmodel.showProblems() && !field.isValid())
+                $(select.view().el).addClass('redborder');
+            else
+                $(select.view().el).removeClass('redborder');
 
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
