@@ -261,7 +261,16 @@
                        .append(localization.saveAsDraft));
 
             div.click(function() {
-                viewmodel.document().save();
+                viewmodel.document().save(function() {
+                  new Submit({
+                                          ajax : 'true',
+                                          method : 'POST',
+                                          url : '/d/save/' + viewmodel.document().documentid(),
+                                          ajaxsuccess : function() {
+                                              new FlashMessage({color: "green", content : localization.designview.saved})
+                                          }
+                                        }).send();
+                });
                 viewmodel.setShowProblems(false);
             });
 
@@ -660,7 +669,7 @@
             return $(view.el);
         };
 
-        // Show the NJ promo. This code will go away as soon as 
+        // Show the NJ promo. This code will go away as soon as
         // Viktor and me can figure out some sort of requirements
         // and how to control different promos in an efficient way.
         if (Cookies.get('njpromo') && Cookies.get('njpromo') == 'true') {
@@ -705,7 +714,7 @@
               if (alreadyClicked(this))
                 return false;
 
-              Promo.close(); 
+              Promo.close();
             }
           }).input().css({
             'margin': '46px 0px',

@@ -145,6 +145,7 @@ javascriptLocalisation =
               }
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
+            , goBack: "$_goBack()$"
             , process : {
                 contract: {
                    name: "$_contractname()$",
@@ -392,6 +393,10 @@ javascriptLocalisation =
              , chooseDocument: "$_designViewChooseDocument()$"
              , attached : "$_designViewAttached()$"
              , requestedFrom : "$_designViewRequestedFrom()$"
+             , draggablehelp1 : "$_designviewdraggablehelp1()$"
+             , draggablehelp2 : "$_designviewdraggablehelp2()$"
+             , days :"$_designviewdays()$"
+             , saved : "$_designviewsaved()$"
            }
 
          , validation : {

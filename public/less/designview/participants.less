@@ -19,7 +19,7 @@
 
 .design-view-action-participant-box {
     .box-sizing(border-box);
-    margin: 16px 6px 8px 16px;
+    margin: 14px 6px 8px 16px;
     position: relative;
 }
 
@@ -41,9 +41,8 @@
 
 .design-view-action-participant-close {
      position: absolute;
-     margin-right: 12px;
+     left : 959px;
      margin-top: -5px;
-     right : 0px;
      width: 19px;
      height: 20px;
      background: url("/img/editor-view-remove-party.png");
@@ -220,6 +219,10 @@
 /// @NEW BOX ///
 
 
+.design-view-action-participant-container-participants-box {
+    // overflow-y : auto;
+    // overflow-x : visible;
+}
 
 .design-view-action-participant-new-box {
     position: relative;
@@ -326,9 +329,15 @@
     vertical-align: middle;
     height: 36px;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+     }
     .select-opts {
-        z-index: 1000;
-        width: 200px;
+            z-index: 1002;
+            width: 200px;
+     }
+    .select-button .select-button-label {
+        text-indent: 3px;
     }
     margin-bottom: 8px;
 }
@@ -375,10 +384,13 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+        }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-    }
+            z-index: 1002;
+            width: 100%;
+        }
 }
 
 .design-view-action-participant-details-participation-delivery {
@@ -386,12 +398,12 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+     }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-        li {
-            z-index: 1000;
-        }
+            z-index: 1002;
+            width: 100%;
     }
 }
 
@@ -400,10 +412,13 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+        }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-    }
+            z-index: 1002;
+            width: 100%;
+        }
 }
 
 .design-view-action-participant-details-participation-auth {
@@ -411,10 +426,13 @@
     margin-right: 8px;
     float: left;
     font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    .select-button.select-exp {
+            z-index: 1003;
+        }
     .select-opts {
-        z-index: 1000;
-        width: 100%;
-    }
+            z-index: 1002;
+            width: 100%;
+        }
 }
 
 .design-view-action-participant-buttons {

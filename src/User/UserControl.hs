@@ -431,8 +431,9 @@ handlePasswordReminderGet uid token = do
                         F.value "linkchangepassword" $ changePassLink
           return $ Right $ Right $ ThinPage content
     Nothing -> do
+      ctx <- getContext
       addFlashM flashMessagePasswordChangeLinkNotValid
-      Left <$> getHomeOrDesignViewLink
+      return $ Left $ LinkLogin (ctxlang ctx) LoginTry
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue

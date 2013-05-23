@@ -44,8 +44,15 @@ window.trackTimeout = function(name, props, cb, ms) {
 };
 
 window.createnewdocument = function(event) {
-  event.preventDefault();
-  event.stopImmediatePropagation();
+  if( event.preventDefault ) {
+      event.preventDefault();
+  }
+  else {
+      event.returnValue = false;
+  }
+  if( event.stopImmediatePropagation ) event.stopImmediatePropagation();
+  if( event.stopPropagation ) event.stopPropagation();
+  if( event.stop ) event.stop();
   trackTimeout('Click start new process', {}, function() {
       new Submit({
           method : "POST",
@@ -64,8 +71,15 @@ window.createnewdocument = function(event) {
 }
 
 window.createfromtemplate = function(event) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
+  if( event.preventDefault ) {
+      event.preventDefault();
+  }
+  else {
+      event.returnValue = false;
+  }
+  if( event.stopImmediatePropagation ) event.stopImmediatePropagation();
+  if( event.stopPropagation ) event.stopPropagation();
+  if( event.stop ) event.stop();
     trackTimeout('Click create from template', {}, function() {
         window.location.href = "/fromtemplate";
     });

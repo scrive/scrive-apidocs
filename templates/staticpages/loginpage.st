@@ -25,6 +25,7 @@ $doctype()$
     $standardHeaderContents()$
   </head>
   <body style="background: $background$" >
+  $flashmessages()$
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>

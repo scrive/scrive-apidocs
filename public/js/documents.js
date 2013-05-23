@@ -242,7 +242,8 @@ window.Document = Backbone.Model.extend({
     },
     setInvitationMessage: function(customtext)
     {
-        this.set({invitationmessage: customtext},{silent: true});
+        this.set({invitationmessage: $(customtext).text() != "" ? customtext : ""},{silent: true});
+
     },
     invitationmessage : function() {
         return this.get("invitationmessage");
@@ -328,11 +329,12 @@ window.Document = Backbone.Model.extend({
               ajaxtimeout : 120000
           });
     },
-    save: function() {
+    save: function(callback) {
          this.get("saveQueue").add(new Submit({
               url: "/api/frontend/update/" + this.documentid(),
               method: "POST",
-              json: JSON.stringify(this.draftData())
+              json: JSON.stringify(this.draftData()),
+              ajaxsuccess : function() {if (callback != undefined) callback();}
           }), function(ec) {if (ec == 403) window.location.reload()});
     },
     afterSave: function(f) {
@@ -717,6 +719,17 @@ window.Document = Backbone.Model.extend({
                 });
             });
         });
+    },
+    killAllPlacements: function() {
+        var document = this;
+        _.each(document.signatories(), function(sig) {
+            _.each(sig.fields(), function(field) {
+                _.each(field.placements(), function(placement) {
+                    placement.die();
+                });
+            });
+        });
+
     }
 
 });
