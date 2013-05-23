@@ -23,6 +23,7 @@ module User.UserView (
     flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
+    flashMessageAccessNewAccountLinkNotValid,
     flashMessageUserWithSameEmailExists,
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
@@ -304,6 +305,10 @@ flashMessageUserPasswordChanged =
 flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordChangeLinkNotValid =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessagePasswordChangeLinkNotValid"
+
+flashMessageAccessNewAccountLinkNotValid :: TemplatesMonad m => m FlashMessage
+flashMessageAccessNewAccountLinkNotValid =
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageAccessNewAccountLinkNotValid"
 
 
 flashMessageUserWithSameEmailExists :: TemplatesMonad m => m FlashMessage

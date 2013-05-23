@@ -356,12 +356,11 @@ handleAccessNewAccountGet uid token = do
     Just user -> do
       switchLang (getLang user)
       let changePassLink = show $ LinkAccessNewAccount uid token
-{- TODO: Fix domain branding
       ctx <- getContext
       case (currentBrandedDomain ctx) of
         Just bd -> do
           ad <- getAnalyticsData
-          content <- renderTemplate "changePasswordPageWithBranding" $ do
+          content <- renderTemplate "accessNewAccountPageWithBranding" $ do
                         F.value "linkchangepassword" $ changePassLink
                         F.value "logolink" $ bdlogolink bd
                         F.value "background" $ bdbackgroundcolorexternal $ bd
@@ -370,14 +369,12 @@ handleAccessNewAccountGet uid token = do
                         standardPageFields ctx kontrakcja ad
           Right . Left <$> simpleHtmlResonseClrFlash content
         Nothing -> do
--}
-      do
           content <- renderTemplate "accessNewAccountPage" $ do
                         F.value "linkchangepassword" $ changePassLink
           return $ Right $ Right $ ThinPage content
     Nothing -> do
-      addFlashM flashMessagePasswordChangeLinkNotValid
-      Left <$> getHomeOrDesignViewLink
+      addFlashM flashMessageAccessNewAccountLinkNotValid
+      return $ Left LinkLoginDirect
 
 -- TODO: Too much code duplication around new account access and password reminders
 handleAccessNewAccountPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
@@ -399,7 +396,7 @@ handleAccessNewAccountPost uid token = do
           logUserToContext $ Just user
           runJSONGenT $ do
             value "logged" True
-            value "location" $ show LinkDesignView
+            value "location" $ show LinkArchive
         Nothing -> internalError
     Nothing -> runJSONGenT $ value "logged" False
 
@@ -431,9 +428,8 @@ handlePasswordReminderGet uid token = do
                         F.value "linkchangepassword" $ changePassLink
           return $ Right $ Right $ ThinPage content
     Nothing -> do
-      ctx <- getContext
       addFlashM flashMessagePasswordChangeLinkNotValid
-      return $ Left $ LinkLogin (ctxlang ctx) LoginTry
+      return $ Left LinkLoginDirect
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue

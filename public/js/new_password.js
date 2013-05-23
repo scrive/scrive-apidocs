@@ -86,8 +86,10 @@
 
     render: function () {
       var model = this.model;
-       var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
+       var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(this.options.header));
        $(this.el).append(header);
+       if (this.options.body)
+         $(this.el).append($("<div style='padding: 0 0 3em;'/>").append($("<h4 style='color: #FFFFFF; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45);'/>").text(this.options.body)));
 
 
       var content = $("<div class='short-input-container recovery-container'/>");
@@ -122,7 +124,7 @@
       var changePasswordButton = Button.init({
           size  : 'small',
           color : 'blue',
-          text  : localization.newPasswordModal.modalNewPasswordViewFooterSave,
+          text  : this.options.button,
           onClick : function() {
             model.resetPassword();
           }
@@ -155,8 +157,9 @@
 
       content.append(wrapper.append(body));
 
-      body.append($("<div class='position first' style='text-align: left;height: 30px;'/>").append($("<label style='padding-left:10px;'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader + ":")));
-
+      body.append($("<div class='position first' style='text-align: left;height: 30px;'/>").append($("<label style='padding-left:10px;'/>").text(this.options.header)));
+       if (this.options.body)
+         body.append($("<label style='padding-bottom: 1em;'/>").text(this.options.body));
 
       var passwordInput = InfoTextInput.init({
         infotext: localization.newPasswordModal.modalNewPasswordViewNewPassword,
@@ -185,7 +188,7 @@
       var changePasswordButton = Button.init({
           size  : 'tiny',
           color : model.buttoncolorclass(),
-          text  : localization.newPasswordModal.modalNewPasswordViewFooterSave,
+          text  : this.options.button,
             style : "width:245px;",
           onClick : function() {
             model.resetPassword();
@@ -201,11 +204,27 @@
   window.NewPassword = function(args) {
     var model = new NewPasswordModel(args);
     var view;
+    var options = { model: model,
+                    header: localization.newPasswordModal.modalNewPasswordViewHeader,
+                    body: null,
+                    button: localization.newPasswordModal.modalNewPasswordViewFooterSave
+                  };
 
-    if (args.branded)
-      view = new NewPasswordBrandedView({model: model, el: $("<div style='width:275px;margin:20px auto'/>")});
-    else
-      view = new NewPasswordView({model: model, el: $("<div class='short-input-section'/>")});
+    if (args.accessnewaccount) {
+      options.header = localization.accessNewAccountModal.header;
+      options.body = localization.accessNewAccountModal.body;
+      options.button = localization.accessNewAccountModal.button;
+    }
+
+    if (args.branded) {
+      if (!args.accessnewaccount)
+        options.header = options.header + ':';
+      options.el = $("<div style='width:275px;margin:20px auto'/>");
+      view = new NewPasswordBrandedView(options);
+    } else {
+      options.el = $("<div class='short-input-section'/>");
+      view = new NewPasswordView(options);
+    }
 
     this.el = function() {return $(view.el);}
   };

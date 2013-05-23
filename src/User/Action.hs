@@ -42,7 +42,7 @@ handleAccountSetupFromSign document signatorylink = do
   ctx <- getContext
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
-      email = getEmail signatorylink
+  email <- guardJustM $ getRequiredField asValidEmail "email"
   muser <- dbQuery $ GetUserByEmail (Email email)
   user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (documentlang document))
                 return
@@ -101,10 +101,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
                   dbUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
 
-              link <- newAccessNewAccountLink $ userid actvuser
-              mail <- accessNewAccountMail ctx actvuser link
-              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress actvuser] }
-
+              scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
@@ -119,6 +116,12 @@ handleActivate mfstname msndname actvuser signupmethod = do
     _ -> do
         Log.debug $ "Create account attempt failed (params missing)"
         return Nothing
+
+scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m) => Context -> User -> m ()
+scheduleNewAccountMail ctx user = do
+  link <- newAccessNewAccountLink $ userid user
+  mail <- accessNewAccountMail ctx user link
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
 createUser email names mcompanyid lang = do

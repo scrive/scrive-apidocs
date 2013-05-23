@@ -34,6 +34,7 @@ data LoginRedirectReason = LoginTry
 data KontraLink
     = LinkHome Lang
     | LinkLogin Lang LoginRedirectReason
+    | LinkLoginDirect
     | LinkLogout
     | LinkSignup Lang
     | LinkArchive
@@ -84,6 +85,7 @@ langFolder lang = "/" ++ (codeFromLang lang)
 instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
     showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/login"
+    showsPrec _ LinkLoginDirect = (++) $ "/login"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/signup"
     showsPrec _ (LinkArchive) = (++) $ "/d"

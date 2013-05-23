@@ -67,7 +67,10 @@ accessNewAccountPage=
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.inner').append(new NewPassword({linkchangepassword: "$linkchangepassword$"}).el());
+    jQuery('.inner').append(new NewPassword({
+      linkchangepassword: "$linkchangepassword$",
+      accessnewaccount: true
+    }).el());
   });
 </script>
 </div>
@@ -90,6 +93,32 @@ $doctype()$
   jQuery(document).ready(function() {
     jQuery('.inner').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
+                        branded : true,
+                        logolink:   "$logolink$",
+                        buttoncolorclass : "$buttoncolorclass$"
+                       }).el());
+  });
+</script>
+  </body>
+</html>
+###
+accessNewAccountPageWithBranding=
+$doctype()$
+<html>
+  <head>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents()$
+  </head>
+  <body style="background: $background$">
+  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
+      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+      </div>
+  </div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery('.inner').append(new NewPassword({
+                        linkchangepassword: "$linkchangepassword$",
+                        accessnewaccount: true,
                         branded : true,
                         logolink:   "$logolink$",
                         buttoncolorclass : "$buttoncolorclass$"
