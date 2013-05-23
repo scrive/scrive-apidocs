@@ -382,6 +382,7 @@ var TextTypeSetterView = Backbone.View.extend({
             style: "z-index: 108;",
             onSelect: function(f) {
                 placement.setField(f);
+                f.addPlacement(placement);
             }
         });
 

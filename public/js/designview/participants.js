@@ -10,7 +10,6 @@
         initialize: function() {
             var view = this;
             _.bindAll(view);
-            view.bind('refresh', view.refresh);
             view.render();
         },
         render: function() {
@@ -30,170 +29,27 @@
                 size: 'tiny',
                 text: '+ ' + localization.designview.addField,
                 onClick: function() {
-                    view.popup();
+                    view.addOne();
                 }
             });
 
             return button.input();
         },
-        reset: function() {
-            this.selected = null;
-            this.customName = null;
-        },
-        popup: function() {
-            var view = this;
-            var sig = view.model;
-            view.reset();
-            view.confirmation = Confirmation.popup({
-                title: localization.designview.addField,
-                acceptText: localization.save,
-                content: view.popupContent(),
-                onAccept: function() {
-                    if (view.acceptPopup())
-                      view.confirmation.close();
-                    else
-                      return false;
-                }
-            });
-        },
-        acceptPopup: function() {
+        addOne: function() {
+
             var view = this;
             var sig = view.model;
 
-            if(view.selected) {
-                var name = view.selected === '--custom' ? view.customName : view.selected;
-                var type = view.standardPlaceholders[view.selected] ? 'standard' : 'custom';
-                if ((view.selected === '--custom') && (view.customName == undefined || view.customName.trim() == "")) {
-                  if (view.input != undefined)
-                    view.input.input().addClass("redborder");
-                  return false;
-                }
-                var field = new Field({
-                    name: name,
-                    type: type,
-                    signatory: sig,
-                    obligatory: false
-                });
-
-                sig.addField(field);
-                return true;
-            }
-        },
-        popupContent: function() {
-            var view = this;
-
-            if(!view.content) {
-                var div = $('<div />');
-                div.addClass('design-view-action-participant-new-field-popup-content');
-                view.content = div;
-            }
-
-            view.refresh();
-
-            return view.content;
-        },
-        refresh: function() {
-            var view = this;
-
-            var div = view.content;
-
-            var top = $('<div />');
-            top.addClass('design-view-action-participant-new-field-popup-content-top');
-            top.html(view.selectBox());
-
-            var bottom = $('<div />');
-            bottom.addClass('design-view-action-participant-new-field-popup-content-bottom');
-            bottom.html(view.customField());
-
-            div.html(top);
-            div.append(bottom);
-
-            return div;
-        },
-        selectBox: function() {
-            var view = this;
-            var sig = view.model;
-
-            var options = [];
-
-            _.each(view.standardFields, function(f) {
-                if(!sig.field(f[0], f[1]))
-                    options.push({
-                        name: view.placeholder(f[0]),
-                        value: f[0]
-                    });
+            var field = new Field({
+                name: '',
+                type: '',
+                signatory: sig,
+                obligatory: false
             });
 
-            options.push({
-                name: localization.designview.customField,
-                value: '--custom'
-            });
-
-            var name;
-
-            if(!view.selected)
-                name = localization.designview.addField;
-            else if(view.selected === '--custom')
-                name = localization.designview.customField;
-            else
-                name = view.placeholder(view.selected);
-
-            var select = new Select({
-                options: options,
-                name: name,
-                onSelect: function(v) {
-                    view.selected = v;
-                    view.trigger('refresh');
-                }
-            });
-
-            return select.view().el;
-        },
-        customField: function() {
-            var view = this;
-            var sig = view.model;
-
-            var div = $('<div />');
-
-            if(view.selected === '--custom') {
-                var title = $('<div />');
-                title.addClass('design-view-action-participant-new-field-popup-content-bottom-title');
-
-                this.input = InfoTextInput.init({
-                    cssClass: 'design-view-action-participant-new-field-popup-content-bottom-input',
-                    infotext: localization.designview.fieldName,
-                    value: '',
-                    onChange: function() {
-                        view.input.input().removeClass('redborder');
-                        view.customName = view.input.value();
-                    },
-                    onEnter: function() {
-                        if (view.acceptPopup())
-                          view.confirmation.close();
-                    }
-                });
-
-                div.append(title);
-                div.append(this.input.input());
-            }
-
-            return div.children();
-        },
-        standardFields: [
-            ["sigpersnr", "standard"],
-            ["sigcompnr", "standard"],
-            ["sigco",     "standard"],
-            ["mobile",    "standard"]
-        ],
-        standardPlaceholders: {
-            sigcompnr: localization.companyNumber,
-            sigpersnr: localization.personamNumber,
-            sigco: localization.company,
-            mobile: localization.phone
-        },
-        placeholder: function(name) {
-            return this.standardPlaceholders[name] || name;
+            sig.addField(field);
         }
+
     });
 
     var DesignViewParticipation = Backbone.View.extend({
@@ -766,15 +622,14 @@
             } else {
                 // always show these three fields first
                 div.append(view.detailsFullNameField());
-                div.append(view.detailsInformationField('email', 'standard', 'Email'));
-                div.append(view.detailsInformationField('sigco', 'standard', 'Company'));
-
+                div.append(view.detailsInformationField('email', 'standard', localization.email));
+                var ignores = ['fstname', 'sndname', 'email'];
                 $.each(sig.fields(), function(i, e) {
-                    if(e.name() !== 'fstname' &&
-                       e.name() !== 'sndname' &&
-                       e.name() !== 'sigco'   &&
-                       e.name() !== 'email'   &&
-                       e.isText())
+                    if(e.isBlank())
+                        div.append(view.detailsInformationNewField(e));
+                    else if(e.noName())
+                        div.append(view.detailsInformationCustomFieldName(e));
+                    else if(!_.contains(ignores, e.name()) && e.isText())
                         div.append(view.detailsInformationField(e.name(), e.type(), e.nicename()));
                 });
 
@@ -785,6 +640,119 @@
 
             return div;
         },
+        detailsInformationCustomFieldName: function(field) {
+            var view = this;
+            var sig = view.model;
+            var viewmodel = view.viewmodel;
+
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-details-information-field-wrapper');
+
+            var setter = function() {
+                if(input.value()) {
+                    field.setName(input.value());
+                    sig.trigger('change:fields');
+                }
+            };
+
+            var input = InfoTextInput.init({
+                cssClass: 'design-view-action-participant-new-field-name-input',
+                infotext: localization.designview.fieldName,
+                value: '',
+                onEnter: setter
+            });
+
+            if(viewmodel.showProblems() && !field.isValid())
+                $(input.input()).addClass('redborder');
+            else
+                $(input.input()).removeClass('redborder');
+
+            var button = Button.init({
+                color: 'black',
+                size: 'tiny',
+                text: localization.ok,
+                width: 64,
+                onClick: setter
+            });
+
+            var closer = $('<div />');
+            closer.addClass('design-view-action-participant-details-information-closer');
+            closer.addClass("active").click(function() {
+                sig.deleteField(field);
+            });
+
+            div.append(closer);
+            div.append(input.input());
+            div.append(button.input());
+
+            return div;
+
+        },
+        detailsInformationNewField: function(field) {
+            var view = this;
+            var sig = view.model;
+            var viewmodel = view.viewmodel;
+
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-details-information-field-wrapper');
+
+            var options = [];
+
+            _.each(view.standardFields, function(f) {
+                if(!sig.field(f[0], f[1]))
+                    options.push({
+                        name: view.placeholder(f[0]),
+                        value: f[0]
+                    });
+            });
+
+            options.push({
+                name: localization.designview.customField,
+                value: '--custom'
+            });
+
+            var name;
+
+            if(!view.selected)
+                name = localization.designview.addField;
+            else if(view.selected === '--custom')
+                name = localization.designview.customField;
+            else
+                name = view.placeholder(view.selected);
+
+            var select = new Select({
+                options: options,
+                name: name,
+                onSelect: function(v) {
+                    if(v === '--custom') {
+                        field.setType('custom');
+                    } else {
+                        field.setType('standard');
+                        field.setName(v);
+                    }
+                    sig.trigger('change:fields');
+                }
+            });
+
+            $(select.view().el).addClass('design-view-action-participant-new-field-select');
+
+            if(viewmodel.showProblems() && !field.isValid())
+                $(select.view().el).addClass('redborder');
+            else
+                $(select.view().el).removeClass('redborder');
+
+            var closer = $('<div />');
+            closer.addClass('design-view-action-participant-details-information-closer');
+            closer.addClass("active").click(function() {
+                sig.deleteField(field);
+            });
+
+            div.append(select.view().el);
+            div.append(closer);
+
+            return div;
+
+        },
         detailsFullNameField: function() {
             var view = this;
             var sig = view.model;
@@ -793,15 +761,14 @@
             var value = sig.name();
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
+            
 
-            var input = $('<input />');
-            input.addClass('design-view-action-participant-details-information-field');
-            input.val(value);
-            input.attr('placeholder', localization.designview.fullName);
-
-            input.bind('keypress keydown keyup change input', function() {
-                setTimeout(function() {
-                    var str = input.val().trim();
+            var input = InfoTextInput.init({
+                cssClass: 'design-view-action-participant-details-information-field',
+                infotext: localization.designview.fullName,
+                value: value,
+                onChange: function(val) {
+                    var str = val.trim();
                     var i = str.indexOf(' ');
                     var f, s;
                     if(i >= 0) {
@@ -813,7 +780,7 @@
                     }
                     sig.fstnameField().setValue(f);
                     sig.sndnameField().setValue(s);
-                },0); // do this with the current value (not value before keypress)
+                }
             });
 
             var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
@@ -827,7 +794,7 @@
             closer.addClass('design-view-action-participant-details-information-closer');
 
             div.append(closer);
-            div.append(input);
+            div.append(input.input());
             div.append(options.el);
 
             return div;
@@ -845,20 +812,19 @@
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
-            var input = $('<input />');
-            input.addClass('design-view-action-participant-details-information-field');
-            input.val(value);
-            input.attr('placeholder', placeholder || name);
 
-            input.bind('keyup keydown keypress change input', function() {
-                setTimeout(function() {
-                    field.setValue(input.val().trim());
+            var input = InfoTextInput.init({
+                cssClass: 'design-view-action-participant-details-information-field',
+                infotext: placeholder || name,
+                value: value,
+                onChange: function(val) {
+                    field.setValue(val.trim());
                     if(viewmodel.showProblems() && !field.isValid())
-                        input.addClass('redborder');
+                        input.input().addClass('redborder');
                     else
                         input.removeClass('redborder');
-                },0);
-            });
+                }
+            }).input();
 
             var optionOptions = ['optional', 'signatory', 'sender'];
 
@@ -901,7 +867,23 @@
             div.append(options.el);
 
             return div;
-        }
+        },
+        standardFields: [
+            ["sigpersnr", "standard"],
+            ["sigcompnr", "standard"],
+            ["sigco",     "standard"],
+            ["mobile",    "standard"]
+        ],
+        standardPlaceholders: {
+            sigcompnr: localization.companyNumber,
+            sigpersnr: localization.personamNumber,
+            sigco: localization.company,
+            mobile: localization.phone
+        },
+        placeholder: function(name) {
+            return this.standardPlaceholders[name] || name;
+        },
+
     });
 
     // single line view which can open
