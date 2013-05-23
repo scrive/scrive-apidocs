@@ -99,7 +99,11 @@
             if(model.step() === 1)
                 div.addClass('tab-active');
             div.click(function() {
+                var prevStep = model.step();
                 model.setStep(1);
+                if (prevStep == 1)
+                  model.trigger('step1-refreshed');
+
             });
 
             div.mouseenter(function() {
@@ -180,7 +184,11 @@
             view.draggablesView   = new DesignViewDraggablesView({ model : view.model});
             view.processView = DesignViewProcessView({ model : view.model });
             view.model.bind('change:step', view.render);
+            view.model.bind('step1-refreshed', view.closeAllParticipants);
             view.render();
+        },
+        closeAllParticipants : function() {
+            this.participantsView.closeAllParticipants();
         },
         render: function() {
             var view = this;

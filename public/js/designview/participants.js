@@ -472,6 +472,13 @@
             view.setup();
             view.render();
         },
+        closeAllParticipants : function() {
+            console.log("Closing participants")
+            this.model.setParticipantDetail(null);
+
+            console.log("Closing is done")
+
+        },
         setup: function() {
             var view = this;
             var model = view.model;
