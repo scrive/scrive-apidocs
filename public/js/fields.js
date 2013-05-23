@@ -316,6 +316,12 @@ window.Field = Backbone.Model.extend({
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
+
+        if(this.signatory().author() && this.isObligatory() && forSigning && this.shouldbefilledbysender()) {
+            var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+            return new NotEmptyValidation({message: msg});
+        }
+
         if (this.signatory().author() && (this.isCheckbox() || this.isText()) && this.hasPlacements() && this.isObligatory() && forSigning) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});

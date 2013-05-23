@@ -44,7 +44,8 @@
                 name: '',
                 type: '',
                 signatory: sig,
-                obligatory: false
+                obligatory: false,
+                shouldbefilledbysender: sig.author()
             });
 
             sig.addField(field);
@@ -652,7 +653,12 @@
                 if(input.value()) {
                     field.setName(input.value());
                     sig.trigger('change:fields');
+                    field.unbind('change:name', changer);
                 }
+            };
+
+            var changer = function() {
+                input.setValue(field.name());
             };
 
             var input = InfoTextInput.init({
@@ -662,7 +668,9 @@
                 onEnter: setter
             });
 
-            if(viewmodel.showProblems() && !field.isValid())
+            field.bind('change:name', changer);
+
+            if(viewmodel.showProblems() && !field.isValid(true))
                 $(input.input()).addClass('redborder');
             else
                 $(input.input()).removeClass('redborder');
@@ -678,6 +686,7 @@
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
             closer.addClass("active").click(function() {
+                field.removeAllPlacements();
                 sig.deleteField(field);
             });
 
@@ -696,39 +705,55 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
 
+            var allFieldOptions = view.possibleFields.concat([]);
+            
+            function isUnique(field) {
+                return _.every(allFieldOptions, function(o) {
+                    return field.name() !== o.name && field.type() !== o.type;
+                });
+            }
+            
+            _.each(viewmodel.document().signatories(), function(signatory) {
+                _.each(signatory.fields(), function(field) {
+                    if(field.isText() && isUnique(field))
+                        allFieldOptions.push({name: field.name(),
+                                              type: field.type()});
+                });
+            });
+            
             var options = [];
 
-            _.each(view.standardFields, function(f) {
-                if(!sig.field(f[0], f[1]))
+            // keep only fields not already part of signatory
+            _.each(allFieldOptions, function(f) {
+                if(!sig.field(f.name, f.type))
                     options.push({
-                        name: view.placeholder(f[0]),
-                        value: f[0]
+                        name: view.placeholder(f.name),
+                        value: f
                     });
             });
 
-            options.push({
-                name: localization.designview.customField,
-                value: '--custom'
-            });
+            options.push({name: localization.designview.customField,
+                          value: {name: '--custom',
+                                  type: '--custom'}}); // type is not used for custom
 
             var name;
 
             if(!view.selected)
                 name = localization.designview.addField;
-            else if(view.selected === '--custom')
+            else if(view.selected.name === '--custom')
                 name = localization.designview.customField;
             else
-                name = view.placeholder(view.selected);
+                name = view.placeholder(view.selected.name);
 
             var select = new Select({
                 options: options,
                 name: name,
                 onSelect: function(v) {
-                    if(v === '--custom') {
+                    if(v.name === '--custom') {
                         field.setType('custom');
                     } else {
-                        field.setType('standard');
-                        field.setName(v);
+                        field.setType(v.type);
+                        field.setName(v.name);
                     }
                     sig.trigger('change:fields');
                 }
@@ -736,7 +761,7 @@
 
             $(select.view().el).addClass('design-view-action-participant-new-field-select');
 
-            if(viewmodel.showProblems() && !field.isValid())
+            if(viewmodel.showProblems() && !field.isValid(true))
                 $(select.view().el).addClass('redborder');
             else
                 $(select.view().el).removeClass('redborder');
@@ -744,6 +769,7 @@
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
             closer.addClass("active").click(function() {
+                field.removeAllPlacements();
                 sig.deleteField(field);
             });
 
@@ -819,8 +845,8 @@
                 value: value,
                 onChange: function(val) {
                     field.setValue(val.trim());
-                    if(viewmodel.showProblems() && !field.isValid())
-                        input.input().addClass('redborder');
+                    if(viewmodel.showProblems() && !field.isValid(true))
+                        input.addClass('redborder');
                     else
                         input.removeClass('redborder');
                 }
@@ -848,7 +874,7 @@
                 options : optionOptions
             });
 
-            if(viewmodel.showProblems() && !field.isValid())
+            if(viewmodel.showProblems() && !field.isValid(true))
                 input.addClass('redborder');
             else
                 input.removeClass('redborder');
@@ -858,6 +884,7 @@
 
             if(field.canBeRemoved()) {
                 closer.addClass("active").click(function() {
+                    field.removeAllPlacements();
                     sig.deleteField(field);
                 });
             }
@@ -868,20 +895,33 @@
 
             return div;
         },
-        standardFields: [
-            ["sigpersnr", "standard"],
-            ["sigcompnr", "standard"],
-            ["sigco",     "standard"],
-            ["mobile",    "standard"]
+        possibleFields: [
+            {name: "fstname", 
+             type: 'standard'},
+            {name: "sndname",
+             type: 'standard'},
+            {name: "email",
+             type: 'standard'},
+            {name: "sigco",
+             type: 'standard'},
+            {name: "sigpersnr",
+             type: 'standard'},
+            {name: "sigcompnr",
+             type: 'standard'},
+            {name: "mobile",
+         type: 'standard'}
         ],
-        standardPlaceholders: {
+        fieldNames: {
+            fstname: localization.fstname,
+            sndname: localization.sndname,
+            email: localization.email,
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
             sigco: localization.company,
-            mobile: localization.phone
+            mobile: localization.phone     
         },
         placeholder: function(name) {
-            return this.standardPlaceholders[name] || name;
+            return this.fieldNames[name] || name;
         },
 
     });

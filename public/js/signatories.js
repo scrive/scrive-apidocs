@@ -540,7 +540,7 @@ window.Signatory = Backbone.Model.extend({
     },
     hasFieldProblems: function(forSigning) {
         return _.some(this.fields(), function(field) {
-            return !field.isValid();
+            return !field.isValid(forSigning);
         });
     },
     role: function() {
@@ -582,9 +582,7 @@ window.Signatory = Backbone.Model.extend({
                 pn.makeObligatory();
             }
         } else {
-            // we remove it if we don't use eleg
-            // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '' && !pn.hasPlacements()) {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             }
         }
@@ -597,19 +595,19 @@ window.Signatory = Backbone.Model.extend({
         var pn = signatory.mobileField();
         if(signatory.needsMobile()) {
             if(!pn) {
-                signatory.addField(new Field({name:'mobile',
-                                              type: 'standard',
-                                              obligatory: true,
-                                              shouldbefilledbysender: true,
-                                              signatory: signatory}));
+                var f = new Field({name:'mobile',
+                                   type: 'standard',
+                                   obligatory: true,
+                                   shouldbefilledbysender: true,
+                                   signatory: signatory});
+                f.addedByMe = true;
+                signatory.addField(f);
             } else {
                 pn.makeObligatory();
                 pn.setShouldBeFilledBySender(true);
             }
         } else {
-            // we remove it if we don't use SMS
-            // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '' && !pn.hasPlacements()) {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             }
         }

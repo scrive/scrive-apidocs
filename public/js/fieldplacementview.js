@@ -262,7 +262,7 @@ var TextTypeSetterView = Backbone.View.extend({
     obligatoryOption : function() {
         var view = this;
         var field = this.model.field();
-        var sig = field.signatory();
+        var sig = field?field.signatory():view.model.signatory();
 
         var optionOptions = ['optional', 'signatory', 'sender'];
 
@@ -318,6 +318,31 @@ var TextTypeSetterView = Backbone.View.extend({
     title : function() {
         return $("<div class='title'/>").text(localization.designview.textFields.textField);
     },
+    possibleFields: [
+        {name: "fstname", 
+         type: 'standard'},
+        {name: "sndname",
+         type: 'standard'},
+        {name: "email",
+         type: 'standard'},
+        {name: "sigco",
+         type: 'standard'},
+        {name: "sigpersnr",
+         type: 'standard'},
+        {name: "sigcompnr",
+         type: 'standard'},
+        {name: "mobile",
+         type: 'standard'}
+    ],
+    fieldNames: {
+        fstname: localization.fstname,
+        sndname: localization.sndname,
+        email: localization.email,
+        sigcompnr: localization.companyNumber,
+        sigpersnr: localization.personamNumber,
+        sigco: localization.company,
+        mobile: localization.phone     
+    },
     selector : function() {
         var view = this;
         var box = $("<div class='subtitle'/>");
@@ -341,11 +366,28 @@ var TextTypeSetterView = Backbone.View.extend({
             cssClass: 'text-field-placement-setter-field-selector',
             style: "z-index: 109;",
             onSelect: function(s) {
+                if(field &&
+                   field.addedByMe && 
+                   field.value() === '' && 
+                   field.placements().length <= 1) {
+                    sig.removeField(field);
+                    model.setField(undefined);
+                    field.removePlacement(model);
+                }
                 var name = field?field.name():'email';
                 var type = field?field.type():'standard';
                 var oldfield = s.field(name, type);
-                if (oldfield == undefined)
-                  oldfield = s.field('email', 'standard');
+                if (oldfield == undefined) {
+                    oldfield = new Field({signatory: signatory,
+                                          type: o.type,
+                                          name: o.name,
+                                          obligatory: true,
+                                          shouldbefilledbysender: signatory.author()});
+                    oldfield.addPlacement(placement);
+                    
+                    s.addField(oldfield);
+                    oldfield.addedByMe = true;
+                }
                 s.bind("change:fields",view.render);
                 model.setField(oldfield);
                 model.setSignatory(s);
@@ -359,20 +401,45 @@ var TextTypeSetterView = Backbone.View.extend({
         return box;
     },
     fieldSelector: function() {
-        var placement = this.model;
+        var view = this;
+        var placement = view.model;
         var field = placement.field();
 
         var signatory = placement.signatory();
+        var fields = signatory.field();
 
-        var fields = signatory ? signatory.fields() : [];
 
-        var name = field ? field.nicename() : 'Select field';
+        var div = $('<div />');
 
-        var options = [];
-        _.each(fields, function(f) {
-            if(f.isText())
-                options.push({name: f.nicename(),
-                              value: f});
+        var name = field ? field.nicename() : localization.designview.selectField;
+
+        // we need to build a list of all of the different field name/type pairs
+        // plus the ability to add a custom field
+
+        // clone the array
+        var allFieldOptions = view.possibleFields.concat([]);
+
+        function isUnique(field) {
+            return _.every(allFieldOptions, function(o) {
+                return field.name() !== o.name && field.type() !== o.type;
+            });
+        }
+
+        _.each(signatory.document().signatories(), function(signatory) {
+            _.each(signatory.fields(), function(field) {
+                if(field.isText() && isUnique(field))
+                    allFieldOptions.push({name: field.name(),
+                                          type: field.type()});
+            });
+        });
+
+        var options = [{name: localization.designview.customField,
+                        value: {name: '--custom',
+                                type: '--custom'}}];
+
+        _.each(allFieldOptions, function(o) {
+            options.push({name: view.fieldNames[o.name] || o.name,
+                          value: o});
         });
 
         var selector = new Select({
@@ -380,11 +447,50 @@ var TextTypeSetterView = Backbone.View.extend({
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
             style: "z-index: 108;",
-            onSelect: function(f) {
-                placement.setField(f);
-                f.addPlacement(placement);
+            onSelect: function(o) {
+                // we want the field to go away if we added it
+                if(field && 
+                   field.addedByMe &&
+                   field.value() === '' &&
+                   field.placements().length <= 1) {
+                    signatory.deleteField(field);
+                    placement.setField(undefined);
+                    field.removePlacement(placement);
+                }
+
+                var f = signatory.field(o.name, o.type);
+                
+                if(o.name === '--custom') {
+                    f = new Field({signatory: signatory, 
+                                   type: 'custom',
+                                   name: '',
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author()});
+                    placement.setField(f);
+                    f.addPlacement(placement);
+
+                    signatory.addField(f);
+                    f.addedByMe = true;
+
+                } else if(f) {
+                    placement.setField(f);
+                    f.addPlacement(placement);
+                } else {
+                    f = new Field({signatory: signatory,
+                                   type: o.type,
+                                   name: o.name,
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author()});
+                    placement.setField(f);
+                    f.addPlacement(placement);
+                    
+                    signatory.addField(f);
+                    f.addedByMe = true;
+                }
             }
         });
+
+        view.myFieldSelector = selector;
 
         return selector.input();
     },
@@ -394,6 +500,47 @@ var TextTypeSetterView = Backbone.View.extend({
         $(this.el).css("left",offset.left + Math.max($(placement.view.el).width()+18));
         $(this.el).css("top",offset.top - 19);
     },
+    fieldNamer: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var signatory = placement.signatory();
+
+        var div = $('<div />');
+        div.addClass('text-field-placement-setter-field-name');
+        
+        function setName() {
+            if(input.value()) {
+                placement.trigger('change:field');
+                signatory.trigger('change:fields');
+            }
+        }
+        
+        var input = InfoTextInput.init({
+            infotext: localization.designview.fieldName,
+            value: field.name(),
+            cssClass: "name",
+            onChange : function(value) {
+                field.setName(value);
+                view.myFieldSelector.model().setName(value);
+                view.place();
+            },
+            onEnter: setName
+        });
+        
+        var button = Button.init({
+            color: 'black',
+            size: 'tiny',
+            text: localization.ok,
+            width: 64,
+            onClick: setName
+        });
+        
+        div.append(input.input());
+        div.append(button.input());
+        return div;
+    },
     render: function() {
            var view = this;
            var container = $(this.el);
@@ -402,11 +549,16 @@ var TextTypeSetterView = Backbone.View.extend({
            var body = $("<div class='checkboxTypeSetter-body'/>");
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
 
+        var placement = view.model;
+        var field = placement.field();
+        
            body.append(this.title());
            body.append(this.selector());
            body.append(this.fieldSelector());
+           if(field && field.name() === '') {
+               body.append(this.fieldNamer());
+           }
            body.append(this.obligatoryOption());
-
            body.append(this.doneOption());
            body.append(this.help());
         container.html('');

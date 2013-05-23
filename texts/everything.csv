@@ -1094,7 +1094,7 @@
 "_designViewEditSigningProcess","Definera processen","Edit process"
 "_designViewStartSigning","Starta signering","Start signing"
 "_designViewAddField","Lägg till fält","Add field"
-"_designViewCustomField","Nytt fält","Custom field"
+"_designViewCustomField","Nytt fält","New field"
 "_designViewDefineParticipation","Definiera deltagare","Define participation"
 "_designViewToReceiveDocument","att ta emot dokument","to receive document"
 "_designViewByEmail","genom epost","by email"
@@ -1141,3 +1141,4 @@
 "_designviewdays","Dag(ar)","Day(s)"
 "_designviewsaved","Ditt dokument har sparats som ett utkast. Du kan se dina utkast i arkivet.","Your document has been saved as a draft. You can find your drafts in your Archive."
 "_validationPleaseSelectField","(change me)","Please complete or remove the fields added to the document."
+"_selectField","(change me)","Select field"

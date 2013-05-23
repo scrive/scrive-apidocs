@@ -414,7 +414,7 @@
                                {Message: 'duplicate emails'});
                 new FlashMessage({color: 'red', content : localization.designview.validation.sameMails});
                 model.setStep(1);
-            } else if(doc.hasSignatoryProblems()) {
+            } else if(doc.hasSignatoryProblems(forSigning)) {
                 var s, f, sigs = doc.signatories(), fields;
                 for(s=0;s<sigs.length;s++) {
                     var sig = sigs[s];
@@ -577,7 +577,7 @@
             });
         },
         verificationBeforeSendingOrSigning : function() {
-            return !this.model.document().hasProblems();
+            return !this.model.document().hasProblems(true);
         }
     });
 
