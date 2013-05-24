@@ -27,19 +27,19 @@ describe "sign view all functionalities" do
       @h.dochelper.addCustomField(1,"authorFN2","authorFV2")
 
       puts "set the first counterpart to have one filled field, and one empty one"
+      @h.dochelper.addPart
       @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
       @h.dochelper.addCustomField(2,"part1FN1","part1FV1")
 
       puts "set the second counterpart to have no fields"
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.second_counterpart_fstname, @h.ctx.props.second_counterpart_sndname, @h.ctx.props.second_counterpart_email)
+      @h.dochelper.enterCounterpart(@h.ctx.props.second_counterpart_fstname, @h.ctx.props.second_counterpart_sndname, @h.ctx.props.second_counterpart_email, 3)
 
       puts "set the third counterpart to have one filled field"
       @h.dochelper.addPart
-      @h.dochelper.enterCounterpart(@h.ctx.props.third_counterpart_fstname, @h.ctx.props.third_counterpart_sndname, @h.ctx.props.third_counterpart_email)
-      @h.dochelper.addCustomField(2,"part3FN1","part3FV1")
+      @h.dochelper.enterCounterpart(@h.ctx.props.third_counterpart_fstname, @h.ctx.props.third_counterpart_sndname, @h.ctx.props.third_counterpart_email, 4)
+      @h.dochelper.addCustomField(4,"part3FN1","part3FV1")
 
-      @h.dochelper.gotToStep3
       puts "Loading first author attachment"
       @h.dochelper.loadAuthorAttachment(1, @h.ctx.props.first_author_attachment_pdf_path)
       puts "Loading second author attachment"

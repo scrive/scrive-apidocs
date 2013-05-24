@@ -100,8 +100,7 @@ describe "subscribe with a credit card" do
     @h.wait_until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
 
     puts "fill in a name"
-    (@h.wait_until { @h.driver.find_element :name => "fstname" }).send_keys "Random"
-    (@h.wait_until { @h.driver.find_element :name => "sndname" }).send_keys "Person"
+    (@h.wait_until { @h.driver.find_element :name => "fullname" }).send_keys "Random Person"
 
     puts "fill in the password details correctly"
     (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-123"
@@ -115,9 +114,7 @@ describe "subscribe with a credit card" do
     puts "waiting for recurly form"
     (@h.wait_until { @h.driver.find_element :css => "form.recurly" })
     puts "sign up for teamplan"
-    #(@h.wait_until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
-    #(@h.wait_until { @h.driver.find_element :css =>
-    #".plan-container.team a.button.action-sign-up" }).click
+
     @h.driver.execute_script "$('.plan-container.team a.button-small.action-sign-up').click();"
     puts "fill in cc"
     #(@h.wait_until { @h.driver.find_element :css => ".plan-container.team .field.card_number input" }).send_keys "4111 1111 1111 1111"
@@ -160,8 +157,7 @@ describe "subscribe with a credit card" do
     @h.wait_until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
 
     puts "fill in a name"
-    (@h.wait_until { @h.driver.find_element :name => "fstname" }).send_keys "Random"
-    (@h.wait_until { @h.driver.find_element :name => "sndname" }).send_keys "Person"
+    (@h.wait_until { @h.driver.find_element :name => "fullname" }).send_keys "Random Person"
 
     puts "fill in the password details correctly"
     (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-123"
