@@ -222,6 +222,7 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
+            view.model.bind('change:participantDetail', view.render);
             view.render();
         },
         render: function() {
@@ -240,8 +241,14 @@
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-new-box-buttons');
-            div.append(view.multi());
-            div.append(view.single());
+            
+            if(model.participantDetail()) {
+                div.append(view.doneButton());
+            } else {
+                div.append(view.multi());
+                div.append(view.single());
+            }
+
             return div;
         },
         single: function() {
@@ -303,6 +310,25 @@
                         }
                     });
                     return false;
+                }
+            });
+
+            div.append(button.input());
+
+            return div;
+        },
+        doneButton: function() {
+            var view = this;
+            var model = view.model;
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-done');
+            
+            var button = Button.init({
+                color: 'green',
+                size: 'tiny',
+                text: localization.ok,
+                onClick: function() {
+                    model.setParticipantDetail(null);
                 }
             });
 
