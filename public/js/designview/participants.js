@@ -96,8 +96,8 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-participation-fields');
             div.append(view.detailsParticipationFieldsSignOrder());
-            div.append(view.detailsParticipationFieldsDelivery());
             div.append(view.detailsParticipationFieldsRole());
+            div.append(view.detailsParticipationFieldsDelivery());
             div.append(view.detailsParticipationFieldsAuth());
             return div;
         },
