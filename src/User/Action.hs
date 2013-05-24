@@ -64,6 +64,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
   callme <- isFieldSet "callme"
+  stoplogin <- isFieldSet "stoplogin"
   phone <-  fromMaybe "" <$> getField "phone"
   companyname <- fromMaybe "" <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
@@ -104,9 +105,9 @@ handleActivate mfstname msndname actvuser signupmethod = do
               scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
-              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
-              logUserToContext $ Just tosuser
+              when (not stoplogin) $ (logUserToContext $ Just tosuser)
+              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
               return $ Just (tosuser, newdocs)
             else do
