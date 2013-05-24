@@ -40,7 +40,7 @@
             var div = $("<div class='design-view-action-document-draggables-help' style='margin-right:80px'/>");
             div.append($("<div class='wrapper'>")
               .append($("<span class='number'/>").text("2."))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp1))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp2))
               .append($("<img src='/img/place-fields-help2.png'/>")));
 
 
