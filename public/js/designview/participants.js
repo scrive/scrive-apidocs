@@ -473,11 +473,11 @@
             });
         },
         icons: {
-            email: '/img/email.png',
-            pad: '/img/pad2.png',
-            api: '/img/pad2.png',
-            mobile: '/img/phone2.png',
-            email_mobile : '/img/email_mobile.png'
+            email: 'design-view-action-participant-icon-device-icon-email',
+            pad: 'design-view-action-participant-icon-device-icon-pad',
+            api: 'design-view-action-participant-icon-device-icon-pad',
+            mobile: 'design-view-action-participant-icon-device-icon-phone',
+            email_mobile : 'design-view-action-participant-icon-device-icon-email-mobile'
         },
         render: function() {
             var view = this;
@@ -487,9 +487,9 @@
 
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-device-inner')
-                .append($('<img />')
+                .append($('<div />')
                         .addClass('design-view-action-participant-icon-device-icon')
-                        .attr('src', view.icons[delivery]));
+                        .addClass(view.icons[delivery]));
             view.$el.html(div);
 
             return view;
