@@ -141,6 +141,13 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     font-family: @source;
     /* to fix Firefox bug, have to use padding instead of line height */
     padding: 15px 30px 14px;
+
+    .small-screen & {
+        font-size: 42px;
+        line-height: 60px;
+        max-height: 80px;
+        padding-bottom: 25px;
+    }
   }
 
   &.button-round {

@@ -51,7 +51,7 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-info-box')]"}).click
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-selector')]//a[contains(@class,'button')]"}).click
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
-    (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//ul[contains(@class,'select-opts')]//li[last()]"}).click
+    @driver.execute_script("$($('div.design-view-action-participant-container-participants-box').children('div')[" + (part - 1).to_s() + "]).find('div.design-view-action-participant-new-field-select ul.select-opts li').last().click()")
     (@h.wait_until { @driver.find_element :xpath => p + "//input[contains(@class,'design-view-action-participant-new-field-name-input')]"}).send_keys fieldname
     (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button-gray')][../input[contains(@class,'design-view-action-participant-new-field-name-input')]]"}).click
     

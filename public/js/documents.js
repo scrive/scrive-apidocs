@@ -302,6 +302,7 @@ window.Document = Backbone.Model.extend({
               if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "")
                 window.location = document.currentSignatory().signsuccessredirect();
               else
+                window.scroll(0,0);
                 window.location.reload();
             },
             ajaxerror : function() {

@@ -80,21 +80,25 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if (BrowserInfo.isSmallScreen()) {
         container.addClass("small-screen");
     }
-    if (document.currentSignatory() != undefined &&
-       document.currentSignatory().name()!="" &&
-       !document.currentSignatory().padDelivery() &&
-       document.currentSignatory().canSign() &&
-       !document.currentSignatory().author()) {
+
+    var welcomeUser = document.currentSignatory() != undefined &&
+                      document.currentSignatory().name()!="" &&
+                      !document.currentSignatory().padDelivery() &&
+                      document.currentSignatory().canSign() &&
+                      !document.currentSignatory().author();
+
+    if (welcomeUser) {
       var headline = $("<div class='headline' style='margin-bottom : 10px'/>");
       this.styleText(headline);
       container.append(headline.html(this.welcomeText()));
     }
 
     var headline = $("<div class='headline' />");
-    if (BrowserInfo.isSmallScreen()) {
+    if (BrowserInfo.isSmallScreen() && welcomeUser) {
       headline.css('font-size', '42px');
       headline.css('margin-bottom', '0px');
     }
+
     this.styleText(headline);
     container.append(headline.text(this.text()));
     var subheadline = $("<div class='subheadline' />");
