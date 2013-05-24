@@ -428,8 +428,8 @@
 
         },
         icons: {
-            viewer: '/img/viewer.png',
-            signatory: '/img/signatory.png'
+            viewer: 'design-view-action-participant-icon-role-icon-viewer',
+            signatory: 'design-view-action-participant-icon-role-icon-signatory'
         },
         render: function() {
             var view = this;
@@ -439,9 +439,9 @@
 
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-role-inner')
-                .append($('<img />')
+                .append($('<div />')
                         .addClass('design-view-action-participant-icon-role-icon')
-                        .attr('src', view.icons[role]));
+                        .addClass(view.icons[role]));
 
             view.$el.html(div);
 
