@@ -447,6 +447,11 @@ javascriptLocalisation =
          , changeEmail : "$_changeEmail()$"
          , changePhone : "$_changePhone()$"
          , onlyPDF : "$_onlyPDF()$"
+         , accessNewAccountModal: {
+             header: "$_accessNewAccountHeader()$"
+           , body: "$_accessNewAccountBody()$"
+           , button: "$_accessNewAccountButton()$"
+         }
          , newPasswordModal: {
              modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"
            , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"

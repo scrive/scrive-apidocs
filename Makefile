@@ -1,5 +1,6 @@
 DBNAME=kontratest
 DBUSER=kontra
+DBBACKUP=$(DBNAME).dump
 TESTS=all --plain
 
 INSTALL=BUILD_DATE=2010-01-01-00-00-00 cabal-dev install $(INSTALLFLAGS)
@@ -42,6 +43,14 @@ reset-test-db:
 	-PGUSER=$(DBUSER) dropdb $(DBNAME)
 	PGUSER=$(DBUSER) createdb $(DBNAME)
 	psql $(DBNAME) $(DBUSER) -c "ALTER DATABASE $(DBNAME) SET TIMEZONE = 'UTC';"
+
+# Make a backup of the test database
+backup-test-db:
+	pg_dump -U $(DBUSER) $(DBNAME) -F c -f $(DBBACKUP)
+
+# Reset and restore the test database
+restore-test-db: reset-test-db
+	pg_restore -U $(DBUSER) -n public -d $(DBNAME) $(DBBACKUP)
 
 # Heap profiling
 

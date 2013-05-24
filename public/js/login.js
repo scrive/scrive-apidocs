@@ -223,7 +223,7 @@ var LoginView = Backbone.View.extend({
         var footer = $("<div class='short-input-container-footer'/>");
         content.append(footer);
 
-        var toogleOption = $("<a href='#' class='s-forgot-password'/>").text(localization.loginModal.forgotpassword + "?").click(function(){ model.toogleView();return false;});
+        var toogleOption = $("<a href='#' class='s-forgot-password'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();return false;});
         footer.append($("<p class='float-right'/>").append(toogleOption));
       }
       return content;
@@ -365,7 +365,7 @@ var LoginBrandedView = Backbone.View.extend({
       body.append(fp_position);
 
       if (!model.pad()) {
-        var toogleOption = $("<label class='s-forgot-password' style='border-bottom: 1px solid #999999;color:#999999;font-style:italic;font-size:10px;line-height: 12px;'/>").text(localization.loginModal.forgotpassword + "?").click(function(){ model.toogleView();return false;});
+        var toogleOption = $("<label class='s-forgot-password' style='border-bottom: 1px solid #999999;color:#999999;font-style:italic;font-size:10px;line-height: 12px;'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();return false;});
         fp_position.append($("<div style='display:inline-block;width:224px;text-align:left;vertical-align: bottom;margin-left:4px;'/>").append(toogleOption));
       }
       var button_position = $("<div class='position' style='text-align:center'/>");
