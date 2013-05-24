@@ -15,7 +15,8 @@
             var self = this;
             var model = this;
             _.bindAll(model);
-            args.document.bind('change:ready', function() {if (self.document().mainfile() != undefined) self.setStep(1); } )
+            args.document.bind('change:ready change:file', function() {self.setStep(self.document().mainfile() != undefined ? 1 : undefined);})
+
             model.currentColorIndex = 0;
             model.colors = [
                 '#ff3377',
@@ -67,6 +68,7 @@
             _.bindAll(view);
             // probably just need to change a class
             view.model.bind('change:step', view.render);
+            view.model.document().bind('change:file', view.updateTab2);
             view.render();
         },
         render: function() {
@@ -115,7 +117,7 @@
             var view = this;
             var model = view.model;
 
-            var div = $('<div />')
+            view.tab2div = $('<div />')
                 .addClass('design-view-tab2')
                 .append($('<div />')
                         .addClass('design-view-tab2-text')
@@ -124,20 +126,35 @@
                                 .addClass('design-view-tab2-text-optional')
                                 .text('(' + localization.designview.optional + ')')));
             if(model.step() === 2)
-                div.addClass('tab-active');
-            div.click(function() {
+                view.tab2div.addClass('tab-active');
+            this.updateTab2();
+
+            return view.tab2div;
+        },
+        updateTab2 : function() {
+          var view = this;
+          var model = view.model;
+          view.tab2div.unbind('click');
+          view.tab2div.unbind('mouseenter');
+          view.tab2div.unbind('mouseleave');
+          if (view.model.document().mainfile() != undefined) {
+            view.tab2div.removeClass("grayed");
+
+            view.tab2div.click(function() {
                   model.setStep(model.step () != 2 ? 2 : undefined);
             });
 
-            div.mouseenter(function() {
-                div.addClass('tab-hover');
+            view.tab2div.mouseenter(function() {
+                view.tab2div.addClass('tab-hover');
             });
 
-            div.mouseleave(function() {
-                div.removeClass('tab-hover');
+            view.tab2div.mouseleave(function() {
+                view.tab2div.removeClass('tab-hover');
             });
+          }
+          else
+            view.tab2div.addClass("grayed");
 
-            return div;
         },
         tab3: function () {
             var view = this;
