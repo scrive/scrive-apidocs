@@ -1155,14 +1155,20 @@
             div.addClass('design-view-action-participant-info-name');
             var txt = $('<div />');
             txt.addClass('design-view-action-participant-info-name-inner');
-            txt.text(sig.name());
 
-            var f = function() {
+            if( sig.isCsv()) {
+                txt.text(localization.csv.title);
+            }
+            else {
                 txt.text(sig.name());
-            };
 
-            sig.fstnameField().bind('change:value', f);
-            sig.sndnameField().bind('change:value', f);
+                var f = function() {
+                    txt.text(sig.name());
+                };
+
+                sig.fstnameField().bind('change:value', f);
+                sig.sndnameField().bind('change:value', f);
+            }
 
             div.append(txt);
 
