@@ -437,8 +437,10 @@ window.Field = Backbone.Model.extend({
       return this.get("placements").length > 0;
    },
     addPlacement : function(placement) {
-        this.placements().push(placement);
-        this.trigger('change:placements');
+        if(!_.contains(this.placements(), placement)) {
+            this.placements().push(placement);
+            this.trigger('change change:placements');
+        }
     },
    removePlacement : function(placement) {
        var newplacements = _.without(this.placements(), placement);

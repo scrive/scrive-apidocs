@@ -427,7 +427,7 @@ var TextTypeSetterView = Backbone.View.extend({
 
         _.each(signatory.document().signatories(), function(signatory) {
             _.each(signatory.fields(), function(f) {
-                if(f.isText() && ((f.isCustom() && f.name() !== '') || isUnique(f)))
+                if(f.isText() && f.name() !== '' && isUnique(f))
                     allFieldOptions.push({name: f.name(),
                                           type: f.type()});
             });
@@ -616,7 +616,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
         signatory.document().bind('change:signatories',this.updateColor);
-
+        placement.bind('change', this.updateErrorBackground);
 
         this.model.view = this;
         this.render();
@@ -756,6 +756,21 @@ var TextPlacementPlacedView = Backbone.View.extend({
        if(signatory.color())
             $(this.el).css('border', '1px solid ' + signatory.color());
     },
+    updateErrorBackground: function() {
+        var placement = this.model;
+        var field = placement.field();
+
+        if(field) {
+            field.unbind('change', this.updateErrorBackground);
+            field.bind('change', this.updateErrorBackground);
+        }
+
+        if(field && field.isValid(true)) {
+            $(this.el).css('background-color', 'white');
+        } else {
+            $(this.el).css('background-color', '#f33');
+        }
+    },
     render: function() {
         var view = this;
         var placement = this.model;
@@ -765,6 +780,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
+        this.updateErrorBackground();
         this.updateColor();
 
         if ((signatory == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
