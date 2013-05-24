@@ -869,12 +869,15 @@
                 value: value,
                 onChange: function(val) {
                     field.setValue(val.trim());
-                    if(!field.isValid(true))
-                        input.addClass('redborder');
-                    else
-                        input.removeClass('redborder');
                 }
             }).input();
+
+            field.bind('change', function() {
+                if(!field.isValid(true))
+                    input.addClass('redborder');
+                else
+                    input.removeClass('redborder');
+            });
 
             var optionOptions = ['optional', 'signatory', 'sender'];
 

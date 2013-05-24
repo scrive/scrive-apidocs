@@ -325,12 +325,15 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
+        // Removed because we don't treat standard fields so differently
+        /*
         if (this.signatory().author() && this.isStandard() && this.hasPlacements() && forSigning) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
+        */
 
-        if(this.signatory().author() && this.isObligatory() && forSigning && this.shouldbefilledbysender()) {
+        if(this.isObligatory() && forSigning && this.shouldbefilledbysender()) {
             var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
             return new NotEmptyValidation({message: msg});
         }
@@ -340,17 +343,20 @@ window.Field = Backbone.Model.extend({
           return new NotEmptyValidation({message: msg});
         }
 
+        // Removed to make more sense in new design view: custom fields do not need to be placed.
+        /*
         if (this.isCustom()) {
           var msg1 = localization.designview.validation.notReadyField;
           var msg2 = localization.designview.validation.notPlacedField;
-          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
+          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1})
+                .concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
           if (this.signatory().author() && forSigning) {
             return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongPlacedAuthorField}));
           } else {
             return validation;
           }
         }
-
+        */
         if (this.isCheckbox()) {
             var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
             return validation;
