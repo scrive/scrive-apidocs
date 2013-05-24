@@ -319,7 +319,7 @@ var TextTypeSetterView = Backbone.View.extend({
         return $("<div class='title'/>").text(localization.designview.textFields.textField);
     },
     possibleFields: [
-        {name: "fstname", 
+        {name: "fstname",
          type: 'standard'},
         {name: "sndname",
          type: 'standard'},
@@ -341,7 +341,7 @@ var TextTypeSetterView = Backbone.View.extend({
         sigcompnr: localization.companyNumber,
         sigpersnr: localization.personamNumber,
         sigco: localization.company,
-        mobile: localization.phone     
+        mobile: localization.phone
     },
     selector : function() {
         var view = this;
@@ -367,8 +367,8 @@ var TextTypeSetterView = Backbone.View.extend({
             style: "z-index: 109;",
             onSelect: function(s) {
                 if(field &&
-                   field.addedByMe && 
-                   field.value() === '' && 
+                   field.addedByMe &&
+                   field.value() === '' &&
                    field.placements().length <= 1) {
                     sig.removeField(field);
                     model.setField(undefined);
@@ -384,7 +384,7 @@ var TextTypeSetterView = Backbone.View.extend({
                                           obligatory: true,
                                           shouldbefilledbysender: signatory.author()});
                     oldfield.addPlacement(placement);
-                    
+
                     s.addField(oldfield);
                     oldfield.addedByMe = true;
                 }
@@ -427,7 +427,7 @@ var TextTypeSetterView = Backbone.View.extend({
 
         _.each(signatory.document().signatories(), function(signatory) {
             _.each(signatory.fields(), function(f) {
-                if(f.isText() && isUnique(f) && f.name() !== '')
+                if(f.isText() && ((f.isCustom() && f.name() !== '') || isUnique(f)))
                     allFieldOptions.push({name: f.name(),
                                           type: f.type()});
             });
@@ -435,7 +435,7 @@ var TextTypeSetterView = Backbone.View.extend({
 
         var options = [];
 
-        if(!field || field.name() !== '') 
+        if(!field || field.name() !== '')
             options.push({name: localization.designview.customField,
                           value: {name: '--custom',
                                   type: '--custom'}});
@@ -452,7 +452,7 @@ var TextTypeSetterView = Backbone.View.extend({
             style: "z-index: 108;",
             onSelect: function(o) {
                 // we want the field to go away if we added it
-                if(field && 
+                if(field &&
                    field.addedByMe &&
                    field.value() === '' &&
                    field.placements().length <= 1) {
@@ -462,9 +462,9 @@ var TextTypeSetterView = Backbone.View.extend({
                 }
 
                 var f = signatory.field(o.name, o.type);
-                
+
                 if(o.name === '--custom') {
-                    f = new Field({signatory: signatory, 
+                    f = new Field({signatory: signatory,
                                    type: 'custom',
                                    name: '',
                                    obligatory: true,
@@ -485,7 +485,7 @@ var TextTypeSetterView = Backbone.View.extend({
                                    shouldbefilledbysender: signatory.author()});
                     placement.setField(f);
                     f.addPlacement(placement);
-                    
+
                     signatory.addField(f);
                     f.addedByMe = true;
                 }
@@ -511,14 +511,14 @@ var TextTypeSetterView = Backbone.View.extend({
 
         var div = $('<div />');
         div.addClass('text-field-placement-setter-field-name');
-        
+
         function setName() {
             if(input.value()) {
                 placement.trigger('change:field');
                 signatory.trigger('change:fields');
             }
         }
-        
+
         var input = InfoTextInput.init({
             infotext: localization.designview.fieldName,
             value: field.name(),
@@ -530,7 +530,7 @@ var TextTypeSetterView = Backbone.View.extend({
             },
             onEnter: setName
         });
-        
+
         var button = Button.init({
             color: 'black',
             size: 'tiny',
@@ -538,7 +538,7 @@ var TextTypeSetterView = Backbone.View.extend({
             width: 64,
             onClick: setName
         });
-        
+
         div.append(input.input());
         div.append(button.input());
         return div;
@@ -553,7 +553,7 @@ var TextTypeSetterView = Backbone.View.extend({
 
         var placement = view.model;
         var field = placement.field();
-        
+
            body.append(this.title());
            body.append(this.selector());
            body.append(this.fieldSelector());
