@@ -516,8 +516,8 @@
             });
         },
         icons: {
-            standard: '/img/noauth.png',
-            eleg: '/img/eleg.png'
+            standard: 'design-view-action-participant-icon-auth-icon-noauth',
+            eleg: 'design-view-action-participant-icon-auth-icon-eleg'
         },
         render: function() {
             var view = this;
@@ -527,9 +527,9 @@
 
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-auth-inner')
-                .append($('<img />')
+                .append($('<div />')
                         .addClass('design-view-action-participant-icon-auth-icon')
-                        .attr('src', view.icons[auth]));
+                        .addClass(view.icons[auth]));
 
             view.$el.html(div);
 
