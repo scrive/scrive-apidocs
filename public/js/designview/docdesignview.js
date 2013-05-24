@@ -337,7 +337,7 @@
         updateSaveButton : function() {
            console.log("Updating save button");
            if (this.sendButton != undefined) {
-             if (this.model.document().hasProblems(true, true)) {
+             if (this.model.document().hasProblems(true)) {
               this.sendButton.removeClass("active");
               this.sendButton.unbind('click');
              } else  {
