@@ -9,11 +9,14 @@
 
     var DesignViewModel = Backbone.Model.extend({
         defaults : {
-            step : 1
+            step : undefined
         },
         initialize: function (args) {
+            var self = this;
             var model = this;
             _.bindAll(model);
+            args.document.bind('change:ready change:file', function() {self.setStep(self.document().mainfile() != undefined ? 1 : undefined);})
+
             model.currentColorIndex = 0;
             model.colors = [
                 '#ff3377',
@@ -44,13 +47,6 @@
             this.set({participantDetail : s});
             return this;
         },
-        setShowProblems: function(b) {
-            this.set({showProblems:b});
-            return this;
-        },
-        showProblems: function() {
-            return this.get('showProblems');
-        },
         currentColor: function() {
             return this.colors[this.currentColorIndex % this.colors.length];
         },
@@ -72,6 +68,7 @@
             _.bindAll(view);
             // probably just need to change a class
             view.model.bind('change:step', view.render);
+            view.model.document().bind('change:file', view.updateTab2);
             view.render();
         },
         render: function() {
@@ -100,7 +97,7 @@
                 div.addClass('tab-active');
             div.click(function() {
                 var prevStep = model.step();
-                model.setStep(1);
+                model.setStep(model.step () != 1 ? 1 : undefined);
                 if (prevStep == 1)
                   model.trigger('step1-refreshed');
 
@@ -120,7 +117,7 @@
             var view = this;
             var model = view.model;
 
-            var div = $('<div />')
+            view.tab2div = $('<div />')
                 .addClass('design-view-tab2')
                 .append($('<div />')
                         .addClass('design-view-tab2-text')
@@ -129,20 +126,35 @@
                                 .addClass('design-view-tab2-text-optional')
                                 .text('(' + localization.designview.optional + ')')));
             if(model.step() === 2)
-                div.addClass('tab-active');
-            div.click(function() {
-                model.setStep(2);
+                view.tab2div.addClass('tab-active');
+            this.updateTab2();
+
+            return view.tab2div;
+        },
+        updateTab2 : function() {
+          var view = this;
+          var model = view.model;
+          view.tab2div.unbind('click');
+          view.tab2div.unbind('mouseenter');
+          view.tab2div.unbind('mouseleave');
+          if (view.model.document().mainfile() != undefined) {
+            view.tab2div.removeClass("grayed");
+
+            view.tab2div.click(function() {
+                  model.setStep(model.step () != 2 ? 2 : undefined);
             });
 
-            div.mouseenter(function() {
-                div.addClass('tab-hover');
+            view.tab2div.mouseenter(function() {
+                view.tab2div.addClass('tab-hover');
             });
 
-            div.mouseleave(function() {
-                div.removeClass('tab-hover');
+            view.tab2div.mouseleave(function() {
+                view.tab2div.removeClass('tab-hover');
             });
+          }
+          else
+            view.tab2div.addClass("grayed");
 
-            return div;
         },
         tab3: function () {
             var view = this;
@@ -159,7 +171,7 @@
             if(model.step() === 3)
                 div.addClass('tab-active');
             div.click(function() {
-                model.setStep(3);
+                  model.setStep(model.step () != 3 ? 3 : undefined);
             });
 
             div.mouseenter(function() {
@@ -227,6 +239,17 @@
             _.bindAll(view);
             view.render();
             view.model.document().bind('change:template change:file', view.render);
+            view.model.document().bind('change:signatories',view.updateSaveButton);
+            view.model.document().bind('change:signatories',view.bindUpdateSaveButtonToPropperEvents);
+            view.model.document().bind('change-signatories-field-values',view.updateSaveButton);
+            view.bindUpdateSaveButtonToPropperEvents();
+        },
+        bindUpdateSaveButtonToPropperEvents : function() {
+          var view = this;
+           _.each(view.model.document().signatories(), function(s) {
+               s.unbind('change change:role change:delivery change:authentication',view.updateSaveButton);
+               s.bind('change change:role change:delivery change:authentication',view.updateSaveButton);
+          });
         },
         render: function() {
             var view = this;
@@ -279,7 +302,6 @@
                                           }
                                         }).send();
                 });
-                viewmodel.setShowProblems(false);
             });
 
             return div;
@@ -304,15 +326,25 @@
         send: function() {
             var view = this;
 
-            var div = $('<div />');
-            div.addClass('design-view-button3');
-            div.append($('<div />')
+            this.sendButton = $('<div />');
+            this.sendButton .addClass('design-view-button3');
+            this.sendButton .append($('<div />')
                        .addClass('design-view-button3-text')
                        .append(localization.designview.startSigning));
-
-            div.click(view.finalClick);
-
-            return div;
+            this.updateSaveButton();
+            return this.sendButton ;
+        },
+        updateSaveButton : function() {
+           console.log("Updating save button");
+           if (this.sendButton != undefined) {
+             if (this.model.document().hasProblems(true, true)) {
+              this.sendButton.removeClass("active");
+              this.sendButton.unbind('click');
+             } else  {
+              this.sendButton.addClass("active");
+              this.sendButton.unbind('click').click(this.finalClick);
+             }
+           }
         },
         removeDocumentButton: function() {
             var view = this;
@@ -369,8 +401,6 @@
             // (meaning red border). The idea is that they have
             // shown the intention of trying to send the doc.
             // Now we want to help them complete this.
-            model.setShowProblems(true);
-
             // why not save the document before we validate it?
             document.save();
 
@@ -408,11 +438,6 @@
                 mixpanel.track('Error',
                                {Message: 'nobody signs'});
                 new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
-                model.setStep(1);
-            } else if(doc.hasDuplicateEmails()) {
-                mixpanel.track('Error',
-                               {Message: 'duplicate emails'});
-                new FlashMessage({color: 'red', content : localization.designview.validation.sameMails});
                 model.setStep(1);
             } else if(doc.hasSignatoryProblems(forSigning)) {
                 var s, f, sigs = doc.signatories(), fields;

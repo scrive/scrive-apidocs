@@ -159,9 +159,9 @@ window.Field = Backbone.Model.extend({
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
-        //this.bind("change",function() {
-        //    field.signatory().document().trigger("change:signatories");
-        //});
+        this.bind("change:value",function() {
+            field.signatory().document().trigger("change-signatories-field-values");
+        });
         if(args.signatory)
             args.signatory.bind("removed", field.remove);
     },
@@ -280,7 +280,7 @@ window.Field = Backbone.Model.extend({
             return new Validation({validates: function() {
                 return !field.noName();
             }, message: msg});
-            
+
         }
 
         if (   this.isEmail()
