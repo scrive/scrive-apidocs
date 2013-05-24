@@ -664,7 +664,7 @@ window.Document = Backbone.Model.extend({
     },
     hasDocumentProblems: function() {
         return !this.hasAtLeastOneSignatory() ||
-            !this.mainfile()
+            !this.mainfile();
     },
     hasAtLeastOneSignatory: function() {
         var signing = this.signatoriesWhoSign();
