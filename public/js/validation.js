@@ -56,6 +56,7 @@ window.NotEmptyValidation = Validation.extend({
 window.EmailValidation = Validation.extend({
      defaults: {
             validates: function(t) {
+                t = t.trim();
                 // this does not allow international characters, which for the moment is good
                 if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
                     return true;

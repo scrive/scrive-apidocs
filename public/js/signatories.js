@@ -82,6 +82,7 @@ window.Signatory = Backbone.Model.extend({
 
     initialize: function(args) {
         var signatory = this;
+        _.bindAll(signatory);
         var extendedWithSignatory = function(hash) {
                     hash.signatory = signatory;
                     return hash;
@@ -96,6 +97,8 @@ window.Signatory = Backbone.Model.extend({
         signatory.set({"fields": fields,
                        "attachments": attachments
                       });
+        
+        signatory.bindBubble();
     },
     document: function() {
         return this.get("document");
@@ -472,7 +475,7 @@ window.Signatory = Backbone.Model.extend({
     },
     addField : function(f) {
         this.fields().push(f);
-        this.trigger("change:fields");
+        this.trigger("change change:fields");
     },
     deleteField: function(field) {
         this.set({fields : _.without(this.fields(), field)});
@@ -658,6 +661,21 @@ window.Signatory = Backbone.Model.extend({
                                               shouldbefilledbysender: false,
                                               signatory: signatory}));
         }
+    },
+    bindBubble: function() {
+        var signatory = this;
+        signatory.bind('change', signatory.bubbleSelf);
+        signatory.bind('bubble', signatory.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var signatory = this;
+        signatory.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var signatory = this;
+        var document = signatory.document();
+        if(document)
+            document.trigger('bubble');
     }
 
 });

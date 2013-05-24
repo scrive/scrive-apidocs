@@ -74,6 +74,8 @@ window.Document = Backbone.Model.extend({
     initialize: function(args) {
         var params = { evidenceAttachments: args.evidenceAttachments };
         this.url = "/api/frontend/get/" + args.id + "?" + $.param(params,true);
+        _.bindAll(this);
+        this.bindBubble();
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -724,8 +726,15 @@ window.Document = Backbone.Model.extend({
             });
         });
 
+    },
+    bindBubble: function() {
+        var document = this;
+        document.bind('change', document.bubbleSelf);
+    },
+    bubbleSelf: function() {
+        var document = this;
+        document.trigger('bubble');
     }
-
 });
 
 

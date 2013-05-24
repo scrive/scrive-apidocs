@@ -135,6 +135,21 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     alive: function() {
         return this.get('alive');
+    },
+    bindBubble: function() {
+        var placement = this;
+        placement.bind('change', placement.bubbleSelf);
+        placement.bind('bubble', placement.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var placement = this;
+        placement.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var placement = this;
+        var field = placement.field();
+        if(field)
+            field.trigger('bubble');
     }
 });
 
@@ -164,6 +179,7 @@ window.Field = Backbone.Model.extend({
         });
         if(args.signatory)
             args.signatory.bind("removed", field.remove);
+        field.bindBubble();
     },
     type : function() {
         return this.get("type");
@@ -288,13 +304,11 @@ window.Field = Backbone.Model.extend({
             && (this.signatory().emailDelivery() || this.signatory().emailMobileDelivery())
            ){
             var msg = localization.designview.validation.missingOrWrongEmail;
-            this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
-            this.setValue(this.value().trim());
             return new EmailValidation({message: msg});
         }
 
@@ -303,7 +317,6 @@ window.Field = Backbone.Model.extend({
             && (this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery())
            ){
             var msg = localization.designview.validation.missingOrWrongMobile;
-            this.setValue(this.value().trim());
             return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
@@ -467,6 +480,21 @@ window.Field = Backbone.Model.extend({
             return false;
         else
             return true;
+    },
+    bindBubble: function() {
+        var field = this;
+        field.bind('change', field.bubbleSelf);
+        field.bind('bubble', field.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var field = this;
+        field.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var field = this;
+        var signatory = field.signatory();
+        if(signatory)
+            signatory.trigger('bubble');
     }
 });
 

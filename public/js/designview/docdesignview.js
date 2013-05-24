@@ -239,17 +239,7 @@
             _.bindAll(view);
             view.render();
             view.model.document().bind('change:template change:file', view.render);
-            view.model.document().bind('change:signatories',view.updateSaveButton);
-            view.model.document().bind('change:signatories',view.bindUpdateSaveButtonToPropperEvents);
-            view.model.document().bind('change-signatories-field-values',view.updateSaveButton);
-            view.bindUpdateSaveButtonToPropperEvents();
-        },
-        bindUpdateSaveButtonToPropperEvents : function() {
-          var view = this;
-           _.each(view.model.document().signatories(), function(s) {
-               s.unbind('change change:role change:delivery change:authentication',view.updateSaveButton);
-               s.bind('change change:role change:delivery change:authentication',view.updateSaveButton);
-          });
+            view.model.document().bind('bubble',view.updateSaveButton);
         },
         render: function() {
             var view = this;
