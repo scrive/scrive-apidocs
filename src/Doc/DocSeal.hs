@@ -558,7 +558,6 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     Context{ctxhostpart, ctxtime, ctxgtconf} <- getContext
     elog <- dbQuery $ GetEvidenceLog documentid
     ces <- collectClockErrorStatistics elog
-    Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
@@ -566,7 +565,6 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
     config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog ces content tmpin tmpout
-    Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000
 
@@ -634,7 +632,6 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
     emptyFieldsText <- emptyFieldsTextT
     let config = presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
-    Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000
     Log.debug $ "PreSealing completed with " ++ show code
