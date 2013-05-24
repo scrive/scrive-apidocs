@@ -43,14 +43,14 @@
      position: absolute;
      left : 959px;
      margin-top: -5px;
-     width: 19px;
-     height: 20px;
+     width: 24px;
+     height: 22px;
      background: url("/img/editor-view-remove-party.png");
      display: inline-block;
      cursor: pointer;
      z-index : 501;
      &:hover {
-      background: url("/img/editor-view-remove-party-hover.png");
+      background-position: -24px 0px;
      }
 }
 
@@ -528,8 +528,8 @@
 }
 
 .design-view-action-participant-details-information-closer {
-     width: 19px;
-     height: 20px;
+     width: 24px;
+     height: 22px;
      display: inline-block;
      position: absolute;
      top: -8px;
@@ -537,9 +537,10 @@
      z-index: 2;
      &.active {
       background: url("/img/editor-view-remove-party.png");
+      background-position: 0px 0px;
       cursor: pointer;
       &:hover {
-        background: url("/img/editor-view-remove-party-hover.png");
+            background-position: -24px 0px;
       }
     }
 }
