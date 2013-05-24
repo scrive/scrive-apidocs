@@ -160,6 +160,7 @@
                                        document.save();
                                        document.afterSave(function() {
                                            submit.sendAjax();
+                                           view.viewmodel.setStep(1);
                                         });
                                      }
                        }).input();

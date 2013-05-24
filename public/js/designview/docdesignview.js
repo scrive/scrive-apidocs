@@ -12,8 +12,10 @@
             step : undefined
         },
         initialize: function (args) {
+            var self = this;
             var model = this;
             _.bindAll(model);
+            args.document.bind('change:ready', function() {if (self.document().mainfile() != undefined) self.setStep(1); } )
             model.currentColorIndex = 0;
             model.colors = [
                 '#ff3377',
