@@ -548,14 +548,12 @@
             view.viewmodel = args.viewmodel;
             view.participation = new DesignViewParticipation({model:view.model});
             view.newFieldSelector = new DesignViewNewFieldSelector({model:view.model});
-            view.viewmodel.bind('change:showProblems', view.render);
             view.model.bind('change:fields', view.render);
             view.model.bind('change:authentication', view.render);
             view.model.bind('change:delivery', view.render);
             view.render();
         },
         destroy : function() {
-          this.viewmodel.unbind('change:showProblems', this.render);
           this.model.unbind('change:fields', this.render);
           this.model.unbind('change:authentication', this.render);
           this.model.unbind('change:delivery', this.render);
@@ -670,7 +668,7 @@
 
             field.bind('change:name', changer);
 
-            if(viewmodel.showProblems() && !field.isValid(true))
+            if(!field.isValid(true))
                 $(input.input()).addClass('redborder');
             else
                 $(input.input()).removeClass('redborder');
@@ -706,13 +704,13 @@
             div.addClass('design-view-action-participant-details-information-field-wrapper');
 
             var allFieldOptions = view.possibleFields.concat([]);
-            
+
             function isUnique(field) {
                 return _.every(allFieldOptions, function(o) {
                     return field.name() !== o.name && field.type() !== o.type;
                 });
             }
-            
+
             _.each(viewmodel.document().signatories(), function(signatory) {
                 _.each(signatory.fields(), function(field) {
                     if(field.isText() && isUnique(field))
@@ -720,7 +718,7 @@
                                               type: field.type()});
                 });
             });
-            
+
             var options = [];
 
             // keep only fields not already part of signatory
@@ -761,7 +759,7 @@
 
             $(select.view().el).addClass('design-view-action-participant-new-field-select');
 
-            if(viewmodel.showProblems() && !field.isValid(true))
+            if(!field.isValid(true))
                 $(select.view().el).addClass('redborder');
             else
                 $(select.view().el).removeClass('redborder');
@@ -787,7 +785,7 @@
             var value = sig.name();
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
-            
+
 
             var input = InfoTextInput.init({
                 cssClass: 'design-view-action-participant-details-information-field',
@@ -845,7 +843,7 @@
                 value: value,
                 onChange: function(val) {
                     field.setValue(val.trim());
-                    if(viewmodel.showProblems() && !field.isValid(true))
+                    if(!field.isValid(true))
                         input.addClass('redborder');
                     else
                         input.removeClass('redborder');
@@ -874,7 +872,7 @@
                 options : optionOptions
             });
 
-            if(viewmodel.showProblems() && !field.isValid(true))
+            if(!field.isValid(true))
                 input.addClass('redborder');
             else
                 input.removeClass('redborder');
@@ -896,7 +894,7 @@
             return div;
         },
         possibleFields: [
-            {name: "fstname", 
+            {name: "fstname",
              type: 'standard'},
             {name: "sndname",
              type: 'standard'},
@@ -918,7 +916,7 @@
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
             sigco: localization.company,
-            mobile: localization.phone     
+            mobile: localization.phone
         },
         placeholder: function(name) {
             return this.fieldNames[name] || name;

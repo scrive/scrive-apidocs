@@ -663,18 +663,11 @@ window.Document = Backbone.Model.extend({
     },
     hasDocumentProblems: function() {
         return !this.hasAtLeastOneSignatory() ||
-            !this.mainfile() ||
-            this.hasDuplicateEmails();
+            !this.mainfile()
     },
     hasAtLeastOneSignatory: function() {
         var signing = this.signatoriesWhoSign();
         return signing.length >= 1;
-    },
-    hasDuplicateEmails: function() {
-        var mails = _.invoke(this.signatories(), 'email').sort();
-        return _.some(_.zip(mails, _.rest(mails)), function(ms) {
-            return ms[0] === ms[1] && ms[0] !== '';
-        });
     },
     hasSignatoryProblems: function(forSigning) {
         var sigs = this.signatories();
