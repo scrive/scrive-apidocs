@@ -146,8 +146,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                   _.each(f.placements(), function(p) {
                       if (p.typeSetter != undefined && p.withTypeSetter())
                           p.typeSetter.clear();
-                 })
-               })
+                 });
+               });
              });
                 mixpanel.track('Drag field', {fieldname:field.name(),
                                               signatory:field.signatory().signIndex(),
