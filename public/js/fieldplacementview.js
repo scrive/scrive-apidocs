@@ -290,6 +290,9 @@ var TextTypeSetterView = Backbone.View.extend({
               options: optionOptions
           }).el);
     },
+    title : function() {
+        return $("<div class='title'/>").text(localization.designview.textFields.textField);
+    },
     doneOption : function() {
         var view = this;
         var field = this.model.field();
@@ -545,9 +548,10 @@ var TextTypeSetterView = Backbone.View.extend({
            var body = $("<div class='checkboxTypeSetter-body'/>");
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
 
-        var placement = view.model;
-        var field = placement.field();
+           var placement = view.model;
+           var field = placement.field();
 
+           body.append(this.title());
            body.append(this.selector());
            body.append(this.fieldSelector());
            if(field && field.name() === '') {
@@ -972,6 +976,9 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                                 }
             }).input();
     },
+    title: function() {
+        return $("<div class='title'/>").text(localization.designview.checkboxes.checkbox);
+    },
     subtitle : function() {
         var box = $("<div class='subtitle'/>");
         var name = this.model.field().signatory().nameInDocument();
@@ -998,6 +1005,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            container.append(arrow);
            container.append(body);
 
+           body.append(this.title());
            body.append(this.selector());
            body.append(this.precheckedOption());
            body.append(this.obligatoryOption());
@@ -1311,6 +1319,9 @@ var SignatureTypeSetterView = Backbone.View.extend({
                             }
                            }).input();
     },
+    title : function() {
+        return $("<div class='title'/>").text(localization.designview.signatureBoxSettings);
+    },
     selector : function() {
         var view = this;
         var box = $("<div class='subtitle'/>");
@@ -1361,6 +1372,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
            var body = $("<div class='checkboxTypeSetter-body'/>");
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
 
+           body.append(this.title());
            body.append(this.selector());
            body.append(this.obligatoryOption());
 

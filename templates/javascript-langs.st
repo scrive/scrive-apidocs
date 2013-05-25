@@ -387,6 +387,7 @@ javascriptLocalisation =
              , previewInvitation: "$_designViewPreviewInvitation()$"
              , dAndDActions: "$_designViewDAndDActions()$"
              , signatureBox: "$_designViewSignatureBox()$"
+             , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
              , freeTextBox: "$_designViewFreeTextBox()$"
              , offsite: "$_designViewOffsite()$"
              , checkbox: "$_checkBoxFieldName()$"
