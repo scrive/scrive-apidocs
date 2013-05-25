@@ -606,7 +606,7 @@ var TextPlacementView = Backbone.View.extend({
 
 var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateColor');
+        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateColor', 'updateErrorBackground');
         var view = this;
         var placement = this.model;
         var field =  placement.field();

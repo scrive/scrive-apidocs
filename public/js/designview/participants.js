@@ -241,7 +241,7 @@
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-new-box-buttons');
-            
+
             if(model.participantDetail()) {
                 div.append(view.doneButton());
             } else {
@@ -322,11 +322,11 @@
             var model = view.model;
             var div = $('<div />');
             div.addClass('design-view-action-participant-done');
-            
+
             var button = Button.init({
                 color: 'green',
                 size: 'tiny',
-                text: localization.ok,
+                text: localization.save,
                 onClick: function() {
                     model.setParticipantDetail(null);
                 }
@@ -811,7 +811,8 @@
             var value = sig.name();
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
-
+            var fstnameField = sig.fstnameField();
+            var sndnameField = sig.sndnameField();
 
             var input = InfoTextInput.init({
                 cssClass: 'design-view-action-participant-details-information-field',
@@ -828,15 +829,33 @@
                         f = str.trim();
                         s = '';
                     }
-                    sig.fstnameField().setValue(f);
-                    sig.sndnameField().setValue(s);
+                    fstnameField.setValue(f);
+                    sndnameField.setValue(s);
                 }
             });
+
+            fstnameField.bind('change', function() {
+                if(!fstnameField.isValid(true))
+                    input.input().addClass('redborder');
+                else
+                    input.input().removeClass('redborder');
+            });
+
+            sndnameField.bind('change', function() {
+                if(!fstnameField.isValid(true) )
+                    input.input().addClass('redborder');
+                else
+                    input.input().removeClass('redborder');
+            });
+            if(!fstnameField.isValid(true))
+                    input.input().addClass('redborder');
+            else
+                    input.input().removeClass('redborder');
 
             var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
 
             var options = new FieldOptionsView({
-                model: sig.fstnameField(),
+                model: fstnameField,
                 options: optionOptions
             });
 

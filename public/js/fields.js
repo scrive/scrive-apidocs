@@ -306,6 +306,8 @@ window.Field = Backbone.Model.extend({
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
+        if ((this.isFstName() || this.isSndName()) && this.signatory().author())
+            return new NoValidation();
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
@@ -325,14 +327,6 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
-        // Removed because we don't treat standard fields so differently
-        /*
-        if (this.signatory().author() && this.isStandard() && this.hasPlacements() && forSigning) {
-          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-          return new NotEmptyValidation({message: msg});
-        }
-        */
-
         if(this.isObligatory() && forSigning && this.shouldbefilledbysender()) {
             var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
             return new NotEmptyValidation({message: msg});
@@ -343,25 +337,11 @@ window.Field = Backbone.Model.extend({
           return new NotEmptyValidation({message: msg});
         }
 
-        // Removed to make more sense in new design view: custom fields do not need to be placed.
-        /*
-        if (this.isCustom()) {
-          var msg1 = localization.designview.validation.notReadyField;
-          var msg2 = localization.designview.validation.notPlacedField;
-          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1})
-                .concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
-          if (this.signatory().author() && forSigning) {
-            return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongPlacedAuthorField}));
-          } else {
-            return validation;
-          }
-        }
-        */
         if (this.isCheckbox()) {
             var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
             return validation;
         }
-
+        console.log("Dummy validation for field " + this.name());
         return new Validation();
     },
     isEmail: function() {
@@ -506,176 +486,6 @@ window.Field = Backbone.Model.extend({
     }
 });
 
-window.FieldStandardView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'cleanredborder');
-         this.model.bind('change:inlineedited', this.render);
-        this.model.bind('change', this.cleanredborder);
-        this.model.view = this;
-        this.render();
-    },
-    render: function(){
-        var field = this.model;
-        $(this.el).empty();
-        var signatory = field.signatory();
-        if (!signatory.canSign() || field.isClosed() || !signatory.current()) {
-            $(this.el).addClass("field");
-            input = $("<input class='fieldvalue' autocomplete='off' readonly=''/>");
-            if (field.value() != "")
-                input.val(field.value());
-            else
-                {
-                input.val(field.nicename());
-                $(this.el).addClass("required");
-                input.addClass("grayed");
-                }
-        $(this.el).append(input);
-        }
-        else
-        {
-            $(this.el).addClass("dragfield");
-            var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
-            if (field.value() ==  "" && SessionStorage.get(signatory.document().documentid(),field.name()) != undefined ) {
-                field.setValue(SessionStorage.get(signatory.document().documentid(),field.name()));
-            }
-            var input = InfoTextInput.init({
-                                 infotext: field.nicename(),
-                                 value: field.value(),
-                                 cssClass :'fieldvalue',
-                                 onChange : function(value) {
-                                    field.setValue(value);
-                                    SessionStorage.set(signatory.document().documentid(),field.name(),value);
-                                  }
-                            }).input();
-            this.redborderhere = input;
-            input.attr("autocomplete","off");
-            wrapper.append(input);
-            $(this.el).append(wrapper);
-        }
 
-        return this;
-    },
-    redborder : function() {
-        if (this.redborderhere != undefined)
-            this.redborderhere.css("border","1px solid red");
-    },
-    cleanredborder : function() {
-        if (this.redborderhere != undefined)
-            this.redborderhere.css("border","");
-    }
-});
-
-
-// this is unused in new design view
-// Eric
-window.FieldDesignView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'cleanredborder');
-        this.model.bind('change', this.cleanredborder);
-        this.model.bind('ready', this.render);
-        this.model.signatory().document().bind('change:authenticationdelivery', this.cleanredborder);
-        this.model.view = this;
-        this.render();
-    },
-    ddIcon : function() {
-        var icon =  $("<div class='ddIcon' />");
-        var field = this.model;
-        var document = field.signatory().document();
-        if (document.mainfile() != undefined && document.mainfile().view != undefined) {
-            draggebleField(icon, field);
-        }
-        return icon;
-    },
-    prepIcon : function() {
-        return $("<a class='prepIcon' href='#'/>");
-    },
-    setNameIcon : function() {
-        var view = this;
-        var field = this.model;
-        var input = this.input;
-        var icon =  $("<a class='setNameIcon' href='#'/>");
-        var fn = function(){
-            if (field.name() != undefined && field.name() != "")
-               field.makeReady();
-            else
-               view.redborder();
-            return false;
-        };
-        icon.click(fn);
-        input.keypress(function(event) {
-          if(event.which === 13)
-            return fn();
-        });
-
-        // I'm not putting a blur handler that sets the name
-        // because it's a little odd. Neither is perfect. Eric
-
-        return icon;
-    },
-    removeIcon: function() {
-        var field = this.model;
-        var icon = $("<a class='removeField' href='#'/>");
-        icon.click(function(){
-            field.remove();
-            return false;
-        });
-        return icon;
-    },
-    render: function(){
-        var field = this.model;
-        $(this.el).empty();
-        var signatory = field.signatory();
-        $(this.el).addClass("field");
-        if (field.isReady()) {
-          $(this.el).append(this.ddIcon());
-          this.input = InfoTextInput.init({
-                                 infotext: field.nicename(),
-                                 value: field.value(),
-                                 cssClass :'fieldvalue',
-                                 inputname : field.name(), //Added only for selenium tests
-                                 onChange : function(value) {
-                                    field.setValue(value);
-                                  }
-                            }).input();
-          if  ( field.isClosed() ||
-              ((field.isEmail() || field.isFstName() || field.isSndName()) && field.signatory().author()) ||
-              ( field.isStandard() && field.signatory().author() && field.signatory().document().isTemplate()))
-            {
-                $(this.el).addClass('closed');
-                this.input.attr("readonly","yes");
-            }
-          else if (!field.isStandard())
-           {
-               this.input.addClass("shorter");
-               $(this.el).append(this.removeIcon());
-           }
-          $(this.el).append(this.input);
-        }
-        else {
-           $(this.el).append(this.prepIcon());
-           this.input = InfoTextInput.init({
-                                 infotext: localization.fieldName,
-                                 value: field.name(),
-                                 cssClass :'fieldvalue',
-                                 inputname : field.name(), //Added only for selenium tests
-                                 onChange : function(value) {
-                                    field.setName(value);
-                                  }
-               }).input();
-           this.input.addClass("much-shorter");
-           $(this.el).append(this.input);
-           $(this.el).append(this.removeIcon());
-           $(this.el).append(this.setNameIcon());
-
-        }
-        return this;
-    },
-    redborder : function() {
-        $(this.el).addClass("redborder");
-    },
-    cleanredborder : function() {
-        $(this.el).removeClass("redborder");
-    }
-});
 
 })(window);

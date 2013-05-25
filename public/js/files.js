@@ -186,6 +186,10 @@ var FilePageView = Backbone.View.extend({
         this.render();
     },
     destroy : function() {
+      _.each(this.model.placements(), function(p) {
+          if (p.typeSetter != undefined)
+            p.typeSetter.clear();
+      });
       this.off();
       this.model.off();
       $(this.el).remove();

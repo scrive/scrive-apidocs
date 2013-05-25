@@ -40,6 +40,13 @@ window.Validation = Backbone.Model.extend({
     }
 });
 
+window.NoValidation = Validation.extend({
+    defaults: {
+           validates: function(t) { return true; },
+           message: "The value should be always ok"
+        }
+});
+
 window.NotEmptyValidation = Validation.extend({
     defaults: {
            validates: function(t) {

@@ -15,7 +15,7 @@
             var self = this;
             var model = this;
             _.bindAll(model);
-            args.document.bind('change:ready change:file', function() {self.setStep(self.document().mainfile() != undefined ? 1 : undefined);})
+            args.document.bind('change:ready change:file', function() {self.setStep(self.document().mainfile() != undefined ? (self.step() || 1) : undefined);})
 
             model.currentColorIndex = 0;
             model.colors = [
