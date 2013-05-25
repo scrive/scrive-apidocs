@@ -908,20 +908,6 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
         return box;
     },
-    nameEditor: function() {
-      var view = this;
-      var field = this.model.field();
-      this.nameinput = InfoTextInput.init({
-                                 infotext: localization.designview.checkboxes.name,
-                                 value: field.name(),
-                                 cssClass: "name",
-                                 onChange : function(value) {
-                                     view.nameinput.removeClass('redborder');
-                                     field.setName(value);
-                                 }
-                            }).input();
-     return this.nameinput;
-    },
     obligatoryOption : function() {
 
         var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
@@ -1013,7 +999,6 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            container.append(body);
 
            body.append(this.selector());
-           body.append(this.nameEditor());
            body.append(this.precheckedOption());
            body.append(this.obligatoryOption());
 
