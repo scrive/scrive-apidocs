@@ -109,8 +109,9 @@ handleActivate mfstname msndname actvuser signupmethod = do
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
-              when (not stoplogin) $ (logUserToContext $ Just tosuser)
-              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
+              when (not stoplogin) $ do 
+                _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
+                logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
               when (promo) $ addManualPricePlan (userid actvuser) TrialPricePlan ActiveStatus
               return $ Just (tosuser, newdocs)
