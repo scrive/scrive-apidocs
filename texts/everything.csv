@@ -668,7 +668,7 @@
 "_ordernonsignatoryname","Ej signerande mottagare","Non-signing recipient"
 "_days","dagar","days"
 "_to"," till "," to "
-"_signaturePlaceFor","signerar här","signature"
+"_signaturePlaceFor","signerar här","will sign here"
 "_signaturePlaceYour","Klicka här för att rita signatur","Click here to draw signature"
 "_signaturePlaceYourTip","Klicka här","Click here"
 "_selectFileToUpload","Skicka fil från dator","Send file from computer"
