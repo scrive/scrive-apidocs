@@ -15,7 +15,17 @@
             var self = this;
             var model = this;
             _.bindAll(model);
-            args.document.bind('change:ready change:file', function() {self.setStep(self.document().mainfile() != undefined ? (self.step() || 1) : undefined);})
+            args.document.bind('change:ready change:file', function() {
+              if (self.document().mainfile() == undefined)
+                self.setStep(undefined);
+              else {
+                var updateOnReady = function() {
+                  if (self.document().mainfile().ready())
+                     self.setStep((self.step() || 1));
+                }
+                self.document().mainfile().bind('change', updateOnReady);
+              }
+            })
 
             model.currentColorIndex = 0;
             model.colors = [
@@ -192,6 +202,7 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
+            view.currentStep = undefined;
             view.participantsView = window.DesignViewParticipantsView({ model : view.model});
             view.draggablesView   = new DesignViewDraggablesView({ model : view.model});
             view.processView = DesignViewProcessView({ model : view.model });
@@ -202,30 +213,40 @@
         closeAllParticipants : function() {
             this.participantsView.closeAllParticipants();
         },
+        slideNewView : function() {
+            var view = this;
+            var model = view.model;
+            var container = $(this.el);
+            container.children().detach();
+            var callback;
+            if(model.step() === 1) {
+                container.append($("<div class='design-view-action-container-shadow'/>"));
+                container.append(view.participantsView.el);
+            } else if(model.step() === 2) {
+               container.append($("<div class='design-view-action-container-shadow'/>"));
+               container.append(view.draggablesView.el);
+            } else if(model.step() === 3) {
+               container.append($("<div class='design-view-action-container-shadow'/>"));
+               container.append(view.processView.el);
+               callback = function() {view.processView.setupTinyMCE()};
+            }
+            container.slideDown(200,callback);
+
+        },
         render: function() {
             var view = this;
             var model = view.model;
 
-            if(model.step() === 1) {
-                // detach to keep the handlers around
-                view.$el.children().detach();
-                view.$el.html(view.participantsView.el);
-            } else if(model.step() === 2) {
-                view.$el.children().detach();
-                view.$el.html(view.draggablesView.el);
-            } else if(model.step() === 3) {
-                // add in the edit process view
-                view.$el.children().detach();
-                view.$el.html(view.processView.el);
-                view.processView.setupTinyMCE();
-            } else {
-                view.$el.children().detach();
-                view.$el.html('');
+            if (view.currentStep != undefined)
+              $(this.el).slideUp(200,function() {view.slideNewView();});
+            else {
+              $(this.el).css("display","none");
+              view.slideNewView();
             }
 
-            var shadow = $('<div />');
-            shadow.addClass('design-view-action-container-shadow');
-            view.$el.append(shadow);
+            view.currentStep = model.step();
+
+
 
             return view;
         }

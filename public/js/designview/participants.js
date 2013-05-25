@@ -1112,15 +1112,10 @@
         },
         inner: function() {
             var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-inner');
-            div.append(view.infoBox());
-            div.append(view.detailsView.el);
-
-            // save the div for later
-            view.innerDiv = div;
-
-            return div;
+            view.innerDiv = $("<div class='design-view-action-participant-inner'/>");
+            view.innerDiv.append(view.infoBox());
+            view.innerDiv.append(view.detailsView.el);
+            return view.innerDiv;
         },
         closeBox: function() {
             var view = this;

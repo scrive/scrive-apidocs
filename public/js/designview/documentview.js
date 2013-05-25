@@ -150,7 +150,7 @@
             var input = UploadButton.init({    color: 'green',
                                      size: 'big',
                                      text: localization.uploadButton,
-                                     width: 220,
+                                     width: 226,
                                      name: 'file',
                                      maxlength: 2,
                                      onAppend: function(input, title, multifile) {
