@@ -304,9 +304,6 @@ javascriptLocalisation =
              , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
-              withoutParticipant: "$_designViewWithoutParticipant()$",
-              textFieldFor: "$_designViewTextFieldFor()$",
-              chooseParticipant: "$_designViewChooseParticipant()$",
               selectField: "$_selectField()$",
               selectprocess : "$_selectDocumentType()$",
               validation : {

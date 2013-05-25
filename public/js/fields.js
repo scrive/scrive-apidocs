@@ -14,8 +14,7 @@ window.FieldPlacement = Backbone.Model.extend({
       hrel: 0,
       fsrel: 0,
       withTypeSetter : false,
-        alive: true,
-        step: 'signatory'
+        alive: true
     },
     initialize : function(args){
         var placement = this;
@@ -151,13 +150,6 @@ window.FieldPlacement = Backbone.Model.extend({
         var field = placement.field();
         if(field)
             field.trigger('bubble');
-    },
-    step: function() {
-        return this.get('step');
-    },
-    advanceStep: function() {
-        this.set({step:{signatory:'field',
-                        field:'edit'}[this.get('step')]})
     }
 });
 
