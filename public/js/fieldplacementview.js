@@ -93,6 +93,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset);
         },
         onDrop: function(page, x, y, w, h) {
+
             droppedInside = true;
             var signatory = field.signatory();
             if( !_.find(signatory.fields(), function(f) { return f==field; })) {
@@ -140,6 +141,14 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 }
             }
             else {
+              _.each(field.signatory().document().signatories(),function(s) {
+                _.each(s.fields(), function(f) {
+                  _.each(f.placements(), function(p) {
+                      if (p.typeSetter != undefined && p.withTypeSetter())
+                          p.typeSetter.clear();
+                 })
+               })
+             });
                 mixpanel.track('Drag field', {fieldname:field.name(),
                                               signatory:field.signatory().signIndex(),
                                               documentid:field.signatory().document().documentid()});
