@@ -354,7 +354,6 @@
             var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
-
             var cwidth = view.middleColumnDiv.width();
             view.invitationEditor.html(doc.invitationmessage());
             view.invitationEditor.show();
@@ -365,6 +364,7 @@
                 theme_advanced_toolbar_location: "external",
                 theme_advanced_buttons1: "",
                 //theme_advanced_buttons2: "",
+                width: 300,
                 convert_urls: false,
                 theme_advanced_toolbar_align: "middle",
                 plugins: "noneditable,paste",
@@ -382,6 +382,7 @@
             });
 
 
+            this.tinyIsReady = true;
             return view;
         }
     });

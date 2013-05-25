@@ -228,7 +228,7 @@
             } else if(model.step() === 3) {
                container.append($("<div class='design-view-action-container-shadow'/>"));
                container.append(view.processView.el);
-               callback = function() {view.processView.setupTinyMCE()};
+               callback = function() { view.processView.setupTinyMCE()};
             }
             container.slideDown(200,callback);
 
