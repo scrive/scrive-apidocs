@@ -290,9 +290,6 @@ var TextTypeSetterView = Backbone.View.extend({
               options: optionOptions
           }).el);
     },
-    help : function() {
-        return $("<div class='help'/>").text(localization.designview.textFields.help);
-    },
     doneOption : function() {
         var view = this;
         var field = this.model.field();
@@ -314,9 +311,6 @@ var TextTypeSetterView = Backbone.View.extend({
                                 return false;
                             }
                            }).input();
-    },
-    title : function() {
-        return $("<div class='title'/>").text(localization.designview.textFields.textField);
     },
     possibleFields: [
         {name: "fstname",
@@ -554,7 +548,6 @@ var TextTypeSetterView = Backbone.View.extend({
         var placement = view.model;
         var field = placement.field();
 
-           body.append(this.title());
            body.append(this.selector());
            body.append(this.fieldSelector());
            if(field && field.name() === '') {
@@ -562,7 +555,6 @@ var TextTypeSetterView = Backbone.View.extend({
            }
            body.append(this.obligatoryOption());
            body.append(this.doneOption());
-           body.append(this.help());
         container.html('');
            container.append(arrow);
            container.append(body);
@@ -971,9 +963,6 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         });
         return option;
     },
-    help : function() {
-        return $("<div class='help'/>").text(localization.designview.checkboxes.help);
-    },
     doneOption : function() {
         var view = this;
         var field = this.model.field();
@@ -996,9 +985,6 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                                     return false;
                                 }
             }).input();
-    },
-    title : function() {
-        return $("<div class='title'/>").text(localization.designview.checkboxes.checkbox);
     },
     subtitle : function() {
         var box = $("<div class='subtitle'/>");
@@ -1026,14 +1012,12 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            container.append(arrow);
            container.append(body);
 
-           body.append(this.title());
            body.append(this.selector());
            body.append(this.nameEditor());
            body.append(this.precheckedOption());
            body.append(this.obligatoryOption());
 
            body.append(this.doneOption());
-           body.append(this.help());
            this.place();
            return this;
     }
@@ -1320,9 +1304,6 @@ var SignatureTypeSetterView = Backbone.View.extend({
 
         return option;
     },
-    help : function() {
-        return $("<div class='help'/>").text(localization.designview.textFields.help);
-    },
     doneOption : function() {
         var view = this;
         var field = this.model.field();
@@ -1344,9 +1325,6 @@ var SignatureTypeSetterView = Backbone.View.extend({
                                 return false;
                             }
                            }).input();
-    },
-    title : function() {
-        return $("<div class='title'/>").text(localization.designview.signatureBox);
     },
     selector : function() {
         var view = this;
@@ -1398,12 +1376,10 @@ var SignatureTypeSetterView = Backbone.View.extend({
            var body = $("<div class='checkboxTypeSetter-body'/>");
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
 
-           body.append(this.title());
            body.append(this.selector());
            body.append(this.obligatoryOption());
 
            body.append(this.doneOption());
-           body.append(this.help());
         container.html('');
            container.append(arrow);
            container.append(body);
