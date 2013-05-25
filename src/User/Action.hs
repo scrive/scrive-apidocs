@@ -67,7 +67,6 @@ handleActivate mfstname msndname actvuser signupmethod = do
   mtos <- getDefaultedField False asValidCheckBox "tos"
   callme <- isFieldSet "callme"
   stoplogin <- isFieldSet "stoplogin"
-  promo <- isFieldSet "promo"
   phone <-  fromMaybe "" <$> getField "phone"
   companyname <- fromMaybe "" <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
