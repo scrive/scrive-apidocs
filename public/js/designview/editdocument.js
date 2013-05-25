@@ -130,10 +130,15 @@
             img.attr('src', '/img/place-fields-customfield.png');
 
             var gettext = function() {
-                return viewmodel.document().author().field('email', 'standard');
+                return new Field({
+                    signatory: viewmodel.document().author(),
+                    name: 'fake',
+                    type: 'fake',
+                    value: localization.designview.withoutParticipant
+                });
             };
 
-            draggebleField(div, gettext,undefined, undefined,true);
+            draggebleField(div, gettext, undefined, undefined, true);
 
             div.append(wra);
             wra.append(txt);
