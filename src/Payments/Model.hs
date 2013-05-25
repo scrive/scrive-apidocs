@@ -23,7 +23,7 @@ data PricePlan = FreePricePlan
                | TeamPricePlan
                | FormPricePlan
                | EnterprisePricePlan  -- nothing gets blocked
-               | TrialPricePlan -- nothing gets blocked for 3 months
+               | TrialTeamPricePlan -- team plan for 3 months
                deriving (Eq, Ord)
                  
 newtype AccountCode = AccountCode Int64
@@ -308,14 +308,14 @@ instance Show PricePlan where
   showsPrec _ TeamPricePlan         = (++) "team"
   showsPrec _ FormPricePlan         = (++) "form"
   showsPrec _ EnterprisePricePlan   = (++) "enterprise"
-  showsPrec _ TrialPricePlan        = (++) "trial"
+  showsPrec _ TrialTeamPricePlan    = (++) "trial"
 
 instance Read PricePlan where
   readsPrec _ "free"         = [(FreePricePlan,         "")]
   readsPrec _ "team"         = [(TeamPricePlan,         "")]
   readsPrec _ "form"         = [(FormPricePlan,         "")]
   readsPrec _ "enterprise"   = [(EnterprisePricePlan,   "")]
-  readsPrec _ "trial"        = [(TrialPricePlan,        "")]
+  readsPrec _ "trial"        = [(TrialTeamPricePlan,    "")]
   readsPrec _ _              = []
 
 instance Show PaymentPlanStatus where
@@ -337,14 +337,14 @@ instance Convertible PricePlan Int where
   safeConvert TeamPricePlan         = return 1
   safeConvert FormPricePlan         = return 2
   safeConvert EnterprisePricePlan   = return 3
-  safeConvert TrialPricePlan        = return 4
+  safeConvert TrialTeamPricePlan    = return 4
 
 instance Convertible Int PricePlan where
   safeConvert 0  = return FreePricePlan
   safeConvert 1  = return TeamPricePlan
   safeConvert 2  = return FormPricePlan
   safeConvert 3  = return EnterprisePricePlan
-  safeConvert 4  = return TrialPricePlan
+  safeConvert 4  = return TrialTeamPricePlan
   safeConvert s  = Left ConvertError { convSourceValue  = show s
                                      , convSourceType   = "Int"
                                      , convDestType     = "PricePlan"

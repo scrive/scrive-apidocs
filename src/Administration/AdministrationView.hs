@@ -95,7 +95,7 @@ adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =
           TeamPricePlan       -> F.value "teamplan"       True
           FormPricePlan       -> F.value "formplan"       True
           EnterprisePricePlan -> F.value "enterpriseplan" True
-          TrialPricePlan      -> F.value "trialplan" True
+          TrialTeamPricePlan  -> F.value "trialplan"      True
         case ppStatus paymentplan of
           ActiveStatus      -> F.value "activestatus"      True
           OverdueStatus     -> F.value "overduestatus"     True
@@ -143,7 +143,7 @@ adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =
           TeamPricePlan       -> F.value "teamplan"       True
           FormPricePlan       -> F.value "formplan"       True
           EnterprisePricePlan -> F.value "enterpriseplan" True
-          TrialPricePlan      -> F.value "trialplan" True
+          TrialTeamPricePlan  -> F.value "trialplan"      True
         case ppStatus paymentplan of
           ActiveStatus      -> F.value "activestatus"      True
           OverdueStatus     -> F.value "overduestatus"     True

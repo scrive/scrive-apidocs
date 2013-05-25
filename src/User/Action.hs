@@ -113,7 +113,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
-              when (promo) $ addManualPricePlan (userid actvuser) TrialPricePlan ActiveStatus
+              when (promo) $ addManualPricePlan (userid actvuser) TrialTeamPricePlan ActiveStatus
               return $ Just (tosuser, newdocs)
             else do
               Log.debug $ "No TOS accepted. We cant activate user."
