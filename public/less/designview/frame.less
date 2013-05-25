@@ -1,4 +1,6 @@
 @import 'util.less';
+@import '../branding/elements.less';
+@import '../branding/colors.less';
 
 // hide the page footer in design view
 body.designview > footer {
@@ -224,7 +226,9 @@ body.designview .mainContainer {
     color: #DDDDDD;
     background-color: white;
     &.active {
-      background: #7A94B8;
+      .gradient(hsl(@greenH,@greenS,35%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,40%));
+      .box-shadow(inset hsl(@greenH,66%,60%) 0 0 0 2px);
+      border: 2px solid hsl(@greenH,@greenS,23%);
       color: white;
       font-size: 18px;
       font-weight: 400;
