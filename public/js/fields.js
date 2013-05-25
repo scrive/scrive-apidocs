@@ -208,6 +208,22 @@ window.Field = Backbone.Model.extend({
     },
     setValue : function(value) {
         this.set({"value" : value});
+        this.triggerSignatoryPostChanges();
+    },
+    triggerSignatoryPostChanges : function() {
+        var name = this.name();
+        if (this.isStandard()) {
+            if (name == "fstname")
+                this.signatory().trigger('change:name');
+            if (name == "sndname" )
+                this.signatory().trigger('change:name');
+            if (name == "email")
+                this.signatory().trigger('change:email');
+            if (name == "sigco")
+                this.signatory().trigger('change:company');
+        }
+
+
     },
     setValueTMP : function(value) {
         this.set({"valueTMP" : value});

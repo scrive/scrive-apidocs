@@ -1186,8 +1186,8 @@
                     txt.text(sig.name());
                 };
 
-                sig.fstnameField().bind('change:value', f);
-                sig.sndnameField().bind('change:value', f);
+                sig.bind('change:name', f);
+
             }
 
             div.append(txt);
@@ -1216,7 +1216,7 @@
                 txt.text(sig.email());
             };
 
-            sig.emailField().bind('change:value', f);
+            sig.bind('change:email', f);
 
             div.append(txt);
             return div;
@@ -1236,7 +1236,7 @@
                 };
 
 
-                sig.companyField().bind('change:value', f);
+                sig.bind('change:company', f);
             }
             div.append(txt);
             return div;
