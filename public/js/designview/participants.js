@@ -643,7 +643,10 @@
                         });
                     }
                 });
-                div.append(csvButton.input());
+                var wrapperdiv = $('<div />');
+                wrapperdiv.addClass('design-view-action-participant-details-information-field-wrapper');
+                wrapperdiv.append(csvButton.input());
+                div.append(wrapperdiv);
             } else {
                 // always show these three fields first
                 div.append(view.detailsFullNameField());
