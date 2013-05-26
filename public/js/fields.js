@@ -14,8 +14,8 @@ window.FieldPlacement = Backbone.Model.extend({
       hrel: 0,
       fsrel: 0,
       withTypeSetter : false,
-        alive: true,
-        step: 'signatory'
+      alive: true,
+      step: 'edit'
     },
     initialize : function(args){
         var placement = this;
@@ -157,7 +157,8 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     advanceStep: function() {
         this.set({step:{signatory:'field',
-                        field:'edit'}[this.get('step')]})
+                        field:'edit'}[this.get('step')]});
+
     }
 });
 
@@ -242,6 +243,9 @@ window.Field = Backbone.Model.extend({
     isClosed : function() {
         return this.get("closed");
     },
+    isFake : function() {
+        return this.type() == 'fake';
+    },
     placements : function() {
         return this.get("placements");
     },
@@ -261,6 +265,9 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
+    },
+    hasNotReadyPlacements : function() {
+      return _.any(this.placements(), function(p) {if (p.step() != 'field' && p.step != 'edit') console.log("Bad step X" + p.step() +"X"); return (p.step() != 'field' && p.step() != 'edit');});
     },
     readyForSign : function(){
         if (this.isEmail())
@@ -308,6 +315,9 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name();
 
+        if (field.isFake())
+           return new NoValidation();
+
         if( field.isBlank() ) {
             var msg = localization.designview.validation.pleaseSelectField;
             return new Validation({validates: function() {
@@ -331,6 +341,9 @@ window.Field = Backbone.Model.extend({
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
         if ((this.isFstName() || this.isSndName()) && this.signatory().author())
+            return new NoValidation();
+
+        if (this.isCheckbox() && this.signatory().author())
             return new NoValidation();
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {

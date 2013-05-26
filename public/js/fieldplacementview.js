@@ -146,7 +146,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                         wrel: $(helper).width() / w,
                         hrel: $(helper).height() / h,
                         fsrel: fontSize/w,
-                        tip: placement.tip()
+                        tip: placement.tip(),
+                        step : placement.step()
                     });
                     field.addPlacement(newPlacement);
                 }
@@ -172,7 +173,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     wrel: $(helper).width() / w,
                     hrel: $(helper).height() / h,
                     fsrel: fontSize/w,
-                    withTypeSetter : true
+                    withTypeSetter : true,
+                    step : (field.isFake() ? 'signatory' : 'edit')
                 });
                 field.addPlacement(newPlacement);
                 signatory.trigger('drag:checkbox');
@@ -255,6 +257,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
 
 var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
+        var self = this;
         _.bindAll(this);
         this.model.bind('removed', this.clear);
         this.model.bind('change:field change:signatory change:step', this.render);
@@ -263,7 +266,10 @@ var TextTypeSetterView = Backbone.View.extend({
 
         this.model.field().signatory().bind("change:fields",this.render);
         this.model.field().signatory().document().bind("change:signatories",this.render);
-
+        this.model.bind('change:field',function() {
+          self.model.field().bind('change:value',self.updatePosition);
+        });
+        this.model.field().bind('change:value',this.updatePosition);
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -271,6 +277,10 @@ var TextTypeSetterView = Backbone.View.extend({
         $(window).scroll(view.fixPlaceFunction); // To deal with resize;
         $(window).resize(view.fixPlaceFunction);
         this.render();
+    },
+    updatePosition : function() {
+        var self = this;
+        setTimeout(function() {self.place();},1);
     },
     clear: function() {
         this.off();
@@ -280,6 +290,8 @@ var TextTypeSetterView = Backbone.View.extend({
 
         $(window).unbind('scroll',this.fixPlaceFunction);
         $(window).unbind('resize',this.fixPlaceFunction);
+        this.model.field().unbind('change:value',this.updatePosition);
+
 
         this.model.field().signatory().unbind("change:fields",this.render);
         this.model.field().signatory().document().unbind("change:signatories",this.render);
@@ -590,12 +602,12 @@ var TextTypeSetterView = Backbone.View.extend({
         container.css("position", "absolute");
         var body = $("<div class='checkboxTypeSetter-body'/>");
         var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
-        
+
         var placement = view.model;
         var field = placement.field();
-        
+
         body.append(this.title());
-        
+
         if(placement.step() === 'signatory') {
 
             body.append(this.selector());
@@ -619,7 +631,7 @@ var TextTypeSetterView = Backbone.View.extend({
         container.html('');
         container.append(arrow);
         container.append(body);
-        
+
         this.place();
         return this;
     }
@@ -868,7 +880,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         } else {
             pField = field;
         }
-        
+
         place.empty();
         place.append(new TextPlacementView({model: pField}).el);
         place.unbind('click');

@@ -97,7 +97,7 @@ window.Signatory = Backbone.Model.extend({
         signatory.set({"fields": fields,
                        "attachments": attachments
                       });
-        
+
         signatory.bindBubble();
     },
     document: function() {
@@ -188,7 +188,7 @@ window.Signatory = Backbone.Model.extend({
         });
     },
     readyFields: function() {
-        return _.filter(this.fields(), function(f) {return f.isReady();});
+        return _.filter(this.fields(), function(f) {return f.isReady() && !f.isFake();});
     },
     customFields: function() {
         var cf = new Array();
@@ -546,7 +546,7 @@ window.Signatory = Backbone.Model.extend({
     },
     hasFieldProblems: function(forSigning) {
         return _.some(this.fields(), function(field) {
-            return !field.isValid(forSigning);
+            return !field.isValid(forSigning) || field.hasNotReadyPlacements();
         });
     },
     role: function() {
