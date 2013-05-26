@@ -590,7 +590,7 @@ window.Signatory = Backbone.Model.extend({
                                    type: 'standard',
                                    obligatory: true,
                                    shouldbefilledbysender: signatory.author(),
-                                   signatory: signatory})
+                                   signatory: signatory});
                 f.addedByMe = true;
                 signatory.addField(f);
             } else {
