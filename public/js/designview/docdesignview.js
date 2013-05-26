@@ -20,8 +20,9 @@
                 self.setStep(undefined);
               else {
                 var updateOnReady = function() {
-                  if (self.document().mainfile().ready())
-                     self.setStep((self.step() || 1));
+                  if (self.document().mainfile().ready()) {
+                     setTimeout(function() { self.setStep((self.step() || 1)); }, 800);
+                  }
                 }
                 self.document().mainfile().bind('change', updateOnReady);
               }
