@@ -359,6 +359,22 @@
             // any changes to the signatories of a document and we rerender
             // this includes adding and removing signatories
             view.model.document().bind('change:signatories', view.reset);
+            view.model.bind('change:participantDetail', view.rescroll);
+            $(window).resize(view.resizeOnWindowResize);
+        },
+        rescroll: function() {
+            var view = this;
+            var participantDetail = view.model.participantDetail();
+            if( participantDetail ) {
+                var allSignatories = view.model.document().signatories();
+                var lastSignatory = allSignatories[allSignatories.length - 1];
+                if( participantDetail === lastSignatory ) {
+                    setTimeout(function() {
+                        view.scrollBox.mCustomScrollbar("update");
+                        view.scrollBox.mCustomScrollbar("scrollTo","bottom");
+                    }, 300);
+                }
+            }
         },
         reset: function() {
             var view = this;
@@ -394,18 +410,44 @@
             });
             return view;
         },
+        resizeOnWindowResize: function() {
+            var view = this;
+            var newHeight = $(window).height() - 350;
+            if( newHeight<100 ) {
+                newHeight = 100;
+            }
+            view.scrollBox.css("max-height", newHeight + "px");
+            setTimeout(function() {
+                view.scrollBox.mCustomScrollbar('update');
+            }, 500);
+            return false;
+        },
         render: function() {
             var view = this;
             var model = view.model;
             view.$el.children().detach();
             var box = $("<div class='design-view-action-participant-container-participants-box'>");
-            //box.css("max-height",($(window).height() - 460) + "px");
+            var newHeight = $(window).height() - 350;
+            if( newHeight<100 ) {
+                newHeight = 100;
+            }
+            box.css("max-height", newHeight + "px");
             $.each(view.participants, function(i, p) {
                box.append(p.el);
             });
 
             view.$el.append(box).append(view.addNew.el);
 
+
+            box.mCustomScrollbar({ mouseWheel: true
+                                   , advanced:{
+                                       updateOnContentResize: true // this is polling, might want to have update called in proper times
+                                   }
+                                   , scrollInertia: 0
+                                   , scrollButtons:{
+                                       enable: false // we do not want buttons, also we do not want pngs that come with the buttons
+                                   }});
+            view.scrollBox = box;
             return view;
         }
     });
