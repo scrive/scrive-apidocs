@@ -257,9 +257,13 @@ var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this);
         this.model.bind('removed', this.clear);
+        this.model.bind('change:field change:signatory change:step', this.render);
+
+
+
         this.model.field().signatory().bind("change:fields",this.render);
         this.model.field().signatory().document().bind("change:signatories",this.render);
-        this.model.bind('change:field change:signatory', this.render);
+
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -271,12 +275,17 @@ var TextTypeSetterView = Backbone.View.extend({
     clear: function() {
         this.off();
         $(this.el).remove();
+        this.model.unbind('removed', this.clear);
+        this.model.unbind('change:field change:signatory change:step', this.render);
+
         $(window).unbind('scroll',this.fixPlaceFunction);
         $(window).unbind('resize',this.fixPlaceFunction);
-        this.model.unbind('removed', this.clear);
+
         this.model.field().signatory().unbind("change:fields",this.render);
         this.model.field().signatory().document().unbind("change:signatories",this.render);
-        this.model.unbind('change:field change:signatory', this.render);
+        //this.model.field().signatory().bind("change:fields",this.render);
+        //this.model.field().signatory().document().bind("change:signatories",this.render);
+
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
@@ -301,8 +310,6 @@ var TextTypeSetterView = Backbone.View.extend({
         if(name === 'sigpersnr' && sig.needsPersonalNumber())
             optionOptions = _.without(optionOptions, 'optional');
 
-
-
         return $("<div style='display:block;margin-top:4px;'/>").append(
           new FieldOptionsView({
               model: this.model.field(),
@@ -311,7 +318,38 @@ var TextTypeSetterView = Backbone.View.extend({
           }).el);
     },
     title : function() {
-        return $("<div class='title'/>").text(localization.designview.textFields.textField);
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var div = $("<div class='title'/>");
+
+        //.text(localization.designview.textFields.textField);
+
+        if(placement.step() === 'signatory') {
+
+            div.text(localization.designview.withoutParticipant);
+
+        } else if(placement.step() === 'field') {
+            var signatory = placement.signatory();
+            var name = signatory.nameOrEmail() || signatory.nameInDocument();
+
+            div.text(localization.designview.textFieldFor + ' ' + name);
+        } else if(field.noName()) {
+            var signatory = placement.signatory();
+            var name = signatory.nameOrEmail() || signatory.nameInDocument();
+
+            div.text(localization.designview.textFieldFor + ' ' + name);
+        } else {
+            var fname = field.nicename();
+
+            var signatory = placement.signatory();
+            var sname = signatory.nameOrEmail() || signatory.nameInDocument();
+
+            div.text(fname + ' ' + localization.designview.requestedFrom + ' ' + sname);
+        }
+
+        return div;
     },
     doneOption : function() {
         var view = this;
@@ -362,15 +400,14 @@ var TextTypeSetterView = Backbone.View.extend({
     },
     selector : function() {
         var view = this;
-        var box = $("<div class='subtitle'/>");
-        var model = view.model;
-        var field = model.field();
-        var sig = field?field.signatory():model.signatory();
+        var placement = view.model;
+        var field = placement.field();
+        var sig = field.signatory();
         var doc = sig.document();
 
-        var signame = sig.nameOrEmail() || sig.nameInDocument();
+        var box = $("<div class='subtitle'/>");
 
-        var name = signame;
+        var name = localization.designview.chooseParticipant;
 
         var options = _.map(doc.signatories(), function(s) {
             return {name: s.nameOrEmail() || s.nameInDocument(),
@@ -383,36 +420,13 @@ var TextTypeSetterView = Backbone.View.extend({
             cssClass: 'text-field-placement-setter-field-selector',
             style: "z-index: 109;",
             onSelect: function(s) {
-                if(field &&
-                   field.addedByMe &&
-                   field.value() === '' &&
-                   field.placements().length <= 1) {
-                    sig.removeField(field);
-                    model.setField(undefined);
-                    field.removePlacement(model);
-                }
-                var name = field?field.name():'email';
-                var type = field?field.type():'standard';
-                var oldfield = s.field(name, type);
-                if (oldfield == undefined) {
-                    oldfield = new Field({signatory: signatory,
-                                          type: o.type,
-                                          name: o.name,
-                                          obligatory: true,
-                                          shouldbefilledbysender: signatory.author()});
-                    oldfield.addPlacement(placement);
-
-                    s.addField(oldfield);
-                    oldfield.addedByMe = true;
-                }
-                s.bind("change:fields",view.render);
-                model.setField(oldfield);
-                model.setSignatory(s);
+                placement.setSignatory(s);
+                placement.advanceStep();
             }
         });
 
-        var text = localization.designview.textFields.forThis + " ";
-        box.text(text);
+        //var text = localization.designview.textFields.forThis + " ";
+        //box.text(text);
         box.append(selector.input());
 
         return box;
@@ -428,7 +442,7 @@ var TextTypeSetterView = Backbone.View.extend({
 
         var div = $('<div />');
 
-        var name = field ? field.nicename() : localization.designview.selectField;
+        var name = localization.designview.selectField;
 
         // we need to build a list of all of the different field name/type pairs
         // plus the ability to add a custom field
@@ -468,16 +482,6 @@ var TextTypeSetterView = Backbone.View.extend({
             cssClass: 'text-field-placement-setter-field-field-selector',
             style: "z-index: 108;",
             onSelect: function(o) {
-                // we want the field to go away if we added it
-                if(field &&
-                   field.addedByMe &&
-                   field.value() === '' &&
-                   field.placements().length <= 1) {
-                    signatory.deleteField(field);
-                    placement.setField(undefined);
-                    field.removePlacement(placement);
-                }
-
                 var f = signatory.field(o.name, o.type);
 
                 if(o.name === '--custom') {
@@ -506,6 +510,9 @@ var TextTypeSetterView = Backbone.View.extend({
                     signatory.addField(f);
                     f.addedByMe = true;
                 }
+
+                placement.advanceStep();
+
             }
         });
 
@@ -560,31 +567,61 @@ var TextTypeSetterView = Backbone.View.extend({
         div.append(button.input());
         return div;
     },
+    editor: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var input = InfoTextInput.init({
+            cssClass: 'text-field-placement-setter-field-editor',
+            infotext: field.nicename(),
+            value: field.value(),
+            onChange: function(val) {
+                field.setValue(val.trim());
+            }
+        }).input();
+
+        return input;
+    },
     render: function() {
-           var view = this;
-           var container = $(this.el);
-           container.addClass("checkboxTypeSetter-container");
-           container.css("position", "absolute");
-           var body = $("<div class='checkboxTypeSetter-body'/>");
-           var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+        var view = this;
+        var container = $(this.el);
+        container.addClass("checkboxTypeSetter-container");
+        container.css("position", "absolute");
+        var body = $("<div class='checkboxTypeSetter-body'/>");
+        var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+        
+        var placement = view.model;
+        var field = placement.field();
+        
+        body.append(this.title());
+        
+        if(placement.step() === 'signatory') {
 
-           var placement = view.model;
-           var field = placement.field();
+            body.append(this.selector());
 
-           body.append(this.title());
-           body.append(this.selector());
-           body.append(this.fieldSelector());
-           if(field && field.name() === '') {
-               body.append(this.fieldNamer());
-           }
-           body.append(this.obligatoryOption());
-           body.append(this.doneOption());
+        } else if(placement.step() === 'field') {
+
+            body.append(this.fieldSelector());
+
+        } else if(field.noName()) {
+
+            body.append(this.fieldNamer());
+
+        } else {
+
+            body.append(this.editor());
+            body.append(this.obligatoryOption());
+
+        }
+
+        body.append(this.doneOption());
         container.html('');
-           container.append(arrow);
-           container.append(body);
-
-           this.place();
-           return this;
+        container.append(arrow);
+        container.append(body);
+        
+        this.place();
+        return this;
     }
 });
 
@@ -628,7 +665,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
         this.model.bind('removed', this.clear, this);
-        this.model.bind('change:field change:signatory', this.render);
+        this.model.bind('change:field change:signatory change:step', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
         signatory.document().bind('change:signatories',this.updateColor);
@@ -791,7 +828,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var view = this;
         var placement = this.model;
         var field =  placement.field();
-        var signatory = field?field.signatory():placement.signatory();
+        var signatory = placement.signatory()||field.signatory();
         var document = signatory.document();
         var place = $(this.el);
 
@@ -804,8 +841,36 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         this.updatePosition();
 
+        var pField;
+
+        if(placement.step() === 'signatory') {
+            pField = new Field({
+                signatory: signatory,
+                type: 'fake',
+                name: 'fake',
+                value: localization.designview.withoutParticipant
+            });
+        } else if(placement.step() === 'field') {
+            pField = new Field({
+                signatory: signatory,
+                type: 'fake',
+                name: 'fake',
+                value: localization.designview.textFieldFor + ' ' + signatory.nameOrEmail() || signatory.nameInDocument()
+
+            });
+        } else if(field.noName()) {
+            pField = new Field({
+                signatory: signatory,
+                type: 'fake',
+                name: 'fake',
+                value: localization.designview.textFieldFor + ' ' + signatory.nameOrEmail() || signatory.nameInDocument()
+            });
+        } else {
+            pField = field;
+        }
+        
         place.empty();
-        place.append(new TextPlacementView({model: field}).el);
+        place.append(new TextPlacementView({model: pField}).el);
         place.unbind('click');
         if (document.allowsDD()) {
             draggebleField(place, placement);
