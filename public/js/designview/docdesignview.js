@@ -220,6 +220,7 @@
             container.children().detach();
             var callback;
             if(model.step() === 1) {
+                view.closeAllParticipants();
                 container.append($("<div class='design-view-action-container-shadow'/>"));
                 container.append(view.participantsView.el);
             } else if(model.step() === 2) {
