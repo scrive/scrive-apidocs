@@ -48,6 +48,14 @@
                 shouldbefilledbysender: sig.author()
             });
 
+            if(field.obligatory() && field.shouldbefilledbysender())
+                field.authorObligatory = 'sender';
+            else if(field.obligatory())
+                field.authorObligatory = 'recipient';
+            else
+                field.authorObligatory = 'optional';
+
+
             sig.addField(field);
         }
 
@@ -1299,13 +1307,17 @@
                     if(field) {
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
+                            field.authorObligatory = 'signatory';
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
+                            author.authorObligatory = 'sender';
                         }
+                        field.addedByMe = false;
                     }
                     return true;
                 }
