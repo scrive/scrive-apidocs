@@ -245,7 +245,10 @@
             if(model.participantDetail()) {
                 div.append(view.doneButton());
             } else {
-                div.append(view.multi());
+                var thereIsMultiSendAlready = _.any(model.document().signatories(), function(x) { return x.isCsv(); });
+                if(!thereIsMultiSendAlready) {
+                    div.append(view.multi());
+                }
                 div.append(view.single());
             }
 
