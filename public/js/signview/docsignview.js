@@ -105,7 +105,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && !this.document().currentSignatory().saved()
-             && !this.document().currentSignatory().padDelivery()
              && !this.document().currentSignatory().mobileDelivery()
              && !this.document().currentSignatory().emailMobileDelivery()
              && window.CreateAccountAfterSignView != undefined;
