@@ -345,7 +345,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 res = false;
                              if (field.isSignature() && (field.value() == "")
                                  && field.placements().length == 0 && !document.currentSignatory().anySignatureHasImageOrPlacement()
-                                 && document.padDelivery())
+                                 && document.currentSignatory().padDelivery())
                                 res = false;
                         });
                         return res;
