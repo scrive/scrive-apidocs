@@ -593,7 +593,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
     updateColor : function() {
        var placement = this.model;
        var field =  placement.field();
-       var signatory = field?field.signatory():placement.signatory();
+       var signatory = placement.signatory() || (field ? field.signatory() : undefined);
+       console.log("Updating signatory color " + signatory.color());
+
        if(signatory.color())
             $(this.el).css('border', '1px solid ' + signatory.color());
     },
@@ -720,7 +722,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
             style: "z-index: 108;",
-            border : "1px solid #f33",
+            border : "1px solid " + (signatory.color() || "#f33"),
             onSelect: function(o) {
                 var f = signatory.field(o.name, o.type);
 
