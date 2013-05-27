@@ -954,7 +954,7 @@
                     input.input().addClass('redborder');
                 else
                     input.input().removeClass('redborder');
-                input.setValue(field.value);
+                input.setValue(field.value());
             });
 
             var optionOptions = ['optional', 'signatory', 'sender'];
