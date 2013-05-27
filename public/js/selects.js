@@ -22,12 +22,12 @@ window.SelectOptionModel = Backbone.Model.extend({
        if (this.get("onSelect")(this.value()) == true)
            this.trigger("done");
   },
-    leftMargin: function() {
+  leftMargin: function() {
         return this.get('leftMargin');
-    },
-    offset: function() {
+  },
+  offset: function() {
         return this.get('offset');
-    }
+  }
 });
 
 window.SelectModel = Backbone.Model.extend({
@@ -38,7 +38,9 @@ window.SelectModel = Backbone.Model.extend({
       expanded : false,
       onOpen : function() {return true;},
       extraNameAttrs: {},
-      expandOnHover : false
+      expandOnHover : false,
+      zIndex : 5000
+
   },
   initialize: function(args){
       var model = this;
@@ -72,6 +74,9 @@ window.SelectModel = Backbone.Model.extend({
   },
   theme : function(){
        return this.get("theme");
+  },
+  zIndex : function() {
+      return this.get("zIndex");
   },
   expandSide : function() {
        return this.get("expandSide");
@@ -154,7 +159,7 @@ var SelectView = Backbone.View.extend({
         if ( this.dead != true
             && this.model.expanded()
             && new Date().getTime() - this.enterdate > 50
-            && $(":hover", this.el).size() == 0
+            && (this.expButton == undefined || $(":hover", this.expButton).size() == 0)
             && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
            )
           this.model.toggleExpand();
@@ -193,6 +198,7 @@ var SelectView = Backbone.View.extend({
         $(this.el).addClass(this.model.theme() + "-theme");
         var view = this;
         var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
+        options.addClass(this.model.theme() + "-theme");
         var model = this.model;
         var button = this.button();
         _.each(model.options(),function(e){
@@ -214,18 +220,27 @@ var SelectView = Backbone.View.extend({
               return false;
           });
         }
+        $(this.el).append(button);
 
         if (model.expanded())
             {
-              button.addClass("select-exp");
-              options.css("display", "block");
+              this.expButton = $(this.el).clone();
+              this.expButton.addClass("select-exp").css("position","absolute");
+              $('.select-button',this.expButton).addClass("select-exp").css('z-index',model.zIndex() + 2);
+              this.expButton.css('z-index',model.zIndex());
+              this.expButton.css('left',$(this.el).offset().left + "px").css('top',($(this.el).offset().top + "px"));
+              this.expButton.css("display", "block");
+              $('body').append(this.expButton);
+              this.expButton.mouseout(function() {
+                 setTimeout(function() {view.closeIfNeeded();}, 100);
+              });
+              this.expButton.mouseenter(function() {view.enterdate = new Date().getTime();});
+              this.expButton.append(options.css('z-index',model.zIndex()+1));
             }
         else
             {
-              button.removeClass("select-exp");
-              options.css("display", "none");
+              if (this.expButton != undefined) $(this.expButton).detach();
             }
-        $(this.el).append(button).append(options);
         view.close = false;
         return this;
     }
