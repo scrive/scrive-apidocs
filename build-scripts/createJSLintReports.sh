@@ -3,8 +3,6 @@
 echo "# N.B. this script requires gjslint, please install if you have not already";
 echo "# https://developers.google.com/closure/utilities/docs/linter_howto";
 
-rm -f jslint-files.txt;
-ls public/js/*.js | egrep -v "jquery|backbone|underscore|livequery" > jslint-files.txt;
 
 if [ $# -eq 0 ]
 then
@@ -25,29 +23,22 @@ else
   fi
 fi
 
-echo "Creating jslint report...";
-rm -f jslint.txt;
-cat jslint-files.txt | awk '{print "gjslint "$1" || true"}' | sh > jslint.txt;
+echo "Creating jslint report..."
+(gjslint --disable 1,2,5,110,120,131,220 --nosummary --nobeep -r public/js || true) > jslint.txt
 
-echo "Searching for missing semicolons or extra commas...";
-rm -f jslint-serious.txt;
-grep -E 'FILE|0010|0121' jslint.txt > jslint-serious.txt;
-
-if grep -q "Line" jslint-serious.txt
+if grep -q "Line" jslint.txt
 then
-   cat jslint-serious.txt;
+   cat jslint.txt;
    exit 1;
 fi
 
 echo "Searching for use of :focus selector ...";
 rm -f jslint-focus.txt;
-cat jslint-files.txt | awk '{print "grep -nH :focus "$1" || true"}' | sh > jslint-focus.txt;
-rm -f jslint-focus-serious.txt;
-#todo we should really get rid of this exception
-(egrep -v "global.js" jslint-focus.txt > jslint-focus-serious.txt || true);
-if grep -q ":focus" jslint-focus-serious.txt
+grep -nHr :focus public/js  > jslint-focus.txt;
+
+if grep -q ":focus" jslint-focus.txt
 then
-   cat jslint-focus-serious.txt;
+   cat jslint-focus.txt;
    exit 1;
 fi
 
