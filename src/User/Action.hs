@@ -11,6 +11,7 @@ import Data.Functor
 import Data.Maybe
 import qualified Control.Exception.Lifted as E
 
+import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
 import Company.CompanyID
 import DB
 import Doc.Model
@@ -32,6 +33,8 @@ import User.History.Model
 import ScriveByMail.Model
 import qualified ScriveByMail.Action as MailAPI
 import ThirdPartyStats.Core
+import Payments.Model
+import Administration.AddPaymentPlan
 import Crypto.RNG
 import MinutesTime
 import BrandedDomains
@@ -41,9 +44,9 @@ handleAccountSetupFromSign document signatorylink = do
   ctx <- getContext
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
-      email = getEmail signatorylink
+  email <- guardJustM $ getRequiredField asValidEmail "email"
   muser <- dbQuery $ GetUserByEmail (Email email)
-  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (ctxlang ctx))
+  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (documentlang document))
                 return
                 muser
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
@@ -63,18 +66,15 @@ handleActivate mfstname msndname actvuser signupmethod = do
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
   callme <- isFieldSet "callme"
+  stoplogin <- isFieldSet "stoplogin"
+  promo <- isFieldSet "promo"
   phone <-  fromMaybe "" <$> getField "phone"
   companyname <- fromMaybe "" <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
-  mpassword <- getRequiredField asValidPassword "password"
-  mpassword2 <- getRequiredField asValidPassword "password2"
-  case (mtos, mfstname, msndname, mpassword, mpassword2) of
-    (Just tos, Just fstname, Just sndname, Just password, Just password2) -> do
-      case checkPasswordsMatch password password2 of
-        Right () ->
+  case (mtos, mfstname, msndname) of
+    (Just tos, Just fstname, Just sndname) -> do
           if tos
             then do
-              passwordhash <- createPassword password
               _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
                   userfstname = fstname
                 , usersndname = sndname
@@ -86,7 +86,6 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
                 ((userinfo actvuser) { userfstname = fstname , usersndname = sndname })
                 (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
               _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
               _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
@@ -105,25 +104,30 @@ handleActivate mfstname msndname actvuser signupmethod = do
                   results <- forM texts (\t -> MailAPI.doMailAPI t `E.catch` (\(_::KontraError) -> return Nothing))
                   dbUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
-
+              when (signupmethod == BySigning) $
+                scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
-              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
-              logUserToContext $ Just tosuser
+              when (not stoplogin) $ do 
+                _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
+                logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
+              when (promo) $ addManualPricePlan (userid actvuser) TrialTeamPricePlan ActiveStatus
               return $ Just (tosuser, newdocs)
             else do
               Log.debug $ "No TOS accepted. We cant activate user."
               addFlashM flashMessageMustAcceptTOS
               return Nothing
-        Left flash -> do
-          Log.debug $ "Create account attempt failed (params checkup)"
-          addFlashM flash
-          return Nothing
     _ -> do
         Log.debug $ "Create account attempt failed (params missing)"
         return Nothing
+
+scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m) => Context -> User -> m ()
+scheduleNewAccountMail ctx user = do
+  link <- newAccessNewAccountLink $ userid user
+  mail <- accessNewAccountMail ctx user link
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
 createUser email names mcompanyid lang = do

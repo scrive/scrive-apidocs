@@ -18,13 +18,14 @@
             view.viewmodel = args.viewmodel;
 
             view.render();
+            view.model.bind('change:ready', view.render);
             view.model.bind('change:file', view.render);
             view.model.bind('change:flux', view.render);
-            view.viewmodel.bind('change:showProblems', view.showProblems);
             $(window).resize(function() {
                 var myTop = view.$el.offset().top;
                 var winHeight = $(window).height();
                 view.$el.css('min-height', Math.max(winHeight - myTop, 300));
+                view.refreshMargins();
             });
             view.viewmodel.bind('change:step', function() {
                 $(window).resize();
@@ -32,6 +33,9 @@
             $(window).resize();
         },
         render: function() {
+            if( !this.model.ready() )
+                return this;
+
             var view = this;
             if(view.file) {
                 view.file.destroy();
@@ -47,27 +51,13 @@
             } else {
                 view.$el.html(view.uploadButtons());
             }
-            view.showProblems();
             return view;
         },
-        showProblems: function() {
-            var view = this;
-            var model = view.viewmodel;
-            var document = view.model;
-
-            if(model.showProblems() && !document.mainfile())
-                view.$el.addClass('redborder');
-            else
-                view.$el.removeClass('redborder');
-        },
         loading: function() {
-            var wrapper = $('<div />');
-            wrapper.addClass('design-view-document-buttons-wrapper');
-            var div = $('<div />');
-            div.addClass('design-view-document-loading');
-            var inner = $('<div />');
-            inner.addClass('design-view-document-loading-inner');
-            div.html(inner);
+            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper'/>");
+            var div = $("<div class='design-view-document-loading'/>");
+            this.innerDiv = $("<div class='design-view-document-loading-inner''/>");
+            div.html(this.innerDiv);
             var spinner = new Spinner({
 	        lines  : 10,     // The number of lines to draw
 	        length : 19,     // The length of each line
@@ -77,9 +67,10 @@
 	        speed  : 1.5,    // Rounds per second
 	        trail  : 74,     // Afterglow percentage
 	        shadow : false   // Whether to render a shadow
-            }).spin(inner.get(0));
-            wrapper.append(div);
-            return wrapper;
+            }).spin(this.innerDiv.get(0));
+            this.wrapperDiv.append(div);
+            this.refreshMargins();
+            return this.wrapperDiv;
         },
         renderDocument: function() {
             var view = this;
@@ -91,22 +82,26 @@
             div.append(this.file.view.el);
             return div;
         },
+        refreshMargins : function() {
+          if (this.wrapperDiv != undefined)
+            this.wrapperDiv.css("height", ($(window).height() - 306) + "px");
+          if (this.wrapperDiv != undefined)
+            this.innerDiv.css("margin-top", (Math.floor($(window).height() - 306)/2) - 60) + "px";
+        },
         uploadButtons: function() {
             var view = this;
-            var wrapper = $('<div />');
-            wrapper.addClass('design-view-document-buttons-wrapper');
-            var div = $('<div />');
-            div.addClass('design-view-document-buttons');
+            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper'/>");
+            var div = $("<div class='design-view-document-buttons'/>");
 
-            var inner = $('<div />');
-            inner.addClass('design-view-document-buttons-inner');
-            div.append(inner);
+            this.innerDiv = $("<div class='design-view-document-buttons-inner'/>");
+            div.append(this.innerDiv);
 
-            inner.append(view.title());
-            inner.append(view.buttons());
+            this.innerDiv.append(view.title()).append(view.buttons());
+            this.wrapperDiv.append(div);
 
-            wrapper.append(div);
-            return wrapper;
+            this.refreshMargins();
+
+            return this.wrapperDiv;
         },
         title: function() {
             var view = this;
@@ -159,13 +154,13 @@
             var input = UploadButton.init({    color: 'green',
                                      size: 'big',
                                      text: localization.uploadButton,
-                                     width: 220,
+                                     width: 245,
                                      name: 'file',
                                      maxlength: 2,
                                      onAppend: function(input, title, multifile) {
                                        document.setFlux();
                                        submit.addInputs(input);
-                                         
+
                                        document.save();
                                        document.afterSave(function() {
                                            submit.sendAjax();

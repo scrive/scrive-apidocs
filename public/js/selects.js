@@ -22,12 +22,12 @@ window.SelectOptionModel = Backbone.Model.extend({
        if (this.get("onSelect")(this.value()) == true)
            this.trigger("done");
   },
-    leftMargin: function() {
+  leftMargin: function() {
         return this.get('leftMargin');
-    },
-    offset: function() {
+  },
+  offset: function() {
         return this.get('offset');
-    }
+  }
 });
 
 window.SelectModel = Backbone.Model.extend({
@@ -38,7 +38,11 @@ window.SelectModel = Backbone.Model.extend({
       expanded : false,
       onOpen : function() {return true;},
       extraNameAttrs: {},
-      expandOnHover : false
+      expandOnHover : false,
+      color: undefined,
+      border: undefined,
+      zIndex : 5000
+
   },
   initialize: function(args){
       var model = this;
@@ -73,6 +77,9 @@ window.SelectModel = Backbone.Model.extend({
   theme : function(){
        return this.get("theme");
   },
+  zIndex : function() {
+      return this.get("zIndex");
+  },
   expandSide : function() {
        return this.get("expandSide");
   },
@@ -100,9 +107,15 @@ window.SelectModel = Backbone.Model.extend({
         return this.get("onOpen")();
        return true;
   },
-    offset: function() {
+  offset: function() {
         return this.get('offset');
-    }
+  },
+  color : function() {
+     return this.get("color");
+  },
+  border : function() {
+     return this.get("border");
+  }
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -154,7 +167,7 @@ var SelectView = Backbone.View.extend({
         if ( this.dead != true
             && this.model.expanded()
             && new Date().getTime() - this.enterdate > 50
-            && $(":hover", this.el).size() == 0
+            && (this.expButton == undefined || $(":hover", this.expButton).size() == 0)
             && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
            )
           this.model.toggleExpand();
@@ -189,14 +202,23 @@ var SelectView = Backbone.View.extend({
         $(this.el).remove();
     },
     render: function () {
-        $(this.el).empty();
-        $(this.el).addClass(this.model.theme() + "-theme");
-        var view = this;
-        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
         var model = this.model;
         var button = this.button();
+        var view = this;
+        $(this.el).empty();
+        $(this.el).addClass(this.model.theme() + "-theme");
+
+        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
+        if (model.border() != undefined) {
+          options.css("border", this.model.border());
+          $(this.el).css("border", "none");
+        }
+        options.addClass(this.model.theme() + "-theme");
+
         _.each(model.options(),function(e){
                 var li = $("<li/>");
+                if (model.color())
+                  li.css('color',model.color());
                 new SelectOptionView({model : e, el : li});
                 options.append(li);
         });
@@ -214,18 +236,29 @@ var SelectView = Backbone.View.extend({
               return false;
           });
         }
+        $(this.el).append(button);
 
         if (model.expanded())
             {
-              button.addClass("select-exp");
-              options.css("display", "block");
+              this.expButton = $(this.el).clone();
+              if (model.color())
+                this.expButton.css('color',model.color());
+              this.expButton.addClass("select-exp").css("position","absolute");
+              $('.select-button',this.expButton).addClass("select-exp").css('z-index',model.zIndex() + 2);
+              this.expButton.css('z-index',model.zIndex());
+              this.expButton.css('left',$(this.el).offset().left + "px").css('top',($(this.el).offset().top + "px"));
+              this.expButton.css("display", "block");
+              $('body').append(this.expButton);
+              this.expButton.mouseout(function() {
+                 setTimeout(function() {view.closeIfNeeded();}, 100);
+              });
+              this.expButton.mouseenter(function() {view.enterdate = new Date().getTime();});
+              this.expButton.append(options.css('z-index',model.zIndex()+1));
             }
         else
             {
-              button.removeClass("select-exp");
-              options.css("display", "none");
+              if (this.expButton != undefined) $(this.expButton).detach();
             }
-        $(this.el).append(button).append(options);
         view.close = false;
         return this;
     }
@@ -245,7 +278,9 @@ window.Select = function(args) {
                                         onOpen : args.onOpen,
                                         extraNameAttrs: args.extraNameAttrs,
                                         expandOnHover : args.expandOnHover,
-                                        offset : args.offset
+                                        offset : args.offset,
+                                        color : args.color,
+                                        border : args.border
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)

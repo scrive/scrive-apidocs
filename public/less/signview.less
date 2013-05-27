@@ -54,13 +54,15 @@
     margin-right: auto;
 
     &.small-screen {
+      padding-bottom: 45px;
       .headline {
         font-size: 64px;
         margin-bottom: 30px;
         line-height: 75px;
       }
       .subheadline {
-        font-size:28px;
+        font-size: 44px;
+        line-height: 45px;
       }
     }
 
@@ -129,6 +131,19 @@
     overflow: none;
     margin-top: 30px;
     margin-bottom : 30px;
+
+    &.small-screen {
+      .title {
+        line-height: 54px;
+        font-size: 45px;
+        padding-top: 30px;
+        padding-bottom: 30px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+    }
   }
 
   .save .title {
@@ -225,31 +240,7 @@
     float: left;
   }
 
-  .save .tos {
-    margin-bottom: 2px;
-    vertical-align: middle;
-  }
-
-  .save .invalid.tos {
-    padding: 2px 10px;
-  }
-
-  .save .tos .check {
-    float: left;
-    margin-right: 10px;
-  }
-
-  .save .tos input {
-    background: transparent;
-  }
-
-  .save .tos .label {
-    float: left;
-    line-height: 19px;
-  }
-
   .save .acceptbutton {
-    float: right;
     margin-right: 22px;
     margin-top: 4px;
   }

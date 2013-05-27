@@ -44,8 +44,17 @@
                 name: '',
                 type: '',
                 signatory: sig,
-                obligatory: false
+                obligatory: false,
+                shouldbefilledbysender: sig.author()
             });
+
+            if(field.obligatory() && field.shouldbefilledbysender())
+                field.authorObligatory = 'sender';
+            else if(field.obligatory())
+                field.authorObligatory = 'recipient';
+            else
+                field.authorObligatory = 'optional';
+
 
             sig.addField(field);
         }
@@ -94,8 +103,8 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-participation-fields');
             div.append(view.detailsParticipationFieldsSignOrder());
-            div.append(view.detailsParticipationFieldsDelivery());
             div.append(view.detailsParticipationFieldsRole());
+            div.append(view.detailsParticipationFieldsDelivery());
             div.append(view.detailsParticipationFieldsAuth());
             return div;
         },
@@ -220,6 +229,7 @@
         initialize: function(args) {
             var view = this;
             _.bindAll(view);
+            view.model.bind('change:participantDetail', view.render);
             view.render();
         },
         render: function() {
@@ -238,8 +248,17 @@
 
             var div = $('<div />');
             div.addClass('design-view-action-participant-new-box-buttons');
-            div.append(view.multi());
-            div.append(view.single());
+
+            if(model.participantDetail()) {
+                div.append(view.doneButton());
+            } else {
+                var thereIsMultiSendAlready = _.any(model.document().signatories(), function(x) { return x.isCsv(); });
+                if(!thereIsMultiSendAlready) {
+                    div.append(view.multi());
+                }
+                div.append(view.single());
+            }
+
             return div;
         },
         single: function() {
@@ -307,6 +326,25 @@
             div.append(button.input());
 
             return div;
+        },
+        doneButton: function() {
+            var view = this;
+            var model = view.model;
+            var div = $('<div />');
+            div.addClass('design-view-action-participant-done');
+
+            var button = Button.init({
+                color: 'green',
+                size: 'tiny',
+                text: localization.save,
+                onClick: function() {
+                    model.setParticipantDetail(null);
+                }
+            });
+
+            div.append(button.input());
+
+            return div;
         }
     });
 
@@ -320,6 +358,22 @@
             // any changes to the signatories of a document and we rerender
             // this includes adding and removing signatories
             view.model.document().bind('change:signatories', view.reset);
+            view.model.bind('change:participantDetail', view.rescroll);
+            $(window).resize(view.resizeOnWindowResize);
+        },
+        rescroll: function() {
+            var view = this;
+            var participantDetail = view.model.participantDetail();
+            if( participantDetail ) {
+                var allSignatories = view.model.document().signatories();
+                var lastSignatory = allSignatories[allSignatories.length - 1];
+                if( participantDetail === lastSignatory ) {
+                    setTimeout(function() {
+                        view.scrollBox.mCustomScrollbar("update");
+                        view.scrollBox.mCustomScrollbar("scrollTo","bottom");
+                    }, 300);
+                }
+            }
         },
         reset: function() {
             var view = this;
@@ -355,18 +409,45 @@
             });
             return view;
         },
+        resizeOnWindowResize: function() {
+            var view = this;
+            var newHeight = $(window).height() - 350;
+            if( newHeight<250 ) {
+                newHeight = 250;
+            }
+            view.scrollBox.css("max-height", newHeight + "px");
+            setTimeout(function() {
+                view.scrollBox.mCustomScrollbar('update');
+            }, 500);
+            return false;
+        },
         render: function() {
             var view = this;
             var model = view.model;
             view.$el.children().detach();
             var box = $("<div class='design-view-action-participant-container-participants-box'>");
-            //box.css("max-height",($(window).height() - 460) + "px");
+            var newHeight = $(window).height() - 350;
+            if( newHeight<250 ) {
+                newHeight = 250;
+            }
+            box.css("max-height", newHeight + "px");
             $.each(view.participants, function(i, p) {
                box.append(p.el);
             });
 
             view.$el.append(box).append(view.addNew.el);
 
+
+            box.mCustomScrollbar({ mouseWheel: true
+                                   , theme: "dark-2"
+                                   , advanced:{
+                                       updateOnContentResize: true // this is polling, might want to have update called in proper times
+                                   }
+                                   , scrollInertia: 0
+                                   , scrollButtons:{
+                                       enable: false // we do not want buttons, also we do not want pngs that come with the buttons
+                                   }});
+            view.scrollBox = box;
             return view;
         }
     });
@@ -426,8 +507,8 @@
 
         },
         icons: {
-            viewer: '/img/viewer.png',
-            signatory: '/img/signatory.png'
+            viewer: 'design-view-action-participant-icon-role-icon-viewer',
+            signatory: 'design-view-action-participant-icon-role-icon-signatory'
         },
         render: function() {
             var view = this;
@@ -437,9 +518,9 @@
 
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-role-inner')
-                .append($('<img />')
+                .append($('<div />')
                         .addClass('design-view-action-participant-icon-role-icon')
-                        .attr('src', view.icons[role]));
+                        .addClass(view.icons[role]));
 
             view.$el.html(div);
 
@@ -471,11 +552,11 @@
             });
         },
         icons: {
-            email: '/img/email.png',
-            pad: '/img/pad2.png',
-            api: '/img/pad2.png',
-            mobile: '/img/phone2.png',
-            email_mobile : '/img/email_mobile.png'
+            email: 'design-view-action-participant-icon-device-icon-email',
+            pad: 'design-view-action-participant-icon-device-icon-pad',
+            api: 'design-view-action-participant-icon-device-icon-pad',
+            mobile: 'design-view-action-participant-icon-device-icon-phone',
+            email_mobile : 'design-view-action-participant-icon-device-icon-email-mobile'
         },
         render: function() {
             var view = this;
@@ -485,9 +566,9 @@
 
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-device-inner')
-                .append($('<img />')
+                .append($('<div />')
                         .addClass('design-view-action-participant-icon-device-icon')
-                        .attr('src', view.icons[delivery]));
+                        .addClass(view.icons[delivery]));
             view.$el.html(div);
 
             return view;
@@ -514,8 +595,8 @@
             });
         },
         icons: {
-            standard: '/img/noauth.png',
-            eleg: '/img/eleg.png'
+            standard: 'design-view-action-participant-icon-auth-icon-noauth',
+            eleg: 'design-view-action-participant-icon-auth-icon-eleg'
         },
         render: function() {
             var view = this;
@@ -525,9 +606,9 @@
 
             var div = $('<div />')
                 .addClass('design-view-action-participant-icon-auth-inner')
-                .append($('<img />')
+                .append($('<div />')
                         .addClass('design-view-action-participant-icon-auth-icon')
-                        .attr('src', view.icons[auth]));
+                        .addClass(view.icons[auth]));
 
             view.$el.html(div);
 
@@ -546,14 +627,12 @@
             view.viewmodel = args.viewmodel;
             view.participation = new DesignViewParticipation({model:view.model});
             view.newFieldSelector = new DesignViewNewFieldSelector({model:view.model});
-            view.viewmodel.bind('change:showProblems', view.render);
             view.model.bind('change:fields', view.render);
             view.model.bind('change:authentication', view.render);
             view.model.bind('change:delivery', view.render);
             view.render();
         },
         destroy : function() {
-          this.viewmodel.unbind('change:showProblems', this.render);
           this.model.unbind('change:fields', this.render);
           this.model.unbind('change:authentication', this.render);
           this.model.unbind('change:delivery', this.render);
@@ -617,7 +696,10 @@
                         });
                     }
                 });
-                div.append(csvButton.input());
+                var wrapperdiv = $('<div />');
+                wrapperdiv.addClass('design-view-action-participant-details-information-field-wrapper');
+                wrapperdiv.append(csvButton.input());
+                div.append(wrapperdiv);
             } else {
                 // always show these three fields first
                 div.append(view.detailsFullNameField());
@@ -651,7 +733,12 @@
                 if(input.value()) {
                     field.setName(input.value());
                     sig.trigger('change:fields');
+                    field.unbind('change:name', changer);
                 }
+            };
+
+            var changer = function() {
+                input.setValue(field.name());
             };
 
             var input = InfoTextInput.init({
@@ -661,7 +748,9 @@
                 onEnter: setter
             });
 
-            if(viewmodel.showProblems() && !field.isValid())
+            field.bind('change:name', changer);
+
+            if(!field.isValid(true))
                 $(input.input()).addClass('redborder');
             else
                 $(input.input()).removeClass('redborder');
@@ -677,6 +766,7 @@
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
             closer.addClass("active").click(function() {
+                field.removeAllPlacements();
                 sig.deleteField(field);
             });
 
@@ -695,39 +785,55 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
 
+            var allFieldOptions = view.possibleFields.concat([]);
+
+            function isUnique(field) {
+                return _.every(allFieldOptions, function(o) {
+                    return field.name() !== o.name && field.type() !== o.type;
+                });
+            }
+
+            _.each(viewmodel.document().signatories(), function(signatory) {
+                _.each(signatory.fields(), function(field) {
+                    if(field.isText() && isUnique(field))
+                        allFieldOptions.push({name: field.name(),
+                                              type: field.type()});
+                });
+            });
+
             var options = [];
 
-            _.each(view.standardFields, function(f) {
-                if(!sig.field(f[0], f[1]))
+            // keep only fields not already part of signatory
+            _.each(allFieldOptions, function(f) {
+                if(!sig.field(f.name, f.type))
                     options.push({
-                        name: view.placeholder(f[0]),
-                        value: f[0]
+                        name: view.placeholder(f.name),
+                        value: f
                     });
             });
 
-            options.push({
-                name: localization.designview.customField,
-                value: '--custom'
-            });
+            options.push({name: localization.designview.customField,
+                          value: {name: '--custom',
+                                  type: '--custom'}}); // type is not used for custom
 
             var name;
 
             if(!view.selected)
                 name = localization.designview.addField;
-            else if(view.selected === '--custom')
+            else if(view.selected.name === '--custom')
                 name = localization.designview.customField;
             else
-                name = view.placeholder(view.selected);
+                name = view.placeholder(view.selected.name);
 
             var select = new Select({
                 options: options,
                 name: name,
                 onSelect: function(v) {
-                    if(v === '--custom') {
+                    if(v.name === '--custom') {
                         field.setType('custom');
                     } else {
-                        field.setType('standard');
-                        field.setName(v);
+                        field.setType(v.type);
+                        field.setName(v.name);
                     }
                     sig.trigger('change:fields');
                 }
@@ -735,7 +841,7 @@
 
             $(select.view().el).addClass('design-view-action-participant-new-field-select');
 
-            if(viewmodel.showProblems() && !field.isValid())
+            if(!field.isValid(true))
                 $(select.view().el).addClass('redborder');
             else
                 $(select.view().el).removeClass('redborder');
@@ -743,6 +849,7 @@
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
             closer.addClass("active").click(function() {
+                field.removeAllPlacements();
                 sig.deleteField(field);
             });
 
@@ -760,7 +867,8 @@
             var value = sig.name();
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
-
+            var fstnameField = sig.fstnameField();
+            var sndnameField = sig.sndnameField();
 
             var input = InfoTextInput.init({
                 cssClass: 'design-view-action-participant-details-information-field',
@@ -777,15 +885,35 @@
                         f = str.trim();
                         s = '';
                     }
-                    sig.fstnameField().setValue(f);
-                    sig.sndnameField().setValue(s);
+                    fstnameField.setValue(f);
+                    sndnameField.setValue(s);
                 }
             });
+
+            fstnameField.bind('change', function() {
+                if(!fstnameField.isValid(true))
+                    input.input().addClass('redborder');
+                else
+                    input.input().removeClass('redborder');
+                input.setValue(sig.name());
+            });
+
+            sndnameField.bind('change', function() {
+                if(!fstnameField.isValid(true) )
+                    input.input().addClass('redborder');
+                else
+                    input.input().removeClass('redborder');
+                input.setValue(sig.name());
+            });
+            if(!fstnameField.isValid(true))
+                    input.input().addClass('redborder');
+            else
+                    input.input().removeClass('redborder');
 
             var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
 
             var options = new FieldOptionsView({
-                model: sig.fstnameField(),
+                model: fstnameField,
                 options: optionOptions
             });
 
@@ -818,12 +946,16 @@
                 value: value,
                 onChange: function(val) {
                     field.setValue(val.trim());
-                    if(viewmodel.showProblems() && !field.isValid())
-                        input.input().addClass('redborder');
-                    else
-                        input.removeClass('redborder');
                 }
-            }).input();
+            });
+
+            field.bind('change', function() {
+                if(!field.isValid(true))
+                    input.input().addClass('redborder');
+                else
+                    input.input().removeClass('redborder');
+                input.setValue(field.value());
+            });
 
             var optionOptions = ['optional', 'signatory', 'sender'];
 
@@ -847,40 +979,54 @@
                 options : optionOptions
             });
 
-            if(viewmodel.showProblems() && !field.isValid())
-                input.addClass('redborder');
+            if(!field.isValid(true))
+                input.input().addClass('redborder');
             else
-                input.removeClass('redborder');
+                input.input().removeClass('redborder');
 
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
 
             if(field.canBeRemoved()) {
                 closer.addClass("active").click(function() {
+                    field.removeAllPlacements();
                     sig.deleteField(field);
                 });
             }
 
             div.append(closer);
-            div.append(input);
+            div.append(input.input());
             div.append(options.el);
 
             return div;
         },
-        standardFields: [
-            ["sigpersnr", "standard"],
-            ["sigcompnr", "standard"],
-            ["sigco",     "standard"],
-            ["mobile",    "standard"]
+        possibleFields: [
+            {name: "fstname",
+             type: 'standard'},
+            {name: "sndname",
+             type: 'standard'},
+            {name: "email",
+             type: 'standard'},
+            {name: "sigco",
+             type: 'standard'},
+            {name: "sigpersnr",
+             type: 'standard'},
+            {name: "sigcompnr",
+             type: 'standard'},
+            {name: "mobile",
+         type: 'standard'}
         ],
-        standardPlaceholders: {
+        fieldNames: {
+            fstname: localization.fstname,
+            sndname: localization.sndname,
+            email: localization.email,
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
             sigco: localization.company,
             mobile: localization.phone
         },
         placeholder: function(name) {
-            return this.standardPlaceholders[name] || name;
+            return this.fieldNames[name] || name;
         },
 
     });
@@ -1025,15 +1171,10 @@
         },
         inner: function() {
             var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-inner');
-            div.append(view.infoBox());
-            div.append(view.detailsView.el);
-
-            // save the div for later
-            view.innerDiv = div;
-
-            return div;
+            view.innerDiv = $("<div class='design-view-action-participant-inner'/>");
+            view.innerDiv.append(view.infoBox());
+            view.innerDiv.append(view.detailsView.el);
+            return view.innerDiv;
         },
         closeBox: function() {
             var view = this;
@@ -1088,14 +1229,20 @@
             div.addClass('design-view-action-participant-info-name');
             var txt = $('<div />');
             txt.addClass('design-view-action-participant-info-name-inner');
-            txt.text(sig.name());
 
-            var f = function() {
+            if( sig.isCsv()) {
+                txt.text(localization.csv.title);
+            }
+            else {
                 txt.text(sig.name());
-            };
 
-            sig.fstnameField().bind('change:value', f);
-            sig.sndnameField().bind('change:value', f);
+                var f = function() {
+                    txt.text(sig.name());
+                };
+
+                sig.bind('change:name', f);
+
+            }
 
             div.append(txt);
 
@@ -1123,7 +1270,7 @@
                 txt.text(sig.email());
             };
 
-            sig.emailField().bind('change:value', f);
+            sig.bind('change:email', f);
 
             div.append(txt);
             return div;
@@ -1143,7 +1290,7 @@
                 };
 
 
-                sig.companyField().bind('change:value', f);
+                sig.bind('change:company', f);
             }
             div.append(txt);
             return div;
@@ -1205,13 +1352,17 @@
                     if(field) {
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
+                            field.authorObligatory = 'signatory';
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
+                            field.authorObligatory = 'sender';
                         }
+                        field.addedByMe = false;
                     }
                     return true;
                 }

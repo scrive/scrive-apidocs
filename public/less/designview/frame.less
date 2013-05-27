@@ -1,4 +1,6 @@
 @import 'util.less';
+@import '../branding/elements.less';
+@import '../branding/colors.less';
 
 // hide the page footer in design view
 body.designview > footer {
@@ -6,12 +8,9 @@ body.designview > footer {
 }
 
 body.designview .mainContainer {
+    margin-top: 20px;
     margin-bottom: 0;
-    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
-    font-weight: 300;
-    input, .select {
-        font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
-    }
+    min-height : auto;
 }
 
 .design-view-frame {
@@ -24,14 +23,18 @@ body.designview .mainContainer {
 
 .design-view-frame-top-bar {
     width: 100%;
+    height: 54px;
     z-index: 1000;
+    left: 0;
+    position: relative;
+    top: 0;
 }
 
 .design-view-tab-container {
     .box-sizing(border-box);
-    height: 80px;
+    height: 54px;
     border-bottom: 1px solid #ccc;
-    font-size:18px;
+    font-size:16px;
     cursor: pointer;
     width: 1018px;
     margin: 0 auto;
@@ -69,6 +72,13 @@ body.designview .mainContainer {
     border-right: 1px solid #ccc;
     height: 100%;
     position: relative;
+    &.grayed {
+        background-color: #FBFBFB;
+        color: #AAAAAA;
+        .design-view-tab2-text-optional {
+          color: #AAAAAA;
+        }
+    }
 }
 
 .design-view-tab2-text {
@@ -77,7 +87,7 @@ body.designview .mainContainer {
 }
 
 .design-view-tab2-text-optional {
-    font-size: 14.5px;
+    font-size: 12.5px;
     color: #808080;
 }
 
@@ -95,7 +105,7 @@ body.designview .mainContainer {
 }
 
 .design-view-tab3-text-optional {
-    font-size: 14.5px;
+    font-size: 12.5px;
     color: #808080;
 }
 
@@ -140,7 +150,6 @@ body.designview .mainContainer {
 
 .design-view-document-container {
     .box-sizing(border-box);
-    margin-top: 1px;
     overflow: auto;
     min-height: 300px;
     padding-top: 20px;
@@ -154,7 +163,7 @@ body.designview .mainContainer {
 
 .design-view-button-bar {
     width: 100%;
-    height: 60px;
+    height: 52px;
     bottom: 0;
     left: 0;
     position: absolute;
@@ -214,10 +223,16 @@ body.designview .mainContainer {
     height: 100%;
     position: relative;
     cursor: pointer;
-    background: #7A94B8;
-    font-size: 18px;
-    font-weight: 400;
-    color: white;
+    color: #DDDDDD;
+    background-color: white;
+    &.active {
+      .gradient(hsl(@greenH,@greenS,35%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,40%));
+      .box-shadow(inset hsl(@greenH,66%,60%) 0 0 0 2px);
+      border: 2px solid hsl(@greenH,@greenS,23%);
+      color: white;
+      font-size: 18px;
+      font-weight: 400;
+    }
 }
 
 .design-view-button1-text,

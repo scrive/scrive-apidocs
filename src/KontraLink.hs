@@ -34,6 +34,7 @@ data LoginRedirectReason = LoginTry
 data KontraLink
     = LinkHome Lang
     | LinkLogin Lang LoginRedirectReason
+    | LinkLoginDirect
     | LinkLogout
     | LinkSignup Lang
     | LinkArchive
@@ -58,6 +59,7 @@ data KontraLink
     | LinkAdminStatsByDay
     | LinkAdminStatsByMonth
     | LinkPasswordReminder UserID MagicHash
+    | LinkAccessNewAccount UserID MagicHash
     | LinkAccountCreated Lang UserID MagicHash SignupMethod -- email
     | LoopBack
     | LinkDaveDocument DocumentID
@@ -83,6 +85,7 @@ langFolder lang = "/" ++ (codeFromLang lang)
 instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
     showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/login"
+    showsPrec _ LinkLoginDirect = (++) $ "/login"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/signup"
     showsPrec _ (LinkArchive) = (++) $ "/d"
@@ -115,6 +118,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAdminStatsByDay) = (++) $ "/adminonly/statsbyday"
     showsPrec _ (LinkAdminStatsByMonth) = (++) $ "/adminonly/statsbymonth"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
+    showsPrec _ (LinkAccessNewAccount aid hash) = (++) $ "/mynewaccount/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated lang uid hash sm) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash ++ "/" ++ show sm
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")

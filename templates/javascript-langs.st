@@ -304,6 +304,11 @@ javascriptLocalisation =
              , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
+              editMessagePlaceholder: "$_editMessagePlaceholder()$",
+              withoutParticipant: "$_designViewWithoutParticipant()$",
+              textFieldFor: "$_designViewTextFieldFor()$",
+              chooseParticipant: "$_designViewChooseParticipant()$",
+              selectField: "$_selectField()$",
               selectprocess : "$_selectDocumentType()$",
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
@@ -386,6 +391,7 @@ javascriptLocalisation =
              , previewInvitation: "$_designViewPreviewInvitation()$"
              , dAndDActions: "$_designViewDAndDActions()$"
              , signatureBox: "$_designViewSignatureBox()$"
+             , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
              , freeTextBox: "$_designViewFreeTextBox()$"
              , offsite: "$_designViewOffsite()$"
              , checkbox: "$_checkBoxFieldName()$"
@@ -446,6 +452,11 @@ javascriptLocalisation =
          , changeEmail : "$_changeEmail()$"
          , changePhone : "$_changePhone()$"
          , onlyPDF : "$_onlyPDF()$"
+         , accessNewAccountModal: {
+             header: "$_accessNewAccountHeader()$"
+           , body: "$_accessNewAccountBody()$"
+           , button: "$_accessNewAccountButton()$"
+         }
          , newPasswordModal: {
              modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"
            , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"
@@ -596,7 +607,13 @@ javascriptLocalisation =
                       price : "$_paymentsQuote()$",
                       price3 : "$_paymentsGetInTouch()$"
                     }
+                    , trial : {
+                      name : "$_paymentPlanTrial()$",
+                      tag : "$_paymentPlanTrialTag()$",
+                      price : "$_paymentsQuote()$",
+                      price3 : "$_paymentsGetInTouch()$"
                     }
+            }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , total       : "$_paymentPlanTotal()$"
                     , payments    : "$_paymentPlanPayments()$"

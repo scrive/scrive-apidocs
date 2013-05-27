@@ -6,7 +6,6 @@
     .box-sizing(border-box);
     margin: 0 -1px -1px 0;
     width: 100%;
-    float: left;
     position: relative;
     background-color: #f2f2f2;
     border-bottom: 4px solid #fff;
@@ -19,7 +18,8 @@
 
 .design-view-action-participant-box {
     .box-sizing(border-box);
-    margin: 14px 6px 8px 16px;
+    padding-top: 14px;
+    margin: 0px 6px 0px 16px;
     position: relative;
 }
 
@@ -34,7 +34,6 @@
     width: 970px;
     height: 58px;
     position: relative;
-    z-index: 1;
     border-radius: 4px;
 
 }
@@ -43,14 +42,14 @@
      position: absolute;
      left : 959px;
      margin-top: -5px;
-     width: 19px;
-     height: 20px;
+     width: 24px;
+     height: 22px;
      background: url("/img/editor-view-remove-party.png");
      display: inline-block;
      cursor: pointer;
      z-index : 501;
      &:hover {
-      background: url("/img/editor-view-remove-party-hover.png");
+      background-position: -24px 0px;
      }
 }
 
@@ -161,6 +160,20 @@
     right: 88px;
 }
 
+.design-view-action-participant-icon-role-icon-viewer {
+    width: 36px;
+    height: 36px;
+    background-position: -1*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
+.design-view-action-participant-icon-role-icon-signatory {
+    width: 36px;
+    height: 36px;
+    background-position: -0*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
 .design-view-action-participant-icon-role-inner {
     margin-top: 6px;
     text-align: center;
@@ -175,6 +188,41 @@
     position: absolute;
     top: 0;
     right: 44px;
+}
+
+.design-view-action-participant-icon-device-icon-email {
+    width: 36px;
+    height: 36px;
+    background-position: -3*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
+.design-view-action-participant-icon-device-icon-pad {
+    width: 36px;
+    height: 36px;
+    background-position: -2*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
+.design-view-action-participant-icon-device-icon-email {
+    width: 36px;
+    height: 36px;
+    background-position: -3*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
+.design-view-action-participant-icon-device-icon-phone {
+    width: 36px;
+    height: 36px;
+    background-position: -4*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
+.design-view-action-participant-icon-device-icon-email-mobile {
+    width: 36px;
+    height: 36px;
+    background-position: -5*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
 }
 
 .design-view-action-participant-icon-device-inner {
@@ -193,6 +241,20 @@
     right: 0;
 }
 
+.design-view-action-participant-icon-auth-icon-noauth {
+    width: 36px;
+    height: 36px;
+    background-position: -7*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
+.design-view-action-participant-icon-auth-icon-eleg {
+    width: 36px;
+    height: 36px;
+    background-position: -6*36px 0px;
+    background-image: url(../../img/sprite-participation-icons.png);
+}
+
 .design-view-action-participant-icon-auth-inner {
     margin-top: 6px;
     text-align: center;
@@ -205,7 +267,6 @@
     border: 1px solid #ccc;
     width: 194px;
     background: #white;
-    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     &:focus {
         border: 1px solid #ccc;
     }
@@ -268,7 +329,6 @@
     bottom: 0;
     left: 0;
     width: 970px;
-    z-index: 1;
 }
 
 .design-view-action-participant-details {
@@ -308,6 +368,9 @@
     display: inline-block;
     vertical-align: top;
     margin-bottom: 8px;
+    &.redborder {
+        border: 1px solid red;
+    }
 }
 
 .design-view-action-participant-new-field-select {
@@ -315,7 +378,10 @@
     display: inline-block;
     vertical-align: top;
     margin-bottom: 8px;
-    &.redborder {
+    &.select .select-opts {
+        width : 298px;
+    }
+    &.redborder, &.select .select-opts {
         border:1px solid red;
     }
 }
@@ -331,7 +397,7 @@
     .design-view-action-participant-details-field;
     margin-bottom: 8px;
     border-right-color : transparent;
-    width: 228px;
+    width: 223px;
     &.redborder {
         border:1px solid red;
     }
@@ -344,9 +410,8 @@
 .design-view-action-participant-details-information-field-options {
     .box-sizing(border-box);
     display: inline-block;
-    width: 60px;
+    width: 65px;
     vertical-align: middle;
-    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-button.select-exp {
             z-index: 1003;
      }
@@ -401,7 +466,6 @@
     width: 225px;
     margin-right: 8px;
     float: left;
-    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-button.select-exp {
             z-index: 1003;
         }
@@ -415,7 +479,6 @@
     width: 225px;
     margin-right: 8px;
     float: left;
-    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-button.select-exp {
             z-index: 1003;
      }
@@ -429,7 +492,6 @@
     width: 225px;
     margin-right: 8px;
     float: left;
-    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-button.select-exp {
             z-index: 1003;
         }
@@ -443,7 +505,6 @@
     width: 225px;
     margin-right: 8px;
     float: left;
-    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
     .select-button.select-exp {
             z-index: 1003;
         }
@@ -451,6 +512,11 @@
             z-index: 1002;
             width: 100%;
         }
+}
+
+.designview .select-opts {
+            z-index: 1002;
+            width: 270px;
 }
 
 .design-view-action-participant-buttons {
@@ -465,8 +531,8 @@
 }
 
 .design-view-action-participant-details-information-closer {
-     width: 19px;
-     height: 20px;
+     width: 24px;
+     height: 22px;
      display: inline-block;
      position: absolute;
      top: -8px;
@@ -474,9 +540,10 @@
      z-index: 2;
      &.active {
       background: url("/img/editor-view-remove-party.png");
+      background-position: 0px 0px;
       cursor: pointer;
       &:hover {
-        background: url("/img/editor-view-remove-party-hover.png");
+            background-position: -24px 0px;
       }
     }
 }

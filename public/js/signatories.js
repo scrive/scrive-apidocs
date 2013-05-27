@@ -65,7 +65,10 @@ window.Signatory = Backbone.Model.extend({
         author: false,
         fields: [{name: "fstname",   type : "standard"},
                  {name: "sndname",   type : "standard"},
-                 {name: "email",     type : "standard"}
+                 {name: "email",     type : "standard"},
+                 {name: "mobile",    type : "standard"},
+                 {name: "sigco",     type : "standard"},
+                 {name: "sigcompnr", type : "standard"}
         ],
         current: false,
         attachments: [],
@@ -79,12 +82,20 @@ window.Signatory = Backbone.Model.extend({
 
     initialize: function(args) {
         var signatory = this;
+        _.bindAll(signatory);
         var extendedWithSignatory = function(hash) {
                     hash.signatory = signatory;
                     return hash;
         };
         var fields = _.map(signatory.get('fields'), function(field) {
-                return new Field(extendedWithSignatory(field));
+            var f = new Field(extendedWithSignatory(field));
+            if(f.obligatory() && f.shouldbefilledbysender())
+                f.authorObligatory = 'sender';
+            else if(f.obligatory())
+                f.authorObligatory = 'signatory';
+            else
+                f.authorObligatory = 'optional';
+            return f;
         });
 
         var attachments = _.map(args.attachments, function(attachment) {
@@ -93,6 +104,8 @@ window.Signatory = Backbone.Model.extend({
         signatory.set({"fields": fields,
                        "attachments": attachments
                       });
+
+        signatory.bindBubble();
     },
     document: function() {
         return this.get("document");
@@ -182,7 +195,7 @@ window.Signatory = Backbone.Model.extend({
         });
     },
     readyFields: function() {
-        return _.filter(this.fields(), function(f) {return f.isReady();});
+        return _.filter(this.fields(), function(f) {return f.isReady() && !f.isFake();});
     },
     customFields: function() {
         var cf = new Array();
@@ -192,7 +205,7 @@ window.Signatory = Backbone.Model.extend({
         return cf;
     },
     name: function() {
-        var name = this.fstname() + " " + this.sndname();
+        var name = (this.fstname() + " " + this.sndname()).trim();
         if (name != undefined && name != " ")
             return name;
         else
@@ -469,7 +482,7 @@ window.Signatory = Backbone.Model.extend({
     },
     addField : function(f) {
         this.fields().push(f);
-        this.trigger("change:fields");
+        this.trigger("change change:fields");
     },
     deleteField: function(field) {
         this.set({fields : _.without(this.fields(), field)});
@@ -540,7 +553,7 @@ window.Signatory = Backbone.Model.extend({
     },
     hasFieldProblems: function(forSigning) {
         return _.some(this.fields(), function(field) {
-            return !field.isValid();
+            return !field.isValid(forSigning) || field.hasNotReadyPlacements();
         });
     },
     role: function() {
@@ -573,19 +586,27 @@ window.Signatory = Backbone.Model.extend({
         var pn = signatory.personalnumberField();
         if(signatory.needsPersonalNumber()) {
             if(!pn) {
-                signatory.addField(new Field({name:'sigpersnr',
-                                              type: 'standard',
-                                              obligatory: true,
-                                              shouldbefilledbysender: false,
-                                              signatory: signatory}));
+                var f = new Field({name:'sigpersnr',
+                                   type: 'standard',
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author(),
+                                   signatory: signatory});
+                f.addedByMe = true;
+                signatory.addField(f);
             } else {
                 pn.makeObligatory();
             }
         } else {
-            // we remove it if we don't use eleg
-            // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '' && !pn.hasPlacements()) {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
+            } else if(pn && pn.authorObligatory == 'sender') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(true);
+            } else if(pn && pn.authorObligatory == 'signatory') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(false);
+            } else if(pn && pn.authorObligatory == 'optional') {
+                pn.makeOptional();
             }
         }
     },
@@ -597,20 +618,28 @@ window.Signatory = Backbone.Model.extend({
         var pn = signatory.mobileField();
         if(signatory.needsMobile()) {
             if(!pn) {
-                signatory.addField(new Field({name:'mobile',
-                                              type: 'standard',
-                                              obligatory: true,
-                                              shouldbefilledbysender: true,
-                                              signatory: signatory}));
+                var f = new Field({name:'mobile',
+                                   type: 'standard',
+                                   obligatory: true,
+                                   shouldbefilledbysender: true,
+                                   signatory: signatory});
+                f.addedByMe = true;
+                signatory.addField(f);
             } else {
                 pn.makeObligatory();
                 pn.setShouldBeFilledBySender(true);
             }
         } else {
-            // we remove it if we don't use SMS
-            // this should probably be smarter, like remembering if the author added it
-            if(pn && pn.value() === '' && !pn.hasPlacements()) {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
+            } else if(pn && pn.authorObligatory == 'sender') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(true);
+            } else if(pn && pn.authorObligatory == 'signatory') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(false);
+            } else if(pn && pn.authorObligatory == 'optional') {
+                pn.makeOptional();
             }
         }
     },
@@ -633,6 +662,14 @@ window.Signatory = Backbone.Model.extend({
         if(signatory.needsEmail()) {
             email.makeObligatory();
             email.setShouldBeFilledBySender(true);
+        } else if(email.authorObligatory == 'sender') {
+            email.makeObligatory();
+            email.setShouldBeFilledBySender(true);
+        } else if(email.authorObligatory == 'signatory') {
+            email.makeObligatory();
+            email.setShouldBeFilledBySender(false);
+        } else if(email.authorObligatory == 'optional') {
+            email.makeOptional();
         }
     },
     needsSignature: function() {
@@ -654,9 +691,24 @@ window.Signatory = Backbone.Model.extend({
                 signatory.addField(new Field({name:document.newSignatureName(),
                                               type: 'signature',
                                               obligatory: true,
-                                              shouldbefilledbysender: false,
+                                              shouldbefilledbysender: signatory.author(),
                                               signatory: signatory}));
         }
+    },
+    bindBubble: function() {
+        var signatory = this;
+        signatory.bind('change', signatory.bubbleSelf);
+        signatory.bind('bubble', signatory.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var signatory = this;
+        signatory.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var signatory = this;
+        var document = signatory.document();
+        if(document)
+            document.trigger('bubble');
     }
 
 });

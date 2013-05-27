@@ -10,6 +10,7 @@ import Text.JSON.Gen
 import ActionQueue.Core
 import ActionQueue.EmailChangeRequest
 import ActionQueue.PasswordReminder
+import ActionQueue.AccessNewAccount
 import ActionQueue.UserAccountRequest
 import AppView
 import Crypto.RNG
@@ -345,6 +346,61 @@ handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token AccountRequest
 
 {- |
+    This is where we get to when the user clicks the link in their new-account
+    email.  This will show them a page where they need to set their password.
+-}
+handleAccessNewAccountGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink (Either Response ThinPage))
+handleAccessNewAccountGet uid token = do
+  muser <- getAccessNewAccountUser uid token
+  case muser of
+    Just user -> do
+      switchLang (getLang user)
+      let changePassLink = show $ LinkAccessNewAccount uid token
+      ctx <- getContext
+      case (currentBrandedDomain ctx) of
+        Just bd -> do
+          ad <- getAnalyticsData
+          content <- renderTemplate "accessNewAccountPageWithBranding" $ do
+                        F.value "linkchangepassword" $ changePassLink
+                        F.value "logolink" $ bdlogolink bd
+                        F.value "background" $ bdbackgroundcolorexternal $ bd
+                        F.value "buttoncolorclass" $ bdbuttonclass $ bd
+
+                        standardPageFields ctx kontrakcja ad
+          Right . Left <$> simpleHtmlResonseClrFlash content
+        Nothing -> do
+          content <- renderTemplate "accessNewAccountPage" $ do
+                        F.value "linkchangepassword" $ changePassLink
+          return $ Right $ Right $ ThinPage content
+    Nothing -> do
+      addFlashM flashMessageAccessNewAccountLinkNotValid
+      return $ Left LinkLoginDirect
+
+-- TODO: Too much code duplication around new account access and password reminders
+handleAccessNewAccountPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
+handleAccessNewAccountPost uid token = do
+  muser <- getAccessNewAccountUser uid token
+  case muser of
+    Just user -> do
+      switchLang (getLang user)
+      Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
+      mpassword <- getRequiredField Good "password"
+      case mpassword of
+        Just password -> do
+          _ <- dbUpdate $ DeleteAction accessNewAccount uid
+          passwordhash <- createPassword password
+          _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+          _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+          addFlashM flashMessageUserPasswordChanged
+          _ <- addUserLoginStatEvent ctxtime user
+          logUserToContext $ Just user
+          runJSONGenT $ do
+            value "logged" True
+            value "location" $ show LinkArchive
+        Nothing -> internalError
+    Nothing -> runJSONGenT $ value "logged" False
+
+{- |
     This is where we get to when the user clicks the link in their password reminder
     email.  This'll show them the usual landing page, but with option to changing their password.
 -}
@@ -372,9 +428,8 @@ handlePasswordReminderGet uid token = do
                         F.value "linkchangepassword" $ changePassLink
           return $ Right $ Right $ ThinPage content
     Nothing -> do
-      ctx <- getContext
       addFlashM flashMessagePasswordChangeLinkNotValid
-      return $ Left $ LinkLogin (ctxlang ctx) LoginTry
+      return $ Left LinkLoginDirect
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue

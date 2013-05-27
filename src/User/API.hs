@@ -297,7 +297,7 @@ apiCallPaymentInfo = api $ do
                 Nothing -> return 1
                 Just cid -> dbQuery $ GetCompanyQuantity cid
 
-  let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
+  let paymentplan = maybe "free" (getNonTrialPlanName . ppPricePlan) mpaymentplan
       status      = maybe "active" (show . ppStatus) mpaymentplan
       dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
       canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)

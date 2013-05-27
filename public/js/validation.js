@@ -40,6 +40,13 @@ window.Validation = Backbone.Model.extend({
     }
 });
 
+window.NoValidation = Validation.extend({
+    defaults: {
+           validates: function(t) { return true; },
+           message: "The value should be always ok"
+        }
+});
+
 window.NotEmptyValidation = Validation.extend({
     defaults: {
            validates: function(t) {
@@ -56,6 +63,7 @@ window.NotEmptyValidation = Validation.extend({
 window.EmailValidation = Validation.extend({
      defaults: {
             validates: function(t) {
+                t = t.trim();
                 // this does not allow international characters, which for the moment is good
                 if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
                     return true;

@@ -80,6 +80,17 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
         stop: function() {
             if( placement!=undefined && !droppedInside ) {
                 placement.remove();
+                var f = placement.field();
+                var s = f.signatory();
+                if(f &&
+                   f.addedByMe &&
+                   f.value() === '' &&
+                   f.placements().length <= 1) {
+                    s.deleteField(field);
+                    placement.setField(undefined);
+                    f.removePlacement(placement);
+                }
+
             }
             else if( dragHandler.hasClass("placedfield")) {
                 dragHandler.show();
@@ -93,6 +104,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset);
         },
         onDrop: function(page, x, y, w, h) {
+
             droppedInside = true;
             var signatory = field.signatory();
             if( !_.find(signatory.fields(), function(f) { return f==field; })) {
@@ -134,12 +146,21 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                         wrel: $(helper).width() / w,
                         hrel: $(helper).height() / h,
                         fsrel: fontSize/w,
-                        tip: placement.tip()
+                        tip: placement.tip(),
+                        step : placement.step()
                     });
                     field.addPlacement(newPlacement);
                 }
             }
             else {
+              _.each(field.signatory().document().signatories(),function(s) {
+                _.each(s.fields(), function(f) {
+                  _.each(f.placements(), function(p) {
+                      if (p.typeSetter != undefined && p.withTypeSetter())
+                          p.typeSetter.clear();
+                 });
+               });
+             });
                 mixpanel.track('Drag field', {fieldname:field.name(),
                                               signatory:field.signatory().signIndex(),
                                               documentid:field.signatory().document().documentid()});
@@ -152,7 +173,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     wrel: $(helper).width() / w,
                     hrel: $(helper).height() / h,
                     fsrel: fontSize/w,
-                    withTypeSetter : true
+                    withTypeSetter : true,
+                    step : (field.isFake() ? 'signatory' : 'edit')
                 });
                 field.addPlacement(newPlacement);
                 signatory.trigger('drag:checkbox');
@@ -214,13 +236,17 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     if(field) {
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
+                            field.authorObligatory = 'signatory';
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
+                            field.authorObligatory = 'sender';
                         }
+                        field.addedByMe = false;
                     }
                     return true;
                 }
@@ -235,11 +261,19 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
 
 var TextTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
+        var self = this;
         _.bindAll(this);
         this.model.bind('removed', this.clear);
+        this.model.bind('change:field change:signatory change:step', this.render);
+
+
+
         this.model.field().signatory().bind("change:fields",this.render);
         this.model.field().signatory().document().bind("change:signatories",this.render);
-        this.model.bind('change:field change:signatory', this.render);
+        this.model.bind('change:field',function() {
+          self.model.field().bind('change:value',self.updatePosition);
+        });
+        this.model.field().bind('change:value',this.updatePosition);
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
@@ -248,21 +282,32 @@ var TextTypeSetterView = Backbone.View.extend({
         $(window).resize(view.fixPlaceFunction);
         this.render();
     },
+    updatePosition : function() {
+        var self = this;
+        setTimeout(function() {self.place();},1);
+    },
     clear: function() {
         this.off();
         $(this.el).remove();
+        this.model.unbind('removed', this.clear);
+        this.model.unbind('change:field change:signatory change:step', this.render);
+
         $(window).unbind('scroll',this.fixPlaceFunction);
         $(window).unbind('resize',this.fixPlaceFunction);
-        this.model.unbind('removed', this.clear);
+        this.model.field().unbind('change:value',this.updatePosition);
+
+
         this.model.field().signatory().unbind("change:fields",this.render);
         this.model.field().signatory().document().unbind("change:signatories",this.render);
-        this.model.unbind('change:field change:signatory', this.render);
+        //this.model.field().signatory().bind("change:fields",this.render);
+        //this.model.field().signatory().document().bind("change:signatories",this.render);
+
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
         var view = this;
         var field = this.model.field();
-        var sig = field.signatory();
+        var sig = field?field.signatory():view.model.signatory();
 
         var optionOptions = ['optional', 'signatory', 'sender'];
 
@@ -281,8 +326,6 @@ var TextTypeSetterView = Backbone.View.extend({
         if(name === 'sigpersnr' && sig.needsPersonalNumber())
             optionOptions = _.without(optionOptions, 'optional');
 
-
-
         return $("<div style='display:block;margin-top:4px;'/>").append(
           new FieldOptionsView({
               model: this.model.field(),
@@ -290,8 +333,23 @@ var TextTypeSetterView = Backbone.View.extend({
               options: optionOptions
           }).el);
     },
-    help : function() {
-        return $("<div class='help'/>").text(localization.designview.textFields.help);
+    title : function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var div = $("<div class='title'/>");
+
+        //.text(localization.designview.textFields.textField);
+
+        var fname = field.nicename();
+
+        var signatory = placement.signatory();
+        var sname = signatory.nameOrEmail() || signatory.nameInDocument();
+
+        div.text(fname + ' ' + localization.designview.requestedFrom + ' ' + sname);
+
+        return div;
     },
     doneOption : function() {
         var view = this;
@@ -308,85 +366,14 @@ var TextTypeSetterView = Backbone.View.extend({
                                 if (done) {
                                     field.makeReady();
                                     view.clear();
+                                    view.model.cleanTypeSetter();
+                                    view.model.trigger('change:step');
                                 } else {
                                     view.nameinput.addClass('redborder');
                                 }
                                 return false;
                             }
                            }).input();
-    },
-    title : function() {
-        return $("<div class='title'/>").text(localization.designview.textFields.textField);
-    },
-    selector : function() {
-        var view = this;
-        var box = $("<div class='subtitle'/>");
-        var model = view.model;
-        var field = model.field();
-        var sig = field?field.signatory():model.signatory();
-        var doc = sig.document();
-
-        var signame = sig.nameOrEmail() || sig.nameInDocument();
-
-        var name = signame;
-
-        var options = _.map(doc.signatories(), function(s) {
-            return {name: s.nameOrEmail() || s.nameInDocument(),
-                    value: s};
-        });
-
-        var selector = new Select({
-            name: name,
-            options: options,
-            cssClass: 'text-field-placement-setter-field-selector',
-            style: "z-index: 109;",
-            onSelect: function(s) {
-                var name = field?field.name():'email';
-                var type = field?field.type():'standard';
-                var oldfield = s.field(name, type);
-                if (oldfield == undefined)
-                  oldfield = s.field('email', 'standard');
-                s.bind("change:fields",view.render);
-                model.setField(oldfield);
-                model.setSignatory(s);
-            }
-        });
-
-        var text = localization.designview.textFields.forThis + " ";
-        box.text(text);
-        box.append(selector.input());
-
-        return box;
-    },
-    fieldSelector: function() {
-        var placement = this.model;
-        var field = placement.field();
-
-        var signatory = placement.signatory();
-
-        var fields = signatory ? signatory.fields() : [];
-
-        var name = field ? field.nicename() : 'Select field';
-
-        var options = [];
-        _.each(fields, function(f) {
-            if(f.isText())
-                options.push({name: f.nicename(),
-                              value: f});
-        });
-
-        var selector = new Select({
-            name: name,
-            options: options,
-            cssClass: 'text-field-placement-setter-field-field-selector',
-            style: "z-index: 108;",
-            onSelect: function(f) {
-                placement.setField(f);
-                f.addPlacement(placement);
-            }
-        });
-
-        return selector.input();
     },
     place : function() {
         var placement = this.model;
@@ -395,26 +382,34 @@ var TextTypeSetterView = Backbone.View.extend({
         $(this.el).css("top",offset.top - 19);
     },
     render: function() {
-           var view = this;
-           var container = $(this.el);
-           container.addClass("checkboxTypeSetter-container");
-           container.css("position", "absolute");
-           var body = $("<div class='checkboxTypeSetter-body'/>");
-           var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+        var view = this;
+        var container = $(this.el);
 
-           body.append(this.title());
-           body.append(this.selector());
-           body.append(this.fieldSelector());
-           body.append(this.obligatoryOption());
+        var placement = view.model;
+        var field = placement.field();
 
-           body.append(this.doneOption());
-           body.append(this.help());
-        container.html('');
-           container.append(arrow);
-           container.append(body);
+        if(placement.step() === 'edit' && field.name()) {
 
-           this.place();
-           return this;
+            container.addClass("checkboxTypeSetter-container");
+            container.css("position", "absolute");
+            var body = $("<div class='checkboxTypeSetter-body'/>");
+            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+
+
+            body.append(this.title());
+
+            body.append(this.obligatoryOption());
+
+
+
+            body.append(this.doneOption());
+            container.html('');
+            container.append(arrow);
+            container.append(body);
+
+            this.place();
+        }
+        return this;
     }
 });
 
@@ -452,17 +447,17 @@ var TextPlacementView = Backbone.View.extend({
 
 var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateColor');
+        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateColor', 'updateErrorBackground');
         var view = this;
         var placement = this.model;
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
         this.model.bind('removed', this.clear, this);
-        this.model.bind('change:field change:signatory', this.render);
+        this.model.bind('change:field change:signatory change:step change:withTypeSetter', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
         signatory.document().bind('change:signatories',this.updateColor);
-
+        placement.bind('change', this.updateErrorBackground);
 
         this.model.view = this;
         this.render();
@@ -602,15 +597,239 @@ var TextPlacementPlacedView = Backbone.View.extend({
        if(signatory.color())
             $(this.el).css('border', '1px solid ' + signatory.color());
     },
+    updateErrorBackground: function() {
+        var placement = this.model;
+        var field = placement.field();
+
+        if(field) {
+            field.unbind('change', this.updateErrorBackground);
+            field.bind('change', this.updateErrorBackground);
+        }
+
+        if(field && field.isValid(true)) {
+            $(this.el).css('background-color', 'white');
+        } else {
+            $(this.el).css('background-color', '#f33');
+        }
+    },
+    possibleFields: [
+        {name: "fstname",
+         type: 'standard'},
+        {name: "sndname",
+         type: 'standard'},
+        {name: "email",
+         type: 'standard'},
+        {name: "sigco",
+         type: 'standard'},
+        {name: "sigpersnr",
+         type: 'standard'},
+        {name: "sigcompnr",
+         type: 'standard'},
+        {name: "mobile",
+         type: 'standard'}
+    ],
+    fieldNames: {
+        fstname: localization.fstname,
+        sndname: localization.sndname,
+        email: localization.email,
+        sigcompnr: localization.companyNumber,
+        sigpersnr: localization.personamNumber,
+        sigco: localization.company,
+        mobile: localization.phone
+    },
+    selector : function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+        var sig = field.signatory();
+        var doc = sig.document();
+
+        var box = $("<div class='subtitle'/>");
+
+        var name = localization.designview.chooseParticipant;
+
+        var options = _.map(doc.signatories(), function(s) {
+            return {name: s.nameOrEmail() || s.nameInDocument(),
+                    value: s};
+        });
+
+        var selector = new Select({
+            name: name,
+            options: options,
+            cssClass: 'text-field-placement-setter-field-selector',
+            style: "z-index: 109;",
+            border : "1px solid #f33",
+            onSelect: function(s) {
+                placement.setSignatory(s);
+                placement.goToStepField();
+            }
+        });
+
+        box.append(selector.input());
+
+        return box;
+    },
+    fieldSelector: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var signatory = placement.signatory();
+        var fields = signatory.field();
+
+
+        var div = $('<div />');
+
+        var name = localization.designview.selectField;
+
+        // we need to build a list of all of the different field name/type pairs
+        // plus the ability to add a custom field
+
+        // clone the array
+        var allFieldOptions = view.possibleFields.concat([]);
+
+        function isUnique(field) {
+            return _.every(allFieldOptions, function(o) {
+                return field.name() !== o.name && field.type() !== o.type;
+            });
+        }
+
+        _.each(signatory.document().signatories(), function(signatory) {
+            _.each(signatory.fields(), function(f) {
+                if(f.isText() && f.name() !== '' && isUnique(f))
+                    allFieldOptions.push({name: f.name(),
+                                          type: f.type()});
+            });
+        });
+
+        var options = [];
+
+        if(!field || field.name() !== '')
+            options.push({name: localization.designview.customField,
+                          value: {name: '--custom',
+                                  type: '--custom'}});
+
+        _.each(allFieldOptions, function(o) {
+            options.push({name: view.fieldNames[o.name] || o.name,
+                          value: o});
+        });
+
+        var selector = new Select({
+            name: name,
+            options: options,
+            cssClass: 'text-field-placement-setter-field-field-selector',
+            style: "z-index: 108;",
+            border : "1px solid #f33",
+            onSelect: function(o) {
+                var f = signatory.field(o.name, o.type);
+
+                if(o.name === '--custom') {
+                    f = new Field({signatory: signatory,
+                                   type: 'custom',
+                                   name: '',
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author()});
+                    placement.setField(f);
+                    f.addPlacement(placement);
+
+                    signatory.addField(f);
+                    f.addedByMe = true;
+                } else if(f) {
+                    placement.setField(f);
+                    f.addPlacement(placement);
+                } else {
+                    f = new Field({signatory: signatory,
+                                   type: o.type,
+                                   name: o.name,
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author()});
+                    placement.setField(f);
+                    f.addPlacement(placement);
+
+                    signatory.addField(f);
+                    f.addedByMe = true;
+                }
+
+                placement.goToStepEdit();
+                view.addTypeSetter();
+            }
+        });
+
+        view.myFieldSelector = selector;
+
+        return selector.input();
+    },
+    fieldNamer: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var signatory = placement.signatory();
+
+        var div = $('<div />');
+        div.addClass('text-field-placement-setter-field-name');
+
+        function setName() {
+            if(input.value()) {
+                placement.trigger('change:field');
+                signatory.trigger('change:fields');
+                view.addTypeSetter();
+            }
+        }
+
+        var input = InfoTextInput.init({
+            infotext: localization.designview.fieldName,
+            value: field.name(),
+            cssClass: "name",
+            onChange : function(value) {
+                field.setName(value);
+                view.myFieldSelector.model().setName(value);
+                if (view.place != undefined)
+                  view.place();
+            },
+            onEnter: setName,
+            suppressSpace: (field.name()=="fstname")
+        });
+
+        var button = Button.init({
+            color: 'black',
+            size: 'tiny',
+            text: localization.ok,
+            width: 64,
+            onClick: setName
+        });
+
+        div.append(input.input());
+        div.append(button.input());
+        return div;
+    },
+    editor: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var input = InfoTextInput.init({
+            cssClass: 'text-field-placement-setter-field-editor',
+            infotext: field.nicename(),
+            value: field.value(),
+            suppressSpace: (field.name()=="fstname"),
+            onChange: function(val) {
+                field.setValue(val.trim());
+            }
+        }).input();
+
+        return input;
+    },
     render: function() {
         var view = this;
         var placement = this.model;
         var field =  placement.field();
-        var signatory = field?field.signatory():placement.signatory();
+        var signatory = placement.signatory()||field.signatory();
         var document = signatory.document();
         var place = $(this.el);
 
         place.addClass('placedfield');
+        this.updateErrorBackground();
         this.updateColor();
 
         if ((signatory == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
@@ -618,16 +837,33 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         this.updatePosition();
 
+        var pField;
+
+
         place.empty();
-        place.append(new TextPlacementView({model: field}).el);
+
+        if(placement.step() === 'signatory') {
+            place.append(this.selector());
+        } else if(placement.step() === 'field') {
+            place.append(this.fieldSelector());
+        } else if(field.noName()) {
+            place.append(this.fieldNamer());
+        } else if(view.hasTypeSetter()) {
+            place.append(this.editor());
+        } else {
+            place.append(new TextPlacementView({model: field}).el);
+        }
+
         place.unbind('click');
         if (document.allowsDD()) {
             draggebleField(place, placement);
             place.click(function(){
-                if (!view.hasTypeSetter())
+                if (!view.hasTypeSetter()) {
                     view.addTypeSetter();
-                else
-                    view.closeTypeSetter();
+                    placement.trigger('change:step');
+                }
+                //else
+                //    view.closeTypeSetter();
                 return false;
             });
         }
@@ -746,20 +982,6 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
         return box;
     },
-    nameEditor: function() {
-      var view = this;
-      var field = this.model.field();
-      this.nameinput = InfoTextInput.init({
-                                 infotext: localization.designview.checkboxes.name,
-                                 value: field.name(),
-                                 cssClass: "name",
-                                 onChange : function(value) {
-                                     view.nameinput.removeClass('redborder');
-                                     field.setName(value);
-                                 }
-                            }).input();
-     return this.nameinput;
-    },
     obligatoryOption : function() {
 
         var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
@@ -801,9 +1023,6 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         });
         return option;
     },
-    help : function() {
-        return $("<div class='help'/>").text(localization.designview.checkboxes.help);
-    },
     doneOption : function() {
         var view = this;
         var field = this.model.field();
@@ -827,7 +1046,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                                 }
             }).input();
     },
-    title : function() {
+    title: function() {
         return $("<div class='title'/>").text(localization.designview.checkboxes.checkbox);
     },
     subtitle : function() {
@@ -858,12 +1077,10 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
            body.append(this.title());
            body.append(this.selector());
-           body.append(this.nameEditor());
            body.append(this.precheckedOption());
            body.append(this.obligatoryOption());
 
            body.append(this.doneOption());
-           body.append(this.help());
            this.place();
            return this;
     }
@@ -1150,9 +1367,6 @@ var SignatureTypeSetterView = Backbone.View.extend({
 
         return option;
     },
-    help : function() {
-        return $("<div class='help'/>").text(localization.designview.textFields.help);
-    },
     doneOption : function() {
         var view = this;
         var field = this.model.field();
@@ -1176,7 +1390,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
                            }).input();
     },
     title : function() {
-        return $("<div class='title'/>").text(localization.designview.signatureBox);
+        return $("<div class='title'/>").text(localization.designview.signatureBoxSettings);
     },
     selector : function() {
         var view = this;
@@ -1233,7 +1447,6 @@ var SignatureTypeSetterView = Backbone.View.extend({
            body.append(this.obligatoryOption());
 
            body.append(this.doneOption());
-           body.append(this.help());
         container.html('');
            container.append(arrow);
            container.append(body);

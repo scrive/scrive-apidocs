@@ -152,7 +152,9 @@ setSignOrder i =  liftTMP $  \s -> s {signatorysignorder = i}
 --signOrder = signatorysignorder . details
 
 addAttachment :: SignatoryAttachment -> SignatoryTMP -> SignatoryTMP
-addAttachment a s = s {attachments = a : (attachments s)}
+addAttachment a s = if (signatoryattachmentname a `elem `(signatoryattachmentname <$> attachments s))
+                       then s
+                       else s {attachments = a : (attachments s)}
 
 getAttachments :: SignatoryTMP -> [SignatoryAttachment]
 getAttachments s = attachments s

@@ -532,6 +532,22 @@ mailDocumentError=
 mailDocumentErrorMainP =
     $_hi()$ <strong>$creatorname$</strong>,
 ####
+#### ACCESS NEW ACCOUNT MAIL
+####
+accessNewAccountMail=
+    $_accessNewAccountMailTitle()$
+    $nicemail(
+        mailheader=_accessNewAccountMailTitle();
+        mailp1=accessNewAccountMailMainP();
+        mailp2=regards()
+    )$
+###
+accessNewAccountMailMainP=
+$_hi()$ <strong>$personname$</strong>,
+<br/>
+<br/>
+$_accessNewAccountMailContentBody()$
+####
 #### CHANGE PASSWORD MAIL
 ####
 passwordChangeLinkMail=
@@ -539,12 +555,10 @@ passwordChangeLinkMail=
     $nicemail(
         mailheader=_passwordChangeLinkMailTitle();
         mailp1=passwordChangeLinkMailMainP();
-        mailp2=regards()
+        mailp2=""
     )$
 ###
 passwordChangeLinkMailMainP=
-$_hi()$ <strong>$personname$</strong>,
-<br/>
 <br/>
 $_passwordChangeLinkMailContentBody()$
 <br/>

@@ -74,6 +74,8 @@ window.Document = Backbone.Model.extend({
     initialize: function(args) {
         var params = { evidenceAttachments: args.evidenceAttachments };
         this.url = "/api/frontend/get/" + args.id + "?" + $.param(params,true);
+        _.bindAll(this);
+        this.bindBubble();
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -302,6 +304,7 @@ window.Document = Backbone.Model.extend({
               if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "")
                 window.location = document.currentSignatory().signsuccessredirect();
               else
+                window.scroll(0,0);
                 window.location.reload();
             },
             ajaxerror : function() {
@@ -663,18 +666,11 @@ window.Document = Backbone.Model.extend({
     },
     hasDocumentProblems: function() {
         return !this.hasAtLeastOneSignatory() ||
-            !this.mainfile() ||
-            this.hasDuplicateEmails();
+            !this.mainfile();
     },
     hasAtLeastOneSignatory: function() {
         var signing = this.signatoriesWhoSign();
         return signing.length >= 1;
-    },
-    hasDuplicateEmails: function() {
-        var mails = _.invoke(this.signatories(), 'email').sort();
-        return _.some(_.zip(mails, _.rest(mails)), function(ms) {
-            return ms[0] === ms[1] && ms[0] !== '';
-        });
     },
     hasSignatoryProblems: function(forSigning) {
         var sigs = this.signatories();
@@ -730,8 +726,15 @@ window.Document = Backbone.Model.extend({
             });
         });
 
+    },
+    bindBubble: function() {
+        var document = this;
+        document.bind('change', document.bubbleSelf);
+    },
+    bubbleSelf: function() {
+        var document = this;
+        document.trigger('bubble');
     }
-
 });
 
 

@@ -21,9 +21,9 @@ describe "basic signing" do
     begin
       @h.dochelper.uploadContract
       puts "Fill in counterpart"
+      @h.dochelper.addPart
       @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
       puts "About to sign and send"
-      @h.dochelper.gotToStep3
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout

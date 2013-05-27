@@ -14,7 +14,8 @@ window.FieldPlacement = Backbone.Model.extend({
       hrel: 0,
       fsrel: 0,
       withTypeSetter : false,
-        alive: true
+      alive: true,
+      step: 'edit'
     },
     initialize : function(args){
         var placement = this;
@@ -135,6 +136,30 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     alive: function() {
         return this.get('alive');
+    },
+    bindBubble: function() {
+        var placement = this;
+        placement.bind('change', placement.bubbleSelf);
+        placement.bind('bubble', placement.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var placement = this;
+        placement.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var placement = this;
+        var field = placement.field();
+        if(field)
+            field.trigger('bubble');
+    },
+    step: function() {
+        return this.get('step');
+    },
+    goToStepField : function() {
+        this.set({step:'field'});
+    },
+    goToStepEdit : function() {
+        this.set({step:'edit'});
     }
 });
 
@@ -159,11 +184,12 @@ window.Field = Backbone.Model.extend({
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
-        //this.bind("change",function() {
-        //    field.signatory().document().trigger("change:signatories");
-        //});
+        this.bind("change:value",function() {
+            field.signatory().document().trigger("change-signatories-field-values");
+        });
         if(args.signatory)
             args.signatory.bind("removed", field.remove);
+        field.bindBubble();
     },
     type : function() {
         return this.get("type");
@@ -192,6 +218,22 @@ window.Field = Backbone.Model.extend({
     },
     setValue : function(value) {
         this.set({"value" : value});
+        this.triggerSignatoryPostChanges();
+    },
+    triggerSignatoryPostChanges : function() {
+        var name = this.name();
+        if (this.isStandard()) {
+            if (name == "fstname")
+                this.signatory().trigger('change:name');
+            if (name == "sndname" )
+                this.signatory().trigger('change:name');
+            if (name == "email")
+                this.signatory().trigger('change:email');
+            if (name == "sigco")
+                this.signatory().trigger('change:company');
+        }
+
+
     },
     setValueTMP : function(value) {
         this.set({"valueTMP" : value});
@@ -201,6 +243,9 @@ window.Field = Backbone.Model.extend({
     },
     isClosed : function() {
         return this.get("closed");
+    },
+    isFake : function() {
+        return this.type() == 'fake';
     },
     placements : function() {
         return this.get("placements");
@@ -221,6 +266,9 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
+    },
+    hasNotReadyPlacements : function() {
+      return _.any(this.placements(), function(p) {if (p.step() != 'field' && p.step != 'edit') console.log("Bad step X" + p.step() +"X"); return (p.step() != 'field' && p.step() != 'edit');});
     },
     readyForSign : function(){
         if (this.isEmail())
@@ -268,6 +316,9 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name();
 
+        if (field.isFake())
+           return new NoValidation();
+
         if( field.isBlank() ) {
             var msg = localization.designview.validation.pleaseSelectField;
             return new Validation({validates: function() {
@@ -280,7 +331,7 @@ window.Field = Backbone.Model.extend({
             return new Validation({validates: function() {
                 return !field.noName();
             }, message: msg});
-            
+
         }
 
         if (   this.isEmail()
@@ -288,22 +339,24 @@ window.Field = Backbone.Model.extend({
             && (this.signatory().emailDelivery() || this.signatory().emailMobileDelivery())
            ){
             var msg = localization.designview.validation.missingOrWrongEmail;
-            this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
+        if ((this.isFstName() || this.isSndName()) && this.signatory().author())
+            return new NoValidation();
+
+        if (this.isCheckbox() && this.signatory().author())
+            return new NoValidation();
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
-            this.setValue(this.value().trim());
             return new EmailValidation({message: msg});
         }
 
         if (   this.isMobile()
             && !this.signatory().isCsv()
-            && (this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery())
+            && this.signatory().needsMobile()
            ){
             var msg = localization.designview.validation.missingOrWrongMobile;
-            this.setValue(this.value().trim());
             return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
@@ -312,31 +365,20 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.signatory().author() && this.isStandard() && this.hasPlacements() && forSigning) {
-          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-          return new NotEmptyValidation({message: msg});
+        if(this.isObligatory() && forSigning && this.shouldbefilledbysender()) {
+            var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+            return new NotEmptyValidation({message: msg});
         }
+
         if (this.signatory().author() && (this.isCheckbox() || this.isText()) && this.hasPlacements() && this.isObligatory() && forSigning) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
-        }
-
-        if (this.isCustom()) {
-          var msg1 = localization.designview.validation.notReadyField;
-          var msg2 = localization.designview.validation.notPlacedField;
-          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
-          if (this.signatory().author() && forSigning) {
-            return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongPlacedAuthorField}));
-          } else {
-            return validation;
-          }
         }
 
         if (this.isCheckbox()) {
             var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
             return validation;
         }
-
         return new Validation();
     },
     isEmail: function() {
@@ -418,8 +460,10 @@ window.Field = Backbone.Model.extend({
       return this.get("placements").length > 0;
    },
     addPlacement : function(placement) {
-        this.placements().push(placement);
-        this.trigger('change:placements');
+        if(!_.contains(this.placements(), placement)) {
+            this.placements().push(placement);
+            this.trigger('change change:placements');
+        }
     },
    removePlacement : function(placement) {
        var newplacements = _.without(this.placements(), placement);
@@ -461,179 +505,24 @@ window.Field = Backbone.Model.extend({
             return false;
         else
             return true;
-    }
-});
-
-window.FieldStandardView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'cleanredborder');
-         this.model.bind('change:inlineedited', this.render);
-        this.model.bind('change', this.cleanredborder);
-        this.model.view = this;
-        this.render();
     },
-    render: function(){
-        var field = this.model;
-        $(this.el).empty();
+    bindBubble: function() {
+        var field = this;
+        field.bind('change', field.bubbleSelf);
+        field.bind('bubble', field.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var field = this;
+        field.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var field = this;
         var signatory = field.signatory();
-        if (!signatory.canSign() || field.isClosed() || !signatory.current()) {
-            $(this.el).addClass("field");
-            input = $("<input class='fieldvalue' autocomplete='off' readonly=''/>");
-            if (field.value() != "")
-                input.val(field.value());
-            else
-                {
-                input.val(field.nicename());
-                $(this.el).addClass("required");
-                input.addClass("grayed");
-                }
-        $(this.el).append(input);
-        }
-        else
-        {
-            $(this.el).addClass("dragfield");
-            var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
-            if (field.value() ==  "" && SessionStorage.get(signatory.document().documentid(),field.name()) != undefined ) {
-                field.setValue(SessionStorage.get(signatory.document().documentid(),field.name()));
-            }
-            var input = InfoTextInput.init({
-                                 infotext: field.nicename(),
-                                 value: field.value(),
-                                 cssClass :'fieldvalue',
-                                 onChange : function(value) {
-                                    field.setValue(value);
-                                    SessionStorage.set(signatory.document().documentid(),field.name(),value);
-                                  }
-                            }).input();
-            this.redborderhere = input;
-            input.attr("autocomplete","off");
-            wrapper.append(input);
-            $(this.el).append(wrapper);
-        }
-
-        return this;
-    },
-    redborder : function() {
-        if (this.redborderhere != undefined)
-            this.redborderhere.css("border","1px solid red");
-    },
-    cleanredborder : function() {
-        if (this.redborderhere != undefined)
-            this.redborderhere.css("border","");
+        if(signatory)
+            signatory.trigger('bubble');
     }
 });
 
 
-// this is unused in new design view
-// Eric
-window.FieldDesignView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'cleanredborder');
-        this.model.bind('change', this.cleanredborder);
-        this.model.bind('ready', this.render);
-        this.model.signatory().document().bind('change:authenticationdelivery', this.cleanredborder);
-        this.model.view = this;
-        this.render();
-    },
-    ddIcon : function() {
-        var icon =  $("<div class='ddIcon' />");
-        var field = this.model;
-        var document = field.signatory().document();
-        if (document.mainfile() != undefined && document.mainfile().view != undefined) {
-            draggebleField(icon, field);
-        }
-        return icon;
-    },
-    prepIcon : function() {
-        return $("<a class='prepIcon' href='#'/>");
-    },
-    setNameIcon : function() {
-        var view = this;
-        var field = this.model;
-        var input = this.input;
-        var icon =  $("<a class='setNameIcon' href='#'/>");
-        var fn = function(){
-            if (field.name() != undefined && field.name() != "")
-               field.makeReady();
-            else
-               view.redborder();
-            return false;
-        };
-        icon.click(fn);
-        input.keypress(function(event) {
-          if(event.which === 13)
-            return fn();
-        });
-
-        // I'm not putting a blur handler that sets the name
-        // because it's a little odd. Neither is perfect. Eric
-
-        return icon;
-    },
-    removeIcon: function() {
-        var field = this.model;
-        var icon = $("<a class='removeField' href='#'/>");
-        icon.click(function(){
-            field.remove();
-            return false;
-        });
-        return icon;
-    },
-    render: function(){
-        var field = this.model;
-        $(this.el).empty();
-        var signatory = field.signatory();
-        $(this.el).addClass("field");
-        if (field.isReady()) {
-          $(this.el).append(this.ddIcon());
-          this.input = InfoTextInput.init({
-                                 infotext: field.nicename(),
-                                 value: field.value(),
-                                 cssClass :'fieldvalue',
-                                 inputname : field.name(), //Added only for selenium tests
-                                 onChange : function(value) {
-                                    field.setValue(value);
-                                  }
-                            }).input();
-          if  ( field.isClosed() ||
-              ((field.isEmail() || field.isFstName() || field.isSndName()) && field.signatory().author()) ||
-              ( field.isStandard() && field.signatory().author() && field.signatory().document().isTemplate()))
-            {
-                $(this.el).addClass('closed');
-                this.input.attr("readonly","yes");
-            }
-          else if (!field.isStandard())
-           {
-               this.input.addClass("shorter");
-               $(this.el).append(this.removeIcon());
-           }
-          $(this.el).append(this.input);
-        }
-        else {
-           $(this.el).append(this.prepIcon());
-           this.input = InfoTextInput.init({
-                                 infotext: localization.fieldName,
-                                 value: field.name(),
-                                 cssClass :'fieldvalue',
-                                 inputname : field.name(), //Added only for selenium tests
-                                 onChange : function(value) {
-                                    field.setName(value);
-                                  }
-               }).input();
-           this.input.addClass("much-shorter");
-           $(this.el).append(this.input);
-           $(this.el).append(this.removeIcon());
-           $(this.el).append(this.setNameIcon());
-
-        }
-        return this;
-    },
-    redborder : function() {
-        $(this.el).addClass("redborder");
-    },
-    cleanredborder : function() {
-        $(this.el).removeClass("redborder");
-    }
-});
 
 })(window);

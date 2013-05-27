@@ -40,7 +40,7 @@
             var div = $("<div class='design-view-action-document-draggables-help' style='margin-right:80px'/>");
             div.append($("<div class='wrapper'>")
               .append($("<span class='number'/>").text("2."))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp1))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp2))
               .append($("<img src='/img/place-fields-help2.png'/>")));
 
 
@@ -58,9 +58,8 @@
             var txt = $('<div />');
             txt.addClass('design-view-action-document-draggables-checkbox-text');
 
-            var img = $('<img />');
-            img.addClass('design-view-action-document-draggables-checkbox-icon');
-            img.attr('src', '/img/place-fields-checkbox.png');
+            var imgdiv = $('<div />');
+            imgdiv.addClass('design-view-action-document-draggables-checkbox-icon');
 
             // a function because author is not yet defined
             var getcheckbox = function() {
@@ -76,7 +75,7 @@
 
             div.append(wra);
             wra.append(txt);
-            txt.append(img);
+            txt.append(imgdiv);
             txt.append(localization.designview.checkbox);
 
             return div;
@@ -94,9 +93,8 @@
             var txt = $('<div />');
             txt.addClass('design-view-action-document-draggables-signature-text');
 
-            var img = $('<img />');
-            img.addClass('design-view-action-document-draggables-signature-icon');
-            img.attr('src', '/img/place-fields-signaturebox.png');
+            var imgdiv = $('<div />');
+            imgdiv.addClass('design-view-action-document-draggables-signature-icon');
 
             var getsignature = function() {
                 var signature = new Field({fresh:false,
@@ -109,7 +107,7 @@
 
             div.append(wra);
             wra.append(txt);
-            txt.append(img);
+            txt.append(imgdiv);
             txt.append(localization.designview.signatureBox);
 
             return div;
@@ -125,19 +123,23 @@
             var txt = $('<div />');
             txt.addClass('design-view-action-document-draggables-textbox-text');
 
-            var img = $('<img />');
-            img.addClass('design-view-action-document-draggables-textbox-icon');
-            img.attr('src', '/img/place-fields-customfield.png');
+            var imgdiv = $('<div />');
+            imgdiv.addClass('design-view-action-document-draggables-textbox-icon');
 
             var gettext = function() {
-                return viewmodel.document().author().field('email', 'standard');
+                return new Field({
+                    signatory: viewmodel.document().author(),
+                    name: 'fake',
+                    type: 'fake',
+                    value: localization.designview.freeTextBox
+                });
             };
 
-            draggebleField(div, gettext,undefined, undefined,true);
+            draggebleField(div, gettext, undefined, undefined, true);
 
             div.append(wra);
             wra.append(txt);
-            txt.append(img);
+            txt.append(imgdiv);
             txt.append(localization.designview.freeTextBox);
 
             return div;
