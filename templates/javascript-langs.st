@@ -304,6 +304,7 @@ javascriptLocalisation =
              , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
+              editMessagePlaceholder: "$_editMessagePlaceholder()$",
               withoutParticipant: "$_designViewWithoutParticipant()$",
               textFieldFor: "$_designViewTextFieldFor()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
