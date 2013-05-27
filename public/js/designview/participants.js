@@ -838,6 +838,7 @@
                         field.setName(v.name);
                     }
                     sig.trigger('change:fields');
+                    return true;
                 }
             });
 
