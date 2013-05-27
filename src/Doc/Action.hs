@@ -426,7 +426,7 @@ sendClosedEmails document = do
                                       , attachments = mailattachments
                                       }
       let sendSMS withMail = (scheduleSMS =<< smsClosedNotification document sl withMail)
-      case (isGood $ asValidEmail $ getEmail sl,isGood $  asValidPhone $ getMobile sl) of
+      case (isGood $ asValidEmail $ getEmail sl,isGood $  asValidPhoneForSMS $ getMobile sl) of
            (False,False) -> return ()
            (True,False) -> sendMail
            (False,True) -> sendSMS False
