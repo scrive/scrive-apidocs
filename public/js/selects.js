@@ -115,7 +115,7 @@ window.SelectModel = Backbone.Model.extend({
   },
   border : function() {
      return this.get("border");
-  },
+  }
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
