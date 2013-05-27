@@ -334,7 +334,7 @@ var FileView = Backbone.View.extend({
       var self = this;
       _.defer(function() {
 
-        var top = helper.offset().top - $(self.el).offset().top + helper.height() + verticaloffset;
+        var top = helper.offset().top - $(self.el).offset().top + helper.outerHeight() + verticaloffset;
         var left = helper.offset().left - $(self.el).offset().left;
         var height = $(self.el).height();
         var width = $(self.el).width();

@@ -838,6 +838,7 @@
                         field.setName(v.name);
                     }
                     sig.trigger('change:fields');
+                    return true;
                 }
             });
 
@@ -954,7 +955,8 @@
                 infotext: placeholder || name,
                 value: value,
                 onChange: function(val) {
-                    field.setValue(val.trim());
+                    if(typeof val === 'string')
+                        field.setValue(val.trim());
                 }
             });
 
