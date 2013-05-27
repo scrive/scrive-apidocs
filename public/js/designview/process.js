@@ -337,7 +337,7 @@
             var textarea = $('<textarea />');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
             textarea.hide();
-	   
+
             wrapper.append(textarea);
 
             view.invitationEditor = textarea;
