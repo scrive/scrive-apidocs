@@ -787,7 +787,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
                 if (view.place != undefined)
                   view.place();
             },
-            onEnter: setName
+            onEnter: setName,
+            suppressSpace: (field.name()=="fstname")
         });
 
         var button = Button.init({
@@ -811,6 +812,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             cssClass: 'text-field-placement-setter-field-editor',
             infotext: field.nicename(),
             value: field.value(),
+            suppressSpace: (field.name()=="fstname"),
             onChange: function(val) {
                 field.setValue(val.trim());
             }
