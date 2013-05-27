@@ -131,7 +131,7 @@
                     signatory: viewmodel.document().author(),
                     name: 'fake',
                     type: 'fake',
-                    value: localization.designview.withoutParticipant
+                    value: localization.designview.freeTextBox
                 });
             };
 

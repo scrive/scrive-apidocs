@@ -853,6 +853,7 @@
                     input.input().addClass('redborder');
                 else
                     input.input().removeClass('redborder');
+                input.setValue(sig.name());
             });
 
             sndnameField.bind('change', function() {
@@ -860,6 +861,7 @@
                     input.input().addClass('redborder');
                 else
                     input.input().removeClass('redborder');
+                input.setValue(sig.name());
             });
             if(!fstnameField.isValid(true))
                     input.input().addClass('redborder');
@@ -903,13 +905,14 @@
                 onChange: function(val) {
                     field.setValue(val.trim());
                 }
-            }).input();
+            });
 
             field.bind('change', function() {
                 if(!field.isValid(true))
-                    input.addClass('redborder');
+                    input.input().addClass('redborder');
                 else
-                    input.removeClass('redborder');
+                    input.input().removeClass('redborder');
+                input.setValue(field.value);
             });
 
             var optionOptions = ['optional', 'signatory', 'sender'];
@@ -935,9 +938,9 @@
             });
 
             if(!field.isValid(true))
-                input.addClass('redborder');
+                input.input().addClass('redborder');
             else
-                input.removeClass('redborder');
+                input.input().removeClass('redborder');
 
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
@@ -950,7 +953,7 @@
             }
 
             div.append(closer);
-            div.append(input);
+            div.append(input.input());
             div.append(options.el);
 
             return div;
@@ -1315,7 +1318,7 @@
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
-                            author.authorObligatory = 'sender';
+                            field.authorObligatory = 'sender';
                         }
                         field.addedByMe = false;
                     }
