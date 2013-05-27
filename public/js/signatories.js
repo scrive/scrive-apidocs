@@ -205,7 +205,7 @@ window.Signatory = Backbone.Model.extend({
         return cf;
     },
     name: function() {
-        var name = this.fstname() + " " + this.sndname();
+        var name = (this.fstname() + " " + this.sndname()).trim();
         if (name != undefined && name != " ")
             return name;
         else

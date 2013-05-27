@@ -32,6 +32,7 @@ ignore  css/fonts
 set systemPage
  css css/calendar.css
  css css/colorpicker.css
+ css css/jquery.mCustomScrollbar.css
  less less/utils.less
  less less/branding/index.less
  less less/document-pages.less
@@ -74,6 +75,7 @@ set systemPage
  js   libs/underscore.js
  js   libs/backbone.js
  js   libs/jquery.form.js
+ js   libs/jquery.mCustomScrollbar.concat.min.js
  js   libs/livequery.js
  js   libs/recurly.js
  js   libs/moment.min.js
