@@ -39,6 +39,7 @@ window.SelectModel = Backbone.Model.extend({
       onOpen : function() {return true;},
       extraNameAttrs: {},
       expandOnHover : false,
+      color: undefined,
       zIndex : 5000
 
   },
@@ -105,9 +106,12 @@ window.SelectModel = Backbone.Model.extend({
         return this.get("onOpen")();
        return true;
   },
-    offset: function() {
+  offset: function() {
         return this.get('offset');
-    }
+  },
+  color : function() {
+     return this.get("color");
+  }
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -203,6 +207,8 @@ var SelectView = Backbone.View.extend({
         var button = this.button();
         _.each(model.options(),function(e){
                 var li = $("<li/>");
+                if (model.color())
+                  li.css('color',model.color());
                 new SelectOptionView({model : e, el : li});
                 options.append(li);
         });
@@ -225,6 +231,8 @@ var SelectView = Backbone.View.extend({
         if (model.expanded())
             {
               this.expButton = $(this.el).clone();
+              if (model.color())
+                this.expButton.css('color',model.color());
               this.expButton.addClass("select-exp").css("position","absolute");
               $('.select-button',this.expButton).addClass("select-exp").css('z-index',model.zIndex() + 2);
               this.expButton.css('z-index',model.zIndex());
@@ -260,7 +268,8 @@ window.Select = function(args) {
                                         onOpen : args.onOpen,
                                         extraNameAttrs: args.extraNameAttrs,
                                         expandOnHover : args.expandOnHover,
-                                        offset : args.offset
+                                        offset : args.offset,
+                                        color : args.color
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)

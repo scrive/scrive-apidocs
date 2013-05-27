@@ -413,8 +413,8 @@
         resizeOnWindowResize: function() {
             var view = this;
             var newHeight = $(window).height() - 350;
-            if( newHeight<100 ) {
-                newHeight = 100;
+            if( newHeight<250 ) {
+                newHeight = 250;
             }
             view.scrollBox.css("max-height", newHeight + "px");
             setTimeout(function() {
@@ -428,8 +428,8 @@
             view.$el.children().detach();
             var box = $("<div class='design-view-action-participant-container-participants-box'>");
             var newHeight = $(window).height() - 350;
-            if( newHeight<100 ) {
-                newHeight = 100;
+            if( newHeight<250 ) {
+                newHeight = 250;
             }
             box.css("max-height", newHeight + "px");
             $.each(view.participants, function(i, p) {
