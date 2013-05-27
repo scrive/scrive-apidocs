@@ -155,10 +155,11 @@ window.FieldPlacement = Backbone.Model.extend({
     step: function() {
         return this.get('step');
     },
-    advanceStep: function() {
-        this.set({step:{signatory:'field',
-                        field:'edit'}[this.get('step')]});
-
+    goToStepField : function() {
+        this.set({step:'field'});
+    },
+    goToStepEdit : function() {
+        this.set({step:'edit'});
     }
 });
 

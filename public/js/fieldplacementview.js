@@ -661,7 +661,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             border : "1px solid #f33",
             onSelect: function(s) {
                 placement.setSignatory(s);
-                placement.advanceStep();
+                placement.goToStepField();
             }
         });
 
@@ -750,7 +750,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                     f.addedByMe = true;
                 }
 
-                placement.advanceStep();
+                placement.goToStepEdit();
                 view.addTypeSetter();
             }
         });
