@@ -805,7 +805,7 @@
 "_paymentPlanCancelSubscription","Avsluta prenumeration","Cancel subscription"
 "_paymentPlanAlreadySubscribed","Du är redan prenumerant","You already have a subscription"
 "_paymentPlanAlreadySubscribedGo","Gå till <a href='/Scrive/account#subscription'>dina inställningar</a> för att hantera din prenumeration.","Please go to <a href='/Scrive/account#subscription'>your subscription settings</a> to manage your subscription."
-"_paymentPlanSendMessage","Skicka meddelande â€º","Send message â€º"
+"_paymentPlanSendMessage","Skicka meddelande","Send message"
 "_paymentPlanPlaceholder","Beskriv ditt behov här i några få meningar. Vi återkommer till dig direkt.","Please describe your needs here in a few sentences. We'll get back to you right away."
 "_blockingFreeCreateTitle","Köp ett abonnemang","Purchase a subscription"
 "_blockingFreeCSVHeader","Denna fil innehåller X1 mottagare och du har endast X2 fria dokument kvar att skicka. För att skicka vänligen <a href='/Scrive/account#subscription'>köp ett abonnemang</a>.","Your file contains X1 recipients and you have only X2 free documents left to send. To send please <a href='/Scrive/account#subscription'>purchase a subscription</a>."
