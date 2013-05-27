@@ -360,6 +360,7 @@ javascriptLocalisation =
              , editSigningProcess: "$_designViewEditSigningProcess()$"
              , startSigning: "$_designViewStartSigning()$"
              , addField: "$_designViewAddField()$"
+             , whatField: "$_designViewWhatField()$"
              , customField: "$_designViewCustomField()$"
              , fieldName: "$_designViewFieldName()$"
              , defineParticipation: "$_designViewDefineParticipation()$"
