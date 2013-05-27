@@ -659,7 +659,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-selector',
-            style: "z-index: 109;",
             border : "1px solid #f33",
             onSelect: function(s) {
                 placement.setSignatory(s);
@@ -721,7 +720,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
-            style: "z-index: 108;",
             border : "1px solid " + (signatory.color() || "#f33"),
             onSelect: function(o) {
                 var f = signatory.field(o.name, o.type);
