@@ -240,6 +240,7 @@ var SelectView = Backbone.View.extend({
 
         if (model.expanded())
             {
+              if (this.expButton != undefined) $(this.expButton).detach();
               this.expButton = $(this.el).clone();
               if (model.color())
                 this.expButton.css('color',model.color());
