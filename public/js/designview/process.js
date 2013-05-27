@@ -30,7 +30,7 @@
             div.append(view.rightColumn());
 
             view.$el.html(div.children());
-            view.setupTinyMCE(view.emaildeliveryused);
+            view.setupTinyMCE();
             return view;
         },
         leftColumn: function() {
@@ -57,6 +57,11 @@
 
             return div;
         },
+	rerenderMiddleColumn: function() {
+	    var view = this;
+	    view.middleColumnDiv.html('').append(view.invitationBox());
+	    view.setupTinyMCE();
+	},
         rightColumn: function() {
             var view = this;
 
@@ -314,7 +319,7 @@
 	    this.emaildeliveryused = _.some(this.model.document().signatories(), function(signatory) {
 		return signatory.delivery() == 'email' || signatory.delivery() == 'email_mobile';
             });
-	    this.setupTinyMCE(this.emaildeliveryused);
+	    this.rerenderMiddleColumn();
 	},
         invitationBox: function() {
             var view = this;
@@ -328,6 +333,9 @@
 
             var label = $('<div />');
             label.addClass('design-view-action-process-right-column-invitation-label');
+	    if (!view.emaildeliveryused) {
+		label.css('color','#AAAAAA');
+	    }
             label.text(localization.designview.editInvitation);
             view.editInvitationLabel = label;
 
@@ -337,7 +345,7 @@
             var textarea = $('<textarea />');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
             textarea.hide();
-	   
+
             wrapper.append(textarea);
 
             view.invitationEditor = textarea;
@@ -360,22 +368,24 @@
             });
 
             topLine.append(label);
-            topLine.append(previewLink);
+	    if (view.emaildeliveryused) {
+		topLine.append(previewLink);
+	    }
 
             div.append(topLine);
             div.append(wrapper);
 
             return div.children();
         },
-        setupTinyMCE: function(enabled) {
+        setupTinyMCE: function() {
             var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
             var cwidth = view.middleColumnDiv.width();
             view.invitationEditor.html(doc.invitationmessage());
             view.invitationEditor.show();
-	    if (view.tinysetup === true && typeof tinyMCE != "undefined" && tinyMCE.get().length > 0) {
-		tinyMCE.get()[0].remove();
+	    if (!view.emaildeliveryused) {
+		view.invitationEditor.attr('disabled', '').val('<i>' + localization.designview.editMessagePlaceholder + '</i>');
 	    }
             view.invitationEditor.tinymce({
                 script_url: '/tiny_mce/tiny_mce.js',
@@ -387,23 +397,28 @@
                 convert_urls: false,
                 theme_advanced_toolbar_align: "middle",
                 plugins: "noneditable,paste",
-		readonly: !enabled,
-                valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
+		readonly: !view.emaildeliveryused,
+                valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul,i[style<_color: #AAAAAA;]",
                 width: cwidth, // automatically adjust for different swed/eng text
                 oninit : function(ed) {
                     $('.mceExternalToolbar').css('z-index','-1000');
                        $(ed.getDoc()).blur(function(e) {
-                        doc.setInvitationMessage(ed.getBody().innerHTML);
+			   if (view.emaildeliveryused) {
+                               doc.setInvitationMessage(ed.getBody().innerHTML);
+			   }
                     });
 		    if (!view.emaildeliveryused) {
-			ed.getWin().document.body.style.backgroundColor = 'gray';
+         		ed.getWin().document.body.style.color = '#AAAAAA';
+			$('.mceLayout').css({'border-left': '0px',
+					     'border-right': '0px'});
+			$('.mceIframeContainer').css({'border-top': '0px',
+					     'border-bottom': '0px'});
 		    }
                 },
                 onchange_callback  : function (inst) {
                     doc.setInvitationMessage(inst.getBody().innerHTML);
                 }
             });
-	    view.tinysetup = true;
 
             this.tinyIsReady = true;
             return view;

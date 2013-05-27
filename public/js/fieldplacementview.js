@@ -244,7 +244,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
-                            author.authorObligatory = 'sender';
+                            field.authorObligatory = 'sender';
                         }
                         field.addedByMe = false;
                     }
@@ -394,8 +394,8 @@ var TextTypeSetterView = Backbone.View.extend({
             container.css("position", "absolute");
             var body = $("<div class='checkboxTypeSetter-body'/>");
             var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
-            
-            
+
+
             body.append(this.title());
 
             body.append(this.obligatoryOption());
@@ -658,14 +658,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
             options: options,
             cssClass: 'text-field-placement-setter-field-selector',
             style: "z-index: 109;",
+            border : "1px solid #f33",
             onSelect: function(s) {
                 placement.setSignatory(s);
                 placement.advanceStep();
             }
         });
 
-        //var text = localization.designview.textFields.forThis + " ";
-        //box.text(text);
         box.append(selector.input());
 
         return box;
@@ -720,6 +719,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
             style: "z-index: 108;",
+            border : "1px solid #f33",
             onSelect: function(o) {
                 var f = signatory.field(o.name, o.type);
 
@@ -784,7 +784,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
             onChange : function(value) {
                 field.setName(value);
                 view.myFieldSelector.model().setName(value);
-                view.place();
+                if (view.place != undefined)
+                  view.place();
             },
             onEnter: setName
         });

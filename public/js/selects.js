@@ -40,6 +40,7 @@ window.SelectModel = Backbone.Model.extend({
       extraNameAttrs: {},
       expandOnHover : false,
       color: undefined,
+      border: undefined,
       zIndex : 5000
 
   },
@@ -111,7 +112,10 @@ window.SelectModel = Backbone.Model.extend({
   },
   color : function() {
      return this.get("color");
-  }
+  },
+  border : function() {
+     return this.get("border");
+  },
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -198,13 +202,19 @@ var SelectView = Backbone.View.extend({
         $(this.el).remove();
     },
     render: function () {
-        $(this.el).empty();
-        $(this.el).addClass(this.model.theme() + "-theme");
-        var view = this;
-        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
-        options.addClass(this.model.theme() + "-theme");
         var model = this.model;
         var button = this.button();
+        var view = this;
+        $(this.el).empty();
+        $(this.el).addClass(this.model.theme() + "-theme");
+
+        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
+        if (model.border() != undefined) {
+          options.css("border", this.model.border());
+          $(this.el).css("border", "none");
+        }
+        options.addClass(this.model.theme() + "-theme");
+
         _.each(model.options(),function(e){
                 var li = $("<li/>");
                 if (model.color())
@@ -269,7 +279,8 @@ window.Select = function(args) {
                                         extraNameAttrs: args.extraNameAttrs,
                                         expandOnHover : args.expandOnHover,
                                         offset : args.offset,
-                                        color : args.color
+                                        color : args.color,
+                                        border : args.border
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)

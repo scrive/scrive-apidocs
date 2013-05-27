@@ -378,7 +378,6 @@ window.Field = Backbone.Model.extend({
             var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
             return validation;
         }
-        console.log("Dummy validation for field " + this.name());
         return new Validation();
     },
     isEmail: function() {

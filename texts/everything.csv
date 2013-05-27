@@ -1154,3 +1154,4 @@
 "_designviewsaved","Ditt dokument har sparats som ett utkast. Du kan se dina utkast i arkivet.","Your document has been saved as a draft. You can find your drafts in your Archive."
 "_validationPleaseSelectField","Var vänlig fyll i eller ta bort fälten i dokumentet.","Please complete or remove the fields added to the document."
 "_selectField","Välj fält","Select field"
+"_editMessagePlaceholder","Dokumentet måste skickas med epost","Must send document via email"
