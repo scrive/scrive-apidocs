@@ -216,6 +216,9 @@ window.Field = Backbone.Model.extend({
         this.set({shouldbefilledbysender:s});
         return this;
     },
+    setValueSilent : function(value) {
+        this.set({"value" : value}, {silent: true});
+    },
     setValue : function(value) {
         this.set({"value" : value});
         this.triggerSignatoryPostChanges();
