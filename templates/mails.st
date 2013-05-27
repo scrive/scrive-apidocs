@@ -386,10 +386,7 @@ $nicebutton(link=concat(a1=ctxhostpart;a2=activatelink); text=_mailActivateAccou
 ####
 mailNewCompanyUserInvite=
     $_mailNewAccountCreatedByAdminTitle()$
-    $nicemail(
-        mailheader=_mailNewAccountCreatedByAdminTitle();
-        mailp1=mailNewCompanyUserInviteMainP();
-    )$
+    $nicemail(mailheader=_mailNewAccountCreatedByAdminTitle();mailp1=mailNewCompanyUserInviteMainP())$
 ####
 mailNewCompanyUserInviteMainP=
  <br/>
@@ -426,7 +423,7 @@ mailNewAccountCreatedByAdmin=
     $nicemail(
         mailheader=_mailNewAccountCreatedByAdminTitle();
         mailp1=mailNewAccountCreatedByAdminContentHeader();
-        mailp2=mailNewAccountCreatedByAdminMainP();
+        mailp2=mailNewAccountCreatedByAdminMainP()
     )$
 ####
 mailNewAccountCreatedByAdminMainP=
@@ -440,7 +437,7 @@ invitationMailDeferred=
     $_invitationMailDeferredTitle()$
     $nicemail(
         mailheader=_invitationMailDeferredTitle();
-        mailp1=invitationMailDeferredMainP();
+        mailp1=invitationMailDeferredMainP()
     )$
 ###
 invitationMailDeferredMainP=
@@ -455,7 +452,7 @@ invitationMailDeliveredAfterDeferred=
     $_invitationMailDeliveredAfterDeferredTitle()$
     $nicemail(
         mailheader=_invitationMailDeliveredAfterDeferredTitle();
-        mailp1=_invitationMailDeliveredAfterDeferredContentBody();
+        mailp1=_invitationMailDeliveredAfterDeferredContentBody()
     )$
 ###
 ### UNDELIVERED MAIL
@@ -464,7 +461,7 @@ invitationMailUndelivered=
     $_invitationMailUndeliveredTitle()$
     $nicemail(
         mailheader=_invitationMailUndeliveredTitle();
-        mailp1=invitationMailUndeliveredMainP();
+        mailp1=invitationMailUndeliveredMainP()
     )$
 ####
 ####
@@ -487,7 +484,7 @@ mailDocumentError=
         mailp1=_mailDocumentErrorContentBodyFirst();
         mailp2=_mailDocumentErrorContentBodySecond();
         mailp3=_mailDocumentErrorContentBodyThird();
-        mailspacing3='';
+        mailspacing3=''
     )$
 ####
 #### ACCESS NEW ACCOUNT MAIL
@@ -496,7 +493,7 @@ accessNewAccountMail=
     $_accessNewAccountMailTitle()$
     $nicemail(
         mailheader=_accessNewAccountMailTitle();
-        mailp1=accessNewAccountMailMainP();
+        mailp1=accessNewAccountMailMainP()
     )$
 ###
 accessNewAccountMailMainP=
@@ -526,7 +523,7 @@ mailMismatchSignatory=
 $_mailMismatchSignatoryTitle()$
     $nicemail(
         mailheader=_mailMismatchSignatoryTitle();
-        mailp1=mailMismatchSignatoryMainP();
+        mailp1=mailMismatchSignatoryMainP()
     )$
 #####
 mailMismatchSignatoryMainP=
@@ -543,7 +540,7 @@ mailMismatchAuthor=
 $_mailMismatchAuthorTitle()$
 $nicemail(
         mailheader=_mailMismatchAuthorTitle();
-        mailp1=mailMismatchAuthorMainP();
+        mailp1=mailMismatchAuthorMainP()
     )$
 ####
 mailMismatchAuthorMainP =
@@ -561,7 +558,7 @@ mailTakeoverPrivateUserInvite=
   $_mailTakeoverPrivateUserInviteTitle()$
   $nicemail(
       mailheader=_mailTakeoverPrivateUserInviteTitle();
-      mailp1=mailTakeoverPrivateUserInviteP();
+      mailp1=mailTakeoverPrivateUserInviteP()
     )$
 ####
 mailTakeoverPrivateUserInviteP=
@@ -582,7 +579,7 @@ mailRequestChangeEmail=
   $_mailRequestChangeEmailTitle()$
   $nicemail(
     mailheader=_mailRequestChangeEmailTitle();
-    mailp1=mailRequestChangeEmailP();
+    mailp1=mailRequestChangeEmailP()
   )$
 ####
 mailRequestChangeEmailP=
