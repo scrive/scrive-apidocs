@@ -555,12 +555,10 @@ passwordChangeLinkMail=
     $nicemail(
         mailheader=_passwordChangeLinkMailTitle();
         mailp1=passwordChangeLinkMailMainP();
-        mailp2=regards()
+        mailp2=""
     )$
 ###
 passwordChangeLinkMailMainP=
-$_hi()$ <strong>$personname$</strong>,
-<br/>
 <br/>
 $_passwordChangeLinkMailContentBody()$
 <br/>
