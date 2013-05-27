@@ -105,7 +105,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && !this.document().currentSignatory().saved()
-             && !this.document().currentSignatory().padDelivery()
              && !this.document().currentSignatory().mobileDelivery()
              && !this.document().currentSignatory().emailMobileDelivery()
              && window.CreateAccountAfterSignView != undefined;
@@ -346,7 +345,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 res = false;
                              if (field.isSignature() && (field.value() == "")
                                  && field.placements().length == 0 && !document.currentSignatory().anySignatureHasImageOrPlacement()
-                                 && document.padDelivery())
+                                 && document.currentSignatory().padDelivery())
                                 res = false;
                         });
                         return res;
