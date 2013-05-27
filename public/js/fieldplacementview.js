@@ -662,6 +662,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             onSelect: function(s) {
                 placement.setSignatory(s);
                 placement.goToStepField();
+                return true;
             }
         });
 
@@ -752,6 +753,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
                 placement.goToStepEdit();
                 view.addTypeSetter();
+                return true;
             }
         });
 
