@@ -821,7 +821,7 @@
             var name;
 
             if(!view.selected)
-                name = localization.designview.addField;
+                name = localization.designview.whatField;
             else if(view.selected.name === '--custom')
                 name = localization.designview.customField;
             else
