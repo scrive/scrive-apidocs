@@ -548,6 +548,7 @@
                     view.model.setDelivery('email');
 
                 view.model.ensureMobile();
+                view.model.ensureEmail();
 
                 return false;
             });
