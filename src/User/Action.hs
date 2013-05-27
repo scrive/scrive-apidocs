@@ -33,6 +33,8 @@ import User.History.Model
 import ScriveByMail.Model
 import qualified ScriveByMail.Action as MailAPI
 import ThirdPartyStats.Core
+import Payments.Model
+import Administration.AddPaymentPlan
 import Crypto.RNG
 import MinutesTime
 import BrandedDomains
@@ -65,6 +67,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
   mtos <- getDefaultedField False asValidCheckBox "tos"
   callme <- isFieldSet "callme"
   stoplogin <- isFieldSet "stoplogin"
+  promo <- isFieldSet "promo"
   phone <-  fromMaybe "" <$> getField "phone"
   companyname <- fromMaybe "" <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
@@ -106,9 +109,11 @@ handleActivate mfstname msndname actvuser signupmethod = do
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
-              when (not stoplogin) $ (logUserToContext $ Just tosuser)
-              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
+              when (not stoplogin) $ do 
+                _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
+                logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
+              when (promo) $ addManualPricePlan (userid actvuser) TrialTeamPricePlan ActiveStatus
               return $ Just (tosuser, newdocs)
             else do
               Log.debug $ "No TOS accepted. We cant activate user."

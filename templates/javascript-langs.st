@@ -606,7 +606,13 @@ javascriptLocalisation =
                       price : "$_paymentsQuote()$",
                       price3 : "$_paymentsGetInTouch()$"
                     }
+                    , trial : {
+                      name : "$_paymentPlanTrial()$",
+                      tag : "$_paymentPlanTrialTag()$",
+                      price : "$_paymentsQuote()$",
+                      price3 : "$_paymentsGetInTouch()$"
                     }
+            }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , total       : "$_paymentPlanTotal()$"
                     , payments    : "$_paymentPlanPayments()$"

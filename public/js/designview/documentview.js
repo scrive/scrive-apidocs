@@ -18,6 +18,7 @@
             view.viewmodel = args.viewmodel;
 
             view.render();
+            view.model.bind('change:ready', view.render);
             view.model.bind('change:file', view.render);
             view.model.bind('change:flux', view.render);
             $(window).resize(function() {
@@ -32,6 +33,9 @@
             $(window).resize();
         },
         render: function() {
+            if( !this.model.ready() )
+                return this;
+
             var view = this;
             if(view.file) {
                 view.file.destroy();

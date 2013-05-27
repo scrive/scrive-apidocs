@@ -17,6 +17,8 @@
             _.bindAll(view);
             view.render();
             view.model.document().bind('change', view.render);
+	    view.emailDeliveryUsedTogglerWorker();
+	    view.model.document().bind('change:signatories', view.emailDeliveryUsedToggler);
         },
         render: function() {
             var view = this;
@@ -28,7 +30,7 @@
             div.append(view.rightColumn());
 
             view.$el.html(div.children());
-            view.setupTinyMCE();
+            view.setupTinyMCE(view.emaildeliveryused);
             return view;
         },
         leftColumn: function() {
@@ -300,6 +302,20 @@
 
             return div;
         },
+	emailDeliveryUsedToggler: function() {
+	    var view = this;
+	    _.each(this.model.document().signatories(), function(signatory) {
+		signatory.unbind('change:delivery', view.emailDeliveryUsedTogglerWorker);
+		signatory.bind('change:delivery', view.emailDeliveryUsedTogglerWorker);
+            });
+	    view.emailDeliveryUsedTogglerWorker();
+	},
+	emailDeliveryUsedTogglerWorker: function() {
+	    this.emaildeliveryused = _.some(this.model.document().signatories(), function(signatory) {
+		return signatory.delivery() == 'email' || signatory.delivery() == 'email_mobile';
+            });
+	    this.setupTinyMCE(this.emaildeliveryused);
+	},
         invitationBox: function() {
             var view = this;
             var viewmodel = view.model;
@@ -321,6 +337,7 @@
             var textarea = $('<textarea />');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
             textarea.hide();
+	   
             wrapper.append(textarea);
 
             view.invitationEditor = textarea;
@@ -350,14 +367,16 @@
 
             return div.children();
         },
-        setupTinyMCE: function() {
+        setupTinyMCE: function(enabled) {
             var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
             var cwidth = view.middleColumnDiv.width();
             view.invitationEditor.html(doc.invitationmessage());
             view.invitationEditor.show();
-
+	    if (view.tinysetup === true && typeof tinyMCE != "undefined" && tinyMCE.get().length > 0) {
+		tinyMCE.get()[0].remove();
+	    }
             view.invitationEditor.tinymce({
                 script_url: '/tiny_mce/tiny_mce.js',
                 theme: "advanced",
@@ -368,6 +387,7 @@
                 convert_urls: false,
                 theme_advanced_toolbar_align: "middle",
                 plugins: "noneditable,paste",
+		readonly: !enabled,
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
                 width: cwidth, // automatically adjust for different swed/eng text
                 oninit : function(ed) {
@@ -375,12 +395,15 @@
                        $(ed.getDoc()).blur(function(e) {
                         doc.setInvitationMessage(ed.getBody().innerHTML);
                     });
+		    if (!view.emaildeliveryused) {
+			ed.getWin().document.body.style.backgroundColor = 'gray';
+		    }
                 },
                 onchange_callback  : function (inst) {
                     doc.setInvitationMessage(inst.getBody().innerHTML);
                 }
             });
-
+	    view.tinysetup = true;
 
             this.tinyIsReady = true;
             return view;

@@ -41,3 +41,8 @@ changePaymentPlanOwner source destination = do
       _ <- Stats.record time Stats.OwnerSwitchAction RecurlyProvider (ppQuantity pp') (ppPricePlan pp') destination (ppAccountCode pp)
       return b
     _ -> return False
+
+getNonTrialPlanName :: PricePlan -> String
+getNonTrialPlanName TrialTeamPricePlan = show TeamPricePlan
+getNonTrialPlanName x = show x
+

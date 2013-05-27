@@ -236,13 +236,17 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     if(field) {
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
+                            field.authorObligatory = 'signatory';
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
+                            author.authorObligatory = 'sender';
                         }
+                        field.addedByMe = false;
                     }
                     return true;
                 }
@@ -338,28 +342,12 @@ var TextTypeSetterView = Backbone.View.extend({
 
         //.text(localization.designview.textFields.textField);
 
-        if(placement.step() === 'signatory') {
+        var fname = field.nicename();
 
-            div.text(localization.designview.withoutParticipant);
+        var signatory = placement.signatory();
+        var sname = signatory.nameOrEmail() || signatory.nameInDocument();
 
-        } else if(placement.step() === 'field') {
-            var signatory = placement.signatory();
-            var name = signatory.nameOrEmail() || signatory.nameInDocument();
-
-            div.text(localization.designview.textFieldFor + ' ' + name);
-        } else if(field.noName()) {
-            var signatory = placement.signatory();
-            var name = signatory.nameOrEmail() || signatory.nameInDocument();
-
-            div.text(localization.designview.textFieldFor + ' ' + name);
-        } else {
-            var fname = field.nicename();
-
-            var signatory = placement.signatory();
-            var sname = signatory.nameOrEmail() || signatory.nameInDocument();
-
-            div.text(fname + ' ' + localization.designview.requestedFrom + ' ' + sname);
-        }
+        div.text(fname + ' ' + localization.designview.requestedFrom + ' ' + sname);
 
         return div;
     },
@@ -378,6 +366,8 @@ var TextTypeSetterView = Backbone.View.extend({
                                 if (done) {
                                     field.makeReady();
                                     view.clear();
+                                    view.model.cleanTypeSetter();
+                                    view.model.trigger('change:step');
                                 } else {
                                     view.nameinput.addClass('redborder');
                                 }
@@ -385,254 +375,40 @@ var TextTypeSetterView = Backbone.View.extend({
                             }
                            }).input();
     },
-    possibleFields: [
-        {name: "fstname",
-         type: 'standard'},
-        {name: "sndname",
-         type: 'standard'},
-        {name: "email",
-         type: 'standard'},
-        {name: "sigco",
-         type: 'standard'},
-        {name: "sigpersnr",
-         type: 'standard'},
-        {name: "sigcompnr",
-         type: 'standard'},
-        {name: "mobile",
-         type: 'standard'}
-    ],
-    fieldNames: {
-        fstname: localization.fstname,
-        sndname: localization.sndname,
-        email: localization.email,
-        sigcompnr: localization.companyNumber,
-        sigpersnr: localization.personamNumber,
-        sigco: localization.company,
-        mobile: localization.phone
-    },
-    selector : function() {
-        var view = this;
-        var placement = view.model;
-        var field = placement.field();
-        var sig = field.signatory();
-        var doc = sig.document();
-
-        var box = $("<div class='subtitle'/>");
-
-        var name = localization.designview.chooseParticipant;
-
-        var options = _.map(doc.signatories(), function(s) {
-            return {name: s.nameOrEmail() || s.nameInDocument(),
-                    value: s};
-        });
-
-        var selector = new Select({
-            name: name,
-            options: options,
-            cssClass: 'text-field-placement-setter-field-selector',
-            style: "z-index: 109;",
-            onSelect: function(s) {
-                placement.setSignatory(s);
-                placement.advanceStep();
-            }
-        });
-
-        //var text = localization.designview.textFields.forThis + " ";
-        //box.text(text);
-        box.append(selector.input());
-
-        return box;
-    },
-    fieldSelector: function() {
-        var view = this;
-        var placement = view.model;
-        var field = placement.field();
-
-        var signatory = placement.signatory();
-        var fields = signatory.field();
-
-
-        var div = $('<div />');
-
-        var name = localization.designview.selectField;
-
-        // we need to build a list of all of the different field name/type pairs
-        // plus the ability to add a custom field
-
-        // clone the array
-        var allFieldOptions = view.possibleFields.concat([]);
-
-        function isUnique(field) {
-            return _.every(allFieldOptions, function(o) {
-                return field.name() !== o.name && field.type() !== o.type;
-            });
-        }
-
-        _.each(signatory.document().signatories(), function(signatory) {
-            _.each(signatory.fields(), function(f) {
-                if(f.isText() && f.name() !== '' && isUnique(f))
-                    allFieldOptions.push({name: f.name(),
-                                          type: f.type()});
-            });
-        });
-
-        var options = [];
-
-        if(!field || field.name() !== '')
-            options.push({name: localization.designview.customField,
-                          value: {name: '--custom',
-                                  type: '--custom'}});
-
-        _.each(allFieldOptions, function(o) {
-            options.push({name: view.fieldNames[o.name] || o.name,
-                          value: o});
-        });
-
-        var selector = new Select({
-            name: name,
-            options: options,
-            cssClass: 'text-field-placement-setter-field-field-selector',
-            style: "z-index: 108;",
-            onSelect: function(o) {
-                var f = signatory.field(o.name, o.type);
-
-                if(o.name === '--custom') {
-                    f = new Field({signatory: signatory,
-                                   type: 'custom',
-                                   name: '',
-                                   obligatory: true,
-                                   shouldbefilledbysender: signatory.author()});
-                    placement.setField(f);
-                    f.addPlacement(placement);
-
-                    signatory.addField(f);
-                    f.addedByMe = true;
-                } else if(f) {
-                    placement.setField(f);
-                    f.addPlacement(placement);
-                } else {
-                    f = new Field({signatory: signatory,
-                                   type: o.type,
-                                   name: o.name,
-                                   obligatory: true,
-                                   shouldbefilledbysender: signatory.author()});
-                    placement.setField(f);
-                    f.addPlacement(placement);
-
-                    signatory.addField(f);
-                    f.addedByMe = true;
-                }
-
-                placement.advanceStep();
-
-            }
-        });
-
-        view.myFieldSelector = selector;
-
-        return selector.input();
-    },
     place : function() {
         var placement = this.model;
         var offset = $(placement.view.el).offset();
         $(this.el).css("left",offset.left + Math.max($(placement.view.el).width()+18));
         $(this.el).css("top",offset.top - 19);
     },
-    fieldNamer: function() {
-        var view = this;
-        var placement = view.model;
-        var field = placement.field();
-
-        var signatory = placement.signatory();
-
-        var div = $('<div />');
-        div.addClass('text-field-placement-setter-field-name');
-
-        function setName() {
-            if(input.value()) {
-                placement.trigger('change:field');
-                signatory.trigger('change:fields');
-            }
-        }
-
-        var input = InfoTextInput.init({
-            infotext: localization.designview.fieldName,
-            value: field.name(),
-            cssClass: "name",
-            onChange : function(value) {
-                field.setName(value);
-                view.myFieldSelector.model().setName(value);
-                view.place();
-            },
-            onEnter: setName
-        });
-
-        var button = Button.init({
-            color: 'black',
-            size: 'tiny',
-            text: localization.ok,
-            width: 64,
-            onClick: setName
-        });
-
-        div.append(input.input());
-        div.append(button.input());
-        return div;
-    },
-    editor: function() {
-        var view = this;
-        var placement = view.model;
-        var field = placement.field();
-
-        var input = InfoTextInput.init({
-            cssClass: 'text-field-placement-setter-field-editor',
-            infotext: field.nicename(),
-            value: field.value(),
-            onChange: function(val) {
-                field.setValue(val.trim());
-            }
-        }).input();
-
-        return input;
-    },
     render: function() {
         var view = this;
         var container = $(this.el);
-        container.addClass("checkboxTypeSetter-container");
-        container.css("position", "absolute");
-        var body = $("<div class='checkboxTypeSetter-body'/>");
-        var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
 
         var placement = view.model;
         var field = placement.field();
 
-        body.append(this.title());
+        if(placement.step() === 'edit' && field.name()) {
 
-        if(placement.step() === 'signatory') {
+            container.addClass("checkboxTypeSetter-container");
+            container.css("position", "absolute");
+            var body = $("<div class='checkboxTypeSetter-body'/>");
+            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+            
+            
+            body.append(this.title());
 
-            body.append(this.selector());
-
-        } else if(placement.step() === 'field') {
-
-            body.append(this.fieldSelector());
-
-        } else if(field.noName()) {
-
-            body.append(this.fieldNamer());
-
-        } else {
-
-            body.append(this.editor());
             body.append(this.obligatoryOption());
 
+
+
+            body.append(this.doneOption());
+            container.html('');
+            container.append(arrow);
+            container.append(body);
+
+            this.place();
         }
-
-        body.append(this.doneOption());
-        container.html('');
-        container.append(arrow);
-        container.append(body);
-
-        this.place();
         return this;
     }
 });
@@ -677,7 +453,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
         this.model.bind('removed', this.clear, this);
-        this.model.bind('change:field change:signatory change:step', this.render);
+        this.model.bind('change:field change:signatory change:step change:withTypeSetter', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
         signatory.document().bind('change:signatories',this.updateColor);
@@ -836,6 +612,211 @@ var TextPlacementPlacedView = Backbone.View.extend({
             $(this.el).css('background-color', '#f33');
         }
     },
+    possibleFields: [
+        {name: "fstname",
+         type: 'standard'},
+        {name: "sndname",
+         type: 'standard'},
+        {name: "email",
+         type: 'standard'},
+        {name: "sigco",
+         type: 'standard'},
+        {name: "sigpersnr",
+         type: 'standard'},
+        {name: "sigcompnr",
+         type: 'standard'},
+        {name: "mobile",
+         type: 'standard'}
+    ],
+    fieldNames: {
+        fstname: localization.fstname,
+        sndname: localization.sndname,
+        email: localization.email,
+        sigcompnr: localization.companyNumber,
+        sigpersnr: localization.personamNumber,
+        sigco: localization.company,
+        mobile: localization.phone
+    },
+    selector : function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+        var sig = field.signatory();
+        var doc = sig.document();
+
+        var box = $("<div class='subtitle'/>");
+
+        var name = localization.designview.chooseParticipant;
+
+        var options = _.map(doc.signatories(), function(s) {
+            return {name: s.nameOrEmail() || s.nameInDocument(),
+                    value: s};
+        });
+
+        var selector = new Select({
+            name: name,
+            options: options,
+            cssClass: 'text-field-placement-setter-field-selector',
+            style: "z-index: 109;",
+            onSelect: function(s) {
+                placement.setSignatory(s);
+                placement.advanceStep();
+            }
+        });
+
+        //var text = localization.designview.textFields.forThis + " ";
+        //box.text(text);
+        box.append(selector.input());
+
+        return box;
+    },
+    fieldSelector: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var signatory = placement.signatory();
+        var fields = signatory.field();
+
+
+        var div = $('<div />');
+
+        var name = localization.designview.selectField;
+
+        // we need to build a list of all of the different field name/type pairs
+        // plus the ability to add a custom field
+
+        // clone the array
+        var allFieldOptions = view.possibleFields.concat([]);
+
+        function isUnique(field) {
+            return _.every(allFieldOptions, function(o) {
+                return field.name() !== o.name && field.type() !== o.type;
+            });
+        }
+
+        _.each(signatory.document().signatories(), function(signatory) {
+            _.each(signatory.fields(), function(f) {
+                if(f.isText() && f.name() !== '' && isUnique(f))
+                    allFieldOptions.push({name: f.name(),
+                                          type: f.type()});
+            });
+        });
+
+        var options = [];
+
+        if(!field || field.name() !== '')
+            options.push({name: localization.designview.customField,
+                          value: {name: '--custom',
+                                  type: '--custom'}});
+
+        _.each(allFieldOptions, function(o) {
+            options.push({name: view.fieldNames[o.name] || o.name,
+                          value: o});
+        });
+
+        var selector = new Select({
+            name: name,
+            options: options,
+            cssClass: 'text-field-placement-setter-field-field-selector',
+            style: "z-index: 108;",
+            onSelect: function(o) {
+                var f = signatory.field(o.name, o.type);
+
+                if(o.name === '--custom') {
+                    f = new Field({signatory: signatory,
+                                   type: 'custom',
+                                   name: '',
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author()});
+                    placement.setField(f);
+                    f.addPlacement(placement);
+
+                    signatory.addField(f);
+                    f.addedByMe = true;
+                } else if(f) {
+                    placement.setField(f);
+                    f.addPlacement(placement);
+                } else {
+                    f = new Field({signatory: signatory,
+                                   type: o.type,
+                                   name: o.name,
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author()});
+                    placement.setField(f);
+                    f.addPlacement(placement);
+
+                    signatory.addField(f);
+                    f.addedByMe = true;
+                }
+
+                placement.advanceStep();
+                view.addTypeSetter();
+            }
+        });
+
+        view.myFieldSelector = selector;
+
+        return selector.input();
+    },
+    fieldNamer: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var signatory = placement.signatory();
+
+        var div = $('<div />');
+        div.addClass('text-field-placement-setter-field-name');
+
+        function setName() {
+            if(input.value()) {
+                placement.trigger('change:field');
+                signatory.trigger('change:fields');
+                view.addTypeSetter();
+            }
+        }
+
+        var input = InfoTextInput.init({
+            infotext: localization.designview.fieldName,
+            value: field.name(),
+            cssClass: "name",
+            onChange : function(value) {
+                field.setName(value);
+                view.myFieldSelector.model().setName(value);
+                view.place();
+            },
+            onEnter: setName
+        });
+
+        var button = Button.init({
+            color: 'black',
+            size: 'tiny',
+            text: localization.ok,
+            width: 64,
+            onClick: setName
+        });
+
+        div.append(input.input());
+        div.append(button.input());
+        return div;
+    },
+    editor: function() {
+        var view = this;
+        var placement = view.model;
+        var field = placement.field();
+
+        var input = InfoTextInput.init({
+            cssClass: 'text-field-placement-setter-field-editor',
+            infotext: field.nicename(),
+            value: field.value(),
+            onChange: function(val) {
+                field.setValue(val.trim());
+            }
+        }).input();
+
+        return input;
+    },
     render: function() {
         var view = this;
         var placement = this.model;
@@ -855,42 +836,31 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         var pField;
 
-        if(placement.step() === 'signatory') {
-            pField = new Field({
-                signatory: signatory,
-                type: 'fake',
-                name: 'fake',
-                value: localization.designview.withoutParticipant
-            });
-        } else if(placement.step() === 'field') {
-            pField = new Field({
-                signatory: signatory,
-                type: 'fake',
-                name: 'fake',
-                value: localization.designview.textFieldFor + ' ' + signatory.nameOrEmail() || signatory.nameInDocument()
-
-            });
-        } else if(field.noName()) {
-            pField = new Field({
-                signatory: signatory,
-                type: 'fake',
-                name: 'fake',
-                value: localization.designview.textFieldFor + ' ' + signatory.nameOrEmail() || signatory.nameInDocument()
-            });
-        } else {
-            pField = field;
-        }
 
         place.empty();
-        place.append(new TextPlacementView({model: pField}).el);
+
+        if(placement.step() === 'signatory') {
+            place.append(this.selector());
+        } else if(placement.step() === 'field') {
+            place.append(this.fieldSelector());
+        } else if(field.noName()) {
+            place.append(this.fieldNamer());
+        } else if(view.hasTypeSetter()) {
+            place.append(this.editor());
+        } else {
+            place.append(new TextPlacementView({model: field}).el);
+        }
+
         place.unbind('click');
         if (document.allowsDD()) {
             draggebleField(place, placement);
             place.click(function(){
-                if (!view.hasTypeSetter())
+                if (!view.hasTypeSetter()) {
                     view.addTypeSetter();
-                else
-                    view.closeTypeSetter();
+                    placement.trigger('change:step');
+                }
+                //else
+                //    view.closeTypeSetter();
                 return false;
             });
         }

@@ -48,6 +48,14 @@
                 shouldbefilledbysender: sig.author()
             });
 
+            if(field.obligatory() && field.shouldbefilledbysender())
+                field.authorObligatory = 'sender';
+            else if(field.obligatory())
+                field.authorObligatory = 'recipient';
+            else
+                field.authorObligatory = 'optional';
+
+
             sig.addField(field);
         }
 
@@ -245,7 +253,10 @@
             if(model.participantDetail()) {
                 div.append(view.doneButton());
             } else {
-                div.append(view.multi());
+                var thereIsMultiSendAlready = _.any(model.document().signatories(), function(x) { return x.isCsv(); });
+                if(!thereIsMultiSendAlready) {
+                    div.append(view.multi());
+                }
                 div.append(view.single());
             }
 
@@ -348,6 +359,22 @@
             // any changes to the signatories of a document and we rerender
             // this includes adding and removing signatories
             view.model.document().bind('change:signatories', view.reset);
+            view.model.bind('change:participantDetail', view.rescroll);
+            $(window).resize(view.resizeOnWindowResize);
+        },
+        rescroll: function() {
+            var view = this;
+            var participantDetail = view.model.participantDetail();
+            if( participantDetail ) {
+                var allSignatories = view.model.document().signatories();
+                var lastSignatory = allSignatories[allSignatories.length - 1];
+                if( participantDetail === lastSignatory ) {
+                    setTimeout(function() {
+                        view.scrollBox.mCustomScrollbar("update");
+                        view.scrollBox.mCustomScrollbar("scrollTo","bottom");
+                    }, 300);
+                }
+            }
         },
         reset: function() {
             var view = this;
@@ -383,18 +410,44 @@
             });
             return view;
         },
+        resizeOnWindowResize: function() {
+            var view = this;
+            var newHeight = $(window).height() - 350;
+            if( newHeight<100 ) {
+                newHeight = 100;
+            }
+            view.scrollBox.css("max-height", newHeight + "px");
+            setTimeout(function() {
+                view.scrollBox.mCustomScrollbar('update');
+            }, 500);
+            return false;
+        },
         render: function() {
             var view = this;
             var model = view.model;
             view.$el.children().detach();
             var box = $("<div class='design-view-action-participant-container-participants-box'>");
-            //box.css("max-height",($(window).height() - 460) + "px");
+            var newHeight = $(window).height() - 350;
+            if( newHeight<100 ) {
+                newHeight = 100;
+            }
+            box.css("max-height", newHeight + "px");
             $.each(view.participants, function(i, p) {
                box.append(p.el);
             });
 
             view.$el.append(box).append(view.addNew.el);
 
+
+            box.mCustomScrollbar({ mouseWheel: true
+                                   , advanced:{
+                                       updateOnContentResize: true // this is polling, might want to have update called in proper times
+                                   }
+                                   , scrollInertia: 0
+                                   , scrollButtons:{
+                                       enable: false // we do not want buttons, also we do not want pngs that come with the buttons
+                                   }});
+            view.scrollBox = box;
             return view;
         }
     });
@@ -842,6 +895,7 @@
                     input.input().addClass('redborder');
                 else
                     input.input().removeClass('redborder');
+                input.setValue(sig.name());
             });
 
             sndnameField.bind('change', function() {
@@ -849,6 +903,7 @@
                     input.input().addClass('redborder');
                 else
                     input.input().removeClass('redborder');
+                input.setValue(sig.name());
             });
             if(!fstnameField.isValid(true))
                     input.input().addClass('redborder');
@@ -892,13 +947,14 @@
                 onChange: function(val) {
                     field.setValue(val.trim());
                 }
-            }).input();
+            });
 
             field.bind('change', function() {
                 if(!field.isValid(true))
-                    input.addClass('redborder');
+                    input.input().addClass('redborder');
                 else
-                    input.removeClass('redborder');
+                    input.input().removeClass('redborder');
+                input.setValue(field.value);
             });
 
             var optionOptions = ['optional', 'signatory', 'sender'];
@@ -924,9 +980,9 @@
             });
 
             if(!field.isValid(true))
-                input.addClass('redborder');
+                input.input().addClass('redborder');
             else
-                input.removeClass('redborder');
+                input.input().removeClass('redborder');
 
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
@@ -939,7 +995,7 @@
             }
 
             div.append(closer);
-            div.append(input);
+            div.append(input.input());
             div.append(options.el);
 
             return div;
@@ -1296,13 +1352,17 @@
                     if(field) {
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
+                            field.authorObligatory = 'signatory';
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
+                            field.authorObligatory = 'sender';
                         }
+                        field.addedByMe = false;
                     }
                     return true;
                 }

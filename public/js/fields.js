@@ -353,7 +353,7 @@ window.Field = Backbone.Model.extend({
 
         if (   this.isMobile()
             && !this.signatory().isCsv()
-            && (this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery())
+            && this.signatory().needsMobile()
            ){
             var msg = localization.designview.validation.missingOrWrongMobile;
             return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
