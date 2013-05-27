@@ -150,7 +150,6 @@ handleAcceptAccountFromSign documentid
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  when (signatorylinkdeliverymethod signatorylink == PadDelivery) internalError
   muser <- User.Action.handleAccountSetupFromSign document signatorylink
   case muser of
     Just user -> runJSONGenT $ do
