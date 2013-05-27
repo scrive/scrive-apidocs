@@ -31,9 +31,6 @@ $else$
 $_mailClosedLogin()$
 $endif$
 #####
-mailDocumentAwaitingForAuthorContentMainP =
-   $_hi()$ <strong>$authorname$</strong>,
-#####
 ##### CLOSED MAIL
 #####
 mailContractClosed=
@@ -47,8 +44,6 @@ mailContractClosed=
 
 ####
 mailContractClosedMainP =
-$_hi()$ <strong>$signatoryname$</strong>,
-<br/>
 <br/>
       $_mailContractClosedContentSignedBy()$
       <br/>
@@ -270,8 +265,6 @@ $if(!hascustommessage)$
 $endif$
 ####
 mailInvitationToViewDefaultHeader=
-$_hi()$ <strong>$personname$</strong>,
-<br/>
 <br/>
 $_mailInvitationToViewDefaultHeader()$
 <br/>
@@ -299,8 +292,6 @@ remindMailSignedP=
 $header:noescape()$
 ####
 remindMailSignedStandardHeader=
-$_hi()$ <strong>$personname$</strong>,
-<br/>
 <br/>
   $_remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
@@ -308,8 +299,6 @@ $_hi()$ <strong>$personname$</strong>,
   $_remindMailSignedContractStandardHeaderSendRequest2()$
 ####
 remindMailSignedOfferStandardHeader=
-$_hi()$ <strong>$personname$</strong>,
-<br/>
 <br/>
   $_remindMailSignedOfferStandardHeaderSendRequest()$
 <br/>
@@ -317,8 +306,6 @@ $_hi()$ <strong>$personname$</strong>,
 $regards()$
 ####
 remindMailSignedOrderStandardHeader=
-$_hi()$ <strong>$personname$</strong>,
-<br/>
 <br/>
   $_remindMailSignedOrderStandardHeaderSendRequest()$
 <br/>
@@ -413,8 +400,6 @@ mailNewCompanyUserInvite=
     )$
 ####
 mailNewCompanyUserInviteMainP=
- $_hi()$ <strong>$invitedname$</strong>,
- <br/>
  <br/>
  $_mailNewAccountCreatedByAdminContentHeaderBodyFirst()$
  <br/>
@@ -437,8 +422,6 @@ mailNewAccountCreatedByAdminContentHeader=
 $if(custommessage)$
     $custommessage:noescape()$
 $else$
-    $_hi()$ <strong>$personname$</strong>,
-    <br/>
     <br/>
     $_mailNewAccountCreatedByAdminContentHeaderBodyFirst()$
     <br/>
@@ -471,8 +454,6 @@ invitationMailDeferred=
     )$
 ###
 invitationMailDeferredMainP=
-      $_hi()$ <strong>$authorname$</strong>,
-      <br/>
       <br/>
       $_invitationMailDeferredContentBodyFirst()$
       <br/>
@@ -484,13 +465,9 @@ invitationMailDeliveredAfterDeferred=
     $_invitationMailDeliveredAfterDeferredTitle()$
     $nicemail(
         mailheader=_invitationMailDeliveredAfterDeferredTitle();
-        mailp1=invitationMailDeliveredAfterDeferredMainP();
-        mailp2=_invitationMailDeliveredAfterDeferredContentBody();
-        mailp3=regards()
+        mailp1=_invitationMailDeliveredAfterDeferredContentBody();
+        mailp2=regards()
     )$
-###
-invitationMailDeliveredAfterDeferredMainP =
-      $_hi()$ <strong>$authorname$</strong>,
 ###
 ### UNDELIVERED MAIL
 ###
@@ -504,8 +481,6 @@ invitationMailUndelivered=
 ####
 ####
 invitationMailUndeliveredMainP =
-       $_hi()$ <strong>$authorname$</strong>,
-       <br/>
        <br/>
        $_invitationMailUndeliveredContentBody()$
        <br/>
@@ -521,16 +496,12 @@ mailDocumentError=
     $_mailDocumentErrorTitle()$
     $nicemail(
         mailheader=_mailDocumentErrorTitle();
-        mailp1=mailDocumentErrorMainP();
-        mailp2=_mailDocumentErrorContentBodyFirst();
-        mailp3=_mailDocumentErrorContentBodySecond();
-        mailp4=_mailDocumentErrorContentBodyThird();
-        mailspacing4='';
-        mailp5=regards()
+        mailp1=_mailDocumentErrorContentBodyFirst();
+        mailp2=_mailDocumentErrorContentBodySecond();
+        mailp3=_mailDocumentErrorContentBodyThird();
+        mailspacing3='';
+        mailp4=regards()
     )$
-###
-mailDocumentErrorMainP =
-    $_hi()$ <strong>$creatorname$</strong>,
 ####
 #### ACCESS NEW ACCOUNT MAIL
 ####
@@ -543,8 +514,6 @@ accessNewAccountMail=
     )$
 ###
 accessNewAccountMailMainP=
-$_hi()$ <strong>$personname$</strong>,
-<br/>
 <br/>
 $_accessNewAccountMailContentBody()$
 ####
@@ -576,8 +545,6 @@ $_mailMismatchSignatoryTitle()$
     )$
 #####
 mailMismatchSignatoryMainP=
-$_hi()$ <strong>$signame$</strong>,
-<br/>
 <br/>
 $_mailMismatchSignatoryContentBodyFirst()$
 <br/>
@@ -596,8 +563,6 @@ $nicemail(
     )$
 ####
 mailMismatchAuthorMainP =
-$_hi()$ <strong>$authorname$</strong>,
-<br/>
 <br/>
 $_mailMismatchAuthorContentBodyFirst()$
 <br/>
@@ -617,8 +582,6 @@ mailTakeoverPrivateUserInvite=
     )$
 ####
 mailTakeoverPrivateUserInviteP=
-  $_hi()$ <strong>$invitedname$</strong>,
-  <br/>
   <br/>
   $_mailTakeoverPrivateUserInviteContentBodyFirst()$
   <br/>
@@ -641,8 +604,6 @@ mailRequestChangeEmail=
   )$
 ####
 mailRequestChangeEmailP=
-  $_hi()$ <strong>$fullname$</strong>,
-  <br/>
   <br/>
   $_mailRequestChangeEmailExplanation()$
   <br/>
