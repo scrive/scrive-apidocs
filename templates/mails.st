@@ -38,7 +38,6 @@ mailContractClosed=
     $nicemail(
         mailheader = _mailDocumentClosedTitleContract();
         mailp1 = mailContractClosedMainP();
-        mailp2 = regards();
         footer = footer
     )$
 
@@ -55,7 +54,6 @@ mailOfferClosed=
     $nicemail(
         mailheader = _mailDocumentClosedTitleOffer();
         mailp1 = mailContractClosedMainP();
-        mailp2 = regards();
         footer = footer
     )$
 ####
@@ -70,7 +68,6 @@ mailOrderClosed=
     $nicemail(
         mailheader = _mailDocumentClosedTitleOrder();
         mailp1 = mailContractClosedMainP();
-        mailp2 = regards();
         footer = footer
     )$
 ####
@@ -302,15 +299,11 @@ remindMailSignedOfferStandardHeader=
 <br/>
   $_remindMailSignedOfferStandardHeaderSendRequest()$
 <br/>
-<br/>
-$regards()$
 ####
 remindMailSignedOrderStandardHeader=
 <br/>
   $_remindMailSignedOrderStandardHeaderSendRequest()$
 <br/>
-<br/>
-$regards()$
 ###
 ###
 ### Reminding mails - NOT SIGNED
@@ -396,7 +389,6 @@ mailNewCompanyUserInvite=
     $nicemail(
         mailheader=_mailNewAccountCreatedByAdminTitle();
         mailp1=mailNewCompanyUserInviteMainP();
-        mailp2=regards()
     )$
 ####
 mailNewCompanyUserInviteMainP=
@@ -435,7 +427,6 @@ mailNewAccountCreatedByAdmin=
         mailheader=_mailNewAccountCreatedByAdminTitle();
         mailp1=mailNewAccountCreatedByAdminContentHeader();
         mailp2=mailNewAccountCreatedByAdminMainP();
-        mailp3=regards()
     )$
 ####
 mailNewAccountCreatedByAdminMainP=
@@ -450,7 +441,6 @@ invitationMailDeferred=
     $nicemail(
         mailheader=_invitationMailDeferredTitle();
         mailp1=invitationMailDeferredMainP();
-        mailp2=regards()
     )$
 ###
 invitationMailDeferredMainP=
@@ -466,7 +456,6 @@ invitationMailDeliveredAfterDeferred=
     $nicemail(
         mailheader=_invitationMailDeliveredAfterDeferredTitle();
         mailp1=_invitationMailDeliveredAfterDeferredContentBody();
-        mailp2=regards()
     )$
 ###
 ### UNDELIVERED MAIL
@@ -476,7 +465,6 @@ invitationMailUndelivered=
     $nicemail(
         mailheader=_invitationMailUndeliveredTitle();
         mailp1=invitationMailUndeliveredMainP();
-        mailp2=regards()
     )$
 ####
 ####
@@ -500,7 +488,6 @@ mailDocumentError=
         mailp2=_mailDocumentErrorContentBodySecond();
         mailp3=_mailDocumentErrorContentBodyThird();
         mailspacing3='';
-        mailp4=regards()
     )$
 ####
 #### ACCESS NEW ACCOUNT MAIL
@@ -510,7 +497,6 @@ accessNewAccountMail=
     $nicemail(
         mailheader=_accessNewAccountMailTitle();
         mailp1=accessNewAccountMailMainP();
-        mailp2=regards()
     )$
 ###
 accessNewAccountMailMainP=
@@ -541,7 +527,6 @@ $_mailMismatchSignatoryTitle()$
     $nicemail(
         mailheader=_mailMismatchSignatoryTitle();
         mailp1=mailMismatchSignatoryMainP();
-        mailp2=regards()
     )$
 #####
 mailMismatchSignatoryMainP=
@@ -559,7 +544,6 @@ $_mailMismatchAuthorTitle()$
 $nicemail(
         mailheader=_mailMismatchAuthorTitle();
         mailp1=mailMismatchAuthorMainP();
-        mailp2=regards()
     )$
 ####
 mailMismatchAuthorMainP =
@@ -578,7 +562,6 @@ mailTakeoverPrivateUserInvite=
   $nicemail(
       mailheader=_mailTakeoverPrivateUserInviteTitle();
       mailp1=mailTakeoverPrivateUserInviteP();
-      mailp2=regards()
     )$
 ####
 mailTakeoverPrivateUserInviteP=
@@ -600,7 +583,6 @@ mailRequestChangeEmail=
   $nicemail(
     mailheader=_mailRequestChangeEmailTitle();
     mailp1=mailRequestChangeEmailP();
-    mailp2=regards()
   )$
 ####
 mailRequestChangeEmailP=
@@ -864,7 +846,3 @@ para=<p>$a$</p>
 linkk=<a href="$href$">$text$</a>
 ####
 concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$
-####
-regards=
-$_regards()$,<br/>
-Scrive
