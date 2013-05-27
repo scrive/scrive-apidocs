@@ -548,6 +548,7 @@
                     view.model.setDelivery('email');
 
                 view.model.ensureMobile();
+                view.model.ensureEmail();
 
                 return false;
             });
@@ -886,6 +887,13 @@
                         f = str.trim();
                         s = '';
                     }
+                    /*
+                     * First we need to set the value silently, then
+                     * broadcast the info about changes to the world.
+                     * Otherwise the hard link to full name breaks.
+                     */
+                    fstnameField.setValueSilent(f);
+                    sndnameField.setValueSilent(s);
                     fstnameField.setValue(f);
                     sndnameField.setValue(s);
                 }

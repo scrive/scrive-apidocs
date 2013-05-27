@@ -661,7 +661,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             border : "1px solid #f33",
             onSelect: function(s) {
                 placement.setSignatory(s);
-                placement.advanceStep();
+                placement.goToStepField();
             }
         });
 
@@ -750,7 +750,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                     f.addedByMe = true;
                 }
 
-                placement.advanceStep();
+                placement.goToStepEdit();
                 view.addTypeSetter();
             }
         });
@@ -787,7 +787,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
                 if (view.place != undefined)
                   view.place();
             },
-            onEnter: setName
+            onEnter: setName,
+            suppressSpace: (field.name()=="fstname")
         });
 
         var button = Button.init({
@@ -811,6 +812,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             cssClass: 'text-field-placement-setter-field-editor',
             infotext: field.nicename(),
             value: field.value(),
+            suppressSpace: (field.name()=="fstname"),
             onChange: function(val) {
                 field.setValue(val.trim());
             }

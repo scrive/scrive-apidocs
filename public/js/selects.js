@@ -115,7 +115,7 @@ window.SelectModel = Backbone.Model.extend({
   },
   border : function() {
      return this.get("border");
-  },
+  }
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -240,6 +240,7 @@ var SelectView = Backbone.View.extend({
 
         if (model.expanded())
             {
+              if (this.expButton != undefined) $(this.expButton).detach();
               this.expButton = $(this.el).clone();
               if (model.color())
                 this.expButton.css('color',model.color());
