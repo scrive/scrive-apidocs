@@ -48,6 +48,14 @@
                 shouldbefilledbysender: sig.author()
             });
 
+            if(field.obligatory() && field.shouldbefilledbysender())
+                field.authorObligatory = 'sender';
+            else if(field.obligatory())
+                field.authorObligatory = 'recipient';
+            else
+                field.authorObligatory = 'optional';
+
+
             sig.addField(field);
         }
 
@@ -245,7 +253,10 @@
             if(model.participantDetail()) {
                 div.append(view.doneButton());
             } else {
-                div.append(view.multi());
+                var thereIsMultiSendAlready = _.any(model.document().signatories(), function(x) { return x.isCsv(); });
+                if(!thereIsMultiSendAlready) {
+                    div.append(view.multi());
+                }
                 div.append(view.single());
             }
 
@@ -643,7 +654,10 @@
                         });
                     }
                 });
-                div.append(csvButton.input());
+                var wrapperdiv = $('<div />');
+                wrapperdiv.addClass('design-view-action-participant-details-information-field-wrapper');
+                wrapperdiv.append(csvButton.input());
+                div.append(wrapperdiv);
             } else {
                 // always show these three fields first
                 div.append(view.detailsFullNameField());
@@ -839,6 +853,7 @@
                     input.input().addClass('redborder');
                 else
                     input.input().removeClass('redborder');
+                input.setValue(sig.name());
             });
 
             sndnameField.bind('change', function() {
@@ -846,6 +861,7 @@
                     input.input().addClass('redborder');
                 else
                     input.input().removeClass('redborder');
+                input.setValue(sig.name());
             });
             if(!fstnameField.isValid(true))
                     input.input().addClass('redborder');
@@ -889,13 +905,14 @@
                 onChange: function(val) {
                     field.setValue(val.trim());
                 }
-            }).input();
+            });
 
             field.bind('change', function() {
                 if(!field.isValid(true))
-                    input.addClass('redborder');
+                    input.input().addClass('redborder');
                 else
-                    input.removeClass('redborder');
+                    input.input().removeClass('redborder');
+                input.setValue(field.value);
             });
 
             var optionOptions = ['optional', 'signatory', 'sender'];
@@ -921,9 +938,9 @@
             });
 
             if(!field.isValid(true))
-                input.addClass('redborder');
+                input.input().addClass('redborder');
             else
-                input.removeClass('redborder');
+                input.input().removeClass('redborder');
 
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
@@ -936,7 +953,7 @@
             }
 
             div.append(closer);
-            div.append(input);
+            div.append(input.input());
             div.append(options.el);
 
             return div;
@@ -1293,13 +1310,17 @@
                     if(field) {
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(false);
+                            field.authorObligatory = 'signatory';
                         } else if(v === 'sender') {
                             field.makeObligatory();
                             field.setShouldBeFilledBySender(true);
+                            field.authorObligatory = 'sender';
                         }
+                        field.addedByMe = false;
                     }
                     return true;
                 }
