@@ -32,6 +32,8 @@ import qualified HostClock.Model as HC
 import User.Model
 import DB
 import Control.Logic
+import qualified Log
+
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) $ eventsForLog doc dees
@@ -156,14 +158,17 @@ emptyEvent (DocumentEvidenceEvent {evType = InvitationEvidence, evAffectedSigLin
 emptyEvent (DocumentEvidenceEvent {evType = ReminderSend,       evAffectedSigLinkID = Nothing }) = True
 emptyEvent _ = False
 
-simplyfiedEventText :: TemplatesMonad m => Document -> DocumentEvidenceEvent -> m String
+simplyfiedEventText :: (TemplatesMonad m, Log.MonadLog m) => Document -> DocumentEvidenceEvent -> m String
 simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evType dee)) $ do
     let siglink = (getSigLinkFor doc =<< evAffectedSigLinkID dee)
     F.value "documenttitle" $ (documenttitle doc)
     F.value "affectedsignatory" $ getSmartName <$> siglink
     F.value "text" $ filterTags <$> evMessageText dee
-    F.value "eleg" $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
-    F.value "pad"  $ (\sl -> signatorylinkdeliverymethod sl == PadDelivery) <$> siglink
+    F.value "eleg"   $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
+    F.value "pad"    $ (\sl -> signatorylinkdeliverymethod sl == PadDelivery) <$> siglink
+    F.value "email"  $ (\sl -> signatorylinkdeliverymethod sl == EmailDelivery) <$> siglink
+    F.value "mobile" $ (\sl -> signatorylinkdeliverymethod sl == MobileDelivery) <$> siglink
+    F.value "emailmobile" $ (\sl -> signatorylinkdeliverymethod sl == EmailAndMobileDelivery) <$> siglink
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"

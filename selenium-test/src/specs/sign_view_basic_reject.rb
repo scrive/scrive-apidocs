@@ -19,8 +19,8 @@ describe "rejecting document" do
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     begin
       @h.dochelper.uploadContract
+      @h.dochelper.addPart
       @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
-      @h.dochelper.gotToStep3
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout

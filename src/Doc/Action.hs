@@ -10,8 +10,8 @@ module Doc.Action (
   ) where
 
 import Control.Applicative
+import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
-import Control.Monad.IO.Class
 import Control.Logic
 import Crypto.RNG
 import Data.Char
@@ -23,8 +23,10 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.DocViewSMS
 import Doc.SignatoryLinkID
 import Doc.DocumentID
+import SMS.SMS (scheduleSMS)
 import InputValidation
 import File.Model
 import Kontra
@@ -254,24 +256,31 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
     case getAuthorSigLink document of
       Nothing -> error "No author in Document"
       Just authorsl -> do
-        mail <- mailMismatchSignatory
-                ctx
-                document
-                (getEmail authorsl)
-                (getFullName authorsl)
-                (ctxhostpart ctx ++ (show $ LinkSignDoc document signatorylink))
-                (getFullName signatorylink)
-                badname
-                msg
-                isbad
-        scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress sigdets]}
+        sendNotifications authorsl
+          (do
+            mail <- mailMismatchSignatory
+                    ctx
+                    document
+                    (getEmail authorsl)
+                    (getFullName authorsl)
+                    (ctxhostpart ctx ++ (show $ LinkSignDoc document signatorylink))
+                    (getFullName signatorylink)
+                    badname
+                    msg
+                    isbad
+            scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress sigdets]})
+          (scheduleSMS =<<  smsMismatchSignatory document signatorylink)
 
 sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> [String] -> String -> String -> m ()
 sendDataMismatchEmailAuthor ctx document author messages badname bademail = do
-    let authorname = getFullName $ $(fromJust) $ getAuthorSigLink document
-        authoremail = getEmail $ $(fromJust) $ getAuthorSigLink document
-    mail <- mailMismatchAuthor ctx document authorname messages badname bademail (getLang author)
-    scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
+    let authorname = getFullName authorlink
+        authoremail = getEmail authorlink
+        authorlink = $(fromJust) $ getAuthorSigLink document
+    sendNotifications authorlink
+      (do
+        mail <- mailMismatchAuthor ctx document authorname messages badname bademail (getLang author)
+        scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]})
+      (scheduleSMS =<<  smsMismatchAuthor document authorlink)
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
@@ -288,10 +297,14 @@ sendDocumentErrorEmail document author = do
     sendDocumentErrorEmailToAuthor = do
       ctx <- getContext
       let authorlink = $(fromJust) $ getAuthorSigLink document
-      mail <- mailDocumentErrorForAuthor ctx document (getLang author)
-      scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
-          to = [getMailAddress authorlink]
-      }
+      sendNotifications authorlink
+        (do
+          mail <- mailDocumentErrorForAuthor ctx document (getLang author)
+          scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
+                                   to = [getMailAddress authorlink]
+                                 })
+        (scheduleSMS =<< smsDocumentErrorAuthor document authorlink)
+
     -- | Helper function to send emails to invited parties
     -- ??: Should this be in DocControl or in an email-specific file?
     sendDocumentErrorEmailToSignatory signatorylink = do
@@ -299,11 +312,14 @@ sendDocumentErrorEmail document author = do
       let SignatoryLink { signatorylinkid
                         , signatorydetails } = signatorylink
           Document { documentid } = document
-      mail <- mailDocumentErrorForSignatory ctx document
-      scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
-            to = [getMailAddress signatorydetails]
-          , mailInfo = Invitation documentid  signatorylinkid
-      }
+      sendNotifications signatorylink
+        (do
+          mail <- mailDocumentErrorForSignatory ctx document
+          scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
+                                   to = [getMailAddress signatorydetails]
+                                 , mailInfo = Invitation documentid  signatorylinkid
+                                 })
+         (scheduleSMS =<<  smsDocumentErrorSignatory document signatorylink)
 
 {- |
    Send emails to all of the invited parties.
@@ -314,7 +330,7 @@ sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isSignatory sl
                       , isCurrentSignatory (documentcurrentsignorder document) sl
-                      , signatorylinkdeliverymethod sl == EmailDelivery
+                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       , not $ hasSigned sl
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
@@ -324,7 +340,7 @@ sendInvitationEmailsToViewers ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , not $ isSignatory sl
                       , not $ isAuthor sl
-                      , signatorylinkdeliverymethod sl == EmailDelivery
+                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
 
@@ -339,13 +355,18 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
       Document { documentid } = document
-  mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink) False
-  -- ?? Do we need to read in the contents? -EN
-  -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
-  scheduleEmailSendout (ctxmailsconfig ctx) $
-    mail { to = [getMailAddress signatorydetails]
-         , mailInfo = Invitation documentid signatorylinkid
-         }
+  sendNotifications signatorylink
+
+    (do
+      mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink) False
+      -- ?? Do we need to read in the contents? -EN
+      -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
+      scheduleEmailSendout (ctxmailsconfig ctx) $
+                           mail { to = [getMailAddress signatorydetails]
+                                , mailInfo = Invitation documentid signatorylinkid
+                                })
+     (scheduleSMS =<< smsInvitation document signatorylink)
+
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID documentid
@@ -355,26 +376,33 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
 sendInvitationEmail1 ctx document authorsiglink =
   if (isSignatory authorsiglink)
      then do
-        -- send invitation to sign to author when it is his turn to sign
-        mail <- mailDocumentAwaitingForAuthor ctx document $ getLang document
-        scheduleEmailSendout (ctxmailsconfig ctx) $
-          mail { to = [getMailAddress authorsiglink] }
-        return $ Right document
+       sendNotifications authorsiglink
+          (do
+            -- send invitation to sign to author when it is his turn to sign
+            mail <- mailDocumentAwaitingForAuthor ctx document $ getLang document
+            scheduleEmailSendout (ctxmailsconfig ctx) $
+                                 mail { to = [getMailAddress authorsiglink] })
+          (scheduleSMS =<<  smsInvitationToAuthor document authorsiglink)
+       return $ Right document
      else return $ Right document
+
 {- |
     Send a reminder email (and update the modification time on the document)
 -}
 sendReminderEmail :: Kontrakcja m => Maybe String -> Context -> Actor -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx actor doc siglink = do
-  mail <- mailDocumentRemind custommessage ctx doc siglink False
-  mailattachments <- makeMailAttachments doc
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
-      to = [getMailAddress siglink]
-    , mailInfo = Invitation (documentid doc) (signatorylinkid siglink)
-    , attachments = if isJust $ maybesigninfo siglink
-                      then mailattachments
-                      else []
-    }
+  sendNotifications siglink
+    (do
+      mail <- mailDocumentRemind custommessage ctx doc siglink False
+      mailattachments <- makeMailAttachments doc
+      scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
+                               to = [getMailAddress siglink]
+                             , mailInfo = Invitation (documentid doc) (signatorylinkid siglink)
+                             , attachments = if isJust $ maybesigninfo siglink
+                                             then mailattachments
+                                             else []
+                             })
+    (scheduleSMS =<< smsReminder doc siglink)
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
     dbUpdate $ PostReminderSend doc siglink custommessage actor
@@ -391,11 +419,19 @@ sendClosedEmails document = do
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
       ml <- handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
-      mail <- mailDocumentClosed ctx document ml sl
-      scheduleEmailSendout (ctxmailsconfig ctx) $
-        mail { to = [getMailAddress sl]
-             , attachments = mailattachments
-             }
+      let sendMail = do
+            mail <- mailDocumentClosed ctx document ml sl
+            scheduleEmailSendout (ctxmailsconfig ctx) $
+                                 mail { to = [getMailAddress sl]
+                                      , attachments = mailattachments
+                                      }
+      let sendSMS withMail = (scheduleSMS =<< smsClosedNotification document sl withMail)
+      case (isGood $ asValidEmail $ getEmail sl,isGood $  asValidPhoneForSMS $ getMobile sl) of
+           (False,False) -> return ()
+           (True,False) -> sendMail
+           (False,True) -> sendSMS False
+           (True,True) -> sendMail >> sendSMS True
+
 
 makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
@@ -423,10 +459,13 @@ sendRejectEmails customMessage ctx document signalink = do
                                  , signatorylinkdeliverymethod sl == EmailDelivery || isAuthor sl
                                  ]
   forM_ activatedSignatories $ \sl -> do
-    mail <- mailDocumentRejected customMessage ctx document signalink False
-    scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
-      to = [getMailAddress sl]
-    }
+    sendNotifications sl
+      (do
+         mail <- mailDocumentRejected customMessage ctx document signalink False
+         scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
+                                  to = [getMailAddress sl]
+                                })
+      (scheduleSMS =<<  smsRejectNotification document sl signalink)
 
 {- |
    Send reminder to all parties in document. No custom text
@@ -468,3 +507,17 @@ handlePostSignSignup email fn ln = do
           return $ Just l
     (_, _) -> return Nothing
 
+
+
+
+-- Notification sendout
+
+-- | Currently, we pick either mail or SMS delivery.  In the future, we may do both.
+sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> m () -> m () -> m ()
+sendNotifications sl domail dosms = do
+  Log.debug $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
+  case signatorylinkdeliverymethod sl of
+    EmailDelivery   -> domail
+    MobileDelivery  -> dosms
+    EmailAndMobileDelivery -> domail >> dosms
+    _               -> return ()

@@ -188,7 +188,6 @@ test_setUserInfo = do
       userpersonalnumber = "1234567"
     , usercompanyposition = "blabla"
     , userphone = "66346343"
-    , usermobile = "989834343"
   }
   res <- dbUpdate $ SetUserInfo userid ui
   assertBool "UserInfo updated correctly" res
@@ -202,7 +201,6 @@ test_setUserInfoCapEmail = do
       userpersonalnumber = "1234567"
     , usercompanyposition = "blabla"
     , userphone = "66346343"
-    , usermobile = "989834343"
     , useremail = Email "DFSFS@fsdfs.com"
   }
   res <- dbUpdate $ SetUserInfo userid ui

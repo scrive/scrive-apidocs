@@ -25,9 +25,11 @@ javascriptLocalisation =
                     return  '$_tbsGenerationMessage1()$"' + doctitle + '"$_tbsGenerationMessage2()$"' + docid + '"$_tbsGenerationMessage3()$'
                      }
              , ie6NotSupported : "$_ie6NotSupported()$"
+             , name : "$_name()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
              , email : "$_email()$"
+             , phone : "$_phone()$"
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
              , companyNumber : "$_orgnumber()$"
@@ -66,6 +68,8 @@ javascriptLocalisation =
 					   , formHead : "$_reminderFormHead()$"
 					   , formSend :	"$_reminderFormSendReminder()$"
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
+                       , mobileQuestion : "$_reminderByMobileQuestion()$"
+                       , emailMobileQuestion : "$_reminderByEmailMobileQuestion()$"
 					}
              , sign :  {
                           eleg : {
@@ -141,6 +145,7 @@ javascriptLocalisation =
               }
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
+            , goBack: "$_goBack()$"
             , process : {
                 contract: {
                    name: "$_contractname()$",
@@ -299,16 +304,23 @@ javascriptLocalisation =
              , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
+              editMessagePlaceholder: "$_editMessagePlaceholder()$",
+              withoutParticipant: "$_designViewWithoutParticipant()$",
+              textFieldFor: "$_designViewTextFieldFor()$",
+              chooseParticipant: "$_designViewChooseParticipant()$",
+              selectField: "$_selectField()$",
               selectprocess : "$_selectDocumentType()$",
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
+                    , missingOrWrongMobile : "$_emptyOrNotValidMobile()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
                     , fileMustBeAdded : "$_fileMustBeAdded()$"
+                    , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
              , authentication : {
                       selectmethod: "$_signStepsBodyFunctionsBoxChooseAuthentication()$"
@@ -340,6 +352,59 @@ javascriptLocalisation =
                     , help : "$_checkboxHelp()$"
              }
              , saveAsTemplateDescription : "$_saveAsTemplateLongDescription()$"
+             , editParticipants: "$_designViewEditParticipants()$"
+             , editDocument: "$_designViewEditDocument()$"
+             , optional: "$_designViewOptional()$"
+             , optionalField: "$_designViewOptionalField()$"
+             , optionalFieldAbbrev: "$_designViewOptionalFieldAbbrev()$"
+             , editSigningProcess: "$_designViewEditSigningProcess()$"
+             , startSigning: "$_designViewStartSigning()$"
+             , addField: "$_designViewAddField()$"
+             , whatField: "$_designViewWhatField()$"
+             , customField: "$_designViewCustomField()$"
+             , fieldName: "$_designViewFieldName()$"
+             , defineParticipation: "$_designViewDefineParticipation()$"
+             , toReceiveDocument: "$_designViewToReceiveDocument()$"
+             , byEmail: "$_designViewByEmail()$"
+             , onThisTablet: "$_designViewOnThisTablet()$"
+             , bySMS: "$_designViewBySMS()$"
+             , byEmailAndSMS : "$_designViewbyEmailAndSMS()$"
+             , forSigning: "$_designViewForSigning()$"
+             , forViewing: "$_designViewForViewing()$"
+             , noIDControl: "$_designViewNoIDControl()$"
+             , withEleg: "$_designViewWithEleg()$"
+             , addParty: "$_designViewAddParty()$"
+             , addMultisend: "$_designViewAddMultisend()$"
+             , viewCSV: "$_designViewViewCSV()$"
+             , fullName: "$_designViewFullName()$"
+             , optional: "$_designViewOptional()$"
+             , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
+             , mandatoryForRecipientAbbrev: "$_designViewMandatoryForRecipientAbbrev()$"
+             , mandatoryForSender: "$_designViewMandatoryForSender()$"
+             , mandatoryForSenderAbbrev: "$_designViewMandatoryForSenderAbbrev()$"
+             , documentName: "$_designViewDocumentName()$"
+             , documentType: "$_designViewDocumentType()$"
+             , recipientsLanguage: "$_designViewRecipientsLanguage()$"
+             , signingDeadline: "$_designViewSigningDeadline()$"
+             , addRemove: "$_designViewAddRemove()$"
+             , request: "$_designViewRequest()$"
+             , editInvitation: "$_designViewEditInvitation()$"
+             , previewInvitation: "$_designViewPreviewInvitation()$"
+             , dAndDActions: "$_designViewDAndDActions()$"
+             , signatureBox: "$_designViewSignatureBox()$"
+             , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
+             , freeTextBox: "$_designViewFreeTextBox()$"
+             , offsite: "$_designViewOffsite()$"
+             , checkbox: "$_checkBoxFieldName()$"
+             , removeThisDocument: "$_designViewRemoveThisDocument()$"
+             , openPDF: "$_designViewOpenPDF()$"
+             , chooseDocument: "$_designViewChooseDocument()$"
+             , attached : "$_designViewAttached()$"
+             , requestedFrom : "$_designViewRequestedFrom()$"
+             , draggablehelp1 : "$_designviewdraggablehelp1()$"
+             , draggablehelp2 : "$_designviewdraggablehelp2()$"
+             , days :"$_designviewdays()$"
+             , saved : "$_designviewsaved()$"
            }
 
          , validation : {
@@ -350,6 +415,7 @@ javascriptLocalisation =
               , invalidnamechars: "$_nameInvalidChars()$"
               , firstNameField: "$_firstNameField()$"
               , lastNameField: "$_lastNameField()$"
+              , fullNameField: "$_fullName()$"
               , companyNumberInvalidChars: "$_companyNumberInvalidChars()$"
               , companyNumberTooShort: "$_companyNumberTooShort()$"
               , companyNumberTooLong: "$_companyNumberTooLong()$"
@@ -381,8 +447,17 @@ javascriptLocalisation =
              ,  changePartyTo : "$_changePartyTo()$"
              ,  giveForSigningThisDevice : "$_padGiveForSigningThisDevice()$"
         }
+         , mobile : {
+                delivery : "$_mobileDelivery()$"
+         }
          , changeEmail : "$_changeEmail()$"
+         , changePhone : "$_changePhone()$"
          , onlyPDF : "$_onlyPDF()$"
+         , accessNewAccountModal: {
+             header: "$_accessNewAccountHeader()$"
+           , body: "$_accessNewAccountBody()$"
+           , button: "$_accessNewAccountButton()$"
+         }
          , newPasswordModal: {
              modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"
            , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"
@@ -399,7 +474,9 @@ javascriptLocalisation =
          , signupModal: {
              modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
            , mainHeader : "$_signupModalMainHeader()$"
+           , alreadyHaveAnAccount : "$_alreadyHaveAccount()$"
          }
+         , visitOurPricingPage : "$_visitOurPricingPage()$"
          , accountSetupModal: {
              modalAccountSetupBodyAccept: "$_modalAccountSetupBodyAccept()$"
            , modalAccountSetupBodyTOS   : "$_modalAccountSetupBodyTOS()$"
@@ -495,6 +572,10 @@ javascriptLocalisation =
            , title : "$_avtal24Title()$"
            , description : "$_avtal24Description()$"
           }
+        , promo : {
+             accept : "$_promoAccept()$"
+           , decline : "$_promoDecline()$"
+        }
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
@@ -527,7 +608,13 @@ javascriptLocalisation =
                       price : "$_paymentsQuote()$",
                       price3 : "$_paymentsGetInTouch()$"
                     }
+                    , trial : {
+                      name : "$_paymentPlanTrial()$",
+                      tag : "$_paymentPlanTrialTag()$",
+                      price : "$_paymentsQuote()$",
+                      price3 : "$_paymentsGetInTouch()$"
                     }
+            }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , total       : "$_paymentPlanTotal()$"
                     , payments    : "$_paymentPlanPayments()$"
@@ -713,7 +800,7 @@ javascriptLocalisation =
            , noUser : "$_cantSendReminderNoUser()$"
            , tooMuch : "$_cantSendReminderTooMuch()$"
            , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
-
+           , dontHaveAccount : "$_dontHaveAccount()$"
       }
       , blocking : {
           free: {
@@ -830,6 +917,7 @@ javascriptLocalisation =
                 name : "$_HeadUserInfo()$"
               , fstname : "$_firstname()$"
               , sndname : "$_lastname()$"
+              , fullname : "$_fullName()$"
               , personnumber : "$_personnumber()$"
               , email : "$_email()$"
               , phone : "$_phone()$"

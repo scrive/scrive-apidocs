@@ -16,12 +16,12 @@ window.Validation = Backbone.Model.extend({
     validateData: function(text, elem) {
             if (!this.get("validates").call(this, text)) {
                this.fail(text, elem);
-               return false;       
+               return false;
             }
             else if (this.get("next") != undefined)
-               return this.get("next").validateData(text,elem); 
+               return this.get("next").validateData(text,elem);
             else
-               return true; 
+               return true;
     },
     fail : function(text, elem) {
         if (this.get("callback") != undefined)
@@ -40,13 +40,20 @@ window.Validation = Backbone.Model.extend({
     }
 });
 
+window.NoValidation = Validation.extend({
+    defaults: {
+           validates: function(t) { return true; },
+           message: "The value should be always ok"
+        }
+});
+
 window.NotEmptyValidation = Validation.extend({
     defaults: {
            validates: function(t) {
 
                     if (/^\s*$/.test(t)) // only spaces
                         return false;
-                    
+
                     return true;
             },
            message: "The value cannot be empty!"
@@ -56,12 +63,27 @@ window.NotEmptyValidation = Validation.extend({
 window.EmailValidation = Validation.extend({
      defaults: {
             validates: function(t) {
+                t = t.trim();
                 // this does not allow international characters, which for the moment is good
                 if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
                     return true;
                 return false;
             },
             message: "Wrong email format!"
+    }
+});
+
+window.PhoneValidation = Validation.extend({
+     defaults: {
+            validates: function(t) {
+                /* After trimming and removal of ignorable characters
+                 * mobile phone number is required to have 11 digits
+                 * including country code. Prefix it with plus sign.
+                 */
+                var z = t.replace(/-/g, "").replace(/\s/g, "");
+                return /^\+[0-9]{9,}$/i.test(z);
+            },
+            message: "Wrong phone number format!"
     }
 });
 
@@ -85,27 +107,51 @@ window.NameValidation = Validation.extend({
 
 window.UserNameValidation = Validation.extend({
     initialize: function(args) {
-      this.set('fieldName', args.fieldName);
+      this.set('firstName', args.firstName);
+      this.set('lastName', args.lastName);
     },
-    fieldName: function() {
-      return this.get('fieldName');
+    firstName: function() {
+      return this.get('firstName');
+    },
+    lastName: function() {
+      return this.get('lastName');
     },
     defaults: {
             validates: function(t) {
-                var t = $.trim(t);
+                var words = _.filter(t.split(' '), function(x) { return x.trim() != '';});
+                var firstName = words[0];
+                if (firstName === undefined) {
+                  firstName = '';
+                }
 
-                if (t.length === 0) {
-                    this.setMessage(this.fieldName() + ' ' + localization.validation.required);
+                var lastName = words.splice(1).join(' ');
+
+                if (firstName.length === 0) {
+                    this.setMessage(this.firstName() + ' ' + localization.validation.required);
                     return false;
                 }
-                if (t.length > 100) {
-                    this.setMessage(this.fieldName() + ' ' + localization.validation.toolong);
+                if (firstName.length > 100) {
+                    this.setMessage(this.firstName() + ' ' + localization.validation.toolong);
                     return false;
                 }
+                if (lastName.length === 0) {
+                    this.setMessage(this.lastName() + ' ' + localization.validation.required);
+                    return false;
+                }
+                if (lastName.length > 100) {
+                    this.setMessage(this.lastName() + ' ' + localization.validation.toolong);
+                    return false;
+                }
+
                 // we want to match international characters
                 // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
-                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(t)) {
-                    this.setMessage(this.fieldName() + ' ' + localization.validation.invalidnamechars);
+
+                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(firstName)) {
+                    this.setMessage(this.firstName() + ' ' + localization.validation.invalidnamechars);
+                    return false;
+                }
+                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(lastName)) {
+                    this.setMessage(this.lastName() + ' ' + localization.validation.invalidnamechars);
                     return false;
                 }
 
@@ -147,12 +193,12 @@ window.PasswordValidation = Validation.extend({
     },
     initialize: function() {
         this.set({"next": new Validation({
-            callback: this.get("callback"), 
-            message: this.get("message_max"), 
+            callback: this.get("callback"),
+            message: this.get("message_max"),
             validates: function(t) { return t.length <= 250; }})});
 
         this.concat(new DigitsLettersValidation({
-            callback: this.get("callback"), 
+            callback: this.get("callback"),
             message: this.get("message_digits")
         }));
 
@@ -179,8 +225,8 @@ jQuery.fn.validate = function(validationObject){
             if ($(this).attr('type') == 'checkbox' || $(this).hasClass('checkbox')) {
                 if (!validationObject.validateData($(this), $(this))) {
                     validates = false;
-                    return false; 
-                } 
+                    return false;
+                }
             } else if (!validationObject.validateData($(this).val(), $(this))) {
                 validates = false;
                 return false;

@@ -52,11 +52,30 @@
     font-weight: bold;
     margin-left: auto;
     margin-right: auto;
+
+    &.small-screen {
+      padding-bottom: 45px;
+      .headline {
+        font-size: 64px;
+        margin-bottom: 30px;
+        line-height: 75px;
+      }
+
+      .subheadline {
+        font-size: 44px;
+        line-height: 45px;
+      }
+    }
+
     .headline {
       text-transform: uppercase;
       color: black;
       font-size: x-large;
       margin-bottom: 5px;
+
+      .name {
+        white-space: nowrap;
+      }
     }
     .giveForSigning {
       margin: auto;
@@ -113,6 +132,19 @@
     overflow: none;
     margin-top: 30px;
     margin-bottom : 30px;
+
+    &.small-screen {
+      .title {
+        line-height: 54px;
+        font-size: 45px;
+        padding-top: 30px;
+        padding-bottom: 30px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+    }
   }
 
   .save .title {
@@ -209,31 +241,7 @@
     float: left;
   }
 
-  .save .tos {
-    margin-bottom: 2px;
-    vertical-align: middle;
-  }
-
-  .save .invalid.tos {
-    padding: 2px 10px;
-  }
-
-  .save .tos .check {
-    float: left;
-    margin-right: 10px;
-  }
-
-  .save .tos input {
-    background: transparent;
-  }
-
-  .save .tos .label {
-    float: left;
-    line-height: 19px;
-  }
-
   .save .acceptbutton {
-    float: right;
     margin-right: 22px;
     margin-top: 4px;
   }
@@ -655,6 +663,17 @@
     margin : auto;
   }
 
+  .pagefooter.small-screen .poweredbyscrive {
+    .text {
+      font-size: x-large;
+    }
+    .logo {
+        background-image : url("../img/logo.png");
+        width: 120px;
+        height: 21px;
+    }
+  }
+
   .pagefooter .poweredbyscrive {
     margin: 00px auto;
     text-align : center;
@@ -768,7 +787,6 @@
       width: 620px;
       margin: auto;
   }
-
 
   .sbox {
       padding: 10px;

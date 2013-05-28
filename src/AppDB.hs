@@ -144,6 +144,7 @@ kontraMigrations = [
   , addShouldBeFilledBySenderColumnToSignatoryLinkFields
   , addCustomBrandingOptions
   , addAssociatedDomainToUsers
+  , dropMobileFromUsers
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -176,6 +177,7 @@ kontraTables = [
   , tableAccessToken
   , tablePrivilege
   , tablePasswordReminders
+  , tableAccessNewAccounts
   , tableEmailChangeRequests
   , tableUserAccountRequests
   , tablePaymentPlans

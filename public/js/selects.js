@@ -4,7 +4,8 @@
 
 window.SelectOptionModel = Backbone.Model.extend({
   defaults : {
-    onSelect : function(){return false;}
+      onSelect : function(){return false;},
+      leftMargin: 0
   },
   initialize: function(args){
   },
@@ -20,6 +21,12 @@ window.SelectOptionModel = Backbone.Model.extend({
   selected : function() {
        if (this.get("onSelect")(this.value()) == true)
            this.trigger("done");
+  },
+  leftMargin: function() {
+        return this.get('leftMargin');
+  },
+  offset: function() {
+        return this.get('offset');
   }
 });
 
@@ -31,7 +38,11 @@ window.SelectModel = Backbone.Model.extend({
       expanded : false,
       onOpen : function() {return true;},
       extraNameAttrs: {},
-      expandOnHover : false
+      expandOnHover : false,
+      color: undefined,
+      border: undefined,
+      zIndex : 5000
+
   },
   initialize: function(args){
       var model = this;
@@ -50,6 +61,10 @@ window.SelectModel = Backbone.Model.extend({
   name : function(){
        return this.get("name");
   },
+  setName: function(name) {
+      this.set({name:name});
+      return this;
+  },
   extraNameAttrs : function(){
        return this.get("extraNameAttrs");
   },
@@ -61,6 +76,9 @@ window.SelectModel = Backbone.Model.extend({
   },
   theme : function(){
        return this.get("theme");
+  },
+  zIndex : function() {
+      return this.get("zIndex");
   },
   expandSide : function() {
        return this.get("expandSide");
@@ -78,6 +96,9 @@ window.SelectModel = Backbone.Model.extend({
      if (!this.expanded() && this.onOpen() && this.options().length > 0)
        this.set({"expanded" : true});
   },
+    unexpand: function() {
+        this.set({expanded:false});
+    },
   expandOnHover : function() {
      return this.get("expandOnHover");
   },
@@ -85,6 +106,15 @@ window.SelectModel = Backbone.Model.extend({
        if (this.get("onOpen") != undefined)
         return this.get("onOpen")();
        return true;
+  },
+  offset: function() {
+        return this.get('offset');
+  },
+  color : function() {
+     return this.get("color");
+  },
+  border : function() {
+     return this.get("border");
   }
 });
 
@@ -103,7 +133,12 @@ window.SelectOptionView = Backbone.View.extend({
     },
     render: function () {
         var model = this.model;
-        var a = $("<span/>").text(this.model.name());
+        var a = $("<span/>").html(this.model.name());
+        a.css({'margin-left':this.model.leftMargin()});
+        if(model.offset()!==undefined) {
+            a.css('display', 'block');
+            a.css('margin-top', model.offset());
+        }
         var attrs = model.extraAttrs() ? model.extraAttrs() : {};
         $.each(attrs, function(attr, val) {
           a.attr(attr, val);
@@ -132,7 +167,7 @@ var SelectView = Backbone.View.extend({
         if ( this.dead != true
             && this.model.expanded()
             && new Date().getTime() - this.enterdate > 50
-            && $(":hover", this.el).size() == 0
+            && (this.expButton == undefined || $(":hover", this.expButton).size() == 0)
             && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
            )
           this.model.toggleExpand();
@@ -148,9 +183,11 @@ var SelectView = Backbone.View.extend({
         if (this.model.iconClass() != undefined)
             label.append($("<div class='select-icon'>").addClass(this.model.iconClass()));
         else
-            label.text(this.model.name());
+            label.html(this.model.name());
         if (this.model.textWidth() != undefined)
             label.css("width",this.model.textWidth());
+        if(this.model.offset())
+            label.css('margin-top', this.model.offset());
         button.append(label);
         button.append("<div class='select-button-right' />");
         return button;
@@ -165,14 +202,23 @@ var SelectView = Backbone.View.extend({
         $(this.el).remove();
     },
     render: function () {
-        $(this.el).empty();
-        $(this.el).addClass(this.model.theme() + "-theme");
-        var view = this;
-        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
         var model = this.model;
         var button = this.button();
+        var view = this;
+        $(this.el).empty();
+        $(this.el).addClass(this.model.theme() + "-theme");
+
+        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
+        if (model.border() != undefined) {
+          options.css("border", this.model.border());
+          $(this.el).css("border", this.model.border());
+        }
+        options.addClass(this.model.theme() + "-theme");
+
         _.each(model.options(),function(e){
                 var li = $("<li/>");
+                if (model.color())
+                  li.css('color',model.color());
                 new SelectOptionView({model : e, el : li});
                 options.append(li);
         });
@@ -190,18 +236,30 @@ var SelectView = Backbone.View.extend({
               return false;
           });
         }
+        $(this.el).append(button);
 
         if (model.expanded())
             {
-              button.addClass("select-exp");
-              options.css("display", "block");
+              if (this.expButton != undefined) $(this.expButton).detach();
+              this.expButton = $(this.el).clone();
+              if (model.color())
+                this.expButton.css('color',model.color());
+              this.expButton.addClass("select-exp").css("position","absolute");
+              $('.select-button',this.expButton).addClass("select-exp").css('z-index',model.zIndex() + 2);
+              this.expButton.css('z-index',model.zIndex());
+              this.expButton.css('left',$(this.el).offset().left + "px").css('top',($(this.el).offset().top + "px"));
+              this.expButton.css("display", "block");
+              $('body').append(this.expButton);
+              this.expButton.mouseout(function() {
+                 setTimeout(function() {view.closeIfNeeded();}, 100);
+              });
+              this.expButton.mouseenter(function() {view.enterdate = new Date().getTime();});
+              this.expButton.append(options.css('z-index',model.zIndex()+1));
             }
         else
             {
-              button.removeClass("select-exp");
-              options.css("display", "none");
+              if (this.expButton != undefined) $(this.expButton).detach();
             }
-        $(this.el).append(button).append(options);
         view.close = false;
         return this;
     }
@@ -220,17 +278,25 @@ window.Select = function(args) {
                                         expandSide : args.expandSide,
                                         onOpen : args.onOpen,
                                         extraNameAttrs: args.extraNameAttrs,
-                                        expandOnHover : args.expandOnHover
+                                        expandOnHover : args.expandOnHover,
+                                        offset : args.offset,
+                                        color : args.color,
+                                        border : args.border
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)
               input.addClass(args.cssClass);
+          if (args.style != undefined)
+              input.attr("style",args.style);
+
           var view = new SelectView({model : model, el : input});
           return new Object({
               model : function() {return model;},
               view : function()  {return view;},
               clear : function() {view.clear(); model.destroy();},
-              open : function()  {model.expand();}
+              open : function()  {model.expand();},
+              close : function() {model.unexpand();},
+              input : function() {return $(view.el);}
             });
 };
 

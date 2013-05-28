@@ -72,6 +72,15 @@
     setTosValidator: function(validator) {
       this.set('tosValidator', validator);
     },
+    buttoncolorclass : function() {
+      return this.get("buttoncolorclass");
+    },
+    branded : function() {
+      return this.get("branded");
+    },
+    servicelinkcolour : function() {
+      return this.get("servicelinkcolour");
+    },
     callme: function() {
       return this.get('callme');
     },
@@ -163,119 +172,51 @@
       //$(this.el).append(header);
 
       var content = $("<div class='short-input-container'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper float-left'/>");
-      var acceptButtonBox = $("<div class='short-input-container-right float-right'></div>");
+      var wrapper = $("<div class='short-input-container-body-wrapper'/>");
+      wrapper.css('margin','auto');
+
       var body = $("<div class='short-input-container-body'/>");
-      $(this.el).append(content.append(wrapper.append(body)).append(acceptButtonBox));
+      $(this.el).append(content.append(wrapper.append(body)));
 
 
 
-      var firstNameInput = InfoTextInput.init({
-        infotext: localization.account.accountDetails.fstname,
-        value: model.fstname(),
-        onChange: function(v) {model.setFstname(v);},
+      var nameInput = InfoTextInput.init({
+        infotext: localization.account.accountDetails.fullname,
+        value: model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
+        onChange: function(v) {
+          var words = _.filter(v.split(' '), function(x) { return x.trim() != '';});
+          var firstName = words[0];
+          if (firstName === undefined) {
+            firstName = '';
+          }
+          var lastName = words.splice(1).join(' ');
+          model.setFstname(firstName);
+          model.setSndname(lastName);
+        },
         inputtype: 'text',
-        name: 'fstname',
+        name: 'fullname',
         cssClass : "big-input"
       });
 
       model.addValidator(function() {
-        return firstNameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.firstNameField}));
+        return nameInput.input().validate(new UserNameValidation({callback: view.validationCallback,
+                                                                  firstName: localization.validation.firstNameField,
+                                                                  lastName: localization.validation.lastNameField}));
       });
 
-      body.append($("<div class='position first'/>").append(firstNameInput.input()));
-
-      var lastNameInput = InfoTextInput.init({
-        infotext: localization.account.accountDetails.sndname,
-        value: model.sndname(),
-        onChange: function(v) {model.setSndname(v);},
-        inputtype: 'text',
-        name: 'sndname',
-        cssClass : "big-input"
-      });
-
-      model.addValidator(function() {
-        return lastNameInput.input().validate(new UserNameValidation({callback: view.validationCallback, fieldName: localization.validation.lastNameField}));
-      });
-
-      body.append($("<div class='position'/>").append(lastNameInput.input()));
-
-
-      var passwordInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupChoosePassword,
-        value: "",
-        onChange: function(v) {model.setPassword(v);},
-        inputtype: 'password',
-        name: 'password',
-        cssClass : "big-input"
-      });
-
-      model.addValidator(function() {
-        return passwordInput.input().validate(new PasswordValidation({callback: view.validationCallback,
-                                                              message: localization.validation.passwordLessThanMinLength,
-                                                              message_max: localization.validation.passwordExceedsMaxLength,
-                                                              message_digits: localization.validation.passwordNeedsLetterAndDigit}));
-      });
-
-      body.append($("<div class='position'/>")
-                    .append($("<label style='text-align:left;margin-left: 5px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
-                    .append(passwordInput.input()));
-
-
-      var password2Input = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupRepeatPassword,
-        value: "",
-        onChange: function(v) {model.setPassword(v);},
-        inputtype: 'password',
-        name: 'password2',
-        cssClass : "big-input"
-      });
-
-      model.addValidator(function() {
-        return password2Input.input().validate(new PasswordEqValidation({callback: view.validationCallback,
-                                                                 message: localization.validation.passwordsDontMatch,
-                                                                 'with': passwordInput.input()}));
-      });
-
-      body.append($("<div class='position'/>").append(password2Input.input()));
-
-      var tosAccept = $("<div class='position checkbox-box' style='text-align: left;'/>");
-      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
-      if (model.accepted()) tosCBox.addClass('checked');
-      tosCBox.click(function() { tosCBox.toggleClass('checked'); model.setAccepted(tosCBox.hasClass('checked'));});
-
-
-      model.setTosValidator(function() {
-        tosCBox.validate(new CheckboxReqValidation({callback: view.validationCallback, message: localization.validation.mustAcceptTOS}));
-      });
-      tosAccept.append(tosCBox);
-      var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
-      tosAccept.append($('<label/>')
-                  .append($("<span/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
-                  .append($("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS))
-                );
-      tosAccept.append($('<br/>'));
-
-      body.append(tosAccept);
-
-
-      var optionaldescriptionrow = $("<div class='position' style='text-align:left;'/>")
-        .append($("<label style='text-align:left;margin-left: 5px'></label>").text(localization.accountSetupModal.modalAccountOptionalPositions));
-      body.append(optionaldescriptionrow);
+      body.append($("<div class='position first'/>").append(nameInput.input()));
 
       var companyInput = InfoTextInput.init({
         infotext: localization.accountSetupModal.modalAccountSetupCompany,
         value: model.company(),
         onChange: function(v) {model.setCompany(v);},
         inputtype: 'text',
-        name: 'position',
-        cssClass : "big-input"
+        name: 'company',
+        cssClass : "med-input med-input-left"
        });
       if (this.model.companyFilled())
         companyInput.input().attr("readonly","true");
       var companyrow = $("<div class='position'/>").append(companyInput.input());
-
-      body.append(companyrow);
 
       var positionInput = InfoTextInput.init({
         infotext: localization.accountSetupModal.modalAccountSetupPosition,
@@ -283,12 +224,12 @@
         onChange: function(v) {model.setPosition(v);},
         inputtype: 'text',
         name: 'position',
-        cssClass : "big-input"
+        cssClass : "med-input"
        });
 
-      var positionrow = $("<div class='position'/>").append(positionInput.input());
+      companyrow.append(positionInput.input());
 
-      body.append(positionrow);
+      body.append(companyrow);
 
       var phoneInput = InfoTextInput.init({
         infotext: localization.accountSetupModal.modalAccountSetupPhone,
@@ -302,12 +243,68 @@
       var phonerow = $("<div class='position'/>").append(phoneInput.input());
       body.append(phonerow);
 
+      var passwordInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupChoosePassword,
+        value: "",
+        onChange: function(v) {model.setPassword(v);},
+        inputtype: 'password',
+        name: 'password',
+        cssClass : "med-input med-input-left"
+      });
+
+      model.addValidator(function() {
+        return passwordInput.input().validate(new PasswordValidation({callback: view.validationCallback,
+                                                              message: localization.validation.passwordLessThanMinLength,
+                                                              message_max: localization.validation.passwordExceedsMaxLength,
+                                                              message_digits: localization.validation.passwordNeedsLetterAndDigit}));
+      });
+
+      var password2Input = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupRepeatPassword,
+        value: "",
+        onChange: function(v) {model.setPassword(v);},
+        inputtype: 'password',
+        name: 'password2',
+        cssClass : "med-input"
+      });
+
+      model.addValidator(function() {
+        return password2Input.input().validate(new PasswordEqValidation({callback: view.validationCallback,
+                                                                 message: localization.validation.passwordsDontMatch,
+                                                                 'with': passwordInput.input()}));
+      });
+
+      body.append($("<div class='position'/>")
+                    .append($("<label style='text-align:left;margin-left: 32px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
+                    .append(passwordInput.input())
+                    .append(password2Input.input()));
+
+      var tosAccept = $("<div class='checkbox-box' style='text-align: left;'/>");
+      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
+      if (model.accepted()) tosCBox.addClass('checked');
+      tosCBox.click(function() { tosCBox.toggleClass('checked'); model.setAccepted(tosCBox.hasClass('checked'));});
 
 
+      model.setTosValidator(function() {
+        tosCBox.validate(new CheckboxReqValidation({callback: view.validationCallback, message: localization.validation.mustAcceptTOS}));
+      });
+      tosAccept.append(tosCBox);
+      var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
+      var toslink = $("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS);
+      if (model.servicelinkcolour()) {
+        toslink.css('color', model.servicelinkcolour());
+      }
+      tosAccept.append($('<label/>')
+                  .append($("<span/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
+                  .append(toslink)
+                );
+      tosAccept.append($('<br/>'));
+
+      body.append(tosAccept);
 
       var acceptButton = Button.init({
           size: 'small',
-          color: 'blue',
+          color: this.model.buttoncolorclass(),
           text: localization.signupModal.modalAccountSetupFooter,
           onClick: function() {
             view.clearValidationMessages();
@@ -315,8 +312,7 @@
           }
         });
 
-      acceptButtonBox.append($("<h3></h3>").append(localization.signupModal.mainHeader)).append(acceptButton.input());
-
+      body.append($('<div class="position"/>').append(acceptButton.input()));
     }
   });
 
@@ -324,7 +320,7 @@
       mixpanel.track('Visit account setup');
     var model = new AccountSetupModel(args);
     var view =  new AccountSetupView({model: model, el: $("<div class='short-input-section account-setup'/>")});
-    this.el = function() {return $(view.el);}
+    this.el = function() {return $(view.el);};
   };
 
 })(window);

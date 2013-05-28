@@ -68,11 +68,14 @@ window.Document = Backbone.Model.extend({
         delivery: "email",
         template: false,
         saveQueue : new AjaxQueue(),
-        screenshots : {}
+        screenshots : {},
+        flux: false
     },
     initialize: function(args) {
         var params = { evidenceAttachments: args.evidenceAttachments };
         this.url = "/api/frontend/get/" + args.id + "?" + $.param(params,true);
+        _.bindAll(this);
+        this.bindBubble();
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -93,6 +96,14 @@ window.Document = Backbone.Model.extend({
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
         return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
     },
+    addExistingSignatory: function(sig) {
+        var document = this;
+        var signatories = document.signatories();
+        signatories[signatories.length] = sig;
+        var time = new Date().getTime();
+        document.trigger('change:signatories');
+        document.trigger('change:signorder');
+    },
     addSignatory: function() {
       var document = this;
       var signatories = document.signatories();
@@ -112,18 +123,7 @@ window.Document = Backbone.Model.extend({
         // author does not sign at all
         signorder = 1;
       }
-      var nsigdelivery, nsigauth;
-      if (document.standardAuthentication())
-          nsigauth = "standard";
-      if (document.elegAuthentication())
-          nsigauth = "eleg";
-      if (document.emailDelivery())
-          nsigdelivery = "email";
-      if (document.padDelivery())
-          nsigdelivery = "pad";
-      if (document.apiDelivery())
-          nsigdelivery = "api";
-
+      var nsigdelivery= "email", nsigauth= "standard";
       var nsig = new Signatory({"document": document,
                                  signs: true,
                                  signorder: signorder,
@@ -131,6 +131,7 @@ window.Document = Backbone.Model.extend({
                                  delivery: nsigdelivery});
       signatories[signatories.length] = nsig;
       document.set({"signatories": signatories});
+        document.trigger('change:signorder');
       this.fixSignorder();
       return nsig;
     },
@@ -164,6 +165,9 @@ window.Document = Backbone.Model.extend({
     },
     authorattachments: function() {
         return this.get("authorattachments");
+    },
+    removeattachment : function(a) {
+        this.set({"authorattachments": _.without(this.authorattachments(),[a]) });
     },
     evidenceattachments: function() {
         return this.get("evidenceattachments");
@@ -240,7 +244,11 @@ window.Document = Backbone.Model.extend({
     },
     setInvitationMessage: function(customtext)
     {
-        this.set({invitationmessage: customtext},{silent: true});
+        this.set({invitationmessage: $(customtext).text() != "" ? customtext : ""},{silent: true});
+
+    },
+    invitationmessage : function() {
+        return this.get("invitationmessage");
     },
     inviteMail: function() {
                 return new Mail({
@@ -296,6 +304,7 @@ window.Document = Backbone.Model.extend({
               if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "")
                 window.location = document.currentSignatory().signsuccessredirect();
               else
+                window.scroll(0,0);
                 window.location.reload();
             },
             ajaxerror : function() {
@@ -323,11 +332,12 @@ window.Document = Backbone.Model.extend({
               ajaxtimeout : 120000
           });
     },
-    save: function() {
+    save: function(callback) {
          this.get("saveQueue").add(new Submit({
               url: "/api/frontend/update/" + this.documentid(),
               method: "POST",
-              json: JSON.stringify(this.draftData())
+              json: JSON.stringify(this.draftData()),
+              ajaxsuccess : function() {if (callback != undefined) callback();}
           }), function(ec) {if (ec == 403) window.location.reload()});
     },
     afterSave: function(f) {
@@ -345,13 +355,12 @@ window.Document = Backbone.Model.extend({
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
-          authentication: this.get("authentication"),
-          delivery: this.get("delivery"),
           apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
           process : this.process().process(),
-          template: this.isTemplate()
+          template: this.isTemplate(),
+          authorattachments : _.map(this.authorattachments(), function(a) {return a.draftData()})
       };
     },
     status: function() {
@@ -427,42 +436,6 @@ window.Document = Backbone.Model.extend({
     signorder: function() {
       return this.get("signorder");
     },
-    standardAuthentication: function() {
-          return this.get("authentication") == "standard";
-    },
-    elegAuthentication : function() {
-          return this.get("authentication") == "eleg";
-    },
-    emailDelivery: function() {
-          return this.get("delivery") == "email";
-    },
-    padDelivery : function() {
-          return this.get("delivery") == "pad";
-    },
-    apiDelivery : function() {
-          return this.get("delivery") == "api";
-    },
-    setStandardAuthentication: function() {
-          this.set({"authentication": "standard"}, {silent: true});
-          this.trigger("change:authenticationdelivery");
-    },
-    setElegAuthentication : function() {
-          this.set({"authentication":"eleg"}, {silent: true});
-          this.trigger("change:authenticationdelivery");
-    },
-    setEmailDelivery: function() {
-          this.set({"delivery": "email"}, {silent: true});
-          this.trigger("change:authenticationdelivery");
-    },
-    setPadDelivery : function() {
-          this.set({"delivery":"pad"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.clearAttachments();});
-          this.trigger("change:authenticationdelivery");
-    },
-    setAPIDelivery : function() {
-          this.set({"delivery":"api"}, {silent: true});
-          this.trigger("change:authenticationdelivery");
-    },
     elegTBS: function() {
         var text = this.title() + " " + this.documentid();
         _.each(this.signatories(), function(signatory) {
@@ -479,9 +452,10 @@ window.Document = Backbone.Model.extend({
        return this.get("template") == true;
     },
     makeTemplate: function() {
-       return this.set({"template": true}, {silent: true});
+       return this.set({"template": true});
     },
     recall: function(successCallback) {
+        console.log('recall');
         var self = this;
         var fetchOptions = { data: self.viewer().forFetch(),
                              processData: true,
@@ -501,12 +475,11 @@ window.Document = Backbone.Model.extend({
 
     },
     author: function() {
-      for (var i = 0; i < this.signatories().length; i++)
-          if (this.signatories()[i].author())
-              return this.signatories()[i];
+        return _.find(this.signatories(),
+                      function(s) { return s.author(); });
     },
     authorCanSignFirst : function() {
-        if (!this.author().signs() || this.padDelivery())
+        if (!this.author().signs())
             return false;
         if (this.author().hasPlacedSignatures()) {
             // We don't support drawing signature in design view
@@ -584,6 +557,11 @@ window.Document = Backbone.Model.extend({
     authoruser: function() {
         return this.get("authoruser");
     },
+    signatoriesWhoSign: function() {
+        return _.filter(this.signatories(), function(sig) {
+            return sig.signs();
+        });
+    },
     maxPossibleSignOrder : function() {
       var mpso = 0;
       _.each(this.signatories(), function(sig) {if (sig.signs()) mpso++;});
@@ -608,6 +586,8 @@ window.Document = Backbone.Model.extend({
         { documentid: self.documentid(),
           signatoryid: self.viewer().signatoryid()
         };
+        console.log(args.daystosign);
+     if (self.file() != undefined) self.file().off();
      return {
        title: args.title,
        file: function() {
@@ -636,9 +616,16 @@ window.Document = Backbone.Model.extend({
                         var process= new Process({process : args.process});
                         process.bind("change", function() { self.trigger("change:process")});
                         // This is not used but nice to have. Please leave it.
+                        // It is used now --Eric
                         return process;
                 }(),
-       lang: new Lang({lang : args.lang}),
+       lang: (function() {
+           var lang = new Lang({lang : args.lang});
+           lang.bind('change', function() {
+               self.trigger('change:lang');
+           });
+           return lang;
+       }()),
        infotext: args.infotext,
        canberestarted: args.canberestarted,
        canbeprolonged: args.canbeprolonged,
@@ -658,10 +645,96 @@ window.Document = Backbone.Model.extend({
        signviewbarscolour: args.signviewbarscolour,
        signviewbarstextcolour: args.signviewbarstextcolour,
        signviewbackgroundcolour: args.signviewbackgroundcolour,
+       flux: false,
        ready: true
      };
-    }
+    },
+    setFlux: function() {
+        this.set({flux:true});
+        return this;
+    },
+    flux: function() {
+        return this.get('flux');
+    },
+    unsetFlux: function() {
+        this.set({flux:false});
+        return this;
+    },
+    // validation
+    hasProblems: function(forSigning) {
+        return this.hasDocumentProblems() || this.hasSignatoryProblems(forSigning);
+    },
+    hasDocumentProblems: function() {
+        return !this.hasAtLeastOneSignatory() ||
+            !this.mainfile();
+    },
+    hasAtLeastOneSignatory: function() {
+        var signing = this.signatoriesWhoSign();
+        return signing.length >= 1;
+    },
+    hasSignatoryProblems: function(forSigning) {
+        var sigs = this.signatories();
+        return _.some(sigs, function(sig) {
+            return sig.hasProblems(forSigning);
+        });
+    },
+    newCheckboxName: function() {
+        var document = this;
+        var allnames = [];
+        _.each(document.signatories(), function(s) {
+            _.each(s.fields(), function(f) {
+                allnames.push(f.name());
+            });
+        });
+        var i = 1;
+        while(_.contains(allnames, 'checkbox-' + i))
+            i++;
+        return 'checkbox-' + i;
+    },
+    newSignatureName: function() {
+        var document = this;
+        var allnames = [];
+        _.each(document.signatories(), function(s) {
+            _.each(s.fields(), function(f) {
+                allnames.push(f.name());
+            });
+        });
+        var i = 1;
+        while(_.contains(allnames, 'signature-' + i))
+            i++;
+        return 'signature-' + i;
+    },
+    removeTypeSetters: function() {
+        var document = this;
+        _.each(document.signatories(), function(sig) {
+            _.each(sig.fields(), function(field) {
+                _.each(field.placements(), function(placement) {
+                    placement.cleanTypeSetter();
+                    if(placement.view)
+                        placement.view.clear();
+                });
+            });
+        });
+    },
+    killAllPlacements: function() {
+        var document = this;
+        _.each(document.signatories(), function(sig) {
+            _.each(sig.fields(), function(field) {
+                _.each(field.placements(), function(placement) {
+                    placement.die();
+                });
+            });
+        });
 
+    },
+    bindBubble: function() {
+        var document = this;
+        document.bind('change', document.bubbleSelf);
+    },
+    bubbleSelf: function() {
+        var document = this;
+        document.trigger('bubble');
+    }
 });
 
 

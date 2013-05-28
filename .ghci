@@ -1,6 +1,6 @@
 :set -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
 :set -idist/build/autogen
-:set -imisc -iinc -idocconv/src -isrc -imailer/inc -imailer/src -ipdfseal/src -ipdfseal/inc -itest/src
+:set -imisc -iinc -idocconv/src -isrc -imailer/inc -imailer/src -imessenger/inc -imessenger/src -ipdfseal/src -ipdfseal/inc -itest/src
 :set -XBangPatterns
 :set -XDeriveDataTypeable
 :set -XFlexibleContexts

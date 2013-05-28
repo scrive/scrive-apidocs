@@ -20,8 +20,8 @@ describe "Sign a document and then cancel it" do
     puts "Logged in"
     @h.dochelper.uploadContract
     puts "Fill in counterpart"
+    @h.dochelper.addPart
     @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
-    (@h.wait_until { @h.driver.find_element :css => ".nextstepbutton" }).click
     puts "About to sign and send"
     @h.dochelper.signAndSend
     puts "After sign and send"

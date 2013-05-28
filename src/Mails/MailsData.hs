@@ -1,10 +1,8 @@
 module Mails.MailsData where
 
 import qualified Data.ByteString as BS
-
-import Doc.SignatoryLinkID
-import Doc.DocumentID
 import File.FileID
+import MessageData
 
 data MailAddress = MailAddress {
     fullname    :: String
@@ -18,13 +16,8 @@ data Mail = Mail {
   , title       :: String
   , content     :: String
   , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
-  , mailInfo    :: MailInfo
+  , mailInfo    :: MessageData
   } deriving (Eq, Ord, Show)
-
-data MailInfo =
-    Invitation DocumentID SignatoryLinkID
-  | None
-    deriving (Eq, Ord, Show, Read)
 
 emptyMail :: Mail
 emptyMail = Mail {

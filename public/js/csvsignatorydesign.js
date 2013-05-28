@@ -91,7 +91,7 @@ var CsvProblem = Backbone.Model.extend({
        var sigdesign = this;
        var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"text"});
        submit.add("customfieldscount",this.signatory().customFields().length);
-       if (this.signatory().document().elegAuthentication())
+       if (this.signatory().elegAuthentication())
         submit.add("eleg","YES");
        submit.addInputs(input);
        submit.sendAjax(function (resp) {
@@ -129,7 +129,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
        return box;
     },
     // we fix the order of the standard fields
-    csvheaderorder: ['fstname', 'sndname', 'email', 'sigco', 'sigpersnr', 'sigcompnr'],
+    csvheaderorder: ['fstname', 'sndname', 'email', 'mobile',  'sigco', 'sigpersnr', 'sigcompnr'],
     dataTable : function() {
       var model = this.model;
       var table = $("<table class='csvDataTable'/>");
@@ -245,7 +245,9 @@ window.CsvSignatoryDesignPopup = {
               acceptVisible : model.ready(),
               onAccept : function() {
                   signatory.makeCsv(model.rows());
-                  signatory.document().save();
+                  if(typeof args.onAccept === 'function')
+                      args.onAccept();
+                  //signatory.document().save();
                   return true;
             }
         });

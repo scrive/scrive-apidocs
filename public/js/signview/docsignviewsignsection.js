@@ -50,8 +50,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var document = this.document();
     var guardModel = this.guardModel;
     return Button.init({
-      size: "small",
-      shape : "rounded",
+      size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "blue",
       text: document.process().processLocalization().signbuttontext,
       onClick: function() {
@@ -60,7 +59,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         trackTimeout('Accept', {'Accept' : 'sign document'});
         document.takeSigningScreenshot(function() { document.sign().send(); });
       }
-    }).input().css('margin-top', '-10px');
+    }).input().css('margin-top', '-10px')
+              .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
   },
   createPreambleElems: function() {
     var document = this.document();
@@ -101,6 +101,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   createContentElems: function() {
     var content = $("<div />");
     content.append(this.createPreambleElems());
+
+    if (BrowserInfo.isSmallScreen()) {
+        var p = content.find('p');
+        p.css('font-size', '52px');
+        p.css('line-height', '72px');
+        p.css('margin-top', '40px');
+    }
     return content;
   },
   popup: function() {
@@ -115,6 +122,44 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       textfont : this.model.usebranding() ? document.signviewtextfont() : undefined,
       content: this.createContentElems
     });
+
+    // Re-adjust the signing modal for small screen devices.
+    if (BrowserInfo.isSmallScreen()) {
+      // Remove the modal header but keep the close button
+      var modalHeader = $('.modal-container .modal-header');
+      var close = modalHeader.find('.modal-close').detach();
+      modalHeader.remove();
+      close.css('margin', '45px 475px 30px 30px');
+      close.css('background', 'none');
+      close.css('font-size', '55px');
+      close.css('color', 'red');
+      close.css('width', '420px');
+      close.css('height', '90px');
+      close.text(localization.goBack);
+
+      // Remove the modal footer but keep the button
+      var modalFooter = $('.modal-container .modal-footer');
+      var signButton = modalFooter.find('.button').detach();
+      modalFooter.remove();
+
+      $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
+
+      signButton.css({
+        'font-size': '100px',
+        'height': '100px',
+        'width': '80%',
+        'max-height': '120px',
+        'margin-right': '48px',
+        'margin-bottom': '65px',
+        'margin-top': '40px',
+        'line-height': '105px',
+        'padding-bottom': '55px',
+        'padding-top': '50px'
+      });
+
+      $('.modal-container').append(signButton);
+      $('.modal-container').append(close);
+    }
   }
 });
 
@@ -145,12 +190,11 @@ window.DocumentSignSignSection = Backbone.View.extend({
        mixpanel.people.set(ps);
 
        mixpanel.track('View sign view');
-
        this.rejectButton = Button.init({
-                                        size: "small",
+                                        size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                                         color: "red",
                                         shape : "rounded",
-                                        width: 260,
+                                        width: 206,
                                         text: document.process().processLocalization().rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
@@ -179,12 +223,12 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         }
                                 });
        this.signButton = Button.init({
-                            size: "small",
-                            shape : "rounded",
+                            size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
+                            shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "blue",
-                            width: 260,
+                            width: BrowserInfo.isSmallScreen() ?  404 : 206,
                             text: document.process().processLocalization().signbuttontext,
-                            icon: $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
+                            icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
 
                                 var valid =  model.tasks().notCompleatedTasks().length == 1 && model.tasks().notCompleatedTasks()[0] == model.signtask();
@@ -198,16 +242,36 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                     }).popup();
                                 }
                             });
-      if (model.hasRejectOption()) {
+
+      var signButton = this.signButton.input();
+      if (BrowserInfo.isSmallScreen()) {
+        signButton.css({
+          'padding-left': '33%',
+          'padding-right': '33%',
+          'font-size': '100px',
+          'height': '100px',
+          'max-height': '120px',
+          'line-height': '85px',
+          'padding-top': '55px',
+          'padding-bottom': '55px'
+        });
+      }
+
+      if (model.hasRejectOption() && !BrowserInfo.isSmallScreen()) {
         box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
-        box.append($("<div class='signwrapper sign'>").append(this.signButton.input()));
+        box.append($("<div class='signwrapper sign'>").append(signButton));
       }
       else {
-        box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(this.signButton.input()));
+        box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
+        if (BrowserInfo.isSmallScreen()) {
+          box.css("padding", "0px");
+        }
       }
       box.append($("<div class='clearfix' />"));
 
+    setTimeout(function() {
       document.takeFirstScreenshot();
+    }, 1500);
    }
 });
 

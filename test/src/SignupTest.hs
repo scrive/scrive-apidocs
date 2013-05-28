@@ -29,8 +29,6 @@ signupTests env = testGroup "Signup" [
     , testThat "must accept tos to activate an account" env testAcceptTOSToActivate
     , testThat "must enter first name to activate an account" env testNeedFirstNameToActivate
     , testThat "must enter last name to activate an account" env testNeedLastNameToActivate
-    , testThat "must enter passwords to activate an account" env testNeedPasswordToActivate
-    , testThat "passwords must match to activate an account" env testPasswordsMatchToActivate
     , testThat "login event recorded when logged in after activation" env testLoginEventRecordedWhenLoggedInAfterActivation
     ]
 
@@ -101,30 +99,6 @@ testNeedLastNameToActivate = do
 
   -- activate the account without entering passwords
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "" "" "" Nothing
-  assertAccountActivationFailed ctx3
-
-testNeedPasswordToActivate :: TestEnv ()
-testNeedPasswordToActivate = do
-  ctx <- mkContext defaultValue
-
-  -- enter the email to signup
-  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful ctx1
-
-  -- activate the account without entering passwords
-  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "" "" Nothing
-  assertAccountActivationFailed ctx3
-
-testPasswordsMatchToActivate :: TestEnv ()
-testPasswordsMatchToActivate = do
-  ctx <- mkContext defaultValue
-
-  -- enter the email to signup
-  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful ctx1
-
-  -- activate the account using mismatched passwords
-  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password21" Nothing
   assertAccountActivationFailed ctx3
 
 signupForAccount :: Context -> String -> TestEnv Context

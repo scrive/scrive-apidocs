@@ -18,9 +18,6 @@ Synopsis:            Seal PDF documents
 -- The license under which the package is released.
 License:             AllRightsReserved
 
--- The file containing the license text.
-License-file:        LICENSE
-
 -- The package author(s).
 Author:              Gracjan Polak
 
@@ -40,20 +37,58 @@ Build-type:          Simple
 -- Extra-source-files:  
 
 -- Constraint on the version of Cabal needed to build this package.
-Cabal-version:       >=1.2
+Cabal-version:       >=1.8
 
+Library
+  hs-source-dirs: inc
+  Exposed-Modules: Matrix PdfFinder PdfModel SealSpec
+  Build-depends: base
+  Build-depends: bytestring
+  Build-depends: containers
+  Build-depends: mtl == 2.0.*
+  Build-depends: binary == 0.5.0.2
+  Build-depends: mmap==0.5.*
+  Build-depends: attoparsec == 0.10.4.0
+
+  Extensions: BangPatterns,
+              TypeSynonymInstances,
+              FlexibleInstances,
+              FlexibleContexts,
+              OverloadedStrings
 
 Executable pdfseal
   hs-source-dirs: src
   -- .hs or .lhs file containing the Main module.
-  Main-is: Main.hs
+  Main-is: SealMain.hs
   
   -- Packages needed in order to build this package.
-  Build-depends: bytestringreadp, base
+
+  Build-depends: base
+  Build-depends: pdfseal
+  Build-depends: bytestring
+  Build-depends: utf8-string == 0.3.6
+  Build-depends: base64-bytestring == 1.0.0.0
+  Build-depends: directory
+  Build-depends: HPDF == 1.4.2
+  Build-depends: containers
+  Build-depends: mtl == 2.0.*
+
+  Extensions: NamedFieldPuns,
+              FlexibleContexts
+
+Executable pdfgrep
+  hs-source-dirs: src
+  -- .hs or .lhs file containing the Main module.
+  Main-is: PdfGrep.hs
   
-  -- Modules not exported by this package.
-  -- Other-modules:       
-  
-  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
-  
+  -- Packages needed in order to build this package.
+
+  Build-depends: base
+  Build-depends: pdfseal
+  Build-depends: bytestring
+  Build-depends: utf8-string == 0.3.6
+  Build-depends: base64-bytestring == 1.0.0.0
+  Build-depends: directory
+  Build-depends: HPDF == 1.4.2
+  Build-depends: containers
+  Build-depends: mtl == 2.0.*

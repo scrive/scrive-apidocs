@@ -66,10 +66,9 @@ window.Signatory = Backbone.Model.extend({
         fields: [{name: "fstname",   type : "standard"},
                  {name: "sndname",   type : "standard"},
                  {name: "email",     type : "standard"},
+                 {name: "mobile",    type : "standard"},
                  {name: "sigco",     type : "standard"},
-                 {name: "sigpersnr", type : "standard"},
-                 {name: "sigcompnr", type : "standard"},
-                 {name: "signature", type : "signature"}
+                 {name: "sigcompnr", type : "standard"}
         ],
         current: false,
         attachments: [],
@@ -83,32 +82,30 @@ window.Signatory = Backbone.Model.extend({
 
     initialize: function(args) {
         var signatory = this;
+        _.bindAll(signatory);
         var extendedWithSignatory = function(hash) {
                     hash.signatory = signatory;
                     return hash;
         };
-        var fields = _.map(args.fields, function(field) {
-                return new Field(extendedWithSignatory(field));
+        var fields = _.map(signatory.get('fields'), function(field) {
+            var f = new Field(extendedWithSignatory(field));
+            if(f.obligatory() && f.shouldbefilledbysender())
+                f.authorObligatory = 'sender';
+            else if(f.obligatory())
+                f.authorObligatory = 'signatory';
+            else
+                f.authorObligatory = 'optional';
+            return f;
         });
-        // Make sure that all basic fields are initiated
-        for(var i = 0; i < this.defaults.fields.length; i++)
-        {   var isSet = false;
-            for(var j=0;j < args.fields.length;j++ )
-                if (this.defaults.fields[i].name == args.fields[j].name)
-                    isSet = true;
-            if (!isSet)
-                fields.push(new Field(extendedWithSignatory(this.defaults.fields[i])));
-        }
 
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });
-        this.set({"fields": fields,
-                  "attachments": attachments
-        });
+        signatory.set({"fields": fields,
+                       "attachments": attachments
+                      });
 
-        this.bind("change", function() {signatory.document().trigger("change:signatories")});
-        this.bind("change:role", function() {signatory.document().trigger("change:signatories-roles")});
+        signatory.bindBubble();
     },
     document: function() {
         return this.get("document");
@@ -119,8 +116,7 @@ window.Signatory = Backbone.Model.extend({
     signIndex: function() {
         var allSignatories = this.document().signatories();
         var index = 1;
-        for (var i = 0; i < allSignatories.length; i++)
-        {
+        for (var i = 0; i < allSignatories.length; i++) {
             if (allSignatories[i] === this)
                 return index;
             if (allSignatories[i].signs()) index++;
@@ -145,6 +141,9 @@ window.Signatory = Backbone.Model.extend({
     emailField : function() {
         return this.field("email", "standard");
     },
+    mobileField : function() {
+        return this.field("mobile", "standard");
+    },
     fstnameField : function() {
         return this.field("fstname", "standard");
     },
@@ -162,6 +161,9 @@ window.Signatory = Backbone.Model.extend({
     },
     email: function() {
         return this.emailField().value();
+    },
+    mobile: function() {
+        return this.mobileField().value();
     },
     fstname: function() {
         return this.fstnameField().value();
@@ -193,7 +195,7 @@ window.Signatory = Backbone.Model.extend({
         });
     },
     readyFields: function() {
-        return _.filter(this.fields(), function(f) {return f.isReady();});
+        return _.filter(this.fields(), function(f) {return f.isReady() && !f.isFake();});
     },
     customFields: function() {
         var cf = new Array();
@@ -203,7 +205,7 @@ window.Signatory = Backbone.Model.extend({
         return cf;
     },
     name: function() {
-        var name = this.fstname() + " " + this.sndname();
+        var name = (this.fstname() + " " + this.sndname()).trim();
         if (name != undefined && name != " ")
             return name;
         else
@@ -262,11 +264,11 @@ window.Signatory = Backbone.Model.extend({
           return new Date(Date.parse(this.get("readdate")));
         return undefined;
     },
-    deliveredEmail: function() {
-        return this.get("deliveredEmail");
+    deliveredInvitation: function() {
+        return this.get("deliveredInvitation");
     },
-    undeliveredEmail: function() {
-          return this.get("undeliveredEmail");
+    undeliveredInvitation: function() {
+          return this.get("undeliveredInvitation");
     },
     signorder: function() {
          return this.get("signorder");
@@ -324,6 +326,10 @@ window.Signatory = Backbone.Model.extend({
     attachments: function() {
         return this.get("attachments");
     },
+    removeAttachment : function(a) {
+        this.set({"attachments": _.without(this.attachments(),[a]) });
+        this.document().trigger('change:attachments');
+    },
     addAttachment: function(att) {
         this.get("attachments").push(att);
     },
@@ -366,6 +372,9 @@ window.Signatory = Backbone.Model.extend({
     signatures: function() {
         return this.fieldsByType("signature");
     },
+    hasSignatureField : function() {
+      return this.signatures().lenght > 0 ;
+    },
     hasPlacedSignatures: function() {
         return _.any(this.signatures(), function(signature) {
             return signature.hasPlacements();
@@ -387,6 +396,12 @@ window.Signatory = Backbone.Model.extend({
     },
     padDelivery : function() {
           return this.get("delivery") == "pad";
+    },
+    mobileDelivery : function() {
+          return this.get("delivery") == "mobile";
+    },
+    emailMobileDelivery : function() {
+          return this.get("delivery") == "email_mobile";
     },
     apiDelivery : function() {
           return this.get("delivery") == "api";
@@ -432,6 +447,13 @@ window.Signatory = Backbone.Model.extend({
                 email: email
          });
     },
+    changePhone: function(phone) {
+        return new Submit({
+                url: "/changephone/" + this.document().documentid() + "/" + this.signatoryid(),
+                method: "POST",
+                phone: phone
+         });
+    },
     remindMail: function() {
         return new Mail({
                 document: this.document(),
@@ -455,59 +477,15 @@ window.Signatory = Backbone.Model.extend({
     addNewCustomField: function() {
        return this.addNewField("custom", true);
     },
-    newCheckbox: function() {
-       var checkbox = this.newField("checkbox", false);
-       if(this.author())
-           checkbox.makeOptional();
-       else
-           checkbox.makeObligatory();
-
-       /* Generate unique name for a checkbox. Checkbox names are really important for API,
-          for humans checkbox names are pure annoyance.
-        */
-       var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
-       var i = 1;
-       while(_.any(allfields, function(f) {
-           return f.name() == "checkbox-" + i;
-       })) {
-           i++;
-       }
-       checkbox.setName("checkbox-" + i);
-       return checkbox;
-    },
     newField : function(t,f) {
         return new Field({signatory: this, fresh: (f != undefined ? f : true) , type : t});
     },
-    newSignature: function() {
-       var signature = this.newField("signature", false);
-       signature.makeObligatory();
-
-       /* Generate unique name for a signature. Signature names are really important for API,
-          for humans signature names are pure annoyance.
-        */
-       var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
-       var i = 1;
-       while(_.any(allfields, function(f) {
-           return f.name() == "signature-" + i;
-       })) {
-           i++;
-       }
-       signature.setName("signature-" + i);
-       return signature;
-    },
     addField : function(f) {
-        var fields = this.fields();
-        fields.push(f);
-        this.set({"fields": fields});
-        this.trigger("change:fields");
+        this.fields().push(f);
+        this.trigger("change change:fields");
     },
     deleteField: function(field) {
-       var newfields = new Array();
-       for (var i = 0; i < this.fields().length; i++)
-          if (field !== this.fields()[i])
-             newfields.push(this.fields()[i]);
-       this.set({fields: newfields});
-
+        this.set({fields : _.without(this.fields(), field)});
     },
     csv: function() {
         return this.get("csv");
@@ -527,8 +505,9 @@ window.Signatory = Backbone.Model.extend({
        return this.get("inpadqueue");
     },
     removed : function() {
-        this.trigger("removed");
+        this.isRemoved = true;
         this.off();
+        this.trigger("removed");
     },
     hasUser: function() {
         return this.get("hasUser");
@@ -545,9 +524,191 @@ window.Signatory = Backbone.Model.extend({
                   return att.draftData();
               }),
               csv: this.csv(),
-              signsuccessredirect : this.signsuccessredirect()
+              signsuccessredirect : this.signsuccessredirect(),
+              authentication: this.authentication(),
+              delivery: this.delivery()
 
         };
+    },
+    delivery: function() {
+        return this.get('delivery');
+    },
+    setDelivery: function(d) {
+        // TODO: check values of d
+        // email, pad, api
+        this.set({delivery:d});
+        return this;
+    },
+    authentication: function() {
+        return this.get('authentication');
+    },
+    setAuthentication: function(a) {
+        // TODO: check values of a
+        // standard, eleg
+        this.set({authentication:a});
+        return this;
+    },
+    hasProblems: function(forSigning) {
+        return this.hasFieldProblems(forSigning);
+    },
+    hasFieldProblems: function(forSigning) {
+        return _.some(this.fields(), function(field) {
+            return !field.isValid(forSigning) || field.hasNotReadyPlacements();
+        });
+    },
+    role: function() {
+        if(this.signs())
+            return 'signatory';
+        else
+            return 'viewer';
+    },
+    // called when creating a multisend signatory
+    giveStandardFields: function() {
+        var signatory = this;
+        var stdfields = [{name: "fstname",   type : "standard"},
+                         {name: "sndname",   type : "standard"},
+                         {name: "email",     type : "standard"},
+                         {name: "sigco",     type : "standard"},
+                         {name: "sigpersnr", type : "standard"},
+                         {name: "sigcompnr", type : "standard"},
+                         {name: "mobile"   , type : "standard"}
+                        ];
+
+        var fields = _.map(stdfields, function(f) {
+            f.signatory = signatory;
+            return new Field(f);
+        });
+        signatory.set({fields:fields});
+        return signatory;
+    },
+    ensurePersNr: function() {
+        var signatory = this;
+        var pn = signatory.personalnumberField();
+        if(signatory.needsPersonalNumber()) {
+            if(!pn) {
+                var f = new Field({name:'sigpersnr',
+                                   type: 'standard',
+                                   obligatory: true,
+                                   shouldbefilledbysender: signatory.author(),
+                                   signatory: signatory});
+                f.addedByMe = true;
+                signatory.addField(f);
+            } else {
+                pn.makeObligatory();
+            }
+        } else {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
+                signatory.deleteField(pn);
+            } else if(pn && pn.authorObligatory == 'sender') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(true);
+            } else if(pn && pn.authorObligatory == 'signatory') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(false);
+            } else if(pn && pn.authorObligatory == 'optional') {
+                pn.makeOptional();
+            }
+        }
+    },
+    needsPersonalNumber: function() {
+        return this.elegAuthentication();
+    },
+    ensureMobile: function() {
+        var signatory = this;
+        var pn = signatory.mobileField();
+        if(signatory.needsMobile()) {
+            if(!pn) {
+                var f = new Field({name:'mobile',
+                                   type: 'standard',
+                                   obligatory: true,
+                                   shouldbefilledbysender: true,
+                                   signatory: signatory});
+                f.addedByMe = true;
+                signatory.addField(f);
+            } else {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(true);
+            }
+        } else {
+            if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
+                signatory.deleteField(pn);
+            } else if(pn && pn.authorObligatory == 'sender') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(true);
+            } else if(pn && pn.authorObligatory == 'signatory') {
+                pn.makeObligatory();
+                pn.setShouldBeFilledBySender(false);
+            } else if(pn && pn.authorObligatory == 'optional') {
+                pn.makeOptional();
+            }
+        }
+    },
+    needsMobile: function() {
+        return this.mobileDelivery() || this.emailMobileDelivery();
+    },
+    color: function() {
+        return this.get('color');
+    },
+    setColor: function(c) {
+        this.set({color:c});
+        return this;
+    },
+    needsEmail: function() {
+        return this.emailDelivery() || this.emailMobileDelivery();
+    },
+    ensureEmail: function() {
+        var signatory = this;
+        var email = signatory.emailField();
+        if(signatory.needsEmail()) {
+            email.makeObligatory();
+            email.setShouldBeFilledBySender(true);
+        } else if(email.authorObligatory == 'sender') {
+            email.makeObligatory();
+            email.setShouldBeFilledBySender(true);
+        } else if(email.authorObligatory == 'signatory') {
+            email.makeObligatory();
+            email.setShouldBeFilledBySender(false);
+        } else if(email.authorObligatory == 'optional') {
+            email.makeOptional();
+        }
+    },
+    needsSignature: function() {
+        return this.padDelivery();
+    },
+    ensureSignature: function() {
+        var signatory = this;
+        var document = signatory.document();
+        var signatures = signatory.signatures();
+        // remove the unplaced signatures
+        _.each(signatures, function(s) {
+            if(!s.hasPlacements())
+                signatory.deleteField(s);
+        });
+        signatures = signatory.signatures();
+
+        if(signatory.needsSignature()) {
+            if(signatures.length === 0)
+                signatory.addField(new Field({name:document.newSignatureName(),
+                                              type: 'signature',
+                                              obligatory: true,
+                                              shouldbefilledbysender: signatory.author(),
+                                              signatory: signatory}));
+        }
+    },
+    bindBubble: function() {
+        var signatory = this;
+        signatory.bind('change', signatory.bubbleSelf);
+        signatory.bind('bubble', signatory.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var signatory = this;
+        signatory.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var signatory = this;
+        var document = signatory.document();
+        if(document)
+            document.trigger('bubble');
     }
 
 });

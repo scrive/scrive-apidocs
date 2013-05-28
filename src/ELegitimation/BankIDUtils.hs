@@ -54,7 +54,7 @@ getTBS doc = renderTemplate "tbs" $ do
 
 getSigEntries :: TemplatesMonad m => D.Document -> m String
 getSigEntries doc = do
-    s <- mapM (getSigEntry . signatorydetails) $ documentsignatorylinks doc
+    s <- mapM (getSigEntry . signatorydetails) $ filter (signatoryispartner . signatorydetails) $ documentsignatorylinks doc
     return $ intercalate "\n" s
 
 getSigEntry :: TemplatesMonad m => SignatoryDetails -> m String

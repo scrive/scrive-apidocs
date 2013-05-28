@@ -25,12 +25,14 @@ ignore  less/branding/tooltip.less
 ignore  less/branding/checkbox.less
 ignore  less/branding/contact.less
 ignore  less/branding/main.less
+ignore  less/designview/util.less
 ignore  libs/html5shiv.js
 ignore  css/fonts
 
 set systemPage
  css css/calendar.css
  css css/colorpicker.css
+ css css/jquery.mCustomScrollbar.css
  less less/utils.less
  less less/branding/index.less
  less less/document-pages.less
@@ -55,7 +57,13 @@ set systemPage
  less less/signview.less
  less less/attachmentview.less
  less less/verification.less
+ less less/designview/frame.less
+ less less/designview/participants.less
+ less less/designview/editdocument.less
+ less less/designview/documentview.less
+ less less/designview/process.less
  js   libs/jquery.min.js
+ js   libs/jquery-migrate.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js
@@ -67,11 +75,13 @@ set systemPage
  js   libs/underscore.js
  js   libs/backbone.js
  js   libs/jquery.form.js
+ js   libs/jquery.mCustomScrollbar.concat.min.js
  js   libs/livequery.js
  js   libs/recurly.js
  js   libs/moment.min.js
  js   libs/iso8601.min.js
  js   libs/html2canvas.js
+ js   libs/spin.js
  js   js/global.js
  js   js/storage.js
  js   js/utils/browserinfo.js
@@ -79,6 +89,7 @@ set systemPage
  js   js/utils/time.js
  js   js/utils/cookie.js
  js   js/loading.js
+ js   js/promo.js
  js   js/arrows.js
  js   js/flashmessages.js
  js   js/infotextinputs.js
@@ -129,12 +140,15 @@ set systemPage
  js   js/signview/docsignviewpad.js
  js   js/signview/docsignviewattachments.js
  js   js/signview/docsignview.js
- js   js/avtal24popup.js
- js   js/designview/signatorydesignview.js
- js   js/designview/signatoriesdesignview.js
  js   js/designview/docdesignviewpad.js
+ js   js/designview/participants.js
+ js   js/designview/editdocument.js
+ js   js/designview/documentview.js
  js   js/designview/docdesignview.js
- js   js/designview/attachmentsdesignview.js
+ js   js/designview/authoraattachmentsdesign.js
+ js   js/designview/signatoryattachmentsdesignview.js
+ js   js/designview/attachmentslist.js
+ js   js/designview/process.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js

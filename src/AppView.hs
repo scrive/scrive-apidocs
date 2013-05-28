@@ -124,6 +124,9 @@ brandingFields mbd mcompany = do
   F.value "custombarshighlightcolour" $ mcolour bdbarssecondarycolour companycustombarssecondarycolour
   F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
   F.value "customdomainlogolink" $ bdlogolink <$> mbd
+  F.value "customdomainbdbuttonclass" $ bdbuttonclass <$> mbd
+  F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd
+  F.value "hasbrandeddomain" $ isJust mbd
  where
    mcolour df cuf =  (join $ cuf <$> companyui <$> mcompany) `mplus` (df <$> mbd)
 
@@ -135,7 +138,21 @@ internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage = renderTemplate_ "internalServerError" >>= renderFromBody kontrakcja
 
 priceplanPage :: Kontrakcja m => m Response
-priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
+priceplanPage = do
+  ctx <- getContext
+  case currentBrandedDomain ctx of
+       Nothing -> renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
+       Just bd -> do
+          ad <- getAnalyticsData
+          content <- renderTemplate "priceplanPageWithBranding" $ do
+            F.value "logolink" $ bdlogolink bd
+            F.value "background" $ bdbackgroundcolorexternal $ bd
+            F.value "buttoncolorclass" $ bdbuttonclass bd
+            F.value "headercolour" $ bdheadercolour bd
+            F.value "textcolour" $ bdtextcolour bd
+            F.value "pricecolour" $ bdpricecolour bd
+            standardPageFields ctx kontrakcja ad
+          simpleHtmlResonseClrFlash content
 
 {- |
     Render a template as an entire page.

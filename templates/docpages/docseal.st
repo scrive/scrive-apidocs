@@ -88,6 +88,8 @@ signMethod=
             $_signMethodPad()$
           $elseif(api)$
             $_signMethodAPI()$
+          $elseif(mobile)$
+            $_signMethodMobile()$
           $endif$
         $elseif(bankid)$
             $_signMethodElegBankID()$

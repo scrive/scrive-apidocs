@@ -14,3 +14,37 @@ priceplanPage=
  </div>
 </div>
 ###
+priceplanPageWithBranding=
+$doctype()$
+<html>
+  <head>
+    <script src="//cdn.optimizely.com/js/158965942.js"></script>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents()$
+  </head>
+  <body style="background: $background$">
+    <div style='width:920px;margin: 0px auto;position: relative;top:170px; left: 185px;'>
+      <label style='float:left' class='label-with-link'>$_loginOrSignup()$</label>
+    </div>
+    <div style='width:275px;margin:20px auto;'>
+      <div style="margin-bottom: 100px; margin-top: 50px;">
+        <img alt="logo" src="$logolink$"/>
+        <div class="divider-line"></div>
+        <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+      </div>
+    </div>
+    <div class="js-price-plan price-plan"></div>
+    <script>
+      PricePage({noheaders: true,
+                 includeenterprise: false,
+                 buttoncolorclass : "$buttoncolorclass$",
+                 headercolour: "$headercolour$",
+                 textcolour: "$textcolour$",
+                 pricecolour: "$pricecolour$"
+                 }).show('.js-price-plan');
+      mixpanel.track('View Price Plan Page | Branded');
+    </script>
+
+  </body>
+</html>
+####

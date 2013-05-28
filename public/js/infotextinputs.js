@@ -21,6 +21,7 @@ var InfoTextInputModel = Backbone.Model.extend({
       infotext : "",
       focus : false,
       value : "",
+      suppressSpace : false,
       inputtype : "text"
   },
   infotext : function(){
@@ -67,6 +68,7 @@ var InfoTextInputView = Backbone.View.extend({
         "change" :  "updateValue",
         "keydown" : "addFocus",
         "keydown" : "propagateEnter",
+        "keypress" : "suppressSpace",
         "keyup" : "updateValue"
     },
     initialize: function (args) {
@@ -115,6 +117,18 @@ var InfoTextInputView = Backbone.View.extend({
     propagateEnter : function(e) {
         if (e.keyCode == 13)
           this.model.enterPressed();
+    },
+    suppressSpace : function(e) {
+        if (this.model.get("suppressSpace")==true ) {
+            var key = String.fromCharCode(!e.charCode ? e.which : e.charCode);
+            if (key==" ") {
+                if( e.preventDefault ) {
+                    e.preventDefault();
+                }
+                else e.returnValue = false;
+                return false;
+            }
+        }
     }
 });
 
@@ -127,6 +141,7 @@ window.InfoTextInput = {
                       value: args.value,
                       onChange : args.onChange,
                       inputtype : args.inputtype,
+                      suppressSpace: args.suppressSpace,
                       onEnter : args.onEnter
                     });
           var input = $("<input/>");

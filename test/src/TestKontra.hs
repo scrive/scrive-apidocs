@@ -31,13 +31,10 @@ import Happstack.Server.Internal.Monads
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
-import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.Map as M
-import qualified Network.AWS.AWSConnection as AWS
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.HTTP as HTTP
 
+import qualified Amazon as AWS
 import Control.Monad.Trans.Control.Util
 import Configuration
 import Crypto.RNG
@@ -119,12 +116,14 @@ instance MonadBaseControl IO TestEnv where
 
 runTestKontraHelper :: Request -> Context -> Kontra a -> TestEnv (a, Context, FilterFun Response)
 runTestKontraHelper rq ctx tk = do
+  filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
+      amazoncfg = AWS.AmazonConfig Nothing filecache
   nex <- getNexus
   rng <- getCryptoRNGState
   mres <- liftIO . ununWebT $ runServerPartT
     (runOurServerPartT . runDBT nex (DBEnvSt Nothing [] Nothing) . runCryptoRNGT rng $
-      runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
+      AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
     Just (Left _, _) -> fail "This should never happen since we don't use Happstack's finishWith"
@@ -239,15 +238,6 @@ mkContext lang = do
         , ctxtime = time
         , ctxnormalizeddocuments = docs
         , ctxipnumber = noIP
-        , ctxs3action = AWS.S3Action {
-              AWS.s3conn = AWS.amazonS3Connection "" ""
-            , AWS.s3bucket = ""
-            , AWS.s3object = ""
-            , AWS.s3query = ""
-            , AWS.s3metadata = []
-            , AWS.s3body = BSL.empty
-            , AWS.s3operation = HTTP.GET
-        }
         , ctxproduction = False
         , ctxtemplates = localizedVersion lang globaltemplates
         , ctxglobaltemplates = globaltemplates

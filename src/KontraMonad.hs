@@ -13,6 +13,7 @@ import Context
 import Crypto.RNG
 import DB.Core
 import Text.StringTemplates.Templates
+import qualified Amazon as AWS
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
@@ -27,6 +28,7 @@ class ( Applicative m
       , MonadIO m
       , ServerMonad m
       , TemplatesMonad m
+      , AWS.AmazonMonad m
       ) => Kontrakcja m
 
 class (Functor m, Monad m) => KontraMonad m where

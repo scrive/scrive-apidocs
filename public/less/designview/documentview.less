@@ -1,0 +1,117 @@
+@import 'util.less';
+
+.design-view-document-buttons {
+    .box-sizing(border-box);
+
+    position: relative;
+}
+
+.design-view-document-buttons-wrapper {
+    width: 943px;
+    border: 1px dashed #B3B3B3;
+    .rounded(4px);
+    margin: 18px auto;
+}
+
+.design-view-document-buttons-inner {
+    .box-sizing(border-box);
+    margin: 60px auto 0;
+    text-align: center;
+}
+
+.design-view-document-buttons-title {
+    .box-sizing(border-box);
+    margin: auto;
+    font-size: 20px;
+}
+
+.design-view-document-buttons-buttons {
+    .box-sizing(border-box);
+    margin: 16px auto;
+}
+
+
+
+.design-view-document-buttons-upload-button {
+    a.button-large.button {
+        font-weight: 400;
+        font-size: 18px;
+    }
+}
+
+.design-view-document-buttons-upload-button-circle {
+    zoom: 1;
+    filter: alpha(opacity=25);
+    opacity: 0.25;
+}
+
+.design-view-document-buttons-upload-button-label {
+    .box-sizing(border-box);
+    .center-vh(80px, 2em);
+    text-align: center;
+    font-size: 20px;
+    line-height: 1em;
+}
+
+.design-view-document-buttons-upload-button-line1 {
+
+}
+
+
+// the little "or" in the middle
+.design-view-document-buttons-or-text {
+    display: inline-block;
+    margin: 0 16px;
+}
+
+
+
+.design-view-document-buttons-avtal-button {
+    .box-sizing(border-box);
+    width: 140px;
+    height: 140px;
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+}
+
+.design-view-document-buttons-avtal-button-circle {
+    zoom: 1;
+    filter: alpha(opacity=25);
+    opacity: 0.25;
+}
+
+.design-view-document-buttons-avtal-button-label {
+    .box-sizing(border-box);
+    font-size: 20px;
+    line-height: 1em;
+    .center-vh(100%, 2em);
+    text-align: center;
+}
+
+.design-view-document-buttons-avtal-button-line1 {
+    font-size: 20px;
+    line-height: 1em;
+}
+
+.design-view-document-buttons-avtal-button-line2 {
+    font-style: italic;
+    font-size: 14px;
+    font-weight: 200;
+}
+
+.design-view-document-loading {
+    .box-sizing(border-box);
+    margin-left: auto;
+    margin-top: 180px;
+    margin-right : auto;
+    z-index: 1;
+}
+
+.design-view-document-loading-inner {
+    // need to recenter the wheel because the center
+    // is at the top left corner
+    position:relative;
+    top:50%;
+    left:50%;
+}

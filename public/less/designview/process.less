@@ -1,0 +1,213 @@
+@import 'util.less';
+
+.design-view-action-process {
+    background-color: #f2f2f2;
+    border-bottom: 4px solid #fff;
+    border-left: 4px solid #fff;
+    border-right: 4px solid #fff;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    .box-shadow(0 4px 0 rgba(0,0,0,0.05));
+}
+
+.design-view-action-process {
+    .design-view-action-process-right-column-invitation-wrapper {
+        .mceStatusbar {
+            display: none;
+        }
+    }
+}
+
+.design-view-action-process-left-column {
+    display: inline-block;
+    vertical-align: top;
+    width: 33%;
+    height: 170px;
+    margin-top: 16px;
+}
+
+.design-view-action-row {
+    margin-bottom: 8px;
+    line-height: 32px;
+    vertical-align: middle;
+}
+
+.design-view-action-label {
+    width: 156px;
+    display: inline-block;
+    text-align: right;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.design-view-action-process-left-column-document-name {
+    .design-view-action-row;
+}
+
+.design-view-action-process-left-column-document-name-label {
+    .design-view-action-label;
+}
+
+.design-view-action-process-left-column-document-name-field {
+    width: 148px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.design-view-action-process-left-column-document-type {
+    .design-view-action-row;
+}
+
+.design-view-action-process-left-column-document-type-label {
+    .design-view-action-label;
+}
+
+.design-view-action-process-left-column-document-type-field {
+    width: 158px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.design-view-action-process-left-column-language {
+    .design-view-action-row;
+}
+
+.design-view-action-process-left-column-language-label {
+    .design-view-action-label;
+}
+
+.design-view-action-process-left-column-language-field {
+    width: 158px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.design-view-action-process-left-column-deadline {
+    .design-view-action-row;
+}
+
+.design-view-action-process-left-column-deadline-label {
+    .design-view-action-label;
+}
+
+.design-view-action-process-left-column-deadline-field {
+    width: 50px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.design-view-action-process-left-column-deadline-tag {
+    display: inline-block;
+}
+
+.design-view-action-process-left-column-attachments {
+    display: inline-block;
+    width : 310px;
+}
+
+.designview-attachemnts-list {
+  margin-top: 40px;
+  .icon-td {
+    width:24px;
+    .author-attachment-icon {
+      width: 18px;
+      height: 20px;
+      display: inline-block;
+      margin-right: 6px;
+      background: url("/img/editor-view-attachment-added.png");
+      vertical-align : middle;
+    }
+    .signatory-attachment-icon{
+      width: 18px;
+      height: 20px;
+      display: inline-block;
+      margin-right: 6px;
+      background: url("/img/editor-view-attachment-requested.png");
+      vertical-align : middle;
+
+    }
+  }
+  .name-td {
+    width:275px;
+    line-height: 16px;
+  }
+  .remove-td {
+    width: 11px;
+    .remove-icon {
+     width: 11px;
+     height: 11px;
+     display: inline-block;
+     background: url("/img/editor-view-remove-field.png") repeat scroll -5px -5px transparent;
+     cursor: pointer;
+     vertical-align : middle;
+     &:hover {
+        background: url("/img/editor-view-remove-field-hover.png") repeat scroll -5px -5px transparent;
+      }
+
+    }
+  }
+}
+
+.design-view-action-process-left-column-attachments-author-button {
+  float: left;
+  min-width:116px;
+}
+
+.design-view-action-process-left-column-attachments-signatory-button {
+  float: right;
+  min-width: 116px;
+
+}
+
+.design-view-action-process-middle-column {
+    display:inline-block;
+    .box-sizing(border-box);
+    width: 33%;
+    height: 170px;
+    margin-top: 16px;
+    padding: 4px 16px 8px 16px;
+    vertical-align: top;
+}
+
+.design-view-action-process-right-column {
+    display: inline-block;
+    .box-sizing(border-box);
+    margin-top: 18px;
+    width: 34%;
+    min-height: 170px;
+    padding: 0px 16px 8px 16px;
+    vertical-align: top;
+}
+
+.design-view-action-process-right-column-invitation-topline {
+    position: relative;
+}
+
+.design-view-action-process-right-column-invitation-link {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #7a94b8;
+    text-decoration: underline;
+}
+
+.design-view-action-process-right-column-invitation-label {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    margin-bottom: 4px;
+}
+
+.design-view-action-process-right-column-invitation-wrapper {
+    display: inline-block;
+    width: 310px;
+    height: 124px;
+    vertical-align: top;
+    overflow: hidden;
+}
+
+.design-view-action-process-right-column-invitation-editor {
+    width: 470px;
+    height: 110px;
+}

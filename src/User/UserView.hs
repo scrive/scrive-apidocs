@@ -9,6 +9,7 @@ module User.UserView (
     -- mails
     newUserMail,
     mailNewAccountCreatedByAdmin,
+    accessNewAccountMail,
     resetPasswordMail,
     mailEmailChangeRequest,
 
@@ -22,6 +23,7 @@ module User.UserView (
     flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
+    flashMessageAccessNewAccountLinkNotValid,
     flashMessageUserWithSameEmailExists,
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
@@ -81,7 +83,6 @@ userJSON ctx user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $
     value "email" $ getEmail user
     value "personalnumber" $ getPersonalNumber user
     value "phone" $ userphone $ userinfo user
-    value "mobile" $ usermobile $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
     value "usercompanyname" $ getCompanyName (user,mcompany)
@@ -119,6 +120,10 @@ companyUIJson ctx company editable = runJSONGenT $ do
     value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
     value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
     value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
+    value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
+    value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
+    value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
+    value "servicelinkcolour" $ fromMaybe "" $ bdservicelinkcolour <$> currentBrandedDomain ctx
     value "editable" editable
 
 
@@ -213,6 +218,15 @@ activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =
   renderTemplate "activatePageViewNotValidLink" $ F.value "email" email
 
+accessNewAccountMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
+accessNewAccountMail ctx user setpasslink = do
+  kontramail "accessNewAccountMail" $ do
+    F.value "personname"   $ getFullName user
+    F.value "personemail"  $ getEmail user
+    F.value "passwordlink" $ show setpasslink
+    F.value "ctxhostpart"  $ ctxhostpart ctx
+    brandingMailFields (currentBrandedDomain ctx) Nothing
+
 resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
   kontramail "passwordChangeLinkMail" $ do
@@ -291,6 +305,10 @@ flashMessageUserPasswordChanged =
 flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordChangeLinkNotValid =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessagePasswordChangeLinkNotValid"
+
+flashMessageAccessNewAccountLinkNotValid :: TemplatesMonad m => m FlashMessage
+flashMessageAccessNewAccountLinkNotValid =
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageAccessNewAccountLinkNotValid"
 
 
 flashMessageUserWithSameEmailExists :: TemplatesMonad m => m FlashMessage

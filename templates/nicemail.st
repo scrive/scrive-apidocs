@@ -73,8 +73,8 @@ nicemail=
 
                     <table border="0" cellspacing="0" width="100%">
                       <tr>
-                        <td valign="top">
-                          <div style="color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
+                        <td valign="top" style="color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
+                          <div>
                             $if(previewLink)$
                               <table>
                                 <tr>
@@ -93,7 +93,7 @@ nicemail=
                                   </td>
                                   <td style="width: 32px;">
                                   </td>
-                                  <td style="float: right; width: 330px;">
+                                  <td style="float: right; width: 330px; color: $nicemailfgcolour()$; font-family: $nicemailfont()$; font-size: 16px; line-height: 150%; text-align: left">
                                     $nicemailparagraph(p=mailp1;l=mailp2;spacing=mailspacing1)$
                                     $nicemailparagraph(p=mailp2;l=mailp3;spacing=mailspacing2)$
                                     $nicemailparagraph(p=mailp3;l=mailp4;spacing=mailspacing3)$
@@ -195,7 +195,7 @@ nicebutton=
     $if(!buttoncolour)$
      background-color: rgb(62,85,116); background: rgb(62,85,116); border: 2px solid rgb(62,85,116); -webkit-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -moz-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -ms-box-shadow: inset rgb(62,85,116) 0 0 0 1px; -o-box-shadow: inset rgb(62,85,116) 0 0 0 1px; box-shadow: inset rgb(62,85,116) 0 0 0 1px;
     $else$
-     background-color: $buttoncolour$; background: $buttoncolour$; border: 2px solid $buttoncolour$; -webkit-box-shadow: #CCCCCC 0 0 0 1px; -moz-box-shadow: inset #CCCCCC 0 0 0 1px; -ms-box-shadow: inset #CCCCCC 0 0 0 1px; -o-box-shadow: inset #CCCCCC 0 0 0 1px; box-shadow: inset #CCCCCC 0 0 0 1px;
+     background-color: $buttoncolour$; background: $buttoncolour$; border: 2px solid $buttoncolour$; -webkit-box-shadow: $buttonborder()$ 0 0 0 1px; -moz-box-shadow: inset $buttonborder()$ 0 0 0 1px; -ms-box-shadow: inset $buttonborder()$ 0 0 0 1px; -o-box-shadow: inset $buttonborder()$ 0 0 0 1px; box-shadow: inset $buttonborder()$ 0 0 0 1px;
     $endif$
     text-decoration: none; max-height: 16px; font: 16px/16px Helvetica Neue, Arial, sans-serif; padding: 12px 20px; margin: 0; color: #fff; text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0; text-align: center; -webkit-transition: 0.15s ease-in-out; -moz-transition: 0.15s ease-in-out; -ms-transition: 0.15s ease-in-out; -o-transition: 0.15s ease-in-out; transition: 0.15s, ease-in-out; cursor: pointer; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; -webkit-user-select: none; user-select: none; display: inline-block; -webkit-transform: translatez(0); -moz-transform: translatez(0); -ms-transform: translatez(0); -o-transform: translatez(0); transform: translatez(0); zoom: 1;">
       <div style="position: relative; background-color: $if(!buttoncolour)$ rgb(62,85,116)$else$ $buttoncolour$$endif$; color: #fff">
@@ -209,3 +209,6 @@ nicebutton=
 </td>
 </tr>
 </table>
+####
+buttonborder=$if(skipbuttonborder)$$buttoncolour$$else$#CCCCCC$endif$
+####

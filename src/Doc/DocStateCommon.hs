@@ -60,14 +60,10 @@ signatoryLinkClearField field =  case sfType field of
 
 emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [
-          sf FirstNameFT
-        , sf LastNameFT
-        , sf CompanyFT
-        , sf PersonalNumberFT
-        , sf CompanyNumberFT
-        , sf EmailFT
+          SignatoryField FirstNameFT "" True  True  []
+        , SignatoryField LastNameFT  "" True  True  []
+        , SignatoryField EmailFT     "" True  True  []
         ]
-  where sf t = SignatoryField t "" True False []
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] -> [String]
 checkResetSignatoryData doc sigs =
@@ -87,9 +83,10 @@ replaceSignatoryData :: SignatoryLink
                         -> String
                         -> String
                         -> String
+                        -> String
                         -> [String]
                         -> SignatoryLink
-replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname email company personalnumber companynumber fieldvalues =
+replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname email mobile company personalnumber companynumber fieldvalues =
   siglink { signatorydetails = signatorydetails { signatoryfields = pumpData (signatoryfields signatorydetails) fieldvalues } }
   where
     pumpData [] _ = []
@@ -100,6 +97,7 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
       PersonalNumberFT -> sf { sfValue = personalnumber }
       CompanyNumberFT  -> sf { sfValue = companynumber }
       EmailFT          -> sf { sfValue = email }
+      MobileFT         -> sf { sfValue = mobile }
       CustomFT label _ -> sf { sfType = CustomFT label (not $ null v), sfValue = v }
       CheckboxFT _     -> sf
       SignatureFT _    -> sf)
@@ -140,6 +138,7 @@ replaceSignatoryUser siglink user mcompany=
                        (getFirstName      user)
                        (getLastName       user)
                        (getEmail          user)
+                       (getMobile         user)
                        (getCompanyName    (user,mcompany))
                        (getPersonalNumber user)
                        (getCompanyNumber  (user,mcompany))

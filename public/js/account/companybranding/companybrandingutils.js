@@ -294,17 +294,18 @@ var CompanyBrandingFontView = Backbone.View.extend({
     };
 
     var fonts = {'default': 'Helvetica Neue, Arial, sans-serif',
-                 'Sans Serif': 'arial,helvetica,sans-serif',
-                 'Serif': 'times new roman,serif',
-                 'Wide': 'arial black,sans-serif',
-                 'Narrow': 'arial narrow,sans-serif',
                  'Comic Sans MS': 'comic sans ms,sans-serif',
                  'Courier New': 'courier new,monospace',
+                 'Helvetica': 'helvetica,sans-serif',
                  'Garamond': 'garamond,serif',
                  'Georgia': 'georgia,serif',
+                 'Narrow': 'arial narrow,sans-serif',
+                 'Sans Serif': 'arial,helvetica,sans-serif',
+                 'Serif': 'times new roman,serif',
                  'Tahoma': 'tahoma,sans-serif',
                  'Trebuchet MS': 'trebuchet ms,sans-serif',
-                 'Verdana': 'verdana,sans-serif'};
+                 'Verdana': 'verdana,sans-serif',
+                 'Wide': 'arial black,sans-serif'};
 
 
     var options = [];

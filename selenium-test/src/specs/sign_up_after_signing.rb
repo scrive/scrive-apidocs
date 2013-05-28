@@ -22,8 +22,8 @@ describe "sign up after signing a document" do
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     begin
       @h.dochelper.uploadContract
+      @h.dochelper.addPart
       @h.dochelper.enterCounterpart("Random", "Person", random_email)
-      @h.dochelper.gotToStep3
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout
@@ -35,15 +35,16 @@ describe "sign up after signing a document" do
     @h.dochelper.partSign
 
     puts "we should be given the option to accept the tos"
-    @h.wait_until { @h.driver.find_element :css => ".checkbox-box div.checkbox" }.click
+    @h.wait_until { @h.driver.find_element :css => "a.blue.button.button-large" }.click
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
-    (@h.wait_until { @h.driver.find_element :css => ".save .button-small" }).click
+    @h.driver.execute_script("$('.save .button').click()")
     @h.wait_until { @h.driver.find_element :css => ".errormsg" }
 
     puts "fill in the password details incorrectly and make sure we get invalid elements"
     (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-12"
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
-    (@h.wait_until { @h.driver.find_element :css => ".save .button-small" }).click
+    sleep 1
+    @h.driver.execute_script("$('.save .button').click()")
     @h.wait_until { @h.driver.find_element :css => ".errormsg" }
 
     puts "clear password2 and really activate"
@@ -52,7 +53,8 @@ describe "sign up after signing a document" do
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
 
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-12"
-    (@h.wait_until { @h.driver.find_element :css => ".save .button-small" }).click
+    sleep 1
+    @h.driver.execute_script("$('.save .button').click()")
 
     puts "should be logged in"
     (@h.wait_until { @h.driver.find_element :css => ".tst-action" }).click();

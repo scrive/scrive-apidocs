@@ -16,11 +16,12 @@ import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import qualified Log
+import Amazon
 
-type InnerAQ qd = ReaderT qd (CryptoRNGT (DBT IO))
+type InnerAQ qd = ReaderT qd (AmazonMonadT (CryptoRNGT (DBT IO)))
 
 newtype ActionQueue qd a = AQ { unAQ :: InnerAQ qd a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase IO, MonadDB, MonadIO, MonadReader qd, Log.MonadLog)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase IO, MonadDB, MonadIO, MonadReader qd, Log.MonadLog, AmazonMonad)
 
 instance MonadBaseControl IO (ActionQueue qd) where
   newtype StM (ActionQueue qd) a = StAQ { unStAQ :: StM (InnerAQ qd) a }
@@ -29,9 +30,9 @@ instance MonadBaseControl IO (ActionQueue qd) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runQueue :: CryptoRNGState -> String -> qd -> ActionQueue qd () -> IO ()
-runQueue rng dbconf qd queue =
-  withPostgreSQL dbconf . runCryptoRNGT rng $ runReaderT (unAQ queue) qd
+runQueue :: CryptoRNGState -> String -> AmazonConfig -> qd -> ActionQueue qd () -> IO ()
+runQueue rng dbconf amazonconf qd queue =
+  withPostgreSQL dbconf . runCryptoRNGT rng $ runAmazonMonadT amazonconf $ runReaderT (unAQ queue) qd
 
 -- | Gets 'expired' actions and evaluates them
 actionQueue :: Show t => Action idx t con (ActionQueue qd) -> ActionQueue qd ()
