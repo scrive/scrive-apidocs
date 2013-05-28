@@ -342,7 +342,7 @@
             var wrapper = $('<div />');
             wrapper.addClass('design-view-action-process-right-column-invitation-wrapper');
 
-            var textarea = $('<textarea />');
+            var textarea = $('<textarea id="design-view-action-process-right-column-invitation-editor"/>');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
             textarea.hide();
 
@@ -389,7 +389,7 @@
 	    if (!view.emaildeliveryused) {
 		view.invitationEditor.attr('disabled', '').val('<i>' + localization.designview.editMessagePlaceholder + '</i>');
 	    }
-            view.invitationEditor.tinymce({
+	    new tinyMCE.Editor('design-view-action-process-right-column-invitation-editor', {
                 script_url: '/tiny_mce/tiny_mce.js',
                 theme: "advanced",
                 theme_advanced_toolbar_location: "external",
@@ -420,9 +420,8 @@
                 onchange_callback  : function (inst) {
                     doc.setInvitationMessage(inst.getBody().innerHTML);
                 }
-            });
+            }).render();
 
-            this.tinyIsReady = true;
             return view;
         }
     });

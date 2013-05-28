@@ -139,12 +139,14 @@ function alreadyClicked(button) {
 function prepareForEdit(form, width) {
   var width = width == undefined ? 540 : width;
 
-  $(".editable", form).each(function() {
-    var textarea = $("<textarea style='width:" + width + "px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
+  $(".editable", form).each(function(i) {
+    window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
+    var id = 'editable-textarea-' + window.tinymce_textarea_count;
+    var textarea = $("<textarea id='" + id + "' style='width:" + width + "px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
     var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
     wrapper.append(textarea);
     $(this).replaceWith(wrapper);
-    var editor = prepareEditor(textarea);
+    prepareEditor(textarea);
   });
   $(".replacebynextonedit", form).each(function() {
     var replacement = $(this).next();
@@ -154,7 +156,7 @@ function prepareForEdit(form, width) {
 }
 
 function prepareEditor(textarea) {
-  return textarea.tinymce({
+  new tinyMCE.Editor(textarea.attr('id'), {
     script_url: '/tiny_mce/tiny_mce.js',
     theme: "advanced",
     theme_advanced_toolbar_location: "top",
@@ -164,7 +166,7 @@ function prepareEditor(textarea) {
     theme_advanced_toolbar_align: "left",
     plugins: "noneditable,paste",
     valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
-  });
+  }).render();
 }
 
 function parseQueryString() {

@@ -1,5 +1,3 @@
-
-ignore  tiny_mce/tiny_mce.js
 ignore  tiny_mce/tiny_mce_src.js
 ignore  tiny_mce/tiny_mce_popup.js
 ignore  tiny_mce/langs
@@ -64,11 +62,11 @@ set systemPage
  less less/designview/process.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
+ jsx  tiny_mce/tiny_mce.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js
  js   libs/jquery.hashchange.js
- jsx  tiny_mce/jquery.tinymce.js
  js   libs/colorpicker.js
  js   libs/json2.js
  js   libs/jstz.min.js

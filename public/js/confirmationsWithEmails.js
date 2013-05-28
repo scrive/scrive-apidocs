@@ -54,12 +54,14 @@ window.MailView = Backbone.View.extend({
         var view = this;
         var content = this.model.content().clone();
         var editablePart = $(".editable", content);
-        var textarea = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
+        window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
+        var id = 'editable-textarea-' + window.tinymce_textarea_count;
+        var textarea = $("<textarea id='" + id + "' style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
         textarea.css("width", this.model.editWidth() + "px");
         var wrapper = $("<div style='margin-bottom:12px;'/>").append(textarea);
         editablePart.replaceWith(wrapper);
         setTimeout( function() {
-           view.editor = textarea.tinymce({
+           view.editor =   new tinyMCE.Editor(id, {
                       script_url: '/tiny_mce/tiny_mce.js',
                       theme: "advanced",
                       theme_advanced_toolbar_location: "top",
@@ -82,6 +84,7 @@ window.MailView = Backbone.View.extend({
                                 view.customtextvalue = inst.getBody().innerHTML;
                       }
           });
+          view.editor.render();
         },100);
         return content;
 	},
