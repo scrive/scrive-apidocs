@@ -30,6 +30,7 @@ module InputValidation
     , asValidCompanyNumber
     , asValidAddress
     , asValidPhone
+    , asValidPhoneForSMS
     , asValidPosition
     , asValidCheckBox
     , asValidID
@@ -75,6 +76,7 @@ type Input = Maybe String
 data Result a = Good a
               | Bad
               | Empty
+              deriving (Eq, Show)
 
 instance Monoid a => Monoid (Result a) where
     mappend (Good a1) (Good a2) = Good $ mappend a1 a2
@@ -447,6 +449,17 @@ asValidPhone input =
     >>= checkLengthIsMax 100
     >>= checkOnly (isAlphaNum : map (==) " +-()")
 
+asValidPhoneForSMS :: String -> Result String
+asValidPhoneForSMS input =
+    filterOutCharacters " -()." input
+    >>= checkIfEmpty
+    >>= checkLengthIsMax 20
+    >>= checkLengthIsMin 6
+    >>= checkOnly (isDigit : map (==) "+")
+    >>= (\str -> if take 1 str == "+"
+                 then return str
+                 else Bad)
+
 {- |
     Gets a cleaned up doc id. Useful for validating
     you're not getting fed complete garbage from hidden fields,
@@ -622,6 +635,11 @@ checkLengthIsMax maxlength xs
 checkIfEmpty :: String -> Result String
 checkIfEmpty [] = Empty
 checkIfEmpty xs = Good xs
+
+
+filterOutCharacters :: String -> String -> Result String
+filterOutCharacters pattern =
+    return . filter (\x -> not $ elem x pattern)
 
 {- |
     Strips leading and trailing whitespace

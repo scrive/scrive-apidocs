@@ -211,7 +211,7 @@ var SelectView = Backbone.View.extend({
         var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
         if (model.border() != undefined) {
           options.css("border", this.model.border());
-          $(this.el).css("border", "none");
+          $(this.el).css("border", this.model.border());
         }
         options.addClass(this.model.theme() + "-theme");
 
@@ -240,6 +240,7 @@ var SelectView = Backbone.View.extend({
 
         if (model.expanded())
             {
+              if (this.expButton != undefined) $(this.expButton).detach();
               this.expButton = $(this.el).clone();
               if (model.color())
                 this.expButton.css('color',model.color());

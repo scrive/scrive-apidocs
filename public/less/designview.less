@@ -596,7 +596,7 @@ input.daystosign {
   font: 13px "Helvetica Neue";
   position: absolute;
   width: 250px;
-  z-index: 105;
+  z-index: 1005;
   .name {
     margin-top: 10px;
      width: 160px;
@@ -737,11 +737,26 @@ input.daystosign {
   }
 }
 
+.text-field-placement-setter-field-selector, .text-field-placement-setter-field-field-selector {
+    
+    .select-button {
+        height: 23px;
+        .select-button-left {
+            height: 23px;
+        }
 
-.text-field-placement-setter-field-selector {
-    z-index: 1000;
-}
+        .select-button-label {
+            padding: 0;
+            line-height: 23px;
+        }
 
-.signature-field-placement-setter-field-selector {
-    z-index: 1000;
+        .select-button-right {
+            height: 23px;
+            background-position: 3px 4px;
+        }
+    }
+
+    .select-opts { 
+        top: 22px;
+    }
 }

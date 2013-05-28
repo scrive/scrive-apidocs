@@ -43,8 +43,10 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             placement = undefined;
             field = fieldOrPlacement;
         }
-        if (field.isText())
-            verticaloffset = -2;
+        if(field.isFake()) 
+            verticaloffset = -1;
+        else if (field.isText())
+            verticaloffset = -1;
         else if (field.isSignature())
             verticaloffset = 1;
 
@@ -430,6 +432,12 @@ var TextPlacementView = Backbone.View.extend({
         }
 
     },
+    updateColor : function() {
+        var field = this.model;
+        var signatory = field.signatory();
+        var color = signatory?signatory.color():'red';
+        $(this.el).css('border', '1px solid ' + color);
+    },
     render: function() {
             var field =   this.model;
             var box = $(this.el);
@@ -442,12 +450,13 @@ var TextPlacementView = Backbone.View.extend({
         } else {
             box.text('unset field');
         }
+        this.updateColor();
     }
 });
 
 var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateColor', 'updateErrorBackground');
+        _.bindAll(this, 'render' , 'clear', 'closeTypeSetter', 'updateErrorBackground');
         var view = this;
         var placement = this.model;
         var field =  placement.field();
@@ -456,7 +465,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         this.model.bind('change:field change:signatory change:step change:withTypeSetter', this.render);
         this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
-        signatory.document().bind('change:signatories',this.updateColor);
+        //signatory.document().bind('change:signatories',this.updateColor);
         placement.bind('change', this.updateErrorBackground);
 
         this.model.view = this;
@@ -498,7 +507,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         this.model.unbind('change:field change:signatory', this.render);
         this.model.unbind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.unbind('clean', this.closeTypeSetter);
-        this.model.field().signatory().document().unbind('change:signatories',this.updateColor);
+        //this.model.field().signatory().document().unbind('change:signatories',this.updateColor);
     },
     hasTypeSetter : function(){
         return this.model.typeSetter != undefined;
@@ -590,13 +599,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
         }
         return false;
     },
-    updateColor : function() {
-       var placement = this.model;
-       var field =  placement.field();
-       var signatory = field?field.signatory():placement.signatory();
-       if(signatory.color())
-            $(this.el).css('border', '1px solid ' + signatory.color());
-    },
     updateErrorBackground: function() {
         var placement = this.model;
         var field = placement.field();
@@ -657,11 +659,11 @@ var TextPlacementPlacedView = Backbone.View.extend({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-selector',
-            style: "z-index: 109;",
             border : "1px solid #f33",
             onSelect: function(s) {
                 placement.setSignatory(s);
                 placement.goToStepField();
+                return true;
             }
         });
 
@@ -718,8 +720,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             name: name,
             options: options,
             cssClass: 'text-field-placement-setter-field-field-selector',
-            style: "z-index: 108;",
-            border : "1px solid #f33",
+            border : "1px solid " + (signatory.color() || "#f33"),
             onSelect: function(o) {
                 var f = signatory.field(o.name, o.type);
 
@@ -752,6 +753,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
                 placement.goToStepEdit();
                 view.addTypeSetter();
+                return true;
             }
         });
 
@@ -799,6 +801,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
             onClick: setName
         });
 
+        if(field && field.signatory() && field.signatory().color())
+            input.input().css('border-color', field.signatory().color());
+
         div.append(input.input());
         div.append(button.input());
         return div;
@@ -818,6 +823,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
             }
         }).input();
 
+        if(field && field.signatory() && field.signatory().color())
+            input.css('border-color', field.signatory().color());
+
         return input;
     },
     render: function() {
@@ -830,7 +838,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         place.addClass('placedfield');
         this.updateErrorBackground();
-        this.updateColor();
+        //this.updateColor();
 
         if ((signatory == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
               place.css('cursor','pointer');

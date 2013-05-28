@@ -547,6 +547,7 @@
                     view.model.setDelivery('email');
 
                 view.model.ensureMobile();
+                view.model.ensureEmail();
 
                 return false;
             });
@@ -819,7 +820,7 @@
             var name;
 
             if(!view.selected)
-                name = localization.designview.addField;
+                name = localization.designview.whatField;
             else if(view.selected.name === '--custom')
                 name = localization.designview.customField;
             else
@@ -836,6 +837,7 @@
                         field.setName(v.name);
                     }
                     sig.trigger('change:fields');
+                    return true;
                 }
             });
 
@@ -885,6 +887,13 @@
                         f = str.trim();
                         s = '';
                     }
+                    /*
+                     * First we need to set the value silently, then
+                     * broadcast the info about changes to the world.
+                     * Otherwise the hard link to full name breaks.
+                     */
+                    fstnameField.setValueSilent(f);
+                    sndnameField.setValueSilent(s);
                     fstnameField.setValue(f);
                     sndnameField.setValue(s);
                 }
@@ -945,7 +954,8 @@
                 infotext: placeholder || name,
                 value: value,
                 onChange: function(val) {
-                    field.setValue(val.trim());
+                    if(typeof val === 'string')
+                        field.setValue(val.trim());
                 }
             });
 
