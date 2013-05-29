@@ -50,7 +50,7 @@ var DesignAttachmentsListView = Backbone.View.extend({
                         sig.removeAttachment(a);
                         mixpanel.track('Click remove attachment', {
                             Type: 'Signatory'
-                        }
+                        });
                     }));
       return tr.append(icon).append(name).append(remove);
     },
