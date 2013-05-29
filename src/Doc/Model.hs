@@ -63,7 +63,8 @@ module Doc.Model
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
   , SetDocumentProcess(..)
-  , SetInvitationDeliveryStatus(..)
+  , SetEmailInvitationDeliveryStatus(..)
+  , SetSMSInvitationDeliveryStatus(..)
   , SetInviteText(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
@@ -1987,10 +1988,28 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLang Bool where
         (Just did)
         actor
 
+data SetEmailInvitationDeliveryStatus = SetEmailInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetEmailInvitationDeliveryStatus Bool where
+  update (SetEmailInvitationDeliveryStatus did slid status actor) = do
+    setInvitationDeliveryStatusWorker did slid status actor "email" getEmail InvitationDeliveredByEmail InvitationUndeliveredByEmail
 
-data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
-  update (SetInvitationDeliveryStatus did slid status actor) = do
+data SetSMSInvitationDeliveryStatus = SetSMSInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
+  update (SetSMSInvitationDeliveryStatus did slid status actor) = do
+    setInvitationDeliveryStatusWorker did slid status actor "phone" getMobile InvitationDeliveredBySMS InvitationUndeliveredBySMS
+
+setInvitationDeliveryStatusWorker :: (TemplatesMonad m, MonadDB m)
+                                     => DocumentID
+                                  -> SignatoryLinkID
+                                  -> MailsDeliveryStatus
+                                  -> Actor
+                                  -> String
+                                  -> (SignatoryLink -> String)
+                                  -> EvidenceEventType
+                                  -> EvidenceEventType
+                                  -> m Bool
+setInvitationDeliveryStatusWorker did slid status actor fieldName getFieldValue
+                                  invitationDeliveredEvent invitationUndeliveredEvent = do
     let decode acc st = acc ++ [st]
     old_status <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
@@ -2005,26 +2024,26 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
         sqlWhereDocumentTypeIs (Signable undefined)
 
     sig <- query $ GetSignatoryLinkByID did slid Nothing
-    let (email, changed) = (getEmail sig, old_status /= status)
+    let (fieldValue, changed) = (getFieldValue sig, old_status /= status)
 
     when_ (changed) $
       update $ InsertEvidenceEvent
         SetInvitationDeliveryStatusEvidence
-        (value "email" email >> value "status" (map toLower $ show status) >> value "actor" (actorWho actor))
+        (value fieldName fieldValue >> value "status" (map toLower $ show status) >> value "actor" (actorWho actor))
         (Just did)
         actor
     when_ (changed && status == Delivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-        InvitationDelivered
-        (value "email" email >> value "status" (show status) >> value "actor" (actorWho actor))
+        invitationDeliveredEvent
+        (value fieldName fieldValue >> value "status" (show status) >> value "actor" (actorWho actor))
         (Just did)
         (Just slid)
         Nothing
         actor
     when_ (changed && status == Undelivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-        InvitationUndelivered
-        (value "email" email >> value "status" (show status) >> value "actor" (actorWho actor))
+        invitationUndeliveredEvent
+        (value fieldName fieldValue >> value "status" (show status) >> value "actor" (actorWho actor))
         (Just did)
         (Just slid)
         Nothing

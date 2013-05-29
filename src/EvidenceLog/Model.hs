@@ -267,11 +267,13 @@ data EvidenceEventType =
   ReminderSend                                    |  --Renamed
   SetDocumentProcessEvidence                      |
   DetachFileEvidence                              |
-  InvitationDelivered                             |
-  InvitationUndelivered                           |
+  InvitationDeliveredByEmail                      |
+  InvitationUndeliveredByEmail                    |
   SignatoryLinkVisited                            |
   ProlongDocumentEvidence                         |
-  ChangeSignatoryPhoneWhenUndeliveredEvidence
+  ChangeSignatoryPhoneWhenUndeliveredEvidence     |
+  InvitationDeliveredBySMS                        |
+  InvitationUndeliveredBySMS
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -345,11 +347,13 @@ instance Convertible EvidenceEventType Int where
   safeConvert ReminderSend                                    = return 68
   safeConvert SetDocumentProcessEvidence                      = return 69
   safeConvert DetachFileEvidence                              = return 70
-  safeConvert InvitationDelivered                             = return 71
-  safeConvert InvitationUndelivered                           = return 72
+  safeConvert InvitationDeliveredByEmail                      = return 71
+  safeConvert InvitationUndeliveredByEmail                    = return 72
   safeConvert SignatoryLinkVisited                            = return 73
   safeConvert ProlongDocumentEvidence                         = return 74
   safeConvert ChangeSignatoryPhoneWhenUndeliveredEvidence     = return 75
+  safeConvert InvitationDeliveredBySMS                        = return 76
+  safeConvert InvitationUndeliveredBySMS                      = return 77
 
 
 instance Convertible Int EvidenceEventType where
@@ -423,11 +427,13 @@ instance Convertible Int EvidenceEventType where
     safeConvert 68 = return ReminderSend
     safeConvert 69 = return SetDocumentProcessEvidence
     safeConvert 70 = return DetachFileEvidence
-    safeConvert 71 = return InvitationDelivered
-    safeConvert 72 = return InvitationUndelivered
+    safeConvert 71 = return InvitationDeliveredByEmail
+    safeConvert 72 = return InvitationUndeliveredByEmail
     safeConvert 73 = return SignatoryLinkVisited
     safeConvert 74 = return ProlongDocumentEvidence
     safeConvert 75 = return ChangeSignatoryPhoneWhenUndeliveredEvidence
+    safeConvert 76 = return InvitationDeliveredBySMS
+    safeConvert 77 = return InvitationUndeliveredBySMS
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

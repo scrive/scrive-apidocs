@@ -21,9 +21,13 @@ simpliefiedTextSignDocumentEvidence         = $_simpliefiedTextSignDocumentEvide
 ####
 simpliefiedTextInvitationEvidence           = $_simpliefiedTextInvitationEvidence()$
 ####
-simpliefiedTextInvitationDelivered          = $_simpliefiedTextInvitationDelivered()$
+simpliefiedTextInvitationDeliveredByEmail          = $_simpliefiedTextInvitationDelivered()$
 #####
-simpliefiedTextInvitationUndelivered        = $_simpliefiedTextInvitationUndelivered()$
+simpliefiedTextInvitationUndeliveredByEmail        = $_simpliefiedTextInvitationUndelivered()$
+####
+simpliefiedTextInvitationDeliveredBySMS          = $_simpliefiedTextInvitationDelivered()$
+#####
+simpliefiedTextInvitationUndeliveredBySMS        = $_simpliefiedTextInvitationUndelivered()$
 #####
 simpliefiedTextReminderSend                 = $_simpliefiedTextReminderSend()$
 #####

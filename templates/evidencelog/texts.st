@@ -156,9 +156,13 @@ SetDocumentProcessEvidenceText=
 ###
 DetachFileEvidenceText=
 ###
-InvitationDeliveredText=Scrive´s external email delivery system reported that the email invitation to sign was delivered.
+InvitationDeliveredByEmailText=Scrive´s external email delivery system reported that the email invitation to sign was delivered.
 ###
-InvitationUndeliveredText=Scrive´s external email delivery system reported that the email invitation to sign could not be delivered.
+InvitationUndeliveredByEmailText=Scrive´s external email delivery system reported that the email invitation to sign could not be delivered.
+###
+InvitationDeliveredBySMSText=Scrive´s external sms delivery system reported that the sms invitation to sign was delivered.
+###
+InvitationUndeliveredBySMSText=Scrive´s external sms delivery system reported that the sms invitation to sign could not be delivered.
 ###
 SignatoryLinkVisitedText=The page for signing the document was visited by $name$.
 ###
