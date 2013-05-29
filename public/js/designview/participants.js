@@ -1416,6 +1416,7 @@
                 offset: options[selected].offset,
                 onSelect: function(v) {
                     mixpanel.track('Choose obligation', {
+                        Subcontext: 'participant',
                         Type: v
                     });
                     if(field) {

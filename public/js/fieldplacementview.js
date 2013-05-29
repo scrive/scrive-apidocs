@@ -163,9 +163,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                  });
                });
              });
-                mixpanel.track('Drag field', {fieldname:field.name(),
-                                              signatory:field.signatory().signIndex(),
-                                              documentid:field.signatory().document().documentid()});
+                mixpanel.track('Drag field', {
+                    documentid:field.signatory().document().documentid()
+                });
                 var newPlacement = new FieldPlacement({
                     page: page.number(),
                     fileid: page.file().fileid(),
@@ -236,6 +236,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 offset: options[selected].offset,
                 onSelect: function(v) {
                     if(field) {
+                        mixpanel.track('Choose obligation', {
+                            Subcontext: 'inline'
+                        });
                         if(v === 'optional') {
                             field.makeOptional();
                             field.authorObligatory = 'optional';
@@ -366,6 +369,7 @@ var TextTypeSetterView = Backbone.View.extend({
                                     return f.name() != field.name() || f.type() != field.type() || f == field;
                                 });
                                 if (done) {
+                                    mixpanel.track('Click save inline field');
                                     field.makeReady();
                                     view.clear();
                                     view.model.cleanTypeSetter();
@@ -661,6 +665,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             cssClass: 'text-field-placement-setter-field-selector',
             border : "1px solid #f33",
             onSelect: function(s) {
+                mixpanel.track('Select placement signatory');
                 placement.setSignatory(s);
                 placement.goToStepField();
                 return true;
@@ -725,6 +730,10 @@ var TextPlacementPlacedView = Backbone.View.extend({
                 var f = signatory.field(o.name, o.type);
 
                 if(o.name === '--custom') {
+                    mixpanel.track('Choose placement type', {
+                        Type: 'custom'
+                    });
+
                     f = new Field({signatory: signatory,
                                    type: 'custom',
                                    name: '',
@@ -736,9 +745,17 @@ var TextPlacementPlacedView = Backbone.View.extend({
                     signatory.addField(f);
                     f.addedByMe = true;
                 } else if(f) {
+                    mixpanel.track('Choose placement type', {
+                        Type: o.type,
+                        Name: o.name
+                    });
                     placement.setField(f);
                     f.addPlacement(placement);
                 } else {
+                    mixpanel.track('Choose placement type', {
+                        Type: o.type,
+                        Name: o.name
+                    });
                     f = new Field({signatory: signatory,
                                    type: o.type,
                                    name: o.name,
@@ -773,6 +790,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         function setName() {
             if(input.value()) {
+                mixpanel.track('Set placement field name');
                 placement.trigger('change:field');
                 signatory.trigger('change:fields');
                 view.addTypeSetter();
@@ -978,6 +996,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             options: options,
             cssClass: 'signature-field-placement-setter-field-selector',
             onSelect: function(s) {
+                mixpanel.track('Choose checkbox signatory');
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);
@@ -1001,11 +1020,17 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             checkbox.addClass("checked");
         checkbox.click(function(){
             if (field.isObligatory()) {
-                    checkbox.removeClass("checked");
-                    field.makeOptional();
+                mixpanel.track('Choose checkbox obligation', {
+                    Value: 'optional'
+                });
+                checkbox.removeClass("checked");
+                field.makeOptional();
             } else {
-              checkbox.addClass("checked");
-              field.makeObligatory();
+                mixpanel.track('Choose checkbox obligation', {
+                    Value: 'obligatory'
+                });
+                checkbox.addClass("checked");
+                field.makeObligatory();
             }
         });
 
@@ -1021,9 +1046,15 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             checkbox.addClass("checked");
         checkbox.click(function(){
             if (field.value() != undefined && field.value()  != "") {
+                mixpanel.track('Choose prechecked', {
+                    Value: 'unchecked'
+                });
                     checkbox.removeClass("checked");
                     field.setValue("");
             }  else {
+                mixpanel.track('Choose prechecked', {
+                    Value: 'prechecked'
+                });
                     checkbox.addClass("checked");
                     field.setValue("checked");
             }
@@ -1423,6 +1454,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
             options: options,
             cssClass: 'signature-field-placement-setter-field-selector',
             onSelect: function(s) {
+                mixpanel.track('Choose signature signatory');
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);

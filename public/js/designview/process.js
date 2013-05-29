@@ -141,6 +141,9 @@
                 }),
                 name: processText[processName].name,
                 onSelect: function(v) {
+                    mixpanel.track('Select document type', {
+                        'Document type' : v
+                    });
                     doc.process().setProcess(v);
                     return true;
                 }
@@ -190,6 +193,8 @@
                 }),
                 name: languageText[lang].name,
                 onSelect: function(v) {
+                    mixpanel.track('Select language',
+                                   {'New Language': v});
                     doc.lang().setLanguage(v);
                     return true;
                 }
@@ -277,6 +282,7 @@
                 text: localization.designview.addRemove,
                 cssClass: 'design-view-action-process-left-column-attachments-author-button',
                 onClick: function() {
+                    mixpanel.track('Open author attachments');
                     document.save();
                     DesignAuthorAttachmentsPopup.popup({document: document});
                 }
@@ -288,6 +294,7 @@
                 text: localization.designview.request,
                 cssClass: 'design-view-action-process-left-column-attachments-signatory-button',
                 onClick: function() {
+                    mixpanel.track('Open sig attachments');
                     document.save();
                     DesignSignatoryAttachmentsPopup.popup({document: document});
                 }
@@ -354,6 +361,7 @@
             previewLink.addClass('design-view-action-process-right-column-invitation-link');
             previewLink.text(localization.designview.previewInvitation);
             previewLink.click(function() {
+                mixpanel.track('Open invitation preview');
                 doc.save();
                 doc.afterSave(function() {
                     var popup = ConfirmationWithEmail.popup({
