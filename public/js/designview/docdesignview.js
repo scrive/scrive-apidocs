@@ -340,6 +340,7 @@
                        .append(localization.saveAsDraft));
 
             div.click(function() {
+                mixpanel.track('Click save as draft');
                 viewmodel.document().save(function() {
                   new Submit({
                                           ajax : 'true',
@@ -367,6 +368,7 @@
             div.click(function() {
                 viewmodel.document().makeTemplate();
                 viewmodel.document().save();
+                mixpanel.track('Click save as template');
             });
 
             return div;
@@ -403,6 +405,7 @@
             div.addClass('design-view-button-remove');
             div.append(view.removeDocumentButtonLabel());
             div.click(function() {
+                mixpanel.track('Click remove file');
                 doc.setFlux();
                 doc.removeTypeSetters();
                 doc.save();
@@ -442,7 +445,12 @@
             var isSigning = document.authorCanSignFirst();
 
             mixpanel.track('Click sign button', {
-                'Is Signing' : isSigning
+                'Is Signing' : isSigning,
+                'Uses eleg' : document.hasEleg(),
+                'Uses email delivery' : document.hasEmail(),
+                'Uses mobile delivery' : document.hasSMS(),
+                'Uses pad delivery' : document.hasPad(),
+                'Uses email and mobile delivery' : document.hasEmailAndSMS()
             });
 
             // putting this here makes problems start showing up
@@ -767,6 +775,7 @@
               if (alreadyClicked(this))
                 return false;
 
+                mixpanel.track('Accept NJ Promo');
               $('.promomodal img').attr('src', '/img/njpromo_ok.png');
               acceptButton.hide();
               declineButton.hide();
@@ -776,6 +785,7 @@
                 color: "green",
                 text: "Ok!",
                 onClick: function() {
+                    mixpanel.track('OK NJ promo');
                   Promo.close();
                 }
               }).input().css({
@@ -794,7 +804,7 @@
             onClick: function() {
               if (alreadyClicked(this))
                 return false;
-
+                mixpanel.track('Decline NJ Promo');
               Promo.close();
             }
           }).input().css({

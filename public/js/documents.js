@@ -734,6 +734,31 @@ window.Document = Backbone.Model.extend({
     bubbleSelf: function() {
         var document = this;
         document.trigger('bubble');
+    },
+    hasEleg: function() {
+        return _.some(this.signatories(), function(s) {
+            return s.elegAuthentication();
+        });
+    },
+    hasEmail: function() {
+        return _.some(this.signatories(), function(s) {
+            return s.emailDelivery() || s.emailMobileDelivery();
+        });
+    },
+    hasSMS: function() {
+        return _.some(this.signatories(), function(s) {
+            return s.mobileDelivery() || s.emailMobileDelivery();
+        });
+    },
+    hasPad: function() {
+        return _.some(this.signatories(), function(s) {
+            return s.padDelivery();
+        });
+    },
+    hasEmailAndSMS: function() {
+        return _.some(this.signatories(), function(s) {
+            return s.emailMobileDelivery();
+        });
     }
 });
 
