@@ -25,6 +25,11 @@ Flag mailing-server
   Manual: True
   Default: True
 
+Flag messenger-server
+  Description: Build messenger server
+  Manual: True
+  Default: True
+
 Flag server
   Description: Build server
   Manual: True
@@ -147,7 +152,7 @@ Executable kontrakcja-server
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc src pdfseal/inc mailer/inc docconv/src
+  Hs-source-dirs: inc misc src pdfseal/inc mailer/inc docconv/src messenger/src messenger/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults -fcontext-stack=34
   if !flag(allow-warnings)
@@ -162,6 +167,7 @@ Executable kontrakcja-server
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
+  Build-depends: attoparsec == 0.10.4.0
   Build-depends: AES == 0.2.8
   Build-depends: cryptohash == 0.7.5
   Build-depends: Crypto == 4.2.*
@@ -296,7 +302,7 @@ Executable cron
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc src cron mailer/inc docconv/src pdfseal/inc
+  Hs-source-dirs: inc misc src cron mailer/inc docconv/src pdfseal/inc messenger/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
   if !flag(allow-warnings)
@@ -340,7 +346,7 @@ Executable mailing-server
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc mailer/src mailer/inc src docconv/src
+  Hs-source-dirs: inc misc mailer/src mailer/inc docconv/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
   if !flag(allow-warnings)
@@ -357,6 +363,50 @@ Executable mailing-server
 
   cpp-options: -DMailingServer=Main
   Main-is: MailingServer.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              OverloadedStrings,
+              PatternGuards,
+              RankNTypes,
+              RecordWildCards,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TupleSections,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable messenger-server
+  if flag(messenger-server)
+    Buildable: True
+  else
+    Buildable: False
+
+  Hs-source-dirs: src inc misc messenger/src messenger/inc
+
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
+  if flag(server-coverage)
+    GHC-Options: -fhpc
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  cpp-options: -DMessengerServer=Main
+  Main-is: MessengerServer.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,
@@ -427,7 +477,7 @@ Executable kontrakcja-test
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
-  Hs-source-dirs: inc misc test/src src pdfseal/inc mailer/inc docconv/src docconv/test/src
+  Hs-source-dirs: inc misc test/src src pdfseal/inc mailer/inc docconv/src docconv/test/src messenger/src messenger/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults -fcontext-stack=34
   if flag(test-coverage)

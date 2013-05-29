@@ -41,15 +41,16 @@ import User.Model
 import Utils.List
 import Utils.Monad
 import Log
+import qualified Amazon as AWS
 
-type InnerKontraPlus = StateT Context (CryptoRNGT (DBT (OurServerPartT IO)))
+type InnerKontraPlus = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (OurServerPartT IO))))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response, MonadLog)
+  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response, MonadLog, AWS.AmazonMonad)
 
-runKontraPlus :: Context -> KontraPlus a -> CryptoRNGT (DBT (OurServerPartT IO)) a
+runKontraPlus :: Context -> KontraPlus a -> AWS.AmazonMonadT (CryptoRNGT (DBT (OurServerPartT IO))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
 instance Kontrakcja KontraPlus
@@ -77,7 +78,7 @@ instance TemplatesMonad KontraPlus where
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad, MonadLog)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad, MonadLog, AWS.AmazonMonad)
 
 instance Kontrakcja Kontra
 

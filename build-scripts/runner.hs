@@ -13,6 +13,7 @@ executables :: [String]
 executables =
   [ "dist/build/kontrakcja-server/kontrakcja-server"
   , "dist/build/mailing-server/mailing-server"
+  , "dist/build/messenger-server/messenger-server"
   , "dist/build/cron/cron"
   ]
 

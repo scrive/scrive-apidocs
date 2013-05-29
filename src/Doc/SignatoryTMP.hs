@@ -21,6 +21,8 @@ module Doc.SignatoryTMP (
     , setCompanynumber
     , email
     , setEmail
+    , mobile
+    , setMobile
     , makeAuthor
     , makePartner
     , customField
@@ -38,7 +40,7 @@ import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Doc.DocStateData
 import Doc.DocUtils
-import Data.Foldable hiding (concat, elem)
+--import Data.Foldable hiding (concat, elem)
 import Data.Maybe
 import Utils.Monoid
 import Utils.Prelude
@@ -98,6 +100,12 @@ company = nothingIfEmpty . getCompanyName . details
 setCompany:: String -> SignatoryTMP -> SignatoryTMP
 setCompany = replaceFieldValue CompanyFT
 
+mobile::SignatoryTMP -> Maybe String
+mobile = nothingIfEmpty . getMobile . details
+
+setMobile:: String -> SignatoryTMP -> SignatoryTMP
+setMobile = replaceFieldValue MobileFT
+
 personalnumber::SignatoryTMP -> Maybe String
 personalnumber = nothingIfEmpty . getPersonalNumber . details
 
@@ -140,11 +148,13 @@ isSignatoryTMP = signatoryispartner . details
 setSignOrder :: SignOrder -> SignatoryTMP -> SignatoryTMP
 setSignOrder i =  liftTMP $  \s -> s {signatorysignorder = i}
 
-signOrder :: SignatoryTMP -> SignOrder
-signOrder = signatorysignorder . details
+--signOrder :: SignatoryTMP -> SignOrder
+--signOrder = signatorysignorder . details
 
 addAttachment :: SignatoryAttachment -> SignatoryTMP -> SignatoryTMP
-addAttachment a s = s {attachments = a : (attachments s)}
+addAttachment a s = if (signatoryattachmentname a `elem `(signatoryattachmentname <$> attachments s))
+                       then s
+                       else s {attachments = a : (attachments s)}
 
 getAttachments :: SignatoryTMP -> [SignatoryAttachment]
 getAttachments s = attachments s
@@ -157,23 +167,12 @@ toSignatoryDetails1 sTMP = (\(x,_,_,_,_,_) -> x) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
 toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)
 toSignatoryDetails2 sTMP  =
-    let sig = makeSignatory [] [] ""
-                 (fold $ fstname sTMP)
-                 (fold $ sndname sTMP)
-                 (fold $ email sTMP)
-                 (signOrder sTMP)
-                 (signatoryisauthor $ details sTMP)
-                 (signatoryispartner $ details sTMP)
-                 (fold $ company sTMP)
-                 (fold $ personalnumber sTMP)
-                 (fold $ companynumber sTMP)
-    in withRolesAndAttsAndCSVAndAuthandDelivery $ sig {
-            signatoryfields =  mergeFields (getAllFields sTMP)  (signatoryfields sig),
-            signatorysignorder = signatorysignorder $ details sTMP }
-  where
-   mergeFields [] l = l
-   mergeFields (f:fs) l = mergeFields fs (replaceField f l)
-   withRolesAndAttsAndCSVAndAuthandDelivery x = (x, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP, authentication $ sTMP, delivery $ sTMP)
+  ( details sTMP
+  , attachments $ sTMP
+  , csvupload $ sTMP
+  , signredirecturl $ sTMP
+  , authentication $ sTMP
+  , delivery $ sTMP)
 
 instance FromJSValue SignatoryTMP where
     fromJSValue = do
@@ -233,6 +232,7 @@ instance FromJSValue FieldType where
          ("standard",  Just "fstname")    -> Just $ FirstNameFT
          ("standard",  Just "sndname")    -> Just $ LastNameFT
          ("standard",  Just "email")      -> Just $ EmailFT
+         ("standard",  Just "mobile")     -> Just $ MobileFT
          ("standard",  Just "sigpersnr")  -> Just $ PersonalNumberFT
          ("standard",  Just "sigco")      -> Just $ CompanyFT
          ("standard",  Just "sigcompnr")  -> Just $ CompanyNumberFT

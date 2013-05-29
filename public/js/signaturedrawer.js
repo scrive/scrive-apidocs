@@ -8,6 +8,7 @@ var SignatureDrawer = Backbone.View.extend({
         this.model.view = this;
         this.height = args.height;
         this.width = args.width;
+        this.modal = args.modal;
         this.empty = true;
         this.render();
     },
@@ -17,6 +18,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
              e.preventDefault();
         }
+        this.modal.css("-ms-touch-action","none");
     },
     stopDrawing : function() {
         var view = this;
@@ -25,7 +27,10 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
             return true;
         }
-
+        this.modal.css("-ms-touch-action","auto");
+    },
+    modal : function() {
+      return this.get("modal");
     },
     lineWith : function() {
         return 3;
@@ -140,6 +145,10 @@ var SignatureDrawer = Backbone.View.extend({
             this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation();e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e));});
             this.canvas[0].addEventListener('touchmove',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
             this.canvas[0].addEventListener('touchend',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e));});
+           } else if (navigator.msPointerEnabled) {
+            this.canvas[0].addEventListener("MSPointerDown",function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e)); return false;},true);
+            this.canvas[0].addEventListener("MSPointerMove",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e)); return false;},true);
+            this.canvas[0].addEventListener("MSPointerUp",function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e)); return false;},true);
            } else {
             this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e),e);});
             this.canvas.mousemove(function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
@@ -178,22 +187,6 @@ var SignatureDrawer = Backbone.View.extend({
           this.canvas[0].width = this.canvas[0].width;
           this.empty  = true;
     },
-    getPNG : function() {
-      if (this.empty) return undefined;
-      return  this.canvas[0].toDataURL("image/png",1.0);
-    },
-    setPNG : function(png) {
-      var self = this;
-      var signature = this.model;
-      this.clear();
-      if (png != undefined) {
-         var img = new Image();
-         img.type = 'image/png';
-         img.src = png;
-         img.onload = function() {self.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);};
-         this.empty = false;
-      }
-    },
     render: function () {
         var signature = this.model;
         var view = this;
@@ -207,6 +200,7 @@ var SignatureDrawer = Backbone.View.extend({
         this.picture =  this.canvas[0].getContext('2d');
         if (this.model.value() != "" && this.model.valueTMP() != undefined && this.model.valueTMP() != "") {
           var img = new Image();
+          img.type = 'image/png';
           img.src = this.model.valueTMP() ;
           this.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);
           this.empty = false;
@@ -220,21 +214,19 @@ var SignatureDrawer = Backbone.View.extend({
 var SignatureDrawerWrapper = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.overlay = args.overlay;
+        this.onClose = args.onClose;
         this.height = args.height;
         this.width = args.width;
+        this.modal = args.modal;
         this.render();
     },
     header: function() {
         var h = $("<h1>").text(localization.pad.drawSignatureBoxHeader);
         return $("<div class='header'/>").append(h);
     },
-    separator: function() {
-        return $("<div style='width:90%;margin:auto;height:1px;background-color: #999999'/>");
-    },
     drawingBox : function() {
         var div = $("<div class='signatureDrawingBoxWrapper'>");
-        this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width});
+        this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width, modal : this.modal});
         div.append(this.drawer.el);
         div.width(820);
         div.height(820 * this.height / this.width);
@@ -247,12 +239,11 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         var document = signatory.document();
         return Button.init({
                     color : 'green',
-                    size: 'tiny',
+                    size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                     text: localization.signature.confirmSignature,
                     onClick : function(){
                         view.drawer.saveImage();
-                        view.overlay.data('overlay').close();
-                        view.overlay.detach();
+                        view.onClose();
                         return false;
                     }
             }).input();
@@ -261,7 +252,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         var view = this;
         return Button.init({
                 color : 'red',
-                size: 'tiny',
+                size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                 text: localization.pad.cleanImage,
                 onClick : function() {
                     view.drawer.clear();
@@ -285,9 +276,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     render: function () {
         var box = $(this.el);
         box.append(this.header());
-        //box.append(this.separator());
         box.append(this.drawingBox());
-        //box.append(this.separator());
         box.append(this.footer());
         return this;
     }
@@ -302,45 +291,36 @@ window.SignatureDrawerPopup = function(args){
             alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
             return;
         }
-        self.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/></div>");
-        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, overlay : self.overlay});
-        self.overlay.append(self.dw.el);
-        $('body').append(self.overlay );
-        var opened = true;
-        var ol = {
-            mask:  {
-                color: '#ffffff',
-                loadSpeed: 0,
-                opacity: 0.1
-            },
-            onClose : function() {
-              opened = false;
+        var modal = $("<div class='modal'></div>");
+
+        var width = BrowserInfo.isSmallScreen() ? 980 : 900;
+        var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
+
+        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
+        container.css("top",$(window).scrollTop());
+        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
+        container.css("left","0px");
+        var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
+        container.css("margin-left",left > 20 ? left : 20);
+
+        var close =  function() {
+              console.log("Closing");
+              modal.removeClass('active');
               document.ontouchmove = function(e){
                  return true;
               }
-              self.overlay.detach();
-            },
-            top: "10%",
-            resizable: false,
-            closeOnClick: false,
-            closeOnEsc: false,
-            load: true,
-            fixed:false
-          };
-        if ($(window).scrollLeft() > 60) ol.left = 60 - $(window).scrollLeft();
-        self.overlay.overlay(ol);
-        /* window.onorientationchange = function() {
-           if (opened) {
-             var png = self.dw.drawer.getPNG();
-             self.overlay.data("overlay").close();
-             setTimeout(function() {
-               var s = new SignatureDrawerPopup(args);
-               s.dw.drawer.setPNG(png);
-               window.scrollTo(0,s.overlay.offset().top - 30);
-              },100);
-           }
-        }; */
+              setTimeout(function() {modal.detach();},500);
+            };
 
+        var closeButton = $("<div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/>").click(close);
+
+        container.append(closeButton);
+        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, onClose : close, modal : modal});
+        container.append(self.dw.el);
+        modal.append(container);
+
+        $('body').append(modal );
+        modal.addClass('active');
 };
 
 })(window);

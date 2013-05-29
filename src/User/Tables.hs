@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 13
+  , tblVersion = 14
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -19,7 +19,6 @@ tableUsers = tblTable {
        , ("last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("personal_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("company_position", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("phone", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("mobile", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
@@ -43,7 +42,6 @@ tableUsers = tblTable {
           <> ", personal_number TEXT NOT NULL"
           <> ", company_position TEXT NOT NULL"
           <> ", phone TEXT NOT NULL"
-          <> ", mobile TEXT NOT NULL"
           <> ", email TEXT NOT NULL"
           <> ", lang SMALLINT NOT NULL"
           <> ", deleted BOOL NOT NULL"

@@ -23,6 +23,7 @@ module Doc.DocControl(
     , prepareEmailPreview
     , handleResend
     , handleChangeSignatoryEmail
+    , handleChangeSignatoryPhone
     , handleRestart
     , handleProlong
     , handleSignWithEleg
@@ -125,7 +126,7 @@ handleNewDocument = do
         user <- guardJustM $ ctxmaybeuser <$> getContext
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
+        Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 0 actor
         _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry
@@ -149,7 +150,6 @@ handleAcceptAccountFromSign documentid
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  when (signatorylinkdeliverymethod signatorylink == PadDelivery) internalError
   muser <- User.Action.handleAccountSetupFromSign document signatorylink
   case muser of
     Just user -> runJSONGenT $ do
@@ -497,7 +497,7 @@ splitUpDocument doc = do
 splitUpDocumentWorker :: (MonadDB m, TemplatesMonad m, CryptoRNG m, MonadBase IO m)
                       => Document -> Actor -> [[String]] -> m [Document]
 splitUpDocumentWorker doc actor csvbody = do
-  let preparedData = map (\xs -> let pxs = xs ++ repeat "" in ((pxs!!0),(pxs!!1),(pxs!!2),(pxs!!3),(pxs!!4),(pxs!!5),(drop 6 xs))) csvbody
+  let preparedData = map (\xs -> let pxs = xs ++ repeat "" in ((pxs!!0),(pxs!!1),(pxs!!2),(pxs!!3),(pxs!!4),(pxs!!5),(pxs!!6),(drop 7 xs))) csvbody
   dbUpdate $ DocumentFromSignatoryDataV (documentid doc) preparedData actor
 
 
@@ -664,6 +664,30 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
             _ -> return LoopBack
     _ -> return LoopBack
 
+--This only works for undelivered mails. We shoulkd check if current user is author
+handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleChangeSignatoryPhone docid slid = withUserPost $ do
+  mphone <- getOptionalField asValidPhone "phone"
+  case mphone of
+    Just phone -> do
+      edoc <- getDocByDocIDForAuthor docid
+      case edoc of
+        Left _ -> return LoopBack
+        Right _ -> do
+          actor <- guardJustM $ mkAuthorActor <$> getContext
+          dbUpdate $ ChangeSignatoryPhoneWhenUndelivered docid slid phone actor
+          mnewdoc <- dbQuery $ GetDocumentByDocumentID docid
+
+          case mnewdoc of
+            Just newdoc -> do
+              -- get (updated) siglink from updated document
+              sl <- guardJust (getSigLinkFor newdoc slid)
+              ctx <- getContext
+              _ <- sendInvitationEmail1 ctx newdoc sl
+              return $ LoopBack
+            _ -> return LoopBack
+    _ -> return LoopBack
+
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do
 
@@ -779,21 +803,21 @@ prepareEmailPreview docid slid = do
 handleSetAttachments :: Kontrakcja m => DocumentID -> m JSValue
 handleSetAttachments did = do
     doc <- guardRightM $ getDocByDocIDForAuthor did
-    attachments <- getAttachments 0
+    attachments <- getAttachments doc 0
     Log.debug $ "Setting attachments to " ++ show attachments
     actor <- guardJustM $ mkAuthorActor <$> getContext
     forM_ (documentauthorattachments doc) $ \att -> dbUpdate $ RemoveDocumentAttachment did (authorattachmentfile att) actor
     forM_ (nub attachments) $ \att -> dbUpdate $ AddDocumentAttachment did att actor -- usage of nub is ok, as we never expect this list to be big
     runJSONGenT $ return ()
    where
-        getAttachments :: Kontrakcja m => Int -> m [FileID]
-        getAttachments i = do
-            mf <- tryGetFile i
+        getAttachments :: Kontrakcja m => Document -> Int -> m [FileID]
+        getAttachments doc i = do
+            mf <- tryGetFile doc i
             case mf of
-                 Just f -> (f:) <$> getAttachments (i+1)
+                 Just f -> (f:) <$> getAttachments doc (i+1)
                  Nothing -> return []
-        tryGetFile ::  Kontrakcja m => Int -> m (Maybe FileID)
-        tryGetFile i = do
+        tryGetFile ::  Kontrakcja m => Document -> Int -> m (Maybe FileID)
+        tryGetFile doc i = do
             inp <- getDataFn' (lookInput $ "attachment_" ++ show i)
             case inp of
                  Just (Input (Left filepath) (Just filename) _contentType) -> do
@@ -808,9 +832,29 @@ handleSetAttachments did = do
                          return (Just (fileid file))
                  Just (Input  (Right c)  _ _)  -> do
                       case maybeRead (BSL.toString c) of
-                          Just fid -> (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
+                          Just fid -> do
+                            access <- hasAccess doc fid
+                            if access
+                              then (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
+                              else internalError
                           Nothing -> internalError
                  _ -> return Nothing
+        hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
+        hasAccess doc fid = do
+          user <- fromJust <$> ctxmaybeuser <$> getContext
+          if (fid `elem` (authorattachmentfile <$> documentauthorattachments doc))
+           then return True
+           else do
+            atts <- dbQuery $ GetAttachments [  AttachmentsSharedInUsersCompany (userid user)
+                                              , AttachmentsOfAuthorDeleteValue (userid user) True
+                                              , AttachmentsOfAuthorDeleteValue (userid user) False
+                                             ]
+                                            [ AttachmentFilterByFileID [fid]]
+                                            []
+                                            (0,1)
+            return $ not $ null atts
+
+
 
 handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do

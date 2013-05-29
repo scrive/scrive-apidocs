@@ -3,7 +3,7 @@ module Mails.SendMail
     ( Mail(..)
     , emptyMail
     , MailAddress(..)
-    , MailInfo(..)
+    , MessageData(..)
     , scheduleEmailSendout
     , kontramail
     , kontramaillocal
@@ -22,6 +22,7 @@ import qualified Text.StringTemplates.Fields as F
 import Templates
 import Control.Logic
 import Data.Char
+import MessageData
 
 -- Needed only for FROM address
 import User.Lang
@@ -76,7 +77,7 @@ wrapHTML body = concat [
 -- Prototyped. This is why texts are here. But the proper way to do
 -- that is not to add some extra info in Mail data structure
 -- Proper way is to hold as abstract data there.
-fromNiceAddress :: MonadDB m => MailInfo -> String -> m String
+fromNiceAddress :: MonadDB m => MessageData -> String -> m String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do
   mdoc <- dbQuery $ GetDocumentByDocumentID did

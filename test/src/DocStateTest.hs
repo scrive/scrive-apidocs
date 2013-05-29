@@ -376,7 +376,7 @@ testDocumentFromSignatoryDataEvidenceLog = do
                                              , signatoryattachmentname        = "attachment"
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
-  mdoc <- randomUpdate $ \t a b c d e f -> DocumentFromSignatoryData (documentid doc) a b c d e f [] (systemActor t)
+  mdoc <- randomUpdate $ \t a b c d e f h -> DocumentFromSignatoryData (documentid doc) a b c d e f h [] (systemActor t)
   assertJust mdoc
   let ndoc = fromJust mdoc
   lg <- dbQuery $ GetEvidenceLog (documentid ndoc)
@@ -535,6 +535,7 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "link personal number matches author's" (getPersonalNumber user) (getPersonalNumber siglink)
     assertEqual "link company name matches company's" (getCompanyName mcompany) (getCompanyName siglink)
     assertEqual "link company number matches company's" (getCompanyNumber mcompany) (getCompanyNumber siglink)
+    assertEqual "link company number matches company's" (getMobile user) (getMobile siglink)
     assertEqual "link signatory matches author id" (Just $ userid user) (maybesignatory siglink)
 
 testCancelDocumentCancelsDocument :: TestEnv ()
@@ -1254,16 +1255,16 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
 
 testDocumentFromSignatoryDataFailsDoesntExist :: TestEnv ()
 testDocumentFromSignatoryDataFailsDoesntExist = doTimes 10 $ do
-  (did, a, b, c, d, e, f, g, aa :: AuthorActor) <- rand 10 arbitrary
-  mdoc <- randomUpdate $ DocumentFromSignatoryData did a b c d e f g (unAuthorActor aa)
+  (did, a, b, c, d, e, f, g, h, aa :: AuthorActor) <- rand 10 arbitrary
+  mdoc <- randomUpdate $ DocumentFromSignatoryData did a b c d e f g h (unAuthorActor aa)
   assertNothing mdoc
 
 testDocumentFromSignatoryDataSucceedsExists :: TestEnv ()
 testDocumentFromSignatoryDataSucceedsExists = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthor' author
-  (time, a, b, c, d, e, f, g) <- rand 10 arbitrary
-  mdoc <- randomUpdate $ DocumentFromSignatoryData (documentid doc) a b c d e f g
+  (time, a, b, c, d, e, f, g, h) <- rand 10 arbitrary
+  mdoc <- randomUpdate $ DocumentFromSignatoryData (documentid doc) a b c d e f g h
           (authorActor time noIP (userid author) (getEmail author))
   assertJust mdoc
 

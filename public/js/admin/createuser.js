@@ -73,7 +73,7 @@ window.CreateUserButton = Button.init({
                                 lang.validate(new NotEmptyValidation({callback: callback, message:"Language cannot be empty!"}))
                                 ];
 
-                            if (vresult.every(function(a) {return a;})) {
+                            if (_.every(vresult, function(a) {return a;})) {
                                 new Submit({
                                     method: "POST",
                                     add : "true",

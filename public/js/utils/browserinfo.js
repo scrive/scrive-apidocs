@@ -26,6 +26,12 @@ window.BrowserInfo = {
     },
     isIE7orLower : function() {
       return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "7.0");
+    },
+    isIE6orLower : function() {
+      return $.browser.msie && ($.browser.version > "3" && $.browser.version < "7.0");
+    },
+    isSmallScreen : function() {
+     return (window.outerWidth < 760) || (screen.width < 760) ;
     }
 };
 

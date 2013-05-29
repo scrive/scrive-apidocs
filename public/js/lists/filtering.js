@@ -291,6 +291,7 @@
             if (this.select != undefined)
                 this.select.clear();
             this.select = new Select({
+                color : "#000000",
                 options : selectOptions,
                 name : selected.name,
                 theme : selected.value != "" ? "dark" : "warm",

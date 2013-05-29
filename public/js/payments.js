@@ -92,7 +92,12 @@
             createdUser: false,
             accountCreated: false,
             currentPlan: 'team',
-            header: localization.payments.subscribeheader
+            header: localization.payments.subscribeheader,
+            buttoncolorclass: null,
+            headercolour: null,
+            textcolour: null,
+            pricecolour: null,
+            includeenterprise: true
         },
         reset: function() {
             if(this.get('firstName'))
@@ -156,6 +161,18 @@
         },
         subdomain: function() {
             return this.get('subdomain');
+        },
+        buttoncolorclass: function() {
+            return this.get('buttoncolorclass');
+        },
+        headercolour: function() {
+            return this.get('headercolour');
+        },
+        textcolour: function() {
+            return this.get('textcolour');
+        },
+        pricecolour: function() {
+            return this.get('pricecolour');
         },
         currentPlan: function() {
             return this.get('currentPlan');
@@ -253,6 +270,9 @@
         url: function() {
             return "/payments/pricepageinfo";
         },
+        includeenterprise: function() {
+            return this.get('includeenterprise');
+        },
         createaccount: function(email, firstname, lastname, callback) {
             var model = this;
             $.ajax('/api/frontend/signup',
@@ -315,18 +335,30 @@
 
             var features = $('<div class="features" />');
 
+            var titleheader = $('<h2 />').text(localization.payments.plans[view.plan].name);
+            if (model.headercolour()) {
+              titleheader.css('color', model.headercolour());
+            }
+            var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
+            if (model.textcolour()) {
+              titlesubtext.css('color', model.textcolour());
+            }
             var title = $('<div class="title" />')
-                .append($('<h2 />')
-                        .text(localization.payments.plans[view.plan].name))
-                .append($('<p />')
-                        .html(localization.payments.plans[view.plan].tag));
+                .append(titleheader)
+                .append(titlesubtext);
             features.append(title);
 
+            var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
+            if (model.pricecolour()) {
+              price.css('color', model.pricecolour());
+            }
+            var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
+            if (model.textcolour()) {
+              priceinfo.css('color', model.textcolour());
+            }
             var cost = $('<div class="cost" />')
-                .append($('<span class="price" />')
-                        .html(localization.payments.plans[view.plan].price))
-                .append($('<p />')
-                        .text(localization.payments.plans[view.plan].price3));
+                .append(price)
+                .append(priceinfo);
 
             features.append(cost);
 
@@ -335,6 +367,16 @@
                         .text(localization.payments.contact))
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
+
+            var buttoncolour = model.buttoncolorclass();
+            if (buttoncolour == 'red')
+              button.addClass('button-red');
+            else if (buttoncolour == 'green')
+              button.addClass('button-green');
+            else if (buttoncolour == 'black')
+              button.addClass('button-gray');
+            else if (buttoncolour == 'light-blue')
+              button.addClass("button-light-blue");
 
             var action = $('<div class="action" />').append(button);
 
@@ -428,18 +470,31 @@
 
             var features = $('<div class="features" />');
 
+            var titleheader = $('<h2 />').text(localization.payments.plans[view.plan].name);
+            if (model.headercolour()) {
+              titleheader.css('color', model.headercolour());
+            }
+            var titlesubtext = $('<p />').html(localization.payments.plans[view.plan].tag);
+            if (model.textcolour()) {
+              titlesubtext.css('color', model.textcolour());
+            }
             var title = $('<div class="title" />')
-                .append($('<h2 />')
-                        .text(localization.payments.plans[view.plan].name))
-                .append($('<p />')
-                        .html(localization.payments.plans[view.plan].tag));
+                .append(titleheader)
+                .append(titlesubtext);
+
             features.append(title);
 
+            var price = $('<span class="price" />').html(localization.payments.plans[view.plan].price);
+            if (model.pricecolour()) {
+              price.css('color', model.pricecolour());
+            }
+            var priceinfo = $('<p />').text(localization.payments.plans[view.plan].price3);
+            if (model.textcolour()) {
+              priceinfo.css('color', model.textcolour());
+            }
             var cost = $('<div class="cost" />')
-                .append($('<span class="price" />')
-                        .html(localization.payments.plans[view.plan].price))
-                .append($('<p />')
-                        .text(localization.payments.plans[view.plan].price3));
+                .append(price)
+                .append(priceinfo);
 
             features.append(cost);
 
@@ -448,6 +503,16 @@
                         .text(localization.payments.purchase))
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
+
+            var buttoncolour = model.buttoncolorclass();
+            if (buttoncolour == 'red')
+              button.addClass('button-red');
+            else if (buttoncolour == 'green')
+              button.addClass('button-green');
+            else if (buttoncolour == 'black')
+              button.addClass('button-gray');
+            else if (buttoncolour == 'light-blue')
+              button.addClass("button-light-blue");
 
             var action = $('<div class="action" />')
                 .append(button);
@@ -812,24 +877,38 @@
                                                      onClick: function() {
                                                          mixpanel.track('Click enterprise plan');
                                                      }});
+            this.noheaders = args.noheaders;
             //this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
             view.model.bind('fetch', this.render);
+        },
+        fixlinkstyle: function() {
+          if (this.model.pricecolour()) {
+            $('.stylablelink').css('color', this.model.pricecolour());
+          }
         },
         render: function() {
             var view = this;
             var model = view.model;
             var div = $('<div />'); // container div
 
+            view.fixlinkstyle();
+
             var header = $('<header />')
                 .append($('<h1 />').text(model.header()))
                 .append($('<h2 />').text('')); //localization.payments.subheader
-
-            div.append(header);
+            if (!this.noheaders)
+              div.append(header);
             //div.append($('<h3 />').text(localization.payments.chooseplan));
 
             div.append(view.teamBox.el)
-                .append(view.formBox.el)
-                .append(view.enterpriseBox.el);
+                .append(view.formBox.el);
+            if (model.includeenterprise()) {
+                div.append(view.enterpriseBox.el);
+            } else {
+                var dummyspacing = $('<div style="" class="plan-container enterprise"/>');
+                dummyspacing.css('width', '160px');
+                div.prepend(dummyspacing);
+            }
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));

@@ -1,0 +1,176 @@
+@import 'util.less';
+
+/// @DRAGGABLES ///
+
+.design-view-action-document-draggables {
+    .box-sizing(border-box);
+    height: 96px;
+    text-align: right;
+    background-color: #f2f2f2;
+    border-bottom: 4px solid #fff;
+    border-left: 4px solid #fff;
+    border-right: 4px solid #fff;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    .box-shadow(0 4px 0 rgba(0,0,0,0.05));
+}
+
+.design-view-action-document-draggables-help {
+    .box-sizing(border-box);
+    height: 100%;
+    width: 200px;
+    display: inline-block;
+    position: relative;
+    margin: 0 8px 0 0;
+    .wrapper {
+        .box-sizing(border-box);
+        .center-vh(100%, 36px);
+        .number {
+          display : inline-block;
+          width:14px;
+          vertical-align: top;
+          line-height: 16px;
+          text-align : left;
+        }
+        .text {
+          display : inline-block;
+          width: 140px;
+          line-height: 16px;
+          vertical-align: top;
+          margin-right: 10px;
+          text-align : left;
+        }
+    }
+}
+
+@draggable-width: 133px;
+@draggable-background: #FAFAFA;
+
+
+
+.design-view-action-document-draggables-checkbox {
+    .box-sizing(border-box);
+    height: 100%;
+    width: @draggable-width;
+    display: inline-block;
+    position: relative;
+    margin: 0 16px 0 0;
+    text-align: center;
+}
+
+.design-view-action-document-draggables-checkbox-wrapper {
+    .box-sizing(border-box);
+    .center-vh(100%, 56px);
+    border: 4px solid #FFFFFF;
+    border-radius: 4px 4px 4px 4px;
+    background-color: @draggable-background;
+}
+
+.design-view-action-document-draggables-checkbox-text {
+    .box-sizing(border-box);
+    .center-vh(100%, 38px);
+    cursor: default;
+}
+
+.design-view-action-document-draggables-checkbox-icon {
+    vertical-align: middle;
+    margin-right: 8px;
+    background-image: url(../../img/place-fields-sprite.png);
+    background-position: -0*38px 0px;
+    width: 38px;
+    height: 38px;
+    display: inline-block;
+}
+
+.design-view-action-document-draggables-signature {
+    .box-sizing(border-box);
+    height: 100%;
+    display: inline-block;
+    position: relative;
+    width: 160px;
+    margin: 0 16px 0 5px;
+    text-align: center;
+}
+
+.design-view-action-document-draggables-signature-wrapper {
+    .box-sizing(border-box);
+    .center-vh(100%, 56px);
+    border: 4px solid #FFFFFF;
+    border-radius: 4px 4px 4px 4px;
+    background-color: @draggable-background;
+}
+
+.design-view-action-document-draggables-signature-text {
+    .box-sizing(border-box);
+    .center-vh(100%, 38px);
+    cursor: default;
+}
+
+.design-view-action-document-draggables-signature-icon {
+    vertical-align: middle;
+    margin-right: 8px;
+    background-image: url(../../img/place-fields-sprite.png);
+    background-position: -1*38px 0px;
+    width: 38px;
+    height: 38px;
+    display: inline-block;
+}
+
+
+.design-view-action-document-draggables-textbox {
+    .box-sizing(border-box);
+    height: 100%;
+    display: inline-block;
+    position: relative;
+    width: 158px;
+    margin: 0 20px 0 5px;
+    text-align: center;
+}
+
+.design-view-action-document-draggables-textbox-wrapper {
+    .box-sizing(border-box);
+    .center-vh(100%, 56px);
+    border: 4px solid #FFFFFF;
+    border-radius: 4px 4px 4px 4px;
+    background-color: @draggable-background;
+}
+
+.design-view-action-document-draggables-textbox-text {
+    .box-sizing(border-box);
+    .center-vh(100%, 38px);
+    cursor: default;
+}
+
+.design-view-action-document-draggables-textbox-icon {
+    vertical-align: middle;
+    margin-right: 8px;
+    background-image: url(../../img/place-fields-sprite.png);
+    background-position: -2*38px 0px;
+    width: 38px;
+    height: 38px;
+    display: inline-block;
+}
+
+.typesetter-obligatory-option {
+    width: 220px;
+}
+
+.text-field-placement-setter-field-name {
+    .name {
+        border: 1px solid red;
+        width: 150px;
+        vertical-align: top;
+        height: 15px;
+        padding: 4px;
+    }
+    .button {
+        padding: 4px 12px 5px;
+        vertical-align: top;
+    }
+}
+
+.text-field-placement-setter-field-editor {
+    width: 208px;
+    height: 15px;
+    padding: 4px;
+}

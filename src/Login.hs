@@ -48,7 +48,9 @@ handleLoginGet = do
                 ad <- getAnalyticsData
                 content <- renderTemplate "loginPageWithBranding" $ do
                          F.value "logolink" $ bdlogolink bd
+                         F.value "servicelinkcolour" $ bdservicelinkcolour bd
                          F.value "background" $ bdbackgroundcolorexternal $ bd
+                         F.value "buttoncolorclass" $ bdbuttonclass $ bd
                          F.value "referer" $ fromMaybe "/" referer
                          standardPageFields ctx kontrakcja ad
                 Right . Left <$> simpleHtmlResonseClrFlash content
@@ -69,6 +71,8 @@ signupPageGet = do
             F.value "email" memail
             F.value "logolink" $ bdlogolink bd
             F.value "background" $ bdbackgroundcolorexternal $ bd
+            F.value "buttoncolorclass" $ bdbuttonclass $ bd
+            F.value "servicelinkcolour" $ bdservicelinkcolour bd
             standardPageFields ctx kontrakcja ad
           Left <$> simpleHtmlResonseClrFlash content
 

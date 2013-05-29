@@ -82,10 +82,17 @@ instance SafeEnum DeliveryMethod where
     fromSafeEnum EmailDelivery = 1
     fromSafeEnum PadDelivery   = 2
     fromSafeEnum APIDelivery   = 3
+    fromSafeEnum MobileDelivery= 4
+    fromSafeEnum EmailAndMobileDelivery = 5
+
     toSafeEnum 1 = Just EmailDelivery
     toSafeEnum 2 = Just PadDelivery
     toSafeEnum 3 = Just APIDelivery
+    toSafeEnum 4 = Just MobileDelivery
+    toSafeEnum 5 = Just EmailAndMobileDelivery
     toSafeEnum _  = Nothing
+
+
 
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair
@@ -146,6 +153,7 @@ sfFromJSON (name, jsv) =
     obl = maybe True id (fromJSValueField "obligatory" jsv)
     tp  = case name of
             "email"      -> EmailFT
+            "mobile"     -> MobileFT
             "fstname"    -> FirstNameFT
             "sndname"    -> LastNameFT
             "company"    -> CompanyFT

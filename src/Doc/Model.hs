@@ -23,6 +23,7 @@ module Doc.Model
   , CancelDocument(..)
   , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
+  , ChangeSignatoryPhoneWhenUndelivered(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
   , RemoveOldDrafts(..)
@@ -33,6 +34,7 @@ module Doc.Model
   , GetDocuments2(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByDocumentIDs(..)
+  , GetDocumentBySignatoryLinkID(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentsByAuthor(..)
   , GetSignatoryScreenshots(..)
@@ -1239,6 +1241,31 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
       updateMTimeAndObjectVersion did (actorTime actor)
       return ()
 
+data ChangeSignatoryPhoneWhenUndelivered = ChangeSignatoryPhoneWhenUndelivered DocumentID SignatoryLinkID String Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneWhenUndelivered () where
+  update (ChangeSignatoryPhoneWhenUndelivered did slid phone actor) = do
+      oldphone <- kRunAndFetch1OrThrowWhyNot (\acc (m :: String) -> acc ++ [m]) $ sqlUpdate "signatory_link_fields" $ do
+             sqlFrom "signatory_link_fields AS signatory_link_fields_old"
+             sqlWhere "signatory_link_fields.id = signatory_link_fields_old.id"
+             sqlSet "value" phone
+             sqlResult "signatory_link_fields_old.value"
+             sqlWhereEq "signatory_link_fields.signatory_link_id" slid
+             sqlWhereEq "signatory_link_fields.type" MobileFT
+      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+          sqlSet "invitation_delivery_status" Unknown
+          sqlSet "user_id" $ SqlNull
+          sqlWhereEq "signatory_links.id" slid
+          sqlWhereExists $ sqlSelect "documents" $ do
+              sqlWhere "documents.id = signatory_links.document_id"
+              sqlWhereDocumentStatusIs Pending
+      _ <- update $ InsertEvidenceEvent
+          ChangeSignatoryPhoneWhenUndeliveredEvidence
+          (value "oldphone" oldphone >> value "newphone" phone >> value "actor" (actorWho actor))
+          (Just did)
+          actor
+      updateMTimeAndObjectVersion did (actorTime actor)
+      return ()
+
 data PreparationToPending = PreparationToPending DocumentID Actor (Maybe TimeZoneName)
 instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending () where
   update (PreparationToPending docid actor mtzn) = do
@@ -1326,13 +1353,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () wher
     return ()
 
 
-data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
+data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
-  update (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues actor) =
-    listToMaybe <$> update (DocumentFromSignatoryDataV docid [(fstname,sndname,email,company,personalnumber,companynumber,fieldvalues)] actor)
+  update (DocumentFromSignatoryData docid fstname sndname email mobile company personalnumber companynumber fieldvalues actor) =
+    listToMaybe <$> update (DocumentFromSignatoryDataV docid [(fstname,sndname,email, mobile, company,personalnumber,companynumber,fieldvalues)] actor)
 
 data DocumentFromSignatoryDataV = DocumentFromSignatoryDataV DocumentID
-                                  [(String,String,String,String,String,String,[String])] Actor
+                                  [(String,String,String,String,String,String,String,[String])] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m DocumentFromSignatoryDataV [Document] where
   update (DocumentFromSignatoryDataV docid csvdata actor) = do
     mdocument <- query $ GetDocumentByDocumentID docid
@@ -1366,8 +1393,8 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m Docu
      toNewSigLink csvdata1 mh sl
          | isJust (signatorylinkcsvupload sl) = (pumpData csvdata1 sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
          | otherwise = sl { signatorymagichash = mh }
-     pumpData (fstname,sndname,email,company,personalnumber,companynumber,fieldvalues) siglink =
-       replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
+     pumpData (fstname,sndname,email,mobile,company,personalnumber,companynumber,fieldvalues) siglink =
+       replaceSignatoryData siglink fstname sndname email mobile company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
@@ -1492,6 +1519,16 @@ instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
     selectDocuments $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereIn "documents.id" dids
+
+data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
+instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) where
+  query (GetDocumentBySignatoryLinkID slid) =
+     (selectDocuments $ sqlSelect "documents" $ do
+       mapM_ sqlResult documentsSelectors
+       sqlWhereExists $ sqlSelect "signatory_links" $ do
+         sqlWhereEq "signatory_links.id" slid
+         sqlWhere "signatory_links.document_id = documents.id")
+    >>= oneObjectReturnedGuard
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash (Maybe Document) where
@@ -1642,8 +1679,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
   update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
   magichash <- random
-
+  Log.debug $ show user
   authorDetails <- signatoryDetailsFromUser user (True, True)
+  Log.debug $ show authorDetails
   let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
   let authorlink = authorlink0 {

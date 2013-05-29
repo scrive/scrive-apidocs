@@ -79,6 +79,8 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for signatory 
 ###
 ChangeMainfileEvidenceText=
 ###
+ChangeSignatoryPhoneWhenUndeliveredEvidenceText=$actor$ changed the phone for the signatory from "$oldphone$" to "$newphone$".
+###
 CancelDocumenElegEvidenceText=Scrive cancelled the signing process due to mismatch of signatory information with the eID data received from the eID provider. Reason provided by the eID provider: $msg$.
 ###
 CancelDocumentEvidenceText=The signing process was cancelled by $actor$.
@@ -146,7 +148,7 @@ SetPadDeliveryMethodEvidenceText=
 ###
 SetAPIDeliveryMethodEvidenceText=
 ###
-ResealedPDFText=The document was resealed by $actor$. Resealing is a manual request by an admin in the Scrive backend to seal the document. Scrive sealing of the document includes appending the verification page, evidence log, evidence of intent, evidence documentation, digital signature documentation and the Guardtime digital signature. Resealing is done in cases when a system error prevented the sealing to be executed by the Scrive system. 
+ResealedPDFText=The document was resealed by $actor$. Resealing is a manual request by an admin in the Scrive backend to seal the document. Scrive sealing of the document includes appending the verification page, evidence log, evidence of intent, evidence documentation, digital signature documentation and the Guardtime digital signature. Resealing is done in cases when a system error prevented the sealing to be executed by the Scrive system.
 ###
 ReminderSendText=A reminder to sign was sent by the Scrive system. The Scrive system reset the delivery status details (sent/received/read invitation/read online).
 ###
@@ -160,3 +162,5 @@ InvitationUndeliveredText=Scrive´s external email delivery system reported that
 ###
 SignatoryLinkVisitedText=The page for signing the document was visited by $name$.
 ###
+ProlongDocumentEvidenceText=Document $did$ prolonged by $actor$
+####

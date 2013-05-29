@@ -2,7 +2,7 @@
 	color: #666;
 	position: absolute;
 	width: 250px;
-	z-index: 101;
+	z-index: 1001;
     .tooltip-body {
       background: #fff;
       margin: 5px;
@@ -32,7 +32,20 @@
       position: absolute;
       top: 12px;
       width: 17px;
-      z-index: 102;
+      z-index: 1002;
+  }
+
+  &.black-theme {
+     color: #EFEFEF;
+    .tooltip-body {
+      opacity: 0.55;
+      background: #000000;
+    }
+    &:before {
+      background : #000000
+      opacity: 0.55;
+    }
+
   }
 }
 

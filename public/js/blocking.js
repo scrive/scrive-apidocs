@@ -39,6 +39,9 @@
         isEnterprise: function() {
             return this.plan() === 'enterprise';
         },
+        isTrial: function() {
+            return this.plan() === 'trial';
+        },
         isFree: function() {
             return this.plan() === 'free';
         },
@@ -59,6 +62,7 @@
         },
         hasUsedAll: function() {
             return !this.isEnterprise()  &&
+                   !this.isTrial()       &&
                    !this.isFree()        &&
                     this.isActive()      &&
                     this.docsLeft() <= 0;

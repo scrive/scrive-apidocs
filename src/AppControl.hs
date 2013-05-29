@@ -12,7 +12,7 @@ module AppControl
 
 import AppConf
 
-import Amazon
+import qualified Amazon as AWS
 import AppView as V
 import Crypto.RNG
 import DB
@@ -166,7 +166,8 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT . enhanceYourCalm $
-  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $ do
+  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
+    AWS.runAmazonMonadT amazoncfg $ do
     startTime <- liftIO getClockTime
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
@@ -219,6 +220,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         kRollback -- if exception was thrown, rollback everything
         return response
   where
+    amazoncfg = AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals)
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
       lift $ Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
       internalServerError $ toResponse ""
@@ -252,10 +254,13 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       -- error notification
       peerip <- do
         rq <- askRq
-        -- FIXME: we should read some headers from upstream proxy, if any
-        let peerhost = case getHeader "x-real-ip" rq of
-              Just name -> BS.toString name
-              Nothing -> fst (rqPeer rq)
+        -- First, we look for x-forwarded-for, which a proxy might insert
+        -- Then, we look for x-real-ip, which nginx might insert
+        let peerhost :: HostName
+            peerhost = head $ catMaybes $
+                         [ BS.toString <$> getHeader h rq
+                         |  h <- ["x-forwarded-for", "x-real-ip"]
+                         ] ++ [Just (fst (rqPeer rq))]
             hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
         addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
         return $ case addrAddress $ head addrs of
@@ -294,7 +299,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxtime = minutestime
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
-        , ctxs3action = mkAWSAction $ amazonConfig appConf
         , ctxproduction = production appConf
         , ctxtemplates = localizedVersion userlang templates2
         , ctxglobaltemplates = templates2

@@ -24,6 +24,7 @@ import Utils.Prelude
 import IPAddress ()
 import Kontra
 import Administration.AdministrationView
+import Administration.AddPaymentPlan
 import Doc.Model
 import Doc.DocStateData
 import Doc.SignatoryLinkID
@@ -462,54 +463,6 @@ deleteCompanyPlan :: Kontrakcja m => CompanyID -> m ()
 deleteCompanyPlan companyid = do
   dbUpdate $ DeletePaymentPlan (Right companyid)
 
-addCompanyPlanManual :: Kontrakcja m => CompanyID -> PricePlan -> PaymentPlanStatus -> m ()
-addCompanyPlanManual companyid pp status = do
-  case pp of
-    FreePricePlan -> do
-      mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
-      case mpaymentplan of
-        Nothing -> return ()
-        Just PaymentPlan {ppPaymentPlanProvider = NoProvider} -> do
-          _ <- dbUpdate $ DeletePaymentPlan (Right companyid)
-          return ()
-        Just _ -> return ()
-    plan -> do
-      mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
-      quantity <- dbQuery $ GetCompanyQuantity companyid
-      time <- ctxtime <$> getContext
-      case mpaymentplan of
-        Nothing -> do
-          ac <- dbUpdate $ GetAccountCode
-          let paymentplan = PaymentPlan { ppAccountCode         = ac
-                                        , ppID                  = Right companyid
-                                        , ppPricePlan           = plan
-                                        , ppPendingPricePlan    = plan
-                                        , ppStatus              = status
-                                        , ppPendingStatus       = status
-                                        , ppQuantity            = quantity
-                                        , ppPendingQuantity     = quantity
-                                        , ppPaymentPlanProvider = NoProvider
-                                        , ppDunningStep         = Nothing
-                                        , ppDunningDate         = Nothing
-                                        , ppBillingEndDate      = time
-                                        }
-          _ <- dbUpdate $ SavePaymentPlan paymentplan time
-          _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Right companyid) ac
-          return ()
-        Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
-          let paymentplan' = paymentplan { ppPricePlan        = plan
-                                         , ppPendingPricePlan = plan
-                                         , ppStatus           = status
-                                         , ppPendingStatus    = status
-                                         , ppQuantity         = quantity
-                                         , ppPendingQuantity  = quantity
-                                         }
-          _ <- dbUpdate $ SavePaymentPlan paymentplan' time
-          _ <- Payments.Stats.record time Payments.Stats.ChangeAction NoProvider quantity plan (Right companyid) (ppAccountCode paymentplan')
-          return ()
-        Just _ -> do -- must be a Recurly payment plan; maybe flash message?
-          return ()
-
 handleUserPaymentsChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserPaymentsChange userid = onlySalesOrAdmin $ do
   mplan <- readField "priceplan"
@@ -548,54 +501,6 @@ migratePlan userid = do
 deletePlan :: Kontrakcja m => UserID -> m ()
 deletePlan userid = do
   dbUpdate $ DeletePaymentPlan (Left userid)
-
-addManualPricePlan :: Kontrakcja m => UserID -> PricePlan -> PaymentPlanStatus -> m ()
-addManualPricePlan  uid priceplan status =
-  case priceplan of
-    FreePricePlan -> do
-      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left uid
-      case mpaymentplan of
-        Just PaymentPlan{ppPaymentPlanProvider = NoProvider} -> do
-          _ <- dbUpdate $ DeletePaymentPlan $ Left uid
-          return ()
-        _ -> do
-          return ()
-    plan -> do
-      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left uid
-      let quantity = 1
-      time <- ctxtime <$> getContext
-      case mpaymentplan of
-        Nothing -> do
-          ac <- dbUpdate $ GetAccountCode
-          let paymentplan = PaymentPlan { ppAccountCode         = ac
-                                        , ppID                  = Left uid
-                                        , ppPricePlan           = plan
-                                        , ppPendingPricePlan    = plan
-                                        , ppStatus              = status
-                                        , ppPendingStatus       = status
-                                        , ppQuantity            = quantity
-                                        , ppPendingQuantity     = quantity
-                                        , ppPaymentPlanProvider = NoProvider
-                                        , ppDunningStep         = Nothing
-                                        , ppDunningDate         = Nothing
-                                        , ppBillingEndDate      = time
-                                        }
-          _ <- dbUpdate $ SavePaymentPlan paymentplan time
-          _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Left uid) ac
-          return ()
-        Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
-          let paymentplan' = paymentplan { ppPricePlan        = plan
-                                         , ppPendingPricePlan = plan
-                                         , ppStatus           = status
-                                         , ppPendingStatus    = status
-                                         , ppQuantity         = quantity
-                                         , ppPendingQuantity  = quantity
-                                         }
-          _ <- dbUpdate $ SavePaymentPlan paymentplan' time
-          _ <- Payments.Stats.record time Payments.Stats.ChangeAction NoProvider quantity plan (Left uid) (ppAccountCode paymentplan')
-          return ()
-        Just _ -> do -- must be a Recurly payment plan; maybe flash message?
-          return ()
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
@@ -688,7 +593,6 @@ getUserInfoChange = do
   muserpersonalnumber  <- getField "userpersonalnumber"
   musercompanyposition <- getField "usercompanyposition"
   muserphone           <- getField "userphone"
-  musermobile          <- getField "usermobile"
   museremail           <- fmap Email <$> getField "useremail"
   musercompanyname     <- getField "usercompanyname"
   musercompanynumber   <- getField "usercompanynumber"
@@ -698,7 +602,6 @@ getUserInfoChange = do
       , userpersonalnumber  = fromMaybe userpersonalnumber muserpersonalnumber
       , usercompanyposition = fromMaybe usercompanyposition musercompanyposition
       , userphone           = fromMaybe userphone muserphone
-      , usermobile          = fromMaybe usermobile musermobile
       , useremail           = fromMaybe useremail museremail
       , usercompanyname     = fromMaybe usercompanyname musercompanyname
       , usercompanynumber   = fromMaybe usercompanynumber musercompanynumber
@@ -929,6 +832,7 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
               FirstNameFT      -> "sigfstname"
               LastNameFT       -> "sigsndname"
               EmailFT          -> "sigemail"
+              MobileFT         -> "sigmobile"
               CompanyFT        -> "sigco"
               PersonalNumberFT -> "sigpersnr"
               CompanyNumberFT  -> "sigcompnr"

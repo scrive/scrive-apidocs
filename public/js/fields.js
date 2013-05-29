@@ -13,37 +13,41 @@ window.FieldPlacement = Backbone.Model.extend({
       wrel: 0,
       hrel: 0,
       fsrel: 0,
-      withTypeSetter : false
+      withTypeSetter : false,
+      alive: true,
+      step: 'edit'
     },
     initialize : function(args){
         var placement = this;
+        _.bindAll(placement);
         placement.addToPage();
-        if (this.tip() == undefined)
+        if (this.tip() === undefined)
           this.set({"tip" : args.field.defaultTip()});
-        args.field.bind('removed', function() {
-            placement.trigger("removed");
-            placement.remove();
-        });
+        this.setSignatory(args.field.signatory());
+        this.setField(args.field);
     },
     placed : function() {
-          return this.get("placed");
+        return this.get("placed");
     },
     addToPage : function() {
-         if (this.placed()) return;
-         var placement = this;
-         var field = placement.field();
-         var signatory = field.signatory();
-         var document = signatory.document();
-         var pageno = this.get("page");
-         var tryToAddToPage = function() {
-                if (document.file() && document.file().page(pageno) != undefined) {
-                    document.file().page(pageno).addPlacement(placement);
-                    placement.set({placed : true});
-                    document.off('file:change',tryToAddToPage);
-                }
-         };
-         document.bind('file:change',tryToAddToPage);
-         tryToAddToPage();
+        if (this.placed())
+            return;
+        var placement = this;
+        var field = placement.field();
+        var signatory = field.signatory();
+        var document = signatory.document();
+        var pageno = this.get("page");
+        var tryToAddToPage = function() {
+            if (placement.alive() && document.file() && document.file().page(pageno) != undefined) {
+                document.file().page(pageno).addPlacement(placement);
+                placement.set({placed : true});
+                document.off('file:change',tryToAddToPage);
+            }
+            if(!placement.alive())
+                document.off('file:change',tryToAddToPage);
+        };
+        document.bind('file:change',tryToAddToPage);
+        setTimeout(tryToAddToPage,0);
     },
     xrel : function() {
         return this.get("xrel");
@@ -66,6 +70,20 @@ window.FieldPlacement = Backbone.Model.extend({
     field : function(){
         return this.get("field");
     },
+    setField: function(f) {
+        var oldfield = this.field();
+        if(oldfield !== f) {
+            if(f) {
+                f.bind('removed', this.remove);
+                f.addPlacement(this);
+            }
+            if(oldfield) {
+                oldfield.unbind('removed', this.remove);
+                oldfield.removePlacement(this);
+            }
+            this.set({field:f});
+        }
+    },
     file : function(){
         return this.get("file");
     },
@@ -76,12 +94,15 @@ window.FieldPlacement = Backbone.Model.extend({
       return this.get("withTypeSetter") == true;
     },
     cleanTypeSetter : function() {
-       this.set({"withTypeSetter" : false}, {silent: true});
+       this.set({"withTypeSetter" : false});
+        this.trigger('clean');
     },
     remove : function() {
+       this.trigger("removed");
        var document = this.field().signatory().document();
        var page = document.file().page(this.get("page"));
        page.removePlacement(this);
+        this.set({placed:false});
        this.field().removePlacement(this);
        this.off();
     },
@@ -103,6 +124,42 @@ window.FieldPlacement = Backbone.Model.extend({
         tip : this.get("tip")
       };
       return draft;
+    },
+    signatory: function() {
+        return this.get('signatory');
+    },
+    setSignatory: function(s) {
+        return this.set({signatory:s});
+    },
+    die: function() {
+        this.set({alive:false});
+    },
+    alive: function() {
+        return this.get('alive');
+    },
+    bindBubble: function() {
+        var placement = this;
+        placement.bind('change', placement.bubbleSelf);
+        placement.bind('bubble', placement.triggerBubble);
+    },
+    bubbleSelf: function() {
+        var placement = this;
+        placement.trigger('bubble');
+    },
+    triggerBubble: function() {
+        var placement = this;
+        var field = placement.field();
+        if(field)
+            field.trigger('bubble');
+    },
+    step: function() {
+        return this.get('step');
+    },
+    goToStepField : function() {
+        this.set({step:'field'});
+    },
+    goToStepEdit : function() {
+        this.set({step:'edit'});
     }
 });
 
@@ -118,24 +175,27 @@ window.Field = Backbone.Model.extend({
     },
     initialize : function(args){
         var field = this;
+        _.bindAll(field);
         var extendedWithField =   function(hash){
-                    hash.field = field;
-                    return hash;
+            hash.field = field;
+            return hash;
         };
         var placements =  _.map(args.placements, function(placement){
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
-        this.bind("change",function() {
-            field.signatory().document().trigger("change:signatories");
+        this.bind("change:value",function() {
+            field.signatory().document().trigger("change-signatories-field-values");
         });
-        args.signatory.bind("removed",function() {
-            field.trigger("removed");
-            field.off();
-        });
+        if(args.signatory)
+            args.signatory.bind("removed", field.remove);
+        field.bindBubble();
     },
     type : function() {
         return this.get("type");
+    },
+    setType : function(t) {
+        this.set({type:t});
     },
     name : function() {
         return this.get("name");
@@ -152,8 +212,31 @@ window.Field = Backbone.Model.extend({
     shouldbefilledbysender : function() {
         return this.get("shouldbefilledbysender");
     },
+    setShouldBeFilledBySender : function(s) {
+        this.set({shouldbefilledbysender:s});
+        return this;
+    },
+    setValueSilent : function(value) {
+        this.set({"value" : value}, {silent: true});
+    },
     setValue : function(value) {
         this.set({"value" : value});
+        this.triggerSignatoryPostChanges();
+    },
+    triggerSignatoryPostChanges : function() {
+        var name = this.name();
+        if (this.isStandard()) {
+            if (name == "fstname")
+                this.signatory().trigger('change:name');
+            if (name == "sndname" )
+                this.signatory().trigger('change:name');
+            if (name == "email")
+                this.signatory().trigger('change:email');
+            if (name == "sigco")
+                this.signatory().trigger('change:company');
+        }
+
+
     },
     setValueTMP : function(value) {
         this.set({"valueTMP" : value});
@@ -164,6 +247,9 @@ window.Field = Backbone.Model.extend({
     isClosed : function() {
         return this.get("closed");
     },
+    isFake : function() {
+        return this.type() == 'fake';
+    },
     placements : function() {
         return this.get("placements");
     },
@@ -173,8 +259,19 @@ window.Field = Backbone.Model.extend({
     signatory : function(){
         return this.get("signatory");
     },
+    setSignatory: function(sig) {
+        var oldsig = this.signatory();
+        if(oldsig)
+            oldsig.unbind('removed', this.remove);
+        this.set({signatory:sig});
+        sig.bind('removed', this.remove);
+        return this;
+    },
     canBeIgnored: function(){
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
+    },
+    hasNotReadyPlacements : function() {
+      return _.any(this.placements(), function(p) {if (p.step() != 'field' && p.step != 'edit') console.log("Bad step X" + p.step() +"X"); return (p.step() != 'field' && p.step() != 'edit');});
     },
     readyForSign : function(){
         if (this.isEmail())
@@ -207,6 +304,8 @@ window.Field = Backbone.Model.extend({
                 return localization.personamNumber;
             if (name == "sigcompnr")
                 return localization.companyNumber;
+            if (name == "mobile")
+                return localization.phone;
         }
         return name;
     },
@@ -220,54 +319,76 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name();
 
+        if (field.isFake())
+           return new NoValidation();
+
+        if( field.isBlank() ) {
+            var msg = localization.designview.validation.pleaseSelectField;
+            return new Validation({validates: function() {
+                return field.type() && field.name();
+            }, message: msg});
+        }
+
+        if(field.noName()) {
+            var msg = localization.designview.validation.notReadyField;
+            return new Validation({validates: function() {
+                return !field.noName();
+            }, message: msg});
+
+        }
+
         if (   this.isEmail()
             && !this.signatory().isCsv()
-            && (this.signatory().document().emailDelivery())){
+            && (this.signatory().emailDelivery() || this.signatory().emailMobileDelivery())
+           ){
             var msg = localization.designview.validation.missingOrWrongEmail;
-            this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
+        if ((this.isFstName() || this.isSndName()) && this.signatory().author())
+            return new NoValidation();
+
+        if (this.isCheckbox() && this.signatory().author())
+            return new NoValidation();
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
-            this.setValue(this.value().trim());
             return new EmailValidation({message: msg});
         }
 
-        if (forSigning && this.signatory().author() && this.signatory().document().elegAuthentication() && this.isSSN()) {
+        if (   this.isMobile()
+            && !this.signatory().isCsv()
+            && this.signatory().needsMobile()
+           ){
+            var msg = localization.designview.validation.missingOrWrongMobile;
+            return new PhoneValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+        }
+
+        if (forSigning && this.signatory().author() && this.signatory().elegAuthentication() && this.isSSN()) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.signatory().author() && this.isStandard() && this.hasPlacements() && forSigning) {
-          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
-          return new NotEmptyValidation({message: msg});
+        if(this.isObligatory() && forSigning && this.shouldbefilledbysender()) {
+            var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+            return new NotEmptyValidation({message: msg});
         }
+
         if (this.signatory().author() && (this.isCheckbox() || this.isText()) && this.hasPlacements() && this.isObligatory() && forSigning) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
-        }
-
-        if (this.isCustom()) {
-          var msg1 = localization.designview.validation.notReadyField;
-          var msg2 = localization.designview.validation.notPlacedField;
-          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
-          if (this.signatory().author() && forSigning) {
-            return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongPlacedAuthorField}));
-          } else {
-            return validation;
-          }
         }
 
         if (this.isCheckbox()) {
             var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
             return validation;
         }
-
         return new Validation();
     },
     isEmail: function() {
         return  this.isStandard() && this.name() == "email";
+    },
+    isMobile: function() {
+        return  this.isStandard() && this.name() == "mobile";
     },
     isFstName: function() {
         return  this.isStandard() && this.name() == "fstname";
@@ -277,6 +398,12 @@ window.Field = Backbone.Model.extend({
     },
     isSSN : function() {
         return  this.isStandard() && this.name() == "sigpersnr";
+    },
+    isBlank: function() {
+        return this.type() === '' && this.name() === '';
+    },
+    noName: function() {
+        return this.name() === '';
     },
     isStandard: function() {
         return  this.type() == "standard";
@@ -305,50 +432,44 @@ window.Field = Backbone.Model.extend({
       return "right";
     },
     makeOptional : function() {
-        this.set({"obligatory":false}, {silent: true});
+        this.set({"obligatory":false});
     },
     makeObligatory : function() {
-        this.set({"obligatory":true}, {silent: true});
+        this.set({"obligatory":true});
     },
     isReady: function(){
-      return this.get("fresh") == false;
+      return this.get("fresh") == false && this.name() !== '' && this.type() !== '';
     },
     makeReady : function() {
       this.set({fresh: false});
       this.trigger("ready");
     },
     remove: function(){
-      _.each(this.placements(),function(placement) {
-            placement.remove();
-        });
-      this.signatory().deleteField(this);
-      this.trigger("removed");
+        this.signatory().deleteField(this);
+        this.off();
+        this.trigger("removed");
     },
     draftData : function() {
       return {
-                 type : this.type()
-               , name : this.name()
-               , value : this.value()
-               , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
-               , obligatory : this.obligatory()
-               , shouldbefilledbysender : this.shouldbefilledbysender()
-             };
+          type : this.type()
+          , name : this.name()
+          , value : this.value()
+          , placements : _.invoke(this.placements(), 'draftData')
+          , obligatory : this.obligatory()
+          , shouldbefilledbysender : this.shouldbefilledbysender()
+      };
     },
    hasPlacements : function() {
       return this.get("placements").length > 0;
    },
-   addPlacement : function(placement) {
-      var newplacements = new Array(); //Please don't ask why we rewrite this array
-      for(var i=0;i<this.placements().length;i++)
-         newplacements.push(this.placements()[i]);
-      newplacements.push(placement);
-      this.set({placements : newplacements});
+    addPlacement : function(placement) {
+        if(!_.contains(this.placements(), placement)) {
+            this.placements().push(placement);
+            this.trigger('change change:placements');
+        }
     },
    removePlacement : function(placement) {
-       var newplacements = new Array();
-       for(var i=0;i<this.placements().length;i++)
-          if (placement !== this.placements()[i])
-             newplacements.push(this.placements()[i]);
+       var newplacements = _.without(this.placements(), placement);
        this.set({placements : newplacements});
        if (this.isCheckbox() && newplacements.length == 0)
            this.signatory().deleteField(this);
@@ -356,177 +477,55 @@ window.Field = Backbone.Model.extend({
     },
     removeAllPlacements : function() {
         _.each(this.placements(), function(p) {p.remove();});
-    }
-});
-
-
-window.FieldStandardView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'cleanredborder');
-         this.model.bind('change:inlineedited', this.render);
-        this.model.bind('change', this.cleanredborder);
-        this.model.view = this;
-        this.render();
     },
-    render: function(){
-        var field = this.model;
-        $(this.el).empty();
-        var signatory = field.signatory();
-        if (!signatory.canSign() || field.isClosed() || !signatory.current()) {
-            $(this.el).addClass("field");
-            input = $("<input class='fieldvalue' autocomplete='off' readonly=''/>");
-            if (field.value() != "")
-                input.val(field.value());
-            else
-                {
-                input.val(field.nicename());
-                $(this.el).addClass("required");
-                input.addClass("grayed");
-                }
-        $(this.el).append(input);
-        }
+    isValid: function(forSigning) {
+        return this.validation(forSigning).validateData(this.value());
+    },
+    doValidate: function(forSigning, callback) {
+        return this.validation(forSigning)
+            .setCallback(callback)
+            .validateData(this.value());
+    },
+    basicFields: ['fstname', 'sndname', 'email'],
+    isBasic: function() {
+        var field = this;
+        return field.isStandard() && _.contains(field.basicFields, field.name());
+    },
+    requiredForParticipation: function() {
+        var field = this;
+        var sig = field.signatory();
+
+        if(field.isSSN() && sig.needsPersonalNumber())
+            return true;
+        if(field.isMobile() && sig.needsMobile())
+            return true;
+        return false;
+    },
+    canBeRemoved: function() {
+        if(this.isBasic())
+            return false;
+        else if(this.requiredForParticipation())
+            return false;
         else
-        {
-            $(this.el).addClass("dragfield");
-            var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
-            if (field.value() ==  "" && SessionStorage.get(signatory.document().documentid(),field.name()) != undefined ) {
-                field.setValue(SessionStorage.get(signatory.document().documentid(),field.name()));
-            }
-            var input = InfoTextInput.init({
-                                 infotext: field.nicename(),
-                                 value: field.value(),
-                                 cssClass :'fieldvalue',
-                                 onChange : function(value) {
-                                    field.setValue(value);
-                                    SessionStorage.set(signatory.document().documentid(),field.name(),value);
-                                  }
-                            }).input();
-            this.redborderhere = input;
-            input.attr("autocomplete","off");
-            wrapper.append(input);
-            $(this.el).append(wrapper);
-        }
-
-        return this;
+            return true;
     },
-    redborder : function() {
-        if (this.redborderhere != undefined)
-            this.redborderhere.css("border","1px solid red");
+    bindBubble: function() {
+        var field = this;
+        field.bind('change', field.bubbleSelf);
+        field.bind('bubble', field.triggerBubble);
     },
-    cleanredborder : function() {
-        if (this.redborderhere != undefined)
-            this.redborderhere.css("border","");
-    }
-});
-
-window.FieldDesignView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'cleanredborder');
-        this.model.bind('change', this.cleanredborder);
-        this.model.bind('ready', this.render);
-        this.model.signatory().document().bind('change:authenticationdelivery', this.cleanredborder);
-        this.model.view = this;
-        this.render();
+    bubbleSelf: function() {
+        var field = this;
+        field.trigger('bubble');
     },
-    ddIcon : function() {
-        var icon =  $("<div class='ddIcon' />");
-        var field = this.model;
-        var document = field.signatory().document();
-        if (document.mainfile() != undefined && document.mainfile().view != undefined) {
-            draggebleField(icon, field);
-        }
-        return icon;
-    },
-    prepIcon : function() {
-        return $("<a class='prepIcon' href='#'/>");
-    },
-    setNameIcon : function() {
-        var view = this;
-        var field = this.model;
-        var input = this.input;
-        var icon =  $("<a class='setNameIcon' href='#'/>");
-        var fn = function(){
-            if (field.name() != undefined && field.name() != "")
-               field.makeReady();
-            else
-               view.redborder();
-            return false;
-        };
-        icon.click(fn);
-        input.keypress(function(event) {
-          if(event.which === 13)
-            return fn();
-        });
-
-        // I'm not putting a blur handler that sets the name
-        // because it's a little odd. Neither is perfect. Eric
-
-        return icon;
-    },
-    removeIcon: function() {
-        var field = this.model;
-        var icon = $("<a class='removeField' href='#'/>");
-        icon.click(function(){
-            field.remove();
-            return false;
-        });
-        return icon;
-    },
-    render: function(){
-        var field = this.model;
-        $(this.el).empty();
+    triggerBubble: function() {
+        var field = this;
         var signatory = field.signatory();
-        $(this.el).addClass("field");
-        if (field.isReady()) {
-          $(this.el).append(this.ddIcon());
-          this.input = InfoTextInput.init({
-                                 infotext: field.nicename(),
-                                 value: field.value(),
-                                 cssClass :'fieldvalue',
-                                 inputname : field.name(), //Added only for selenium tests
-                                 onChange : function(value) {
-                                    field.setValue(value);
-                                  }
-                            }).input();
-          if  ( field.isClosed() ||
-              ((field.isEmail() || field.isFstName() || field.isSndName()) && field.signatory().author()) ||
-              ( field.isStandard() && field.signatory().author() && field.signatory().document().isTemplate()))
-            {
-                $(this.el).addClass('closed');
-                this.input.attr("readonly","yes");
-            }
-          else if (!field.isStandard())
-           {
-               this.input.addClass("shorter");
-               $(this.el).append(this.removeIcon());
-           }
-          $(this.el).append(this.input);
-        }
-        else {
-           $(this.el).append(this.prepIcon());
-           this.input = InfoTextInput.init({
-                                 infotext: localization.fieldName,
-                                 value: field.name(),
-                                 cssClass :'fieldvalue',
-                                 inputname : field.name(), //Added only for selenium tests
-                                 onChange : function(value) {
-                                    field.setName(value);
-                                  }
-               }).input();
-           this.input.addClass("much-shorter");
-           $(this.el).append(this.input);
-           $(this.el).append(this.removeIcon());
-           $(this.el).append(this.setNameIcon());
-
-        }
-        return this;
-    },
-    redborder : function() {
-        $(this.el).addClass("redborder");
-    },
-    cleanredborder : function() {
-        $(this.el).removeClass("redborder");
+        if(signatory)
+            signatory.trigger('bubble');
     }
 });
+
+
 
 })(window);

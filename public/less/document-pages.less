@@ -20,9 +20,9 @@
 
     border: 1px solid #777;
 
-    box-shadow: 1px 1px 5px #505050;
-    -moz-box-shadow: 1px 1px 5px #505050;
-    -webkit-box-shadow: 1px 1px 5px #505050;
+    -moz-box-shadow: 0 0 5px #aaa;
+    -webkit-box-shadow: 0 0 5px #aaa;
+    box-shadow: 0 0 5px #aaa;
 
     overflow: hidden;
 
@@ -121,20 +121,30 @@
      */
     font-size: 10px * @page-div-width / @a4-width-in-pt;
     line-height: 10px * @page-div-width / @a4-width-in-pt;
+    padding: 4px;
+    background-color: white;
+    filter: ~"alpha(opacity=95)";
+    -moz-opacity: 0.95;
+    opacity: 0.95;
 }
 
 .placedcheckbox {
-    background: url("../img/checkbox-blue-unchecked.png") no-repeat scroll 0 0 transparent;
+    background: url("../img/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
+    background: url("../img/checkbox-blue-unchecked.png") no-repeat scroll 0 0 rgba(255, 255, 255, 0.95);
+
     height: 12px;
     width: 12px;
 }
 
 .placedcheckbox:active {
-    background: url("../img/checkbox-blue-active.png") no-repeat scroll 0 0 transparent;
+    background: url("../img/checkbox-blue-active.png") no-repeat scroll 0 0;
+    background: url("../img/checkbox-blue-active.png") no-repeat scroll 0 0 rgba(255, 255, 255, 0.95);
+
 }
 
 .placedcheckbox.checked {
-    background: url("../img/checkbox-blue-checked.png") no-repeat scroll 0 0 transparent;
+    background: url("../img/checkbox-blue-checked.png") no-repeat scroll 0 0;
+    background: url("../img/checkbox-blue-checked.png") no-repeat scroll 0 0 rgba(255, 255, 255, 0.95);
 }
 
 

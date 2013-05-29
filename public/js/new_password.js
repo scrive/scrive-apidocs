@@ -26,6 +26,9 @@
     logolink : function() {
      return this.get("logolink");
     },
+    buttoncolorclass: function() {
+     return this.get("buttoncolorclass");
+    },
     validatePassword: function() {
       var password = this.password();
       var password2 = this.password2();
@@ -83,8 +86,10 @@
 
     render: function () {
       var model = this.model;
-       var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
+       var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(this.options.header));
        $(this.el).append(header);
+       if (this.options.body)
+         $(this.el).append($("<div style='padding: 0 0 3em;'/>").append($("<h4 style='color: #FFFFFF; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45);'/>").text(this.options.body)));
 
 
       var content = $("<div class='short-input-container recovery-container'/>");
@@ -119,7 +124,7 @@
       var changePasswordButton = Button.init({
           size  : 'small',
           color : 'blue',
-          text  : localization.newPasswordModal.modalNewPasswordViewFooterSave,
+          text  : this.options.button,
           onClick : function() {
             model.resetPassword();
           }
@@ -137,23 +142,24 @@
 
     render: function () {
       var model = this.model;
-      // var header = $("<div/>").addClass('shadowed').append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
-      // $(this.el).append(header);
 
-      var header = $("<div class='shadowed recovery'/>");
+
+
+
+      var content = $("<div style='width:'/>");
+      var wrapper = $("<div/>");
+      var body = $("<div/>");
+      var header = $("<div style='margin-bottom: 103px'/>");
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
-      header.append($("<label/>").text(localization.esigningpoweredbyscrive));
+      header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
       $(this.el).append(header);
 
-
-      var content = $("<div class='short-input-container login' style='border:none;background:none;'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper' style='border:none;background:none;'/>");
-      var body = $("<div class='short-input-container-body' style='border:none;background:none;'/>");
       content.append(wrapper.append(body));
 
-      body.append($("<div class='position first' style='text-align: left;'/>").append($("<label style='padding-left:10px;'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader + ":")));
-
+      body.append($("<div class='position first' style='text-align: left;height: 30px;'/>").append($("<label style='padding-left:10px;'/>").text(this.options.header)));
+       if (this.options.body)
+         body.append($("<label style='padding-bottom: 1em;'/>").text(this.options.body));
 
       var passwordInput = InfoTextInput.init({
         infotext: localization.newPasswordModal.modalNewPasswordViewNewPassword,
@@ -164,7 +170,7 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      passwordInput.input().attr("autocomplete","false");
+      passwordInput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
       body.append($("<div class='position'/>").append(passwordInput.input()));
 
       var password2Input = InfoTextInput.init({
@@ -176,20 +182,20 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      password2Input.input().attr("autocomplete","false");
-      body.append($("<div class='position'/>").append(password2Input.input()));
+      password2Input.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
+      body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.input()));
 
       var changePasswordButton = Button.init({
           size  : 'tiny',
-          color : 'blue',
-          text  : localization.newPasswordModal.modalNewPasswordViewFooterSave,
-          style : "width:80px;",
+          color : model.buttoncolorclass(),
+          text  : this.options.button,
+            style : "width:245px;",
           onClick : function() {
             model.resetPassword();
           }
         });
 
-     body.append($("<div class='position' style='text-align:right'/>").append(changePasswordButton.input()));
+     body.append($("<div class='position' style='text-align:center;margin-top:10px'/>").append(changePasswordButton.input()));
      $(this.el).append(content);
     }
   });
@@ -198,11 +204,27 @@
   window.NewPassword = function(args) {
     var model = new NewPasswordModel(args);
     var view;
+    var options = { model: model,
+                    header: localization.newPasswordModal.modalNewPasswordViewHeader,
+                    body: null,
+                    button: localization.newPasswordModal.modalNewPasswordViewFooterSave
+                  };
 
-    if (args.branded)
-      view = new NewPasswordBrandedView({model: model, el: $("<div class='short-input-section'/>")});
-    else
-      view = new NewPasswordView({model: model, el: $("<div class='short-input-section'/>")});
+    if (args.accessnewaccount) {
+      options.header = localization.accessNewAccountModal.header;
+      options.body = localization.accessNewAccountModal.body;
+      options.button = localization.accessNewAccountModal.button;
+    }
+
+    if (args.branded) {
+      if (!args.accessnewaccount)
+        options.header = options.header + ':';
+      options.el = $("<div style='width:275px;margin:20px auto'/>");
+      view = new NewPasswordBrandedView(options);
+    } else {
+      options.el = $("<div class='short-input-section'/>");
+      view = new NewPasswordView(options);
+    }
 
     this.el = function() {return $(view.el);}
   };

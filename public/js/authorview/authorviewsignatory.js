@@ -68,15 +68,24 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
           && signatory.signs()
           && signatory.reachedBySignorder()
           && (signatory.document().signingInProcess() || signatory.document().closed())
-          && !signatory.undeliveredEmail()
+          && !signatory.undeliveredInvitation()
           && !signatory.padDelivery();
  },
  hasChangeEmailOption: function() {
    var signatory = this.signatory();
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-          && signatory.undeliveredEmail()
+          && signatory.undeliveredInvitation()
           && signatory.document().signingInProcess()
           && signatory.document().pending()
+          && signatory.emailDelivery();
+ },
+ hasChangePhoneOption: function() {
+   var signatory = this.signatory();
+   return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+          && signatory.undeliveredInvitation()
+          && signatory.document().signingInProcess()
+          && signatory.document().pending()
+          && signatory.mobileDelivery();
  },
  hasPadOptions : function() {
    var signatory = this.signatory();
@@ -97,6 +106,7 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
  hasAnyOptions : function() {
     return  this.hasRemindOption()
          || this.hasChangeEmailOption()
+         || this.hasChangePhoneOption()
          || this.hasGiveForSigningOnThisDeviceOption()
          || this.hasAddToPadQueueOption()
          || this.hasRemoveFromPadQueueOption()
@@ -119,7 +129,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       statusbox.append(space);
       return statusbox;
   },
-  remidenMailOption: function() {
+  remiderOption: function() {
          var signatory = this.model.signatory();
          var button = $("<label class='clickable prepareToSendReminderMail'/>");
          var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
@@ -129,21 +139,56 @@ var AuthorViewSignatoryView = Backbone.View.extend({
          button.click(function() {
              mixpanel.track('Click send reminder',
                             {'Signatory index':signatory.signIndex()});
-             ConfirmationWithEmail.popup({
-                title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
-                mail: signatory.remindMail(),
-                acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-                editText: localization.reminder.formOwnMessage,
-                rejectText: localization.cancel,
-                onAccept: function(customtext) {
-                    trackTimeout('Accept',
-                                 {'Accept' : 'send reminder',
-                                  'Signatory index' : signatory.signIndex()},
-                                 function() {
-                                     signatory.remind(customtext).send();
-                                 });
-                }
-            });
+             if( signatory.emailDelivery()) {
+                 ConfirmationWithEmail.popup({
+                     title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
+                     mail: signatory.remindMail(),
+                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                     editText: localization.reminder.formOwnMessage,
+                     rejectText: localization.cancel,
+                     onAccept: function(customtext) {
+                         trackTimeout('Accept',
+                                      {'Accept' : 'send reminder',
+                                       'Signatory index' : signatory.signIndex(),
+                                       'Delivery method' : 'Email'},
+                                      function() {
+                                          signatory.remind(customtext).send();
+                                      });
+                     }
+                 });
+             } else if( signatory.mobileDelivery()) {
+                 Confirmation.popup({
+                     title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
+                     content: $("<div>").text(localization.reminder.mobileQuestion),
+                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                     rejectText: localization.cancel,
+                     onAccept: function(customtext) {
+                         trackTimeout('Accept',
+                                      {'Accept' : 'send reminder',
+                                       'Signatory index' : signatory.signIndex(),
+                                       'Delivery method' : 'Mobile'},
+                                      function() {
+                                          signatory.remind().send();
+                                      });
+                     }
+                 });
+             } else if( signatory.emailMobileDelivery()) {
+                 Confirmation.popup({
+                     title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
+                     content: $("<div>").text(localization.reminder.emailMobileQuestion),
+                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                     rejectText: localization.cancel,
+                     onAccept: function(customtext) {
+                         trackTimeout('Accept',
+                                      {'Accept' : 'send reminder',
+                                       'Signatory index' : signatory.signIndex(),
+                                       'Delivery method' : 'Email and Mobile'},
+                                      function() {
+                                          signatory.remind().send();
+                                      });
+                     }
+                 });
+             }
          });
          return button;
 
@@ -170,6 +215,38 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                       'Accept' : 'change email'},
                                                      function() {
                                                          signatory.changeEmail(input.val()).send();
+                                                     });
+                                    }
+                                    });
+                                container.empty().append(input).append(sndbutton.input());
+                                return false;
+                             }
+                          });
+    container.append(fstbutton.input());
+    return container;
+  },
+  changePhoneOption : function() {
+    var signatory = this.model.signatory();
+    var container = $("<div class='change-email-box'/>");
+    var fstbutton = Button.init({
+                            size: "tiny",
+                            color: "blue",
+                            text: localization.changePhone,
+                            onClick: function() {
+                                mixpanel.track('Click change phone',
+                                               {'Signatory index':signatory.signIndex()});
+                                var input = $("<input type='text'/>");
+                                input.val(signatory.mobile());
+                                var sndbutton = Button.init({
+                                    size: "tiny",
+                                    color: "blue",
+                                    text: localization.send,
+                                    onClick: function() {
+                                        trackTimeout('Accept',
+                                                     {'Signatory index':signatory.signIndex(),
+                                                      'Accept' : 'change phone'},
+                                                     function() {
+                                                         signatory.changePhone(input.val()).send();
                                                      });
                                     }
                                     });
@@ -263,9 +340,11 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     var signatory = this.model.signatory();
     var optionbox = $("<div class='optionbox'/>");
     if (this.model.hasRemindOption())
-      optionbox.append(this.remidenMailOption());
+      optionbox.append(this.remiderOption());
     if (this.model.hasChangeEmailOption())
       optionbox.append(this.changeEmailOption());
+    if (this.model.hasChangePhoneOption())
+      optionbox.append(this.changePhoneOption());
     if (this.model.hasGiveForSigningOnThisDeviceOption())
       optionbox.append(this.giveForSigningOnThisDeviceOption());
     if (this.model.hasAddToPadQueueOption())

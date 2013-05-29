@@ -36,7 +36,7 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign();
   },
   canGiveToNextSignatoryPad : function() {
-    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && this.document().padDelivery() && this.document().signatoriesThatCanSignNow().length > 0;
+    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && _.any(this.document().signatoriesThatCanSignNow(), function(s) {return s.padDelivery();}) && this.document().signatoriesThatCanSignNow().length > 0;
   },
   goToSignView : function() {
     new Submit({method: 'POST', url : '/d/signview/' + this.document().documentid()}).send();

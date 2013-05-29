@@ -19,11 +19,11 @@ import Utils.IO
 import OurPrelude
 import qualified Log (mailingServer, mailContent)
 import DB
-import KontraMonad
+import qualified Amazon as AWS
 
 data Sender = Sender {
     senderName :: String
-  , sendMail   :: (CryptoRNG m, MonadDB m, KontraMonad m) => Mail -> m Bool
+  , sendMail   :: (CryptoRNG m, MonadDB m, AWS.AmazonMonad m) => Mail -> m Bool
   }
 
 instance Show Sender where
@@ -40,7 +40,7 @@ createSender mc = case mc of
 createExternalSender :: String -> String -> (Mail -> [String]) -> Sender
 createExternalSender name program createargs = Sender { senderName = name, sendMail = send }
   where
-    send :: (CryptoRNG m, MonadDB m, KontraMonad m) => Mail -> m Bool
+    send :: (CryptoRNG m, MonadDB m, AWS.AmazonMonad m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       liftIO $ do
@@ -71,16 +71,19 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
     createargs Mail{mailFrom, mailTo} =
       [ "-s", "-S"                   -- show no progress information but show error messages
       , "-k", "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
-      , "--user"
-      , smtpUser config ++ ":" ++ smtpPassword config
-      , smtpAddr config
+      ] ++ (if null (smtpUser config) && null (smtpPassword config)
+           then [] else
+           [ "--user"
+           , smtpUser config ++ ":" ++ smtpPassword config
+           ]) ++
+      [ smtpAddr config
       , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 
 createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendMail = send }
   where
-    send :: (CryptoRNG m, MonadDB m, KontraMonad m) => Mail -> m Bool
+    send :: (CryptoRNG m, MonadDB m, AWS.AmazonMonad m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"

@@ -1,5 +1,5 @@
 module Doc.API.Callback.Model (
-    DocumentAPICallback(..)
+    DocumentAPICallback
   , documentAPICallback
   , triggerAPICallbackIfThereIsOne 
   ) where

@@ -103,6 +103,7 @@ staticRoutes = choice
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
      , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
+     , dir "changephone" $ hPost $ toK2 $ DocControl.handleChangeSignatoryPhone
      -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
      , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
      , dir "prolong" $ hPost $ toK1 $ DocControl.handleProlong
@@ -156,6 +157,8 @@ staticRoutes = choice
      , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
+     , allLangDirs $ dir "mynewaccount"  $ hGet $ toK2 $ UserControl.handleAccessNewAccountGet
+     , allLangDirs $ dir "mynewaccount"  $ hPostNoXToken $ toK2 $ UserControl.handleAccessNewAccountPost
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK3 $ UserControl.handleAccountSetupGetWithMethod
      -- This can go away ~14 days after this code reaches production

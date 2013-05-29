@@ -59,11 +59,6 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0"  value="$user.phone$" name="userphone" />
 		  </td>
 		</tr>
-		<tr> <td>Mobile:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.mobile$" name="usermobile" />
-		  </td>
-		</tr>
 		<tr> <td>Email:</td>
 		  <td>
 		    <input type="text" style="width:200px;margin:0"  value="$user.email$" name="useremail" />
@@ -208,6 +203,7 @@ adminuserpayments=
                       <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
                       <option value="form"         $if(formplan)$selected="selected"$endif$>Online Forms</option>
                       <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="trial"        $if(trialplan)$selected="selected"$endif$>Trial</option>
                     </select>
 		  </td>
 		</tr>
@@ -246,6 +242,7 @@ adminuserpayments=
                       <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
                       <option value="form"         $if(formplan)$selected="selected"$endif$>Online Forms</option>
                       <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="trial"        $if(trialplan)$selected="selected"$endif$>Trial</option>
                     </select>
 		  </td>
 		</tr>
@@ -483,6 +480,7 @@ admincompanypayments=
                       <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
                       <option value="form"         $if(formplan)$selected="selected"$endif$>Online Forms</option>
                       <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="trial"        $if(trialplan)$selected="selected"$endif$>Trial</option>
                     </select>
 		  </td>
 		</tr>

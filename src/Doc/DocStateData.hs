@@ -124,11 +124,22 @@ instance FromJSValue DeliveryMethod where
     Just "email" -> Just EmailDelivery
     Just "pad"   -> Just PadDelivery
     Just "api"   -> Just APIDelivery
+    Just "mobile"-> Just MobileDelivery
+    Just "email_mobile"-> Just EmailAndMobileDelivery
     _            -> Nothing
+
+instance ToJSValue DeliveryMethod where
+  toJSValue EmailDelivery  = toJSValue "email"
+  toJSValue PadDelivery    = toJSValue "pad"
+  toJSValue APIDelivery    = toJSValue "api"
+  toJSValue MobileDelivery = toJSValue "mobile"
+  toJSValue EmailAndMobileDelivery = toJSValue "email_mobile"
 
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
                     | APIDelivery
+                    | MobileDelivery
+                    | EmailAndMobileDelivery
   deriving (Eq, Ord, Show)
 
 data SignatureInfo = SignatureInfo {
@@ -151,6 +162,7 @@ data FieldType = FirstNameFT
                | CustomFT String Bool -- label filledbyauthor
                | SignatureFT String
                | CheckboxFT String
+               | MobileFT
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data SignatoryField = SignatoryField

@@ -61,9 +61,11 @@ import qualified Text.StringTemplates.Fields as F
 import qualified Data.Set as Set
 import Analytics.Include
 import BrandedDomains
+import qualified Amazon as AWS
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
+
 
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do
@@ -121,7 +123,7 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     ctx <- getContext
     file <- documentfileM doc
@@ -157,6 +159,8 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
                                    [EmailDelivery]   -> "email"
                                    [PadDelivery]     -> "pad"
                                    [APIDelivery]     -> "api"
+                                   [MobileDelivery]  -> "mobile"
+                                   [EmailAndMobileDelivery]-> "email_mobile"
                                    _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
@@ -199,8 +203,9 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
-    J.value "undeliveredEmail" $ invitationdeliverystatus siglink == Undelivered
-    J.value "deliveredEmail" $ invitationdeliverystatus siglink == Delivered
+    J.value "undeliveredInvitation" $ invitationdeliverystatus siglink == Undelivered
+    J.value "deliveredInvitation" $ invitationdeliverystatus siglink == Delivered
+    J.value "delivery" $ signatorylinkdeliverymethod siglink
     J.value "signs" $ isSignatory siglink
     J.value "author" $ isAuthor siglink
     J.value "saved" $ isJust . maybesignatory $ siglink
@@ -221,6 +226,9 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
                              EmailDelivery   -> "email"
                              PadDelivery     -> "pad"
                              APIDelivery     -> "api"
+                             MobileDelivery  -> "mobile"
+                             EmailAndMobileDelivery-> "email_mobile"
+
 
     when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
@@ -251,6 +259,9 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
       EmailFT               -> fieldJSON "standard" "email"     sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
+      MobileFT              -> fieldJSON "standard" "mobile"    sfValue
+                                  ((not $ null $ sfValue)  && (not $ isPreparation doc))
+                                  sfObligatory sfShouldBeFilledBySender sfPlacements
       PersonalNumberFT      -> fieldJSON "standard" "sigpersnr" sfValue
                                   ((not $ null $ sfValue)  && (not $ isPreparation doc))
                                   sfObligatory sfShouldBeFilledBySender sfPlacements
@@ -278,6 +289,7 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
     ftOrder EmailFT _ = LT
+    ftOrder MobileFT _ = LT
     ftOrder CompanyFT _ = LT
     ftOrder PersonalNumberFT _ = LT
     ftOrder CompanyNumberFT _ = LT

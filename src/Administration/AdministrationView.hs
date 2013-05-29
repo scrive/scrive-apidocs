@@ -95,6 +95,7 @@ adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =
           TeamPricePlan       -> F.value "teamplan"       True
           FormPricePlan       -> F.value "formplan"       True
           EnterprisePricePlan -> F.value "enterpriseplan" True
+          TrialTeamPricePlan  -> F.value "trialplan"      True
         case ppStatus paymentplan of
           ActiveStatus      -> F.value "activestatus"      True
           OverdueStatus     -> F.value "overduestatus"     True
@@ -142,6 +143,7 @@ adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =
           TeamPricePlan       -> F.value "teamplan"       True
           FormPricePlan       -> F.value "formplan"       True
           EnterprisePricePlan -> F.value "enterpriseplan" True
+          TrialTeamPricePlan  -> F.value "trialplan"      True
         case ppStatus paymentplan of
           ActiveStatus      -> F.value "activestatus"      True
           OverdueStatus     -> F.value "overduestatus"     True
@@ -202,7 +204,6 @@ userFields u =  do
         F.value "personalnumber"   $ getPersonalNumber u
         F.value "companyposition"  $ usercompanyposition $ userinfo u
         F.value "phone"            $ userphone $ userinfo u
-        F.value "mobile"           $ usermobile $ userinfo u
         F.value "email"            $ getEmail u
         F.value "langsv"           $ LANG_SV == getLang u
         F.value "langen"           $ LANG_EN == getLang u

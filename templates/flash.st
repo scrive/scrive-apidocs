@@ -51,6 +51,9 @@ flashMessageUserPasswordChanged=
 flashMessagePasswordChangeLinkNotValid=
 	$_flashMessagePasswordChangeLinkNotValid()$
 ###
+flashMessageAccessNewAccountLinkNotValid=
+	$_flashMessageAccessNewAccountLinkNotValid()$
+###
 flashMessageUserWithSameEmailExists=
 	$_flashMessageUserWithSameEmailExists()$
 

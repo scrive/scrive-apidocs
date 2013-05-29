@@ -1,3 +1,10 @@
+// add startsWith to String prototype
+if (typeof String.prototype.startsWith != 'function') {
+  String.prototype.startsWith = function (str){
+    return this.slice(0, str.length) == str;
+  };
+}
+
 // globally track errors
 window.onerror = function(msg, url, line) {
     mixpanel.track('Error', {
@@ -19,26 +26,37 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
     });
 });
 
-window.trackTimeout = function(name, props, cb, ms) {
+window.trackTimeout = function(name, props, trackTimeoutCallBack, ms) {
     var called = false;
     ms = ms || 300;
     mixpanel.track(name, props, function(e) {
         if(called)
             return;
         called = true;
-        return cb(e);
+        if( trackTimeoutCallBack ) {
+            return trackTimeoutCallBack(e);
+        }
     });
     setTimeout(function(e) {
         if(called)
             return;
         called = true;
-        return cb(e);
+        if( trackTimeoutCallBack ) {
+            return trackTimeoutCallBack(e);
+        }
     }, ms);
 };
 
 window.createnewdocument = function(event) {
-  event.preventDefault();
-  event.stopImmediatePropagation();
+  if( event.preventDefault ) {
+      event.preventDefault();
+  }
+  else {
+      event.returnValue = false;
+  }
+  if( event.stopImmediatePropagation ) event.stopImmediatePropagation();
+  if( event.stopPropagation ) event.stopPropagation();
+  if( event.stop ) event.stop();
   trackTimeout('Click start new process', {}, function() {
       new Submit({
           method : "POST",
@@ -57,8 +75,15 @@ window.createnewdocument = function(event) {
 }
 
 window.createfromtemplate = function(event) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
+  if( event.preventDefault ) {
+      event.preventDefault();
+  }
+  else {
+      event.returnValue = false;
+  }
+  if( event.stopImmediatePropagation ) event.stopImmediatePropagation();
+  if( event.stopPropagation ) event.stopPropagation();
+  if( event.stop ) event.stop();
     trackTimeout('Click create from template', {}, function() {
         window.location.href = "/fromtemplate";
     });
@@ -168,7 +193,7 @@ function parseQueryString() {
 safeReady(function() {
   $("form").live('submit', function() {
     var form = $(this);
-    if ($("input[name='xtoken']",form).size() == 0 && $(form).attr('method').toUpperCase() == 'POST') {
+    if ($("input[name='xtoken']",form).size() == 0 && $(form).attr('method') != undefined && $(form).attr('method').toUpperCase() == 'POST') {
       var tokenTag = $('<input type="hidden" name="xtoken">');
       var token = Cookies.get("xtoken");
       if (token && token.length > 0) {
@@ -182,39 +207,31 @@ safeReady(function() {
 
 //Checking
 $(document).ready(function() {
-    if ($.browser.msie) {
-        var ver = parseInt($.browser.version, 10);
-        if( ver < 7 && ver > 0 ) {
-            /*
-             * If we could not make sense of User agent string from
-             * Explorer, then just let the person sign. No need to be
-             * too picky on people that are spohisticated.
-             */
-            mixpanel.track('Old IE popup', {'Browser version' : ver});
-            var alertModal = $("<div class='modal-container' style='height:80px'>" +
-                                 "<div class='modal-body' style='padding:20px;font-size:13pt'>" +
-                                   "<div class='modal-icon decline' style='margin-top:0px'></div>" +
-                                   "<div>" + localization.ie6NotSupported + "</div>" +
-                                 "</div>" +
-                               "</div>");
+    if (BrowserInfo.isIE6orLower()) {
+            mixpanel.track('Old IE popup', {'Browser version' : $.browser.version});
+            var alertModal = $("<div class='modal active'><div class='modal-container' style='top:400px'><div class='modal-body'><div class='modal-content'><div class='body'>" +
+                             "<center>" +
+                                "<h6 class='loadingmessage'>"+localization.ie6NotSupported+"</h6>" +
+                             "</center>" +
+                        "</div></div></div></div></div>");
             $("body").html("");
             $("body").append(alertModal);
-            alertModal.overlay({
-                load: true,
-                closeOnClick: false,
-                closeOnEsc: false,
-                fixed: false,
-                mask: {
-                    color: '#000000',
-                    loadSpeed: 0,
-                    opacity: 0.90
-                }
-            });
-        }
     }
 });
 
 function capitaliseFirstLetter(string)
 {
     return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// http://ecommerce.shopify.com/c/ecommerce-design/t/ordinal-number-in-javascript-1st-2nd-3rd-4th-29259
+function englishOrdinal(n) {
+    var s=["th","st","nd","rd"],
+        v=n%100;
+    return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+
+function swedishOrdinal(n) {
+    var letter = (n === 1 || n === 2) ? 'a' : 'e';
+    return '' + n + ':' + letter;
 }

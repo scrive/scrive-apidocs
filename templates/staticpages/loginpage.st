@@ -24,7 +24,8 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body $if(background)$ style="background: $background$" $endif$ >
+  <body style="background: $background$" >
+  $flashmessages()$
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -35,6 +36,8 @@ $doctype()$
                                          branded : true,
                                          referer:   "$referer$",
                                          logolink:   "$logolink$",
+                                         buttoncolorclass : "$buttoncolorclass$",
+                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
                                          autofocus: true}).el());
       mixpanel.register({
         Context : 'Login page - branded'
@@ -58,6 +61,21 @@ changePasswordPage=
 </div>
 </div>
 ###
+accessNewAccountPage=
+<div class='mainContainer big'>
+<div class="inner">
+<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery('.inner').append(new NewPassword({
+      linkchangepassword: "$linkchangepassword$",
+      accessnewaccount: true
+    }).el());
+  });
+</script>
+</div>
+</div>
+###
 ###
 changePasswordPageWithBranding=
 $doctype()$
@@ -66,7 +84,7 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body $if(background)$ style="background: $background$" $endif$>
+  <body style="background: $background$">
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -76,7 +94,34 @@ $doctype()$
     jQuery('.inner').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
                         branded : true,
-                        logolink:   "$logolink$"
+                        logolink:   "$logolink$",
+                        buttoncolorclass : "$buttoncolorclass$"
+                       }).el());
+  });
+</script>
+  </body>
+</html>
+###
+accessNewAccountPageWithBranding=
+$doctype()$
+<html>
+  <head>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents()$
+  </head>
+  <body style="background: $background$">
+  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
+      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+      </div>
+  </div>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    jQuery('.inner').append(new NewPassword({
+                        linkchangepassword: "$linkchangepassword$",
+                        accessnewaccount: true,
+                        branded : true,
+                        logolink:   "$logolink$",
+                        buttoncolorclass : "$buttoncolorclass$"
                        }).el());
   });
 </script>
@@ -104,7 +149,7 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>
-  <body>
+  <body style="background: $background$">
   <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
       <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
       </div>
@@ -114,7 +159,10 @@ $doctype()$
       jQuery('.inner').append(new Signup({
                                          branded : true,
                                          logolink:   "$logolink$",
-                                         autofocus: true}).el());
+                                         buttoncolorclass : "$buttoncolorclass$",
+                                         servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,
+                                         autofocus: true
+                            }).el());
     });
   </script>
 
@@ -129,29 +177,24 @@ accountSetupPage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body style='background: none repeat scroll 0 0 #FFFFFF;'>
+      <body style="background: $if(custombackground)$$custombackground$$else$none repeat scroll 0 0 #FFFFFF;$endif$">
 
-      <header class="site thin">
-        <nav>
-          <ul class="ct thin">
-            <li id="branding">
-              <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="22" $endif$ /></a>
-              <div id="tagline" class="h3"></div>
-            </li>
-            <li class="float-right page-first" style="margin-top: 30px;text-align : right; line-height: 20px">
-              <div style='font-size: 14.5px'>
-                 <div>Scrive help desk</div>
-                 <div>+46 8 519 779 00</div>
-              </div>
-            </li>
-          </ul>
-        </nav>
-      </header>
+      $flashmessages()$
 
-       $flashmessages()$
+      <div style='width:275px;margin:20px auto;'>
+        <div style="margin-bottom: 50px; margin-top: 50px;">
+          $if(customlogo)$
+            <img alt="logo" src="$customlogolink$"/>
+            <div class="divider-line"></div>
+            <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+          $else$
+            <img src="/img/Scrive-logo.png" style='margin: 50px 30px 0px;'/>
+          $endif$
+        </div>
+      </div>
+      <div class='mainContainer'>
 
-        <div class='mainContainer big' style='min-height: 712px;'>
-        <script type="text/javascript">
+      <script type="text/javascript">
           jQuery(document).ready(function() {
             jQuery('.mainContainer').append( new AccountSetup({
                                                   fstname: "$fstname$",
@@ -160,6 +203,9 @@ accountSetupPage=
                                                   userid : "$userid$",
                                                   signupmethod : "$signupmethod$",
                                                   companyFilled : $if(company)$true$else$false$endif$,
+                                                  buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$blue$endif$",
+                                                  branded : $if(hasbrandeddomain)$true$else$false$endif$,
+                                                  servicelinkcolour: $if(customservicelinkcolour)$"$customservicelinkcolour$"$else$null$endif$
                                                   })
                                               .el());
             jQuery('.short-input-section input:first').focus();

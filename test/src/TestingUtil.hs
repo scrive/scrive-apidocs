@@ -385,7 +385,6 @@ instance Arbitrary UserInfo where
                       , userpersonalnumber  = pn
                       , usercompanyposition = []
                       , userphone           = []
-                      , usermobile          = []
                       , useremail           = Email em
                       , usercompanyname = []
                       , usercompanynumber = []
@@ -497,7 +496,6 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , userpersonalnumber = []
                                        , usercompanyposition =  []
                                        , userphone = []
-                                       , usermobile = []
                                        , useremail = Email []
                                        , usercompanyname = []
                                        , usercompanynumber = []
@@ -564,7 +562,6 @@ addNewRandomUser = do
       personal_number <- rand 10 $ arbString 3 30
       company_position <- rand 10 $ arbString 3 30
       phone <- rand 10 $ arbString 3 30
-      mobile <- rand 10 $ arbString 3 30
       company_name <- rand 10 $ arbString 3 30
       company_number <- rand 10 $ arbString 3 30
       let userinfo = UserInfo
@@ -573,7 +570,6 @@ addNewRandomUser = do
                      , userpersonalnumber = personal_number
                      , usercompanyposition = company_position
                      , userphone = phone
-                     , usermobile = mobile
                      , useremail = Email em
                      , usercompanyname  = company_name
                      , usercompanynumber = company_number

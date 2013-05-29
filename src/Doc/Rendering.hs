@@ -36,11 +36,14 @@ import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
+import qualified Codec.Picture.Png as Pic
+import qualified Codec.Picture.Types as Pic
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Char8 as BSC
 import qualified Log
+import qualified Amazon as AWS
 import qualified MemCache as MemCache
 import qualified SealSpec as Seal
 import Redirect
@@ -66,10 +69,22 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
     fcontent <- BS.readFile fpath
     return fcontent
 
+
+pngGeometry :: BS.ByteString -> Maybe (Int, Int)
+pngGeometry s = case Pic.decodePng s of
+  Right (Pic.ImageY8 i) -> geometry i
+  Right (Pic.ImageYA8 i) -> geometry i
+  Right (Pic.ImageRGB8 i) -> geometry i
+  Right (Pic.ImageRGBA8 i) -> geometry i
+  Right (Pic.ImageYCbCr8 i) -> geometry i
+  Left _ -> Nothing
+  where geometry i = Just (Pic.imageWidth i, Pic.imageHeight i)
+
+  
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: (KontraMonad m, MonadDB m, MonadIO m)
+convertPdfToJpgPages :: (KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
                      => FileID
                      -> Int
                      -> m JpegPages
@@ -92,7 +107,8 @@ convertPdfToJpgPages fid widthInPixels = do
     let readPagesFrom n = (do
                        contentx <- BS.readFile (pathOfPage n)
                        followingPages <- readPagesFrom (n+1 :: Int)
-                       return $ (contentx, widthInPixels, widthInPixels * 842 `div` 595) : followingPages)
+                       let (w, h) = fromMaybe (widthInPixels, widthInPixels * 842 `div` 595) $ pngGeometry contentx
+                       return $ (contentx, w, h) : followingPages)
              `catch` \(_ :: SomeException) -> return []
 
     result <- case exitcode of
@@ -205,7 +221,7 @@ preCheckPDFHelper content tmppath =
     checkNormalize = do
       liftIO $ BS.writeFile sourcepath content
 
-      (exitcode,stdout1,stderr1) <- liftIO $ readProcessWithExitCode' "mubusy"
+      (exitcode,stdout1,stderr1) <- liftIO $ readProcessWithExitCode' "mutool"
                                    [ "clean"
                                    , "-ggg"
                                    , sourcepath

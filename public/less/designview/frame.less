@@ -1,0 +1,252 @@
+@import 'util.less';
+@import '../branding/elements.less';
+@import '../branding/colors.less';
+
+// hide the page footer in design view
+body.designview > footer {
+    display: none;
+}
+
+body.designview .mainContainer {
+    margin-top: 20px;
+    margin-bottom: 0;
+    min-height : auto;
+}
+
+.design-view-frame {
+    .box-sizing(border-box);
+    border: 1px solid #ccc;
+    border-bottom: none;
+    position: relative;
+    background-color: #fafafa;
+}
+
+.design-view-frame-top-bar {
+    width: 100%;
+    height: 54px;
+    z-index: 1000;
+    left: 0;
+    position: relative;
+    top: 0;
+}
+
+.design-view-tab-container {
+    .box-sizing(border-box);
+    height: 54px;
+    border-bottom: 1px solid #ccc;
+    font-size:16px;
+    cursor: pointer;
+    width: 1018px;
+    margin: 0 auto;
+    background: white;
+}
+
+.tab-active {
+    border-top: 4px solid #7a94b8;
+    border-bottom: 4px solid #fff;
+}
+
+.tab-hover {
+    border-top: 4px solid #7a94b8;
+    border-bottom: 4px solid #fff;
+}
+
+.design-view-tab1 {
+    .box-sizing(border-box);
+    display: inline-block;
+    width: 33%;
+    border-right: 1px solid #ccc;
+    height: 100%;
+    position: relative;
+}
+
+.design-view-tab1-text {
+    .center-vh(100%,1em);
+    text-align: center;
+}
+
+.design-view-tab2 {
+    .box-sizing(border-box);
+    display: inline-block;
+    width: 33%;
+    border-right: 1px solid #ccc;
+    height: 100%;
+    position: relative;
+    &.grayed {
+        background-color: #FBFBFB;
+        color: #AAAAAA;
+        .design-view-tab2-text-optional {
+          color: #AAAAAA;
+        }
+    }
+}
+
+.design-view-tab2-text {
+    .center-vh(100%,1em);
+    text-align: center;
+}
+
+.design-view-tab2-text-optional {
+    font-size: 12.5px;
+    color: #808080;
+}
+
+.design-view-tab3 {
+    .box-sizing(border-box);
+    display: inline-block;
+    width: 34%;
+    height: 100%;
+    position: relative;
+}
+
+.design-view-tab3-text {
+    .center-vh(100%,1em);
+    text-align: center;
+}
+
+.design-view-tab3-text-optional {
+    font-size: 12.5px;
+    color: #808080;
+}
+
+
+
+
+
+
+
+
+
+/// @ACTION CONTAINER ///
+
+.design-view-action-container {
+    .clearfix();
+    width: 1018px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.design-view-action-container-shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    .box-shadow(0 4px 0 rgba(0,0,0,0.05) inset);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/// @DOCUMENT ///
+
+.design-view-document-container {
+    .box-sizing(border-box);
+    overflow: auto;
+    min-height: 300px;
+    padding-top: 20px;
+    padding-bottom: 60px; // room for the button bar
+    position: relative;
+}
+
+
+
+/// @BUTTONS ///
+
+.design-view-button-bar {
+    width: 100%;
+    height: 52px;
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    position: fixed;
+    z-index: 1001;
+}
+
+.design-view-button-bar-inner {
+    border: 1px solid #ccc;
+    width: 1018px;
+    height: 100%;
+    margin: auto;
+    background: #FAFAFA;
+    .box-shadow(0 -4px 0 rgba(0,0,0,0.05));
+}
+
+
+.design-view-button1 {
+    .box-sizing(border-box);
+    display: inline-block;
+    width: 20%;
+    border-right: 1px solid #ccc;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    background: white;
+}
+
+.design-view-button2 {
+    .box-sizing(border-box);
+    display: inline-block;
+    width: 20%;
+    border-right: 1px solid #ccc;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    background: white;
+}
+
+.design-view-button-remove {
+    .box-sizing(border-box);
+    height: 100%;
+    width: 20%;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    border-right: 1px solid #ccc;
+    background-color: white;
+}
+
+.design-view-button3 {
+    .box-sizing(border-box);
+    display: inline-block;
+    width: 20%;
+    float: right;
+    border-left: 1px solid #ccc;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    color: #DDDDDD;
+    background-color: white;
+    &.active {
+      .gradient(hsl(@greenH,@greenS,35%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,40%));
+      .box-shadow(inset hsl(@greenH,66%,60%) 0 0 0 2px);
+      border: 2px solid hsl(@greenH,@greenS,23%);
+      color: white;
+      font-size: 18px;
+      font-weight: 400;
+    }
+}
+
+.design-view-button1-text,
+.design-view-button2-text,
+.design-view-button3-text,
+.design-view-button-remove-label {
+    .center-vh(100%,1em);
+    text-align: center;
+}
+
+
+
+
+
+
+
+

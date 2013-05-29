@@ -10,7 +10,6 @@ window.User = Backbone.Model.extend({
       email     : "",
       personalnumber  : "",
       phone           : "",
-      mobile          : "",
       companyposition : "",
       usercompanyname : "",
       usercompanynumber : "",
@@ -46,9 +45,6 @@ window.User = Backbone.Model.extend({
   phone : function() {
      return this.get("phone");
   },
-  mobile : function() {
-     return this.get("mobile");
-  },
   companyposition : function() {
      return this.get("companyposition");
   },
@@ -82,7 +78,6 @@ window.User = Backbone.Model.extend({
       email     : args.email,
       personalnumber  : args.personalnumber,
       phone           : args.phone,
-      mobile          : args.mobile,
       companyposition : args.companyposition,
       usercompanyname : args.usercompanyname,
       usercompanynumber : args.usercompanynumber,

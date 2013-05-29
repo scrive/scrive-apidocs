@@ -5,12 +5,20 @@ pageDocumentDesign=
 <script>
 jQuery("body").addClass("designview");
 jQuery(function(){
-  jQuery(".body-container").replaceWith(new DesignView({
+  var dv = new DesignView({
                         id:"$documentid$"
-                  }).el());
+                  });
+
+  jQuery(".body-container").replaceWith(
+    jQuery('<div />').append(BlockingInfo.el())
+                     .append(dv.el())
+                     .children()
+  );
+  dv.afterInsert();
 });
   mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
   mixpanel.track('View Design View');
+
 </script>
 </div>
 </div>

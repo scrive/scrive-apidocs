@@ -102,7 +102,6 @@ data UserInfo = UserInfo {
   , userpersonalnumber  :: String
   , usercompanyposition :: String
   , userphone           :: String
-  , usermobile          :: String
   , useremail           :: Email
   , usercompanyname     :: String
   , usercompanynumber   :: String
@@ -128,7 +127,7 @@ userFilterToSQL (UserFilterByString string) =
     sqlConcatAND (map (\wordpat -> SQL "users.first_name ILIKE ?" [wordpat] `sqlOR`
                                    SQL "users.last_name ILIKE ?" [wordpat] `sqlOR`
                                    SQL "users.email ILIKE ?" [wordpat] `sqlOR`
-                                   SQL "translate(users.mobile,'-+ .,()','') ILIKE translate(?,'-+ .,()','')" [wordpat] `sqlOR`
+                                   SQL "translate(users.phone,'-+ .,()','') ILIKE translate(?,'-+ .,()','')" [wordpat] `sqlOR`
                                    SQL "translate(users.personal_number,'-+ .,()','') ILIKE translate(?,'-+ .,()','')" [wordpat]
                       ) sqlwordpat)
   where
@@ -274,7 +273,6 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "company_name" ("" :: String)
             sqlSet "company_number" ("" :: String)
             sqlSet "phone" ("" :: String)
-            sqlSet "mobile" ("" :: String)
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
             sqlSet "deleted" False
@@ -346,7 +344,6 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
                   <> ", personal_number = ?"
                   <> ", company_position = ?"
                   <> ", phone = ?"
-                  <> ", mobile = ?"
                   <> ", email = ?"
                   <> ", company_name = ?"
                   <> ", company_number = ?"
@@ -356,7 +353,6 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
              , toSql $ userpersonalnumber info
              , toSql $ usercompanyposition info
              , toSql $ userphone info
-             , toSql $ usermobile info
              , toSql $ map toLower $ unEmail $ useremail info
              , toSql $ usercompanyname info
              , toSql $ usercompanynumber info
@@ -434,7 +430,6 @@ selectUsersSelectorsList =
   , "personal_number"
   , "company_position"
   , "phone"
-  , "mobile"
   , "email"
   , "lang"
   , "company_name"
@@ -453,7 +448,7 @@ fetchUsers = kFold decoder []
     -- use ORDER BY DESC, so in the end everything is properly ordered.
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method company_id
-      first_name last_name personal_number company_position phone mobile
+      first_name last_name personal_number company_position phone
       email lang company_name company_number is_free associated_domain = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
@@ -467,7 +462,6 @@ fetchUsers = kFold decoder []
           , userpersonalnumber = personal_number
           , usercompanyposition = company_position
           , userphone = phone
-          , usermobile = mobile
           , useremail = email
           , usercompanyname  = company_name
           , usercompanynumber = company_number

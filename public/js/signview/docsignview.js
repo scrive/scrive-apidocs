@@ -50,7 +50,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.document().ready() && this.document().mainfile() == undefined;
   },
   hasRejectOption : function() {
-      return !this.document().padDelivery();
+      return !this.document().currentSignatory().padDelivery();
   },
   hasMainFileSection : function() {
       return   !this.justSaved()
@@ -62,6 +62,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   hasSignatoriesSection : function() {
       return    !this.justSaved()
              && !this.document().closed()
+             && !BrowserInfo.isSmallScreen()
              && _.filter(this.document().signatories(),function(sig) {return sig.signs();}).length > 1;
   },
   hasAuthorAttachmentsSection : function() {
@@ -76,12 +77,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
         res = true;
       if (field.isFstName() && field.value() == "" && !field.hasPlacements())
         res = true;
-      if (field.isSndName() && field.value() == "" && !field.hasPlacements())
-        res = true;
-      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && field.signatory().document().elegAuthentication())
+      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && field.signatory().elegAuthentication())
         res = true;
     });
-    if( !res && this.document().padDelivery()) {
+    if( !res && this.document().currentSignatory().padDelivery() && this.document().currentSignatory().hasSignatureField()) {
         res =  !this.document().currentSignatory().anySignatureHasImageOrPlacement();
     }
     return res;
@@ -97,14 +96,12 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && this.justSaved()
-             && !this.document().padDelivery()
              && window.PromoteScriveView != undefined;
   },
   hasCreateAccountSection : function() {
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && !this.document().currentSignatory().saved()
-             && !this.document().padDelivery()
              && window.CreateAccountAfterSignView != undefined;
   },
   instructionssection : function() {
@@ -339,13 +336,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 res = false;
                             if (field.isFstName() && field.value() == "")
                                 res = false;
-                            if (field.isSndName() && field.value() == "")
-                                res = false;
-                            if (field.isSSN()    && (field.value() == "") && field.signatory().document().elegAuthentication())
+                            if (field.isSSN()    && (field.value() == "") && field.signatory().elegAuthentication())
                                 res = false;
                              if (field.isSignature() && (field.value() == "")
                                  && field.placements().length == 0 && !document.currentSignatory().anySignatureHasImageOrPlacement()
-                                 && document.padDelivery())
+                                 && document.currentSignatory().padDelivery())
                                 res = false;
                         });
                         return res;
@@ -403,6 +398,11 @@ var DocumentSignViewView = Backbone.View.extend({
       $(this.el).append(this.container);
       $(this.el).append("<div class='clearfix'/>");
       $(this.el).append("<div class='spacer40'/>");
+
+      /* Hide the address bar for mobile devices, by scrolling */
+      if (BrowserInfo.isSmallScreen()) {
+        window.scrollTo(0,1);
+      }
     },
     setBackgroundColour: function() {
       var color = this.model.document().signviewbackgroundcolour();
@@ -468,6 +468,11 @@ var DocumentSignViewView = Backbone.View.extend({
 
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrow().view().el);
+
+     if (BrowserInfo.isSmallScreen()) {
+       $('.mainContainer').css('margin-top', '10px');
+     }
+
      return this;
 
     }

@@ -322,7 +322,8 @@ testSendReminderEmailByCompanyAdmin = do
             (\d -> documentstatus d == Pending
                      && case documenttype d of
                          Signable _ -> True
-                         _ -> False)
+                         _ -> False
+                     && (all (== EmailDelivery) $ signatorylinkdeliverymethod <$> documentsignatorylinks d)   )
 
   assertBool "Precondition" $ (ctxtime ctx) /= documentmtime doc
 
