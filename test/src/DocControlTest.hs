@@ -34,6 +34,7 @@ import Util.SignatoryLinkUtils
 import Util.Actor
 import Util.HasSomeUserInfo
 import Doc.API
+import ELegitimation.BankIDUtils
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
@@ -55,6 +56,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
   , testThat "Split document works for csv data" env testSplitDocumentWorkerSucceedes
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
+  , testThat "Bankid mismatch happends when it should" env testBankIDMismatch
   ]
 
 testUploadingFileAsContract :: TestEnv ()
@@ -420,6 +422,15 @@ testDocumentDeleteInBulk = do
     _ <- runTestKontra req ctx $ handleDelete
     docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
     assertEqual "Documents are deleted" 0 (length docs2)
+
+
+testBankIDMismatch :: TestEnv ()
+testBankIDMismatch = do
+    r1 <- compareNames "Mariusz Rak" "Mariusz Rak"
+    assertEqual "Valid match" MergeMatch r1
+    r2 <- compareNames "Mariusz Rak" "Rak Mariusz"
+    assertBool "Invalid match" (MergeMatch /= r2)
+
 
 testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do

@@ -509,6 +509,7 @@
 "_bankidVerificationFailed","E-legitimationstjänsten misslyckades att verifiera din signatur","The e-ID service provider failed to verify your signature."
 "_bankidNoFirstName","Du har inte fyllt i förnamn. Vänligen försök igen.","You have not filled in the first name. Please try again."
 "_bankidFirstNameMismatch","Förnamnen matchar inte","First names do not match"
+"_bankidNameMismatch","Namnet matchar inte","Name does not match"
 "_bankidNoLastName","Du har inte fyllt i efternamn. Vänligen försök igen.","You have not filled in the last name. Please try again."
 "_bankidLastNameMismatch","Efternamnen matchar inte","Last names do not match"
 "_bankidNoNumber","Du har inte fyllt i personnnummer. Vänligen försök igen.","You have not typed in the personal ID number. Please try again."
