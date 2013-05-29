@@ -1157,3 +1157,4 @@
 "_validationPleaseSelectField","Var vänlig fyll i eller ta bort fälten i dokumentet.","Please complete or remove the fields added to the document."
 "_selectField","Vilket fält vill du lägga till?","What field do you want to add?"
 "_editMessagePlaceholder","Meddelande endast tillgängligt vid e-postleverans.","Message available for email delivery only."
+"_firstnameAndLastName","Förnamn & efternamn","First name & last name"
