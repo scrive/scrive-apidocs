@@ -108,10 +108,21 @@
                 div.addClass('tab-active');
             div.click(function() {
                 var prevStep = model.step();
-                model.setStep(model.step () != 1 ? 1 : undefined);
+                if(prevStep !== 1) {
+                    model.setStep(1);
+                    mixpanel.track('Click tab', {
+                        Action: 'Open',
+                        Tab: '1'
+                    });
+                } else {
+                    mixpanel.setStep(undefined);
+                    mixpanel.track('Click tab', {
+                        Action: 'Close',
+                        Tab: '1'
+                    });
+                }
                 if (prevStep == 1)
                   model.trigger('step1-refreshed');
-
             });
 
             div.mouseenter(function() {
@@ -152,7 +163,19 @@
             view.tab2div.removeClass("grayed");
 
             view.tab2div.click(function() {
-                  model.setStep(model.step () != 2 ? 2 : undefined);
+                if(model.step() !== 2) {
+                    model.setStep(2);
+                    mixpanel.track('Click tab', {
+                        Action: 'Open',
+                        Tab: '2'
+                    });
+                } else {
+                    model.setStep(undefined);
+                    mixpanel.track('Click tab', {
+                        Action: 'Close',
+                        Tab: '2'
+                    });
+                }
             });
 
             view.tab2div.mouseenter(function() {
@@ -182,7 +205,19 @@
             if(model.step() === 3)
                 div.addClass('tab-active');
             div.click(function() {
-                  model.setStep(model.step () != 3 ? 3 : undefined);
+                if(model.step() !== 3) {
+                    model.setStep(3);
+                    mixpanel.track('Click tab', {
+                        Action: 'Open',
+                        Tab: '3'
+                    });
+                } else {
+                    model.setStep(undefined);
+                    mixpanel.track('Click tab', {
+                        Action: 'Close',
+                        Tab: '3'
+                    });
+                }
             });
 
             div.mouseenter(function() {
