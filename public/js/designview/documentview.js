@@ -131,6 +131,7 @@
                         method : "POST",
                         url : "/api/frontend/changemainfile/" + document.documentid(),
                         ajaxsuccess: function(d) {
+                            mixpanel.track('Upload main file');
                             document.killAllPlacements();
                             document.recall();
                         },

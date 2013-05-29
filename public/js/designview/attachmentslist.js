@@ -25,7 +25,14 @@ var DesignAttachmentsListView = Backbone.View.extend({
       var tr = $("<tr/>");
       var icon = $("<td class='icon-td'/>").append("<div class='author-attachment-icon'>");
       var name = $("<td class='name-td'/>").text(a.name() + " " + localization.designview.attached);
-      var remove = $("<td class='remove-td'/>").append($("<div class='remove-icon'/>").click(function() {self.model.document().removeattachment(a);}));
+      var remove = $("<td class='remove-td'/>")
+            .append($("<div class='remove-icon'/>")
+                    .click(function() {
+                        self.model.document().removeattachment(a);
+                        mixpanel.track('Click remove attachment', {
+                            Type: 'Author'
+                        });
+                    }));
       return tr.append(icon).append(name).append(remove);
     },
     sarow : function(sig,a) {
@@ -37,7 +44,14 @@ var DesignAttachmentsListView = Backbone.View.extend({
       var icon = $("<td class='icon-td'/>").append("<div class='signatory-attachment-icon'>");
       var tr = $("<tr/>");
       var name = $("<td class='name-td'/>").text(a.name() + " "+localization.designview.requestedFrom+" " + text.trim() + ".");
-      var remove = $("<td class='remove-td'/>").append($("<div class='remove-icon'/>").click(function() {sig.removeAttachment(a);}));
+      var remove = $("<td class='remove-td'/>")
+            .append($("<div class='remove-icon'/>")
+                    .click(function() {
+                        sig.removeAttachment(a);
+                        mixpanel.track('Click remove attachment', {
+                            Type: 'Signatory'
+                        }
+                    }));
       return tr.append(icon).append(name).append(remove);
     },
     render: function () {

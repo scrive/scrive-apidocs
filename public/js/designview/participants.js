@@ -29,6 +29,7 @@
                 size: 'tiny',
                 text: '+ ' + localization.designview.addField,
                 onClick: function() {
+                    mixpanel.track('Click add field');
                     view.addOne();
                 }
             });
@@ -130,6 +131,9 @@
                 name: ordinal + ' ' +
                     localization.designview.toReceiveDocument,
                 onSelect: function(v) {
+                    mixpanel.track('Choose sign order', {
+                        Where: 'select'
+                    });
                     model.setSignOrder(v);
                     return true;
                 }
@@ -158,6 +162,9 @@
                 }),
                 name: deliveryTexts[delivery],
                 onSelect: function(v) {
+                    mixpanel.track('Choose delivery method', {
+                        Where: 'select'
+                    });
                     sig.setDelivery(v);
                     sig.ensureMobile();
                     sig.ensureSignature();
@@ -186,6 +193,9 @@
                 }),
                 name: roleTexts[role],
                 onSelect: function(v) {
+                    mixpanel.track('Choose participant role', {
+                        Where: 'Icon'
+                    });
                     if(v === 'signatory')
                         sig.makeSignatory();
                     else if(v === 'viewer')
@@ -214,6 +224,9 @@
                 }),
                 name: authTexts[auth],
                 onSelect: function(v) {
+                    mixpanel.track('Choose auth', {
+                        Where: 'select'
+                    });
                     sig.setAuthentication(v);
                     sig.ensurePersNr();
                     return true;
@@ -272,6 +285,7 @@
                 size: 'tiny',
                 text: '+ ' + localization.designview.addParty,
                 onClick: function() {
+                    mixpanel.track('Click add signatory');
                     model.setParticipantDetail(null);
 
                     var doc = model.document();
@@ -301,6 +315,7 @@
                 size: 'tiny',
                 text: '+ ' + localization.designview.addMultisend,
                 onClick: function() {
+                    mixpanel.track('Click add CSV');
                     model.setParticipantDetail(null);
 
                     var doc = model.document();
@@ -338,6 +353,7 @@
                 size: 'tiny',
                 text: localization.save,
                 onClick: function() {
+                    mixpanel.track('Close participant');
                     model.setParticipantDetail(null);
                 }
             });
@@ -461,6 +477,9 @@
             view.model.bind('change:signorder', view.render);
             view.render();
             view.$el.click(function() {
+                mixpanel.track('Choose sign order', {
+                    Where: 'icon'
+                });
                 var sig = view.model;
                 var max = sig.document().maxPossibleSignOrder();
                 var o = sig.signorder() + 1;
@@ -498,6 +517,9 @@
             view.model.bind('change:role', view.render);
             view.render();
             view.$el.click(function() {
+                mixpanel.track('Choose participant role', {
+                    Where: 'icon'
+                });
                 if(view.model.role() === 'viewer')
                     view.model.makeSignatory();
                 else
@@ -537,6 +559,9 @@
             view.model.bind('change:delivery', view.render);
             view.render();
             view.$el.click(function() {
+                mixpanel.track('Choose delivery method', {
+                    Where: 'icon'
+                });
                 if(view.model.delivery() === 'email')
                     view.model.setDelivery('pad');
                 else if(view.model.delivery() === 'pad')
@@ -585,6 +610,9 @@
             view.model.bind('change:authentication', view.render);
             view.render();
             view.$el.click(function() {
+                mixpanel.track('Choose auth', {
+                    Where: 'icon'
+                });
                 var sig = view.model;
                 var auth = sig.authentication()
                 if(auth === 'standard')
@@ -689,6 +717,7 @@
                     text: localization.designview.viewCSV,
                     size: 'tiny',
                     onClick: function() {
+                        mixpanel.track('Open CSV Popup');
                         CsvSignatoryDesignPopup.popup({
                             signatory: sig,
                             onAccept: function() {
@@ -732,6 +761,10 @@
 
             var setter = function() {
                 if(input.value()) {
+                    mixpanel.track('Enter custom field name', {
+                        'Field name': input.value()
+                    });
+                                   
                     field.setName(input.value());
                     sig.trigger('change:fields');
                     field.unbind('change:name', changer);
@@ -767,6 +800,10 @@
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
             closer.addClass("active").click(function() {
+                mixpanel.track('Click remove field', {
+                    Type: field.type(),
+                    Name: field.name()
+                });
                 field.removeAllPlacements();
                 sig.deleteField(field);
             });
@@ -831,10 +868,17 @@
                 name: name,
                 onSelect: function(v) {
                     if(v.name === '--custom') {
+                        mixpanel.track('Select field type', {
+                            Type: 'custom'
+                        });
                         field.setType('custom');
                     } else {
                         field.setType(v.type);
                         field.setName(v.name);
+                        mixpanel.track('Select field type', {
+                            Type: v.type,
+                            Name: v.name
+                        });
                     }
                     sig.trigger('change:fields');
                     return true;
@@ -851,6 +895,10 @@
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
             closer.addClass("active").click(function() {
+                mixpanel.track('Click remove field', {
+                    Type: field.type(),
+                    Name: field.name()
+                });
                 field.removeAllPlacements();
                 sig.deleteField(field);
             });
@@ -999,6 +1047,10 @@
 
             if(field.canBeRemoved()) {
                 closer.addClass("active").click(function() {
+                    mixpanel.track('Click remove field', {
+                        Type: field.type(),
+                        Name: field.name()
+                    });
                     field.removeAllPlacements();
                     sig.deleteField(field);
                 });
@@ -1197,6 +1249,7 @@
                 div.addClass('design-view-action-participant-close')
 
                 div.click(function() {
+                    mixpanel.track('Click remove signatory');
                     viewmodel.setParticipantDetail(null);
                     _.each(sig.fields(), function(field) {
                         field.removeAllPlacements();
@@ -1223,10 +1276,13 @@
             div.append(view.deviceIcon.el);
             div.append(view.authIcon.el);
             div.click(function() {
-                if(viewmodel.participantDetail() === sig)
+                if(viewmodel.participantDetail() === sig) {
+                    mixpanel.track('Close participant detail');
                     viewmodel.setParticipantDetail(null);
-                else
+                } else {
+                    mixpanel.track('Open participant detail');
                     viewmodel.setParticipantDetail(sig);
+                }
                 return false;
             });
             return div;
@@ -1359,6 +1415,9 @@
                 name: options[selected].abbrev,
                 offset: options[selected].offset,
                 onSelect: function(v) {
+                    mixpanel.track('Choose obligation', {
+                        Type: v
+                    });
                     if(field) {
                         if(v === 'optional') {
                             field.makeOptional();
