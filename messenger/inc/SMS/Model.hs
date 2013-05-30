@@ -87,8 +87,8 @@ instance MonadDB m => DBUpdate m DeleteSMSesOlderThenDays Integer where
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance MonadDB m => DBUpdate m UpdateWithSMSEvent Bool where
   update (UpdateWithSMSEvent mid ev) = do
-    kRun01 $ SQL "INSERT INTO sms_events (sms_id, event) VALUES (?, ?)"
-             [toSql mid, toSql ev]
+    kRun01 $ SQL "INSERT INTO sms_events (sms_id, event)  (SELECT id, ? FROM smses WHERE id = ?);"
+             [toSql ev, toSql mid]
 
 
 data GetUnreadSMSEvents = GetUnreadSMSEvents

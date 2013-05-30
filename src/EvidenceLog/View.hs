@@ -92,8 +92,10 @@ simpleEvents SignatoryLinkVisited         = True
 simpleEvents RestartDocumentEvidence      = True
 simpleEvents SignDocumentEvidence         = True
 simpleEvents InvitationEvidence           = True
-simpleEvents InvitationDelivered          = True
-simpleEvents InvitationUndelivered        = True
+simpleEvents InvitationDeliveredByEmail   = True
+simpleEvents InvitationUndeliveredByEmail = True
+simpleEvents InvitationDeliveredBySMS     = True
+simpleEvents InvitationUndeliveredBySMS   = True
 simpleEvents ReminderSend                 = True
 simpleEvents ResealedPDF                  = True
 simpleEvents CancelDocumenElegEvidence    = True
@@ -112,8 +114,10 @@ getEvidenceEventStatusClass SignatoryLinkVisited         = SCOpened
 getEvidenceEventStatusClass RestartDocumentEvidence      = SCDraft
 getEvidenceEventStatusClass SignDocumentEvidence         = SCSigned
 getEvidenceEventStatusClass InvitationEvidence           = SCSent
-getEvidenceEventStatusClass InvitationDelivered          = SCDelivered
-getEvidenceEventStatusClass InvitationUndelivered        = SCDeliveryProblem
+getEvidenceEventStatusClass InvitationDeliveredByEmail   = SCDelivered
+getEvidenceEventStatusClass InvitationUndeliveredByEmail = SCDeliveryProblem
+getEvidenceEventStatusClass InvitationDeliveredBySMS     = SCDelivered
+getEvidenceEventStatusClass InvitationUndeliveredBySMS   = SCDeliveryProblem
 getEvidenceEventStatusClass ReminderSend                 = SCSent
 getEvidenceEventStatusClass ResealedPDF                  = SCSigned
 getEvidenceEventStatusClass CancelDocumenElegEvidence    = SCCancelled
@@ -148,8 +152,10 @@ authorEvents _ = False
 
 -- Events that should be considered as performed as author even is actor states different.
 systemEvents  :: EvidenceEventType -> Bool
-systemEvents InvitationDelivered = True
-systemEvents InvitationUndelivered = True
+systemEvents InvitationDeliveredByEmail = True
+systemEvents InvitationUndeliveredByEmail = True
+systemEvents InvitationDeliveredBySMS = True
+systemEvents InvitationUndeliveredBySMS = True
 systemEvents _ = False
 
 -- Empty events - they should be skipped, as they don't provide enought information to show to user

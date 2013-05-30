@@ -74,7 +74,7 @@ testReceiveStat = do
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time) Nothing
-  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ SetInvitationDeliveryStatus (documentid doc') (signatorylinkid sl) Delivered (systemActor time))
+  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ SetEmailInvitationDeliveryStatus (documentid doc') (signatorylinkid sl) Delivered (systemActor time))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatReceiveEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents

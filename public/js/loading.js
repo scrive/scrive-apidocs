@@ -39,7 +39,7 @@ window.LoadingDialog = {
        var dialog =  $('.loadingdialog');
        if (dialog.size() > 0 ) {
          dialog.removeClass("active");
-         if (BrowserInfo.isIE8orLower())
+         if (BrowserInfo.isIE9orLower())
            dialog.css('display','none');
       }
     }

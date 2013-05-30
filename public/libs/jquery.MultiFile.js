@@ -125,15 +125,7 @@
        });
 
        //===
-
-       // Setup dynamic regular expression for extension validation
-       // - thanks to John-Paul Bader: http://smyck.de/2006/08/11/javascript-dynamic-regular-expresions/
-       if(String(MultiFile.accept).length>1){
-								MultiFile.accept = MultiFile.accept.replace(/\W+/g,'|').replace(/^\W|\W$/g,'');
-        MultiFile.rxAccept = new RegExp('\\.('+(MultiFile.accept?MultiFile.accept:'')+')$','gi');
-       };
-
-       //===
+       MultiFile.accept = "";
 
        // Create wrapper to hold our file list
        MultiFile.wrapID = MultiFile.instanceKey+'_wrap'; // Wrapper ID?

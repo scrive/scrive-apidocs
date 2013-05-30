@@ -301,11 +301,12 @@ window.Document = Backbone.Model.extend({
             fields: JSON.stringify(fields),
             ajax: true,
             ajaxsuccess : function() {
-              if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "")
+              if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "") {
                 window.location = document.currentSignatory().signsuccessredirect();
-              else
+              } else {
                 window.scroll(0,0);
                 window.location.reload();
+              }
             },
             ajaxerror : function() {
               window.location.reload();

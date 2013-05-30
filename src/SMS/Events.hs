@@ -86,7 +86,7 @@ handleDeliveredInvitation (_hostpart, _mc) doc signlinkid = do
     Just signlink -> do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
-      _ <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Delivered actor
+      _ <- dbUpdate $ SetSMSInvitationDeliveryStatus (documentid doc) signlinkid Delivered actor
       return ()
     Nothing -> return ()
 
@@ -97,7 +97,7 @@ handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
     Just signlink -> do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
-      _ <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
+      _ <- dbUpdate $ SetSMSInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
       mail <- smsUndeliveredInvitation hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
