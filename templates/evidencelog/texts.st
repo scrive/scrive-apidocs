@@ -33,7 +33,7 @@ SignDocumentEvidenceText=The document was signed by $actor$ $if(!eleg)$ by click
         $if(ocsp)$ <p>Online Certificate Status Protocol (OCSP) Response: <div style="white-space:pre">$ocsp$</div></p>$endif$
     $endif$
 ###
-SetInvitationDeliveryStatusEvidenceText=Scrive´s external email delivery system reported that the email invitation to sign (sent to $email$) was $status$.
+SetInvitationDeliveryStatusEvidenceText=
 ###
 SetDocumentUIEvidenceText=
 ###
@@ -71,7 +71,7 @@ ReallyDeleteDocumentEvidenceText=
 ###
 NewDocumentEvidenceText=
 ###
-MarkInvitationReadEvidenceText=Scrive´s external email delivery system reported that the email invitation to sign (sent to $email$) was opened.
+MarkInvitationReadEvidenceText=Scrive´s notification system reported that the invitation to sign (sent to $email$) was opened.
 ###
 CloseDocumentEvidenceText=After all signatories signed, Scrive closed the signing process to further modifications.
 ###
