@@ -34,7 +34,7 @@ data MergeResult = MergeMatch
  -}
 mergeInfo :: TemplatesMonad m => (String, String, String)
                               -> (String, String, String)
-                              -> m (Either (String, String, String, String) (Bool, Bool, Bool))
+                              -> m (Either (String, String, String, String) (Bool, Bool))
 mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) = do
   results <- sequence [ compareNames (contractFirst ++ " "++ contractLast)  (elegFirst ++ " "++ elegLast)
                       , compareNumbers    contractNumber elegNumber]
@@ -42,7 +42,7 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
       matches  = map (== MergeMatch) results
   if not $ null failmsgs
     then return $ Left  (intercalate ".\n " failmsgs, elegFirst, elegLast, elegNumber)
-    else return $ Right (matches !! 0, matches !! 1, matches !! 2)
+    else return $ Right (matches !! 0, matches !! 1)
 
 getTBS :: TemplatesMonad m => D.Document -> m String
 getTBS doc = renderTemplate "tbs" $ do
@@ -110,7 +110,7 @@ compareNumbers nContract nEleg
 --import qualified Data.ByteString.Lazy.Char8 as B
 
 
-compareSigLinkToElegData :: TemplatesMonad m => SignatoryLink ->  [(FieldType, String)] -> [(String, String)] -> m (Either (String, String, String, String) (Bool, Bool, Bool))
+compareSigLinkToElegData :: TemplatesMonad m => SignatoryLink ->  [(FieldType, String)] -> [(String, String)] -> m (Either (String, String, String, String) (Bool, Bool))
 compareSigLinkToElegData sl fields attrs =
   -- compare information from document (and fields) to that obtained from BankID
   let contractFirst  = fromMaybe (getFirstName sl)      (snd <$> (find (\(ft,_) -> ft == FirstNameFT) fields))

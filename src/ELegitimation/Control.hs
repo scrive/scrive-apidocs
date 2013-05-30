@@ -203,15 +203,15 @@ verifySignatureAndGetSignInfo docid signid magic fields provider signature trans
                 Left (msg, sfn, sln, spn) -> do
                     return $ Mismatch msg sfn sln spn
                 -- we have merged the info!
-                Right (bfn, bln, bpn) -> do
+                Right (bn, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     let mocsp = lookup "Validation.ocsp.response" attrs
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = cert
                                                      , signatureinfoprovider     = provider
-                                                     , signaturefstnameverified  = bfn
-                                                     , signaturelstnameverified  = bln
+                                                     , signaturefstnameverified  = bn
+                                                     , signaturelstnameverified  = bn
                                                      , signaturepersnumverified  = bpn
                                                      , signatureinfoocspresponse = mocsp
                                                     }
@@ -286,14 +286,14 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
             prob <- renderTemplate "bankidPersInfoMismatch" $ F.value "message" msg
             return $ Problem prob
           -- we have merged the info!
-          Right (bfn, bln, bpn) -> do
+          Right (bn, bpn) -> do
             Log.eleg "author merge succeeded. (details omitted)"
             return $ Sign $ SignatureInfo    { signatureinfotext        = transactiontbs
                                              , signatureinfosignature    = signature
                                              , signatureinfocertificate  = cert
                                              , signatureinfoprovider     = provider
-                                             , signaturefstnameverified  = bfn
-                                             , signaturelstnameverified  = bln
+                                             , signaturefstnameverified  = bn
+                                             , signaturelstnameverified  = bn
                                              , signaturepersnumverified  = bpn
                                              , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                              }
@@ -497,14 +497,14 @@ verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
                 Left (msg, sfn, sln, spn) -> do
                     return $ Mismatch msg sfn sln spn
                 -- we have merged the info!
-                Right (bfn, bln, bpn) -> do
+                Right (bn, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
                                                      , signatureinfoprovider     = MobileBankIDProvider
-                                                     , signaturefstnameverified  = bfn
-                                                     , signaturelstnameverified  = bln
+                                                     , signaturefstnameverified  = bn
+                                                     , signaturelstnameverified  = bn
                                                      , signaturepersnumverified  = bpn
                                                      , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                                     }
@@ -534,14 +534,14 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
                 Left (msg, sfn, sln, spn) -> do
                     return $ Mismatch msg sfn sln spn
                 -- we have merged the info!
-                Right (bfn, bln, bpn) -> do
+                Right (bn, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
                                                      , signatureinfoprovider     = MobileBankIDProvider
-                                                     , signaturefstnameverified  = bfn
-                                                     , signaturelstnameverified  = bln
+                                                     , signaturefstnameverified  = bn
+                                                     , signaturelstnameverified  = bn
                                                      , signaturepersnumverified  = bpn
                                                      , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                                     }
