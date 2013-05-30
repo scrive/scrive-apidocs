@@ -34,7 +34,7 @@ fi
 
 echo "Searching for use of :focus selector ...";
 rm -f jslint-focus.txt;
-grep -nHr :focus public/js  > jslint-focus.txt;
+(grep -nHr :focus public/js || true) > jslint-focus.txt;
 
 if grep -q ":focus" jslint-focus.txt
 then
