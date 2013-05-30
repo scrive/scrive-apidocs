@@ -81,7 +81,7 @@
   window.AcceptTOS = function(args) {
     var model = new AcceptTOSModel(args);
     var view =  new AcceptTOSView({model: model, el: $("<div class='short-input-section accept-tos s-accept-tos'/>")});
-    this.el = function() {return $(view.el);}
+    this.el = function() {return $(view.el);};
   };
 
 })(window);

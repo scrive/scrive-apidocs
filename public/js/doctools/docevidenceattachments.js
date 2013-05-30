@@ -10,7 +10,7 @@ var DocumentEvidenceAttachmentsModel = Backbone.Model.extend({
      return this.get("document");
   },
   title : function() {
-     return this.get("title")
+     return this.get("title");
   }
 });
 
@@ -52,7 +52,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
     var tbody = $("<tbody/>");
     table.append(tbody);
     _.each(this.model.document().evidenceattachments(), function(attachment) {
-      var tr = $("<tr/>")
+      var tr = $("<tr/>");
 
       tr.append($("<td class='desc'>").append(self.evidenceAttachmentDesc(attachment)));
       tr.append($("<td class='file'>").append(self.evidenceAttachmentFile(attachment)));
@@ -75,7 +75,7 @@ window.DocumentEvidenceAttachments = function(args) {
                         model: model,
                         el : (args.el != undefined) ? args.el : $("<div/>")
                     });
-       this.el = function() {return $(view.el);}
-}
+       this.el = function() {return $(view.el);};
+};
 
 })(window);

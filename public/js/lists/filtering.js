@@ -36,7 +36,7 @@
             name: ""
         },
         type : function() {
-            return "select"
+            return "select";
         },
         initialize: function(args) {
         },
@@ -120,12 +120,12 @@
             $.get(self.optionsURL(), function(res) {
               var currentValue = self.selectedValue();
               var newOptions = self.optionsParse()(JSON.parse(res));
-              newOptions.unshift({name : self.defaultName(), value : ""})
+              newOptions.unshift({name : self.defaultName(), value : ""});
               self.set({options : newOptions}, {silent : true});
               self.select(currentValue);
               self.trigger("more-options-available"); // We might not rendered with select, since probably we just changed options, but not selected one.
               callback();
-            })
+            });
         },
         select: function(v) {
             if (this.find(v) != undefined) {
@@ -276,7 +276,7 @@
         initialize: function(args) {
             _.bindAll(this, 'render');
             var view = this;
-            this.model.bind('change', function() {view.render();})
+            this.model.bind('change', function() {view.render();});
             this.render();
         },
         render: function() {
@@ -287,7 +287,7 @@
             var selectOptions = [];
             for(var i=0;i< options.length;i++)
                     if (options[i] != selected)
-                         selectOptions.push(options[i])
+                         selectOptions.push(options[i]);
             if (this.select != undefined)
                 this.select.clear();
             this.select = new Select({
@@ -312,8 +312,8 @@
         initialize: function(args) {
             _.bindAll(this, 'render');
             var view = this;
-            this.model.bind('change', function() {view.render();})
-            this.model.bind('more-options-available', function() {view.render();})
+            this.model.bind('change', function() {view.render();});
+            this.model.bind('more-options-available', function() {view.render();});
             this.render();
         },
         render: function() {
@@ -321,11 +321,11 @@
             $(this.el).empty();
             var selectFiltering = this.model;
             var options = this.model.options();
-            var selected = selectFiltering.selected()
+            var selected = selectFiltering.selected();
             var selectOptions = [];
             for(var i=0;i< options.length;i++)
                     if (options[i] != selected)
-                         selectOptions.push(options[i])
+                         selectOptions.push(options[i]);
             if (this.select != undefined)
                 this.select.clear();
             this.select = new Select({
@@ -335,7 +335,7 @@
                 textWidth : selectFiltering.textWidth(),
                 onOpen : function() {
                     if (!selectFiltering.needMoreOptions())  return true;
-                    selectFiltering.getMoreOptions(function() {self.select.open();})
+                    selectFiltering.getMoreOptions(function() {self.select.open();});
                     return false;
                 },
                 onSelect : function(value) {
@@ -354,15 +354,15 @@
         initialize: function(args) {
             _.bindAll(this, 'render');
             var view = this;
-            this.model.bind('change', function() {view.render();})
+            this.model.bind('change', function() {view.render();});
             this.render();
         },
         render: function() {
             $(this.el).empty();
             var filtering = this.model;
             var options = this.model.options();
-            var selectedBottom = filtering.selectedBottom()
-            var selectedTop = filtering.selectedTop()
+            var selectedBottom = filtering.selectedBottom();
+            var selectedTop = filtering.selectedTop();
 
             var selectOptionsBottom = [];
             for(var i=0;i< options.length;i++) {

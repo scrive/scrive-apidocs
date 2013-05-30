@@ -47,11 +47,11 @@
         },
         showLimit : function() {
             if (this.get("showLimit") != undefined && this.get("pageSize") != undefined)
-                return Math.min(this.get("showLimit"),this.get("pageSize"))
+                return Math.min(this.get("showLimit"),this.get("pageSize"));
             else if (this.get("showLimit") != undefined)
                 return this.get("showLimit");
             else
-                return this.get("pageSize")
+                return this.get("pageSize");
         },
         setShowLimit : function(i) {
             this.set({ "showLimit": i });
@@ -76,7 +76,7 @@
                 a.click(paging.changePageFunction(n));
                 pages.append(a);
                 return a;
-            }
+            };
             var maxNextPages = paging.maxNextPages();
             var maxPage = paging.pageCurrent() + maxNextPages - 1;
             for(var i=0;i < maxPage && i*paging.pageSize() < paging.itemMax();i++) {

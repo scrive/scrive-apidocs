@@ -71,17 +71,17 @@ var DocumentHistoryView = Backbone.View.extend({
     updateOption : function() {
          if (this.model.showAll()) {
             this.checkbox.addClass("expanded");
-            this.label.text(localization.history.hide)
+            this.label.text(localization.history.hide);
          }
         else {
             this.checkbox.removeClass("expanded");
-            this.label.text(localization.history.expand + " (" + (this.model.historyList().model().length - 15) + " " +localization.history.available+ ")")
+            this.label.text(localization.history.expand + " (" + (this.model.historyList().model().length - 15) + " " +localization.history.available+ ")");
         }
     },
     expandAllOption : function() {
         var model = this.model;
         var view = this;
-        var option = $("<div class='option'/>")
+        var option = $("<div class='option'/>");
         this.checkbox = $("<div class='expandable'>");
         this.label = $("<div class='label'/>");
         this.updateOption();
@@ -89,23 +89,23 @@ var DocumentHistoryView = Backbone.View.extend({
             model.toogleShowAll();
             view.updateOption();
             return false;
-        })
+        });
         return option.append(this.checkbox).append(this.label);
     },
     render: function() {
       var self = this;
-      var container = $(this.el)
+      var container = $(this.el);
       container.children().detach();
       var historyList = this.model.historyList();
 
-      container.append(historyList.el())
+      container.append(historyList.el());
 
       var footer = $("<div class='document-history-footer'/>");
         if (historyList.model().length <= 15)
             footer.hide();
         else
             self.updateOption();
-      footer.append(this.expandAllOption())
+      footer.append(this.expandAllOption());
       container.append(footer);
 
 

@@ -8,13 +8,13 @@ window.DocumentCellsDefinition = function(archive) { return  [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.documents.columns.status, width:"62px", field:"status",
                  rendering: function(status,idx,listobject) {
-                    var icon = jQuery("<div class='icon status "+status+"'></div>")
+                    var icon = jQuery("<div class='icon status "+status+"'></div>");
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
                                       localization.statusToolTip[status]+"</p></div>");
                     ToolTip.set({
                         on: icon,
                         tip: tip
-                    })
+                    });
                     return icon;
                  }
         }),
@@ -86,7 +86,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                       return jQuery("<span />").text(txt);
                     }
                  })
-        ]
+        ];
 };
 
 window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
@@ -116,7 +116,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                              optionsURL : "/companyaccounts",
                              defaultName : localization.filterByAuthor.showAnyAuthor,
                              optionsParse: function(resp) {
-                                        var options = []
+                                        var options = [];
                                         _.each(resp.list, function(l) {
                                           var fields = l.fields;
                                           var id = fields["id"];
@@ -141,10 +141,10 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                                         var time = new Date();
                                         while (year < time.getFullYear() || (year == time.getFullYear() && month <= time.getMonth() + 1)) {
                                             var name = capitaliseFirstLetter(localization.months[month-1].slice(0,3) + " " + year);
-                                            options.push({name : name , value : "("+month + "," + year + ")" })
+                                            options.push({name : name , value : "("+month + "," + year + ")" });
                                             month++;
                                             if (month == 13) {month = 1; year++;}
-                                        };
+                                        }
                                         options.push({name : localization.filterByTime.filterTo , value : ">" });
                                         return options} ()
                              })
@@ -171,7 +171,7 @@ window.DocumentsListDefinition = function(archive) { return {
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
                      doc.field("status") == "read"      ||
-                     doc.field("status") == "opened"
+                     doc.field("status") == "opened";
             },
             onSelect : function(docs) {
                  var content = jQuery("<p/>");
@@ -217,7 +217,7 @@ window.DocumentsListDefinition = function(archive) { return {
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
                      doc.field("status") == "read"      ||
-                     doc.field("status") == "opened"
+                     doc.field("status") == "opened";
             },
             onSelect : function(docs) {
                              var confirmationPopup = Confirmation.popup({
@@ -287,9 +287,9 @@ window.DocumentsListDefinition = function(archive) { return {
                  acceptEmpty : true,
                  onSelect: function(){
                      mixpanel.track('Download CSV');
-                        var url =  archive.documents().model().schema.url() + "?"
+                        var url =  archive.documents().model().schema.url() + "?";
                         var params =  archive.documents().model().schema.getSchemaUrlParams();
-                        _.each(params,function(a,b){url+=(b+"="+a+"&")})
+                        _.each(params,function(a,b){url+=(b+"="+a+"&")});
                         window.open(url + "format=csv");
                         return true;
                  }
@@ -307,8 +307,8 @@ window.DocumentsListDefinition = function(archive) { return {
                           window.open(url);
                           return true;
                         } else {
-                          var url =  "/d/zip?"
-                          _.each(docs,function(doc){url+=("doccheck="+doc.field("id")+"&")})
+                          var url =  "/d/zip?";
+                          _.each(docs,function(doc){url+=("doccheck="+doc.field("id")+"&")});
                           window.open(url);
                           return true;
                         }

@@ -74,7 +74,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
 
     this.container = $("<div class='sample-custom-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
     this.header = $("<div class='sample-custom-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED;'/>");
-    this.subheader = $("<div style='width:560px;border-top:1px solid #DEE4ED;height:0px;position:absolute;margin-top:2px;'/>")
+    this.subheader = $("<div style='width:560px;border-top:1px solid #DEE4ED;height:0px;position:absolute;margin-top:2px;'/>");
     this.header.append(this.subheader);
 
     this.header1 = $('<div style="float: left;margin-left:16px;"/>');
@@ -83,22 +83,22 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header1.append(this.logowrapper.append(this.logo));
 
     this.header2 = $('<div style="float: right; margin: 23px 8px;"/>');
-    this.header2.append(Button.init({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input())
+    this.header2.append(Button.init({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input());
 
     this.header3 = $('<div style="float: right; margin: 23px 8px;"/>');
-    this.header3.append(Button.init({size: 'tiny', color: 'blue', text: 'Start from templat', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input())
+    this.header3.append(Button.init({size: 'tiny', color: 'blue', text: 'Start from templat', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input());
 
     this.header4 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;border-right:1px solid white"/>');
-    this.header4content = $("<a class='hoverable'>Archive</a>")
+    this.header4content = $("<a class='hoverable'>Archive</a>");
     this.header4.append(this.header4content);
 
     this.header5 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;border-right:1px solid white"/>');
-    this.header5content = $("<a class='hoverable'>Account</a>")
+    this.header5content = $("<a class='hoverable'>Account</a>");
     this.header5.append(this.header5content);
 
 
     this.header6 = $('<div style="float: right;  margin: 30px 0px;height: 15px;  line-height: 15px; font-size:10px;"/>');
-    this.header6content = $("<a class='hoverable'>Log out</a>")
+    this.header6content = $("<a class='hoverable'>Log out</a>");
     this.header6.append(this.header6content);
 
     this.header.append(this.header1).append(this.header6).append(this.header5).append(this.header4).append(this.header3).append(this.header2).append($('<div style="clear:both;"/>'));
@@ -141,11 +141,11 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
         if (self.logo[0].complete && self.logo.width() > 0) {
           var w = self.logo.width();
           var h = self.logo.height();
-          console.log("Scaling " + w + " " + h)
+          console.log("Scaling " + w + " " + h);
           self.logo.css("width", Math.ceil(3*w/5) + "px").css("height",Math.ceil(3*h/5) + "px");
         }
         else setTimeout(scaleWhenComplete,10);
-      }
+      };
       if (!BrowserInfo.isIE8orLower()) //Scaling inlined images with css properties fails in IE
         setTimeout(scaleWhenComplete,5);
   },

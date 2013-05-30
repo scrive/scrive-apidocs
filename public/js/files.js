@@ -283,7 +283,7 @@ var FileView = Backbone.View.extend({
     hline: function() {
       if (this.hlinediv != undefined)
         return this.hlinediv;
-      this.hlinediv = $("<div class='hline'>");;
+      this.hlinediv = $("<div class='hline'>");
       $(this.el).append(this.hlinediv);
       return this.hlinediv;
     },

@@ -19,7 +19,7 @@ window.Language = {
          $.get('/' + code + '/localization/'+window.versioncode +'.js', function(localization_script) {
            eval(localization_script);
            if (callback != undefined) callback();
-         })
+         });
     },
     changeForPageAndUserAndReload : function(code) {
         $.post('/api/frontend/changelanguage', {lang: code }, function() {

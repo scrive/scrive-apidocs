@@ -69,7 +69,7 @@
                                        name: viewmodel.document().newCheckboxName()});
                 //viewmodel.document().author().addField(field);
                 return field;
-            }
+            };
 
             draggebleField(div, getcheckbox,undefined, undefined,true);
 
@@ -160,6 +160,6 @@
 
     window.DesignViewDraggablesView = function(args) {
         return new DesignViewDraggablesView(args);
-    }
+    };
 
 }(window));

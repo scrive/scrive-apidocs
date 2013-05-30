@@ -240,7 +240,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 mixpanel.track('Finish attachment task');
                                 $(model.signatoryattachmentsection().el).removeClass("highlight");
                             }
-                        })
+                        });
             attachment.bind("change", function() {
                 task.update();
                 });
@@ -424,11 +424,11 @@ var DocumentSignViewView = Backbone.View.extend({
      if (!this.model.ignoredoclang() && Language.current() != view.model.document().lang().simpleCode()) {
          Language.changeOnCurrentPage(view.model.document().lang().simpleCode() ,function() {
            view.render();
-        })
+        });
         return this;
      }
 
-     this.container.append(this.model.instructionssection().el)
+     this.container.append(this.model.instructionssection().el);
 
      if (this.model.hasCreateAccountSection())
          this.container.append(this.model.createaccountsection().el);

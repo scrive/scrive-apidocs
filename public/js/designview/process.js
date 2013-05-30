@@ -232,7 +232,7 @@
                                             if (days != doc.daystosign()) {
                                               doc.setDaystosign(days);
                                               if (view.daysinputfield != undefined)
-                                                  view.daysinputfield.setValue(days)
+                                                  view.daysinputfield.setValue(days);
                                             }
                                           }
                         });

@@ -54,7 +54,7 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
     var tbody = $("<tbody/>");
     table.append(tbody);
     _.each(this.model.document().signatoryattachments(), function(attachment) {
-      var tr = $("<tr/>")
+      var tr = $("<tr/>");
       
       tr.append($("<td class='desc'>").append(self.attachmentDescription(attachment)));
       tr.append($("<td class='file'>").append(self.attachmentFile(attachment)));

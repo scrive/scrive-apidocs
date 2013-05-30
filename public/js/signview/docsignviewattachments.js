@@ -155,7 +155,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
       return this;
     }
 
-    var document = this.model.signatories()[0].document()
+    var document = this.model.signatories()[0].document();
     var textcolour = document.signviewtextcolour();
     var textfont = document.signviewtextfont();
     var labelCss = {};
@@ -176,7 +176,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     var tbody = $("<tbody/>");
     table.append(tbody);
     _.each(this.model.currentSignatory().attachments(), function(attachment) {
-      var tr = $("<tr/>")
+      var tr = $("<tr/>");
       tr.append($("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment, labelCss)));
       tr.append($("<td class='file'>").append(self.signatoryAttachmentFile(attachment, labelCss)));
       tbody.append(tr);

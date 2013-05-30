@@ -106,7 +106,7 @@ var CsvProblem = Backbone.Model.extend({
            problems = problems.concat(extraproblems);
            sigdesign.set({'rows': jresp.rows, 'problems': problems });
            sigdesign.trigger("change");
-        } catch(e) {};
+        } catch(e) {}
       });
   }
 });

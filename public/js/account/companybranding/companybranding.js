@@ -12,7 +12,7 @@ window.CompanyBrandingModel = Backbone.Model.extend({
         this.url = "/account/company/json";
         this._companyui = null;
         var user = new User();
-        this.set({"user" : user})
+        this.set({"user" : user});
         user.bind("change:ready",function() {
           self.reset();
           self.trigger('change:ready');
@@ -21,7 +21,7 @@ window.CompanyBrandingModel = Backbone.Model.extend({
       } else {
         this.submiturl = "/adminonly/companyadmin/branding/"+args.companyid;
         this.url = "/adminonly/companyadmin/branding/json/"+args.companyid;
-        this._companyui = new CompanyUI({url: this.url, companyid: args.companyid})
+        this._companyui = new CompanyUI({url: this.url, companyid: args.companyid});
         this._companyui.bind("change:ready",function() {
           self.reset();
           self.trigger('change:ready');

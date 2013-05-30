@@ -175,7 +175,7 @@
                     td.click(function(){view.selectCheck(); return false;});
                     this.checkbox = $("<div class='checkbox'/>");
                     this.renderSelection();
-                    this.checkbox.click(function(){view.selectCheck();return false;})
+                    this.checkbox.click(function(){view.selectCheck();return false;});
                     elem = this.checkbox;
                 } else if (cell.isRendered() && value != undefined) {
                     elem = cell.rendering(value, undefined, this.model);
@@ -311,7 +311,7 @@
                     _.each(this.schema.allFiltering(),function(f) {
                         var filter = new FilteringView({model: f, el: $("<div class='float-left'/>")});
                         view.pretableboxleft.append(filter.el);
-                    })
+                    });
                     if (!this.schema.textfiltering().disabled()) {
                         var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
                         this.pretableboxright.append(filter.el);
@@ -321,7 +321,7 @@
                 if (this.hasSecoundTopBox())
                 {
                     this.pretableboxsubbox = $("<div class='subbox'/>");
-                    this.tableoptionbox.append(this.pretableboxsubbox)
+                    this.tableoptionbox.append(this.pretableboxsubbox);
                     if (this.schema.actionsAvaible()) {
                         this.prepareActions();
                     }
@@ -352,7 +352,7 @@
                         } else {
                             return function() {};
                         }
-                    }
+                    };
                 }
                 return e;
             });
@@ -370,12 +370,12 @@
         prepareActions : function() {
            var actions = this.schema.actions();
            var model = this.model;
-           var view = this
+           var view = this;
            var div = $("<div class='actions-box'/>");
            _.each(actions, function(a) {
                 a.set({"list" : model});
                 div.append(new ListActionView({model : a, el : $("<div class='float-left actionButton'>")}).el);
-            })
+            });
            console.log("Generating buttons for actions");
            view.pretableboxsubbox.removeClass('empty');
            view.pretableboxsubbox.append(div);
@@ -407,7 +407,7 @@
                             }
                         }
                         h.html(text);
-                     }
+                     };
                    makeText();
                    this.model.bind('change', makeText);
 
@@ -442,7 +442,7 @@
 
             var body = this.tbody;
             var odd = true;
-            var schema = this.schema
+            var schema = this.schema;
             _.each(this.model.first(this.schema.paging().showLimit()),function(e) {
                 if (e.view == undefined)
                   new ListObjectView({
@@ -513,13 +513,13 @@
                                     self.silentFetch = function() {return;}; // Disable featching
                                 }
               });
-            }
-            this.model = function() {return model;}
+            };
+            this.model = function() {return model;};
             this.setShowLimit = function(l) {
                     schema.paging().setShowLimit(l);
                     schema.trigger("change");
             };
             schema.bind('change', function() {self.recall();});
             if (args.loadOnInit != false) self.recall();
-        }
+        };
 })(window);

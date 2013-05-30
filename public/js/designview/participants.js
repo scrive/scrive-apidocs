@@ -398,10 +398,10 @@
             view.render();
         },
         closeAllParticipants : function() {
-            console.log("Closing participants")
+            console.log("Closing participants");
             this.model.setParticipantDetail(null);
 
-            console.log("Closing is done")
+            console.log("Closing is done");
 
         },
         setup: function() {
@@ -614,7 +614,7 @@
                     Where: 'icon'
                 });
                 var sig = view.model;
-                var auth = sig.authentication()
+                var auth = sig.authentication();
                 if(auth === 'standard')
                     sig.setAuthentication('eleg');
                 else
@@ -1089,7 +1089,7 @@
         },
         placeholder: function(name) {
             return this.fieldNames[name] || name;
-        },
+        }
 
     });
 
@@ -1246,7 +1246,7 @@
             var div = $('<div />');
 
             if(!sig.author()) {
-                div.addClass('design-view-action-participant-close')
+                div.addClass('design-view-action-participant-close');
 
                 div.click(function() {
                     mixpanel.track('Click remove signatory');
@@ -1447,7 +1447,7 @@
 
     window.DesignViewParticipantsView = function(args) {
         return new DesignViewParticipantsView(args);
-    }
+    };
 
     window.FieldOptionsView = FieldOptionsView;
 

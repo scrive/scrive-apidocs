@@ -157,7 +157,7 @@ var LoginView = Backbone.View.extend({
       var loginFunction = function() {
           Cookies.set('last_login_email',model.email());
           model.login();
-      }
+      };
       model.setEmail(Cookies.get('last_login_email'));
       header.append($("<h1/>").text(localization.welcomeback));
       if (!model.pad()) $(this.el).append(header);
@@ -307,7 +307,7 @@ var LoginBrandedView = Backbone.View.extend({
       var loginFunction = function() {
           Cookies.set('last_login_email',model.email());
           model.login();
-      }
+      };
       model.setEmail(Cookies.get('last_login_email'));
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
@@ -420,7 +420,7 @@ var LoginBrandedView = Backbone.View.extend({
               onEnter : function() { model.sendPasswordReminder();}
 
       });
-      emailinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");;
+      emailinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
         emailinput.input().focus(
           function() {
               emailinput.input().select();

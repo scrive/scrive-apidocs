@@ -21,6 +21,6 @@ window.UserAdminSalesListDefinition = function() {
             ]
         }),
         headerExtras: CreateUserButton.input()
-    }
+    };
 };
 })(window);

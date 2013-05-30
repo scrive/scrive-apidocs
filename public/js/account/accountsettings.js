@@ -6,7 +6,7 @@ var AccountSettingsModel = Backbone.Model.extend({
   initialize : function() {
     var self = this;
     var user = new User();
-    this.set({"user" : user})
+    this.set({"user" : user});
     user.bind("change",function() {
       console.log('User changed ready');
       self.reset();
@@ -31,85 +31,85 @@ var AccountSettingsModel = Backbone.Model.extend({
      return this.get("fstname");
   },
   setFstname : function(v) {
-     this.set({"fstname" : v})
+     this.set({"fstname" : v});
   },
   sndname : function() {
      return this.get("sndname");
   },
   setSndname : function(v) {
-     this.set({"sndname" : v})
+     this.set({"sndname" : v});
   },
   personnumber : function() {
      return this.get("personnumber");
   },
   setPersonnumber : function(v) {
-     this.set({"personnumber" : v})
+     this.set({"personnumber" : v});
   },
   email : function() {
      return this.get("email");
   },
   setEmail : function(v) {
-     this.set({"email" : v})
+     this.set({"email" : v});
   },
   newemail : function() {
      return this.get("newemail");
   },
   setNewEmail : function(v) {
-     this.set({"newemail" : v})
+     this.set({"newemail" : v});
   },
   newemailagain : function() {
      return this.get("newemailagain");
   },
   setNewEmailAgain : function(v) {
-     this.set({"newemailagain" : v})
+     this.set({"newemailagain" : v});
   },
   phone : function() {
      return this.get("phone");
   },
   setPhone : function(v) {
-     this.set({"phone" : v})
+     this.set({"phone" : v});
   },
   companyname  : function() {
      return this.get("companyname");
   },
   setCompanyname : function(v) {
-     this.set({"companyname" : v})
+     this.set({"companyname" : v});
   },
   companynumber  : function() {
      return this.get("companynumber");
   },
   setCompanynumber : function(v) {
-     this.set({"companynumber" : v})
+     this.set({"companynumber" : v});
   },
   companyposition  : function() {
      return this.get("companyposition");
   },
   setCompanyposition : function(v) {
-     this.set({"companyposition" : v})
+     this.set({"companyposition" : v});
   },
   companyaddress  : function() {
      return this.get("companyaddress");
   },
   setCompanyaddress : function(v) {
-     this.set({"companyaddress" : v})
+     this.set({"companyaddress" : v});
   },
   companyzip  : function() {
      return this.get("companyzip");
   },
   setCompanyzip : function(v) {
-     this.set({"companyzip" : v})
+     this.set({"companyzip" : v});
   },
   companycity  : function() {
      return this.get("companycity");
   },
   setCompanycity : function(v) {
-     this.set({"companycity" : v})
+     this.set({"companycity" : v});
   },
   companycountry  : function() {
      return this.get("companycountry");
   },
   setCompanycountry : function(v) {
-     this.set({"companycountry" : v})
+     this.set({"companycountry" : v});
   },
 
   reset : function() {
@@ -248,31 +248,31 @@ var AccountSettingsView = Backbone.View.extend({
       var fstnameinput = $("<input type='text' name='fstname'/>").val(model.fstname());
       fstnameinput.change(function() {
           model.setFstname(fstnameinput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.fstname))).append($("<td/>").append(fstnameinput)));
 
       var sndnameinput = $("<input type='text' name='sndname'/>").val(model.sndname());
       sndnameinput.change(function() {
           model.setSndname(sndnameinput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.sndname))).append($("<td/>").append(sndnameinput)));
 
       var personnumberinput = $("<input type='text' name='personalnumber'/>").val(model.personnumber());
       personnumberinput.change(function() {
           model.setPersonnumber(personnumberinput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.personnumber))).append($("<td/>").append(personnumberinput)));
 
       var emailinput = $("<input type='text' disabled='disabled' style='width:140px;margin-right:10px'/>").val(model.email());
       emailinput.change(function() {
           model.setEmail(emailinput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.email))).append($("<td/>").append(emailinput).append(this.changeEmailButton())));
 
       var phoneinput = $("<input type='text' name='phone'/>").val(model.phone());
       phoneinput.change(function() {
           model.setPhone(phoneinput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.phone))).append($("<td/>").append(phoneinput)));
 
       if (!model.user().hasCompany()) {
@@ -280,20 +280,20 @@ var AccountSettingsView = Backbone.View.extend({
           var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
           companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
-            })
+            });
           table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname))).append($("<td/>").append(companynameinput)));
 
           var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
           companynumberinput.change(function() {
               model.setCompanynumber(companynumberinput.val());
-            })
+            });
           table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber))).append($("<td/>").append(companynumberinput)));
 
-      };
+      }
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyposition))).append($("<td/>").append(companypositioninput)));
 
       return box;
@@ -312,42 +312,42 @@ var AccountSettingsView = Backbone.View.extend({
             if (!model.companyAdmin()) companynameinput.attr("disabled","disabled");
             companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname))).append($("<td/>").append(companynameinput)));
 
             var companynumberinput = $("<input type='text'/>").val(model.companynumber());
             if (!model.companyAdmin()) companynumberinput.attr("disabled","disabled");
             companynumberinput.change(function() {
               model.setCompanynumber(companynumberinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber))).append($("<td/>").append(companynumberinput)));
 
             var companyaddressinput = $("<input type='text'/>").val(model.companyaddress());
             if (!model.companyAdmin()) companyaddressinput.attr("disabled","disabled");
             companyaddressinput.change(function() {
               model.setCompanyaddress(companyaddressinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyaddress))).append($("<td/>").append(companyaddressinput)));
 
             var companyzipinput = $("<input type='text'/>").val(model.companyzip());
             if (!model.companyAdmin()) companyzipinput.attr("disabled","disabled");
             companyzipinput.change(function() {
               model.setCompanyzip(companyzipinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyzip))).append($("<td/>").append(companyzipinput)));
 
             var companycityinput = $("<input type='text'/>").val(model.companycity());
             if (!model.companyAdmin()) companycityinput.attr("disabled","disabled");
             companycityinput.change(function() {
               model.setCompanycity(companycityinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companycity))).append($("<td/>").append(companycityinput)));
 
             var companycountryinput = $("<input type='text'/>").val(model.companycountry());
             if (!model.companyAdmin()) companycountryinput.attr("disabled","disabled");
             companycountryinput.change(function() {
               model.setCompanycountry(companycountryinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companycountry))).append($("<td/>").append(companycountryinput)));
 
 
@@ -437,7 +437,7 @@ var AccountSettingsView = Backbone.View.extend({
             var companynameinput = $("<input type='text'/>").val(model.companyname());
             companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyname)).append($("<td/>").append(companynameinput)));
 
             var companynumberinput = $("<input type='text'/>").val(model.companynumber());
@@ -449,25 +449,25 @@ var AccountSettingsView = Backbone.View.extend({
             var companyaddressinput = $("<input type='text'/>").val(model.companyaddress());
             companyaddressinput.change(function() {
               model.setCompanyaddress(companyaddressinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyaddress)).append($("<td/>").append(companyaddressinput)));
 
             var companyzipinput = $("<input type='text'/>").val(model.companyzip());
             companyzipinput.change(function() {
               model.setCompanyzip(companyzipinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyzip)).append($("<td/>").append(companyzipinput)));
 
             var companycityinput = $("<input type='text'/>").val(model.companycity());
             companynameinput.change(function() {
               model.setCompanycity(companycityinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycity)).append($("<td/>").append(companycityinput)));
 
             var companycountryinput = $("<input type='text'/>").val(model.companycountry());
             companynameinput.change(function() {
               model.setCompanycountry(companycountryinput.val());
-            })
+            });
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycountry)).append($("<td/>").append(companycountryinput)));
 
 
@@ -489,7 +489,7 @@ var AccountSettingsView = Backbone.View.extend({
                                   });
               },
               onReject: function() {
-                window.location = window.location
+                window.location = window.location;
               },
               title: localization.account.accountDetails.createCompany,
               acceptButtonText: localization.account.accountDetails.createCompany,
@@ -512,7 +512,7 @@ var AccountSettingsView = Backbone.View.extend({
           model.save();
           return false;
         }
-      })
+      });
       return button.input();
     },
     render: function () {

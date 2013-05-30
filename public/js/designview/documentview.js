@@ -78,7 +78,7 @@
             var div = $('<div />');
             div.addClass('design-view-document-pages');
             if (!this.file)
-              this.file = KontraFile.init({file: document.mainfile()})
+              this.file = KontraFile.init({file: document.mainfile()});
             div.append(this.file.view.el);
             return div;
         },

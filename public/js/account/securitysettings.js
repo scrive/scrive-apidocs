@@ -6,7 +6,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
   initialize : function() {
     var self = this;
     var user = new User();
-    this.set({"user" : user})
+    this.set({"user" : user});
     user.bind("change:ready",function() {
       self.reset();
     });
@@ -70,7 +70,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
             callback();
          }
          else
-           new FlashMessage({color: 'red', content : localization.validation.passwordOldPasswordNotValid})
+           new FlashMessage({color: 'red', content : localization.validation.passwordOldPasswordNotValid});
       }
     }).send();
   },
@@ -109,7 +109,7 @@ var SecuritySettingsView = Backbone.View.extend({
       // Building frame
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.passwordSection)
+      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.passwordSection);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -119,19 +119,19 @@ var SecuritySettingsView = Backbone.View.extend({
       var oldpasswordinput = $("<input type='password' autocomplete='off'/>");
       oldpasswordinput.change(function() {
           model.setOldPassword(oldpasswordinput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.oldpassword))).append($("<td/>").append(oldpasswordinput)));
 
       password1input = $("<input type='password' autocomplete='off'/>");
       password1input.change(function() {
           model.setPassword1(password1input.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.newpassword1))).append($("<td/>").append(password1input)));
 
       password2input = $("<input type='password' autocomplete='off'/>");
       password2input.change(function() {
           model.setPassword2(password2input.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.newpassword2))).append($("<td/>").append(password2input)));
 
       return box;
@@ -159,7 +159,7 @@ var SecuritySettingsView = Backbone.View.extend({
                              options:   model.lang() == "en" ? [{name: localization.account.accountSecurity.langSV, value: "sv"}] :
                                                                         [{name: localization.account.accountSecurity.langEN, value: "en"}]
                            });
-         self.langSelectBox.append(self.langSelect.view().el)
+         self.langSelectBox.append(self.langSelect.view().el);
       };
       updateLangSelect();
       model.bind("change:lang",updateLangSelect);
@@ -194,7 +194,7 @@ var SecuritySettingsView = Backbone.View.extend({
         text : localization.account.accountSecurity.save,
         onClick : function() {
           if (self.customfooter != undefined) {
-            model.setFooter(self.customfooter.val())
+            model.setFooter(self.customfooter.val());
           }
           if (model.passwordNeedSaving())
           { if (self.passwordsAreValid())
@@ -204,7 +204,7 @@ var SecuritySettingsView = Backbone.View.extend({
             model.save();
           return false;
         }
-      })
+      });
       return box.append(button.input());
     },
     render: function () {

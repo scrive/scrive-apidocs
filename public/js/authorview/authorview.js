@@ -94,7 +94,7 @@ window.AuthorViewView = Backbone.View.extend({
     this.container.empty();
     this.container.append(this.model.title().el());
     this.container.append(this.model.history().el());
-    var subcontainer = $("<div class='subcontainer'/>")
+    var subcontainer = $("<div class='subcontainer'/>");
     this.container.append(subcontainer);
     subcontainer.append(this.model.signatories().el());
     subcontainer.append(model.file().view.el);
@@ -125,7 +125,7 @@ window.AuthorView = function(args) {
                         el : $("<div/>")
                     });
        document.fetch({ processData:  true, cache : false});
-       this.el = function() {return $(view.el);}
-}
+       this.el = function() {return $(view.el);};
+};
 
 })(window);

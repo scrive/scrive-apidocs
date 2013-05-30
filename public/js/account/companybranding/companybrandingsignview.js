@@ -155,7 +155,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
         self.logo.css("width", Math.ceil(3*w/5) + "px").css("height",Math.ceil(3*h/5) + "px");
       }
       else setTimeout(scaleWhenComplete,5);
-    }
+    };
     if (!BrowserInfo.isIE8orLower()) //Scaling inlined images with css properties fails in IE
       setTimeout(scaleWhenComplete,5);
 

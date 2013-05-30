@@ -23,10 +23,10 @@
                   if (self.document().mainfile().ready()) {
                      setTimeout(function() { self.setStep((self.step() || 1)); }, 800);
                   }
-                }
+                };
                 self.document().mainfile().bind('change', updateOnReady);
               }
-            })
+            });
 
             model.currentColorIndex = 0;
             model.colors = [
@@ -347,7 +347,7 @@
                                           method : 'POST',
                                           url : '/d/save/' + viewmodel.document().documentid(),
                                           ajaxsuccess : function() {
-                                              new FlashMessage({color: "green", content : localization.designview.saved})
+                                              new FlashMessage({color: "green", content : localization.designview.saved});
                                           }
                                         }).send();
                 });
@@ -591,7 +591,7 @@
                                 document.signByAuthor().sendAjax(function(resp) {
                                     var link = JSON.parse(resp).link;
                                     window.location = link;
-                                });;
+                                });
                             });
                         });
                     }
@@ -821,6 +821,6 @@
             view.afterInsert();
         };
 
-    }
+    };
 
 })(window);

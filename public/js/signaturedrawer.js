@@ -17,7 +17,7 @@ var SignatureDrawer = Backbone.View.extend({
         this.drawing = true;
         document.ontouchmove = function(e){
              e.preventDefault();
-        }
+        };
         this.modal.css("-ms-touch-action","none");
     },
     stopDrawing : function() {
@@ -26,7 +26,7 @@ var SignatureDrawer = Backbone.View.extend({
 
         document.ontouchmove = function(e){
             return true;
-        }
+        };
         this.modal.css("-ms-touch-action","auto");
     },
     modal : function() {
@@ -78,7 +78,7 @@ var SignatureDrawer = Backbone.View.extend({
     },
     drawingtoolMove : function(x,y) {
       if (this.drawing) {
-        var moved = function(x1,x2) { return (x1 * 2 + x2 * 1) / 3; }
+        var moved = function(x1,x2) { return (x1 * 2 + x2 * 1) / 3; };
         if (this.x_ != undefined && this.y_ != undefined) {
             this.drawNiceCurve(this.x_, this.y_ ,this.x, this.y, moved(this.x,x), moved(this.y,y));
             this.drawNiceLine(moved(this.x,x), moved(this.y,y),moved(x,this.x), moved(y,this.y));
@@ -204,7 +204,7 @@ var SignatureDrawer = Backbone.View.extend({
           img.src = this.model.valueTMP() ;
           this.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);
           this.empty = false;
-        };
+        }
         this.initDrawing();
         this.container.append(this.canvas);
         return this;
@@ -308,7 +308,7 @@ window.SignatureDrawerPopup = function(args){
               modal.removeClass('active');
               document.ontouchmove = function(e){
                  return true;
-              }
+              };
               setTimeout(function() {modal.detach();},500);
             };
 

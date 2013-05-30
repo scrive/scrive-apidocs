@@ -38,11 +38,11 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
                             rendering: function(value,_idx,model) {
                                    var res= $("<div/>");
                                     if (model.field("authentication") == "eleg")
-                                        res.text(localization.eleg)
+                                        res.text(localization.eleg);
                                     else if (model.field("delivery") == "pad")
-                                        res.text(localization.pad.delivery)
+                                        res.text(localization.pad.delivery);
                                     else
-                                        res.text(localization.email)
+                                        res.text(localization.email);
                                     return res;
                             }}),
                   new Cell({name: localization.archive.templates.columns.template, width:"450px", field:"title",
@@ -101,7 +101,7 @@ var CreateFromTemplateView = Backbone.View.extend({
     return box;
   },
   render: function() {
-     var model = this.model
+     var model = this.model;
      var container = $(this.el);
      container.append(this.header());
      model.list().recall();

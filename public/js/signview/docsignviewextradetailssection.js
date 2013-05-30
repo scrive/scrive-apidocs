@@ -37,7 +37,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
      var field1 = signatory.fstnameField();
      var field2 = signatory.sndnameField();
      return field1 != undefined && (field1.value() == "" || field1.value() == undefined) && (!field1.hasPlacements() || !field1.obligatory()) &&
-            field2 != undefined && (field2.value() == "" || field2.value() == undefined) && (!field2.hasPlacements() || !field2.obligatory())
+            field2 != undefined && (field2.value() == "" || field2.value() == undefined) && (!field2.hasPlacements() || !field2.obligatory());
    },
    nameInput : function() {
      var signatory = this.model;
@@ -56,7 +56,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    ssnInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.personalnumberField();
-     return field != undefined && (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory()) && signatory.elegAuthentication()
+     return field != undefined && (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory()) && signatory.elegAuthentication();
    },
    ssnInput : function() {
      var signatory = this.model;

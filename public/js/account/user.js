@@ -85,7 +85,7 @@ window.User = Backbone.Model.extend({
       company   : args.company != undefined ? new Company(args.company) : undefined,
       mailapi   :  args.mailapi != undefined ? new MailApi(args.mailapi) : undefined,
       ready : true
-    }
+    };
   }
 });
 

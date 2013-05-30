@@ -226,7 +226,7 @@
       view = new NewPasswordView(options);
     }
 
-    this.el = function() {return $(view.el);}
+    this.el = function() {return $(view.el);};
   };
 
 })(window);

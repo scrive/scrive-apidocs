@@ -78,7 +78,7 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     var tbody = $("<tbody/>");
     table.append(tbody);
     _.each(this.model.document().authorattachments(), function(attachment) {
-      var tr = $("<tr/>")
+      var tr = $("<tr/>");
 
       tr.append($("<td class='desc'>").append(self.authorAttachmentDesc(attachment, labelCss)));
       tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment, labelCss)));
@@ -101,7 +101,7 @@ window.DocumentAuthorAttachments = function(args) {
                         model: model,
                         el : (args.el != undefined) ? args.el : $("<div/>")
                     });
-       this.el = function() {return $(view.el);}
-}
+       this.el = function() {return $(view.el);};
+};
 
 })(window);

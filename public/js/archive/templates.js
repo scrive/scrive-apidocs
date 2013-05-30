@@ -38,11 +38,11 @@ window.TemplatesListDefinition = function(archive) { return {
                   rendering: function(value, idx, model) {
                          var res= $("<div/>");
                          if (model.field("authentication") == "eleg")
-                             res.text(localization.eleg)
+                             res.text(localization.eleg);
                          else if (model.field("delivery") == "pad")
-                             res.text(localization.pad.delivery)
+                             res.text(localization.pad.delivery);
                          else
-                             res.text(localization.email)
+                             res.text(localization.email);
                          return res;
                   }}),
         new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),

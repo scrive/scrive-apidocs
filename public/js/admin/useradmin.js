@@ -35,6 +35,6 @@ window.UserAdminListDefinition = function() { return {
             new Cell({name: "Admin Invites", width:"40px",  field:"admin_invites", special:"bool"})
         ]
     })
-}
+};
 };
 })(window);

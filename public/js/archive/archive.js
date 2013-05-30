@@ -57,7 +57,7 @@ var ArchiveModel = Backbone.Model.extend({
                             mixpanel.register({Subcontext : 'Templates tab'});
                             mixpanel.track('View Templates Tab');
                         }
-                    })
+                    });
   },
   attachmentsTab : function() {
                     var archive = this;
@@ -93,7 +93,7 @@ var ArchiveView = Backbone.View.extend({
         this.model.view = this;
         var view = this;
         this.render();
-        $(window).scroll(function() {view.updateScroll();})
+        $(window).scroll(function() {view.updateScroll();});
     },
     updateScroll : function() {
         var limit = 277;

@@ -66,7 +66,7 @@ var AdminModel = Backbone.Model.extend({
                         onActivate : function() {
                             admin.useradminforsales().recall();
                         }
-                    })
+                    });
   },
   companyAdminTab : function() {
                     var admin = this;

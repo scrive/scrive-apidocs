@@ -196,7 +196,7 @@
             view = new SignupBrandedView({model : model, el : $("<div style='width:275px;margin:20px auto' />") });
           else
             view = new SignupView({model : model, el : $("<div class='signup short-input-section'/>")});
-    this.el = function() {return $(view.el);}
+    this.el = function() {return $(view.el);};
   };
 
 })(window);

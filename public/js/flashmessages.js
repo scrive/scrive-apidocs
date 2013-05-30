@@ -79,5 +79,5 @@ window.FlashMessage = function(args) {
           $('.flash-body',$(view.el)).addClass("twoLines");
         setTimeout(function() {$(view.el).addClass("active");},100);
         setTimeout(function() {view.clear();},10000);
-}
+};
 });

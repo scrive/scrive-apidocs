@@ -81,7 +81,7 @@ var DesignAttachmentsListView = Backbone.View.extend({
 window.DesignAttachmentsList = function(args) {
     var view = new DesignAttachmentsListView({model : args.viewmodel, el : $("<div class=designview-attachemnts-list/>")});
     this.el = function() {return $(view.el);};
-    this.destroy = function() { view.destroy();}
+    this.destroy = function() { view.destroy();};
 
 };
 

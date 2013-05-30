@@ -184,7 +184,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             signatory.ensureSignature();
         }
     });
-}
+};
 
     /**
        model is field
@@ -282,7 +282,7 @@ var TextTypeSetterView = Backbone.View.extend({
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
-        }
+        };
         $(window).scroll(view.fixPlaceFunction); // To deal with resize;
         $(window).resize(view.fixPlaceFunction);
         this.render();
@@ -576,7 +576,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       field.trigger('change:inlineedited');
                       field.signatory().trigger('change');
                       view.render();
-        }
+        };
         acceptIcon.click(function() {
                       accept();
                       return false;
@@ -957,7 +957,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
-        }
+        };
         $(window).scroll(view.fixPlaceFunction); // To deal with resize;
         $(window).resize(view.fixPlaceFunction);
         this.render();
@@ -1293,11 +1293,11 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
 
                 if (width > bwidth) {
                     button.css("margin-left", Math.floor((width - bwidth) / 2) + "px");
-                };
+                }
                 if (height >bheight) {
 
                     button.css("margin-top", Math.floor((height - bheight) / 2) + "px");
-                };
+                }
                 box.append(button);
             }
             else {
@@ -1370,7 +1370,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var view = this;
         this.fixPlaceFunction = function(){
             view.place();
-        }
+        };
         $(window).scroll(view.fixPlaceFunction); // To deal with resize;
         $(window).resize(view.fixPlaceFunction);
         this.render();

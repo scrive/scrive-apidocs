@@ -103,7 +103,8 @@ window.Submit = Backbone.Model.extend({
         this.get('onSend')();
     },
   success: function(f) {
-    this.set({ajaxsuccess: f || function(){}}, {silent:true});
+    f = f || function(){};
+    this.set({ajaxsuccess: f}, {silent:true});
     return this;
   },
   mixpanel: function() {

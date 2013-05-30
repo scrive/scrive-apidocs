@@ -60,7 +60,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                   var vresult = [
                                  fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
                                  sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
-                                 email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                 email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback})))
                                 ];
 
                   if (_.every(vresult, function(a) {return a;})) {
@@ -129,7 +129,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                   makeadmin: user.field("role")=="RoleStandard",
                                   changeid: user.field("id")
                                 })).send();
-                              }
+                              };
                               role.click(submitRoleChange);
                               return role;
                             }

@@ -89,7 +89,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       var tr = $("<tr style='height: 220px;'/>");
       var td1 = $("<td class='signatory-box' style='width: 300px;' />");
       var tdseparator = $("<td class='signatory-box-separator'/>");
-      var td2 = $("<td class='signatory-box'/>")
+      var td2 = $("<td class='signatory-box'/>");
       var box1 = $('<div class="column spacing" style="width: 95%;" />');
       var box2 = $('<div class="column spacing" />');
       table.append(tbody.append(tr.append(td1.append(box1)).append(tdseparator).append(td2.append(box2))));

@@ -70,7 +70,7 @@
         },
         render: function() {
             var self = this;
-            var model = self.model
+            var model = self.model;
             var button = model.button();
             if (button == undefined)
                 button = Button.init({

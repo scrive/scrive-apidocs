@@ -24,7 +24,7 @@ window.ToolTip= {
                     }
                     else
                         setTimeout(checker,1000);
-                }
+                };
                 setTimeout(checker,1000);
                 container.appendTo('body');
                 container.css({

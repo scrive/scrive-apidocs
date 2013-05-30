@@ -72,7 +72,7 @@ window.createnewdocument = function(event) {
           }
       }).send();
   });
-}
+};
 
 window.createfromtemplate = function(event) {
   if( event.preventDefault ) {
@@ -88,7 +88,7 @@ window.createfromtemplate = function(event) {
         window.location.href = "/fromtemplate";
     });
     return false;
-}
+};
 
 //make sure we've got console logging
 if (!window.console) {
@@ -171,9 +171,9 @@ function parseQueryString() {
     var match,
         urlParams = {},
         pl     = /\+/g,  // Regex for replacing addition symbol with a space
-        search = /([^&=]+)=?([^&]*)/g,
-        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-        query  = window.location.search.substring(1);
+        search = /([^&=]+)=?([^&]*)/g;
+    var decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
+    var query  = window.location.search.substring(1);
 
     while (match = search.exec(query))
        urlParams[decode(match[1])] = decode(match[2]);

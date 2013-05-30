@@ -19,7 +19,7 @@ var CompanyBrandingColourModel = Backbone.Model.extend({
     this.set({ customised: customised });
   },
   setColour: function(colour) {
-    this.set("colour", colour)
+    this.set("colour", colour);
   },
   colour: function() {
     if (this.customised() && this.get("colour").length>0) {
@@ -60,7 +60,7 @@ var CompanyBrandingColourView = Backbone.View.extend({
     });
     var checkboxlabel = $("<label />").append(model.label());
 
-    var input = $("<input type='text' class='colour' />");;
+    var input = $("<input type='text' class='colour' />");
     input.bind("keyup change", function() {
       model.setColour(input.val().trim());
       self.render();
@@ -156,7 +156,7 @@ var CompanyBrandingHueColourView = Backbone.View.extend({
     });
     var checkboxlabel = $("<label />").append(model.label());
 
-    var input = $("<input type='text' class='colour' />");;
+    var input = $("<input type='text' class='colour' />");
     input.bind("keyup change", function() {
       model.setColour(input.val().trim());
       self.render();
@@ -449,7 +449,7 @@ var CompanyBrandingLogoModel = Backbone.Model.extend({
         var logo_base64 = response.logo_base64;
         model.setLogo(logo_base64);
       }
-    })
+    });
   }
 });
 

@@ -207,7 +207,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         var view = this;
         $(this.el).addClass("down").addClass("arrow").css("cursor", "pointer");
         this.updateRightMargin();
-        this.checkIfDownArrowInFooterFunction = function() {view.checkIfDownArrowInFooter();}
+        this.checkIfDownArrowInFooterFunction = function() {view.checkIfDownArrowInFooter();};
         this.updateRightMarginFunction = function() {view.updateRightMargin();};
         $(window).resize(this.checkIfDownArrowInFooterFunction);
         $(window).scroll(this.checkIfDownArrowInFooterFunction);

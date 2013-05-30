@@ -43,10 +43,10 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   },
   padNextSignatory : function() {
     if (this.get("padNextSignatory") != undefined) return this.get("padNextSignatory");
-    return this.document().signatoriesThatCanSignNow()[0]
+    return this.document().signatoriesThatCanSignNow()[0];
   },
   setPadNextSignatory : function(sig) {
-    this.set("padNextSignatory",sig)
+    this.set("padNextSignatory",sig);
   },
   giveToPadSignatory : function() {
       if (this.padNextSignatory() != undefined)
@@ -170,20 +170,20 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
                  name: (sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty),
                  onSelect : function() {model.setPadNextSignatory(sig);}
               });
-            })
+            });
             var select = new Select({
               name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : localization.pad.notNamedParty),
               textWidth : 160,
               options : options
             });
             return div.append($(select.view().el).css("width","200px").addClass('float-left'));
-          }
+          };
           self.padNextSignatoryModalContent = modalContent();
           model.bind("change:padNextSignatory", function() {
             var c = modalContent();
             self.padNextSignatoryModalContent.replaceWith(c);
             self.padNextSignatoryModalContent = c;
-          })
+          });
           Confirmation.popup({
             title : localization.authorview.goToSignView,
             content :self.padNextSignatoryModalContent,
@@ -224,7 +224,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       if (this.model.canGoToSignView())
         buttonbox.append(this.goToSignViewButton());
       else if (this.model.canGiveToNextSignatoryPad())
-        buttonbox.append(this.giveToNextSignatoryPadButton())
+        buttonbox.append(this.giveToNextSignatoryPadButton());
       container.append(buttonbox);
     }
     return this;

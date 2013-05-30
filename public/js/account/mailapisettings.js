@@ -10,7 +10,7 @@ var MailAPISettingsModel = Backbone.Model.extend({
   initialize : function() {
     var self = this;
     var user = new User();
-    this.set({"user" : user})
+    this.set({"user" : user});
     user.bind("change:ready",function() {
       self.reset();
     });
@@ -134,7 +134,7 @@ var MailAPISettingsView = Backbone.View.extend({
         list.append($("<li/>").append(a1));
         list.append($("<li/>").append(a2));
         list.append($("<li/>").append(a3));
-        body.append(list)
+        body.append(list);
 
 
         var resetcheckbox = $("<div class='checkbox'/>");
@@ -171,7 +171,7 @@ var MailAPISettingsView = Backbone.View.extend({
       else
         limitinput.change(function() {
           model.setDailyLimitChange(limitinput.val());
-        })
+        });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.mailAPI.dailyLimit))).append($("<td/>").append(limitinput)));
 
       var sendinput = $("<input type='text' disabled='disabled'/>").val(model.hasPersonalMailApi() ? this.model.personalMailApi().sent() : "N/A");
@@ -212,7 +212,7 @@ var MailAPISettingsView = Backbone.View.extend({
       list.append($("<li/>").append(a1));
       list.append($("<li/>").append(a2));
       list.append($("<li/>").append(a3));
-      body.append(list)
+      body.append(list);
       body.append("<BR/>");
       body.append($("<label/>").text(localization.account.mailAPI.dailyLimit + ":" + companyMailApi.limit()));
       body.append("<BR/>");
@@ -234,7 +234,7 @@ var MailAPISettingsView = Backbone.View.extend({
           model.save();
           return false;
         }
-      })
+      });
       return box.append(button.input());
     },
     render: function () {

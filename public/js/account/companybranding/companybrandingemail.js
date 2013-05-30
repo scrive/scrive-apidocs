@@ -166,7 +166,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
       this.model.emailbuttoncolour().onChange(function(colour,customised) {self.changeButtonColour(colour,customised);});
       this.model.emailemailbackgroundcolour().onChange(function(colour) {self.changeEmailBackgroundColour(colour);});
       this.model.emailbackgroundcolour().onChange(function(colour) {self.changeBBColour(colour);});
-      this.model.emailtextcolour().onChange(function(colour,customised) {self.changeBTColour(colour,customised);});;
+      this.model.emailtextcolour().onChange(function(colour,customised) {self.changeBTColour(colour,customised);});
       this.model.emaillogo().onChange(function(logo) {self.changeLogo(logo);});
   },
   changeLogo : function(logo) {
