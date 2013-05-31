@@ -164,8 +164,8 @@ Executable kontrakcja-server
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   Build-depends: attoparsec == 0.10.4.0
   Build-depends: AES == 0.2.8
@@ -275,8 +275,8 @@ Executable pdfseal
     Buildable: True
   else
     Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
   Hs-source-dirs: pdfseal/src pdfseal/inc
@@ -314,8 +314,8 @@ Executable cron
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   cpp-options: -DCronMain=Main
   Main-is: CronMain.hs
@@ -358,8 +358,8 @@ Executable mailing-server
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   cpp-options: -DMailingServer=Main
   Main-is: MailingServer.hs
@@ -402,8 +402,8 @@ Executable messenger-server
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   cpp-options: -DMessengerServer=Main
   Main-is: MessengerServer.hs
@@ -444,8 +444,8 @@ Executable update-reference-screenshot
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   Main-is: update-reference-screenshot.hs
 
@@ -474,8 +474,8 @@ Executable kontrakcja-test
     Buildable: True
   else
     Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   Hs-source-dirs: inc misc test/src src pdfseal/inc mailer/inc docconv/src docconv/test/src messenger/src messenger/inc
 
