@@ -2,8 +2,6 @@ module Main where
 
 import Control.Concurrent
 import Control.Monad
-import Data.List
-import Data.Version
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import System.Environment
@@ -29,7 +27,7 @@ import User.Model
 import Control.Logic
 import qualified Log
 import qualified MemCache
-import qualified Paths_kontrakcja as Paths
+import qualified Version
 import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
 
@@ -39,7 +37,7 @@ main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
 
-  Log.server $ "Starting kontrakcja-server build " ++ intercalate "." (versionTags Paths.version)
+  Log.server $ "Starting kontrakcja-server build " ++ Version.versionID
 
   appConf <- do
     appname <- getProgName

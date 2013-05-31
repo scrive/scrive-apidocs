@@ -8,7 +8,7 @@ Synopsis: Ultimate signing solution
 Description:
         Sign documents online
 Cabal-version: >= 1.6.0.0
-Build-type: Custom
+Build-type: Simple
 
 Flag pdfseal
   Description: Build pdfseal

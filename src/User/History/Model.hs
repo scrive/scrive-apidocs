@@ -15,12 +15,10 @@ module User.History.Model (
   , GetUserHistoryByUserID(..)
   ) where
 
-import Data.List (intersperse)
 import Data.Monoid
 import Text.JSON
 import Text.JSON.Gen
-import qualified Paths_kontrakcja as Paths
-import qualified Data.Version as Ver
+import qualified Version as Version
 
 import DB hiding (intersperse)
 import DB.SQL2
@@ -235,7 +233,7 @@ addUserHistory user event ip time mpuser =
       sqlSet "event_data" $ maybe "" encode $ uheventdata event
       sqlSet "ip" ip
       sqlSet "time" time
-      sqlSet "system_version" $ concat $ intersperse "." $ Ver.versionTags Paths.version
+      sqlSet "system_version" $ Version.versionID
       sqlSet "performing_user_id" mpuser
 
 selectUserHistorySQL :: SQL
