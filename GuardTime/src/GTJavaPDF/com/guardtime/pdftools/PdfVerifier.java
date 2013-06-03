@@ -40,7 +40,7 @@ public abstract class PdfVerifier {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "GuardTime PDF Verification Tool v.0.3.2-scrive";
+	private static final String TITLE = "GuardTime PDF Verification Tool v.0.3.2a-scrive";
 
 	/**
 	 * Usage message for the CLI.
@@ -260,15 +260,22 @@ public abstract class PdfVerifier {
 			return "{\n  \"invalid\" : {\n    \"reason\": \"no GuardTime signatures in the document\"\n  }\n}\n";
 		}
 		StringBuffer res = new StringBuffer();
+                boolean extended = si.getTimestamp().isExtended();
 		VerificationResult ver = doc.verifyTimestamp(si, svc);
 		if (ver.isValid()) {
 			GTTimestamp ts = si.getTimestamp();
 			String time = PdfUtil.toUtcString(ts.getRegisteredTime());
 			String gwid = PdfUtil.formatGwId(ts.getProperty(GTTimestamp.LOCATION_ID));
 			String gwname = ts.getProperty(GTTimestamp.LOCATION_NAME);
+                        String publication_time = ts.getProperty(GTTimestamp.PUBLICATION_TIME);
 			res.append("{\n  \"valid\": {\n");
 			res.append("    \"time\": \"").append(time).append("\",\n");
 			res.append("    \"gateway_id\": \"").append(gwid).append("\",\n");
+			res.append("    \"extended\": ").append(extended ? "true" : "false").append(",\n");
+			res.append("    \"extensible\": ").append(!extended && ts.isExtended() ? "true" : "false").append(",\n");
+                        if (extended && publication_time != null) {
+                                res.append("    \"publication_time\": \"").append(publication_time).append("\",\n");
+                        }
 			if (gwname != null) {
 				res.append("    \"gateway_name\": \"").append(gwname).append("\",\n");
 			}

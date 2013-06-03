@@ -10,6 +10,7 @@
 
 module InspectXMLInstances() where
 import Doc.DocStateData
+import Doc.SealStatus (SealStatus)
 import Company.Model
 import MagicHash (MagicHash)
 import MinutesTime
@@ -122,3 +123,4 @@ instance InspectXML IPAddress where
 instance InspectXML UserHistoryEventType where
 instance InspectXML JSValue where
 instance InspectXML StatusClass where
+instance InspectXML SealStatus

@@ -21,6 +21,7 @@ import Doc.DocProcess
 import Doc.DocStateData
 import Doc.Model
 import Doc.Rendering
+import Doc.SealStatus (SealStatus(..))
 import File.Storage
 import Doc.DocView
 import Doc.DocUtils
@@ -52,6 +53,7 @@ import File.Model
 import Crypto.RNG
 import DB
 import Control.Applicative
+import Control.Arrow (first)
 import EvidenceLog.Model
 import EvidenceLog.View
 import Util.Actor
@@ -573,29 +575,30 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
       ExitSuccess -> do
         -- GuardTime signs in place
         code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
-        newfilepdf <- Binary <$> case code2 of
+        (newfilepdf, status) <- first Binary <$> case code2 of
           ExitSuccess -> do
             vr <- liftIO $ GT.verify ctxgtconf tmpout
             case vr of
-                 GT.Valid _ _ -> do
+                 GT.Valid gsig -> do
                       res <- liftIO $ BS.readFile tmpout
+                      Log.debug $ "GuardTime verification result: " ++ show vr
                       Log.debug $ "GuardTime signed successfully #" ++ show documentid
-                      return res
+                      return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
                  _ -> do
                       res <- liftIO $ BS.readFile tmpout
                       Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
                       Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
-                      return res
+                      return (res, Missing)
           ExitFailure c -> do
             res <- liftIO $ BS.readFile tmpout
             Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
             Log.error $ "GuardTime failed for document #" ++ show documentid
-            return res
+            return (res, Missing)
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
         res <- runMaybeT $ do
-          dbUpdate $ AttachSealedFile documentid sealedfileid $ systemActor ctxtime
+          dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
           Just doc <- dbQuery $ GetDocumentByDocumentID documentid
           return doc
         Log.debug $ "Should be attached to document; is it? " ++ show (((Just sealedfileid==) . documentsealedfile) <$> res)

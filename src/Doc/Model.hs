@@ -93,6 +93,7 @@ import Doc.Conditions
 import File.FileID
 import File.Model
 import qualified Control.Monad.State.Lazy as State
+import Doc.SealStatus (SealStatus)
 import Doc.DocUtils
 import User.UserID
 import User.Model
@@ -484,6 +485,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
                    , checkEqualBy "documentlang" documentlang
+                   , checkEqualBy "documentapicallbackurl" documentapicallbackurl
+                   , checkEqualBy "documentsealstatus" documentsealstatus
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
                    ] ++
                    concat (zipWith checkSigLink sl1 sl2)
@@ -510,6 +513,7 @@ documentsSelectors =
   , "documents.sharing"
   , "documents.api_callback_url"
   , "documents.object_version"
+  , "documents.seal_status"
   , documentStatusClassExpression
   ]
 
@@ -522,7 +526,7 @@ fetchDocuments = kFold decoder []
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text
-     lang sharing apicallback objectversion status_class
+     lang sharing apicallback objectversion seal_status status_class
        = Document {
          documentid = did
        , documenttitle = title
@@ -549,6 +553,7 @@ fetchDocuments = kFold decoder []
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
        , documentobjectversion = objectversion
+       , documentsealstatus = seal_status
        } : acc
 
 documentStatusClassExpression :: SQL
@@ -973,26 +978,30 @@ instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, Signa
 
 
 insertDocumentAsIs :: MonadDB m => Document -> m (Maybe Document)
-insertDocumentAsIs document = do
-    let Document { documenttitle
-                 , documentsignatorylinks
-                 , documentfile
-                 , documentsealedfile
-                 , documentstatus
-                 , documenttype
-                 , documentctime
-                 , documentmtime
-                 , documentdaystosign
-                 , documenttimeouttime
-                 , documentinvitetime
-                 , documentinvitetext
-                 , documentsharing
-                 , documenttags
-                 , documentauthorattachments
-                 , documentlang
-                 , documentobjectversion
-                 } = document
-        process = toDocumentProcess documenttype
+insertDocumentAsIs document@(Document
+                   _documentid
+                   documenttitle
+                   documentsignatorylinks
+                   documentfile
+                   documentsealedfile
+                   documentstatus
+                   documenttype
+                   documentctime
+                   documentmtime
+                   documentdaystosign
+                   documenttimeouttime
+                   documentinvitetime
+                   documentinvitetext
+                   documentsharing
+                   documenttags
+                   documentauthorattachments
+                   documentlang
+                   _documentstatusclass
+                   documentapicallbackurl
+                   documentobjectversion
+                   documentsealstatus
+                 ) = do
+    let process = toDocumentProcess documenttype
 
     _ <- kRun $ sqlInsert "documents" $ do
         sqlSet "title" documenttitle
@@ -1014,6 +1023,8 @@ insertDocumentAsIs document = do
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
         sqlSet "object_version" documentobjectversion
+        sqlSet "api_callback_url" documentapicallbackurl
+        sqlSet "seal_status" documentsealstatus
         mapM_ (sqlResult) documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
@@ -1116,11 +1127,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
       sqlWhereDocumentStatusIs Preparation
     updateMTimeAndObjectVersion did (actorTime a)
 
-data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
+data AttachSealedFile = AttachSealedFile DocumentID FileID SealStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
-  update (AttachSealedFile did fid actor) = do
+  update (AttachSealedFile did fid status actor) = do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
       sqlSet "sealed_file_id" fid
+      sqlSet "seal_status" status
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Closed
     _ <- update $ InsertEvidenceEvent
@@ -2187,6 +2199,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMe
 data SetDocumentProcess = SetDocumentProcess DocumentID DocumentProcess Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentProcess Bool where
   update (SetDocumentProcess did process _actor) = updateWithoutEvidence did "process" process
+
+data SetDocumentSealStatus = SetDocumentSealStatus DocumentID (Maybe SealStatus)
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSealStatus Bool where
+  update (SetDocumentSealStatus did s) = do
+    kRun01 $ sqlUpdate "documents" $ do
+               sqlSet "seal_status" s
+               sqlWhereEq "id" did
+
 
 data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL DocumentID (Maybe String)
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL Bool where
