@@ -111,9 +111,8 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 _ <- case (mpassword) of
                     Just password -> do
                         passwordhash <- createPassword password
-                        _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
-                        return []
-                    Nothing -> return [] -- TODO what do I do here?
+                        void $ dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+                    Nothing -> return () -- TODO what do I do here?
                 return ()
 
               when (signupmethod == BySigning) $
