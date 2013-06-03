@@ -25,7 +25,7 @@ javascriptLocalisation =
                     return  '$_tbsGenerationMessage1()$"' + doctitle + '"$_tbsGenerationMessage2()$"' + docid + '"$_tbsGenerationMessage3()$'
                      }
              , ie6NotSupported : "$_ie6NotSupported()$"
-             , name : "$_name()$"
+             , name : "$_firstnameAndLastName()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
              , email : "$_email()$"

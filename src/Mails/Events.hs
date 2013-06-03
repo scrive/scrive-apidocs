@@ -115,7 +115,7 @@ handleDeliveredInvitation (hostpart, mc) doc signlinkid = do
         }
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
-      _ <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Delivered actor
+      _ <- dbUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) signlinkid Delivered actor
       return ()
     Nothing -> return ()
 
@@ -138,7 +138,7 @@ handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
   case getSigLinkFor doc signlinkid of
     Just sl -> do
       let actor = mailSystemActor time (maybesignatory sl) email signlinkid
-      success <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
+      success <- dbUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
       when success $ do
         Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
         mail <- mailDeferredInvitation hostpart d sl
@@ -153,7 +153,7 @@ handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
     Just signlink -> do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
-      _ <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
+      _ <- dbUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
       mail <- mailUndeliveredInvitation hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]

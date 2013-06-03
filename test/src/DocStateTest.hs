@@ -1519,7 +1519,7 @@ testSetInvitationDeliveryStatusNotSignableLeft = doTimes 10 $ do
   actor <- unSystemActor <$> rand 10 arbitrary
   let Just sl = getAuthorSigLink doc
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
-    success <- randomUpdate $ \st-> SetInvitationDeliveryStatus (documentid doc) (signatorylinkid sl) st actor
+    success <- randomUpdate $ \st-> SetEmailInvitationDeliveryStatus (documentid doc) (signatorylinkid sl) st actor
     assert $ not success
 
 
@@ -1528,7 +1528,7 @@ testSetInvitationDeliveryStatusNotLeft = doTimes 10 $ do
   actor <- unSystemActor <$> rand 10 arbitrary
   --assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
   assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
-    success <- randomUpdate $ \d s st-> SetInvitationDeliveryStatus d s st actor
+    success <- randomUpdate $ \d s st-> SetEmailInvitationDeliveryStatus d s st actor
     assert $ not success
 
 testSetInvitationDeliveryStatusSignableRight :: TestEnv ()
@@ -1537,7 +1537,7 @@ testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isSignable
   slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
   (st, actor) <- rand 10 arbitrary
-  success <- randomUpdate $ SetInvitationDeliveryStatus (documentid doc) slid st (unSystemActor actor)
+  success <- randomUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) slid st (unSystemActor actor)
   assert success
 
 testSetDocumentTagsRight :: TestEnv ()

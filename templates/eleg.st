@@ -27,6 +27,8 @@ bankidVerificationFailed=$_bankidVerificationFailed()$
 ##
 bankidNoFirstName=$_bankidNoFirstName()$
 ##
+bankidNameMismatch=$_bankidNameMismatch()$
+###
 bankidFirstNameMismatch=$_bankidFirstNameMismatch()$: '$contract$' $_and()$ '$eleg$'.
 ##
 bankidNoLastName=$_bankidNoLastName()$
