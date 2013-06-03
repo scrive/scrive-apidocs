@@ -156,17 +156,18 @@ function prepareForEdit(form, width) {
 }
 
 function prepareEditor(textarea) {
-  new tinyMCE.Editor(textarea.attr('id'), {
-    script_url: '/tiny_mce/tiny_mce.js',
-    theme: "advanced",
-    theme_advanced_toolbar_location: "top",
-    theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-    theme_advanced_buttons2: "",
-    convert_urls: false,
-    theme_advanced_toolbar_align: "left",
+  tinymce.init({
+    selector: '#' + textarea.attr('id'),
     plugins: "noneditable,paste",
-    valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
-  }).render();
+    menubar: false,
+    toolbar: 'bold italic underline | strikethrough bullist numlist | undo redo | cut copy paste',
+    valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
+    setup: function(editor) {
+      editor.on('init', function() {
+        $(editor.getContainer()).find('.mce-btn button').css('padding', '4px 5px');
+      });
+    }
+  });
 }
 
 function parseQueryString() {

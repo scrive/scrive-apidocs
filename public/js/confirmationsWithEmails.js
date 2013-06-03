@@ -61,30 +61,30 @@ window.MailView = Backbone.View.extend({
         var wrapper = $("<div style='margin-bottom:12px;'/>").append(textarea);
         editablePart.replaceWith(wrapper);
         setTimeout( function() {
-           view.editor =   new tinyMCE.Editor(id, {
-                      script_url: '/tiny_mce/tiny_mce.js',
-                      theme: "advanced",
-                      theme_advanced_toolbar_location: "top",
-                      theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-                      theme_advanced_buttons2: "",
-                      convert_urls: false,
-                      theme_advanced_toolbar_align: "middle",
+           tinymce.init({
+                      selector: '#' + id,
                       plugins: "noneditable,paste",
+                      menubar: false,
+                      toolbar: 'bold italic underline | strikethrough bullist numlist | undo redo | cut copy paste',
                       valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
-                      oninit : function(ed) {
+                      setup: function(editor) {
+                        view.editor = editor;
+                        editor.on('init', function() {
+                          $(editor.getContainer()).find('.mce-btn button').css('padding', '4px 5px');
                           var body = $('body',$('iframe',content).contentDocument);
-                           $(ed.getWin()).scroll(
-                              function() {
-                                body.css('background', '#fffffe');
-                                setTimeout(function() {body.css('background', '#ffffff');},1);
-                                return true;
-                              });
-                      },
-                      onchange_callback  : function (inst) {
-                                view.customtextvalue = inst.getBody().innerHTML;
+                          $(editor.getWin()).scroll(function() {
+                            body.css('background', '#fffffe');
+                            setTimeout(function() {
+                              body.css('background', '#ffffff');
+                            }, 1);
+                            return true;
+                          });
+                        });
+                        editor.on('change', function() {
+                          view.customtextvalue = editor.getBody().innerHTML;
+                        });
                       }
           });
-          view.editor.render();
         },100);
         return content;
 	},
@@ -109,7 +109,7 @@ window.MailView = Backbone.View.extend({
     },
     customtext : function() {
         if (this.editor != undefined)
-            return this.editor.val();
+            return this.editor.getContent();
         if (this.customtextvalue != undefined)
             return this.customtextvalue;
         return "";

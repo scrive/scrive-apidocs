@@ -1,9 +1,8 @@
-ignore  tiny_mce/tiny_mce_src.js
-ignore  tiny_mce/tiny_mce_popup.js
+ignore  js/tinymce_plugins/hide_toolbar.js
 ignore  tiny_mce/langs
 ignore  tiny_mce/plugins
 ignore  tiny_mce/themes
-ignore  tiny_mce/utils
+ignore  tiny_mce/skins
 ignore  libs/recurly/recurly.css
 ignore  api-demo
 ignore  less/branding/buttons.less
@@ -62,7 +61,7 @@ set systemPage
  less less/designview/process.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
- jsx  tiny_mce/tiny_mce.js
+ jsx  tiny_mce/tinymce.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js
