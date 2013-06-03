@@ -390,6 +390,7 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
             var cwidth = view.middleColumnDiv.width();
+            if (!doc.ready()) return;
             view.invitationEditor.html(doc.invitationmessage());
             view.invitationEditor.show();
 	    if (!view.emaildeliveryused) {

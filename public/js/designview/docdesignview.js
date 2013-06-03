@@ -70,8 +70,81 @@
             return this;
         }
     });
+/*   NEW COMPONENS    */
 
-    // expected model: DesignViewModel
+var DesignViewTabsView = function(args) {
+  var model = args.model
+  var document = model.document();
+  var participantsView = window.DesignViewParticipantsView({ model : model});
+  var draggablesView   = new DesignViewDraggablesView({ model : model});
+  var processView = DesignViewProcessView({ model : model });
+  var tab1Name = $("<div class='design-view-tab-text'/>")
+                      .text(localization.designview.editParticipants);
+  var tab2Name = $("<div class='design-view-tab-text'/>")
+                      .text(localization.designview.editDocument + ' ')
+                      .append($("<span class='design-view-tab-text-optional'/>")
+                         .text('(' + localization.designview.optional + ')'));
+  var tab3Name = $("<div class='design-view-tab-text'/>")
+                      .text(localization.designview.editSigningProcess + ' ')
+                      .append($("<span class='design-view-tab-text-optional'/>")
+                         .text('(' + localization.designview.optional + ')'));
+
+  var tab1 = new Tab({
+          name: tab1Name,
+          pagehash : "participants",
+          elems: [ $(participantsView.el)],
+          onActivate : function() {
+               mixpanel.track('Click tab', {
+                        Action: 'Open',
+                        Tab: '1'
+                    });
+            }
+          });
+  var tab2 =  new Tab({
+          name: tab2Name,
+          pagehash : "placements",
+          available : document.mainfile() != undefined,
+          elems: [ $(draggablesView.el)],
+          onActivate : function() {
+               mixpanel.track('Click tab', {
+                        Action: 'Open',
+                        Tab: '2'
+                    });
+            }
+          });
+  var tab3 = new Tab({
+          name: tab3Name,
+          pagehash : "process",
+          elems: [ $(processView.el)],
+          onShow : function() {
+              processView.setupTinyMCE();
+            },
+          onActivate : function() {
+               mixpanel.track('Click tab', {
+                        Action: 'Open',
+                        Tab: '3'
+                    });
+            }
+          });
+
+  var tabs = new KontraTabs({
+      numbers : false,
+      tabs: [tab1,tab2,tab3],
+      tabsTail : $(),
+      canHaveNoActiveTab : true,
+      slideEffect : true
+      });
+    document.bind('change:file', function() {tab2.setAvailable(document.mainfile() != undefined);});
+    document.bind('change:ready', function() {tab2.setAvailable(document.mainfile() != undefined);});
+    tab2.setAvailable(document.mainfile() != undefined);
+    this.el = function() { return tabs.el();}
+
+};
+
+
+/*   END OF NEW COMPONENTS    */
+
+/*
     var DesignViewTabsView = Backbone.View.extend({
         className: 'design-view-tab-container',
         initialize: function(args) {
@@ -288,7 +361,7 @@
             return view;
         }
     });
-
+*/
     // expected model: DesignViewModel
     var DesignViewButtonBarView = Backbone.View.extend({
         className: 'design-view-button-bar',
@@ -668,7 +741,6 @@
             var view = this;
             _.bindAll(view);
             view.tabsView    = new DesignViewTabsView({model : view.model});
-            view.actionsView = new DesignViewActionsView({model : view.model});
             view.buttonBar   = new DesignViewButtonBarView({model : view.model});
             view.documentView = new DesignViewDocumentView({model : view.model.document(),
                                                             viewmodel : view.model});
@@ -681,20 +753,22 @@
                 return;
             view.fixed = true;
             view.topBarHeight = view.topBar.outerHeight();
+            console.log("Fixing top bar");
             view.topBar.css({position:'fixed',
                              top: 0,
-                             left: 0});
+                             left: $(view.topBar).offset().left});
             view.docView.css({'padding-top' : 20 + view.topBarHeight});
         },
         unfix: function() {
             var view = this;
             if(!view.fixed)
                 return;
+            console.log("Unfixing top bar");
             view.fixed = false;
             view.topBarHeight = view.topBar.outerHeight();
             view.topBar.css({position:'relative',
-                             top: 'none',
-                             left: 'none'});
+                             top: '',
+                             left: ''});
             view.docView.css({'padding-top' : 20});
         },
         affix: function() {
@@ -716,15 +790,10 @@
         },
         frame: function() {
             var view = this;
-            var topBar = $('<div />');
-            topBar.addClass('design-view-frame-top-bar');
-            topBar.append(view.tabsView.el);
-            topBar.append(view.actionsView.el);
-            view.topBar = topBar;
+            view.topBar = $("<div class='design-view-frame-top-bar'/>");
+            view.topBar.append(view.tabsView.el());
             var div = $('<div/>');
-            div.append(topBar);
-            //div.append(view.tabsView.el);
-            //div.append(view.actionsView.el);
+            div.append(view.topBar);
             div.append(view.documentView.el);
             div.append(view.buttonBar.el);
 
