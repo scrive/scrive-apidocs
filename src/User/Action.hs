@@ -68,6 +68,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
   callme <- isFieldSet "callme"
   stoplogin <- isFieldSet "stoplogin"
   promo <- isFieldSet "promo"
+  haspassword <- isFieldSet "password"
   phone <-  fromMaybe "" <$> getField "phone"
   companyname <- fromMaybe "" <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
@@ -104,6 +105,17 @@ handleActivate mfstname msndname actvuser signupmethod = do
                   results <- forM texts (\t -> MailAPI.doMailAPI t `E.catch` (\(_::KontraError) -> return Nothing))
                   dbUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
+
+              when (haspassword) $ do
+                mpassword <- getRequiredField asValidPassword "password"
+                _ <- case (mpassword) of
+                    Just password -> do
+                        passwordhash <- createPassword password
+                        _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+                        return []
+                    Nothing -> return [] -- TODO what do I do here?
+                return ()
+
               when (signupmethod == BySigning) $
                 scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
