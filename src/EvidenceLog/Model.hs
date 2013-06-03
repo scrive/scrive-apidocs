@@ -199,74 +199,74 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
 data EvidenceEventType =
   AddSigAttachmentEvidence                        | -- not used anymore
   RemoveSigAttachmentsEvidence                    | -- not used anymore
-  RemoveDocumentAttachmentEvidence                |
-  AddDocumentAttachmentEvidence                   |
+  RemoveDocumentAttachmentEvidence                | -- not used anymore
+  AddDocumentAttachmentEvidence                   | -- not used anymore
   PendingToAwaitingAuthorEvidence                 |
   UpdateFieldsEvidence                            | -- not used anymore
   SetElegitimationIdentificationEvidence          | -- not used anymore
   SetEmailIdentificationEvidence                  | -- not used anymore
   TimeoutDocumentEvidence                         |
   SignDocumentEvidence                            |
-  SetInvitationDeliveryStatusEvidence             |
-  SetDocumentUIEvidence                           |
-  SetDocumentLangEvidence                         |
-  SetDocumentTitleEvidence                        |
-  SetDocumentAdvancedFunctionalityEvidence        |
+  SetInvitationDeliveryStatusEvidence             | -- not used anymore
+  SetDocumentUIEvidence                           | -- not used anymore
+  SetDocumentLangEvidence                         | -- not used anymore
+  SetDocumentTitleEvidence                        | -- not used anymore
+  SetDocumentAdvancedFunctionalityEvidence        | -- not used anymore
   RemoveDaysToSignEvidence                        | -- not used anymore
-  SetDaysToSignEvidence                           |
-  SetInvitationTextEvidence                       |
+  SetDaysToSignEvidence                           | -- not used anymore
+  SetInvitationTextEvidence                       | -- not used anymore
   RemoveSignatoryUserEvidence                     | -- not used anymore
-  SetSignatoryUserEvidence                        |
-  RemoveSignatoryCompanyEvidence                  |
-  SetSignatoryCompanyEvidence                     |
-  SetDocumentTagsEvidence                         |
+  SetSignatoryUserEvidence                        | -- not used anymore
+  RemoveSignatoryCompanyEvidence                  | -- not used anymore
+  SetSignatoryCompanyEvidence                     | -- not used anymore
+  SetDocumentTagsEvidence                         | -- not used anymore
   SaveSigAttachmentEvidence                       |
-  SaveDocumentForUserEvidence                     |
+  SaveDocumentForUserEvidence                     | -- not used anymore
   RestartDocumentEvidence                         |
-  ReallyDeleteDocumentEvidence                    |
-  NewDocumentEvidence                             |
+  ReallyDeleteDocumentEvidence                    | -- not used anymore
+  NewDocumentEvidence                             | -- not used anymore
   MarkInvitationReadEvidence                      |
   CloseDocumentEvidence                           |
   ChangeSignatoryEmailWhenUndeliveredEvidence     |
-  ChangeMainfileEvidence                          |
+  ChangeMainfileEvidence                          | -- not used anymore
   CancelDocumenElegEvidence                       |
   CancelDocumentEvidence                          |
-  AttachFileEvidence                              |
+  AttachFileEvidence                              | -- not used anymore
   AttachSealedFileEvidence                        |
   PreparationToPendingEvidence                    |
   DeleteSigAttachmentEvidence                     |
   AuthorUsesCSVEvidence                           |
   ErrorDocumentEvidence                           |
-  MarkDocumentSeenEvidence                        |
+  MarkDocumentSeenEvidence                        | -- not used anymore
   RejectDocumentEvidence                          |
   SetDocumentInviteTimeEvidence                   |
   SetDocumentTimeoutTimeEvidence                  | -- not used anymore
-  RestoreArchivedDocumentEvidence                 |
+  RestoreArchivedDocumentEvidence                 | -- not used anymore
   InvitationEvidence                              |
-  SignableFromDocumentIDWithUpdatedAuthorEvidence |
-  ArchiveDocumentEvidence                         |
+  SignableFromDocumentIDWithUpdatedAuthorEvidence | -- not used anymore
+  ArchiveDocumentEvidence                         | -- not used anymore
   ResetSignatoryDetailsEvidence                   | -- not used anymore
-  AdminOnlySaveForUserEvidence                    |
+  AdminOnlySaveForUserEvidence                    | -- not used anymore
   SignableFromDocumentEvidence                    | -- not used anymore
-  TemplateFromDocumentEvidence                    |
-  AttachCSVUploadEvidence                         |
+  TemplateFromDocumentEvidence                    | -- not used anymore
+  AttachCSVUploadEvidence                         | -- not used anymore
   SendToPadDevice                                 |
   RemovedFromPadDevice                            |
-  AddSignatoryEvidence                            |
-  RemoveSignatoryEvidence                         |
-  AddFieldEvidence                                |
-  RemoveFieldEvidence                             |
-  ChangeFieldEvidence                             |
+  AddSignatoryEvidence                            | -- not used anymore
+  RemoveSignatoryEvidence                         | -- not used anymore
+  AddFieldEvidence                                | -- not used anymore
+  RemoveFieldEvidence                             | -- not used anymore
+  ChangeFieldEvidence                             | -- not used anymore
   ResealedPDF                                     |
   OldDocumentHistory                              |
   SetStandardAuthenticationMethodEvidence         |
   SetELegAuthenticationMethodEvidence             |
-  SetEmailDeliveryMethodEvidence                  |
-  SetPadDeliveryMethodEvidence                    |
-  SetAPIDeliveryMethodEvidence                    |
+  SetEmailDeliveryMethodEvidence                  | -- not used anymore
+  SetPadDeliveryMethodEvidence                    | -- not used anymore
+  SetAPIDeliveryMethodEvidence                    | -- not used anymore
   ReminderSend                                    |  --Renamed
-  SetDocumentProcessEvidence                      |
-  DetachFileEvidence                              |
+  SetDocumentProcessEvidence                      | -- not used anymore
+  DetachFileEvidence                              | -- not used anymore
   InvitationDeliveredByEmail                      |
   InvitationUndeliveredByEmail                    |
   SignatoryLinkVisited                            |
