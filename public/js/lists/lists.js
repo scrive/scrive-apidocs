@@ -365,7 +365,7 @@
             });
             console.log("Generating selects for options");
             this.pretableboxsubbox.removeClass('empty');
-            this.pretableboxsubbox.append($("<div class='options-box'/>").append(select.view().el));
+            this.pretableboxsubbox.append($("<div class='options-box'/>").append(select.el()));
         },
         prepareActions : function() {
            var actions = this.schema.actions();

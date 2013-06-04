@@ -37,12 +37,12 @@
     render: function () {
       var model = this.model;
       var view = this;
-       
+
       var content = $("<div class='short-input-container'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
       var body = $("<div class='short-input-container-body'/>");
       $(this.el).append(content.append(wrapper.append(body)));
-      
+
 
       var tosAccept = $("<div class='position first'/>");
       var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' class='s-accept-tos-cbox' style='margin-right:10px;margin-top: -2px'/>");
@@ -51,7 +51,7 @@
       tosAccept.append($('<span/>')
                   .append($("<label/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
                   .append($("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS))
-                );     
+                );
       tosAccept.append($('<br/>'));
       body.append(tosAccept);
       tosCBox.change(function() {
@@ -72,9 +72,9 @@
                  tosAccept.css("border","1px solid red");
           }
         });
-      
+
       body.append($("<div class='position' style='text-align:center'/>").append(acceptButton.input()));
-      
+
     }
   });
 

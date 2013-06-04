@@ -5,9 +5,7 @@
 window.SelectOptionModel = Backbone.Model.extend({
   defaults : {
       onSelect : function(){return false;},
-      leftMargin: 0
-  },
-  initialize: function(args){
+      style : ""
   },
   name : function(){
        return this.get("name");
@@ -15,18 +13,12 @@ window.SelectOptionModel = Backbone.Model.extend({
   value : function(){
        return this.get("value");
   },
-  extraAttrs: function() {
-       return this.get('extraAttrs');
+  style: function() {
+       return this.get("style");
   },
   selected : function() {
        if (this.get("onSelect")(this.value()) == true)
            this.trigger("done");
-  },
-  leftMargin: function() {
-        return this.get('leftMargin');
-  },
-  offset: function() {
-        return this.get('offset');
   }
 });
 
@@ -37,18 +29,17 @@ window.SelectModel = Backbone.Model.extend({
       expandSide : "left",
       expanded : false,
       onOpen : function() {return true;},
-      extraNameAttrs: {},
-      expandOnHover : false,
       color: undefined,
       border: undefined,
-      zIndex : 5000
+      style : "",
+      cssClass : ""
 
   },
   initialize: function(args){
       var model = this;
+      //Change static options to SelectOptionModel. Propagate onSelect function if this is needed
       var options = _.map(args.options,function(e) {
-                        if (e.onSelect == undefined)
-                            e.onSelect = args.onSelect;
+                        e.onSelect = e.onSelect || args.onSelect;
                         var option = new SelectOptionModel(e);
                         option.bind("done", function() {model.set({"expanded" : false});});
                         return option;
@@ -65,20 +56,11 @@ window.SelectModel = Backbone.Model.extend({
       this.set({name:name});
       return this;
   },
-  extraNameAttrs : function(){
-       return this.get("extraNameAttrs");
-  },
-  iconClass : function(){
-       return this.get("iconClass");
+  style : function(){
+       return this.get("style");
   },
   expanded : function(){
        return this.get("expanded");
-  },
-  theme : function(){
-       return this.get("theme");
-  },
-  zIndex : function() {
-      return this.get("zIndex");
   },
   expandSide : function() {
        return this.get("expandSide");
@@ -96,56 +78,35 @@ window.SelectModel = Backbone.Model.extend({
      if (!this.expanded() && this.onOpen() && this.options().length > 0)
        this.set({"expanded" : true});
   },
-    unexpand: function() {
-        this.set({expanded:false});
-    },
-  expandOnHover : function() {
-     return this.get("expandOnHover");
-  },
   onOpen : function(){
        if (this.get("onOpen") != undefined)
         return this.get("onOpen")();
        return true;
-  },
-  offset: function() {
-        return this.get('offset');
   },
   color : function() {
      return this.get("color");
   },
   border : function() {
      return this.get("border");
+  },
+  cssClass : function() {
+     return this.get("cssClass");
+  },
+  style : function() {
+     return this.get("style");
   }
 });
 
-/* View controls bechavior of real input vs. InfoTextInput model
- * Updates object on focus, blur and change. Sets the grey class for input and fills infotext if needed.
- */
+
 window.SelectOptionView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.view = this;
         this.render();
-    },
-    clear : function() {
-        this.off();
-        $(this.el).remove();
     },
     render: function () {
         var model = this.model;
-        var a = $("<span/>").html(this.model.name());
-        a.css({'margin-left':this.model.leftMargin()});
-        if(model.offset()!==undefined) {
-            a.css('display', 'block');
-            a.css('margin-top', model.offset());
-        }
-        var attrs = model.extraAttrs() ? model.extraAttrs() : {};
-        $.each(attrs, function(attr, val) {
-          a.attr(attr, val);
-        });
-        $(this.el).append(a);
-        $(this.el).click(function() {model.selected(); return false;});
-        return this;
+        var a = $("<span/>").text(model.name()).attr("style", model.style());
+        $(this.el).append(a).click(function() {model.selected(); return false;});
     }
 
 });
@@ -170,83 +131,50 @@ var SelectView = Backbone.View.extend({
             && (this.expButton == undefined || $(":hover", this.expButton).size() == 0)
             && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
            )
-          this.model.toggleExpand();
+          ;//this.model.toggleExpand();
     },
     button : function() {
         var button = $("<div class='select-button' />");
         button.append("<div class='select-button-left' />");
         var label = $("<div class='select-button-label' />");
-        var extraNameAttrs = this.model.extraNameAttrs() != null ? this.model.extraNameAttrs() : {};
-        $.each(extraNameAttrs, function(attr, val) {
-          label.attr(attr, val);
-        });
-        if (this.model.iconClass() != undefined)
-            label.append($("<div class='select-icon'>").addClass(this.model.iconClass()));
-        else
-            label.html(this.model.name());
+        label.attr("style", this.model.style());
+        label.text(this.model.name());
         if (this.model.textWidth() != undefined)
             label.css("width",this.model.textWidth());
-        if(this.model.offset())
-            label.css('margin-top', this.model.offset());
         button.append(label);
         button.append("<div class='select-button-right' />");
         return button;
     },
-    clear : function() {
-        _.each(this.model.options(),function(o) {
-            if (o.view != undefined)
-                o.view.clear();
-            o.destroy();
-        });
-        this.off();
-        $(this.el).remove();
-    },
     render: function () {
         var model = this.model;
-        var button = this.button();
         var view = this;
-        $(this.el).empty();
-        $(this.el).addClass(this.model.theme() + "-theme");
 
-        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
-        if (model.border() != undefined) {
-          options.css("border", this.model.border());
-          $(this.el).css("border", this.model.border());
+        if (this.expButton != undefined) $(this.expButton).detach();
+
+        if (!model.expanded()) {
+          $(this.el).empty();
+          $(this.el).addClass(this.model.cssClass());
+          $(this.el).attr("style",this.model.style());
+          var button = this.button();
+          if (model.border() != undefined) button.css("border", this.model.border());
+          $(this.el).append(button);
+          button.click(function(){
+                    model.toggleExpand();
+                    return false;
+         });
         }
-        options.addClass(this.model.theme() + "-theme");
-
-        _.each(model.options(),function(e){
-                var li = $("<li/>");
-                if (model.color())
-                  li.css('color',model.color());
-                new SelectOptionView({model : e, el : li});
-                options.append(li);
-        });
-
-        button.click(function(){
-              model.toggleExpand();
-              return false;
-        });
-
-        if (model.expandOnHover() && !BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice()){
-          button.mouseenter(function(){
-              view.enterdate = new Date().getTime();
-              model.expand();
-              setTimeout(function() {view.closeIfNeeded();}, 100);
-              return false;
-          });
-        }
-        $(this.el).append(button);
-
-        if (model.expanded())
+        else
             {
-              if (this.expButton != undefined) $(this.expButton).detach();
-              this.expButton = $(this.el).clone();
-              if (model.color())
-                this.expButton.css('color',model.color());
-              this.expButton.addClass("select-exp").css("position","absolute");
-              $('.select-button',this.expButton).addClass("select-exp").css('z-index',model.zIndex() + 2);
-              this.expButton.css('z-index',model.zIndex());
+              this.expButton = $("<div class='select select-exp'/>");
+              this.expButton.addClass(this.model.cssClass());
+              this.expButton.attr("style",this.model.style());
+              this.expButton.css("position","absolute");
+              var button = this.button()
+              this.expButton.append(button);
+              if (model.color()) this.expButton.css('color',model.color());
+
+              $('.select-button',this.expButton).addClass("select-exp").css('z-index',5002);
+              this.expButton.css('z-index',5000);
               this.expButton.css('left',$(this.el).offset().left + "px").css('top',($(this.el).offset().top + "px"));
               this.expButton.css("display", "block");
               $('body').append(this.expButton);
@@ -254,13 +182,22 @@ var SelectView = Backbone.View.extend({
                  setTimeout(function() {view.closeIfNeeded();}, 100);
               });
               this.expButton.mouseenter(function() {view.enterdate = new Date().getTime();});
-              this.expButton.append(options.css('z-index',model.zIndex()+1));
+              var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
+              if (model.border() != undefined) {
+                options.css("border", this.model.border());
+                this.expButton.css("border", this.model.border())
+              }
+
+            _.each(model.options(),function(e){
+                    var li = $("<li/>");
+                    if (model.color())
+                      li.css('color',model.color());
+                    new SelectOptionView({model : e, el : li});
+                    options.append(li);
+            });
+
+              this.expButton.append(options.css('z-index',5001));
             }
-        else
-            {
-              if (this.expButton != undefined) $(this.expButton).detach();
-            }
-        view.close = false;
         return this;
     }
 });
@@ -268,36 +205,18 @@ var SelectView = Backbone.View.extend({
 
 
 window.Select = function(args) {
-          var model = new SelectModel ({
-                                        options: args.options,
-                                        name : args.name,
-                                        iconClass : args.iconClass,
-                                        onSelect : args.onSelect,
-                                        theme : args.theme != undefined ? args.theme : "standard",
-                                        textWidth : args.textWidth,
-                                        expandSide : args.expandSide,
-                                        onOpen : args.onOpen,
-                                        extraNameAttrs: args.extraNameAttrs,
-                                        expandOnHover : args.expandOnHover,
-                                        offset : args.offset,
-                                        color : args.color,
-                                        border : args.border
-                                       });
-          var input = $("<div class='select'/>");
-          if (args.cssClass!= undefined)
-              input.addClass(args.cssClass);
-          if (args.style != undefined)
-              input.attr("style",args.style);
+          // Build model
+          var model = new SelectModel (args);
 
-          var view = new SelectView({model : model, el : input});
-          return new Object({
-              model : function() {return model;},
-              view : function()  {return view;},
-              clear : function() {view.clear(); model.destroy();},
-              open : function()  {model.expand();},
-              close : function() {model.unexpand();},
-              input : function() {return $(view.el);}
-            });
+          // Build view
+          var div = $("<div class='select'/>");
+          var view = new SelectView({model : model, el : $("<div class='select'/>")});
+
+          // Export interface
+          this.setName = function(name) { model.setName(name);}
+          this.open = function(name) { model.expand();}
+          this.el = function() {return $(view.el);};
+
 };
 
 })(window);

@@ -288,8 +288,6 @@
             for(var i=0;i< options.length;i++)
                     if (options[i] != selected)
                          selectOptions.push(options[i]);
-            if (this.select != undefined)
-                this.select.clear();
             this.select = new Select({
                 color : "#000000",
                 options : selectOptions,
@@ -300,9 +298,10 @@
                     mixpanel.track('Filter ' + selectFiltering.name(),
                                    {Value : selected.name});
                     selectFiltering.select(value);
+                    return true;
                 }
             });
-            $(this.el).append(this.select.view().el);
+            $(this.el).append(this.select.el());
         }
     });
 
@@ -326,8 +325,6 @@
             for(var i=0;i< options.length;i++)
                     if (options[i] != selected)
                          selectOptions.push(options[i]);
-            if (this.select != undefined)
-                this.select.clear();
             this.select = new Select({
                 options : selectOptions,
                 name : selected.name,
@@ -342,9 +339,10 @@
                     mixpanel.track('Filter ' + selectFiltering.name(),
                                    {Value : selected.name});
                     selectFiltering.select(value);
+                    return true;
                 }
             });
-            $(this.el).append(this.select.view().el);
+            $(this.el).append(this.select.el());
         }
     });
 
@@ -374,20 +372,20 @@
                 selectOptionsBottom.push(selectOptionsBottom.shift());
             selectOptionsBottom.reverse();
 
-            if (this.selectBottom != undefined)
-                this.selectBottom.clear();
-            this.selectBottom = new Select({
+             this.selectBottom = new Select({
                 options : selectOptionsBottom,
                 name :  selectedBottom.value != "<" ? filtering.selectedBottomPrefix() + " "  + selectedBottom.name : selectedBottom.name,
                 theme : selectedBottom.value != "<" ? "dark" : "warm",
                 textWidth : filtering.textWidth(),
+                cssClass : "float-left",
                 onSelect : function(value) {
                     mixpanel.track('Select from date',
                                    {Value : selectedBottom.value});
                     filtering.selectBottom(value);
+                    return true;
                 }
             });
-            $(this.el).append($(this.selectBottom.view().el).addClass("float-left"));
+            $(this.el).append(this.selectBottom.el());
 
             var selectOptionsTop = [];
             var addOption = false;
@@ -397,20 +395,20 @@
                          selectOptionsTop.push({name : options[i].name, value : options[i].value});
             }
             selectOptionsTop.reverse();
-            if (this.selectTop != undefined)
-                this.selectTop.clear();
             this.selectTop = new Select({
                 options : selectOptionsTop,
                 name : selectedTop.value != ">" ? filtering.selectedTopPrefix() + " " + selectedTop.name : selectedTop.name,
                 theme : selectedTop.value != ">" ? "dark" : "warm",
                 textWidth : filtering.textWidth(),
+                cssClass : "float-left",
                 onSelect : function(value) {
                     mixpanel.track('Select to date',
                                    {Value : selectedTop.value});
                     filtering.selectTop(value);
+                    return true;
                 }
             });
-            $(this.el).append($(this.selectTop.view().el).addClass("float-left"));
+            $(this.el).append(this.selectTop.el());
 
         }
     });

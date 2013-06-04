@@ -159,7 +159,7 @@ var SecuritySettingsView = Backbone.View.extend({
                              options:   model.lang() == "en" ? [{name: localization.account.accountSecurity.langSV, value: "sv"}] :
                                                                         [{name: localization.account.accountSecurity.langEN, value: "en"}]
                            });
-         self.langSelectBox.append(self.langSelect.view().el);
+         self.langSelectBox.append(self.langSelect.el());
       };
       updateLangSelect();
       model.bind("change:lang",updateLangSelect);

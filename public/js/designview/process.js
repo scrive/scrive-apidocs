@@ -135,11 +135,12 @@
             label.addClass('design-view-action-process-left-column-document-type-label');
             label.text(labelText + ':');
 
-            var field = new Select({
+            var select = new Select({
                 options: _.map(processTypes, function(e) {
                     return processText[e];
                 }),
                 name: processText[processName].name,
+                cssClass : 'design-view-action-process-left-column-document-type-field',
                 onSelect: function(v) {
                     mixpanel.track('Select document type', {
                         'Document type' : v
@@ -148,16 +149,12 @@
                     return true;
                 }
             });
-
-            field.input().addClass('design-view-action-process-left-column-document-type-field');
             doc.bind('change:process', function() {
-                    field.model().setName(processText[doc.process().process()].name);
+                    select.setName(processText[doc.process().process()].name);
                 });
 
-            div.append(label);
-            div.append(field.input());
+            return div.append(label).append(select.el());
 
-            return div;
         },
         language: function() {
             var view = this;
@@ -179,19 +176,17 @@
 
             var languages = ['sv', 'en'];
 
-            var div = $('<div />');
-            div.addClass('design-view-action-process-left-column-language');
+            var div = $("<div class='design-view-action-process-left-column-language'/>");
 
 
-            var label = $('<div />');
-            label.addClass('design-view-action-process-left-column-language-label');
-            label.text(labelText + ':');
+            var label = $("<div class='design-view-action-process-left-column-language-label''/>").text(labelText + ':');
 
-            var field = new Select({
+            var select = new Select({
                 options: _.map(languages, function(e) {
                     return languageText[e];
                 }),
                 name: languageText[lang].name,
+                cssClass : 'design-view-action-process-left-column-language-field',
                 onSelect: function(v) {
                     mixpanel.track('Select language',
                                    {'New Language': v});
@@ -200,15 +195,11 @@
                 }
             });
 
-            field.input().addClass('design-view-action-process-left-column-language-field');
             doc.bind('change:lang', function() {
-                field.model().setName(languageText[doc.lang().simpleCode()].name);
+                select.setName(languageText[doc.lang().simpleCode()].name);
             });
 
-            div.append(label);
-            div.append(field.input());
-
-            return div;
+            return div.append(label).append(select.el());
         },
         deadline: function() {
             var view = this;

@@ -130,6 +130,7 @@
                 options: options,
                 name: ordinal + ' ' +
                     localization.designview.toReceiveDocument,
+                cssClass : 'design-view-action-participant-details-participation-order',
                 onSelect: function(v) {
                     mixpanel.track('Choose sign order', {
                         Where: 'select'
@@ -138,9 +139,8 @@
                     return true;
                 }
             });
-            select.view().$el.addClass('design-view-action-participant-details-participation-order');
 
-            return select.view().el;
+            return select.el();
         },
         detailsParticipationFieldsDelivery: function() {
             var view = this;
@@ -161,6 +161,7 @@
                     return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[delivery],
+                cssClass : 'design-view-action-participant-details-participation-delivery',
                 onSelect: function(v) {
                     mixpanel.track('Choose delivery method', {
                         Where: 'select'
@@ -172,8 +173,7 @@
                     return true;
                 }
             });
-            select.view().$el.addClass('design-view-action-participant-details-participation-delivery');
-            return select.view().el;
+            return select.el();
         },
         detailsParticipationFieldsRole: function() {
             var view = this;
@@ -192,6 +192,7 @@
                     return {name: roleTexts[t], value:t};
                 }),
                 name: roleTexts[role],
+                cssClass : 'design-view-action-participant-details-participation-role',
                 onSelect: function(v) {
                     mixpanel.track('Choose participant role', {
                         Where: 'Icon'
@@ -203,8 +204,7 @@
                     return true;
                 }
             });
-            select.view().$el.addClass('design-view-action-participant-details-participation-role');
-            return select.view().el;
+            return select.el();
         },
         detailsParticipationFieldsAuth: function() {
             var view = this;
@@ -223,6 +223,7 @@
                     return {name: authTexts[t], value:t};
                 }),
                 name: authTexts[auth],
+                cssClass : 'design-view-action-participant-details-participation-auth',
                 onSelect: function(v) {
                     mixpanel.track('Choose auth', {
                         Where: 'select'
@@ -232,8 +233,7 @@
                     return true;
                 }
             });
-            select.view().$el.addClass('design-view-action-participant-details-participation-auth');
-            return select.view().el;
+            return select.el();
         }
     });
 
@@ -866,6 +866,7 @@
             var select = new Select({
                 options: options,
                 name: name,
+                cssClass : 'design-view-action-participant-new-field-select',
                 onSelect: function(v) {
                     if(v.name === '--custom') {
                         mixpanel.track('Select field type', {
@@ -885,12 +886,11 @@
                 }
             });
 
-            $(select.view().el).addClass('design-view-action-participant-new-field-select');
 
             if(!field.isValid(true))
-                $(select.view().el).addClass('redborder');
+                $(select.el()).addClass('redborder');
             else
-                $(select.view().el).removeClass('redborder');
+                $(select.el()).removeClass('redborder');
 
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
@@ -903,7 +903,7 @@
                 sig.deleteField(field);
             });
 
-            div.append(select.view().el);
+            div.append(select.el());
             div.append(closer);
 
             return div;
@@ -1413,7 +1413,7 @@
                     return options[v];
                 }),
                 name: options[selected].abbrev,
-                offset: options[selected].offset,
+                cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
                 onSelect: function(v) {
                     mixpanel.track('Choose obligation', {
                         Subcontext: 'participant',
@@ -1437,10 +1437,7 @@
                     return true;
                 }
             });
-            select.view().$el.addClass('design-view-action-participant-details-information-field-options');
-            if(view.extraClass)
-                select.view().$el.addClass(view.extraClass);
-            view.$el.html(select.view().el);
+            view.$el.html(select.el());
             return view;
         }
     });

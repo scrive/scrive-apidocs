@@ -43,7 +43,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             placement = undefined;
             field = fieldOrPlacement;
         }
-        if(field.isFake()) 
+        if(field.isFake())
             verticaloffset = -1;
         else if (field.isText())
             verticaloffset = -1;
@@ -233,7 +233,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     return options[v];
                 }),
                 name: options[selected].name,
-                offset: options[selected].offset,
+                cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
                 onSelect: function(v) {
                     if(field) {
                         mixpanel.track('Choose obligation', {
@@ -256,10 +256,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     return true;
                 }
             });
-            select.view().$el.addClass('design-view-action-participant-details-information-field-options');
-            if(view.extraClass)
-                select.view().$el.addClass(view.extraClass);
-            view.$el.html(select.view().el);
+            $(view.el).empty().append((select.el()));
             return view;
         }
     });
@@ -672,7 +669,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             }
         });
 
-        box.append(selector.input());
+        box.append(selector.el());
 
         return box;
     },
@@ -776,7 +773,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         view.myFieldSelector = selector;
 
-        return selector.input();
+        return selector.el();
     },
     fieldNamer: function() {
         var view = this;
@@ -803,7 +800,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             cssClass: "name",
             onChange : function(value) {
                 field.setName(value);
-                view.myFieldSelector.model().setName(value);
+                view.myFieldSelector.setName(value);
                 if (view.place != undefined)
                   view.place();
             },
@@ -1003,9 +1000,8 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             }
         });
 
-        var text = localization.designview.textFields.forThis + " ";
-        box.text(text);
-        box.append(selector.input());
+        box.text(localization.designview.textFields.forThis + " ");
+        box.append(selector.el());
 
         return box;
     },
@@ -1461,9 +1457,8 @@ var SignatureTypeSetterView = Backbone.View.extend({
             }
         });
 
-        var text = localization.designview.textFields.forThis + " ";
-        box.text(text);
-        box.append(selector.input());
+        box.text(localization.designview.textFields.forThis + " ");
+        box.append(selector.el());
 
         return box;
     },
