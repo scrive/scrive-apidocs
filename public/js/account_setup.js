@@ -130,7 +130,7 @@
           if (resp.ok === true) {
               mixpanel.alias(resp.userid);
               mixpanel.identify(resp.userid);
-              var ps = {Phone : model.phone(),
+              var ps = {'Phone' : model.phone(),
                         'Company Name' : model.company(),
                         'Position' : model.position(),
                         '$first_name' : model.fstname(),
@@ -189,7 +189,7 @@
           if (firstName === undefined) {
             firstName = '';
           }
-          var lastName = words.splice(1).join(' ');
+          var lastName = _.rest(words).join(' ');
           model.setFstname(firstName);
           model.setSndname(lastName);
         },

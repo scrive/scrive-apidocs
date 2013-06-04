@@ -124,7 +124,7 @@ window.UserNameValidation = Validation.extend({
                   firstName = '';
                 }
 
-                var lastName = words.splice(1).join(' ');
+                var lastName = _.rest(words).join(' ');
 
                 if (firstName.length === 0) {
                     this.setMessage(this.firstName() + ' ' + localization.validation.required);
