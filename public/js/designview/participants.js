@@ -364,7 +364,7 @@
         }
     });
 
-    var DesignViewParticipantsView = Backbone.View.extend({
+    window.DesignViewParticipantsView = Backbone.View.extend({
         className: 'design-view-action-participant-container',
         initialize: function(args) {
             var view = this;
@@ -764,7 +764,7 @@
                     mixpanel.track('Enter custom field name', {
                         'Field name': input.value()
                     });
-                                   
+
                     field.setName(input.value());
                     sig.trigger('change:fields');
                     field.unbind('change:name', changer);
@@ -1366,7 +1366,7 @@
     /**
        model is field
      **/
-    var FieldOptionsView = Backbone.View.extend({
+    window.FieldOptionsView = Backbone.View.extend({
         className: 'design-view-action-participant-details-information-field-options-wrapper',
         initialize: function(args) {
             var view = this;
@@ -1444,11 +1444,5 @@
             return view;
         }
     });
-
-    window.DesignViewParticipantsView = function(args) {
-        return new DesignViewParticipantsView(args);
-    };
-
-    window.FieldOptionsView = FieldOptionsView;
 
 }(window));

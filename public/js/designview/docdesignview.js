@@ -70,12 +70,13 @@
             return this;
         }
     });
+
 /*   NEW COMPONENS    */
 
 var DesignViewTabsView = function(args) {
   var model = args.model
   var document = model.document();
-  var participantsView = window.DesignViewParticipantsView({ model : model});
+  var participantsView = new DesignViewParticipantsView({ model : model});
   var draggablesView   = new DesignViewDraggablesView({ model : model});
   var processView = DesignViewProcessView({ model : model });
   var tab1Name = $("<div class='design-view-tab-text'/>")
@@ -98,7 +99,10 @@ var DesignViewTabsView = function(args) {
                         Action: 'Open',
                         Tab: '1'
                     });
-            }
+          },
+          onHide : function() {
+               participantsView.closeAllParticipants();
+          }
           });
   var tab2 =  new Tab({
           name: tab2Name,
@@ -134,234 +138,26 @@ var DesignViewTabsView = function(args) {
       canHaveNoActiveTab : true,
       slideEffect : true
       });
-    document.bind('change:file', function() {tab2.setAvailable(document.mainfile() != undefined);});
-    document.bind('change:ready', function() {tab2.setAvailable(document.mainfile() != undefined);});
+    document.bind('change:ready change:file', function() {tab2.setAvailable(document.mainfile() != undefined);});
+    document.bind('change:ready change:file', function() {
+          if (document.ready()) {
+              if (document.mainfile() == undefined)
+                tabs.deactive();
+              else {
+                var updateOnReady = function() {
+                  if (document.mainfile().ready()) {
+                     setTimeout(function() { tabs.activate(tabs.activeTab() || tab1); }, 800);
+                  }
+                }
+                document.mainfile().bind('change', updateOnReady);
+              }
+          }
+       })
     tab2.setAvailable(document.mainfile() != undefined);
     this.el = function() { return tabs.el();}
 
 };
 
-
-/*   END OF NEW COMPONENTS    */
-
-/*
-    var DesignViewTabsView = Backbone.View.extend({
-        className: 'design-view-tab-container',
-        initialize: function(args) {
-            var view = this;
-            _.bindAll(view);
-            // probably just need to change a class
-            view.model.bind('change:step', view.render);
-            view.model.document().bind('change:file', view.updateTab2);
-            view.render();
-        },
-        render: function() {
-            var view = this;
-            var model = view.model;
-
-            var div = $('<div />');
-            div.append(view.tab1());
-            div.append(view.tab2());
-            div.append(view.tab3());
-
-            view.$el.html(div.children());
-
-            return view;
-        },
-        tab1: function () {
-            var view = this;
-            var model = view.model;
-
-            var div = $('<div />')
-                .addClass('design-view-tab1')
-                .append($('<div />')
-                        .addClass('design-view-tab1-text')
-                        .text(localization.designview.editParticipants));
-            if(model.step() === 1)
-                div.addClass('tab-active');
-            div.click(function() {
-                var prevStep = model.step();
-                if(prevStep !== 1) {
-                    model.setStep(1);
-                    mixpanel.track('Click tab', {
-                        Action: 'Open',
-                        Tab: '1'
-                    });
-                } else {
-                    mixpanel.setStep(undefined);
-                    mixpanel.track('Click tab', {
-                        Action: 'Close',
-                        Tab: '1'
-                    });
-                }
-                if (prevStep == 1)
-                  model.trigger('step1-refreshed');
-            });
-
-            div.mouseenter(function() {
-                div.addClass('tab-hover');
-            });
-
-            div.mouseleave(function() {
-                div.removeClass('tab-hover');
-            });
-
-            return div;
-        },
-        tab2: function () {
-            var view = this;
-            var model = view.model;
-
-            view.tab2div = $('<div />')
-                .addClass('design-view-tab2')
-                .append($('<div />')
-                        .addClass('design-view-tab2-text')
-                        .text(localization.designview.editDocument + ' ')
-                        .append($('<span />')
-                                .addClass('design-view-tab2-text-optional')
-                                .text('(' + localization.designview.optional + ')')));
-            if(model.step() === 2)
-                view.tab2div.addClass('tab-active');
-            this.updateTab2();
-
-            return view.tab2div;
-        },
-        updateTab2 : function() {
-          var view = this;
-          var model = view.model;
-          view.tab2div.unbind('click');
-          view.tab2div.unbind('mouseenter');
-          view.tab2div.unbind('mouseleave');
-          if (view.model.document().mainfile() != undefined) {
-            view.tab2div.removeClass("grayed");
-
-            view.tab2div.click(function() {
-                if(model.step() !== 2) {
-                    model.setStep(2);
-                    mixpanel.track('Click tab', {
-                        Action: 'Open',
-                        Tab: '2'
-                    });
-                } else {
-                    model.setStep(undefined);
-                    mixpanel.track('Click tab', {
-                        Action: 'Close',
-                        Tab: '2'
-                    });
-                }
-            });
-
-            view.tab2div.mouseenter(function() {
-                view.tab2div.addClass('tab-hover');
-            });
-
-            view.tab2div.mouseleave(function() {
-                view.tab2div.removeClass('tab-hover');
-            });
-          }
-          else
-            view.tab2div.addClass("grayed");
-
-        },
-        tab3: function () {
-            var view = this;
-            var model = view.model;
-
-            var div = $('<div />')
-                .addClass('design-view-tab3')
-                .append($('<div />')
-                        .addClass('design-view-tab3-text')
-                        .text(localization.designview.editSigningProcess + ' ')
-                        .append($('<span />')
-                                .addClass('design-view-tab3-text-optional')
-                                .text('(' + localization.designview.optional + ')')));
-            if(model.step() === 3)
-                div.addClass('tab-active');
-            div.click(function() {
-                if(model.step() !== 3) {
-                    model.setStep(3);
-                    mixpanel.track('Click tab', {
-                        Action: 'Open',
-                        Tab: '3'
-                    });
-                } else {
-                    model.setStep(undefined);
-                    mixpanel.track('Click tab', {
-                        Action: 'Close',
-                        Tab: '3'
-                    });
-                }
-            });
-
-            div.mouseenter(function() {
-                div.addClass('tab-hover');
-            });
-
-            div.mouseleave(function() {
-                div.removeClass('tab-hover');
-            });
-
-            return div;
-        }
-    });
-
-    // expected model: DesignViewModel
-    var DesignViewActionsView = Backbone.View.extend({
-        className: 'design-view-action-container',
-        initialize: function(args) {
-            var view = this;
-            _.bindAll(view);
-            view.currentStep = undefined;
-            view.participantsView = window.DesignViewParticipantsView({ model : view.model});
-            view.draggablesView   = new DesignViewDraggablesView({ model : view.model});
-            view.processView = DesignViewProcessView({ model : view.model });
-            view.model.bind('change:step', view.render);
-            view.model.bind('step1-refreshed', view.closeAllParticipants);
-            view.render();
-        },
-        closeAllParticipants : function() {
-            this.participantsView.closeAllParticipants();
-        },
-        slideNewView : function() {
-            var view = this;
-            var model = view.model;
-            var container = $(this.el);
-            container.children().detach();
-            var callback;
-            if(model.step() === 1) {
-                view.closeAllParticipants();
-                container.append($("<div class='design-view-action-container-shadow'/>"));
-                container.append(view.participantsView.el);
-            } else if(model.step() === 2) {
-               container.append($("<div class='design-view-action-container-shadow'/>"));
-               container.append(view.draggablesView.el);
-            } else if(model.step() === 3) {
-               container.append($("<div class='design-view-action-container-shadow'/>"));
-               container.append(view.processView.el);
-               callback = function() { view.processView.setupTinyMCE()};
-            }
-            container.slideDown(200,callback);
-
-        },
-        render: function() {
-            var view = this;
-            var model = view.model;
-
-            if (view.currentStep != undefined)
-              $(this.el).slideUp(200,function() {view.slideNewView();});
-            else {
-              $(this.el).css("display","none");
-              view.slideNewView();
-            }
-
-            view.currentStep = model.step();
-
-
-
-            return view;
-        }
-    });
-*/
     // expected model: DesignViewModel
     var DesignViewButtonBarView = Backbone.View.extend({
         className: 'design-view-button-bar',

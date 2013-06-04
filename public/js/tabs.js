@@ -19,6 +19,7 @@ window.Tab = Backbone.Model.extend({
     iconClass : undefined,
     onActivate : function() {},
     onShow : function() {},
+    onHide : function() {}
     }
   ,
   initialize : function(args){
@@ -27,7 +28,10 @@ window.Tab = Backbone.Model.extend({
           this.set({active: true}, {silent: true});
 
        if (this.active())
-          this.get("onActivate")();
+          this.onActivate();
+  },
+  onActivate : function(){
+      return this.get("onActivate")();
   },
   name : function() {
       return this.get("name");
@@ -84,7 +88,10 @@ window.Tab = Backbone.Model.extend({
               elems[i] = elems[i]();
   },
   onShow : function() {
-     return this.get("onShow");
+     return this.get("onShow")();
+  },
+  onHide : function() {
+     return this.get("onHide")();
   },
   available : function() {
      return this.get('available');
@@ -107,6 +114,7 @@ var Tabs = Backbone.Model.extend({
    },
    activate: function(newtab)
    {
+        if (newtab.active()) return;
         var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
             tabs[i].setActive(newtab == tabs[i]);
@@ -158,7 +166,7 @@ var Tabs = Backbone.Model.extend({
 var TabsView = Backbone.View.extend({
     model: Tabs,
     initialize: function (args) {
-        _.bindAll(this, 'render', 'updateAvabilityOfTab');
+        _.bindAll(this, 'render', 'updateAvabilityOfTab', 'postRenderTabEvents');
         this.extrasInTabsRow = args.extrasInTabsRow;
         this.model.bind('change', this.render);
         this.model.view = this;
@@ -172,7 +180,6 @@ var TabsView = Backbone.View.extend({
         container.append(this.toprow);
     },
     updateAvabilityOfTab : function(tab,li) {
-       console.log("updateAvabilityOfTab");
        var model = this.model;
        if (tab.available()) {
          li.removeClass('inactive');
@@ -180,6 +187,8 @@ var TabsView = Backbone.View.extend({
            if (tab.clickable()) {
              if (!tab.active())
                model.activate(tab);
+             else if (!model.canHaveNoActiveTab())
+               tab.onActivate(); // Manual trigger of activate
              else
                model.deactive();
            }
@@ -190,6 +199,15 @@ var TabsView = Backbone.View.extend({
           li.unbind('click');
           li.addClass('inactive');
        }
+    },
+    postRenderTabEvents : function() {
+      console.log("Post events");
+      _.each(this.model.tabs(), function(t) {
+                   if(t.active())
+                     t.onShow();
+                   else
+                     t.onHide();
+                });
     },
     render: function () {
         var self = this;
@@ -260,26 +278,34 @@ var TabsView = Backbone.View.extend({
               newvisible = newvisible.add(e);
           });
         }
-        if (visible != newvisible) {
-        var activeTab = this.model.activeTab();
-        if (model.slideEffect()) {
-          if (visible.size() == 0)
-            newvisible.slideDown(200,function() { if(activeTab) activeTab.onShow()();});
-          else
-            visible.slideUp(200,function() {
-              newvisible.slideDown(200,function() { if(activeTab)  activeTab.onShow()();});
-            });
-          return this;
-        }
-        else {
-          if (visible.size() == 0)
-            newvisible.show(0,function() { if(activeTab)  activeTab.onShow()();});
-          else
-            visible.hide(0,function() {
-              newvisible.show(0,function() { if(activeTab)  activeTab.onShow()();});
-            });
-          return this;
-        }
+        var toHide = visible.not(newvisible);
+        var toShow = newvisible.not(visible);
+
+        if (toHide.size() != 0 || toShow.size() != 0) {
+
+          var activeTab = this.model.activeTab();
+          if (model.slideEffect()) {
+            if (toHide.size() == 0)
+              toShow.slideDown(200,self.postRenderTabEvents);
+            else if (toShow.size() == 0)
+              toHide.slideUp(200,self.postRenderTabEvents);
+            else
+              toHide.slideUp(200,function() {
+                toShow.slideDown(200,self.postRenderTabEvents);
+              });
+            return this;
+          }
+          else {
+            if (toHide.size() == 0)
+              toShow.show(0,self.postRenderTabEvents);
+            else if (toShow.size() == 0)
+              toHide.hide(0,self.postRenderTabEvents);
+            else
+              toHide.hide(0,function() {
+                toShow.show(0,self.postRenderTabEvents);
+              });
+            return this;
+          }
       }
     }
 });
@@ -301,9 +327,10 @@ window.KontraTabs = function(args){
 
         return {el: function() {return $(self.view.el);},
                 next: function() {self.model.activateNext();},
-                activate: function(tab) {self.model.activate(tab);},
+                activeTab : function() {return self.model.activeTab();},
+                activate: function(tab) {console.log("Activating tab " + tab.name().attr('class')) ; self.model.activate(tab);},
                 activateFirst: function() {self.model.activate(self.model.tabs()[0]);},
-                deactive : function() {self.model.deactive();}
+                deactive : function() {console.log("Deactivating"); self.model.deactive();}
         };
 
 };
