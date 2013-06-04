@@ -175,6 +175,7 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
     F.value "email"  $ (\sl -> signatorylinkdeliverymethod sl == EmailDelivery) <$> siglink
     F.value "mobile" $ (\sl -> signatorylinkdeliverymethod sl == MobileDelivery) <$> siglink
     F.value "emailmobile" $ (\sl -> signatorylinkdeliverymethod sl == EmailAndMobileDelivery) <$> siglink
+    F.value "viewing" $ (not . signatoryispartner . signatorydetails) <$> siglink
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
