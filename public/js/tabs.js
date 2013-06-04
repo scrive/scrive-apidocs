@@ -201,7 +201,6 @@ var TabsView = Backbone.View.extend({
        }
     },
     postRenderTabEvents : function() {
-      console.log("Post events");
       _.each(this.model.tabs(), function(t) {
                    if(t.active())
                      t.onShow();
@@ -328,9 +327,9 @@ window.KontraTabs = function(args){
         return {el: function() {return $(self.view.el);},
                 next: function() {self.model.activateNext();},
                 activeTab : function() {return self.model.activeTab();},
-                activate: function(tab) {console.log("Activating tab " + tab.name().attr('class')) ; self.model.activate(tab);},
+                activate: function(tab) {self.model.activate(tab);},
                 activateFirst: function() {self.model.activate(self.model.tabs()[0]);},
-                deactive : function() {console.log("Deactivating"); self.model.deactive();}
+                deactive : function() { self.model.deactive();}
         };
 
 };

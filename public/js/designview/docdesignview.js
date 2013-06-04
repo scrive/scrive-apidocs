@@ -71,7 +71,6 @@
         }
     });
 
-/*   NEW COMPONENS    */
 
 var DesignViewTabsView = function(args) {
   var model = args.model
@@ -138,8 +137,8 @@ var DesignViewTabsView = function(args) {
       canHaveNoActiveTab : true,
       slideEffect : true
       });
-    document.bind('change:ready change:file', function() {tab2.setAvailable(document.mainfile() != undefined);});
-    document.bind('change:ready change:file', function() {
+  document.bind('change:ready change:file', function() {
+          tab2.setAvailable(document.mainfile() != undefined);}
           if (document.ready()) {
               if (document.mainfile() == undefined)
                 tabs.deactive();
@@ -153,8 +152,8 @@ var DesignViewTabsView = function(args) {
               }
           }
        })
-    tab2.setAvailable(document.mainfile() != undefined);
-    this.el = function() { return tabs.el();}
+  tab2.setAvailable(document.mainfile() != undefined);
+  this.el = function() { return tabs.el();}
 
 };
 
@@ -254,7 +253,6 @@ var DesignViewTabsView = function(args) {
             return this.sendButton ;
         },
         updateSaveButton : function() {
-           console.log("Updating save button");
            if (this.sendButton != undefined) {
              if (this.model.document().hasProblems(true)) {
               this.sendButton.removeClass("active");
@@ -549,7 +547,6 @@ var DesignViewTabsView = function(args) {
                 return;
             view.fixed = true;
             view.topBarHeight = view.topBar.outerHeight();
-            console.log("Fixing top bar");
             view.topBar.css({position:'fixed',
                              top: 0,
                              left: $(view.topBar).offset().left});
@@ -559,7 +556,6 @@ var DesignViewTabsView = function(args) {
             var view = this;
             if(!view.fixed)
                 return;
-            console.log("Unfixing top bar");
             view.fixed = false;
             view.topBarHeight = view.topBar.outerHeight();
             view.topBar.css({position:'relative',
