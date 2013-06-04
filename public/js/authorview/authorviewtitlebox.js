@@ -112,9 +112,20 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       cssClass: "s-withdraw-button",
       onClick: function() {
           mixpanel.track('Click withdraw button');
+          document.fetch();
+          var signers = _.reject(document.signatoriesWhoSign(),
+                                 function(signatory) {
+                                   return signatory.author();
+                                 });
+          var somebodysigned = _.some(signers,
+                                      function(signatory) {
+                                        return signatory.hasSigned();
+                                      });
+          var modalcontent = somebodysigned ? "SOMEONE HAS SIGNED" : "NOBODY HAS SIGNED";
+          // document.process().processLocalization().cancelmodaltext
         Confirmation.popup({
           title: document.process().processLocalization().cancelmodaltitle,
-          content: document.process().processLocalization().cancelmodaltext,
+          content: modalcontent,
           acceptText: document.process().processLocalization().cancelbuttontext,
           rejectText: localization.cancel,
           acceptColor: "red",
