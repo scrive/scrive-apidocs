@@ -12,7 +12,7 @@
       color* : "red"                 // Color of text
       border* : "1px solid red"      // Border style
       style* :  "font-size :16px"     // Extra style applied to main label
-      onSelect* : function(v) {}     // Function to be called when value is selected. If can be overwitten by onSelect from options
+      onSelect* : function(v) {}     // Function to be called when value is selected. If can be overwitten by onSelect from options. If true is returned select will be closed.
       onRemove* : function(v) {}     // If provided, remove (x) icon will be displayed over select. Functon will be executed when this icon will be clicked
       options: [
                       { name : "Option 1" // Name on option label
@@ -37,6 +37,7 @@
     - On expand, clone of current el with expanded options is displayed over current position.
       This way we can have selects withing scrollable areas, that don't make this areas expand.
     - onSelect function must be provided either for whole select of for all options
+    - Select box will be closed on selection only if onSelect for selected option will return true.
 */
 
 (function( window){

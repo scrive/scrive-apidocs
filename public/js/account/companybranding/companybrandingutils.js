@@ -288,6 +288,7 @@ var CompanyBrandingFontView = Backbone.View.extend({
                 model.setFont(font);
                 self.prerender();
                 self.render();
+                return true;
               },
               style: 'font-family: ' + font + ';'
              };
@@ -323,14 +324,14 @@ var CompanyBrandingFontView = Backbone.View.extend({
     });
 
     this.select = new Select({name: font_name,
-                              style: 'font-family: ' + fonts[font_name] + ';',
+                              style: 'font-family: ' + fonts[font_name] + '; width: 150px',
                               textWidth: "120px",
                               expandOnHover: false,
                               options: options
                              });
 
     this.customdiv = $('<div />').css({width: 220, 'margin-left': '23px'});
-    this.customdiv.append(this.select.el().css("width", "150px"));
+    this.customdiv.append(this.select.el());
 
     var container = $('<div/>');
     container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));
