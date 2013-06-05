@@ -140,7 +140,6 @@ set systemPage
  js   js/signview/docsignviewpad.js
  js   js/signview/docsignviewattachments.js
  js   js/signview/docsignview.js
- js   js/designview/docdesignviewpad.js
  js   js/designview/participants.js
  js   js/designview/editdocument.js
  js   js/designview/documentview.js
@@ -149,6 +148,7 @@ set systemPage
  js   js/designview/signatoryattachmentsdesignview.js
  js   js/designview/attachmentslist.js
  js   js/designview/process.js
+ js   js/designview/designviewtabs.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js

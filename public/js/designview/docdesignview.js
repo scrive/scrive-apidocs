@@ -8,25 +8,10 @@
 (function(window){
 
     var DesignViewModel = Backbone.Model.extend({
-        defaults : {
-            step : undefined
-        },
         initialize: function (args) {
             var self = this;
             var model = this;
             _.bindAll(model);
-            args.document.bind('change:ready change:file', function() {
-              if (self.document().mainfile() == undefined)
-                self.setStep(undefined);
-              else {
-                var updateOnReady = function() {
-                  if (self.document().mainfile().ready()) {
-                     setTimeout(function() { self.setStep((self.step() || 1)); }, 800);
-                  }
-                };
-                self.document().mainfile().bind('change', updateOnReady);
-              }
-            });
 
             model.currentColorIndex = 0;
             model.colors = [
@@ -43,13 +28,6 @@
         },
         ready : function() {
             return this.document().ready();
-        },
-        step: function() {
-            return this.get('step');
-        },
-        setStep: function(s) {
-            this.set({step:s});
-            return this;
         },
         participantDetail: function() {
             return this.get('participantDetail');
@@ -71,93 +49,7 @@
         }
     });
 
-
-var DesignViewTabsView = function(args) {
-  var model = args.model;
-  var document = model.document();
-  var participantsView = new DesignViewParticipantsView({ model : model});
-  var draggablesView   = new DesignViewDraggablesView({ model : model});
-  var processView      = new DesignViewProcessView({ model : model });
-  var tab1Name = $("<div class='design-view-tab-text'/>")
-                      .text(localization.designview.editParticipants);
-  var tab2Name = $("<div class='design-view-tab-text'/>")
-                      .text(localization.designview.editDocument + ' ')
-                      .append($("<span class='design-view-tab-text-optional'/>")
-                         .text('(' + localization.designview.optional + ')'));
-  var tab3Name = $("<div class='design-view-tab-text'/>")
-                      .text(localization.designview.editSigningProcess + ' ')
-                      .append($("<span class='design-view-tab-text-optional'/>")
-                         .text('(' + localization.designview.optional + ')'));
-
-  var tab1 = new Tab({
-          name: tab1Name,
-          pagehash : "participants",
-          elems: [ $(participantsView.el)],
-          onActivate : function() {
-               mixpanel.track('Click tab', {
-                        Action: 'Open',
-                        Tab: '1'
-                    });
-          },
-          onHide : function() {
-               participantsView.closeAllParticipants();
-          }
-          });
-  var tab2 =  new Tab({
-          name: tab2Name,
-          pagehash : "placements",
-          available : document.mainfile() != undefined,
-          elems: [ $(draggablesView.el)],
-          onActivate : function() {
-               mixpanel.track('Click tab', {
-                        Action: 'Open',
-                        Tab: '2'
-                    });
-            }
-          });
-  var tab3 = new Tab({
-          name: tab3Name,
-          pagehash : "process",
-          elems: [ $(processView.el)],
-          onShow : function() {
-              processView.setupTinyMCE();
-            },
-          onActivate : function() {
-               mixpanel.track('Click tab', {
-                        Action: 'Open',
-                        Tab: '3'
-                    });
-            }
-          });
-
-  var tabs = new KontraTabs({
-      numbers : false,
-      tabs: [tab1,tab2,tab3],
-      tabsTail : $(),
-      canHaveNoActiveTab : true,
-      slideEffect : true
-      });
-  document.bind('change:ready change:file', function() {
-          tab2.setAvailable(document.mainfile() != undefined);
-          if (document.ready()) {
-              if (document.mainfile() == undefined)
-                tabs.deactive();
-              else {
-                var updateOnReady = function() {
-                  if (document.mainfile().ready()) {
-                     setTimeout(function() { tabs.activate(tabs.activeTab() || tab1); }, 800);
-                  }
-                };
-                document.mainfile().bind('change', updateOnReady);
-              }
-          }
-       });
-  tab2.setAvailable(document.mainfile() != undefined);
-  this.el = function() { return tabs.el();};
-
-};
-
-    // expected model: DesignViewModel
+  // expected model: DesignViewModel
     var DesignViewButtonBarView = Backbone.View.extend({
         className: 'design-view-button-bar',
         initialize: function(args) {
@@ -320,15 +212,8 @@ var DesignViewTabsView = function(args) {
                 'Uses email and mobile delivery' : document.hasEmailAndSMS()
             });
 
-            // putting this here makes problems start showing up
-            // (meaning red border). The idea is that they have
-            // shown the intention of trying to send the doc.
-            // Now we want to help them complete this.
-            // why not save the document before we validate it?
             document.save();
-
-            if(!view.verificationBeforeSendingOrSigning(isSigning)) {
-                view.performValidationActions(isSigning);
+            if(document.hasProblems(true)) {
                 return;
             }
 
@@ -346,43 +231,6 @@ var DesignViewTabsView = function(args) {
                 view.signConfirmation();
             else
                 view.sendConfirmation();
-        },
-        performValidationActions: function(forSigning) {
-            var view = this;
-            var model = view.model;
-            var doc = model.document();
-            // we only flash the first error
-            if(!doc.mainfile()) {
-                mixpanel.track('Error',
-                               {Message: 'no document'});
-                new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
-                return;
-            } else if(!doc.hasAtLeastOneSignatory()) {
-                mixpanel.track('Error',
-                               {Message: 'nobody signs'});
-                new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
-                model.setStep(1);
-            } else if(doc.hasSignatoryProblems(forSigning)) {
-                var s, f, sigs = doc.signatories(), fields;
-                for(s=0;s<sigs.length;s++) {
-                    var sig = sigs[s];
-                    var fields = sig.fields();
-                    for(f=0; f<fields.length;f++) {
-                        var field = fields[f];
-                          if(!field.doValidate(forSigning, function(text, object, validation) {
-                            mixpanel.track('Error',
-                                           {Field: field.name(),
-                                            Value: field.value(),
-                                            Message: validation.message()});
-                            new FlashMessage({color: 'red', content : validation.message()});
-                            model.setStep(1);
-                            model.setParticipantDetail(sig);
-                        }))
-                            return;
-                    }
-                }
-            }
-
         },
         signConfirmation : function() {
             var view = this;
@@ -523,9 +371,6 @@ var DesignViewTabsView = function(args) {
                 rejectText: localization.cancel,
                 content  : box
             });
-        },
-        verificationBeforeSendingOrSigning : function() {
-            return !this.model.document().hasProblems(true);
         }
     });
 
