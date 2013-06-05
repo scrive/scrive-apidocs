@@ -9,7 +9,12 @@
 --
 -- All that is needed to seal a document
 -----------------------------------------------------------------------------
-module Doc.DocSeal(sealDocument, presealDocumentFile) where
+module Doc.DocSeal
+  ( sealDocument
+  , presealDocumentFile
+  , digitallySealDocument
+  , digitallyExtendDocument
+  ) where
 
 import Control.Monad.Trans.Control
 import Control.Monad.Reader
@@ -19,15 +24,17 @@ import Data.List
 import Data.Ord
 import Doc.DocProcess
 import Doc.DocStateData
+import Doc.DocumentID (DocumentID)
 import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
 import File.Storage
 import Doc.DocView
 import Doc.DocUtils
+import GuardTime (GuardTimeConf)
 import qualified HostClock.Model as HC
 import IPAddress
-import MinutesTime (daysBefore)
+import MinutesTime (MinutesTime, daysBefore)
 import Utils.Directory
 import Utils.Read
 import Utils.String
@@ -573,32 +580,8 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
-        -- GuardTime signs in place
-        code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
-        (newfilepdf, status) <- first Binary <$> case code2 of
-          ExitSuccess -> do
-            vr <- liftIO $ GT.verify ctxgtconf tmpout
-            case vr of
-                 GT.Valid gsig -> do
-                      res <- liftIO $ BS.readFile tmpout
-                      Log.debug $ "GuardTime verification result: " ++ show vr
-                      Log.debug $ "GuardTime signed successfully #" ++ show documentid
-                      return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
-                 _ -> do
-                      res <- liftIO $ BS.readFile tmpout
-                      Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
-                      Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
-                      return (res, Missing)
-          ExitFailure c -> do
-            res <- liftIO $ BS.readFile tmpout
-            Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
-            Log.error $ "GuardTime failed for document #" ++ show documentid
-            return (res, Missing)
-        Log.debug $ "Adding new sealed file to DB"
-        File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
-        Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+        sealedfileid <- digitallySealDocument ctxtime ctxgtconf documentid tmpout filename
         res <- runMaybeT $ do
-          dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
           Just doc <- dbQuery $ GetDocumentByDocumentID documentid
           return doc
         Log.debug $ "Should be attached to document; is it? " ++ show (((Just sealedfileid==) . documentsealedfile) <$> res)
@@ -618,6 +601,64 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (systemActor ctxtime)
         return $ Left msg
 
+digitallySealDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
+                      => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m FileID
+digitallySealDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
+  -- GuardTime signs in place
+  code <- liftIO $ GT.digitallySign ctxgtconf pdfpath
+  (newfilepdf, status) <- first Binary <$> case code of
+    ExitSuccess -> do
+      vr <- liftIO $ GT.verify ctxgtconf pdfpath
+      case vr of
+           GT.Valid gsig -> do
+                res <- liftIO $ BS.readFile pdfpath
+                Log.debug $ "GuardTime verification result: " ++ show vr
+                Log.debug $ "GuardTime signed successfully #" ++ show documentid
+                return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
+           _ -> do
+                res <- liftIO $ BS.readFile pdfpath
+                Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
+                Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
+                return (res, Missing)
+    ExitFailure c -> do
+      res <- liftIO $ BS.readFile pdfpath
+      Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
+      Log.error $ "GuardTime failed for document #" ++ show documentid
+      return (res, Missing)
+  Log.debug $ "Adding new sealed file to DB"
+  File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname newfilepdf
+  Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+  dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
+  return sealedfileid
+
+digitallyExtendDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
+                      => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m Bool
+digitallyExtendDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
+  code <- liftIO $ GT.digitallyExtend ctxgtconf pdfpath
+  mr <- case code of
+    ExitSuccess -> do
+      vr <- liftIO $ GT.verify ctxgtconf pdfpath
+      case vr of
+           GT.Valid gsig | GT.extended gsig -> do
+                res <- liftIO $ BS.readFile pdfpath
+                Log.debug $ "GuardTime verification result: " ++ show vr
+                Log.debug $ "GuardTime extended successfully #" ++ show documentid
+                return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
+           _ -> do
+                Log.error $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
+                return Nothing
+    ExitFailure c -> do
+      Log.error $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
+      return Nothing
+  case mr of
+    Nothing -> return False
+    Just (extendedfilepdf, status) -> do
+      Log.debug $ "Adding new extended file to DB"
+      File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
+      Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+      -- TODO: keep old sealed file, or delete?
+      dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
+      return True
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
 presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)

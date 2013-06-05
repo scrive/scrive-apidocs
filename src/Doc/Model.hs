@@ -148,6 +148,7 @@ import Company.Model
 -- the route we got to the document, i. e. signatory_links!.
 data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
+  | DocumentFilterBySealStatus [SealStatus]   -- ^ Any of listed seal statuses
   | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags (warning: this is ALL tags)
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
@@ -166,6 +167,7 @@ data DocumentFilter
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter MinutesTime -- ^ That were modified after given time
+  | DocumentFilterByLatestSignTimeBefore MinutesTime  -- ^ With latest sign time before given time
   deriving Show
 
 -- | Document security domain.
@@ -330,6 +332,8 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
   sqlWhereIn "documents.status" statuses
+documentFilterToSQL (DocumentFilterBySealStatus statuses) = do
+  sqlWhereIn "documents.seal_status" statuses
 documentFilterToSQL (DocumentFilterByStatusClass statuses) = do
   -- I think here we can use the result that we define on select
   -- check this one out later
@@ -345,6 +349,10 @@ documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
             <> ", documents.ctime"
             <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
             <+> ">=" <?> mtime)
+
+documentFilterToSQL (DocumentFilterByLatestSignTimeBefore time) = do
+  sqlWhere ("(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
+            <+> "<" <?> time)
 
 documentFilterToSQL (DocumentFilterByProcess processes) = do
   if null ([minBound..maxBound] \\ processes)
@@ -2199,14 +2207,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMe
 data SetDocumentProcess = SetDocumentProcess DocumentID DocumentProcess Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentProcess Bool where
   update (SetDocumentProcess did process _actor) = updateWithoutEvidence did "process" process
-
-data SetDocumentSealStatus = SetDocumentSealStatus DocumentID (Maybe SealStatus)
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSealStatus Bool where
-  update (SetDocumentSealStatus did s) = do
-    kRun01 $ sqlUpdate "documents" $ do
-               sqlSet "seal_status" s
-               sqlWhereEq "id" did
-
 
 data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL DocumentID (Maybe String)
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL Bool where

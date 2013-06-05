@@ -2,6 +2,7 @@
 
 module GuardTime
        ( digitallySign
+       , digitallyExtend
        , verify
        , VerifyResult(Valid)
        , GuardtimeSignature(..)
@@ -42,6 +43,25 @@ digitallySign conf inputFileName = do
              [ "-i"
              , "-n", "Scrive"
              , "-s", guardTimeURL conf
+             , "-f"
+             , inputFileName
+             ]
+  when (code /= ExitSuccess) $ do
+    Log.debug $ "GuardTime exit code " ++ show code
+    when (not (BSL.null stdout)) $ do
+      Log.debug $ "GuardTime stdout  : " ++ BSL.toString stdout
+    when (not (BSL.null stderr)) $ do
+      Log.debug $ "GuardTime errout  : " ++ BSL.toString stderr
+
+  return code
+
+-- Verification
+
+
+digitallyExtend :: GuardTimeConf -> String -> IO ExitCode
+digitallyExtend conf inputFileName = do
+  (code,stdout,stderr) <- invokeGuardtimeTool "PdfExtender"
+             [ "-x", guardTimeExtendingServiceURL conf
              , "-f"
              , inputFileName
              ]

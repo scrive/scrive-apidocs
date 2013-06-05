@@ -1,5 +1,6 @@
 module ActionQueue.Monad (
-    ActionQueue(..)
+    ActionQueue
+  , ActionQueueT
   , runQueue
   , actionQueue
   ) where
@@ -14,28 +15,31 @@ import ActionQueue.Core
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
-import DB.PostgreSQL
 import qualified Log
 import Amazon
 
-type InnerAQ qd = ReaderT qd (AmazonMonadT (CryptoRNGT (DBT IO)))
+type ActionQueue = ActionQueueT (AmazonMonadT (CryptoRNGT (DBT IO)))
 
-newtype ActionQueue qd a = AQ { unAQ :: InnerAQ qd a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase IO, MonadDB, MonadIO, MonadReader qd, Log.MonadLog, AmazonMonad)
+type InnerAQ m qd = ReaderT qd m
 
-instance MonadBaseControl IO (ActionQueue qd) where
-  newtype StM (ActionQueue qd) a = StAQ { unStAQ :: StM (InnerAQ qd) a }
+newtype ActionQueueT m qd a = AQ { unAQ :: InnerAQ m qd a }
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadIO, MonadReader qd, Log.MonadLog, AmazonMonad)
+
+deriving instance MonadBase IO m => MonadBase IO (ActionQueueT m qd)
+
+instance (MonadBaseControl IO m, MonadBase IO (ActionQueueT m qd)) => MonadBaseControl IO (ActionQueueT m qd) where
+  newtype StM (ActionQueueT m qd) a = StAQ { unStAQ :: StM (InnerAQ m qd) a }
   liftBaseWith = newtypeLiftBaseWith AQ unAQ StAQ
   restoreM = newtypeRestoreM AQ unStAQ
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runQueue :: CryptoRNGState -> String -> AmazonConfig -> qd -> ActionQueue qd () -> IO ()
-runQueue rng dbconf amazonconf qd queue =
-  withPostgreSQL dbconf . runCryptoRNGT rng $ runAmazonMonadT amazonconf $ runReaderT (unAQ queue) qd
+runQueue :: qd -> ActionQueueT m qd a -> m a
+runQueue qd queue =
+  runReaderT (unAQ queue) qd
 
 -- | Gets 'expired' actions and evaluates them
-actionQueue :: Show t => Action idx t con (ActionQueue qd) -> ActionQueue qd ()
+actionQueue :: (MonadDB m, MonadBaseControl IO m, Show t) => Action idx t con (ActionQueueT m qd) -> ActionQueueT m qd ()
 actionQueue qa = getMinutesTime
   >>= dbQuery . GetExpiredActions qa
   >>= mapM_ (\a -> do
