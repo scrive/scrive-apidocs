@@ -292,7 +292,6 @@
                 color : "#000000",
                 options : selectOptions,
                 name : selected.name,
-                theme : selected.value != "" ? "dark" : "warm",
                 textWidth : selectFiltering.textWidth(),
                 onSelect : function(value) {
                     mixpanel.track('Filter ' + selectFiltering.name(),
@@ -326,9 +325,9 @@
                     if (options[i] != selected)
                          selectOptions.push(options[i]);
             this.select = new Select({
+                color : "#000000",
                 options : selectOptions,
                 name : selected.name,
-                theme : selected.value != "" ? "dark" : "warm",
                 textWidth : selectFiltering.textWidth(),
                 onOpen : function() {
                     if (!selectFiltering.needMoreOptions())  return true;
@@ -373,9 +372,9 @@
             selectOptionsBottom.reverse();
 
              this.selectBottom = new Select({
+                color : "#000000",
                 options : selectOptionsBottom,
                 name :  selectedBottom.value != "<" ? filtering.selectedBottomPrefix() + " "  + selectedBottom.name : selectedBottom.name,
-                theme : selectedBottom.value != "<" ? "dark" : "warm",
                 textWidth : filtering.textWidth(),
                 cssClass : "float-left",
                 onSelect : function(value) {
@@ -396,9 +395,9 @@
             }
             selectOptionsTop.reverse();
             this.selectTop = new Select({
+                color : "#000000",
                 options : selectOptionsTop,
                 name : selectedTop.value != ">" ? filtering.selectedTopPrefix() + " " + selectedTop.name : selectedTop.name,
-                theme : selectedTop.value != ">" ? "dark" : "warm",
                 textWidth : filtering.textWidth(),
                 cssClass : "float-left",
                 onSelect : function(value) {

@@ -353,6 +353,7 @@ window.GetHistoryApiCall = ApiCall.extend({
                 type: 'GET',
                 cache: false,
                 headers : { authorization : model.authorization() },
+                contentType : "application/x-www-form-urlencoded; charset:ISO-8859-1",
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },

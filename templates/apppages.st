@@ -401,7 +401,7 @@ langSwitcher=
                                                                {name: "$_SwedishInSwedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
                                                          $endif$
                                                 ]})
-                   jQuery('.langSwitcher').append(select.view().el);
+                   jQuery('.langSwitcher').append(select.el());
               })
 </script>
 ####

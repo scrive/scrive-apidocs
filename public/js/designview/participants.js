@@ -130,6 +130,9 @@
                 options: options,
                 name: ordinal + ' ' +
                     localization.designview.toReceiveDocument,
+                 textWidth : "195px",
+
+                optionsWidth : "225px",
                 cssClass : 'design-view-action-participant-details-participation-order',
                 onSelect: function(v) {
                     mixpanel.track('Choose sign order', {
@@ -161,6 +164,9 @@
                     return {name: deliveryTexts[t], value:t};
                 }),
                 name: deliveryTexts[delivery],
+                 textWidth : "195px",
+
+                optionsWidth : "225px",
                 cssClass : 'design-view-action-participant-details-participation-delivery',
                 onSelect: function(v) {
                     mixpanel.track('Choose delivery method', {
@@ -192,6 +198,9 @@
                     return {name: roleTexts[t], value:t};
                 }),
                 name: roleTexts[role],
+                 textWidth : "195px",
+
+                optionsWidth : "225px",
                 cssClass : 'design-view-action-participant-details-participation-role',
                 onSelect: function(v) {
                     mixpanel.track('Choose participant role', {
@@ -223,6 +232,9 @@
                     return {name: authTexts[t], value:t};
                 }),
                 name: authTexts[auth],
+                 textWidth : "195px",
+
+                optionsWidth : "225px",
                 cssClass : 'design-view-action-participant-details-participation-auth',
                 onSelect: function(v) {
                     mixpanel.track('Choose auth', {
@@ -867,6 +879,16 @@
                 options: options,
                 name: name,
                 cssClass : 'design-view-action-participant-new-field-select',
+                border : "1px solid red",
+                optionsWidth: "297px",
+                onRemove : function() {
+                    mixpanel.track('Click remove field', {
+                        Type: field.type(),
+                        Name: field.name()
+                    });
+                    field.removeAllPlacements();
+                    sig.deleteField(field);
+                },
                 onSelect: function(v) {
                     if(v.name === '--custom') {
                         mixpanel.track('Select field type', {
@@ -886,25 +908,8 @@
                 }
             });
 
-
-            if(!field.isValid(true))
-                $(select.el()).addClass('redborder');
-            else
-                $(select.el()).removeClass('redborder');
-
-            var closer = $('<div />');
-            closer.addClass('design-view-action-participant-details-information-closer');
-            closer.addClass("active").click(function() {
-                mixpanel.track('Click remove field', {
-                    Type: field.type(),
-                    Name: field.name()
-                });
-                field.removeAllPlacements();
-                sig.deleteField(field);
-            });
-
             div.append(select.el());
-            div.append(closer);
+
 
             return div;
 

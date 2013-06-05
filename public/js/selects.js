@@ -1,7 +1,50 @@
-/* Select box - as in top-left of archive*/
+/*
+  Standard select boxes used by our system.
+  Usage:
 
+   var select = new Select({
+      name : "Option 1"              // Name on main label of select
+      cssClass* : "select-1"         // Class to be added
+      expandSide* : "right"          // What direction shold it expand (default left, "left" or "right")
+      textWidth* : "100px"           // If set, unexpanded selectbox will not get much longer that this area
+      optionsWidth* : "200px"        // How long should be an area with options selection
+      onOpen* : function(){}         // Function to be called when box gets opened. Usefull when wanting to get options with AJAX (ask M)
+      color* : "red"                 // Color of text
+      border* : "1px solid red"      // Border style
+      style :  "font-size :16px"     // Extra style aplied to main box
+      onSelect* : function(v) {}     // Function to be called when value is selected. If can be overwitten by onSelect from options
+      onRemove* : function(v) {}     // If provided, remove button will be displayed over select. Functon will be executed when it will be clicked
+      options: [
+                      { name : "Option 1" // Name on option labe
+                        value* : "1" // Value that will be propagated on select
+                        onSelect* : function(v) {} // Function to be called on selection. If not provided, function from main select will be used
+                        style : "font-size: 8px" // Extra styling of given option label
+                      },
+                      { name : "Option 2"
+                        value* : "2"
+                        onSelect* : function(v) {}
+                      },
+                  ]
+   });
+
+  Interface:
+      .el()          // jQuery object to be appended somewere on a page
+      .open()        // Expand of select box. Note that it will be automaticly closed if mouse is not over it
+      .setName(name) // Change name on button
+
+  Details:
+    - It does not use <select> tag internally.
+    - On expand, clone of current el with expanded options is displayed over current el position.
+      This way we can have selects withing scrollable areas, that don't make this areas expand.
+    - onSelect function must be provided either for whole Select of for all options
+
+
+
+*/
 (function( window){
 
+
+// Model for individual options
 window.SelectOptionModel = Backbone.Model.extend({
   defaults : {
       onSelect : function(){return false;},
@@ -22,6 +65,7 @@ window.SelectOptionModel = Backbone.Model.extend({
   }
 });
 
+// Model for whole select
 window.SelectModel = Backbone.Model.extend({
   defaults : {
       name  : "",
@@ -29,15 +73,17 @@ window.SelectModel = Backbone.Model.extend({
       expandSide : "left",
       expanded : false,
       onOpen : function() {return true;},
-      color: undefined,
-      border: undefined,
+      color: "#364963",
+      border: "1px solid #DEE4ED",
+      textWidth : "160px",
+      optionsWidth : "200px",
       style : "",
       cssClass : ""
 
   },
   initialize: function(args){
       var model = this;
-      //Change static options to SelectOptionModel. Propagate onSelect function if this is needed
+      //Change static options to SelectOptionModel. Propagate onSelect function if it's not provided by option
       var options = _.map(args.options,function(e) {
                         e.onSelect = e.onSelect || args.onSelect;
                         var option = new SelectOptionModel(e);
@@ -68,6 +114,9 @@ window.SelectModel = Backbone.Model.extend({
   textWidth : function(){
        return this.get("textWidth");
   },
+  optionsWidth : function() {
+       return this.get("optionsWidth");
+  },
   toggleExpand: function() {
      if (this.expanded())
        this.set({"expanded" : false});
@@ -83,6 +132,14 @@ window.SelectModel = Backbone.Model.extend({
         return this.get("onOpen")();
        return true;
   },
+  onRemove : function(){
+       if (this.get("onRemove") != undefined)
+        return this.get("onRemove")();
+       return true;
+  },
+  hasRemoveOption : function(){
+       return this.get("onRemove") != undefined;
+  },
   color : function() {
      return this.get("color");
   },
@@ -97,7 +154,7 @@ window.SelectModel = Backbone.Model.extend({
   }
 });
 
-
+//View for individual options
 window.SelectOptionView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
@@ -111,19 +168,19 @@ window.SelectOptionView = Backbone.View.extend({
 
 });
 
-
+//View for whole select
 var SelectView = Backbone.View.extend({
     initialize: function (args) {
+        var self = this;
         _.bindAll(this, 'render');
         this.model.bind('change', this.render);
-        this.model.view = this;
-        var view = this;
         $(this.el).mouseout(function() {
-                 setTimeout(function() {view.closeIfNeeded();}, 100);
+                 setTimeout(function() {self.closeIfNeeded();}, 100);
               });
-        $(this.el).mouseenter(function() {view.enterdate = new Date().getTime();});
+        $(this.el).mouseenter(function() {self.enterdate = new Date().getTime();});
         this.render();
     },
+    //Close if we are expanded, we are not hovered and some time has passed since mouse left.
     closeIfNeeded : function() {
         if ( this.dead != true
             && this.model.expanded()
@@ -131,79 +188,89 @@ var SelectView = Backbone.View.extend({
             && (this.expButton == undefined || $(":hover", this.expButton).size() == 0)
             && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
            )
-          ;//this.model.toggleExpand();
+          this.model.toggleExpand();
     },
+
+    // Main button - no options
     button : function() {
+        var model = this.model;
         var button = $("<div class='select-button' />");
         button.append("<div class='select-button-left' />");
-        var label = $("<div class='select-button-label' />");
-        label.attr("style", this.model.style());
-        label.text(this.model.name());
-        if (this.model.textWidth() != undefined)
-            label.css("width",this.model.textWidth());
-        button.append(label);
+        button.append($("<div class='select-button-label' />")
+                          .attr("style", model.style())
+                          .text(model.name())
+                          .css("width",model.textWidth())
+                     );
         button.append("<div class='select-button-right' />");
+
+        if (this.model.hasRemoveOption())
+            button.append($("<div class='closer'/>").click(function() { model.onRemove(); }));
+
         return button;
     },
     render: function () {
+        var self = this;
         var model = this.model;
-        var view = this;
 
-        if (this.expButton != undefined) $(this.expButton).detach();
+        //If we are rerendering we remove expanded part.
+        if (this.expButton != undefined) $(this.expButton).remove();
+
 
         if (!model.expanded()) {
-          $(this.el).empty();
-          $(this.el).addClass(this.model.cssClass());
-          $(this.el).attr("style",this.model.style());
-          var button = this.button();
-          if (model.border() != undefined) button.css("border", this.model.border());
-          $(this.el).append(button);
-          button.click(function(){
-                    model.toggleExpand();
-                    return false;
-         });
+          // We are rerendering button if it is not expanded. We start with cleaning old buttons
+          $(this.el).empty()
+                    .addClass(this.model.cssClass())
+                    .attr("style",this.model.style())
+                    .css('color',this.model.color())
+                    .css("border", this.model.border())
+                    .append(this.button().click(
+                        function(){
+                            model.toggleExpand();
+                            return false;
+                        })
+                    )
         }
         else
             {
-              this.expButton = $("<div class='select select-exp'/>");
-              this.expButton.addClass(this.model.cssClass());
-              this.expButton.attr("style",this.model.style());
-              this.expButton.css("position","absolute");
-              var button = this.button()
-              this.expButton.append(button);
-              if (model.color()) this.expButton.css('color',model.color());
+           // We are rerendering button with options above current element
 
-              $('.select-button',this.expButton).addClass("select-exp").css('z-index',5002);
-              this.expButton.css('z-index',5000);
-              this.expButton.css('left',$(this.el).offset().left + "px").css('top',($(this.el).offset().top + "px"));
-              this.expButton.css("display", "block");
-              $('body').append(this.expButton);
-              this.expButton.mouseout(function() {
-                 setTimeout(function() {view.closeIfNeeded();}, 100);
+              // Prepare box with options
+              var options = $("<ul class='select-opts'/>")
+                                .addClass(this.model.expandSide())
+                                .css("border", this.model.border())
+                                .css("width", this.model.optionsWidth());
+
+              _.each(model.options(),function(e){
+                    options.append($(new SelectOptionView({model : e, el : $("<li/>")}).el));
               });
-              this.expButton.mouseenter(function() {view.enterdate = new Date().getTime();});
-              var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
-              if (model.border() != undefined) {
-                options.css("border", this.model.border());
-                this.expButton.css("border", this.model.border())
-              }
 
-            _.each(model.options(),function(e){
-                    var li = $("<li/>");
-                    if (model.color())
-                      li.css('color',model.color());
-                    new SelectOptionView({model : e, el : li});
-                    options.append(li);
-            });
+              // Prepare area simillar to $(this.el) with extra styles, copy of button and options appended, positioned over current el
+              this.expButton = $("<div class='select select-exp'/>")
+                                  .append(this.button())
+                                  .append(options)
+                                  .addClass(this.model.cssClass())
+                                  .attr("style",this.model.style())
+                                  .css('color',this.model.color())
+                                  .css("border", this.model.border())
+                                  .css('left',$(this.el).offset().left + "px")
+                                  .css('top',$(this.el).offset().top + "px")
+                                  .mouseout(function() {
+                                      setTimeout(function() {self.closeIfNeeded();}, 100);
+                                  })
+                                  .mouseenter(function() {
+                                      self.enterdate = new Date().getTime();
+                                  });
 
-              this.expButton.append(options.css('z-index',5001));
+
+              // Adding expanded button directly to page
+              $('body').append(this.expButton);
             }
         return this;
     }
 });
 
 
-
+// Interface
 window.Select = function(args) {
           // Build model
           var model = new SelectModel (args);

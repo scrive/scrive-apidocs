@@ -1,8 +1,6 @@
 .select{
     font-family: @sans;
-    color: @blue-dark;
     font-size : 14.5px;
-    border: 1px solid @blue-border;
     position: relative;
     cursor: pointer;
     text-align : left;
@@ -11,11 +9,6 @@
             height: 30px;
             position: relative;
             background: #fff;
-            z-index: 0;
-            &.select-exp {
-              position: relative;
-              z-index: 2;
-            }
             .select-button-left {
                     float: left;
                     height: 30px;
@@ -42,34 +35,54 @@
                     text-indent: 5px;
                     line-height: 21px;
             }
+            .closer {
+                width: 24px;
+                height: 22px;
+                display: inline-block;
+                position: absolute;
+                top: -9px;
+                left: -9px;
+                background: url("/img/editor-view-remove-party.png");
+                background-position: 0px 0px;
+                cursor: pointer;
+                &:hover {
+                   background-position: -24px 0px;
+                }
+            }
     }
+    &.select-exp {
+      z-index: 5000;
+      position: absolute;
+      display: block;
+      .select-button {
+        z-index: 5002;
+      }
+      .select-opts {
+                background: #fff;
+                position: absolute;
+                top: 29px;
+                z-index: 5001;
+                left : -1px ;
+                text-align : left;
+                padding:0px;
+                &.right {
+                  left: auto;
+                  right: -1px;
+                  text-align: right;
+                }
+                li {
+                  text-indent: 9px;
+                  padding: 6px;
+                  height: 20px;
+                  line-height :  22px;
+                  &:hover {
+                    background: @blue-border;
+                        }
+                }
+      }
+    }
+
 }
 
 
-.select-opts {
-          color: @blue-dark;
-          background: #fff;
-          border: 1px solid @blue-border;
-          position: absolute;
-          top: 29px;
-          width: 200px;
-          z-index: 1;
-          left : -1px ;
-          text-align : left;
-          padding:0px;
-          &.right {
-            left: auto;
-            right: -1px;
-            text-align: right;
-          }
-          li {
-            text-indent: 9px;
-            padding: 6px;
-            height: 20px;
-            line-height :  22px;
-            &:hover {
-               background: @blue-border;
-               color: @blue-dark;
-                  }
-          }
-}
+

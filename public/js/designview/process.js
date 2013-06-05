@@ -140,6 +140,7 @@
                     return processText[e];
                 }),
                 name: processText[processName].name,
+                textWidth: "130px",
                 cssClass : 'design-view-action-process-left-column-document-type-field',
                 onSelect: function(v) {
                     mixpanel.track('Select document type', {
@@ -185,6 +186,7 @@
                 options: _.map(languages, function(e) {
                     return languageText[e];
                 }),
+                textWidth: "130px",
                 name: languageText[lang].name,
                 cssClass : 'design-view-action-process-left-column-language-field',
                 onSelect: function(v) {

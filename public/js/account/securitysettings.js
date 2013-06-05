@@ -150,7 +150,6 @@ var SecuritySettingsView = Backbone.View.extend({
 
       this.langSelectBox = $("<td/>");
       var updateLangSelect = function() {
-         if (self.langSelect != undefined)  self.langSelect.clear();
          self.langSelectBox.empty();
          self.langSelect = new Select({
                              textWidth : "90px",
