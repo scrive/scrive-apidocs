@@ -341,6 +341,9 @@
 
             var wrapper = $('<div />');
             wrapper.addClass('design-view-action-process-right-column-invitation-wrapper');
+	    if (!view.emaildeliveryused) {
+	      wrapper.addClass('disabled');
+	    }
 
             var textarea = $('<textarea id="design-view-action-process-right-column-invitation-editor"/>');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');

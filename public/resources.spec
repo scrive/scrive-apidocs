@@ -30,6 +30,7 @@ set systemPage
  css css/calendar.css
  css css/colorpicker.css
  css css/jquery.mCustomScrollbar.css
+ less less/tinymce.less
  less less/utils.less
  less less/branding/index.less
  less less/document-pages.less

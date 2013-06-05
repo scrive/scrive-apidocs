@@ -55,6 +55,7 @@ window.MailView = Backbone.View.extend({
         var content = this.model.content().clone();
         var editablePart = $(".editable", content);
         window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
+      window.tinymce_textarea_count++;
         var id = 'editable-textarea-' + window.tinymce_textarea_count;
         var textarea = $("<textarea id='" + id + "' style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
         textarea.css("width", this.model.editWidth() + "px");
@@ -64,8 +65,10 @@ window.MailView = Backbone.View.extend({
            tinymce.init({
                       selector: '#' + id,
                       plugins: "noneditable,paste",
+                      external_plugins: {
+                        hide_toolbar: '/js/tinymce_plugins/hide_toolbar.js'
+                      },
                       menubar: false,
-                      toolbar: 'bold italic underline | strikethrough bullist numlist | undo redo | cut copy paste',
                       valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
                       setup: function(editor) {
                         view.editor = editor;

@@ -141,6 +141,7 @@ function prepareForEdit(form, width) {
 
   $(".editable", form).each(function(i) {
     window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
+    window.tinymce_textarea_count++;
     var id = 'editable-textarea-' + window.tinymce_textarea_count;
     var textarea = $("<textarea id='" + id + "' style='width:" + width + "px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
     var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
@@ -148,19 +149,16 @@ function prepareForEdit(form, width) {
     $(this).replaceWith(wrapper);
     prepareEditor(textarea);
   });
-  $(".replacebynextonedit", form).each(function() {
-    var replacement = $(this).next();
-    $(this).replaceWith(replacement);
-    replacement.show();
-  });
 }
 
 function prepareEditor(textarea) {
   tinymce.init({
     selector: '#' + textarea.attr('id'),
     plugins: "noneditable,paste",
+    external_plugins: {
+      hide_toolbar: '/js/tinymce_plugins/hide_toolbar.js'
+    },
     menubar: false,
-    toolbar: 'bold italic underline | strikethrough bullist numlist | undo redo | cut copy paste',
     valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
     setup: function(editor) {
       editor.on('init', function() {
