@@ -974,18 +974,11 @@
 
             var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
 
-            var options = new FieldOptionsView({
-                model: fstnameField,
-                options: optionOptions
-            });
-
             var closer = $('<div />');
             closer.addClass('design-view-action-participant-details-information-closer');
 
             div.append(closer);
             div.append(input.input());
-            div.append(options.el);
-
             return div;
         },
         detailsInformationField: function(name, type, placeholder) {
@@ -1037,11 +1030,6 @@
             if(name === 'sigpersnr' && sig.needsPersonalNumber())
                 optionOptions = _.without(optionOptions, 'optional');
 
-            var options = new FieldOptionsView({
-                model: field,
-                options : optionOptions
-            });
-
             if(!field.isValid(true))
                 input.input().addClass('redborder');
             else
@@ -1063,7 +1051,6 @@
 
             div.append(closer);
             div.append(input.input());
-            div.append(options.el);
 
             return div;
         },
@@ -1365,85 +1352,6 @@
             }
             div.append(txt);
             return div;
-        }
-    });
-
-    /**
-       model is field
-     **/
-    window.FieldOptionsView = Backbone.View.extend({
-        className: 'design-view-action-participant-details-information-field-options-wrapper',
-        initialize: function(args) {
-            var view = this;
-            view.options = args.options;
-            view.extraClass = args.extraClass;
-            var field = view.model;
-            _.bindAll(view);
-            view.render();
-            if(field) {
-                field.bind('change:obligatory', view.render);
-                field.bind('change:shouldbefilledbysender', view.render);
-            }
-        },
-        render: function() {
-            var view = this;
-            var field = view.model;
-            var selected;
-            if(!field) {
-                selected = 'optional';
-            } else if(field.isOptional()) {
-                selected = 'optional';
-            } else if(field.shouldbefilledbysender()) {
-                selected = 'sender';
-            } else {
-                selected = 'signatory';
-            }
-            var values = view.options;
-            var options = {
-                optional  : {abbrev : localization.designview.optionalFieldAbbrev,
-                             name: localization.designview.optionalField,
-                             value : 'optional'
-                            },
-                signatory : {name : localization.designview.mandatoryForRecipient,
-                             abbrev : localization.designview.mandatoryForRecipientAbbrev,
-                             value : 'signatory'
-                            },
-                sender    : {name : localization.designview.mandatoryForSender,
-                             abbrev: localization.designview.mandatoryForSenderAbbrev,
-                             value : 'sender'
-                            }
-            };
-            var select = new Select({
-                options: _.map(values, function(v) {
-                    return options[v];
-                }),
-                name: options[selected].abbrev,
-                cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
-                onSelect: function(v) {
-                    mixpanel.track('Choose obligation', {
-                        Subcontext: 'participant',
-                        Type: v
-                    });
-                    if(field) {
-                        if(v === 'optional') {
-                            field.makeOptional();
-                            field.authorObligatory = 'optional';
-                        } else if(v === 'signatory') {
-                            field.makeObligatory();
-                            field.setShouldBeFilledBySender(false);
-                            field.authorObligatory = 'signatory';
-                        } else if(v === 'sender') {
-                            field.makeObligatory();
-                            field.setShouldBeFilledBySender(true);
-                            field.authorObligatory = 'sender';
-                        }
-                        field.addedByMe = false;
-                    }
-                    return true;
-                }
-            });
-            view.$el.html(select.el());
-            return view;
         }
     });
 
