@@ -3,22 +3,22 @@
   Usage:
 
    var select = new Select({
-      name : "Option 1"              // Name on main label of select
+      name : "Option 1"              // Name on main button
       cssClass* : "select-1"         // Class to be added
-      expandSide* : "right"          // What direction shold it expand (default left, "left" or "right")
-      textWidth* : "100px"           // If set, unexpanded selectbox will not get much longer that this area
-      optionsWidth* : "200px"        // How long should be an area with options selection
-      onOpen* : function(){}         // Function to be called when box gets opened. Usefull when wanting to get options with AJAX (ask M)
+      expandSide* : "right"          // What direction should it expand ("left" or "right")
+      textWidth* : "100px"           // Unexpanded selectbox will not get much longer then given value. default "160px"
+      optionsWidth* : "200px"        // How long should be an expanded area
+      onOpen* : function(){}         // Function to be called when box gets opened. Usefull when wanting to get options with AJAX (ask M for example)
       color* : "red"                 // Color of text
       border* : "1px solid red"      // Border style
-      style :  "font-size :16px"     // Extra style aplied to main box
+      style* :  "font-size :16px"     // Extra style applied to main label
       onSelect* : function(v) {}     // Function to be called when value is selected. If can be overwitten by onSelect from options
-      onRemove* : function(v) {}     // If provided, remove button will be displayed over select. Functon will be executed when it will be clicked
+      onRemove* : function(v) {}     // If provided, remove (x) icon will be displayed over select. Functon will be executed when this icon will be clicked
       options: [
-                      { name : "Option 1" // Name on option labe
-                        value* : "1" // Value that will be propagated on select
-                        onSelect* : function(v) {} // Function to be called on selection. If not provided, function from main select will be used
-                        style : "font-size: 8px" // Extra styling of given option label
+                      { name : "Option 1" // Name on option label
+                        value* : "1" // Value that will be propagated to onSelect
+                        onSelect* : function(v) {} // Function to be called on selection. It overwrites top level function
+                        style* : "font-size: 8px" // Extra styling of label
                       },
                       { name : "Option 2"
                         value* : "2"
@@ -29,23 +29,21 @@
 
   Interface:
       .el()          // jQuery object to be appended somewere on a page
-      .open()        // Expand of select box. Note that it will be automaticly closed if mouse is not over it
+      .open()        // Expand select box. Note that it will be automaticly closed if mouse is not over it.
       .setName(name) // Change name on button
 
   Details:
     - It does not use <select> tag internally.
-    - On expand, clone of current el with expanded options is displayed over current el position.
+    - On expand, clone of current el with expanded options is displayed over current position.
       This way we can have selects withing scrollable areas, that don't make this areas expand.
-    - onSelect function must be provided either for whole Select of for all options
-
-
-
+    - onSelect function must be provided either for whole select of for all options
 */
+
 (function( window){
 
 
 // Model for individual options
-window.SelectOptionModel = Backbone.Model.extend({
+var SelectOptionModel = Backbone.Model.extend({
   defaults : {
       onSelect : function(){return false;},
       style : ""
@@ -66,7 +64,7 @@ window.SelectOptionModel = Backbone.Model.extend({
 });
 
 // Model for whole select
-window.SelectModel = Backbone.Model.extend({
+var SelectModel = Backbone.Model.extend({
   defaults : {
       name  : "",
       options : [],
@@ -83,7 +81,7 @@ window.SelectModel = Backbone.Model.extend({
   },
   initialize: function(args){
       var model = this;
-      //Change static options to SelectOptionModel. Propagate onSelect function if it's not provided by option
+      //Change static options to SelectOptionModel. Propagate onSelect function if it's not provided for option
       var options = _.map(args.options,function(e) {
                         e.onSelect = e.onSelect || args.onSelect;
                         var option = new SelectOptionModel(e);
@@ -155,7 +153,7 @@ window.SelectModel = Backbone.Model.extend({
 });
 
 //View for individual options
-window.SelectOptionView = Backbone.View.extend({
+var SelectOptionView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.render();
