@@ -73,7 +73,7 @@
 
 
 var DesignViewTabsView = function(args) {
-  var model = args.model
+  var model = args.model;
   var document = model.document();
   var participantsView = new DesignViewParticipantsView({ model : model});
   var draggablesView   = new DesignViewDraggablesView({ model : model});
@@ -147,13 +147,13 @@ var DesignViewTabsView = function(args) {
                   if (document.mainfile().ready()) {
                      setTimeout(function() { tabs.activate(tabs.activeTab() || tab1); }, 800);
                   }
-                }
+                };
                 document.mainfile().bind('change', updateOnReady);
               }
           }
-       })
+       });
   tab2.setAvailable(document.mainfile() != undefined);
-  this.el = function() { return tabs.el();}
+  this.el = function() { return tabs.el();};
 
 };
 
