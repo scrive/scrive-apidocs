@@ -279,33 +279,25 @@ var TabsView = Backbone.View.extend({
         }
         var toHide = visible.not(newvisible);
         var toShow = newvisible.not(visible);
+        var hideMethod = model.slideEffect() ? function(c) { toHide.slideUp(200,c} : function(c) { toHide.hide(0,c};
+        var showMethod =  model.slideEffect() ? function(c) { toShow.slideDown(200,c} : function(c) { toShow.show(0,c};
 
         if (toHide.size() != 0 || toShow.size() != 0) {
 
           var activeTab = this.model.activeTab();
-          if (model.slideEffect()) {
-            if (toHide.size() == 0)
-              toShow.slideDown(200,self.postRenderTabEvents);
-            else if (toShow.size() == 0)
-              toHide.slideUp(200,self.postRenderTabEvents);
-            else
-              toHide.slideUp(200,function() {
-                toShow.slideDown(200,self.postRenderTabEvents);
-              });
-            return this;
+
+          if (toHide.size() != 0 || toShow.size() != 0) {
+
+            var activeTab = this.model.activeTab();
+              if (toHide.size() == 0)
+                showMethod(self.postRenderTabEvents);
+              else if (toShow.size() == 0)
+                hideMethod(self.postRenderTabEvents);
+              else
+                hideMethod(function() {showMethod(self.postRenderTabEvents);} );
+                return this;
           }
-          else {
-            if (toHide.size() == 0)
-              toShow.show(0,self.postRenderTabEvents);
-            else if (toShow.size() == 0)
-              toHide.hide(0,self.postRenderTabEvents);
-            else
-              toHide.hide(0,function() {
-                toShow.show(0,self.postRenderTabEvents);
-              });
-            return this;
-          }
-      }
+        }
     }
 });
 

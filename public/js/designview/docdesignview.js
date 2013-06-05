@@ -77,7 +77,7 @@ var DesignViewTabsView = function(args) {
   var document = model.document();
   var participantsView = new DesignViewParticipantsView({ model : model});
   var draggablesView   = new DesignViewDraggablesView({ model : model});
-  var processView = DesignViewProcessView({ model : model });
+  var processView = new DesignViewProcessView({ model : model });
   var tab1Name = $("<div class='design-view-tab-text'/>")
                       .text(localization.designview.editParticipants);
   var tab2Name = $("<div class='design-view-tab-text'/>")
@@ -138,7 +138,7 @@ var DesignViewTabsView = function(args) {
       slideEffect : true
       });
   document.bind('change:ready change:file', function() {
-          tab2.setAvailable(document.mainfile() != undefined);}
+          tab2.setAvailable(document.mainfile() != undefined);
           if (document.ready()) {
               if (document.mainfile() == undefined)
                 tabs.deactive();
