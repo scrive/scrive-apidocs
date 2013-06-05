@@ -227,7 +227,7 @@ var SelectView = Backbone.View.extend({
                             model.toggleExpand();
                             return false;
                         })
-                    )
+                    );
         }
         else
             {
@@ -279,8 +279,8 @@ window.Select = function(args) {
           var view = new SelectView({model : model, el : $("<div class='select'/>")});
 
           // Export interface
-          this.setName = function(name) { model.setName(name);}
-          this.open = function(name) { model.expand();}
+          this.setName = function(name) { model.setName(name);};
+          this.open = function(name) { model.expand();};
           this.el = function() {return $(view.el);};
 
 };
