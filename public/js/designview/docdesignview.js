@@ -77,7 +77,7 @@ var DesignViewTabsView = function(args) {
   var document = model.document();
   var participantsView = new DesignViewParticipantsView({ model : model});
   var draggablesView   = new DesignViewDraggablesView({ model : model});
-  var processView = new DesignViewProcessView({ model : model });
+  var processView      = new DesignViewProcessView({ model : model });
   var tab1Name = $("<div class='design-view-tab-text'/>")
                       .text(localization.designview.editParticipants);
   var tab2Name = $("<div class='design-view-tab-text'/>")

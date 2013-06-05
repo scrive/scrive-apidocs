@@ -10,7 +10,7 @@
     /**
         model is DocViewModel
     **/
-    var DesignViewProcessView = Backbone.View.extend({
+    window.DesignViewProcessView = Backbone.View.extend({
         className: 'design-view-action-process',
         initialize: function(args) {
             var view = this;
@@ -433,9 +433,5 @@
             return view;
         }
     });
-
-    window.DesignViewProcessView = function(args) {
-        return new DesignViewProcessView(args);
-    };
 
 }(window));

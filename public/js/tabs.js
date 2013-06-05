@@ -279,8 +279,8 @@ var TabsView = Backbone.View.extend({
         }
         var toHide = visible.not(newvisible);
         var toShow = newvisible.not(visible);
-        var hideMethod = model.slideEffect() ? function(c) { toHide.slideUp(200,c} : function(c) { toHide.hide(0,c};
-        var showMethod =  model.slideEffect() ? function(c) { toShow.slideDown(200,c} : function(c) { toShow.show(0,c};
+        var hideMethod =  (model.slideEffect() ? function(c) { toHide.slideUp(200,c)} : function(c) { toHide.hide(0,c)}) ;
+        var showMethod =  (model.slideEffect() ? function(c) { toShow.slideDown(200,c)} : function(c) { toShow.show(0,c)}) ;
 
         if (toHide.size() != 0 || toShow.size() != 0) {
 
