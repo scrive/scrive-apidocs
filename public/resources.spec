@@ -1,11 +1,8 @@
-
-ignore  tiny_mce/tiny_mce.js
-ignore  tiny_mce/tiny_mce_src.js
-ignore  tiny_mce/tiny_mce_popup.js
+ignore  js/tinymce_plugins/hide_toolbar.js
 ignore  tiny_mce/langs
 ignore  tiny_mce/plugins
 ignore  tiny_mce/themes
-ignore  tiny_mce/utils
+ignore  tiny_mce/skins
 ignore  libs/recurly/recurly.css
 ignore  api-demo
 ignore  less/branding/buttons.less
@@ -34,6 +31,7 @@ set systemPage
  css css/calendar.css
  css css/colorpicker.css
  css css/jquery.mCustomScrollbar.css
+ less less/tinymce.less
  less less/utils.less
  less less/branding/index.less
  less less/document-pages.less
@@ -65,11 +63,11 @@ set systemPage
  less less/designview/process.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
+ jsx  tiny_mce/tinymce.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js
  js   libs/jquery.hashchange.js
- jsx  tiny_mce/jquery.tinymce.js
  js   libs/colorpicker.js
  js   libs/json2.js
  js   libs/jstz.min.js

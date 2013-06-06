@@ -139,31 +139,32 @@ function alreadyClicked(button) {
 function prepareForEdit(form, width) {
   var width = width == undefined ? 540 : width;
 
-  $(".editable", form).each(function() {
-    var textarea = $("<textarea style='width:" + width + "px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
+  $(".editable", form).each(function(i) {
+    window.tinymce_textarea_count = window.tinymce_textarea_count || 0;
+    window.tinymce_textarea_count++;
+    var id = 'editable-textarea-' + window.tinymce_textarea_count;
+    var textarea = $("<textarea id='" + id + "' style='width:" + width + "px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
     var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
     wrapper.append(textarea);
     $(this).replaceWith(wrapper);
-    var editor = prepareEditor(textarea);
-  });
-  $(".replacebynextonedit", form).each(function() {
-    var replacement = $(this).next();
-    $(this).replaceWith(replacement);
-    replacement.show();
+    prepareEditor(textarea);
   });
 }
 
 function prepareEditor(textarea) {
-  return textarea.tinymce({
-    script_url: '/tiny_mce/tiny_mce.js',
-    theme: "advanced",
-    theme_advanced_toolbar_location: "top",
-    theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-    theme_advanced_buttons2: "",
-    convert_urls: false,
-    theme_advanced_toolbar_align: "left",
+  tinymce.init({
+    selector: '#' + textarea.attr('id'),
     plugins: "noneditable,paste",
-    valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
+    external_plugins: {
+      hide_toolbar: '/js/tinymce_plugins/hide_toolbar.js'
+    },
+    menubar: false,
+    valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
+    setup: function(editor) {
+      editor.on('init', function() {
+        $(editor.getContainer()).find('.mce-btn button').css('padding', '4px 5px');
+      });
+    }
   });
 }
 

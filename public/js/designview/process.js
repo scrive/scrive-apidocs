@@ -341,8 +341,11 @@
 
             var wrapper = $('<div />');
             wrapper.addClass('design-view-action-process-right-column-invitation-wrapper');
+	    if (!view.emaildeliveryused) {
+	      wrapper.addClass('disabled');
+	    }
 
-            var textarea = $('<textarea />');
+            var textarea = $('<textarea id="design-view-action-process-right-column-invitation-editor"/>');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
             textarea.hide();
 
@@ -389,40 +392,34 @@
 	    if (!view.emaildeliveryused) {
 		view.invitationEditor.attr('disabled', '').val('<i>' + localization.designview.editMessagePlaceholder + '</i>');
 	    }
-            view.invitationEditor.tinymce({
-                script_url: '/tiny_mce/tiny_mce.js',
-                theme: "advanced",
-                theme_advanced_toolbar_location: "external",
-                theme_advanced_buttons1: "",
-                //theme_advanced_buttons2: "",
+            tinymce.init({
+	        selector: '#design-view-action-process-right-column-invitation-editor',
                 width: 300,
-                convert_urls: false,
-                theme_advanced_toolbar_align: "middle",
+                menubar: false,
                 plugins: "noneditable,paste",
+                external_plugins: {
+                  hide_toolbar: '/js/tinymce_plugins/hide_toolbar.js'
+                },
 		readonly: !view.emaildeliveryused,
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul,i[style<_color: #AAAAAA;]",
                 width: cwidth, // automatically adjust for different swed/eng text
-                oninit : function(ed) {
-                    $('.mceExternalToolbar').css('z-index','-1000');
-                       $(ed.getDoc()).blur(function(e) {
-			   if (view.emaildeliveryused) {
-                               doc.setInvitationMessage(ed.getBody().innerHTML);
-			   }
+                setup: function(editor) {
+                  editor.on('init', function() {
+                    $(editor.getDoc()).blur(function() {
+		      if (view.emaildeliveryused) {
+                        doc.setInvitationMessage(editor.getBody().innerHTML);
+		      }
                     });
 		    if (!view.emaildeliveryused) {
-         		ed.getWin().document.body.style.color = '#AAAAAA';
-			$('.mceLayout').css({'border-left': '0px',
-					     'border-right': '0px'});
-			$('.mceIframeContainer').css({'border-top': '0px',
-					     'border-bottom': '0px'});
+         	      editor.getWin().document.body.style.color = '#AAAAAA';
 		    }
-                },
-                onchange_callback  : function (inst) {
-                    doc.setInvitationMessage(inst.getBody().innerHTML);
+                  });
+                  editor.on('change', function () {
+                    doc.setInvitationMessage(editor.getBody().innerHTML);
+                  });
                 }
             });
 
-            this.tinyIsReady = true;
             return view;
         }
     });

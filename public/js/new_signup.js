@@ -23,6 +23,10 @@
     buttoncolorclass: function() {
      return this.get("buttoncolorclass");
     },
+    clear: function() {
+      this.setEmail('');
+      this.trigger('clear');
+    },
     signup: function() {
       var model = this;
       mixpanel.track('Submit signup');
@@ -43,6 +47,7 @@
             });
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;
             new FlashMessage({content: content, color: 'green'});
+            model.clear();
           } else if (resp.sent === false) {
             mixpanel.track('Error',
                            {Message : 'signup failed'});
@@ -55,6 +60,8 @@
 
   var SignupView = Backbone.View.extend({
     initialize: function() {
+      _.bindAll(this, 'render');
+      this.model.bind('clear', this.render);
       this.render();
     },
     validationCallback: function(t, _e , v) {
@@ -64,6 +71,7 @@
       $(".validate-message",this.el).remove();
     },
     render: function () {
+        $(this.el).html('');
         $("#page-signup").removeClass("button-red").addClass("button-gray");
         var self = this;
         var model = this.model;
@@ -114,6 +122,8 @@
 
   var SignupBrandedView = Backbone.View.extend({
     initialize: function() {
+      _.bindAll(this, 'render');
+      this.model.bind('clear', this.render);
       this.render();
     },
     validationCallback: function(t, e, v) {
@@ -123,6 +133,7 @@
       $(".validate-message",this.el).remove();
     },
     render: function () {
+        $(this.el).html('');
         $("#page-signup").removeClass("button-red").addClass("button-gray");
         var self = this;
         var model = this.model;
