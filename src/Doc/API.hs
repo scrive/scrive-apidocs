@@ -287,7 +287,7 @@ apiCallReject did slid = api $ do
           `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
       Just doc' <- dbQuery $ GetDocumentByDocumentID did
       let Just sl = getSigLinkFor doc' slid
-      _ <- addSignStatRejectEvent doc' sl
+
       lift $ postDocumentRejectedChange doc' slid method
       Just doc'' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON muid False True True Nothing Nothing doc''
@@ -371,12 +371,10 @@ apiCallDelete did =  api $ do
   when (not haspermission) $ do
          throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
   dbUpdate $ ArchiveDocument (userid user) did actor
-  _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user) (ctxtime ctx)
+
   case (documentstatus doc) of
        Preparation -> do
          _ <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
-         when_ (isJust $ getSigLinkFor doc user) $
-             addSignStatPurgeEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user)  (ctxtime ctx)
        _ -> return ()
   Accepted <$> (runJSONGenT $ return ())
 

@@ -88,8 +88,7 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
           dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh Nothing screenshots actor
           Just doc <- dbQuery $ GetDocumentByDocumentID did
-          let Just sl = getSigLinkFor doc slid
-          _ <- addSignStatSignEvent doc sl
+
           return doc
         return $ case mdoc of
           Nothing  -> Left $ DBActionNotAvailable "Signing with email/pad failed"
@@ -113,8 +112,6 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
           dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
           Just doc <- dbQuery $ GetDocumentByDocumentID did
-          let Just sl = getSigLinkFor doc slid
-          _ <- addSignStatSignEvent doc sl
           return doc
         return $ case mdoc of
           Nothing -> Left $ DBActionNotAvailable "Signing with Eleg failed"
@@ -135,8 +132,6 @@ authorSignDocument actor did msigninfo timezone screenshots = onlyAuthor did $ \
     -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
     dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
     Just doc <- dbQuery $ GetDocumentByDocumentID did
-    let Just sl = getSigLinkFor doc signatorylinkid
-    _ <- addSignStatSignEvent doc sl
     return doc
   return $ case mdoc of
     Nothing  -> Left $ DBActionNotAvailable "authorSignDocument failed"
@@ -181,8 +176,6 @@ authorSignDocumentFinal did msigninfo screenshots = onlyAuthor did $ \olddoc -> 
     dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
     dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID did
-    let Just sl = getSigLinkFor doc signatorylinkid
-    _ <- addSignStatSignEvent doc sl
     return doc
   return $ case mdoc of
     Nothing  -> Left $ DBActionNotAvailable "authorSignDocumentFinal failed"

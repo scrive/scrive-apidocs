@@ -105,8 +105,6 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
   sendInvitationEmailsToViewers ctx document'
 
   _ <- addDocumentSendStatEvents (documentid document') apistring
-  forM_ (documentsignatorylinks document') $ \sl ->
-    addSignStatInviteEvent document' sl (ctxtime ctx)
 
 postDocumentPendingChange :: Kontrakcja m => Document -> Document -> String -> m ()
 postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistring = do

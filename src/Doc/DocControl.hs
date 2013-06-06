@@ -259,7 +259,7 @@ handleSignShow documentid
       _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
            (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
       document' <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-      _ <- addSignStatLinkEvent document' invitedlink
+
 
       ctx <- getContext
       ad <- getAnalyticsData

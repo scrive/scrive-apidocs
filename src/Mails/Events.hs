@@ -124,13 +124,7 @@ handleOpenedInvitation doc signlinkid email muid = do
   now  <- getMinutesTime
   success <- dbUpdate $ MarkInvitationRead (documentid doc) signlinkid
           (mailSystemActor now muid email signlinkid)
-  when success $ do
-    Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-    case getSigLinkFor d signlinkid of
-      Just sl -> do
-        _ <- addSignStatOpenEvent d sl
-        return ()
-      _ -> return ()
+  return ()
 
 handleDeferredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> String -> m ()
 handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
