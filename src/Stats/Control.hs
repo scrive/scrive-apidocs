@@ -20,9 +20,6 @@ module Stats.Control
          addUserStatAPINewUser,
          handleDocStatsCSV,
          handleUserStatsCSV,
-         getUsageStatsForUser,
-         getUsageStatsForCompany,
-         getDocStatsForUser,
          getUsersAndStatsInv,
          addSignStatInviteEvent,
          addSignStatReceiveEvent,
@@ -234,16 +231,6 @@ calculateCompanyDocStats events =
       totalByDay = map (setUID0 . sumCStats) byDay
   in concat $ zipWith (\a b->a++[b]) userTotalsByDay totalByDay
 
-calculateCompanyDocStatsByMonth :: [(Int, UserID, [Int])] -> [(Int, UserID, [Int])]
-calculateCompanyDocStatsByMonth events =
-  let monthOnly = [((100 * (a `div` 100)), b, c) | (a, b, c) <- events]
-      byMonth = groupWith (\(a,_,_) -> a) $ reverse $ sortWith  (\(a,_,_) -> a) monthOnly
-      byUser = map (groupWith (\(_,a,_) ->a) . sortWith (\(_,a,_)->a)) byMonth
-      userTotalsByMonth = map (map sumCStats) byUser
-      setUID0 (a,_,s) = (a,unsafeUserID 0, s)
-      totalByMonth = map (setUID0 . sumCStats) byMonth
-  in concat $ zipWith (\a b->a++[b]) userTotalsByMonth totalByMonth
-
 -- some utility functions
 
 falseOnError :: MonadBaseControl IO m => m Bool -> m Bool
@@ -387,65 +374,6 @@ getUsersAndStatsInv filters sorting pagination = do
             DocStatClose  -> (asInt time, [amount, 0])
             DocStatCreate -> (asInt time, [0, amount])
             _             -> (asInt time, [0,      0])
-
-
-getDocStatsForUser :: Kontrakcja m => UserID -> m DocStats
-getDocStatsForUser uid = do
-  Context{ctxtime} <- getContext
-  let sixmonthsago = 6 `monthsBefore` ctxtime
-  statEvents <- tuplesFromDocStatsForUser <$> dbQuery (GetDocStatEventsByUserID uid sixmonthsago)
-  return $ calculateDocStats ctxtime statEvents
-
-tuplesFromDocStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
-tuplesFromDocStatsForUser = catMaybes . map toTuple
-  where toTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
-          DocStatClose   -> Just (asInt seTime, [seAmount, 0])
-          DocStatCreate  -> Just (asInt seTime, [0, seAmount])
-          _              -> Nothing
-
--- For Usage Stats tab in Account
-getUsageStatsForUser :: Kontrakcja m => UserID -> Int -> Int -> m ([(Int, [Int])], [(Int, [Int])])
-getUsageStatsForUser uid som sixm = do
-  now <- ctxtime <$> getContext
-  let sixmonthsago = 6 `monthsBefore` now
-  statEvents <- tuplesFromUsageStatsForUser <$> dbQuery (GetDocStatEventsByUserID uid sixmonthsago)
-  Log.stats $ "sixm: " ++ show sixm
-  Log.stats $ "stat events: " ++ show (length statEvents)
-  let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) statEvents
-      statsByMonth = calculateStatsByMonth $ filter (\s -> (fst s) >= sixm) statEvents
-  Log.stats $ "stats by month: " ++ show (length statsByMonth)
-  return (statsByDay, statsByMonth)
-
-getUsageStatsForCompany :: Kontrakcja m => CompanyID -> Int -> Int -> m ([(Int, String, [Int])], [(Int, String, [Int])])
-getUsageStatsForCompany cid som sixm = do
-  now <- ctxtime <$> getContext
-  let sixmonthsago = 6 `monthsBefore` now
-  statEvents <- tuplesFromUsageStatsForCompany <$> dbQuery (GetDocStatEventsByCompanyID cid sixmonthsago)
-  let statsByDay = calculateCompanyDocStats $ filter (\(t,_,_)-> t >= som) statEvents
-      statsByMonth = calculateCompanyDocStatsByMonth $ filter (\(t,_,_) -> t >= sixm) statEvents
-  fullnamesDay <- convertUserIDToFullName [] statsByDay
-  fullnamesMonth <- convertUserIDToFullName [] statsByMonth
-  return (fullnamesDay, fullnamesMonth)
-
-tuplesFromUsageStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
-tuplesFromUsageStatsForUser = catMaybes . map toTuple
-  where toTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
-          DocStatEmailSignatures -> Just (asInt seTime, [seAmount, 0, 0])
-          DocStatElegSignatures  -> Just (asInt seTime, [seAmount, 0, 0])
-          DocStatPadSignatures   -> Just (asInt seTime, [seAmount, 0, 0])
-          DocStatClose           -> Just (asInt seTime, [0, seAmount, 0])
-          DocStatSend            -> Just (asInt seTime, [0, 0, seAmount])
-          _                      -> Nothing
-
-tuplesFromUsageStatsForCompany :: [DocStatEvent] -> [(Int, UserID, [Int])]
-tuplesFromUsageStatsForCompany = catMaybes . map toTuple
-  where toTuple (DocStatEvent {seTime, seUserID, seQuantity, seAmount}) = case seQuantity of
-          DocStatEmailSignatures -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
-          DocStatElegSignatures  -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
-          DocStatPadSignatures   -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
-          DocStatClose           -> Just (asInt seTime, seUserID, [0, seAmount, 0])
-          DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount])
-          _                      -> Nothing
 
 
 {------ Sign Stats ------}

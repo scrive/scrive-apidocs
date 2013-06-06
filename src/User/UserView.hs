@@ -39,10 +39,8 @@ module User.UserView (
     userBasicFields,
     menuFields,
 
-    userStatsDayToJSON,
-    userStatsMonthToJSON,
-    companyStatsDayToJSON,
-    companyStatsMonthToJSON
+    userStatsToJSON,
+    companyStatsToJSON,
     ) where
 
 import Control.Applicative ((<$>))
@@ -58,9 +56,9 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.Model
 import MinutesTime
+import Data.List
 import Text.JSON
 import Text.JSON.Gen
-import Data.Either
 import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Text.StringTemplates.Fields as F
@@ -141,67 +139,47 @@ companyJSON ctx company mcmailapi editable = runJSONGenT $ do
                             Just cmailapi -> mailAPIInfoJSON cmailapi
     valueM "companyui" $ companyUIJson ctx company editable
 
-userStatsDayToJSON :: [(Int, [Int])] -> [JSValue]
-userStatsDayToJSON = rights . map f
+userStatsToJSON :: (MinutesTime -> String) -> [UserUsageStats] -> [JSValue]
+userStatsToJSON formatTime uuss = map tojson uuss
   where
-    f (d, s:c:i:_) = Right . runJSONGen . object "fields" $ do
-      value "date" (showAsDate d)
-      value "closed" c
-      value "sent" i
-      value "signatures" s
-    f _ = Left "Bad stat"
+    tojson uus = runJSONGen . object "fields" $ do
+      value "date" (formatTime (fst (uusTimeSpan uus)))
+      value "closed" (uusDocumentsClosed uus)
+      value "sent" (uusDocumentsSent uus)
+      value "signatures" (uusSignaturesClosed uus)
 
-userStatsMonthToJSON :: [(Int, [Int])] -> [JSValue]
-userStatsMonthToJSON = rights . map f
+companyStatsToJSON :: (MinutesTime -> String) -> String -> [UserUsageStats] -> [JSValue]
+companyStatsToJSON formatTime totalText uuss = map f summarized
   where
-    f (d, s:c:i:_) = Right . runJSONGen . object "fields" $ do
-      value "date" (showAsMonth d)
-      value "closed" c
-      value "sent" i
-      value "signatures" s
-    f _ = Left "Bad stat"
-
-companyStatsDayToJSON :: String -> [(Int, String, [Int])] -> [JSValue]
-companyStatsDayToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
-  where
-    f (d, _, s:c:i:_) = Right $ runJSONGen $ do
+    uusGrouped :: [[UserUsageStats]]
+    uusGrouped = groupBy sameTimespan uuss
+    summarized :: [UserUsageStats]
+    summarized = map summarize uusGrouped
+    summarize :: [UserUsageStats] -> UserUsageStats
+    summarize uuss' = foldl1' addTwo uuss'
+    addTwo u1 u2 = u1 { uusDocumentsSent    = uusDocumentsSent u1    + uusDocumentsSent u2
+                      , uusDocumentsClosed  = uusDocumentsClosed u1  + uusDocumentsClosed u2
+                      , uusSignaturesClosed = uusSignaturesClosed u1 + uusSignaturesClosed u2
+                      }
+    sameTimespan u1 u2 = uusTimeSpan u1 == uusTimeSpan u2
+    f uus = runJSONGen $ do
       object "fields" $ do
-        value "date" (showAsDate d)
-        value "closed" c
-        value "sent" i
-        value "name" ts
-        value "signatures" s
+        value "date" (formatTime (fst (uusTimeSpan uus)))
+        value "closed" (uusDocumentsClosed uus)
+        value "sent" (uusDocumentsSent uus)
+        value "signatures" (uusSignaturesClosed uus)
+        value "name" totalText
       objects "subfields" $ do
-         [do value "date" (showAsDate d')
-             value "closed" c'
-             value "sent" i'
-             value "name" n'
-             value "signatures" s'
-           | (d',n',s':c':i':_) <- ls,
-             d' == d,
-             n' /= "Total"]
-    f _ = Left "Bad stat"
+         [do value "date" (formatTime (fst (uusTimeSpan uus')))
+             value "closed" (uusDocumentsClosed uus')
+             value "sent" (uusDocumentsSent uus')
+             value "signatures" (uusSignaturesClosed uus')
+             value "name" ((\(_,_,n) -> n) <$> uusUser uus')
+             value "email" ((\(_,e,_) -> e) <$> uusUser uus')
+           | uus' <- uuss,
+             uusTimeSpan uus' == uusTimeSpan uus]
 
-companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> [JSValue]
-companyStatsMonthToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
-  where
-    f (d, _, s:c:i:_) = Right $ runJSONGen $ do
-      object "fields" $ do
-        value "date" (showAsMonth d)
-        value "closed" c
-        value "sent" i
-        value "name" ts
-        value "signatures" s
-      objects "subfields" $ do
-        [do value "date" (showAsMonth d')
-            value "closed" c'
-            value "sent" i'
-            value "name" n'
-            value "signatures" s'
-          | (d',n',s':c':i':_) <- ls,
-            d' == d,
-            n' /= "Total"]
-    f _ = Left "Bad stat"
+
 
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplate_ "pageAcceptTOS"

@@ -11,6 +11,7 @@ import User.Model
 import TestingUtil
 import TestKontra
 import Data.List
+import Control.Applicative
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
@@ -38,6 +39,10 @@ userStateTests env = testGroup "UserState" [
     ]
   , testGroup "addUser" [
       testThat "adding a repeated email returns nothing" env test_addUser_repeatedEmailReturnsNothing
+    ]
+  , testGroup "user usage statistics" [
+      testThat "can fetch statistics by user id" env test_userUsageStatisticsByUser,
+      testThat "can fetch statistics by company id" env test_userUsageStatisticsByCompany
     ]
   , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" env test_getCompanyAccounts
   , testThat "GetInviteInfo/SetInviteInfo works" env test_getInviteInfo
@@ -141,6 +146,32 @@ test_getCompanyAccounts = do
     return user
   company_accounts <- dbQuery $ GetCompanyAccounts cid
   assertBool "Company accounts returned in proper order (sorted by email)" $ sortByEmail users == company_accounts
+
+test_userUsageStatisticsByUser :: TestEnv ()
+test_userUsageStatisticsByUser = do
+  Just user <- addNewUser "Emily" "Green" "emily@green.com"
+  res <- dbQuery $ GetUserUsageStats (Just (userid user)) Nothing [("2012-12-01"::String,"2012-12-02"),
+                                                                   ("2012-12-02","2012-12-03"),
+                                                                   ("2012-12-04","2012-12-05"),
+                                                                   ("2012-12-06","2012-12-07")]
+  assertEqual "Stats were returned for all periods requested" 4 (length res)
+  forM_ res $ \r ->
+     assertEqual "Stats were for the proper user" (Just (userid user)) ((\(a,_,_) -> a) <$> uusUser r)
+
+test_userUsageStatisticsByCompany :: TestEnv ()
+test_userUsageStatisticsByCompany = do
+  Company{companyid = cid} <- dbUpdate $ CreateCompany
+  Just _user1 <- addNewCompanyUser "Emily" "Green" "emily@green.com" cid
+  Just _user2 <- addNewCompanyUser "Emily" "Green" "emil2y@green.com" cid
+  res <- dbQuery $ GetUserUsageStats Nothing (Just cid) [("2012-12-01"::String,"2012-12-02"),
+                                                         ("2012-12-02","2012-12-03"),
+                                                         ("2012-12-04","2012-12-05"),
+                                                         ("2012-12-06","2012-12-07")]
+
+  forM_ res $ \r ->
+     assertEqual "Stats were for the proper company" (Just cid) ((\(a,_) -> a) <$> uusCompany r)
+  assertEqual "Stats were returned for all periods requested times users" (4*2) (length res)
+
 
 test_getInviteInfo :: TestEnv ()
 test_getInviteInfo = do

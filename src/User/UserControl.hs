@@ -178,30 +178,35 @@ handleUsageStatsJSONForUserDays = do
   Context{ctxtime, ctxmaybeuser} <- getContext
   totalS <- renderTemplate_ "statsOrgTotal"
   user <- guardJust ctxmaybeuser
-  let som  = asInt $ daysBefore 30 ctxtime
-      sixm = asInt $ monthsBefore 6 ctxtime
+  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
+                     | daysBack <- [0 .. 30]
+                     , t <- [daysBefore daysBack ctxtime]
+                    ]
   if useriscompanyadmin user && isJust (usercompany user)
     then do
-      (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
-      return $ singlePageListToJSON $ companyStatsDayToJSON totalS statsByDay
+      stats <- dbQuery $ GetUserUsageStats Nothing (usercompany user) timespans
+      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m-%d") totalS stats
     else do
-      (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
-      return $ singlePageListToJSON $ userStatsDayToJSON statsByDay
+      stats <- dbQuery $ GetUserUsageStats (Just $ userid user) Nothing timespans
+      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m-%d") stats
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
   Context{ctxtime, ctxmaybeuser} <- getContext
   totalS <- renderTemplate_ "statsOrgTotal"
   user <- guardJust ctxmaybeuser
-  let som  = asInt $ daysBefore 30 ctxtime
-      sixm = asInt $ monthsBefore 6 ctxtime
+  let timespans = [ (formatMinutesTime "%Y-%m-01" t, formatMinutesTime "%Y-%m-01" (monthsBefore (-1) t))
+                     | monthsBack <- [0 .. 6]
+                     , t <- [monthsBefore monthsBack ctxtime]
+                    ]
   if useriscompanyadmin user && isJust (usercompany user)
     then do
-    (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
-    return $ singlePageListToJSON $ companyStatsMonthToJSON totalS statsByMonth
+      stats <- dbQuery $ GetUserUsageStats Nothing (usercompany user) timespans
+      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
     else do
-    (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
-    return $ singlePageListToJSON $ userStatsMonthToJSON statsByMonth
+      stats <- dbQuery $ GetUserUsageStats (Just $ userid user) Nothing timespans
+      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m") stats
+
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do

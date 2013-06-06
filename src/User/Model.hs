@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fcontext-stack=50 #-}
+{-# LANGUAGE ExistentialQuantification #-}
 module User.Model (
     module User.Lang
   , module User.Password
@@ -10,6 +11,7 @@ module User.Model (
   , User(..)
   , UserInfo(..)
   , UserSettings(..)
+  , UserUsageStats(..)
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByIDIncludeDeleted(..)
@@ -17,6 +19,7 @@ module User.Model (
   , GetCompanyAccounts(..)
   , GetCompanyAdmins(..)
   , GetInviteInfo(..)
+  , GetUserUsageStats(..)
   , SetUserCompany(..)
   , DeleteUser(..)
   , RemoveInactiveUser(..)
@@ -74,6 +77,15 @@ $(enumDeriveConvertible ''SignupMethod)
 
 instance FromReqURI SignupMethod where
   fromReqURI = maybeRead
+
+data UserUsageStats = UserUsageStats
+                    { uusTimeSpan         :: (MinutesTime,MinutesTime)
+                    , uusUser             :: Maybe (UserID, String, String)
+                    , uusCompany          :: Maybe (CompanyID, String)
+                    , uusDocumentsSent    :: !Int
+                    , uusDocumentsClosed  :: !Int
+                    , uusSignaturesClosed :: !Int
+                    } deriving (Eq, Ord, Show)
 
 -- data structures
 data InviteInfo = InviteInfo {
@@ -394,6 +406,86 @@ instance MonadDB m => DBUpdate m SetUserCompanyAdmin Bool where
       Just _ -> kRun01 $ SQL
         "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE"
         [toSql iscompanyadmin, toSql uid]
+
+fetchUserUsageStats :: MonadDB m => m [UserUsageStats]
+fetchUserUsageStats = kFold decoder []
+  where
+    decoder acc
+            time_begin time_end
+            maybe_company_id maybe_company_name
+            maybe_user_id maybe_user_email maybe_user_name
+            documents_sent
+            documents_closed
+            signatures_closed
+            = UserUsageStats
+              { uusTimeSpan         = (time_begin, time_end)
+              , uusUser             = (,,) <$> maybe_user_id <*> maybe_user_email <*> maybe_user_name
+              , uusCompany          = (,) <$> maybe_company_id <*> maybe_company_name
+              , uusDocumentsSent    = documents_sent
+              , uusDocumentsClosed  = documents_closed
+              , uusSignaturesClosed = signatures_closed
+              } : acc
+
+data GetUserUsageStats = forall tm . (Convertible tm SqlValue) => GetUserUsageStats (Maybe UserID) (Maybe CompanyID) [(tm,tm)]
+instance MonadDB m => DBQuery m GetUserUsageStats [UserUsageStats] where
+  query (GetUserUsageStats uid cid timespans) = do
+   let (timespans2 :: SQL) = sqlConcatComma $ map (\(beg,end) -> "(" <?> beg <> "::TIMESTAMPTZ, " <?> end <> ":: TIMESTAMPTZ)") timespans
+   kRun_ $ sqlSelect "companies FULL JOIN users ON companies.id = users.company_id" $ do
+     sqlFrom $ ", (VALUES" <+> timespans2 <+> ") AS time_spans(b,e)"
+     sqlResult "time_spans.b :: TIMESTAMPTZ"
+     sqlResult "time_spans.e :: TIMESTAMPTZ"
+     sqlResult "companies.id AS \"Company ID\""
+     sqlResult "companies.name AS \"Company Name\""
+     sqlResult "users.id AS \"User ID\""
+     sqlResult "users.email AS \"User Email\""
+     sqlResult "users.first_name || ' ' || users.last_name AS \"User Name\""
+     sqlResult $ "(SELECT count(*)"
+            <+> "   FROM documents"
+            <+> "  WHERE EXISTS (SELECT TRUE"
+            <+> "                  FROM signatory_links"
+            <+> "                 WHERE signatory_links.is_author"
+            <+> "                   AND users.id = signatory_links.user_id"
+            <+> "                   AND signatory_links.document_id = documents.id"
+            <+> "                   AND documents.invite_time BETWEEN time_spans.b AND time_spans.e)"
+            <+> ") AS \"Docs sent\""
+     sqlResult $ "(SELECT count(*)"
+             <+> "   FROM documents"
+             <+> "  WHERE EXISTS (SELECT TRUE"
+             <+> "                  FROM signatory_links"
+             <+> "                 WHERE signatory_links.is_author"
+             <+> "                   AND signatory_links.document_id = documents.id"
+             <+> "                   AND users.id = signatory_links.user_id"
+             <+> "                   AND documents.status = 3" -- Closed
+             <+> "                   AND (SELECT max(signatory_links.sign_time)"
+             <+> "                          FROM signatory_links"
+             <+> "                         WHERE signatory_links.is_partner"
+             <+> "                           AND signatory_links.document_id = documents.id) BETWEEN time_spans.b AND time_spans.e)"
+             <+> ") AS \"Docs closed\""
+     sqlResult $ "(SELECT count(*)"
+             <+> "   FROM documents, signatory_links"
+             <+> "  WHERE signatory_links.document_id = documents.id"
+             <+> "    AND signatory_links.sign_time IS NOT NULL"
+             <+> "    AND EXISTS (SELECT TRUE"
+             <+> "                  FROM signatory_links"
+             <+> "                 WHERE signatory_links.is_author"
+             <+> "                   AND signatory_links.document_id = documents.id"
+             <+> "                   AND users.id = signatory_links.user_id"
+             <+> "                   AND documents.status = 3" -- Closed
+             <+> "                   AND (SELECT max(signatory_links.sign_time)"
+             <+> "                          FROM signatory_links"
+             <+> "                         WHERE signatory_links.is_partner"
+             <+> "                           AND signatory_links.document_id = documents.id) BETWEEN time_spans.b AND time_spans.e)"
+             <+> ") AS \"Sigs closed\""
+
+     case cid of
+       Nothing -> return ()
+       Just ccid -> sqlWhereEq "companies.id" ccid
+     case uid of
+       Nothing -> return ()
+       Just uuid -> sqlWhereEq "users.id" uuid
+
+     sqlOrderBy "1, 3, 4"
+   fetchUserUsageStats
 
 data SetUserIsFree = SetUserIsFree UserID Bool
 instance MonadDB m => DBUpdate m SetUserIsFree Bool where
