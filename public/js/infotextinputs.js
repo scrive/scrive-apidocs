@@ -27,7 +27,8 @@ var InfoTextInputModel = Backbone.Model.extend({
       cssClass : "",
       style : "",
       inputStyle : "",
-      autocomplete : false
+      autocomplete : false,
+      readonly : false
   },
   infotext : function(){
        return this.get("infotext");
@@ -83,6 +84,9 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   autocompleate : function(){
        return this.get("autocompleate");
+  },
+  readonly : function() {
+       return this.get("readonly");
   }
 });
 
@@ -109,6 +113,7 @@ var InfoTextInputView = Backbone.View.extend({
                           .attr("placeholder",model.infotext())
                           .attr("autocomplete",model.autocompleate ? "on" : "off")
                           .attr("style",model.inputStyle())
+                          .attr("readonly",model.readonly() ? "true" : undefined);
 
         $(this.el).attr("style", model.style())
                   .addClass(model.cssClass())

@@ -233,6 +233,7 @@
             view.daysinputfield = new InfoTextInput({
                 infotext: doc.daystosign(),
                 value: doc.daystosign(),
+                cssClass : 'design-view-action-process-left-column-deadline-field',
                 onChange: function(v) {
                     v = parseInt(v);
                     if (v != undefined && !isNaN(v) && v != doc.daystosign()) {
@@ -241,16 +242,11 @@
                     }
                 }
             });
-            view.daysinputfield.el().addClass('design-view-action-process-left-column-deadline-field');
 
-            var tag = $('<div />');
-            tag.addClass('design-view-action-process-left-column-deadline-tag');
-            tag.text(localization.designview.days);
-
-            div.append(label);
-            div.append(view.daysinputfield.el());
-            div.append(tag);
-            div.append(calendarbutton);
+            div.append(label)
+               .append(view.daysinputfield.el())
+               .append($("<div class='design-view-action-process-left-column-deadline-tag'/>").text(localization.designview.days))
+               .append(calendarbutton);
 
 
             return div;
@@ -260,14 +256,8 @@
             var viewmodel = view.model;
             var document = viewmodel.document();
 
-            var div = $('<div />');
-            div.addClass('design-view-action-process-left-column-attachments');
-
-            var labelText = localization.attachments;
-
-            var label = $('<div />');
-            label.addClass('design-view-action-process-left-column-attachments-label');
-            label.text(labelText + ':');
+            var div = $("<div class='design-view-action-process-left-column-attachments'/>");
+            var label = $("<div class='design-view-action-process-left-column-attachments-label'/>").text(localization.attachments + ':');
 
             var authorAttachmentButton = Button.init({
                 color: 'blue',

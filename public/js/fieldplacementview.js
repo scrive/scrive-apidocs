@@ -799,6 +799,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                   view.place();
             },
             onEnter: setName,
+            style : (field && field.signatory() && field.signatory().color()) ? ('border-color : ' + field.signatory().color()) : "",
             suppressSpace: (field.name()=="fstname")
         });
 
@@ -809,9 +810,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
             width: 64,
             onClick: setName
         });
-
-        if(field && field.signatory() && field.signatory().color())
-            input.el().css('border-color', field.signatory().color());
 
         div.append(input.el());
         div.append(button.input());

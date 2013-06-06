@@ -212,10 +212,10 @@
         onChange: function(v) {model.setCompany(v);},
         inputtype: 'text',
         name: 'company',
-        cssClass : "med-input med-input-left"
+        cssClass : "med-input med-input-left",
+        readonly : this.model.companyFilled()
        });
-      if (this.model.companyFilled())
-        companyInput.el().attr("readonly","true");
+
       var companyrow = $("<div class='position'/>").append(companyInput.el());
 
       var positionInput = new InfoTextInput({
