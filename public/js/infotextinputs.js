@@ -25,7 +25,9 @@ var InfoTextInputModel = Backbone.Model.extend({
       inputtype : "text",
       name : "",
       cssClass : "",
-      style : ""
+      style : "",
+      inputStyle : "",
+      autocomplete : false
   },
   infotext : function(){
        return this.get("infotext");
@@ -38,6 +40,9 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   style : function() {
        return this.get("style");
+  },
+  inputStyle: function() {
+       return this.get("inputStyle");
   },
   value: function() {
        return this.get("value");
@@ -75,6 +80,9 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   hasRemoveOption : function(){
        return this.get("onRemove") != undefined;
+  },
+  autocompleate : function(){
+       return this.get("autocompleate");
   }
 });
 
@@ -99,6 +107,8 @@ var InfoTextInputView = Backbone.View.extend({
                           .attr("name",model.name())
                           .attr("type",model.inputtype())
                           .attr("placeholder",model.infotext())
+                          .attr("autocomplete",model.autocompleate ? "on" : "off")
+                          .attr("style",model.inputStyle())
 
         $(this.el).attr("style", model.style())
                   .addClass(model.cssClass())

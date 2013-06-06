@@ -106,7 +106,6 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      passwordInput.el().attr("autocomplete","false");
       body.append($("<div class='position first'/>").append(passwordInput.el()));
 
       var password2Input = new InfoTextInput({
@@ -118,7 +117,6 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      password2Input.el().attr("autocomplete","false");
       body.append($("<div class='position'/>").append(password2Input.el()));
 
       var changePasswordButton = Button.init({
@@ -168,9 +166,9 @@
         inputtype: 'password',
         name: 'password',
         cssClass : "big-input",
-        onEnter : function() {model.resetPassword();}
+        onEnter : function() {model.resetPassword();},
+        style : "width : 245px; padding : 7px 14px; font-size: 16px"
       });
-      passwordInput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
       body.append($("<div class='position'/>").append(passwordInput.el()));
 
       var password2Input = new InfoTextInput({
@@ -180,9 +178,10 @@
         inputtype: 'password',
         name: 'password2',
         cssClass : "big-input",
-        onEnter : function() {model.resetPassword();}
+        onEnter : function() {model.resetPassword();},
+        style : "width : 245px; padding : 7px 14px; font-size: 16px"
+
       });
-      password2Input.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
       body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.el()));
 
       var changePasswordButton = Button.init({
