@@ -7,11 +7,6 @@ var AdminModel = Backbone.Model.extend({
   isAdmin: function() {
       return this.get("isAdmin");
   },
-  statistics : function() {
-        if (this.get("statistics") != undefined) return this.get("statistics");
-        this.set({ "statistics" : new AdminStats() });
-        return this.statistics();
-  },
   companyadmin: function() {
         if (this.get("companyadmin") != undefined) return this.get("companyadmin");
         this.set({ "companyadmin" : new KontraList(CompanyAdminListDefinition(this)) });
@@ -44,17 +39,6 @@ var AdminModel = Backbone.Model.extend({
                         name: "CSV Statistics",
                         elems: [$(admin.csvstats().el())],
                         pagehash : "csvstats"
-                    });
-  },
-  statsTab : function() {
-                    var admin = this;
-                    return new Tab({
-                        name: "Statistics",
-                        elems: [function() {return $(admin.statistics().el())}],
-                        pagehash : "statistics",
-                        onActivate : function() {
-                            admin.statistics().refresh();
-                        }
                     });
   },
   salesUserAdminTab : function() {
@@ -118,7 +102,6 @@ var AdminView = Backbone.View.extend({
         tabs: [
            admin.statsAsCSVTab(),
            admin.salesUserAdminTab(),
-           admin.statsTab(),
            admin.documentsTab(),
            admin.userAdminTab(),
            admin.companyAdminTab()]
