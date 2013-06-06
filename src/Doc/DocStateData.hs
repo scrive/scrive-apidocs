@@ -3,7 +3,6 @@
 module Doc.DocStateData (
     CSVUpload(..)
   , CancelationReason(..)
-  , DocStats(..)
   , Document(..)
   , DocumentSharing(..)
   , DocumentStatus(..)
@@ -386,17 +385,6 @@ getFieldOfType t (sf:rest) =
 
 getValueOfType :: FieldType -> SignatoryDetails -> String
 getValueOfType t = fromMaybe "" . fmap sfValue . getFieldOfType t . signatoryfields
-
-
-data DocStats = DocStats {
-    doccount          :: !Int
-  , signaturecount    :: !Int
-  , signaturecount1m  :: !Int
-  , signaturecount2m  :: !Int
-  , signaturecount3m  :: !Int
-  , signaturecount6m  :: !Int
-  , signaturecount12m :: !Int
-  } deriving (Eq, Ord, Show, Data, Typeable) -- Data instance used for View modules (quite incorrectly there, please remove ASAP)
 
 data Document = Document {
     documentid                     :: DocumentID
