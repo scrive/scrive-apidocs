@@ -246,17 +246,20 @@
         },
         render: function() {
             var filtering = this.model;
-            var searchBox = InfoTextInput.init({ infotext: filtering.infotext(),
-                                                 value: filtering.text(),
-                                                 cssClass: "list-search float-right" });
-            searchBox.input().keypress(function(event) {
-                var keycode = (event.keyCode ? event.keyCode : event.which);
-                if (keycode == '13') {
-                    mixpanel.track('Search',
-                                   {Input : "Enter",
-                                    Query : $(this).val()});
-                    filtering.searchText($(this).val());
-                }});
+
+            var searchBox = new InfoTextInput({
+                  infotext: filtering.infotext(),
+                  value: filtering.text(),
+                  cssClass: "list-search float-right",
+                  onEnter : function() {
+                    mixpanel.track('Search',{
+                                    Input : "Enter",
+                                    Query : searchBox.value()
+                                  });
+                    filtering.searchText(searchBox.value());
+                  }
+            });
+
             var button = Button.init({color: "black",
                                       size: "tiny",
                                       text: localization.searchBoxButtonText,
@@ -268,7 +271,7 @@
                                           filtering.searchText(searchBox.value());
                                       }
                                      });
-            $(this.el).append(button.input()).append(searchBox.input());
+            $(this.el).append(button.input()).append(searchBox.el());
         }
     });
 

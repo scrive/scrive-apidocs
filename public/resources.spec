@@ -21,6 +21,7 @@ ignore  less/branding/containter.less
 ignore  less/branding/flash.less
 ignore  less/branding/modal.less
 ignore  less/branding/select.less
+ignore  less/branding/infotextinput.less
 ignore  less/branding/tooltip.less
 ignore  less/branding/checkbox.less
 ignore  less/branding/contact.less

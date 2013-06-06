@@ -180,7 +180,7 @@
 
 
 
-      var nameInput = InfoTextInput.init({
+      var nameInput = new InfoTextInput({
         infotext: localization.account.accountDetails.fullname,
         value: model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
         onChange: function(v) {
@@ -199,14 +199,14 @@
       });
 
       model.addValidator(function() {
-        return nameInput.input().validate(new UserNameValidation({callback: view.validationCallback,
+        return nameInput.el().validate(new UserNameValidation({callback: view.validationCallback,
                                                                   firstName: localization.validation.firstNameField,
                                                                   lastName: localization.validation.lastNameField}));
       });
 
-      body.append($("<div class='position first'/>").append(nameInput.input()));
+      body.append($("<div class='position first'/>").append(nameInput.el()));
 
-      var companyInput = InfoTextInput.init({
+      var companyInput = new InfoTextInput({
         infotext: localization.accountSetupModal.modalAccountSetupCompany,
         value: model.company(),
         onChange: function(v) {model.setCompany(v);},
@@ -215,10 +215,10 @@
         cssClass : "med-input med-input-left"
        });
       if (this.model.companyFilled())
-        companyInput.input().attr("readonly","true");
-      var companyrow = $("<div class='position'/>").append(companyInput.input());
+        companyInput.el().attr("readonly","true");
+      var companyrow = $("<div class='position'/>").append(companyInput.el());
 
-      var positionInput = InfoTextInput.init({
+      var positionInput = new InfoTextInput({
         infotext: localization.accountSetupModal.modalAccountSetupPosition,
         value: "",
         onChange: function(v) {model.setPosition(v);},
@@ -227,11 +227,11 @@
         cssClass : "med-input"
        });
 
-      companyrow.append(positionInput.input());
+      companyrow.append(positionInput.el());
 
       body.append(companyrow);
 
-      var phoneInput = InfoTextInput.init({
+      var phoneInput = new InfoTextInput({
         infotext: localization.accountSetupModal.modalAccountSetupPhone,
         value: "",
         onChange: function(v) {model.setPhone(v);},
@@ -240,10 +240,10 @@
         cssClass : "big-input"
        });
 
-      var phonerow = $("<div class='position'/>").append(phoneInput.input());
+      var phonerow = $("<div class='position'/>").append(phoneInput.el());
       body.append(phonerow);
 
-      var passwordInput = InfoTextInput.init({
+      var passwordInput = new InfoTextInput({
         infotext: localization.accountSetupModal.modalAccountSetupChoosePassword,
         value: "",
         onChange: function(v) {model.setPassword(v);},
@@ -253,13 +253,13 @@
       });
 
       model.addValidator(function() {
-        return passwordInput.input().validate(new PasswordValidation({callback: view.validationCallback,
+        return passwordInput.el().validate(new PasswordValidation({callback: view.validationCallback,
                                                               message: localization.validation.passwordLessThanMinLength,
                                                               message_max: localization.validation.passwordExceedsMaxLength,
                                                               message_digits: localization.validation.passwordNeedsLetterAndDigit}));
       });
 
-      var password2Input = InfoTextInput.init({
+      var password2Input = new InfoTextInput({
         infotext: localization.accountSetupModal.modalAccountSetupRepeatPassword,
         value: "",
         onChange: function(v) {model.setPassword(v);},
@@ -269,15 +269,15 @@
       });
 
       model.addValidator(function() {
-        return password2Input.input().validate(new PasswordEqValidation({callback: view.validationCallback,
+        return password2Input.el().validate(new PasswordEqValidation({callback: view.validationCallback,
                                                                  message: localization.validation.passwordsDontMatch,
                                                                  'with': passwordInput.input()}));
       });
 
       body.append($("<div class='position'/>")
                     .append($("<label style='text-align:left;margin-left: 32px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
-                    .append(passwordInput.input())
-                    .append(password2Input.input()));
+                    .append(passwordInput.el())
+                    .append(password2Input.el()));
 
       var tosAccept = $("<div class='checkbox-box' style='text-align: left;'/>");
       var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");

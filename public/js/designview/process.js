@@ -86,7 +86,7 @@
             label.addClass('design-view-action-process-left-column-document-name-label');
             label.text(labelText + ':');
 
-            var field = InfoTextInput.init({
+            var field = new InfoTextInput({
                 infotext: labelText,
                 value: doc.title(),
                 onChange: function(v) {
@@ -94,14 +94,14 @@
                 }
             });
 
-            field.input().addClass('design-view-action-process-left-column-document-name-field');
+            field.el().addClass('design-view-action-process-left-column-document-name-field');
 
             doc.bind('change:title', function() {
                 field.setValue(doc.title());
             });
 
             div.append(label);
-            div.append(field.input());
+            div.append(field.el());
 
             return div;
         },
@@ -230,7 +230,7 @@
                                           }
                         });
 
-            view.daysinputfield = InfoTextInput.init({
+            view.daysinputfield = new InfoTextInput({
                 infotext: doc.daystosign(),
                 value: doc.daystosign(),
                 onChange: function(v) {
@@ -241,14 +241,14 @@
                     }
                 }
             });
-            view.daysinputfield.input().addClass('design-view-action-process-left-column-deadline-field');
+            view.daysinputfield.el().addClass('design-view-action-process-left-column-deadline-field');
 
             var tag = $('<div />');
             tag.addClass('design-view-action-process-left-column-deadline-tag');
             tag.text(localization.designview.days);
 
             div.append(label);
-            div.append(view.daysinputfield.input());
+            div.append(view.daysinputfield.el());
             div.append(tag);
             div.append(calendarbutton);
 

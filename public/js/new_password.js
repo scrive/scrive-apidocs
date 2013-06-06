@@ -97,7 +97,7 @@
       var body = $("<div class='short-input-container-body'/>");
       content.append(wrapper.append(body));
 
-      var passwordInput = InfoTextInput.init({
+      var passwordInput = new InfoTextInput({
         infotext: localization.newPasswordModal.modalNewPasswordViewNewPassword,
         value: model.password(),
         onChange: function(v) {model.setPassword(v);},
@@ -106,10 +106,10 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      passwordInput.input().attr("autocomplete","false");
-      body.append($("<div class='position first'/>").append(passwordInput.input()));
+      passwordInput.el().attr("autocomplete","false");
+      body.append($("<div class='position first'/>").append(passwordInput.el()));
 
-      var password2Input = InfoTextInput.init({
+      var password2Input = new InfoTextInput({
         infotext: localization.newPasswordModal.modalNewPasswordViewRepeatPassword,
         value: model.password2(),
         onChange: function(v) {model.setPassword2(v);},
@@ -118,8 +118,8 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      password2Input.input().attr("autocomplete","false");
-      body.append($("<div class='position'/>").append(password2Input.input()));
+      password2Input.el().attr("autocomplete","false");
+      body.append($("<div class='position'/>").append(password2Input.el()));
 
       var changePasswordButton = Button.init({
           size  : 'small',
@@ -161,7 +161,7 @@
        if (this.options.body)
          body.append($("<label style='padding-bottom: 1em;'/>").text(this.options.body));
 
-      var passwordInput = InfoTextInput.init({
+      var passwordInput = new InfoTextInput({
         infotext: localization.newPasswordModal.modalNewPasswordViewNewPassword,
         value: model.password(),
         onChange: function(v) {model.setPassword(v);},
@@ -170,10 +170,10 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      passwordInput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
-      body.append($("<div class='position'/>").append(passwordInput.input()));
+      passwordInput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
+      body.append($("<div class='position'/>").append(passwordInput.el()));
 
-      var password2Input = InfoTextInput.init({
+      var password2Input = new InfoTextInput({
         infotext: localization.newPasswordModal.modalNewPasswordViewRepeatPassword,
         value: model.password2(),
         onChange: function(v) {model.setPassword2(v);},
@@ -182,8 +182,8 @@
         cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
-      password2Input.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
-      body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.input()));
+      password2Input.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
+      body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.el()));
 
       var changePasswordButton = Button.init({
           size  : 'tiny',

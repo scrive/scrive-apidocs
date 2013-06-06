@@ -2,6 +2,9 @@
 
 (function(window){
 
+/* Margins for text placements. Such placements have some internal margin and we need to adjust it*/
+var textPlacementTopMargin  = 8;
+var textPlacementLeftMargin = 7;
 
 // !!! Not placed views model field, not placement
 window.createFieldPlacementView = function (args) {
@@ -106,7 +109,10 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset);
         },
         onDrop: function(page, x, y, w, h) {
-
+            if (field.isText() || field.isFake() ) {
+              x += textPlacementLeftMargin;
+              y += textPlacementTopMargin;
+            }
             droppedInside = true;
             var signatory = field.signatory();
             if( !_.find(signatory.fields(), function(f) { return f==field; })) {
@@ -372,7 +378,7 @@ var TextTypeSetterView = Backbone.View.extend({
                                     view.model.cleanTypeSetter();
                                     view.model.trigger('change:step');
                                 } else {
-                                    view.nameinput.addClass('redborder');
+                                    if (view.nameinput) view.nameinput.addClass('redborder');
                                 }
                                 return false;
                             }
@@ -492,8 +498,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 0.5),
-                top: Math.floor(placement.yrel() * parentHeight + 0.5),
+                left: Math.floor(placement.xrel() * parentWidth + 0.5) - textPlacementLeftMargin,
+                top: Math.floor(placement.yrel() * parentHeight + 0.5) - textPlacementTopMargin,
                 fontSize: placement.fsrel() * parentWidth
             });
         }
@@ -794,7 +800,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             }
         }
 
-        var input = InfoTextInput.init({
+        var input = new InfoTextInput({
             infotext: localization.designview.fieldName,
             value: field.name(),
             cssClass: "name",
@@ -817,9 +823,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
         });
 
         if(field && field.signatory() && field.signatory().color())
-            input.input().css('border-color', field.signatory().color());
+            input.el().css('border-color', field.signatory().color());
 
-        div.append(input.input());
+        div.append(input.el());
         div.append(button.input());
         return div;
     },
@@ -828,7 +834,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var placement = view.model;
         var field = placement.field();
 
-        var input = InfoTextInput.init({
+        var input = new InfoTextInput({
             cssClass: 'text-field-placement-setter-field-editor',
             infotext: field.nicename(),
             value: field.value(),
@@ -836,7 +842,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             onChange: function(val) {
                 field.setValue(val.trim());
             }
-        }).input();
+        }).el();
 
         if(field && field.signatory() && field.signatory().color())
             input.css('border-color', field.signatory().color());

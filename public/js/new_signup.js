@@ -57,8 +57,8 @@
     initialize: function() {
       this.render();
     },
-    validationCallback: function(t, e, v) {
-      $("<div class='validate-message failed-validation float-left' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
+    validationCallback: function(t, _e , v) {
+      $("<div class='validate-message failed-validation float-left' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo($('.position.withEmail',this.el));
     },
     clearValidationMessages : function() {
       $(".validate-message",this.el).remove();
@@ -77,7 +77,7 @@
         var body = $("<div class='short-input-container-body'/>");
         content.append(wrapper.append(body));
 
-        var emailInput = InfoTextInput.init({
+        var emailInput = new InfoTextInput({
           infotext: localization.email,
           value: model.email(),
           onChange: function(v) {self.clearValidationMessages(); model.setEmail(v);},
@@ -92,7 +92,7 @@
         // Automatically focus the appropriate login field.
         if(model.autofocus()) {
             $(document).ready(function() {
-                emailInput.input().focus();
+                emailInput.focus();
             });
         }
 
@@ -102,12 +102,12 @@
             text: localization.signup + " ›",
             onClick: function() {
               self.clearValidationMessages();
-              if (emailInput.input().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
+              if (emailInput.value().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
                 model.signup();
             }
           });
 
-        body.append($("<div class='position first'/>").append(emailInput.input()).append(signupButton.input()));
+        body.append($("<div class='position first withEmail'/>").append(emailInput.el()).append(signupButton.input()));
         $(this.el).append(content);
       }
   });
@@ -117,7 +117,7 @@
       this.render();
     },
     validationCallback: function(t, e, v) {
-      $("<div class='validate-message failed-validation float-left' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
+      $("<div class='validate-message failed-validation float-left' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo($('.position.withEmail',this.el));
     },
     clearValidationMessages : function() {
       $(".validate-message",this.el).remove();
@@ -142,7 +142,7 @@
         body.append($("<div class='position first' style='text-align: left;height:30px;'/>").append($("<label style='padding-left:10px;'/>").text(localization.signup + ":")));
 
 
-        var emailInput = InfoTextInput.init({
+        var emailInput = new InfoTextInput({
           infotext: localization.email,
           value: model.email(),
           onChange: function(v) {self.clearValidationMessages(); model.setEmail(v);},
@@ -156,7 +156,7 @@
         // Automatically focus the appropriate login field.
         if(model.autofocus()) {
             $(document).ready(function() {
-                emailInput.input().focus();
+                emailInput.focus();
             });
         }
 
@@ -167,12 +167,12 @@
             style : "width:245px;",
             onClick: function() {
               self.clearValidationMessages();
-              if (emailInput.input().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
+              if (emailInput.value().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
                 model.signup();
             }
           });
 
-        body.append($("<div class='position'/>").append(emailInput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px")));
+        body.append($("<div class='position withEmail'/>").append(emailInput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px")));
         body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(signupButton.input()));
 
         var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);

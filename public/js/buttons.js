@@ -13,7 +13,6 @@
 */
 
 (function(window){
-/* InfoTextInput model. Has value, infotext and information if its focused  */
 var ButtonModel = Backbone.Model.extend({
   defaults : {
       color : "green",
@@ -57,9 +56,7 @@ var ButtonModel = Backbone.Model.extend({
   }
 });
 
-/* View controls bechavior of real input vs. InfoTextInput model
- * Updates object on focus, blur and change. Sets the grey class for input and fills infotext if needed.
- */
+
 var ButtonView = Backbone.View.extend({
   events: {
         "click"  :  "clicked"

@@ -361,9 +361,9 @@
                                        cssClass: "float-left extra-width",
                                        name : localization.more,
                                        theme : "black",
-                                       expandSide : "right"
+                                       expandSide : "right",
+                                       optionsWidth: "270px"
             });
-            console.log("Generating selects for options");
             this.pretableboxsubbox.removeClass('empty');
             this.pretableboxsubbox.append($("<div class='options-box'/>").append(select.el()));
         },
@@ -376,7 +376,6 @@
                 a.set({"list" : model});
                 div.append(new ListActionView({model : a, el : $("<div class='float-left actionButton'>")}).el);
             });
-           console.log("Generating buttons for actions");
            view.pretableboxsubbox.removeClass('empty');
            view.pretableboxsubbox.append(div);
         },
@@ -421,7 +420,6 @@
             return $("<thead />").append(headline);
         },
         render: function() {
-            console.log("Rendering main list");
             if (this.table != undefined)
                 this.table.detach();
 

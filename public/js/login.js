@@ -163,7 +163,7 @@ var LoginView = Backbone.View.extend({
       if (!model.pad()) $(this.el).append(header);
       content.append(wrapper.append(body));
 
-      var emailinput = InfoTextInput.init({
+      var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
@@ -173,18 +173,18 @@ var LoginView = Backbone.View.extend({
               onEnter : loginFunction
 
       });
-      emailinput.input().attr("autocomplete","false");
-      body.append($("<div class='position first'/>").append(emailinput.input()));
-      emailinput.input().click();
-      emailinput.input().focus(
+      emailinput.el().attr("autocomplete","false");
+      body.append($("<div class='position first'/>").append(emailinput.el()));
+      emailinput.el().click();
+      emailinput.el().focus(
           function() {
-              emailinput.input().select();
+              emailinput.el().select();
               window.setTimeout(function() {
-                  emailinput.input().select();
+                  emailinput.el().select();
               }, 200);
           }
       );
-      var passwordinput = InfoTextInput.init({
+      var passwordinput = new InfoTextInput({
               infotext: localization.loginModal.password,
               value : model.password(),
               onChange : function(v) {model.setPassword(v);} ,
@@ -194,16 +194,16 @@ var LoginView = Backbone.View.extend({
               onEnter : loginFunction
 
       });
-      passwordinput.input().attr("autocomplete","false");
-      body.append($("<div class='position'/>").append(passwordinput.input()));
+      passwordinput.el().attr("autocomplete","false");
+      body.append($("<div class='position'/>").append(passwordinput.el()));
 
       // Automatically focus the appropriate login field.
       if(model.autofocus()) {
           $(document).ready(function() {
-              if(emailinput.input().val()) {
-                  passwordinput.input().focus();
+              if(emailinput.el().val()) {
+                  passwordinput.el().focus();
               } else {
-                  emailinput.input().focus();
+                  emailinput.el().focus();
               }
           });
       }
@@ -242,7 +242,7 @@ var LoginView = Backbone.View.extend({
 
       content.append(wrapper.append(body));
 
-      var emailinput = InfoTextInput.init({
+      var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
@@ -252,12 +252,12 @@ var LoginView = Backbone.View.extend({
               onEnter : function() { model.sendPasswordReminder();}
 
       });
-      emailinput.input().attr("autocomplete","false");
-        emailinput.input().focus(
+      emailinput.el().attr("autocomplete","false");
+        emailinput.el().focus(
           function() {
-              emailinput.input().select();
+              emailinput.el().select();
               window.setTimeout(function() {
-                  emailinput.input().select();
+                  emailinput.el().select();
               }, 200);
           }
       );
@@ -271,7 +271,7 @@ var LoginView = Backbone.View.extend({
                         model.sendPasswordReminder();
                     }
                 });
-      body.append($("<div class='position first'/>").append(emailinput.input()).append(remindButton.input()));
+      body.append($("<div class='position first'/>").append(emailinput.el()).append(remindButton.input()));
 
       return content;
 
@@ -318,7 +318,7 @@ var LoginBrandedView = Backbone.View.extend({
 
 
 
-      var emailinput = InfoTextInput.init({
+      var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
@@ -327,18 +327,18 @@ var LoginBrandedView = Backbone.View.extend({
               onEnter : loginFunction
 
       });
-      emailinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
-      body.append($("<div class='position' style='margin-bottom:6px;'/>").append(emailinput.input()));
-      emailinput.input().click();
-      emailinput.input().focus(
+      emailinput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
+      body.append($("<div class='position' style='margin-bottom:6px;'/>").append(emailinput.el()));
+      emailinput.el().click();
+      emailinput.el().focus(
           function() {
-              emailinput.input().select();
+              emailinput.el().select();
               window.setTimeout(function() {
-                  emailinput.input().select();
+                  emailinput.el().select();
               }, 200);
           }
       );
-      var passwordinput = InfoTextInput.init({
+      var passwordinput = new InfoTextInput({
               infotext: localization.loginModal.password,
               value : model.password(),
               onChange : function(v) {model.setPassword(v);} ,
@@ -347,16 +347,16 @@ var LoginBrandedView = Backbone.View.extend({
               onEnter : loginFunction
 
       });
-      passwordinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
-      body.append($("<div class='position'/>").append(passwordinput.input()));
+      passwordinput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
+      body.append($("<div class='position'/>").append(passwordinput.el()));
 
       // Automatically focus the appropriate login field.
       if(model.autofocus()) {
           $(document).ready(function() {
-              if(emailinput.input().val()) {
-                  passwordinput.input().focus();
+              if(emailinput.el().val()) {
+                  passwordinput.el().focus();
               } else {
-                  emailinput.input().focus();
+                  emailinput.el().focus();
               }
           });
       }
@@ -411,21 +411,22 @@ var LoginBrandedView = Backbone.View.extend({
 
       body.append($("<div class='position first' style='text-align: left;height:30px''/>").append($("<label style='padding-left:10px;'/>").text(localization.resetYourPassword + ":")));
 
-      var emailinput = InfoTextInput.init({
+      var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
               name : "email",
+              style : "width : 245px;padding : 7px 14px; font-size : 16px;"
               onEnter : function() { model.sendPasswordReminder();}
 
       });
-      emailinput.input().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px");
-        emailinput.input().focus(
+      emailinput.el().attr("autocomplete","false");
+        emailinput.el().focus(
           function() {
-              emailinput.input().select();
+              emailinput.el().select();
               window.setTimeout(function() {
-                  emailinput.input().select();
+                  emailinput.el().select();
               }, 200);
           }
       );
@@ -441,7 +442,7 @@ var LoginBrandedView = Backbone.View.extend({
                     }
                 });
 
-      body.append($("<div class='position'/>").append(emailinput.input()));
+      body.append($("<div class='position'/>").append(emailinput.el()));
       body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(remindButton.input()));
 
       return content;

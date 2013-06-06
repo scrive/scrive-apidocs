@@ -20,7 +20,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    emailInput : function() {
      var signatory = this.model;
      var field = signatory.emailField();
-     var iti = InfoTextInput.init({
+     var iti = new InfoTextInput({
                                  infotext: localization.email,
                                  value: field.value(),
                                  onChange : function(value) {
@@ -30,7 +30,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
                                  }
                             });
      field.bind("change", function() {iti.setValue(field.value())});
-     return iti.input();
+     return iti.el();
    },
    nameInputAvaible : function() {
      var signatory = this.model;
@@ -42,7 +42,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    nameInput : function() {
      var signatory = this.model;
      var field = signatory.fstnameField();
-     var iti =  InfoTextInput.init({
+     var iti =  new InfoTextInput({
                                  infotext: localization.name,
                                  value: field.value(),
                                  onChange : function(value) {
@@ -51,7 +51,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
                                  }
                             });
      field.bind("change", function() {iti.setValue(field.value())});
-     return iti.input();
+     return iti.el();
    },
    ssnInputAvaible : function() {
      var signatory = this.model;
@@ -61,7 +61,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    ssnInput : function() {
      var signatory = this.model;
      var field = this.model.personalnumberField();
-     var iti = InfoTextInput.init({
+     var iti = new InfoTextInput({
                                  infotext: localization.personamNumber,
                                  value: field.value(),
                                  onChange : function(value) {
@@ -70,7 +70,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
                                  }
                             });
      field.bind("change", function() {iti.setValue(field.value())});
-     return iti.input();
+     return iti.el();
    },
    signatureInputAvaible : function() {
        var signatory = this.model;

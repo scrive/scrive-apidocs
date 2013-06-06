@@ -5,7 +5,6 @@
 
 $(function(){
 
-/* InfoTextInput model. Has value, infotext and information if its focused  */
 window.Mail = Backbone.Model.extend({
 	defaults : {
 		ready : false,

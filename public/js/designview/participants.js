@@ -782,24 +782,33 @@
                     field.unbind('change:name', changer);
                 }
             };
+            var remover = function() {
+                mixpanel.track('Click remove field', {
+                    Type: field.type(),
+                    Name: field.name()
+                });
+                field.removeAllPlacements();
+                sig.deleteField(field);
+            };
 
             var changer = function() {
                 input.setValue(field.name());
             };
 
-            var input = InfoTextInput.init({
+            var input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-new-field-name-input',
                 infotext: localization.designview.fieldName,
                 value: '',
-                onEnter: setter
+                onEnter: setter,
+                onRemove : remover
             });
 
             field.bind('change:name', changer);
 
             if(!field.isValid(true))
-                $(input.input()).addClass('redborder');
+                $(input.el()).addClass('redborder');
             else
-                $(input.input()).removeClass('redborder');
+                $(input.el()).removeClass('redborder');
 
             var button = Button.init({
                 color: 'black',
@@ -809,19 +818,8 @@
                 onClick: setter
             });
 
-            var closer = $('<div />');
-            closer.addClass('design-view-action-participant-details-information-closer');
-            closer.addClass("active").click(function() {
-                mixpanel.track('Click remove field', {
-                    Type: field.type(),
-                    Name: field.name()
-                });
-                field.removeAllPlacements();
-                sig.deleteField(field);
-            });
 
-            div.append(closer);
-            div.append(input.input());
+            div.append(input.el());
             div.append(button.input());
 
             return div;
@@ -925,7 +923,7 @@
             var fstnameField = sig.fstnameField();
             var sndnameField = sig.sndnameField();
 
-            var input = InfoTextInput.init({
+            var input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-details-information-field',
                 infotext: localization.designview.fullName,
                 value: value,
@@ -954,31 +952,27 @@
 
             fstnameField.bind('change', function() {
                 if(!fstnameField.isValid(true))
-                    input.input().addClass('redborder');
+                    input.el().addClass('redborder');
                 else
-                    input.input().removeClass('redborder');
+                    input.el().removeClass('redborder');
                 input.setValue(sig.name());
             });
 
             sndnameField.bind('change', function() {
                 if(!fstnameField.isValid(true) )
-                    input.input().addClass('redborder');
+                    input.el().addClass('redborder');
                 else
-                    input.input().removeClass('redborder');
+                    input.el().removeClass('redborder');
                 input.setValue(sig.name());
             });
             if(!fstnameField.isValid(true))
-                    input.input().addClass('redborder');
+                    input.el().addClass('redborder');
             else
-                    input.input().removeClass('redborder');
+                    input.el().removeClass('redborder');
 
             var optionOptions = sig.author()?['sender']:['signatory', 'sender'];
 
-            var closer = $('<div />');
-            closer.addClass('design-view-action-participant-details-information-closer');
-
-            div.append(closer);
-            div.append(input.input());
+            div.append(input.el());
             return div;
         },
         detailsInformationField: function(name, type, placeholder) {
@@ -995,21 +989,31 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
 
-            var input = InfoTextInput.init({
+            var input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-details-information-field',
                 infotext: placeholder || name,
                 value: value,
                 onChange: function(val) {
                     if(typeof val === 'string')
                         field.setValue(val.trim());
-                }
+                },
+                onRemove: (!field.canBeRemoved() ?
+                            undefined :
+                            function() {
+                              mixpanel.track('Click remove field', {
+                                  Type: field.type(),
+                                  Name: field.name()
+                              });
+                              field.removeAllPlacements();
+                              sig.deleteField(field);
+                            })
             });
 
             field.bind('change', function() {
                 if(!field.isValid(true))
-                    input.input().addClass('redborder');
+                    input.el().addClass('redborder');
                 else
-                    input.input().removeClass('redborder');
+                    input.el().removeClass('redborder');
                 input.setValue(field.value());
             });
 
@@ -1031,26 +1035,11 @@
                 optionOptions = _.without(optionOptions, 'optional');
 
             if(!field.isValid(true))
-                input.input().addClass('redborder');
+                input.el().addClass('redborder');
             else
-                input.input().removeClass('redborder');
+                input.el().removeClass('redborder');
 
-            var closer = $('<div />');
-            closer.addClass('design-view-action-participant-details-information-closer');
-
-            if(field.canBeRemoved()) {
-                closer.addClass("active").click(function() {
-                    mixpanel.track('Click remove field', {
-                        Type: field.type(),
-                        Name: field.name()
-                    });
-                    field.removeAllPlacements();
-                    sig.deleteField(field);
-                });
-            }
-
-            div.append(closer);
-            div.append(input.input());
+            div.append(input.el());
 
             return div;
         },

@@ -173,10 +173,10 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             });
             var select = new Select({
               name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : localization.pad.notNamedParty),
-              textWidth : 160,
+              cssClass : "float-left",
               options : options
             });
-            return div.append($(select.view().el).css("width","200px").addClass('float-left'));
+            return div.append(select.el());
           };
           self.padNextSignatoryModalContent = modalContent();
           model.bind("change:padNextSignatory", function() {

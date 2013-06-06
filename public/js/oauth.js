@@ -155,7 +155,7 @@ var OAuthConfirationView = Backbone.View.extend({
       var model = this.model;
       var box = $("<div class='login-box'/>");
       box.append($("<div/>").append($("<h2/>").text(localization.apiConfiration.loginAndAcceptTitle)));
-      var emailinput = InfoTextInput.init({
+      var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
               value : "",
               cssClass : "big-input",
@@ -163,9 +163,9 @@ var OAuthConfirationView = Backbone.View.extend({
               name : "email"
       });
 
-      emailinput.input().attr("autocomplete","false");
-      box.append(emailinput.input());
-      var passwordinput = InfoTextInput.init({
+      emailinput.el().attr("autocomplete","false");
+      box.append(emailinput.el());
+      var passwordinput = new InfoTextInput({
               infotext: localization.loginModal.password,
               value : "",
               inputtype : "password",
@@ -174,8 +174,8 @@ var OAuthConfirationView = Backbone.View.extend({
               onEnter : function() {  model.login(emailinput.value(),passwordinput.value());}
 
       });
-      passwordinput.input().attr("autocomplete","false");
-      box.append(passwordinput.input());
+      passwordinput.el().attr("autocomplete","false");
+      box.append(passwordinput.el());
 
       var button = Button.init({
                   size  : "small",
@@ -193,14 +193,14 @@ var OAuthConfirationView = Backbone.View.extend({
       var model = this.model;
       var box = $("<div class='create-account-box'/>");
       box.append($("<div/>").append($("<h2/>").text(localization.apiConfiration.createAccount)));
-      var emailinput = InfoTextInput.init({
+      var emailinput = new InfoTextInput({
               infotext: localization.apiConfiration.enterEmailAdress,
               value : "",
               cssClass : "big-input",
               inputtype : "text",
               name : "email"
       });
-      box.append(emailinput.input());
+      box.append(emailinput.el());
       var button = Button.init({
                   size  : "small",
                   color : "green",
