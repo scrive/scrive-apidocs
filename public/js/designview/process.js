@@ -319,7 +319,6 @@
 	    this.emaildeliveryused = _.some(this.model.document().signatories(), function(signatory) {
 		return signatory.delivery() == 'email' || signatory.delivery() == 'email_mobile';
             });
-	    this.rerenderMiddleColumn();
 	},
         invitationBox: function() {
             var view = this;

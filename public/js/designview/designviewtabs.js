@@ -54,7 +54,7 @@ window.DesignViewTabsView = function(args) {
           pagehash : "process",
           elems: [ $(processView.el)],
           onShow : function() {
-              processView.setupTinyMCE();
+              processView.rerenderMiddleColumn();
             },
           onActivate : function() {
                mixpanel.track('Click tab', {
