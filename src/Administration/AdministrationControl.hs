@@ -58,7 +58,6 @@ import Recurly
 
 import InspectXMLInstances ()
 import InspectXML
-import Util.CSVUtil
 import ListUtil
 import Text.JSON
 import Mails.Model
@@ -110,12 +109,6 @@ adminonlyRoutes =
 
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
 
-        , dir "allstatscsv" $ hGet $ toK0 $ Stats.handleDocStatsCSV
-        , dir "userstatscsv" $ hGet $ toK0 $ Stats.handleUserStatsCSV
-        , dir "signstatscsv" $ hGet $ toK0 $ Stats.handleSignStatsCSV
-        , dir "dochistorycsv" $ hGet $ toK0 $ Stats.handleDocHistoryCSV
-        , dir "signhistorycsv" $ hGet $ toK0 $ Stats.handleSignHistoryCSV
-        , dir "userslistcsv" $ hGet $ toK0 $ handleUsersListCSV
         , dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
 
         , dir "statsbyday"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByDayJSON
@@ -231,25 +224,6 @@ companyPaginationFromParams pageSize params = (fromIntegral (listParamsOffset pa
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m String
 showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
-
-handleUsersListCSV :: Kontrakcja m => m CSV
-handleUsersListCSV = onlySalesOrAdmin $ do
-  users <- getUsersAndStatsInv [] [] (0,maxBound)
-  return $ CSV { csvHeader = ["id", "fstname", "sndname", "email", "company", "position","tos"]
-               , csvFilename = "userslist.csv"
-               , csvContent = map csvline $ filter active users
-               }
-  where
-        active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u)
-        csvline (u,mc,_,_) =
-                          [ show $ userid u
-                          , getFirstName u
-                          , getLastName u
-                          , getEmail u
-                          , getCompanyName mc
-                          , usercompanyposition $ userinfo u
-                          , show $ fromJust $ userhasacceptedtermsofservice u
-                          ]
 
 
 userSearchingFromParams :: ListParams -> [UserFilter]

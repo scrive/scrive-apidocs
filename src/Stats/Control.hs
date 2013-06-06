@@ -18,8 +18,6 @@ module Stats.Control
          addUserLoginStatEvent,
          addUserStatAPIGrantAccess,
          addUserStatAPINewUser,
-         handleDocStatsCSV,
-         handleUserStatsCSV,
          getUsersAndStatsInv,
          addSignStatInviteEvent,
          addSignStatReceiveEvent,
@@ -28,10 +26,7 @@ module Stats.Control
          addSignStatSignEvent,
          addSignStatRejectEvent,
          addSignStatDeleteEvent,
-         addSignStatPurgeEvent,
-         handleSignStatsCSV,
-         handleDocHistoryCSV,
-         handleSignHistoryCSV
+         addSignStatPurgeEvent
        )
 
        where
@@ -58,13 +53,11 @@ import qualified Log
 import qualified Text.StringTemplates.Fields as F
 
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
 import Control.Monad
 import Control.Monad.Trans.Control
 import Control.Applicative
 import User.Utils
-import Util.CSVUtil
 import ListUtil
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
@@ -111,18 +104,6 @@ getAdminSystemUsageStats timeDiff = do
     userEvents <- dbQuery $ GetUserStatEvents
     return $ (catMaybes $ map statEventToDocStatTuple statEvents)
           ++ (catMaybes $ map userEventToDocStatTuple userEvents)
-
-handleDocStatsCSV :: Kontrakcja m => m CSV
-handleDocStatsCSV = onlySalesOrAdmin $ do
-  let start = fromSeconds 0
-  end <- ctxtime <$> getContext
-  stats <- dbQuery $ GetDocStatCSV start end
-  let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "company", "companyid", "doctype", "api"]
-  return $ CSV { csvFilename = "docstats.csv"
-               , csvHeader = docstatsheader
-               , csvContent = map (map BS.toString) stats
-               }
-
 
 
 {- |
@@ -337,20 +318,6 @@ addUserStatAPINewUser uid mt cid = do
                                               , usCompanyID = cid
                                               }
 
-handleUserStatsCSV :: Kontrakcja m => m CSV
-handleUserStatsCSV = onlySalesOrAdmin $ do
-  stats <- dbQuery GetUserStatEvents
-  return $ CSV { csvFilename = "userstats.csv"
-               , csvHeader = ["userid", "date", "event", "count", "companyid"]
-               , csvContent = map csvline stats
-               }
-  where csvline event = [ show                                 $ usUserID    event
-                        , showDateYMD                          $ usTime      event
-                        , show                                 $ usQuantity  event
-                        , show                                 $ usAmount    event
-                        , maybe "" show                        $ usCompanyID event
-                        ]
-
 -- For User Admin tab in adminonly
 getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Maybe Company, DocStats, InviteType)]
 getUsersAndStatsInv filters sorting pagination = do
@@ -502,42 +469,3 @@ addSignStatPurgeEvent slid time = do
   unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
     show slid ++ " and quantity: " ++ show SignStatPurge
   return a
-
-
---CSV for sign stats
-handleSignStatsCSV :: Kontrakcja m => m CSV
-handleSignStatsCSV = onlySalesOrAdmin $ do
-  stats <- dbQuery GetSignStatEvents
-  return $ CSV { csvFilename = "signstats.csv"
-               , csvHeader = ["documentid", "signatorylinkid", "date", "event", "doctype", "company (author)"]
-               , csvContent = map csvline stats
-               }
-  where csvline event = [ show        $ ssDocumentID      event
-                        , show        $ ssSignatoryLinkID event
-                        , showDateYMD $ ssTime            event
-                        , show        $ ssQuantity        event
-                        , show        $ ssDocumentProcess event
-                        , show        $ ssCompanyID       event
-                        ]
-
--- CSV for document history
-handleDocHistoryCSV :: Kontrakcja m => m CSV
-handleDocHistoryCSV = onlySalesOrAdmin $ do
-  end <- ctxtime <$> getContext
-  let start = fromSeconds 1333256400
-  stats <- dbQuery $ GetDocHistCSV start end
-  return $ CSV { csvFilename = "dochist.csv"
-               , csvHeader = ["documentid", "companyid", "doctype", "create", "send", "close", "reject", "cancel", "timeout"]
-               , csvContent = stats
-               }
-
--- CSV for sign history
-handleSignHistoryCSV :: Kontrakcja m => m CSV
-handleSignHistoryCSV = onlySalesOrAdmin $ do
-  let start = fromSeconds 0
-  end <- ctxtime <$> getContext
-  rows <- dbQuery $ GetSignHistCSV start end
-  return $ CSV { csvFilename = "signhist.csv"
-               , csvHeader = ["documentid", "signatoryid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
-               , csvContent = rows
-               }

@@ -6,30 +6,6 @@
 var CSVStatsView = Backbone.View.extend({
         links: [
             {
-                url: "/adminonly/allstatscsv",
-                text: "Download the CSV containing all signature stats"
-            },
-            {
-                url: "/adminonly/userstatscsv",
-                text: "Download the CSV containing all user stats"
-            },
-            {
-                url: "/adminonly/signstatscsv",
-                text: "Download the CSV containing all sign stats"
-            },
-            {
-                url: "/adminonly/dochistorycsv",
-                text: "Download the CSV containing document histories"
-            },
-            {
-                url: "/adminonly/signhistorycsv",
-                text: "Download the CSV containing sign histories"
-            },
-            {
-                url: "/adminonly/userslistcsv",
-                text: "Download the CSV containing all users (not suspended, with accepted TOS, no integration parties)"
-            },
-            {
                 url: "/adminonly/paymentsstats.csv",
                 text: "Download the CSV containing payments stats"
             }
