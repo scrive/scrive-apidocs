@@ -37,7 +37,6 @@ import Data.Maybe
 import Doc.DocStateData
 import Kontra
 import MinutesTime
-import Utils.List
 import Stats.Model
 import Stats.View
 import Doc.SignatoryLinkID
@@ -86,39 +85,7 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   renderFromBody kontrakcja content
 
 
-addStats :: (Int, [Int]) -> (Int, [Int]) -> (Int, [Int])
-addStats (_, t1s) (t, t2s) = (t, zipWithPadZeroes (+) t1s t2s)
-
-sumStats :: [(Int, [Int])] -> (Int, [Int])
-sumStats = foldl1 addStats
-
 -- this creates an infinite list, so be careful!
-zipWithPadZeroes :: (Int -> Int -> Int) -> [Int] -> [Int] -> [Int]
-zipWithPadZeroes f a b = zipWith f (a ++ repeat 0) (b ++ repeat 0)
-
-calculateDocStats :: MinutesTime -> [(Int, [Int])] -> DocStats
-calculateDocStats ctxtime events =
-  let m1  = asInt $ monthsBefore 1 ctxtime
-      m2  = asInt $ monthsBefore 3 ctxtime
-      m3  = asInt $ monthsBefore 3 ctxtime
-      m6  = asInt $ monthsBefore 6 ctxtime
-      m12 = asInt $ monthsBefore 12 ctxtime
-      sortedEvents = reverse $ sortWith fst events
-      fstSumStats = (\prev (a1,a2) -> let a3 = prev++a1
-                                      in (sumStats $ if null a3 then [(0,[0,0])] else a3, a2))
-      (s1, r1) = fstSumStats [] $ span (\(m, _) -> m >= m1) sortedEvents
-      (s2, r2) = fstSumStats [s1] $ span (\(m, _) -> m >= m2) r1
-      (s3, r3) = fstSumStats [s2] $ span (\(m, _) -> m >= m3) r2
-      (s6, r6) = fstSumStats [s3] $ span (\(m, _) -> m >= m6) r3
-      (s12, r12) = fstSumStats [s6] $ span (\(m, _) -> m >= m12) r6
-      sAll = sumStats $ s12:r12
-  in DocStats ((!!1) . snd $ sAll) -- doccount
-              ((!!0) . snd $ sAll) -- signaturecount
-              ((!!0) . snd $ s1)   -- signaturecount1m
-              ((!!0) . snd $ s2)   -- signaturecount2m
-              ((!!0) . snd $ s3)   -- signaturecount3m
-              ((!!0) . snd $ s6)   -- signaturecount6m
-              ((!!0) . snd $ s12)  -- signaturecount12m
 
 
 -- some utility functions
@@ -228,28 +195,18 @@ addUserStatAPINewUser uid mt cid = do
                                               }
 
 -- For User Admin tab in adminonly
-getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Maybe Company, DocStats, InviteType)]
+getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Maybe Company, InviteType)]
 getUsersAndStatsInv filters sorting pagination = do
-  Context{ctxtime} <- getContext
   list <- dbQuery $ GetUsersAndStatsAndInviteInfo filters sorting pagination
-  return $ convert' ctxtime list
+  return $ convert' list
   where
-    convert' ctxtime list = map (\(u,mc,l,iv) ->
+    convert' list = map (\(u,mc,iv) ->
                                    ( u
                                    , mc
-                                   , calculateDocStats ctxtime $ tuples' l
                                    , case iv of
                                        Nothing                     -> Admin
                                        Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
                                    )) list
-    tuples' :: [(MinutesTime, DocStatQuantity, Int)]
-            -> [(Int, [Int])]
-    tuples' l = map toTuple' l
-    toTuple' (time, quantity, amount) =
-        case quantity of
-            DocStatClose  -> (asInt time, [amount, 0])
-            DocStatCreate -> (asInt time, [0, amount])
-            _             -> (asInt time, [0,      0])
 
 
 {------ Sign Stats ------}

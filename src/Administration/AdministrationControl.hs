@@ -259,7 +259,7 @@ jsonUsersList = onlySalesOrAdmin $ do
                           }
 
     runJSONGenT $ do
-            valueM "list" $ forM (take usersPageSize $ list users) $ \(user,mcompany,docstats,itype) -> runJSONGenT $ do
+            valueM "list" $ forM (take usersPageSize $ list users) $ \(user,mcompany,itype) -> runJSONGenT $ do
                 object "fields" $ do
                     value "id" $ show $ userid user
                     value "username" $ getFullName user
@@ -268,13 +268,6 @@ jsonUsersList = onlySalesOrAdmin $ do
                     value "company"  $ getCompanyName (user,mcompany)
                     value "phone"    $ userphone $ userinfo user
                     value "tos"      $ maybe "-" show (userhasacceptedtermsofservice user)
-                    value "signed_1m" $ show $ signaturecount1m docstats
-                    value "signed_2m" $ show $ signaturecount2m docstats
-                    value "signed_3m" $ show $ signaturecount3m docstats
-                    value "signed_6m" $ show $ signaturecount6m docstats
-                    value "signed_12m" $ show $ signaturecount12m docstats
-                    value "signed_docs" $ show $ signaturecount docstats
-                    value "uploaded_docs" $ show $ doccount docstats
                     value "viral_invites" $ itype == Viral
                     value "admin_invites" $ itype == Admin
                 value "link" $ show $ LinkUserAdmin $ Just $ userid user

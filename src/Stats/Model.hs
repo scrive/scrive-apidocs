@@ -287,7 +287,7 @@ fetchUserIDAndStats = kFold decoder M.empty
 
 data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
-  [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)], Maybe InviteInfo)] where
+  [(User, Maybe Company, Maybe InviteInfo)] where
   query (GetUsersAndStatsAndInviteInfo filters sorting (offset,limit)) = do
     _ <- kRun $ mconcat
          [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
@@ -304,16 +304,9 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
     _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
     usersWithCompaniesAndInviteInfo <- fetchUsersAndCompaniesAndInviteInfo
 
-    _ <- kRun $ selectUserIDAndStatsSQL (DocStatCreate, DocStatClose) <>
-         SQL " AND EXISTS (SELECT 1 FROM users_and_companies_temp WHERE users_and_companies_temp.user_id = e.user_id)" []
-
-    stats <- fetchUserIDAndStats
-
     _ <- kRunRaw "DROP TABLE users_and_companies_temp"
 
-    let findStats (user,mcompany,minviteinfo) = (user, mcompany, M.findWithDefault [] (userid user) stats,minviteinfo)
-
-    return $ map findStats usersWithCompaniesAndInviteInfo
+    return $ usersWithCompaniesAndInviteInfo
 
 {-------- Doc Stat Updates --}
 
