@@ -8,8 +8,6 @@ module Stats.Model
          GetDocStatEvents(..),
          GetDocStatEventsByCompanyID(..),
          GetDocStatEventsByUserID(..),
-         GetDocStatCSV(..),
-         GetDocHistCSV(..),
 
          UserStatEvent(..),
          AddUserStatEvent(..),
@@ -23,7 +21,6 @@ module Stats.Model
          AddSignStatEvent(..),
          AddSignStatEvent2(..),
          GetSignStatEvents(..),
-         GetSignHistCSV(..),
 
          GetUsersAndStatsAndInviteInfo(..),
          StatUpdate,
@@ -56,10 +53,7 @@ import Stats.Tables
 import Doc.DocumentID
 import Company.Model
 import OurPrelude
-import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 
 {------ Doc Stats ------}
 
@@ -157,62 +151,6 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
       <> SQL "AND e.time >= ?" [toSql since]
     fetchDocStats
 
-data GetDocStatCSV = GetDocStatCSV MinutesTime MinutesTime
-instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
-  query (GetDocStatCSV start end) = do
-    _ <- kRun $ SQL ("SELECT doc_stat_events.user_id, trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " <>
-                    "       doc_stat_events.time, doc_stat_events.quantity, doc_stat_events.amount,  " <>
-                    "       doc_stat_events.document_id, trim(companies.name), " <>
-                    "       doc_stat_events.company_id, doc_stat_events.type, doc_stat_events.process, doc_stat_events.api_string " <>
-                    "FROM doc_stat_events " <>
-                    "LEFT JOIN users ON doc_stat_events.user_id = users.id " <>
-                    "LEFT JOIN companies ON doc_stat_events.company_id = companies.id " <>
-                    "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" <>
-                    "ORDER BY doc_stat_events.time DESC") [toSql start, toSql end]
-    kFold f []
-      where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe CompanyID -> Int -> DocumentProcess -> BS.ByteString -> [[BS.ByteString]]
-            f acc uid n em t q a did cn cid dt dp api =
-              let smartname = if BS.null n then em else n
-              in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q,
-                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, BS.fromString $ show (documentType (dt, dp)), api] : acc
-
-data GetDocHistCSV = GetDocHistCSV MinutesTime MinutesTime
-instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
-  query (GetDocHistCSV start end) = do
-    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.type, ds.process," <>
-                     "       creat.time, " <>
-                     "       send.time, " <>
-                     "       close.time, " <>
-                     "       reject.time, " <>
-                     "       cancel.time, " <>
-                     "       timeout.time " <>
-                     "FROM (SELECT DISTINCT document_id, company_id, type, process FROM doc_stat_events WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?) AS ds " <>
-                     "LEFT JOIN doc_stat_events AS creat   ON (ds.document_id = creat.document_id   AND creat.quantity = ?)" <>
-                     "LEFT JOIN doc_stat_events AS send    ON (ds.document_id = send.document_id    AND send.quantity = ?)" <>
-                     "LEFT JOIN doc_stat_events AS close   ON (ds.document_id = close.document_id   AND close.quantity = ?)" <>
-                     "LEFT JOIN doc_stat_events AS reject  ON (ds.document_id = reject.document_id  AND reject.quantity = ?)" <>
-                     "LEFT JOIN doc_stat_events AS cancel  ON (ds.document_id = cancel.document_id  AND cancel.quantity = ?)" <>
-                     "LEFT JOIN doc_stat_events AS timeout ON (ds.document_id = timeout.document_id AND timeout.quantity = ?)" <>
-                     "ORDER BY ds.document_id DESC") [toSql start,
-                                                      toSql end,
-                                                      toSql DocStatCreate,
-                                                      toSql DocStatSend,
-                                                      toSql DocStatClose,
-                                                      toSql DocStatReject,
-                                                      toSql DocStatCancel,
-                                                      toSql DocStatTimeout]
-    kFold f []
-      where f :: [[String]] -> DocumentID -> Maybe CompanyID -> Int -> DocumentProcess -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
-            f acc did co st dp cr se cl re ca ti =
-              [ show did
-              , maybe "" show co
-              , show (documentType (st, dp))
-              , maybe "" formatMinutesTimeISO cr
-              , maybe "" formatMinutesTimeISO se
-              , maybe "" formatMinutesTimeISO cl
-              , maybe "" formatMinutesTimeISO re
-              , maybe "" formatMinutesTimeISO ca
-              , maybe "" formatMinutesTimeISO ti ] : acc
 
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
 selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
@@ -533,41 +471,6 @@ instance MonadDB m => DBUpdate m AddSignStatEvent2 Bool where
         sqlWhereEq "quantity" quantity
         sqlWhereEq "signatory_link_id " slid
 
-data GetSignHistCSV = GetSignHistCSV MinutesTime MinutesTime
-instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
-  query (GetSignHistCSV start end) = do
-    _ <- kRun $ SQL ("SELECT ss.document_id, ss.signatory_link_id, ss.company_id, ss.document_process, " <>
-                     "       invite.time, " <>
-                     "       receive.time, " <>
-                     "       open.time, " <>
-                     "       link.time, " <>
-                     "       sign.time, " <>
-                     "       reject.time, " <>
-                     "       del.time, " <>
-                     "       purge.time " <>
-                     "FROM (SELECT DISTINCT document_id, signatory_link_id, company_id, document_process FROM sign_stat_events WHERE sign_stat_events.time > ? AND sign_stat_events.time <= ?) AS ss " <>
-                     "LEFT JOIN sign_stat_events AS invite   ON (ss.document_id = invite.document_id   AND invite.quantity  = ? AND ss.signatory_link_id = invite.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS receive  ON (ss.document_id = receive.document_id  AND receive.quantity = ? AND ss.signatory_link_id = receive.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS open     ON (ss.document_id = open.document_id     AND open.quantity    = ? AND ss.signatory_link_id = open.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS link     ON (ss.document_id = link.document_id     AND link.quantity    = ? AND ss.signatory_link_id = link.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS sign     ON (ss.document_id = sign.document_id     AND sign.quantity    = ? AND ss.signatory_link_id = sign.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS reject   ON (ss.document_id = reject.document_id   AND reject.quantity  = ? AND ss.signatory_link_id = reject.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS del      ON (ss.document_id = del.document_id      AND del.quantity     = ? AND ss.signatory_link_id = del.signatory_link_id )" <>
-                     "LEFT JOIN sign_stat_events AS purge    ON (ss.document_id = purge.document_id    AND purge.quantity   = ? AND ss.signatory_link_id = purge.signatory_link_id )" <>
-                     "ORDER BY ss.document_id DESC, ss.signatory_link_id DESC") [toSql start,
-                                                      toSql end,
-                                                      toSql SignStatInvite,
-                                                      toSql SignStatReceive,
-                                                      toSql SignStatOpen,
-                                                      toSql SignStatLink,
-                                                      toSql SignStatSign,
-                                                      toSql SignStatReject,
-                                                      toSql SignStatDelete,
-                                                      toSql SignStatPurge]
-    kFold f []
-      where f :: [[String]] -> DocumentID -> SignatoryLinkID -> Maybe CompanyID -> String -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
-            f acc did sid co t inv rec op li si rej del pur =
-              [show did, show sid, maybe "" show co, t, maybe "" formatMinutesTimeISO inv, maybe "" formatMinutesTimeISO rec, maybe "" formatMinutesTimeISO op, maybe "" formatMinutesTimeISO li, maybe "" formatMinutesTimeISO si, maybe "" formatMinutesTimeISO rej, maybe "" formatMinutesTimeISO del, maybe "" formatMinutesTimeISO pur] : acc
 
 -- More readable names for types used in stat logging.
 type APIString = String
