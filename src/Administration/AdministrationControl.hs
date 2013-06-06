@@ -111,9 +111,6 @@ adminonlyRoutes =
 
         , dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
 
-        , dir "statsbyday"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByDayJSON
-        , dir "statsbymonth" $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByMonthJSON
-
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
   ]
 

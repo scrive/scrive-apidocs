@@ -2,8 +2,6 @@ module Stats.Control
        (
          showAdminCompanyUsageStats,
          showAdminUserUsageStats,
-         handleAdminSystemUsageStatsByDayJSON,
-         handleAdminSystemUsageStatsByMonthJSON,
          addDocumentCloseStatEvents,
          addDocumentCreateStatEvents,
          addDocumentSendStatEvents,
@@ -44,7 +42,6 @@ import Utils.List
 import Stats.Model
 import Stats.View
 import Doc.SignatoryLinkID
-import Text.JSON
 import Doc.DocumentID
 import User.Model
 import Util.HasSomeUserInfo
@@ -58,7 +55,6 @@ import Control.Monad
 import Control.Monad.Trans.Control
 import Control.Applicative
 import User.Utils
-import ListUtil
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do
@@ -84,26 +80,6 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   content <- adminCompanyUsageStatsPage companyid $ do
     F.objects "statistics" $ statisticsCompanyFieldsByDay fullnames
   renderFromBody kontrakcja content
-
-handleAdminSystemUsageStatsByDayJSON :: Kontrakcja m => m JSValue
-handleAdminSystemUsageStatsByDayJSON =
-    onlySalesOrAdmin $ do
-      stats <- calculateStatsByDay <$> getAdminSystemUsageStats (30 `daysBefore`)
-      return $ singlePageListToJSON $ map (statToJSON showAsDate) (take 30 stats)
-
-handleAdminSystemUsageStatsByMonthJSON :: Kontrakcja m => m JSValue
-handleAdminSystemUsageStatsByMonthJSON =
-    onlySalesOrAdmin $ do
-      stats <- calculateStatsByMonth <$> getAdminSystemUsageStats (6 `monthsBefore`)
-      return $ singlePageListToJSON $ map (statToJSON showAsMonth) (take 6 stats)
-
-getAdminSystemUsageStats :: Kontrakcja m => (MinutesTime -> MinutesTime) -> m [(Int, [Int])]
-getAdminSystemUsageStats timeDiff = do
-    time <- timeDiff <$> ctxtime <$> getContext
-    statEvents <- dbQuery $ GetDocStatEvents time
-    userEvents <- dbQuery $ GetUserStatEvents
-    return $ (catMaybes $ map statEventToDocStatTuple statEvents)
-          ++ (catMaybes $ map userEventToDocStatTuple userEvents)
 
 
 {- |
@@ -163,11 +139,6 @@ statCompanyEventToDocStatTuple (DocStatEvent {seTime, seUserID, seQuantity, seAm
   DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount, 0])
   _                      -> Nothing
 
-userEventToDocStatTuple :: UserStatEvent -> Maybe (Int, [Int])
-userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case usQuantity of
-  UserSignTOS -> Just (asInt usTime, [0, 0, 0, usAmount])
-  _           -> Nothing
-
 calculateDocStats :: MinutesTime -> [(Int, [Int])] -> DocStats
 calculateDocStats ctxtime events =
   let m1  = asInt $ monthsBefore 1 ctxtime
@@ -196,12 +167,6 @@ calculateStatsByDay :: [(Int, [Int])] -> [(Int, [Int])]
 calculateStatsByDay events =
   let byDay = groupWith fst $ reverse $ sortWith fst events
   in map sumStats byDay
-
-calculateStatsByMonth :: [(Int, [Int])] -> [(Int, [Int])]
-calculateStatsByMonth events =
-  let monthOnly = [(100 * (a `div` 100), b) | (a, b) <- events]
-      byMonth = groupWith fst $ reverse $ sortWith fst monthOnly
-  in map sumStats byMonth
 
 calculateCompanyDocStats :: [(Int, UserID, [Int])] -> [(Int, UserID, [Int])]
 calculateCompanyDocStats events =
