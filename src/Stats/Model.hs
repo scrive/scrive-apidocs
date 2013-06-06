@@ -19,7 +19,6 @@ module Stats.Model
          AddSignStatEvent2(..),
          GetSignStatEvents(..),
 
-         GetUsersAndStatsAndInviteInfo(..),
          StatUpdate,
          StatEvt (..),
          statUpdate,
@@ -35,7 +34,6 @@ module Stats.Model
        where
 
 import Control.Monad
-import Control.Applicative ((<$>), (<*>))
 import Data.Monoid
 import Data.List
 import Database.HDBC
@@ -50,7 +48,6 @@ import Stats.Tables
 import Doc.DocumentID
 import Company.Model
 import OurPrelude
-import qualified Data.Map as M
 
 {------ Doc Stats ------}
 
@@ -94,193 +91,7 @@ data DocStatEvent = DocStatEvent {
 
 {-------- Doc Stat Queries ---}
 
-selectDocStatEventsSQL :: SQL
-selectDocStatEventsSQL = SQL ("SELECT "
- <> "  e.user_id"
- <> ", e.time"
- <> ", e.quantity"
- <> ", e.amount"
- <> ", e.document_id"
- <> ", e.company_id"
- <> ", e.type"
- <> ", e.process"
- <> ", e.api_string"
- <> "  FROM doc_stat_events e"
- <> " ") []
 
-
-fetchDocStats :: MonadDB m => m [DocStatEvent]
-fetchDocStats = kFold decoder []
-  where
-    decoder acc uid time quantity amount documentid
-     companyid dtype dprocess apistring =
-       DocStatEvent {
-            seUserID       = uid
-          , seTime         = time
-          , seQuantity     = quantity
-          , seAmount       = amount
-          , seDocumentID   = documentid
-          , seCompanyID    = companyid
-          , seDocumentType = documentType (dtype, dprocess)
-          , seAPIString    = apistring
-          } : acc
-
-
-selectUsersAndCompaniesAndInviteInfoSQL :: SQL
-selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
-  -- User:
-  <> "  users.id AS user_id"
-  <> ", users.password"
-  <> ", users.salt"
-  <> ", users.is_company_admin"
-  <> ", users.account_suspended"
-  <> ", users.has_accepted_terms_of_service"
-  <> ", users.signup_method"
-  <> ", users.company_id AS user_company_id"
-  <> ", users.first_name"
-  <> ", users.last_name"
-  <> ", users.personal_number"
-  <> ", users.company_position"
-  <> ", users.phone"
-  <> ", users.email"
-  <> ", users.lang"
-  <> ", users.company_name"
-  <> ", users.company_number"
-  <> ", users.is_free"
-  <> ", users.associated_domain"
-
-  -- Company:
-  <> ", c.id AS company_id"
-  <> ", c.name"
-  <> ", c.number"
-  <> ", c.address"
-  <> ", c.zip"
-  <> ", c.city"
-  <> ", c.country"
-  <> ", email_domain"
-  <> ", ip_address_mask_list"
-  -- InviteInfo:
-  <> ", user_invite_infos.inviter_id"
-  <> ", user_invite_infos.invite_time"
-  <> ", user_invite_infos.invite_type"
-  <> "  FROM users"
-  <> "  LEFT JOIN companies c ON users.company_id = c.id"
-  <> "  LEFT JOIN user_invite_infos ON users.id = user_invite_infos.user_id"
-  <> "  WHERE users.deleted = FALSE")
-  []
-
-
-fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => m [(User, Maybe Company, Maybe InviteInfo)]
-fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
-  where
-    decoder acc uid password salt is_company_admin account_suspended
-     has_accepted_terms_of_service signup_method company_id
-     first_name last_name personal_number company_position phone
-     email lang company_name company_number is_free associated_domain cid
-     name number address zip' city country email_domain ip_address_mask inviter_id
-     invite_time invite_type
-     = (
-       User {
-           userid = uid
-         , userpassword = maybePassword (password, salt)
-         , useriscompanyadmin = is_company_admin
-         , useraccountsuspended = account_suspended
-         , userhasacceptedtermsofservice = has_accepted_terms_of_service
-         , usersignupmethod = signup_method
-         , userinfo = UserInfo {
-             userfstname = first_name
-           , usersndname = last_name
-           , userpersonalnumber = personal_number
-           , usercompanyposition = company_position
-           , userphone = phone
-           , useremail = email
-           , usercompanyname = company_name
-           , usercompanynumber = company_number
-           }
-         , usersettings = UserSettings {
-             lang = lang
-           }
-         , usercompany = company_id
-         , userisfree = is_free
-         , userassociateddomain = associated_domain
-         }
-        , case cid of
-            (Just _) -> Just Company {
-                companyid = $(fromJust) cid
-              , companyinfo = CompanyInfo {
-                  companyname = $(fromJust) name
-                , companynumber = $(fromJust) number
-                , companyaddress = $(fromJust) address
-                , companyzip = $(fromJust) zip'
-                , companycity = $(fromJust) city
-                , companycountry = $(fromJust) country
-                , companyemaildomain = email_domain
-                , companyipaddressmasklist = maybe [] $(read) ip_address_mask
-                }
-              , companyui = CompanyUI {
-                  companyemailfont = Nothing
-                , companyemailbordercolour = Nothing
-                , companyemailbuttoncolour = Nothing
-                , companyemailemailbackgroundcolour = Nothing
-                , companyemailbackgroundcolour = Nothing
-                , companyemailtextcolour = Nothing
-                , companyemaillogo = Nothing
-                , companysignviewlogo = Nothing
-                , companysignviewtextcolour = Nothing
-                , companysignviewtextfont = Nothing
-                , companysignviewbarscolour = Nothing
-                , companysignviewbarstextcolour = Nothing
-                , companysignviewbackgroundcolour = Nothing
-                , companycustomlogo = Nothing
-                , companycustombarscolour = Nothing
-                , companycustombarstextcolour = Nothing
-                , companycustombarssecondarycolour = Nothing
-                , companycustombackgroundcolour = Nothing
-                }
-              }
-            _ -> Nothing
-        , InviteInfo <$> inviter_id <*> invite_time <*> invite_type
-        ) : acc
-
-selectUserIDAndStatsSQL :: (DocStatQuantity, DocStatQuantity) -> SQL
-selectUserIDAndStatsSQL (q1, q2) = SQL ("SELECT "
-  <> " e.user_id"
-  <> ", e.time"
-  <> ", e.quantity"
-  <> ", e.amount"
-  <> "  FROM doc_stat_events e"
-  <> "    WHERE e.quantity IN (?, ?)")
-  [toSql q1, toSql q2]
-
-
-fetchUserIDAndStats :: MonadDB m => m (M.Map UserID [(MinutesTime, DocStatQuantity, Int)])
-fetchUserIDAndStats = kFold decoder M.empty
-  where
-    decoder acc uid time quantity amount =
-      M.insertWith' (++) uid [(time,quantity,amount)] acc
-
-data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] (Int,Int)
-instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
-  [(User, Maybe Company, Maybe InviteInfo)] where
-  query (GetUsersAndStatsAndInviteInfo filters sorting (offset,limit)) = do
-    _ <- kRun $ mconcat
-         [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
-         , selectUsersAndCompaniesAndInviteInfoSQL
-         , if null filters
-             then SQL "" []
-             else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
-         , if null sorting
-           then mempty
-           else SQL " ORDER BY " [] <> sqlConcatComma (map userOrderByAscDescToSQL sorting)
-         , " OFFSET" <?> offset <+> "LIMIT" <?> limit
-         ]
-
-    _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
-    usersWithCompaniesAndInviteInfo <- fetchUsersAndCompaniesAndInviteInfo
-
-    _ <- kRunRaw "DROP TABLE users_and_companies_temp"
-
-    return $ usersWithCompaniesAndInviteInfo
 
 {-------- Doc Stat Updates --}
 

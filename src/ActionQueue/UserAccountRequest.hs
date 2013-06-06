@@ -22,7 +22,6 @@ import DB.SQL2
 import KontraLink
 import MagicHash
 import MinutesTime
-import Stats.Model
 import User.Model
 import qualified Log
 import Recurly
@@ -57,7 +56,6 @@ userAccountRequest = Action {
     case mplan of
       Nothing -> do
         _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
-        _ <- dbUpdate $ RemoveInactiveUserLoginEvents uarUserID
         success <- dbUpdate $ RemoveInactiveUser uarUserID
         when success $
           Log.debug $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
@@ -74,7 +72,6 @@ userAccountRequest = Action {
                 Log.debug $ "Successfully terminated subscription from recurly with account code = " ++ (show $ ppAccountCode plan)
                 _ <- dbUpdate $ DeletePaymentPlan (Left uarUserID)
                 _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
-                _ <- dbUpdate $ RemoveInactiveUserLoginEvents uarUserID
                 success <- dbUpdate $ RemoveInactiveUser uarUserID
                 when success $
                   Log.debug $ "Inactive user (Recurly plan) with id = " ++ show uarUserID ++ " successfully removed from database"
@@ -84,7 +81,6 @@ userAccountRequest = Action {
         -- No need to mess with recurly! -- Eric
         _ <- dbUpdate $ DeletePaymentPlan (Left uarUserID)
         _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
-        _ <- dbUpdate $ RemoveInactiveUserLoginEvents uarUserID
         success <- dbUpdate $ RemoveInactiveUser uarUserID
         when success $
           Log.debug $ "Inactive user (no provider plan) with id = " ++ show uarUserID ++ " successfully removed from database"

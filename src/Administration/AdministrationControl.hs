@@ -65,7 +65,6 @@ import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
-import Stats.Control (getUsersAndStatsInv)
 import User.History.Model
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic

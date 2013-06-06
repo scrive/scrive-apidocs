@@ -486,3 +486,17 @@ handleContactUs = do
           , content = content
       }
   return $ LoopBack
+
+-- For User Admin tab in adminonly
+getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Maybe Company, InviteType)]
+getUsersAndStatsInv filters sorting pagination = do
+  list <- dbQuery $ GetUsersAndStatsAndInviteInfo filters sorting pagination
+  return $ convert' list
+  where
+    convert' list = map (\(u,mc,iv) ->
+                                   ( u
+                                   , mc
+                                   , case iv of
+                                       Nothing                     -> Admin
+                                       Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
+                                   )) list
