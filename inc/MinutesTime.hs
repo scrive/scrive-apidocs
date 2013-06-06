@@ -185,8 +185,12 @@ daysAfter :: Int -> MinutesTime -> MinutesTime
 daysAfter i mt = minutesAfter (i * 60 * 24) mt
 
 monthsBefore :: Int -> MinutesTime -> MinutesTime
-monthsBefore i mt = daysBefore (i * 31) mt
-
+monthsBefore i = fromClockTime . System.Time.toClockTime . move . toCalendarTimeInUTC
+  where
+    move (ct@CalendarTime { ctMonth = m, ctYear = y }) =
+      ct { ctMonth = toEnum ((fromEnum m + y*12 - i) `mod` 12)
+         , ctYear = (fromEnum m + y*12 - i) `div` 12
+         }
 
 beginingOfMonth :: MinutesTime -> MinutesTime
 beginingOfMonth time = fromClockTime $ System.Time.toClockTime $ (toCalendarTimeInUTC time) { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
