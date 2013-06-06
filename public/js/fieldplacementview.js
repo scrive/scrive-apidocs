@@ -43,7 +43,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             placement = undefined;
             field = fieldOrPlacement;
         }
-        if(field.isFake()) 
+        if(field.isFake())
             verticaloffset = -1;
         else if (field.isText())
             verticaloffset = -1;
@@ -682,10 +682,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var field = placement.field();
 
         var signatory = placement.signatory();
-        var fields = signatory.field();
-
-
-        var div = $('<div />');
 
         var name = localization.designview.selectField;
 
@@ -695,18 +691,10 @@ var TextPlacementPlacedView = Backbone.View.extend({
         // clone the array
         var allFieldOptions = view.possibleFields.concat([]);
 
-        function isUnique(field) {
-            return _.every(allFieldOptions, function(o) {
-                return field.name() !== o.name && field.type() !== o.type;
-            });
-        }
-
-        _.each(signatory.document().signatories(), function(signatory) {
-            _.each(signatory.fields(), function(f) {
-                if(f.isText() && f.name() !== '' && isUnique(f))
+        _.each(signatory.fields(), function(f) {
+                if(f.isCustom() && f.name() !== '')
                     allFieldOptions.push({name: f.name(),
                                           type: f.type()});
-            });
         });
 
         var options = [];
