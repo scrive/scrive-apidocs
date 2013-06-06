@@ -21,8 +21,6 @@ import HostClock.Tables
 import User.Migrations
 import User.Tables
 import User.History.Tables
-import Stats.Tables
-import Stats.Migrations
 import File.Tables
 import File.Migrations
 import Mails.Tables
@@ -52,10 +50,8 @@ kontraFunctions = [
 kontraMigrations :: (MonadDB m, MonadIO m) => [Migration m]
 kontraMigrations = [
     addRegionToUserSettings
-  , addServiceAndCompanyToStats
   , removeSystemServer
   , addUserCustomFooter
-  , makeUserStatsRepeatableByChangingPK
   , addNameColumnInSignatoryAttachments
   , addCSVUploadDataFromDocumentToSignatoryLink
   , addColumnToRecordInternalInsertionOrder
@@ -85,14 +81,11 @@ kontraMigrations = [
   , dropDocumentIDColumntFromSignatoryAttachments
   , addCheckLowercaseEmailsUsers
   , moveSignatoryLinkFieldsToSeparateTable
-  , addAPIStringDocStats
   , migrateTempCredentialRemoveEmail -- for oauth
   , deprecateDocFunctionalityCol
   , removePreferedDesignMode
   , addDefaultEmptyStringsToSomeColumnsInCompaniesTable
   , addOCSPResponse
-  , removeUserRefuseSaveAfterSignEvent
-  , removeDocEventsThatReferenceNotActivatedUsers
   , addCryptoColumnsToFilesTable
   , addForeignKeyToDocumentTags
   , addIsFree
@@ -103,9 +96,6 @@ kontraMigrations = [
   , removeServiceIDFromCompanies
   , removeServiceIDFromDocuments
   , removeServiceIDFromUsers
-  , removeServiceIDFromDocStatEvents
-  , removeServiceIDFromUserStatEvents
-  , removeServiceIDFromSignStatEvents
   , removeDiskPathAndMakeNewColumnsNotNull
   , addApiCallbackUrlToDocument
   , removeSignatoryRoles
@@ -120,10 +110,8 @@ kontraMigrations = [
   , attachUniqueContraintsToPaymentPlansColumns
   , removeSignatoryLinksInternalInsertOrder
   , addUnsavedDraftToDocument
-  , removeBrokenLinksFromSignStatsEvents
   , expandEventsWithAffectedSignatoryAndTextMessage
   , addObligatoryColumnToSignatoryLinkFields
-  , separateDocumentTypeInDocStatEvents
   , addIPAddressMaskListToCompanies
   , dropTrustWeaverReferenceFromDocuments
   , dropCSVSignatoryIndexFromSignatoryLinks
@@ -157,9 +145,6 @@ kontraTables = [
   , tableUsersHistory
   , tableCompanies
   , tableCompanyInvites
-  , tableDocStatEvents
-  , tableUserStatEvents
-  , tableSignStatEvents
   , tableFiles
   , tableDocuments
   , tableSignatoryLinks

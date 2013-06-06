@@ -19,6 +19,8 @@ module Administration.AdministrationView(
             , adminCompanyUsageStatsPage
             , adminUserPaymentPage
             , adminUserDocumentsPage
+            , statisticsCompanyFields
+            , statisticsFields
           ) where
 
 import KontraLink
@@ -27,6 +29,7 @@ import Data.Maybe
 import User.Model
 import Company.Model
 import Data.List
+import MinutesTime
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Kontra
@@ -196,3 +199,21 @@ userFields u =  do
         F.value "companynumber"    $ getCompanyNumber u
         F.value "companyname"      $ getCompanyName   u
         F.value "isfree"           $ userisfree u
+
+statisticsFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
+statisticsFields formatTime = map f
+  where f uus = do
+                F.value "date" $ formatTime (fst $ uusTimeSpan uus)
+                F.value "closed" (uusDocumentsClosed uus)
+                F.value "signatures" (uusSignaturesClosed uus)
+                F.value "sent" (uusDocumentsSent uus)
+
+statisticsCompanyFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
+statisticsCompanyFields formatTime = map f
+  where f uus = do
+                F.value "date" $ formatTime (fst $ uusTimeSpan uus)
+                F.value "user" $ ((\(_,_,n) -> n) <$> uusUser uus)
+                F.value "istotal" False -- FIMXE: need totals...
+                F.value "closed" $ uusDocumentsClosed uus
+                F.value "signatures" $ uusSignaturesClosed uus
+                F.value "sent" $ uusDocumentsSent uus

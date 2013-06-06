@@ -71,7 +71,6 @@ import Control.Logic
 import Doc.DocInfo
 import EvidenceLog.Model
 import Routing
-import qualified Stats.Control as Stats
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import Happstack.StaticRouting(Route, choice, dir)
@@ -83,6 +82,8 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import File.Model
 import File.Storage
 
+import AppView
+
 adminonlyRoutes :: Route (KontraPlus Response)
 adminonlyRoutes =
   fmap onlySalesOrAdmin $ choice $ [
@@ -90,7 +91,7 @@ adminonlyRoutes =
         , dir "createuser" $ hPost $ toK0 $ handleCreateUser
         , dir "userslist" $ hGet $ toK0 $ jsonUsersList
         , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
-        , dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
+        , dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ showAdminUserUsageStats
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
         , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
         , dir "useradmin" $ dir "payments" $ hGet $ toK1 $ showAdminUserPayments
@@ -103,7 +104,7 @@ adminonlyRoutes =
         , dir "companyadmin" $ dir "payments" $ hGet $ toK1 $ showAdminCompanyPayments
         , dir "companyadmin" $ dir "payments" $ hPost $ toK1 $ handleCompanyPaymentsChange
         , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
-        , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
+        , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ showAdminCompanyUsageStats
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
 
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
@@ -838,3 +839,35 @@ daveFile fileid' _title = onlyAdmin $ do
           return res2
 
 
+
+showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
+showAdminUserUsageStats userid = onlySalesOrAdmin $ do
+
+  Context{ctxtime} <- getContext
+  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
+                     | daysBack <- [0 .. 30]
+                     , t <- [daysBefore daysBack ctxtime]
+                    ]
+  stats <- dbQuery $ GetUserUsageStats (Just userid) Nothing timespans
+  Just user <- dbQuery $ GetUserByID userid
+  mcompany <- getCompanyForUser user
+
+  content <- adminUserUsageStatsPage user mcompany $ do
+    F.objects "statistics" $ statisticsFields (formatMinutesTime "%Y-%m-%d") stats
+  renderFromBody kontrakcja content
+
+
+
+showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
+showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
+
+  Context{ctxtime} <- getContext
+  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
+                     | daysBack <- [0 .. 30]
+                     , t <- [daysBefore daysBack ctxtime]
+                    ]
+  stats <- dbQuery $ GetUserUsageStats Nothing (Just companyid) timespans
+
+  content <- adminCompanyUsageStatsPage companyid $ do
+    F.objects "statistics" $ statisticsCompanyFields (formatMinutesTime "%Y-%m-%d") stats
+  renderFromBody kontrakcja content
