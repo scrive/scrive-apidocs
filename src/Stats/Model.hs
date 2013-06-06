@@ -5,9 +5,6 @@ module Stats.Model
          DocStatEvent(..),
          DocStatQuantity(..),
          FlushDocStats(..),
-         GetDocStatEvents(..),
-         GetDocStatEventsByCompanyID(..),
-         GetDocStatEventsByUserID(..),
 
          UserStatEvent(..),
          AddUserStatEvent(..),
@@ -127,29 +124,6 @@ fetchDocStats = kFold decoder []
           , seDocumentType = documentType (dtype, dprocess)
           , seAPIString    = apistring
           } : acc
-
-data GetDocStatEvents = GetDocStatEvents MinutesTime
-instance MonadDB m => DBQuery m GetDocStatEvents [DocStatEvent] where
-  query (GetDocStatEvents since) = do
-    _ <- kRun $ selectDocStatEventsSQL
-      <> SQL "WHERE e.time >= ?" [toSql since]
-    fetchDocStats
-
-data GetDocStatEventsByUserID = GetDocStatEventsByUserID UserID MinutesTime
-instance MonadDB m => DBQuery m GetDocStatEventsByUserID [DocStatEvent] where
-  query (GetDocStatEventsByUserID userid since) = do
-    _ <- kRun $ selectDocStatEventsSQL
-      <> SQL "WHERE e.user_id = ?" [toSql userid]
-      <> SQL "AND e.time >= ?" [toSql since]
-    fetchDocStats
-
-data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID MinutesTime
-instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
-  query (GetDocStatEventsByCompanyID companyid since) = do
-    _ <- kRun $ selectDocStatEventsSQL
-      <> SQL "WHERE e.company_id = ?" [toSql companyid]
-      <> SQL "AND e.time >= ?" [toSql since]
-    fetchDocStats
 
 
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
