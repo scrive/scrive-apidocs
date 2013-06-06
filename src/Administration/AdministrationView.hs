@@ -15,7 +15,6 @@ module Administration.AdministrationView(
             , adminCompanyBrandingPage
             , adminCompanyUsersPage
             , adminCompanyPaymentPage
-            , allUsersTable
             , adminUserUsageStatsPage
             , adminCompanyUsageStatsPage
             , adminUserPaymentPage
@@ -25,9 +24,7 @@ module Administration.AdministrationView(
 import KontraLink
 import Text.StringTemplates.Templates
 import Data.Maybe
-import User.UserView
 import User.Model
-import Doc.DocStateData
 import Company.Model
 import Data.List
 import Util.HasSomeUserInfo
@@ -169,20 +166,6 @@ adminCompanyUsageStatsPage companyid morefields =
         F.value "adminlink" $ show $ LinkAdminOnly
         F.value "companyid" $ show companyid
         morefields
-
-allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats,InviteType)] -> m String
-allUsersTable users =
-    renderTemplate "allUsersTable" $ do
-        F.objects "users" $ map mkUserInfoView $ users
-        F.value "adminlink" $ show $ LinkAdminOnly
-
-mkUserInfoView :: Monad m => (User, Maybe Company, DocStats,InviteType) -> Fields m ()
-mkUserInfoView (user, mcompany, docstats, _) = do
-  F.object "userdetails" $ userBasicFields user mcompany
-  F.value "docstats" $ docstats
-  F.object "adminview" $ do
-    userFields user
-    companyFields mcompany
 
 companyFields :: Monad m => Maybe Company -> Fields m ()
 companyFields mc = do
