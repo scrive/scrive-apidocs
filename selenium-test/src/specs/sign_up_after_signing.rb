@@ -34,18 +34,32 @@ describe "sign up after signing a document" do
     puts "sign the doc"
     @h.dochelper.partSign
 
-    puts "we should be given the option to accept the tos"
-    @h.wait_until { @h.driver.find_element :css => "a.blue.button.button-large" }.click
+    puts "we should be given the option to save the doc in the archive and create an account"
+    @h.wait_until { @h.driver.find_element :css => "a.button.button-large" }.click
+    (@h.wait_until { @h.driver.find_element :css => ".tst-action" }).click
+
+    puts "should be logged in and able to upload a document"
+    @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
+    @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
+    @h.wait_until { @h.driver.find_element :css => ".archive" }
+
+    @h.loginhelper.logout
+    @h.emailhelper.follow_link_in_latest_mail_for random_email
+
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
-    @h.driver.execute_script("$('.save .button').click()")
-    @h.wait_until { @h.driver.find_element :css => ".errormsg" }
+    @h.driver.execute_script("$('a.blue.button').click()")
+    sleep 1
+    @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
+    (@h.wait_until { @h.driver.find_element :css => ".flash-close img" }).click
 
     puts "fill in the password details incorrectly and make sure we get invalid elements"
     (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-12"
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
     sleep 1
-    @h.driver.execute_script("$('.save .button').click()")
-    @h.wait_until { @h.driver.find_element :css => ".errormsg" }
+    @h.driver.execute_script("$('a.blue.button').click()")
+    sleep 1
+    @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
+    (@h.wait_until { @h.driver.find_element :css => ".flash-close img" }).click
 
     puts "clear password2 and really activate"
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
@@ -54,10 +68,12 @@ describe "sign up after signing a document" do
 
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-12"
     sleep 1
-    @h.driver.execute_script("$('.save .button').click()")
+    @h.driver.execute_script("$('a.blue.button').click()")
 
     puts "should be logged in"
-    (@h.wait_until { @h.driver.find_element :css => ".tst-action" }).click();
+    @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
+    @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
+    @h.wait_until { @h.driver.find_element :css => ".archive" }
     
     @h.loginhelper.logout
 
