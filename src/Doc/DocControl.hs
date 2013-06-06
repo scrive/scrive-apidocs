@@ -81,7 +81,6 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Util.MonadUtils
-import Stats.Control
 import User.Utils
 import Control.Applicative
 import Control.Concurrent

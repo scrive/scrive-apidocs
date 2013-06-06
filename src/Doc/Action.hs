@@ -41,7 +41,6 @@ import Text.StringTemplates.Templates
 import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
-import Stats.Control
 import ThirdPartyStats.Core
 import ActionQueue.UserAccountRequest
 import User.Action
@@ -75,7 +74,7 @@ logDocEvent name doc user extraProps = do
     stringProp "Signup Method" (show $ usersignupmethod user)]
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
-postDocumentPreparationChange doc@Document{documenttitle} apistring = do
+postDocumentPreparationChange doc@Document{documenttitle} _apistring = do
   let docid = documentid doc
   triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
@@ -104,10 +103,10 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
   sendInvitationEmails ctx document'
   sendInvitationEmailsToViewers ctx document'
 
-  _ <- addDocumentSendStatEvents (documentid document') apistring
+  return ()
 
 postDocumentPendingChange :: Kontrakcja m => Document -> Document -> String -> m ()
-postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistring = do
+postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc _apistring = do
   triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
     stateMismatchError "postDocumentPendingChange" Pending doc
@@ -120,7 +119,6 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
       Just closeddoc <- dbQuery $ GetDocumentByDocumentID documentid
 
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
-      _ <- addDocumentCloseStatEvents documentid apistring
       author <- getDocAuthor doc
       logDocEvent "Doc Closed" doc author []
       asyncLogEvent SetUserProps [UserIDProp (userid author),
@@ -149,7 +147,6 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
   Log.docevent $ "Pending -> Rejected; send reject emails: " ++ show documentid
-  _ <- addDocumentRejectStatEvents documentid apistring
   Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
   ctx <- getContext
   -- Log the fact that the current user rejected a document.
@@ -161,12 +158,11 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   return ()
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> String -> m ()
-postDocumentCanceledChange doc@Document{..} apistring = do
+postDocumentCanceledChange doc@Document{..} _apistring = do
   triggerAPICallbackIfThereIsOne doc
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
   Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
-  _ <- addDocumentCancelStatEvents documentid apistring
   -- if canceled because of ElegDataMismatch, send out emails
   author <- getDocAuthor doc
   let f sl = do

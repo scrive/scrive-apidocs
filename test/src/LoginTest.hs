@@ -1,4 +1,4 @@
-module LoginTest (loginTests, assertLoginEventRecordedFor) where
+module LoginTest (loginTests) where
 
 import Control.Applicative
 import Happstack.Server
@@ -8,7 +8,6 @@ import ActionQueue.PasswordReminder
 import DB
 import Context
 import Login
-import Stats.Model
 import TestingUtil
 import TestKontra as T
 import User.Model
@@ -74,7 +73,6 @@ testSuccessfulLoginSavesAStatEvent = do
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
-  assertLoginEventRecordedFor uid
 
 assertResettingPasswordLogsIn :: TestEnv ()
 assertResettingPasswordLogsIn = do
@@ -85,7 +83,6 @@ assertResettingPasswordRecordsALoginEvent :: TestEnv ()
 assertResettingPasswordRecordsALoginEvent = do
   (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
-  assertLoginEventRecordedFor (userid user)
 
 createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
@@ -99,13 +96,6 @@ createUserAndResetPassword = do
   (_res, ctx'') <- runTestKontra req2 ctx' apiCallGetUserProfile
   return (user, ctx'')
 
-assertLoginEventRecordedFor :: UserID -> TestEnv ()
-assertLoginEventRecordedFor uid = do
-  stats <- dbQuery $ GetUserStatEvents
-  let loginstats = filter (\UserStatEvent{usUserID, usQuantity} ->
-                              usUserID == uid && usQuantity == UserLogin) stats
-  assertEqual "Expected 1 login" 1 (length loginstats)
-  assertEqual "Expected amount 1" 1 (usAmount $ head loginstats)
 
 loginFailureChecks :: JSValue -> Context -> TestEnv ()
 loginFailureChecks res ctx = do

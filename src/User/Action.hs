@@ -28,7 +28,6 @@ import Util.FlashUtil
 import Util.HasSomeUserInfo
 import qualified Log
 import Util.MonadUtils
-import Stats.Control
 import Util.Actor
 import User.History.Model
 import ScriveByMail.Model
@@ -55,7 +54,7 @@ handleAccountSetupFromSign document signatorylink = do
     Just (activateduser, _) -> do
       let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
       _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
-      _ <- addUserSaveAfterSignStatEvent activateduser
+
       return $ Just activateduser
     Nothing -> return Nothing
 
@@ -119,10 +118,9 @@ handleActivate mfstname msndname actvuser signupmethod = do
               when (signupmethod == BySigning) $
                 scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
-              _ <- addUserSignTOSStatEvent tosuser
+
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               when (not stoplogin) $ do 
-                _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
               when (promo) $ addManualPricePlan (userid actvuser) TrialTeamPricePlan ActiveStatus
@@ -182,7 +180,7 @@ phoneMeRequest muser phone = do
     let user = fromJust muser
         name = getFirstName user ++ " " ++ getLastName user
     now <- ctxtime <$> getContext
-    _ <- addUserPhoneAfterTOS user
+
     asyncLogEvent "Phone Request" [UserIDProp (userid user),
                                    IPProp (ctxipnumber ctx),
                                    NameProp name,

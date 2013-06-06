@@ -33,7 +33,6 @@ import File.Model
 import Redirect
 import DB
 import DB.TimeZoneName (TimeZoneName)
-import Stats.Control
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils

@@ -16,7 +16,6 @@ import IPAddress
 import Company.Model
 import qualified Log (debug)
 import Util.HasSomeUserInfo
-import Stats.Control
 import User.History.Model
 
 import Control.Applicative
@@ -108,7 +107,7 @@ handleLoginPost = do
                           lang = ctxlang ctx
                         }
                         muuser <- dbQuery $ GetUserByID (userid user)
-                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
+
                         case muuser of
                           Just User{userid = uid} -> do
                             asyncLogEvent "Login" [

@@ -39,9 +39,7 @@ import Payments.Action
 import Company.Model
 import Mails.SendMail
 import ActionQueue.EmailChangeRequest
-import Stats.Control
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 import Crypto.RNG
 import Util.FlashUtil
 import ActionQueue.UserAccountRequest
@@ -192,8 +190,7 @@ apiCallCreateCompany =  api $  do
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   -- payment plan needs to migrate to company
   _ <- lift $ switchPlanToCompany (userid user) (companyid company)
-  upgradeduser <- lift $ guardJustM $ dbQuery $ GetUserByID $ userid user
-  _ <- lift $ addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+
   _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                               [("is_company_admin", "false", "true")]
                                               (Just $ userid user)

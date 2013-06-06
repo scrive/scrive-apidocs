@@ -13,7 +13,6 @@ import DB hiding (query, update)
 import FlashMessage
 import MagicHash (MagicHash)
 import Mails.Model
-import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Utils.Default
 import TestingUtil
@@ -63,7 +62,6 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   -- activate the account using the signup details
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" ctx3
-  assertLoginEventRecordedFor uarUserID
 
 testAcceptTOSToActivate :: TestEnv ()
 testAcceptTOSToActivate = do

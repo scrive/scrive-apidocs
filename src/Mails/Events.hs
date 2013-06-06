@@ -38,7 +38,6 @@ import Util.SignatoryLinkUtils
 import Doc.SignatoryLinkID
 import qualified Log
 import Util.Actor
-import Stats.Control
 import qualified Text.StringTemplates.Fields as F
 
 processEvents :: Scheduler ()
@@ -122,7 +121,7 @@ handleDeliveredInvitation (hostpart, mc) doc signlinkid = do
 handleOpenedInvitation :: (MonadDB m, TemplatesMonad m, MonadIO m) => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation doc signlinkid email muid = do
   now  <- getMinutesTime
-  success <- dbUpdate $ MarkInvitationRead (documentid doc) signlinkid
+  _ <- dbUpdate $ MarkInvitationRead (documentid doc) signlinkid
           (mailSystemActor now muid email signlinkid)
   return ()
 

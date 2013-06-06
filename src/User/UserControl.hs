@@ -33,7 +33,6 @@ import Util.FlashUtil
 import Util.MonadUtils
 import Util.HasSomeUserInfo
 import qualified Log
-import Stats.Control
 import User.Action
 import User.Utils
 import User.History.Model
@@ -288,8 +287,7 @@ handleAcceptTOSPost = do
   tos <- getDefaultedField False asValidCheckBox "tos"
   when (Just True == tos) $ do
       _ <- dbUpdate $ AcceptTermsOfService userid ctxtime
-      user <- guardJustM $ dbQuery $ GetUserByID userid
-      _ <- addUserSignTOSStatEvent user
+
       _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
   return ()
@@ -397,7 +395,7 @@ handleAccessNewAccountPost uid token = do
           _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
           _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
           addFlashM flashMessageUserPasswordChanged
-          _ <- addUserLoginStatEvent ctxtime user
+
           logUserToContext $ Just user
           runJSONGenT $ do
             value "logged" True
@@ -452,7 +450,7 @@ handlePasswordReminderPost uid token = do
           _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
           _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
           addFlashM flashMessageUserPasswordChanged
-          _ <- addUserLoginStatEvent ctxtime user
+
           logUserToContext $ Just user
           runJSONGenT $ do
             value "logged" True

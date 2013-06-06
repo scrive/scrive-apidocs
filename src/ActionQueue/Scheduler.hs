@@ -15,7 +15,6 @@ import AppConf
 import DB hiding (update, query)
 import Doc.DocStateData
 import Doc.Model
-import Stats.Control
 import Templates
 import Util.Actor
 import qualified Log
@@ -42,7 +41,6 @@ timeoutDocuments = do
   forM_ docs $ \doc -> do
     gt <- getGlobalTemplates
     runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
-    _ <- addDocumentTimeoutStatEvents (documentid doc) "scheduler"
     Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
   when (not (null docs)) $ do
     kCommit

@@ -28,7 +28,6 @@ import Util.MonadUtils
 import Control.Applicative
 import Control.Monad.Trans.Maybe
 import Util.SignatoryLinkUtils
-import Stats.Control
 import Util.Actor
 import Util.HasSomeUserInfo
 import Text.JSON
@@ -85,6 +84,7 @@ handleDelete = do
               case (documentstatus doc) of
                    Preparation -> do
                        _ <- dbUpdate $ ReallyDeleteDocument (userid user) (documentid doc) actor
+                       return ()
 
                    _ -> return ()
     J.runJSONGenT $ return ()
@@ -127,13 +127,13 @@ handleReallyDelete :: Kontrakcja m => m JSValue
 handleReallyDelete = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  ctx <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
   mapM_ (\did -> do
-            doc <- guardJustM . runMaybeT $ do
+            _ <- guardJustM . runMaybeT $ do
               True <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
               Just doc <- dbQuery $ GetDocumentByDocumentID did
-              return doc)
+              return doc
+            return ())
     docids
   J.runJSONGenT $ return ()
 

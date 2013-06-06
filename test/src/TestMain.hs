@@ -109,9 +109,6 @@ import FileTest
 #ifndef NO_DOCJSON
 import Doc.TestJSON
 #endif
-#ifndef NO_STATS
-import StatsTest
-#endif
 #ifndef NO_EVIDENCELOG
 import EvidenceLogTest
 #endif
@@ -214,9 +211,6 @@ allTests = tail tests
 #endif
 #ifndef NO_SQLUTILS
       , ("sqlutil", const sqlUtilsTests )
-#endif
-#ifndef NO_STATS
-      , ("stats", const statsTests)
 #endif
 #ifndef NO_EVIDENCELOG
       , ("evidencelog", const evidenceLogTests)

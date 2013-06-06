@@ -53,7 +53,6 @@ import User.Model
 import API.Monad
 import Control.Monad.Error
 import qualified Log
-import Stats.Control
 import LiveDocx
 import Doc.DocView
 import Doc.DocInfo
@@ -169,7 +168,6 @@ apiCallCreateFromFile = api $ do
       dbUpdate $ AttachFile (documentid doc) (fileid file) actor
       return ()
   doc' <- apiGuardL  (forbidden "Access to file is forbiden")  $ dbQuery $ GetDocumentByDocumentID (documentid doc)
-  _ <- lift $ addDocumentCreateStatEvents (documentid doc) "web"
   Created <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
 
 
@@ -186,7 +184,6 @@ apiCallCreateFromTemplate did =  api $ do
                     else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
   case enewdoc of
       Just newdoc -> do
-          _ <- lift $ addDocumentCreateStatEvents (documentid newdoc) "web"
           Log.debug $ show "Document created from template"
           when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
           Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
@@ -286,7 +283,6 @@ apiCallReject did slid = api $ do
           `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
           `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
       Just doc' <- dbQuery $ GetDocumentByDocumentID did
-      let Just sl = getSigLinkFor doc' slid
 
       lift $ postDocumentRejectedChange doc' slid method
       Just doc'' <- dbQuery $ GetDocumentByDocumentID did
@@ -359,7 +355,6 @@ apiCallRemind did =  api $ do
 
 apiCallDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallDelete did =  api $ do
-  ctx <- getContext
   (user, actor, _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
@@ -375,6 +370,7 @@ apiCallDelete did =  api $ do
   case (documentstatus doc) of
        Preparation -> do
          _ <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
+         return ()
        _ -> return ()
   Accepted <$> (runJSONGenT $ return ())
 
