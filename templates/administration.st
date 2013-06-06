@@ -747,16 +747,14 @@ userusagestats=
 	  <table>
             <thead>
               <td style="width:200px">Date</td>
-              <td style="width:200px">Documents Closed That Day</td>
-              <td style="width:200px">Total Closed Signatures That Day</td>
-              <td style="width:200px">Average Signatures / Doc</td>
-              <td style="width:200px">Documents Sent That Day</td>
+              <td style="width:200px">Documents Closed</td>
+              <td style="width:200px">Signatures Closed</td>
+              <td style="width:200px">Documents Sent</td>
 	    </thead>
             $statistics:{stat|<tr>
               <td>$stat.date$</td>
               <td>$stat.closed$ </td>
               <td>$stat.signatures$ </td>
-              <td>$stat.avg$ </td>
               <td>$stat.sent$ </td>
 	    </tr>}$
 	  </table>
@@ -822,8 +820,7 @@ companyusagestats=
               <td style="width:200px">Date</td>
               <td style="width:200px">User</td>
               <td style="width:200px">Documents Closed</td>
-              <td style="width:200px">Total Closed Signatures</td>
-              <td style="width:200px">Average Signatures / Doc</td>
+              <td style="width:200px">Signatures Closed</td>
               <td style="width:200px">Documents Sent</td>
 	    </thead>
             $statistics:{stat|<tr class="$if(stat.istotal)$totalline$endif$">
@@ -831,7 +828,6 @@ companyusagestats=
               <td>$stat.user$</td>
               <td>$stat.closed$ </td>
               <td>$stat.signatures$ </td>
-              <td>$stat.avg$ </td>
               <td>$stat.sent$ </td>
 	    </tr>}$
 	  </table>

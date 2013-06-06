@@ -1,64 +1,29 @@
 module Stats.View
        (
-         statisticsCompanyFieldsByDay,
-         statisticsFieldsByDay,
-         statisticsFieldsByMonth,
-         statToJSON
+         statisticsCompanyFields,
+         statisticsFields
        )
        where
 
 import MinutesTime
-import Text.StringTemplates.Templates
-import Text.JSON
-import Text.JSON.Gen
-import qualified Text.JSON.Gen as J
-import Utils.Prelude
 import qualified Text.StringTemplates.Fields as F
+import User.Model
+import Control.Applicative
 
-statisticsFieldsByDay :: Monad m => [(Int, [Int])] -> [Fields m ()]
-statisticsFieldsByDay stats = for stats f
-  where f (ct, c:s:i:u:_) = do
-                F.value "date" $ showAsDate ct
-                F.value "closed" c
-                F.value "signatures" s
-                F.value "sent" i
-                F.value "users" u
-                F.value "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
-        f _ = error $ "statisticsFieldsByDay: bad stats"
+statisticsFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
+statisticsFields formatTime = map f
+  where f uus = do
+                F.value "date" $ formatTime (fst $ uusTimeSpan uus)
+                F.value "closed" (uusDocumentsClosed uus)
+                F.value "signatures" (uusSignaturesClosed uus)
+                F.value "sent" (uusDocumentsSent uus)
 
-statisticsFieldsByMonth :: Monad m => [(Int, [Int])] -> [Fields m ()]
-statisticsFieldsByMonth stats = for stats f
-  where f (ct, c:s:i:u:_) = do
-                F.value "date" $ showAsMonth ct
-                F.value "closed" c
-                F.value "signatures" s
-                F.value "sent" i
-                F.value "users" u
-                F.value "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
-        f _ = error $ "statisticsFieldsByMonth: bad stats"
-
-
-statisticsCompanyFieldsByDay :: Monad m => [(Int, String, [Int])] -> [Fields m ()]
-statisticsCompanyFieldsByDay stats = for stats f
-  where f (ct, u, c:s:i:_) = do
-                F.value "date" $ showAsDate ct
-                F.value "user" u
-                F.value "istotal" (u == "Total")
-                F.value "closed" c
-                F.value "signatures" s
-                F.value "sent" i
-                F.value "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
-        f _ = error $ "statisticsCompanyFieldsByDay: bad stats"
-
-statToJSON :: (Int -> String) -> (Int, [Int]) -> JSValue
-statToJSON showTimestamp (timestamp, closed : signatures : sent : users : _) =
-    runJSONGen $ do
-      let avg = if closed == 0 then 0 else (fromIntegral signatures / fromIntegral closed)
-      J.object "fields" $ do
-        J.value "date"       $ showTimestamp timestamp
-        J.value "closed"     closed
-        J.value "sent"       sent
-        J.value "signatures" signatures
-        J.value "avg"        (avg :: Double)
-        J.value "users"      users
-statToJSON _ _ = error "statToJSON: bad stat"
+statisticsCompanyFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
+statisticsCompanyFields formatTime = map f
+  where f uus = do
+                F.value "date" $ formatTime (fst $ uusTimeSpan uus)
+                F.value "user" $ ((\(_,_,n) -> n) <$> uusUser uus)
+                F.value "istotal" False -- FIMXE: need totals...
+                F.value "closed" $ uusDocumentsClosed uus
+                F.value "signatures" $ uusSignaturesClosed uus
+                F.value "sent" $ uusDocumentsSent uus

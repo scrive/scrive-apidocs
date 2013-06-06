@@ -33,7 +33,6 @@ import Administration.AdministrationView
 import AppView
 import Company.Model
 import DB
-import Data.List
 import Data.Maybe
 import Doc.DocStateData
 import Kontra
@@ -44,7 +43,6 @@ import Stats.View
 import Doc.SignatoryLinkID
 import Doc.DocumentID
 import User.Model
-import Util.HasSomeUserInfo
 import Util.MonadUtils
 import qualified Log
 import qualified Text.StringTemplates.Fields as F
@@ -53,57 +51,40 @@ import qualified Control.Exception.Lifted as E
 import Happstack.Server
 import Control.Monad
 import Control.Monad.Trans.Control
-import Control.Applicative
 import User.Utils
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do
-  now <- ctxtime <$> getContext
-  let sixmonthsago = 6 `monthsBefore` now
-  statEvents <- dbQuery $ GetDocStatEventsByUserID userid sixmonthsago
+
+  Context{ctxtime} <- getContext
+  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
+                     | daysBack <- [0 .. 30]
+                     , t <- [daysBefore daysBack ctxtime]
+                    ]
+  stats <- dbQuery $ GetUserUsageStats (Just userid) Nothing timespans
   Just user <- dbQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
-  let rawevents = catMaybes $ map statEventToDocStatTuple statEvents
-  let stats = calculateStatsByDay rawevents
+
   content <- adminUserUsageStatsPage user mcompany $ do
-    F.objects "statistics" $ statisticsFieldsByDay stats
+    F.objects "statistics" $ statisticsFields (formatMinutesTime "%Y-%m-%d") stats
   renderFromBody kontrakcja content
+
+
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
-  now <- ctxtime <$> getContext
-  let sixmonthsago = 6 `monthsBefore` now
-  statCompanyEvents <- dbQuery $ GetDocStatEventsByCompanyID companyid sixmonthsago
-  let rawevents = catMaybes $ map statCompanyEventToDocStatTuple statCompanyEvents
-  let stats = calculateCompanyDocStats rawevents
-  fullnames <- convertUserIDToFullName [] stats
+
+  Context{ctxtime} <- getContext
+  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
+                     | daysBack <- [0 .. 30]
+                     , t <- [daysBefore daysBack ctxtime]
+                    ]
+  stats <- dbQuery $ GetUserUsageStats Nothing (Just companyid) timespans
+
   content <- adminCompanyUsageStatsPage companyid $ do
-    F.objects "statistics" $ statisticsCompanyFieldsByDay fullnames
+    F.objects "statistics" $ statisticsCompanyFields (formatMinutesTime "%Y-%m-%d") stats
   renderFromBody kontrakcja content
 
-
-{- |
-   What a beast! This must be stopped! Oh, the humanity!
- -}
-convertUserIDToFullName :: Kontrakcja m => [User] -> [(Int, UserID, [Int])] -> m [(Int, String, [Int])]
-convertUserIDToFullName _ [] = return []
-convertUserIDToFullName acc ((a,uid,s):ss)
-  | uid == unsafeUserID 0 = do
-    rst <- convertUserIDToFullName acc ss
-    return $ (a, "Total", s) : rst
-  | otherwise = case find (\u->userid u == uid) acc of
-    Just u -> do
-      rst <- convertUserIDToFullName acc ss
-      return $ (a, getSmartName u, s) : rst
-    Nothing -> do
-      mu <- dbQuery $ GetUserByID uid
-      case mu of
-        Nothing -> do
-          rst <- convertUserIDToFullName acc ss
-          return $ (a, "Unknown user", s) : rst
-        Just u -> do
-          rst <- convertUserIDToFullName (u:acc) ss
-          return $ (a, getSmartName u, s) : rst
 
 addStats :: (Int, [Int]) -> (Int, [Int]) -> (Int, [Int])
 addStats (_, t1s) (t, t2s) = (t, zipWithPadZeroes (+) t1s t2s)
@@ -111,33 +92,9 @@ addStats (_, t1s) (t, t2s) = (t, zipWithPadZeroes (+) t1s t2s)
 sumStats :: [(Int, [Int])] -> (Int, [Int])
 sumStats = foldl1 addStats
 
-addCStats :: (Int, UserID, [Int]) -> (Int, UserID, [Int]) -> (Int, UserID, [Int])
-addCStats (_, _, t1s) (t, uid, t2s) = (t, uid, zipWithPadZeroes (+) t1s t2s)
-
 -- this creates an infinite list, so be careful!
 zipWithPadZeroes :: (Int -> Int -> Int) -> [Int] -> [Int] -> [Int]
 zipWithPadZeroes f a b = zipWith f (a ++ repeat 0) (b ++ repeat 0)
-
-sumCStats :: [(Int, UserID, [Int])] -> (Int, UserID, [Int])
-sumCStats = foldl1 addCStats
-
-statEventToDocStatTuple :: DocStatEvent -> Maybe (Int, [Int])
-statEventToDocStatTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
-  DocStatClose           -> Just (asInt seTime, [seAmount, 0, 0, 0])
-  DocStatEmailSignatures -> Just (asInt seTime, [0, seAmount, 0, 0])
-  DocStatElegSignatures  -> Just (asInt seTime, [0, seAmount, 0, 0])
-  DocStatPadSignatures   -> Just (asInt seTime, [0, seAmount, 0, 0])
-  DocStatSend            -> Just (asInt seTime, [0, 0, seAmount, 0])
-  _                      -> Nothing
-
-statCompanyEventToDocStatTuple :: DocStatEvent -> Maybe (Int, UserID, [Int])
-statCompanyEventToDocStatTuple (DocStatEvent {seTime, seUserID, seQuantity, seAmount}) = case seQuantity of
-  DocStatClose           -> Just (asInt seTime, seUserID, [seAmount, 0, 0, 0])
-  DocStatEmailSignatures -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
-  DocStatElegSignatures  -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
-  DocStatPadSignatures   -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
-  DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount, 0])
-  _                      -> Nothing
 
 calculateDocStats :: MinutesTime -> [(Int, [Int])] -> DocStats
 calculateDocStats ctxtime events =
@@ -163,19 +120,6 @@ calculateDocStats ctxtime events =
               ((!!0) . snd $ s6)   -- signaturecount6m
               ((!!0) . snd $ s12)  -- signaturecount12m
 
-calculateStatsByDay :: [(Int, [Int])] -> [(Int, [Int])]
-calculateStatsByDay events =
-  let byDay = groupWith fst $ reverse $ sortWith fst events
-  in map sumStats byDay
-
-calculateCompanyDocStats :: [(Int, UserID, [Int])] -> [(Int, UserID, [Int])]
-calculateCompanyDocStats events =
-  let byDay = groupWith (\(a,_,_)->a) $ reverse $ sortWith (\(a,_,_)->a) events
-      byUser = map (groupWith (\(_,a,_)->a) . sortWith (\(_,a,_)->a)) byDay
-      userTotalsByDay = map (map sumCStats) byUser
-      setUID0 (a,_,s) = (a,unsafeUserID 0,s)
-      totalByDay = map (setUID0 . sumCStats) byDay
-  in concat $ zipWith (\a b->a++[b]) userTotalsByDay totalByDay
 
 -- some utility functions
 
