@@ -1,21 +1,38 @@
-/* Inputs supporting infotexts
- * Usage
- *  var iti =  InfoTextInput.init({
- *              infotext: "Infotext for the input",
- *              value*: "Value for input (if needed)",
- *              class* : "Extra css class to be put on the input"
- *              style: some extra style params})
- *  will create InfoTextInput object.
- *
- *  InfoTextInput methods
- *      iti.input() - jQuery object to be appended wherever you want
- *      iti.value() - current value
- *
- */
+/*
+  Standard text inputs with placeholder.
+  Usage:
 
+   var input = new InfoTextInput({
+      value : "",                // Value to be set initialy
+      infotext* : "",            // Placeholder to be displayed if no value is provided
+      suppressSpace* : false,    // Some magic used in design view
+      inputtype* : "text",       // Type attribute of input (default "text")
+      name* : "",                // Name that will be put on input tag
+      cssClass* : "",            // Extra calles for main tag
+      style* : "",               // Style of main tag
+      inputStyle* : "",          // Style of input tag
+      autocomplete* : false,     // Allow autocompleate
+      readonly* : false,         // If input is read only. Just for consistency.
+      onEnter* : function() {},  // Function to be called when enter is pressed
+      onRemove* : function() {}, // Function to be called when remove icon is clicked. If no function is provided, no icon will not show up
+   });
+
+  Interface:
+      .el()          // jQuery object to be appended somewere on a page
+      .value()       // Current value
+      .setValue(v)   // Set current value
+      .focus()       // Focus on this input
+
+  Details:
+    - It uses input tag internally
+    - We use placeholder attr if browser supports it
+
+*/
 
 (function( window){
-/* InfoTextInput model. Has value, infotext and information if its focused  */
+
+/* InfoTextInput model. Has value, information if its focused, and some ui details  */
+
 var InfoTextInputModel = Backbone.Model.extend({
   defaults : {
       infotext : "",
@@ -70,7 +87,7 @@ var InfoTextInputModel = Backbone.Model.extend({
   inputtype: function() {
       return this.get("inputtype");
   },
-  enterPressed : function() {
+  onEnter : function() {
       if (this.get("onEnter") != undefined)
           this.get("onEnter")();
   },
@@ -91,7 +108,11 @@ var InfoTextInputModel = Backbone.Model.extend({
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
- * Updates object on focus, blur and change. Sets the grey class for input and fills infotext if needed.
+ * Updates object on focus, blur and change.
+ * Sets the grey class for input and fills infotext if needed.
+ *
+ * Input is initiated on initialize, not on render.
+ *
  */
 var InfoTextInputView = Backbone.View.extend({
   events: {
@@ -107,6 +128,7 @@ var InfoTextInputView = Backbone.View.extend({
         var model = this.model;
         _.bindAll(this, 'render', 'addFocus' , 'looseFocus', 'updateValue');
         this.model.bind('change', this.render);
+        //Read input element
         this.input = $("<input/>")
                           .attr("name",model.name())
                           .attr("type",model.inputtype())
@@ -115,9 +137,12 @@ var InfoTextInputView = Backbone.View.extend({
                           .attr("style",model.inputStyle())
                           .attr("readonly",model.readonly() ? "true" : undefined);
 
+        //Wrapper with extra styles
         $(this.el).attr("style", model.style())
                   .addClass(model.cssClass())
                   .append(this.input);
+
+        // Remove (x) icon in top left corner
         if (model.hasRemoveOption()){
             $(this.el).append($("<div class='closer'/>").click(function() { model.onRemove(); }));
         }
@@ -163,7 +188,7 @@ var InfoTextInputView = Backbone.View.extend({
     },
     propagateEnter : function(e) {
         if (e.keyCode == 13)
-          this.model.enterPressed();
+          this.model.onEnter();
     },
     suppressSpace : function(e) {
         if (this.model.get("suppressSpace")==true ) {
@@ -182,8 +207,7 @@ var InfoTextInputView = Backbone.View.extend({
     }
 });
 
-/*InfotextInput is a controler generator. Defines input method
- */
+//  Interface
 window.InfoTextInput = function (args) {
           var model = new InfoTextInputModel(args);
           var view = new InfoTextInputView({model : model, el : $("<div class='info-text-input'/>")});

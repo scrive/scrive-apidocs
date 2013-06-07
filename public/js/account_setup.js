@@ -155,14 +155,10 @@
   var AccountSetupView = Backbone.View.extend({
     initialize: function() {
       this.render();
-      _.bindAll(this, 'validationCallback');
       _.bindAll(this, 'render');
       this.model.bind('reload', this.render);
     },
 
-    validationCallback: function(t, e, v) {
-      $("<div class='validate-message failed-validation' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
-    },
     clearValidationMessages : function() {
       $(".validate-message",this.el).remove();
     },
@@ -199,9 +195,12 @@
       });
 
       model.addValidator(function() {
-        return nameInput.el().validate(new UserNameValidation({callback: view.validationCallback,
-                                                                  firstName: localization.validation.firstNameField,
-                                                                  lastName: localization.validation.lastNameField}));
+        return nameInput.value().validate(new UserNameValidation({
+          callback: function(t, e, v) {
+            $("<div class='validate-message failed-validation' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(nameInput.el().parent());
+          },
+          firstName: localization.validation.firstNameField,
+          lastName: localization.validation.lastNameField}));
       });
 
       body.append($("<div class='position first'/>").append(nameInput.el()));
@@ -253,10 +252,13 @@
       });
 
       model.addValidator(function() {
-        return passwordInput.el().validate(new PasswordValidation({callback: view.validationCallback,
-                                                              message: localization.validation.passwordLessThanMinLength,
-                                                              message_max: localization.validation.passwordExceedsMaxLength,
-                                                              message_digits: localization.validation.passwordNeedsLetterAndDigit}));
+        return passwordInput.value().validate(new PasswordValidation({
+                    callback: function(t, e, v) {
+                      $("<div class='validate-message failed-validation' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(passwordInput.el().parent());
+                    },
+                    message: localization.validation.passwordLessThanMinLength,
+                    message_max: localization.validation.passwordExceedsMaxLength,
+                    message_digits: localization.validation.passwordNeedsLetterAndDigit}));
       });
 
       var password2Input = new InfoTextInput({
@@ -269,9 +271,13 @@
       });
 
       model.addValidator(function() {
-        return password2Input.el().validate(new PasswordEqValidation({callback: view.validationCallback,
-                                                                 message: localization.validation.passwordsDontMatch,
-                                                                 'with': passwordInput.input()}));
+        return password2Input.value().validate(new PasswordEqValidation({
+                  callback: function(t, e, v) {
+                      $("<div class='validate-message failed-validation' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(password2Input.el().parent());
+                  },
+                  message: localization.validation.passwordsDontMatch,
+                  'with': function() {return passwordInput.value();}
+        }));
       });
 
       body.append($("<div class='position'/>")
@@ -286,7 +292,12 @@
 
 
       model.setTosValidator(function() {
-        tosCBox.validate(new CheckboxReqValidation({callback: view.validationCallback, message: localization.validation.mustAcceptTOS}));
+        tosCBox.validate(new CheckboxReqValidation({
+          callback: function(t, e, v) {
+                      $("<div class='validate-message failed-validation' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(tosCBox.parent());
+          },
+          message: localization.validation.mustAcceptTOS
+        }));
       });
       tosAccept.append(tosCBox);
       var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
