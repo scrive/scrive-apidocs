@@ -18,8 +18,8 @@ describe "sign up on front page and modify account settings" do
     puts "reset password for "+email+" to "+password
     @h.driver.navigate().to(@h.ctx.createKontrakcjaURL "/login")
     (@h.wait_until { @h.driver.find_element :css => "a.s-forgot-password" }).click
-    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).click
-    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).send_keys email
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).click
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).send_keys email
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
     @h.emailhelper.follow_link_in_latest_mail_for email
     puts "We have real change password form"
@@ -38,7 +38,7 @@ describe "sign up on front page and modify account settings" do
     @h.driver.get(@h.ctx.createKontrakcjaURL "/signup")
 
     puts "request an account and make sure you get a green flash back"
-    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).send_keys random_email
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).send_keys random_email
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
     @h.wait_until { @h.driver.find_element :css => ".flash-body" }
 
