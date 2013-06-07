@@ -125,6 +125,8 @@ describe "sign up on front page and modify account settings" do
     puts "just followed link"
     sleep 1
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).click
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
+
     puts "just clicked email input"
     sleep 1
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email
@@ -132,6 +134,8 @@ describe "sign up on front page and modify account settings" do
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='password']" }).send_keys new_password
     # trying to get this click thing to work
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).click
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys [:control, 'a']
+
     puts "just clicked email input"
     sleep 1
     (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email

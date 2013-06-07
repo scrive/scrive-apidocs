@@ -236,7 +236,7 @@ var LoginView = Backbone.View.extend({
 
       var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
-              value : model.email(),
+              value : "",
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
               name : "email",
@@ -308,6 +308,7 @@ var LoginBrandedView = Backbone.View.extend({
               inputtype : "text",
               name : "email",
               onEnter : loginFunction,
+              autocomplete : true,
               inputStyle : "width :  245px; padding : 7px 14px ",
               style : "width : 273px; padding: 0px; font-size : 16px "
 
@@ -389,12 +390,11 @@ var LoginBrandedView = Backbone.View.extend({
 
       var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
-              value : model.email(),
+              value : "",
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
               name : "email",
               style : "width : 245px;padding : 7px 14px; font-size : 16px;",
-              autocomplete : true,
               onEnter : function() { model.sendPasswordReminder();}
 
       });

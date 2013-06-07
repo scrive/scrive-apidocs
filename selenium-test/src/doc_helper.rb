@@ -63,7 +63,7 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
     @driver.execute_script("$('ul.select-opts li').last().click()")
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-name-input')]//input"}).send_keys fieldname
-    (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button-gray')][../input[contains(@class,'design-view-action-participant-new-field-name-input')]]"}).click
+    (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button-gray')][../div[contains(@class,'design-view-action-participant-new-field-name-input')]//input]"}).click
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-action-participant-details-information-field-wrapper')]//input[contains(@placeholder,'" + fieldname + "')]"}).send_keys fieldvalue
 
