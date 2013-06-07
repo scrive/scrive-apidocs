@@ -1038,7 +1038,7 @@
         },
         placeholder: function(name) {
             return this.fieldNames[name] || name;
-        },
+        }
 
     });
 
