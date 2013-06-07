@@ -24,7 +24,7 @@ class DocHelper
   end
 
   def partno(no)
-    return "//div[contains(@class,'design-view-action-participant-container-participants-box')]/div[" + no.to_s() + "]"
+    return "(//div[contains(@class,'design-view-action-participant-container-participants-box')]//div[contains(@class,'design-view-action-participant-inner')])[" + no.to_s() + "]"
   end
 
   def enterCounterpart(fstname, sndname, email, part=2)
@@ -33,16 +33,26 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => p + "//input[@placeholder='Email']" }).send_keys email
   end
 
+  def switchtab(n)
+    (@h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'tabs')]/li[" + n.to_s() + "]" })
+    begin
+      @driver.find_element :xpath => "//ul[contains(@class,'tabs')]/li[" + n.to_s() + "][contains(@class,'active')]"
+    rescue Selenium::WebDriver::Error::NoSuchElementError
+      (@driver.find_element :xpath => "//ul[contains(@class,'tabs')]/li[" + n.to_s() + "]").click
+    end
+    sleep 1
+  end
+
   def partytab
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-tab1-text')]" }).click
+    switchtab(1)
   end
 
   def fieldtab
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-tab2-text')]" }).click
+    switchtab(2)
   end
 
   def processtab
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-tab3-text')]" }).click
+    switchtab(3)
   end
 
   def addCustomField(part,fieldname, fieldvalue)
@@ -51,20 +61,20 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-info-box')]"}).click
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-selector')]//a[contains(@class,'button')]"}).click
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
-    @driver.execute_script("$($('div.design-view-action-participant-container-participants-box').children('div')[" + (part - 1).to_s() + "]).find('div.design-view-action-participant-new-field-select ul.select-opts li').last().click()")
+    @driver.execute_script("$('ul.select-opts li').last().click()")
     (@h.wait_until { @driver.find_element :xpath => p + "//input[contains(@class,'design-view-action-participant-new-field-name-input')]"}).send_keys fieldname
     (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button-gray')][../input[contains(@class,'design-view-action-participant-new-field-name-input')]]"}).click
     
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-action-participant-details-information-field-wrapper')]//input[contains(@placeholder,'" + fieldname + "')]"}).send_keys fieldvalue
 
     fieldtab
-    @driver.action.drag_and_drop((@driver.find_element :xpath => "//img[contains(@class, 'design-view-action-document-draggables-textbox-icon')]"), (@driver.find_element :css => "img.pagejpg")).perform
+    @driver.action.drag_and_drop((@driver.find_element :xpath => "//div[contains(@class, 'design-view-action-document-draggables-textbox-icon')]"), (@driver.find_element :css => "img.pagejpg")).perform
     # set target party
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//ul[contains(@class,'select-opts')]//li[" + part.to_s() + "]"}).click
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-field-selector')]//div[contains(@class,'select-button')]"}).click
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-field-selector')]//ul[contains(@class,'select-opts')]//li//span[contains(text(), '" + fieldname + "')]"}).click
+    (@h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']"}).click
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'checkboxTypeSetter-container')]//a[contains(@class,'button-green')]"}).click
 
 # this doesn't work, possibly due to a bug in the Firefox driver:
@@ -76,7 +86,10 @@ class DocHelper
   end
 
   def addPart
+    # switch to a different tab and go back to party tab to ensure that participant details are hidden
+    processtab
     partytab
+
     (@h.wait_until { @driver.find_element :css => ".design-view-action-participant-new-single a.button" }).click
   end
 
