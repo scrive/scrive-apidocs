@@ -34,6 +34,7 @@ class DocHelper
   end
 
   def switchtab(n)
+    sleep 1
     (@h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'tabs')]/li[" + n.to_s() + "]" })
     begin
       @driver.find_element :xpath => "//ul[contains(@class,'tabs')]/li[" + n.to_s() + "][contains(@class,'active')]"
