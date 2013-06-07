@@ -181,7 +181,7 @@ var FilePage = Backbone.Model.extend({
 var FilePageView = Backbone.View.extend({
     model : FilePage,
     initialize: function (args) {
-        _.bindAll(this, 'render', 'renderDragables');
+        _.bindAll(this, 'render', 'renderDragables', 'updateDragablesPosition');
         this.model.bind('change:dragables', this.renderDragables);
         this.render();
     },
@@ -227,6 +227,14 @@ var FilePageView = Backbone.View.extend({
             if (!placement.placed() && placement.page()==page.number()) {
                 var elem = $("<div>").appendTo(container);
                 createFieldPlacementPlacedView({model: placement, el: elem});
+            }
+        });
+    },
+    updateDragablesPosition : function() {
+        var page = this.model;
+        _.each(page.placements(), function(placement) {
+            if (placement.placed() && placement.page()==page.number() && placement.view != undefined && placement.view.updatePosition != undefined) {
+               placement.view.updatePosition();
             }
         });
     },
@@ -312,8 +320,13 @@ var FileView = Backbone.View.extend({
     },
     startReadyChecker : function() {
         var view = this;
-        if (view.ready())
+        if (view.ready()) {
          view.model.trigger('ready');
+         if (view.pageviews != undefined)
+           _.each(view.pageviews, function(pv) {
+              pv.updateDragablesPosition();
+           });
+        }
         else
          setTimeout(function() {view.startReadyChecker()},1000);
     },
