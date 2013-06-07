@@ -5,7 +5,8 @@ module Doc.ExtendSignature
 
 import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
 import Amazon (AmazonMonad)
-import AppConf (guardTimeConf)
+import AppConf (guardTimeConf, hostpart, mailsConfig)
+import Context (MailContext(..))
 import Control.Monad (forM_)
 import Control.Monad.Reader (MonadReader, runReaderT, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
@@ -13,17 +14,21 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
 import qualified Data.ByteString as BS
 import DB (getMinutesTime, MonadDB, dbQuery)
+import Doc.Action (sendClosedEmails)
 import Doc.DocSeal (digitallySealDocument, digitallyExtendDocument)
 import Doc.DocStateData (Document(..), DocumentStatus(..))
-import Doc.DocUtils (documentfileM, documentsealedfileM)
-import Doc.Model (GetDocuments(..), DocumentDomain(..), DocumentFilter(..))
+import Doc.DocUtils (documentsealedfileM)
+import Doc.Model (GetDocuments(..), DocumentDomain(..), DocumentFilter(..), GetDocumentByDocumentID(..))
 import Doc.SealStatus (SealStatus(..))
 import File.File (filename)
 import File.Storage (getFileContents)
+import IPAddress (noIP)
 import qualified Log
 import MinutesTime (MinutesTime, toCalendarTimeInUTC, fromClockTime)
 import System.FilePath ((</>))
 import System.Time (toClockTime, CalendarTime(..), Month(..))
+import Templates (runTemplatesT)
+import User.Lang (getLang)
 import Utils.Directory (withSystemTempDirectory')
 
 latest_publication_time :: MonadDB m => m MinutesTime
@@ -78,7 +83,7 @@ extendSignatures = do
 sealDocument :: (CryptoRNG m, MonadIO m, AmazonMonad m, MonadReader SchedulerData m, MonadBaseControl IO m, MonadDB m)
              => Document -> m ()
 sealDocument doc = do
-  Just file <- documentfileM doc
+  Just file <- documentsealedfileM doc
   withSystemTempDirectory' ("ExtendSignature-" ++ show (documentid doc) ++ "-") $ \tmppath -> do
     content <- getFileContents file
     let mainpath = tmppath </> "main.pdf"
@@ -86,7 +91,21 @@ sealDocument doc = do
     now <- getMinutesTime
     gtconf <- asks (guardTimeConf . sdAppConf)
     templates <- getGlobalTemplates
-    _ <- flip runReaderT templates $ digitallySealDocument now gtconf (documentid doc) mainpath (filename file)
+    _ <- flip runReaderT templates $ digitallySealDocument False now gtconf (documentid doc) mainpath (filename file)
+    Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+    case documentsealstatus doc' of
+      Just Guardtime{} -> do
+        appConf <- asks sdAppConf
+        let mctx = MailContext { mctxhostpart = hostpart appConf
+                               , mctxmailsconfig = mailsConfig appConf
+                               , mctxlang = documentlang doc'
+                               , mctxcurrentBrandedDomain = Nothing
+                               , mctxipnumber = noIP
+                               , mctxtime = now
+                               , mctxmaybeuser = Nothing
+                               }
+        runTemplatesT (getLang doc', templates) $ sendClosedEmails mctx doc' True
+      s -> Log.error $ "Still failing to seal document # " ++ show (documentid doc') ++ ": " ++ show s
     return ()
     -- TODO: re-send the document to signatories saying that this is a corrected version
 

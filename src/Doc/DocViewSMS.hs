@@ -53,9 +53,12 @@ smsReminder :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink ->
 smsReminder doc sl = do
   (SMS (getMobile sl) (Invitation (documentid doc) (signatorylinkid sl))) <$> renderLocalTemplate doc "_smsReminder" (smsFields doc sl)
 
-smsClosedNotification :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Bool -> m SMS
-smsClosedNotification doc sl withEmail = do
-  (SMS (getMobile sl) None) <$> renderLocalTemplate doc "_smsClosedNotification" (smsFields doc sl >> F.value "withEmail" withEmail)
+smsClosedNotification :: (HasMailContext c, TemplatesMonad m) => c -> Document -> SignatoryLink -> Bool -> Bool -> m SMS
+smsClosedNotification ctx doc sl withEmail sealFixed = do
+  (SMS (getMobile sl) None <$>) $ renderLocalTemplate doc "_smsClosedNotification" $ do
+    smsFields' ctx doc sl
+    F.value "withEmail" withEmail
+    F.value "sealFixed" sealFixed
 
 smsRejectNotification :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> SignatoryLink -> m SMS
 smsRejectNotification doc sl rejector = do
@@ -63,10 +66,14 @@ smsRejectNotification doc sl rejector = do
 
 smsFields :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
 smsFields document siglink = do
-    ctx <- lift getContext
+  ctx <- lift getContext
+  smsFields' ctx document siglink
+
+smsFields' :: (TemplatesMonad m, HasMailContext c) => c -> Document -> SignatoryLink -> Fields m ()
+smsFields' ctx document siglink = do
     F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
     F.value "partylist" $ map getSmartName $ partyList document
-    F.value "link" $ ctxhostpart ctx ++ show (LinkSignDoc document siglink)
+    F.value "link" $ mctxhostpart (mailContext ctx) ++ show (LinkSignDoc document siglink)
 

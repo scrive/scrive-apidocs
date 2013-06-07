@@ -31,6 +31,14 @@ $else$
 $_mailClosedLogin()$
 $endif$
 #####
+mailSealFixed=$if(sealFixed)$
+<br/>
+<br/>
+$_sealFixed()$
+<br/>
+<br/>
+$endif$
+#####
 ##### CLOSED MAIL
 #####
 mailContractClosed=
@@ -47,7 +55,7 @@ mailContractClosedMainP =
       $_mailContractClosedContentSignedBy()$
       <br/>
       <br/>
-      $_mailContractClosedContentAttached()$ $mailClosedSignup()$
+      $_mailContractClosedContentAttached()$ $mailSealFixed()$ $mailClosedSignup()$
 ####
 mailOfferClosed=
     $_mailDocumentClosedTitleOffer()$
@@ -61,7 +69,7 @@ mailOfferClosedMainP =
       $_mailOfferClosedContentOfferAccepted()$
     <br/>
     <br/>
-    $_mailOfferClosedContentAttached()$ $mailClosedSignup()$
+    $_mailOfferClosedContentAttached()$ $mailSealFixed()$ $mailClosedSignup()$
 ####
 mailOrderClosed=
     $_mailDocumentClosedTitleOrder()$
@@ -75,7 +83,7 @@ mailOrderClosedMainP=
         $_mailOrderClosedContentViewed()$
       <br/>
       <br/>
-      $_mailOrderClosedContentAttached()$ $mailClosedSignup()$
+      $_mailOrderClosedContentAttached()$ $mailSealFixed()$ $mailClosedSignup()$
 ####
 #### REJECTED MAIL
 ####

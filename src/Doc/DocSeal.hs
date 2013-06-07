@@ -580,7 +580,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
-        sealedfileid <- digitallySealDocument ctxtime ctxgtconf documentid tmpout filename
+        Just sealedfileid <- digitallySealDocument True ctxtime ctxgtconf documentid tmpout filename
         res <- runMaybeT $ do
           Just doc <- dbQuery $ GetDocumentByDocumentID documentid
           return doc
@@ -602,8 +602,8 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         return $ Left msg
 
 digitallySealDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
-                      => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m FileID
-digitallySealDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
+                      => Bool -> MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m (Maybe FileID)
+digitallySealDocument forceAttach ctxtime ctxgtconf documentid pdfpath pdfname = do
   -- GuardTime signs in place
   code <- liftIO $ GT.digitallySign ctxgtconf pdfpath
   (newfilepdf, status) <- first Binary <$> case code of
@@ -625,11 +625,14 @@ digitallySealDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
       Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
       Log.error $ "GuardTime failed for document #" ++ show documentid
       return (res, Missing)
-  Log.debug $ "Adding new sealed file to DB"
-  File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname newfilepdf
-  Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-  dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
-  return sealedfileid
+  if status /= Missing || forceAttach then do
+    Log.debug $ "Adding new sealed file to DB"
+    File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname newfilepdf
+    Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+    dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
+    return (Just sealedfileid)
+   else do
+    return Nothing
 
 digitallyExtendDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
                       => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m Bool
