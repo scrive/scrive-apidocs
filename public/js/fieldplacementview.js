@@ -1035,11 +1035,11 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                                 if (done){
                                      field.makeReady();
                                      view.clear();
-                                    }
-                                else
+                                } else {
                                     if (view.nameinput != undefined)  view.nameinput.addClass('redborder');
-                                    return false;
                                 }
+                                return false;
+                            }
             }).input();
     },
     title: function() {
