@@ -363,9 +363,10 @@
 		<li><p>Append the “Evidence Documentation” (as described in this section) as an appendix to the PDF </p></li>
 		<li><p>Append the “Evidence Log” as an appendix to the PDF.</p></li>
 		<li><p>Append the “Evidence of Intent” as an appendix to the PDF.</p></li>
+		<li><p>Append the “Digital Signature Documentation” as an appendix to the PDF.</p></li>
 		<li><p>Sign the Evidence Package (PDF plus appendices) with a digital signature.</p></li>
 	</ol>
-		<p>A detailed description of the steps 3-7 follows below.</p>
+		<p>A detailed description of the steps 3-8 follows below.</p>
 
 <h3>Appending the Verification Page (step 3)</h3>
 	<p>The Verification Page is intended to make the most important metadata of the transaction as accessible as possible. The key details include who signed which documents, when and how. The Verification Page contains the following information:</p>
@@ -394,7 +395,16 @@
 <h3>Appending the Evidence of Intent (Step 6)</h3>
 	<p>The Scrive e-signing system will make screenshots of each party’s signing experience as evidence of the intent to sign. When the Scrive e-signing system is preparing the Evidence Package it will append the Evidence of Intent which is a document with a brief description of the actions of the signing process, who did what and when, with the screenshots included. The intention behind appending the Evidence of Intent is to provide the parties with evidence of such signing intentions in order to provide additional evidence in the potential situation as exemplified with the blue elephant and the pink sheep example.</p>
 
-<h3>Appending the Digital Signature (Step 7)</h3>
+<h3>Appending the Digital Signature Documentation (Step 7)</h3>
+	<p>The Scrive e-signing system will also append the Digital Signature Documentation to the Evidence Package. The Digital Signature Documentation contains an algorithm for how to prove the document’s integrity mathematically. With the help of the Digital Signature Documentation the document integrity can be tested mathematically without the help of Scrive or any other third party. This document does require some technical knowledge to be useful.</p>
+	<p>Note: the Digital Signature Documentation is not intended as the primary method for proving the document’s integrity. The use of the Digital Signature Documentation is intended as a last resort after which all other methods of verifying the integrity have failed. To clarify, the intended order for verifying the integrity of a document is:</p>
+		<ol>
+			<li><p>Scrive provides the primary method for verifying the integrity of a signature at www.scrive.com/verify. Here the document owner can upload the document and get an automated validation of the document integrity. This method does not require any technical knowledge to be useful.</p></li>
+			<li><p>If this primary method for some reason fails to perform the verification of integrity then the digital signature provider, Guardtime, can be contacted directly for verification. This second method also does not require any technical knowledge to be useful.</p></li>
+			<li><p>Finally, if both previous methods have failed, the Digital Signature Documentation can be used to mathematically verify the document integrity.</p></li>
+		</ol>
+
+<h3>Appending the Digital Signature (Step 8)</h3>
 	<p>Once all extra documentation has been appended to the document, the document wrapper is digitally signed with an industry standard digital signature from Guardtime.</p>
 
 
@@ -403,7 +413,7 @@
 	<p>To summarize, all the above measures involved in producing the Evidence Package effectively address the different problems of deteriorating digital document quality.</p>
 
 	<ul>
-		<li><p>Infinite durability (better than paper) is assured with the help of appending the digital signature (step 7).</p></li>
+		<li><p>Infinite durability (better than paper) is assured with the help of appending the digital signature (step 8) and with the help of the Digital Signature Documentation (step 7).</p></li>
 		<li><p>Maximum accessibility is assured by appending the Verification Page to the PDF containing a short documentation (step 3) and appending the full Evidence Documentation document which fully explains all parts of the document and eliminates any need for further expertise or resources (step 4).</p></li>
 		<li><p>Capturing identity is assured by meticulous data collection to the Transaction Logs and then printing selected identity data into both the Verification Page (step 3) and more detailed identity data into the Evidence Log (step 5).</p></li>
 		<li><p>Capturing intent is assured by the screenshot mechanism and by appending the Evidence of Intent document to the PDF (step 6).</p></li>
@@ -488,7 +498,7 @@
 	<p>The holder of the document is made independent of Scrive because:</p>
 
 	<ol>
-		<li><p>The holder of the document is not dependent on the Scrive e-signing system logs to prove document durability due to the digital signature appended (step 7).</p></li>
+		<li><p>The holder of the document is not dependent on the Scrive e-signing system logs to prove document durability due to the digital signature appended (step 8) and the Digital Signature Documentation (step 7).</p></li>
 		<li><p>The holder of the document is not dependent on the Scrive e-signing system logs for additional evidence in case of conflict, as all evidence available to the Scrive e-signing system was made available to the holder of the document through the Evidence Log (step 5).</p></li>
 		<li><p>The holder of the document is not dependent on access to old versions of the Scrive e-signing system to prove the original signing environment to prove all parties’ intent to sign. Instead the evidence of intent is made available to the holder of the document through the Evidence of Intent document (step 6).</p></li>
 		<li><p>Finally, the holder of the document is made independent of other parties and/or Scrive’s expertise to interpret the document, through the Evidence Documentation document that is appended (step 4).</p></li>
