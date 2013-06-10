@@ -39,8 +39,6 @@ import qualified Log (cron, withLogger, error)
 
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
-import ThirdPartyStats.Precog
-import Precog.Ingest (precogConfig)
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -66,19 +64,6 @@ main = Log.withLogger $ do
   mmixpanel <- case mixpanelToken appConf of
     ""    -> Log.error "WARNING: no Mixpanel token present!" >> return Nothing
     token -> return $ Just $ processMixpanelEvent token
-
-  let precogcfg = (precogHost appConf,
-                   precogKey appConf,
-                   precogRootPath appConf,
-                   precogPathPrefix appConf)
-  mprecog <- case precogcfg of
-    (host@(_:_), key@(_:_), root@(_:_), prefix) ->
-      return
-        $ Just
-        $ processPrecogEvent
-        $ precogConfig host key root (Just prefix)
-    _ ->
-      Log.error "WARNING: no Precog credentials!" >> return Nothing
 
   withCronJobs
     ([ forkCron_ True "timeoutDocuments" (60 * 10) $ do
@@ -122,7 +107,7 @@ main = Log.withLogger $ do
            delCount <- dbUpdate $ RemoveOldDrafts 100
            Log.cron $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
      , forkCron_ True "Async Event Dispatcher" (10) . inDB $ do
-         asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel, mprecog]) All
+         asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
      ]) $ \_ -> do
        waitForTermination
        Log.cron $ "Termination request received, waiting for jobs to finish..."

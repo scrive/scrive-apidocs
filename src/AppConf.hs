@@ -12,7 +12,6 @@ import LiveDocx (LiveDocxConf(..))
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig(..))
-import Precog.Ingest (PrecogPrefix (..))
 import BrandedDomains
 
 -- | Defines the application's configuration.  This includes amongst
@@ -41,10 +40,6 @@ data AppConf = AppConf {
   , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
   , mixpanelToken      :: String                       -- ^ for mixpanel integration
   , homebase           :: String                       -- ^ url fragment where to fetch scripts
-  , precogHost         :: String                       -- ^ Precog host
-  , precogKey          :: String                       -- ^ API key for Precog
-  , precogRootPath     :: String                       -- ^ API root path for Precog
-  , precogPathPrefix   :: PrecogPrefix                 -- ^ Dev/Staging/Prod prefix for Precog. MAKE SURE THIS IS SET CORRECTLY DEPENDING ON WHETHER YOU'RE DEPLOING ON PROD, STAGING OR DEV! (You can see this is important because I'm using all caps!)
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , brandedDomains     :: BrandedDomains               -- ^ List of branded domains
   } deriving (Read, Eq, Ord, Show)
@@ -83,13 +78,6 @@ instance Configuration AppConf where
                                          }
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
     , homebase           = "https://staging.scrive.com"
-    , precogHost         = "nebula.precog.com"
-    , precogKey          = "45E31F9C-0D13-44EB-9DA7-057FED133ECA"
-    , precogRootPath     = "/0000000070/"
-    -- precogPathPrefix MUST be set to Staging on staging and Prod on
-    -- production, or our Precog data will get mixed up in an exceedingly
-    -- annoying way!
-    , precogPathPrefix   = Dev
     , ntpServers         = defaultNtpServers
     , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#CCCCCCC" "#AAAAAA" "blue" "hsl(215,30%,60%)" "#364963" "#7A94B8" "#C2000A"]
     }
