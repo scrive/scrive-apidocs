@@ -93,12 +93,3 @@ instance HasMailContext Context where
                                 , mctxtime = ctxtime ctx
                                 , mctxmaybeuser = ctxmaybeuser ctx
                                 }
-
-{-
--- TODO: Break out AppConf data from Context for better re-use (AppConfMonad)
--- | Make partial context from 'AppConf'.
-mkContext :: AppConf -> Context
-mkContext appConf = Context
-  { 
-  where undef s = error $ "mkContext " ++ s
--}
