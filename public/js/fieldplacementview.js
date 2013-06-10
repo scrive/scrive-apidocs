@@ -378,7 +378,7 @@ var TextTypeSetterView = Backbone.View.extend({
                                     view.model.cleanTypeSetter();
                                     view.model.trigger('change:step');
                                 } else {
-                                    if (view.nameinput) view.nameinput.addClass('redborder');
+                                    if (view.nameinput != undefined) view.nameinput.addClass('redborder');
                                 }
                                 return false;
                             }
@@ -1066,11 +1066,11 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                                 if (done){
                                      field.makeReady();
                                      view.clear();
-                                    }
-                                else
-                                    view.nameinput.addClass('redborder');
-                                    return false;
+                                } else {
+                                    if (view.nameinput != undefined)  view.nameinput.addClass('redborder');
                                 }
+                                return false;
+                            }
             }).input();
     },
     title: function() {
@@ -1410,7 +1410,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
                                     field.makeReady();
                                     view.clear();
                                 } else {
-                                    view.nameinput.addClass('redborder');
+                                    if (view.nameinput != undefined) view.nameinput.addClass('redborder');
                                 }
                                 return false;
                             }
