@@ -5,14 +5,17 @@ module Doc.ExtendSignature
 
 import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
 import Amazon (AmazonMonad)
-import AppConf (guardTimeConf, hostpart, mailsConfig)
+import AppConf (guardTimeConf, hostpart, mailsConfig, brandedDomains)
+import BrandedDomains (findBrandedDomain, bdurl)
 import Context (MailContext(..))
+import Control.Applicative ((<$>))
 import Control.Monad (forM_)
 import Control.Monad.Reader (MonadReader, runReaderT, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
 import qualified Data.ByteString as BS
+import Data.Maybe (fromMaybe)
 import DB (getMinutesTime, MonadDB, dbQuery)
 import Doc.Action (sendClosedEmails)
 import Doc.DocSeal (digitallySealDocument, digitallyExtendDocument)
@@ -20,6 +23,7 @@ import Doc.DocStateData (Document(..), DocumentStatus(..))
 import Doc.DocUtils (documentsealedfileM)
 import Doc.Model (GetDocuments(..), DocumentDomain(..), DocumentFilter(..), GetDocumentByDocumentID(..))
 import Doc.SealStatus (SealStatus(..))
+import User.Model (GetUserByEmail(..), Email(..), userassociateddomain)
 import File.File (filename)
 import File.Storage (getFileContents)
 import IPAddress (noIP)
@@ -29,6 +33,8 @@ import System.FilePath ((</>))
 import System.Time (toClockTime, CalendarTime(..), Month(..))
 import Templates (runTemplatesT)
 import User.Lang (getLang)
+import Util.HasSomeUserInfo (getEmail)
+import Util.SignatoryLinkUtils (getAuthorSigLink)
 import Utils.Directory (withSystemTempDirectory')
 
 latest_publication_time :: MonadDB m => m MinutesTime
@@ -89,17 +95,20 @@ sealDocument doc = do
     let mainpath = tmppath </> "main.pdf"
     liftIO $ BS.writeFile mainpath content
     now <- getMinutesTime
-    gtconf <- asks (guardTimeConf . sdAppConf)
+    appConf <- asks sdAppConf
+    let gtconf = guardTimeConf appConf
     templates <- getGlobalTemplates
     _ <- flip runReaderT templates $ digitallySealDocument False now gtconf (documentid doc) mainpath (filename file)
     Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
     case documentsealstatus doc' of
       Just Guardtime{} -> do
-        appConf <- asks sdAppConf
-        let mctx = MailContext { mctxhostpart = hostpart appConf
+        mauthor <- maybe (return Nothing) (dbQuery . GetUserByEmail) $
+                   Email . getEmail <$> getAuthorSigLink doc'
+        let mbd = flip findBrandedDomain (brandedDomains appConf) =<< userassociateddomain =<< mauthor
+        let mctx = MailContext { mctxhostpart = fromMaybe (hostpart appConf) (bdurl <$> mbd)
                                , mctxmailsconfig = mailsConfig appConf
                                , mctxlang = documentlang doc'
-                               , mctxcurrentBrandedDomain = Nothing
+                               , mctxcurrentBrandedDomain = mbd
                                , mctxipnumber = noIP
                                , mctxtime = now
                                , mctxmaybeuser = Nothing
