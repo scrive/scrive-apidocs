@@ -55,7 +55,6 @@ var DesignAttachmentsListView = Backbone.View.extend({
       return tr.append(icon).append(name).append(remove);
     },
     render: function () {
-        console.log("Rendering attachments list");
         var view = this;
         var document = this.model.document();
         this.container = $(this.el);

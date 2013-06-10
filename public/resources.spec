@@ -114,6 +114,7 @@ set systemPage
  js   js/tabs.js
  js   js/files.js
  js   js/process.js
+ js   js/placements.js
  js   js/fields.js
  js   js/signatories.js
  js   js/documents.js

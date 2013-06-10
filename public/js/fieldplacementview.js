@@ -23,7 +23,7 @@ window.createFieldPlacementPlacedView = function (args) {
     else return new TextPlacementPlacedView(args);
 };
 
-window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize)
+window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction, heightFunction, cursorNormalize, fontSize)
 {
     var droppedInside = false;
     var helper;
@@ -31,35 +31,37 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     var placement;
     var verticaloffset = 0;
 
-    var setFP = function() {
-        if(typeof fieldOrPlacementFN === 'function') {
+    if(typeof fieldOrPlacementFN === 'function') {
             fieldOrPlacement = fieldOrPlacementFN();
-        } else {
+    } else {
             fieldOrPlacement = fieldOrPlacementFN;
-        }
+    }
 
-        if( fieldOrPlacement.field !=undefined ) {
+    if( fieldOrPlacement.field !=undefined ) {
             placement = fieldOrPlacement;
             field = placement.field();
-        }
-        else {
+    }
+    else {
             placement = undefined;
             field = fieldOrPlacement;
-        }
-        if(field.isFake())
-            verticaloffset = -1;
-        else if (field.isText())
-            verticaloffset = -1;
-        else if (field.isSignature())
-            verticaloffset = 1;
+    }
 
-    };
+    if(field.isFake())
+            verticaloffset = -1;
+    else if (field.isText())
+            verticaloffset = -1;
+    else if (field.isSignature())
+            verticaloffset = 1;
 
     dragHandler.draggable({
         cursorAt : cursorNormalize ? { top :7 , left :7} : undefined,
         helper: function(event) {
-            setFP();
-            helper = createFieldPlacementView({model: field, height : heightFunction != undefined ? heightFunction() : undefined, width: widthFunction != undefined ? widthFunction() : undefined}).el;
+            helper = createFieldPlacementView({
+                          model: field,
+                          height : heightFunction != undefined ? heightFunction() : undefined,
+                          width: widthFunction != undefined ? widthFunction() : undefined,
+                          fontSize: fontSize
+            }).el;
             return helper;
         },
         start: function(event, ui) {
@@ -71,12 +73,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             }
 
             if( dragHandler.hasClass("placedfield")) {
-                /*
-                 * We are draggin an existing placed field. We need to
-                 * copy all important attributes, so it looks exactly
-                 * the same.
-                 */
-                $(helper).css({fontSize: dragHandler.css("fontSize")});
                 dragHandler.hide();
             }
             if (field.signatory().document().mainfile() != undefined)
@@ -100,6 +96,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             else if( dragHandler.hasClass("placedfield")) {
                 dragHandler.show();
             }
+            console.log("Field " + field)
             if (field.signatory().document().mainfile() != undefined)
                 field.signatory().document().mainfile().view.hideCoordinateAxes();
             droppedInside = false;
@@ -126,12 +123,10 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
 
             if( placement!=undefined ) {
                 if( placement.page()==page.number() ) {
-                    placement.set({ page: page.number(),
-                                    xrel: x/w,
+                    placement.set({ xrel: x/w,
                                     yrel: y/h,
                                     wrel: $(helper).width()/w,
                                     hrel: $(helper).height()/h,
-                                    fsrel: fontSize/w
                                   });
                 }
                 else {
@@ -341,6 +336,31 @@ var TextTypeSetterView = Backbone.View.extend({
               options: optionOptions
           }).el);
     },
+    placementOptions : function() {
+        var page =  this.model.field().signatory().document().mainfile().page(this.model.get("page"));
+        if (page == undefined || page.width() == undefined) return $("<div class='empty'>");
+
+        var placement = this.model;
+        var fontSizeName = "custom";
+        var currSize = placement.fsrel() * page.width();
+        if (Math.abs(currSize - 10) < 1)
+          fontSizeName = "small";
+        if (Math.abs(currSize - 16) < 1)
+          fontSizeName = "normal";
+        if (Math.abs(currSize - 22) < 1)
+          fontSizeName = "big";
+        if (Math.abs(currSize - 28) < 1)
+          fontSizeName = "large";
+        return new Select({name : "Font-size: " + fontSizeName,
+                           textWidth: "191px",
+                           optionsWidth: "218px",
+                           options: [
+                              { name : "Font-size: " + "small", onSelect: function() {placement.setFSRel(10/page.width()); return true;}},
+                              { name : "Font-size: " + "normal", onSelect: function() {placement.setFSRel(16/page.width()); return true;}},
+                              { name : "Font-size: " + "big", onSelect: function() {placement.setFSRel(22/page.width()); return true;}},
+                              { name : "Font-size: " + "large", onSelect: function() {placement.setFSRel(28/page.width()); return true;}}
+                           ] }).el;
+    },
     title : function() {
         var view = this;
         var placement = view.model;
@@ -408,7 +428,7 @@ var TextTypeSetterView = Backbone.View.extend({
             body.append(this.title());
 
             body.append(this.obligatoryOption());
-
+            body.append(this.placementOptions());
 
 
             body.append(this.doneOption());
@@ -426,6 +446,7 @@ var TextPlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
         var view = this;
+        this.fontSize = args.fontSize;
         if(this.model) {
             this.model.bind('removed', this.clear);
         }
@@ -457,6 +478,11 @@ var TextPlacementView = Backbone.View.extend({
         } else {
             box.text('unset field');
         }
+        if (this.fontSize != undefined) {
+            box.css("font-size"  ,this.fontSize + "px");
+            box.css("line-height",this.fontSize + "px");
+        }
+
         this.updateColor();
     }
 });
@@ -469,14 +495,19 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var field =  placement.field();
         var signatory = field?field.signatory():placement.signatory();
         this.model.bind('removed', this.clear, this);
-        this.model.bind('change:field change:signatory change:step change:withTypeSetter', this.render);
-        this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
+        this.model.bind('change:field change:signatory change:step change:withTypeSetter change:fsrel', this.render);
+        this.model.bind('change:xrel change:yrel change:wrel change:hrel', this.updatePosition, this);
         this.model.bind('clean', this.closeTypeSetter);
         //signatory.document().bind('change:signatories',this.updateColor);
         placement.bind('change', this.updateErrorBackground);
 
         this.model.view = this;
         this.render();
+    },
+    fontSize : function() {
+        var parent = $(this.el).parent();
+        if( parent.length>0 ) return this.model.fsrel() * parent.width();
+        return 16;
     },
     updatePosition: function() {
         /*
@@ -560,49 +591,32 @@ var TextPlacementPlacedView = Backbone.View.extend({
           if (width < 30) width = 30;
 
         }
-
-        place.empty();
-        var box = $("<div class='inlineEditing'/>").width(width+24);
-        this.input = $("<input type='text'/>").val(field.value()).width(width+5).attr("placeholder",field.nicetext());
-        if (field.value() == "" && $.browser.msie) {
-          this.input.val(field.nicetext());
-          this.input.addClass("grayed");
-        }
-        var acceptIcon = $("<span class='acceptIcon'/>");
-        place.append(box.append(this.input).append(acceptIcon));
-        field.bind('change',function() { view.inlineediting  = false; view.render();});
-        var accept =  function() {
+        var accept = function() {
                       view.inlineediting = false;
-                      var val = view.input.val();
+                      var val = input.value();
                       field.setValue(val);
-                      SessionStorage.set(field.signatory().document().documentid(),field.name(),val);
-                      field.trigger('change:inlineedited');
                       field.signatory().trigger('change');
+                      field.trigger('change:inlineedited');
                       view.render();
         };
-        acceptIcon.click(function() {
-                      accept();
-                      return false;
-        });
-        this.input.keydown(function(event) {
-                    if(event.which === 13 || event.which === 9)
-                    {   accept();
-                        return false;
-                    }
-        });
-        this.input.blur(function() {
-                  if (view.input.val() != "") {
-                      accept();
-                      return false;
-                  }
-        });
-        if (this.input.hasClass("grayed") && $.browser.msie) {
-                      this.input.val("");
-                      this.input.removeClass("grayed");
-        }
 
-        if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top && self.input != undefined) {
-                   self.input.focus();
+        var input = new InfoTextInput({
+          infotext: field.nicetext(),
+          value : field.value(),
+          style: "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) +  "px; height:"+ (this.fontSize() + 4) +"px",
+          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) + "px; height:"+ (this.fontSize() + 4) +"px",
+          textWidth: width,
+          onEnter : accept,
+          onTab : accept,
+          onBlur : accept,
+          onOk : accept
+        });
+        place.empty().append(input.el());
+        field.trigger('change:inlineedited');
+        field.bind('change',function() { view.inlineediting  = false; view.render();});
+
+        if ($(window).scrollTop() + $(window).height() > input.el().offset().top && $(window).scrollTop() < input.el().offset().top) {
+                   input.focus();
         }
         return false;
     },
@@ -823,15 +837,21 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var input = new InfoTextInput({
             cssClass: 'text-field-placement-setter-field-editor',
             infotext: field.nicename(),
+            style: "font-size:" + this.fontSize() + "px ;" +
+                   "line-height: " + (this.fontSize() + 2) +  "px;" +
+                   "height:"+ (this.fontSize() + 4) +"px; " +
+                    ((field && field.signatory() && field.signatory().color()) ? "border-color : "  + field.signatory().color() + ";": ""),
+            inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) + "px; height:"+ (this.fontSize() + 4) +"px",
             value: field.value(),
             suppressSpace: (field.name()=="fstname"),
             onChange: function(val) {
                 field.setValue(val.trim());
+            },
+            onEnter : function(val) {
+                  view.closeTypeSetter();
+                  view.render();
             }
-        }).el();
-
-        if(field && field.signatory() && field.signatory().color())
-            input.css('border-color', field.signatory().color());
+        });
 
         return input;
     },
@@ -864,14 +884,16 @@ var TextPlacementPlacedView = Backbone.View.extend({
         } else if(field.noName()) {
             place.append(this.fieldNamer());
         } else if(view.hasTypeSetter()) {
-            place.append(this.editor());
+            var editor = this.editor();
+            place.append(editor.el());
+            editor.focus(); // We need to focus when element is appended;
         } else {
-            place.append(new TextPlacementView({model: field}).el);
+            place.append(new TextPlacementView({model: field, fontSize: this.fontSize()}).el);
         }
 
         place.unbind('click');
         if (document.allowsDD()) {
-            draggebleField(place, placement);
+            draggebleField(place, placement, undefined , undefined, false, this.fontSize());
             place.click(function(){
                 if (!view.hasTypeSetter()) {
                     view.addTypeSetter();

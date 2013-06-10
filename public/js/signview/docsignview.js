@@ -317,6 +317,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     labelCss: arrowLabelCss
                 });
                 placement.field().bind("change", function() { task.update();});
+                placement.field().bind("change", function() { task.update();});
+                placement.field().bind("change:inlineedited", function() {task.update();}
                 placement.field().bind("reset", function() {task.update();});
                 tasks.push(task);
             });

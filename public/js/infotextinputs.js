@@ -13,8 +13,11 @@
       inputStyle* : "",          // Style of input tag
       autocomplete* : false,     // Allow autocompleate
       readonly* : false,         // If input is read only. Just for consistency.
-      onEnter* : function() {},  // Function to be called when enter is pressed
+      onEnter*  : function() {}, // Function to be called when enter is pressed
+      onTab*    : function() {}, // Function to be called when tab is entered
+      onBlur*   : function() {}, // Function to be called when input will loose focus
       onRemove* : function() {}, // Function to be called when remove icon is clicked. If no function is provided, no icon will not show up
+      onOk*     : function() {}  // Function called when ok button is clicked. If no function is provided, no ok button will show up
    });
 
   Interface:
@@ -45,7 +48,7 @@ var InfoTextInputModel = Backbone.Model.extend({
       style : "",
       inputStyle : "",
       autocomplete : false,
-      readonly : false
+      readonly : false,
   },
   infotext : function(){
        return this.get("infotext");
@@ -91,13 +94,28 @@ var InfoTextInputModel = Backbone.Model.extend({
       if (this.get("onEnter") != undefined)
           this.get("onEnter")();
   },
+  onTab : function() {
+      if (this.get("onTab") != undefined)
+          this.get("onTab")();
+  },
+  onBlur : function() {
+      if (this.get("onBlur") != undefined)
+          this.get("onBlur")();
+  },
   onRemove : function(){
        if (this.get("onRemove") != undefined)
         return this.get("onRemove")();
        return true;
   },
+  onOk : function() {
+      if (this.get("onOk") != undefined)
+          this.get("onOk")();
+  },
   hasRemoveOption : function(){
        return this.get("onRemove") != undefined;
+  },
+  hasOkOption : function(){
+       return this.get("onOk") != undefined;
   },
   autocompleate : function(){
        return this.get("autocompleate");
@@ -116,17 +134,17 @@ var InfoTextInputModel = Backbone.Model.extend({
  */
 var InfoTextInputView = Backbone.View.extend({
   events: {
-        "focus"  :  "addFocus",
-        "blur"   :  "looseFocus",
-        "change" :  "updateValue",
-        "keydown" : "addFocus",
-        "keydown" : "propagateEnter",
-        "keypress" : "suppressSpace",
-        "keyup" : "updateValue"
+        "focus input"  :  "addFocus",
+        "blur input"   :  "looseFocus",
+        "change input" :  "updateValue",
+        "keydown input" : "addFocus",
+        "keydown input" : "keysEvents",
+        "keypress input" : "suppressSpace",
+        "keyup input" : "updateValue"
     },
     initialize: function (args) {
         var model = this.model;
-        _.bindAll(this, 'render', 'addFocus' , 'looseFocus', 'updateValue');
+        _.bindAll(this, 'render', 'addFocus' , 'looseFocus', 'updateValue', 'keysEvents');
         this.model.bind('change', this.render);
         //Read input element
         this.input = $("<input/>")
@@ -144,8 +162,13 @@ var InfoTextInputView = Backbone.View.extend({
 
         // Remove (x) icon in top left corner
         if (model.hasRemoveOption()){
-            $(this.el).append($("<div class='closer'/>").click(function() { model.onRemove(); }));
+            $(this.el).append($("<div class='closer'/>").click(function() { model.onRemove();}));
         }
+        // Ok button at the end of input
+        if (model.hasOkOption()){
+            $(this.el).append($("<div class='ok-button'>OK</div>").click(function() { model.onOk(); }));
+        }
+
         this.render();
     },
     render: function () {
@@ -180,15 +203,18 @@ var InfoTextInputView = Backbone.View.extend({
         if (this.model.hasFocus()) {
           this.updateValue();
           this.model.looseFocus();
+          this.model.onBlur();
           this.render();
         }
     },
     updateValue: function(){
         this.model.setValue(this.input.val());
     },
-    propagateEnter : function(e) {
+    keysEvents : function(e) {
         if (e.keyCode == 13)
           this.model.onEnter();
+        else if (e.keyCode == 9)
+          this.model.onTab();
     },
     suppressSpace : function(e) {
         if (this.model.get("suppressSpace")==true ) {
