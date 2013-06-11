@@ -570,10 +570,11 @@ mailTakeoverPrivateUserInviteP=
   <br/>
   <br/>
   $_mailTakeoverPrivateUserInviteContentInstructionFirst()$
-  <ul>
+  <ol>
     $_mailTakeoverPrivateUserInviteContentInstructionSecond()$
-  </ul>
-  $_mailTakeoverPrivateUserInviteContentLink()$ $_mailTakeoverPrivateUserInviteContentInstructionThird()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a>
+  </ol>
+  $_mailTakeoverPrivateUserInviteContentLink()$ $_mailTakeoverPrivateUserInviteContentInstructionThird()$ 
+  $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailTakeoverPrivateUserInviteAcceptButton())$
 ####
 mailRequestChangeEmail=
   $_mailRequestChangeEmailTitle()$
