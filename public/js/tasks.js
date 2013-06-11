@@ -16,6 +16,8 @@
  * ! You need to manually call 'update' method. 'update' performes isComplete check on task.
  *   isComplete result is stored in task internal cache - it gets updated only on 'update' method call.
  *
+ * ! If UI of element has been changed - call task method triggerUIChange. This will force arrow to refresh.
+ *
    Sample task :
         var el = $("<input type='text'/>").appendTo('body');
         var task = new PageTask({
@@ -82,6 +84,9 @@ window.PageTask = Backbone.Model.extend({
   },
   update: function() {
     this.set({ complete: this.get("isComplete")()});
+  },
+  triggerUIChange : function() {
+    this.trigger("change:ui");
   }
 });
 
@@ -94,6 +99,7 @@ window.PageTasks = Backbone.Model.extend({
     var model = this;
     var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top - t2.el().offset().top} );
    _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});
+   _.each(tasks, function(t) {t.bind('change:ui', function() { console.log("UI changed"); model.trigger("change");})});
    this.activateTask();
   },
   active : function() {
@@ -188,7 +194,7 @@ var PageTasksArrowView = Backbone.View.extend({
 
         if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
            if (arrow.model().type() == 'point-left')  return false;
-           if (arrow.model().type() == 'point-right') return (elleft + elwidth > $(arrow.view().el).offset().left);
+           if (arrow.model().type() == 'point-right') return (Math.abs(elleft + elwidth - $(arrow.view().el).offset().left) > 10);
            return (arrow.model().type() != 'point-left' && arrow.model().type() != 'point-right');
         }
         if ((elbottom + bottommargin) > scrollbottom)

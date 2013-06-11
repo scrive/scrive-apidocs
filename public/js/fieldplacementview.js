@@ -596,14 +596,18 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       var val = input.value();
                       field.setValue(val);
                       field.signatory().trigger('change');
-                      field.trigger('change:inlineedited');
                       view.render();
+                      field.trigger('change:inlineedited');
+
         };
 
         var input = new InfoTextInput({
           infotext: field.nicetext(),
           value : field.value(),
-          style: "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) +  "px; height:"+ (this.fontSize() + 4) +"px",
+          style: "font-size:" + this.fontSize() + "px;" +
+                 "line-height: " + (this.fontSize() + 2) +  "px;" +
+                 "height:"+ (this.fontSize() + 4) +"px;" +
+                 "margin-top: -1px; margin-left: -1px;border-radius: 2px;",
           inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) + "px; height:"+ (this.fontSize() + 4) +"px",
           textWidth: width,
           onEnter : accept,

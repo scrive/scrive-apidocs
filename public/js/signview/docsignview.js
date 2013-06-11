@@ -318,7 +318,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                 });
                 placement.field().bind("change", function() { task.update();});
                 placement.field().bind("change", function() { task.update();});
-                placement.field().bind("change:inlineedited", function() {task.update();}
+                placement.field().bind("change:inlineedited", function() { task.triggerUIChange();});
                 placement.field().bind("reset", function() {task.update();});
                 tasks.push(task);
             });
