@@ -55,10 +55,9 @@ smsReminder doc sl = do
 
 smsClosedNotification :: (HasMailContext c, TemplatesMonad m) => c -> Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification ctx doc sl withEmail sealFixed = do
-  (SMS (getMobile sl) None <$>) $ renderLocalTemplate doc "_smsClosedNotification" $ do
+  (SMS (getMobile sl) None <$>) $ renderLocalTemplate doc (if sealFixed then "_smsCorrectedNotification" else "_smsClosedNotification") $ do
     smsFields' ctx doc sl
     F.value "withEmail" withEmail
-    F.value "sealFixed" sealFixed
 
 smsRejectNotification :: (KontraMonad m, TemplatesMonad m) => Document -> SignatoryLink -> SignatoryLink -> m SMS
 smsRejectNotification doc sl rejector = do
