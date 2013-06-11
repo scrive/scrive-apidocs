@@ -99,7 +99,7 @@ window.PageTasks = Backbone.Model.extend({
     var model = this;
     var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top - t2.el().offset().top} );
    _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});
-   _.each(tasks, function(t) {t.bind('change:ui', function() { console.log("UI changed"); model.trigger("change");})});
+   _.each(tasks, function(t) {t.bind('change:ui', function() {model.trigger("change");})});
    this.activateTask();
   },
   active : function() {

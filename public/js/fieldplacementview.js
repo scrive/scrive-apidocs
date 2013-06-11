@@ -96,7 +96,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             else if( dragHandler.hasClass("placedfield")) {
                 dragHandler.show();
             }
-            console.log("Field " + field)
             if (field.signatory().document().mainfile() != undefined)
                 field.signatory().document().mainfile().view.hideCoordinateAxes();
             droppedInside = false;
@@ -607,7 +606,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
           style: "font-size:" + this.fontSize() + "px;" +
                  "line-height: " + (this.fontSize() + 2) +  "px;" +
                  "height:"+ (this.fontSize() + 4) +"px;" +
-                 "margin-top: -1px; margin-left: -1px;border-radius: 2px;",
+                 "border-radius: 2px;",
           inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) + "px; height:"+ (this.fontSize() + 4) +"px",
           textWidth: width,
           onEnter : accept,
