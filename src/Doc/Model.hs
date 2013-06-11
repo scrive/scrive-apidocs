@@ -1394,6 +1394,14 @@ selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit Nothing sqlquery
 
 selectDocumentsWithSoftLimit :: MonadDB m => Maybe Int -> SqlSelect -> m (Int,[Document])
 selectDocumentsWithSoftLimit softlimit sqlquery = do
+
+    {-
+    kRun_ $ "EXPLAIN (ANALYZE, VERBOSE, COSTS, BUFFERS)" <+> toSQLCommand sqlquery
+    let fetchTextLines acc line = line:acc
+    textlines <- kFold fetchTextLines []
+    mapM_ Log.debug (reverse textlines)
+    -}
+
     allDocumentsCount <- case softlimit of
       Nothing -> do
         _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <> toSQLCommand sqlquery
