@@ -1042,6 +1042,14 @@ javascriptLocalisation =
              , sampleEmailContent: "$_SampleEmailContent()$"
              , customize : "$_companyBrandingCustomize()$"
       }
+      , fontSize: {
+               name : "$_fontSizeName()$"
+             , small :  "$_fontSizeSmall()$"
+             , normal :  "$_fontSizeNormal()$"
+             , big :  "$_fontSizeBig()$"
+             , large :  "$_fontSizeLarge()$"
+             , custom :  "$_fontSizeCustom()$"
+      }
       , dates : {
                jan : "$_datesJan()$"
              , feb : "$_datesFeb()$"

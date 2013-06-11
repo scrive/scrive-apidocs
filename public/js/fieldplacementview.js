@@ -266,7 +266,7 @@ var TextTypeSetterView = Backbone.View.extend({
         var self = this;
         _.bindAll(this);
         this.model.bind('removed', this.clear);
-        this.model.bind('change:field change:signatory change:step', this.render);
+        this.model.bind('change:field change:signatory change:step change:fsrel', this.render);
 
 
 
@@ -340,24 +340,32 @@ var TextTypeSetterView = Backbone.View.extend({
         if (page == undefined || page.width() == undefined) return $("<div class='empty'>");
 
         var placement = this.model;
-        var fontSizeName = "custom";
+        var fontSizeName = localization.fontSize.custom;
         var currSize = placement.fsrel() * page.width();
-        if (Math.abs(currSize - 10) < 1)
-          fontSizeName = "small";
+        if (Math.abs(currSize - 12) < 1)
+          fontSizeName = localization.fontSize.small;
         if (Math.abs(currSize - 16) < 1)
-          fontSizeName = "normal";
-        if (Math.abs(currSize - 22) < 1)
-          fontSizeName = "big";
-        if (Math.abs(currSize - 28) < 1)
-          fontSizeName = "large";
-        return new Select({name : "Font-size: " + fontSizeName,
+          fontSizeName = localization.fontSize.normal;
+        if (Math.abs(currSize - 20) < 1)
+          fontSizeName = localization.fontSize.big;
+        if (Math.abs(currSize - 24) < 1)
+          fontSizeName = localization.fontSize.large;
+        return new Select({name : localization.fontSize.name + ": " + fontSizeName,
                            textWidth: "191px",
                            optionsWidth: "218px",
                            options: [
-                              { name : "Font-size: " + "small", onSelect: function() {placement.setFSRel(10/page.width()); return true;}},
-                              { name : "Font-size: " + "normal", onSelect: function() {placement.setFSRel(16/page.width()); return true;}},
-                              { name : "Font-size: " + "big", onSelect: function() {placement.setFSRel(22/page.width()); return true;}},
-                              { name : "Font-size: " + "large", onSelect: function() {placement.setFSRel(28/page.width()); return true;}}
+                              { name : localization.fontSize.small,
+                                style: "font-size: 12px",
+                                onSelect: function() {placement.setFSRel(12/page.width()); return true;}},
+                              { name : localization.fontSize.normal,
+                                style: "font-size: 16px",
+                                onSelect: function() {placement.setFSRel(16/page.width()); return true;}},
+                              { name : localization.fontSize.big,
+                                style: "font-size: 20px",
+                                onSelect: function() {placement.setFSRel(20/page.width()); return true;}},
+                              { name : localization.fontSize.large,
+                                style: "font-size: 24px",
+                                onSelect: function() {placement.setFSRel(24/page.width()); return true;}}
                            ] }).el;
     },
     title : function() {
