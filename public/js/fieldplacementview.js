@@ -125,7 +125,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                     placement.set({ xrel: x/w,
                                     yrel: y/h,
                                     wrel: $(helper).width()/w,
-                                    hrel: $(helper).height()/h,
+                                    hrel: $(helper).height()/h
                                   });
                 }
                 else {
