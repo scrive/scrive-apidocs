@@ -18,6 +18,7 @@ module Doc.DocViewMail
 
 import Company.Model
 import Control.Logic
+import Doc.DocInfo (getLastSignedTime)
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
@@ -25,6 +26,7 @@ import File.FileID
 import Kontra
 import KontraLink
 import Mails.SendMail
+import MinutesTime (formatMinutesTime)
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
@@ -281,6 +283,7 @@ mailDocumentClosed ctx document l sl sealFixed = do
                             else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just sl) mainfile
         F.value "sealFixed" $ sealFixed
+        F.value "closingtime" $ formatMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
 
 mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentAwaitingForAuthor ctx document authorlang = do

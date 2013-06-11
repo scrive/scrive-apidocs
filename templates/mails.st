@@ -31,14 +31,6 @@ $else$
 $_mailClosedLogin()$
 $endif$
 #####
-mailSealFixed=$if(sealFixed)$
-<br/>
-<br/>
-$_sealFixed()$
-<br/>
-<br/>
-$endif$
-#####
 ##### CLOSED MAIL
 #####
 mailContractClosed=
@@ -52,10 +44,10 @@ mailContractClosed=
 ####
 mailContractClosedMainP =
 <br/>
-      $_mailContractClosedContentSignedBy()$
-      <br/>
-      <br/>
-      $_mailContractClosedContentAttached()$ $mailSealFixed()$ $mailClosedSignup()$
+    $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailContractClosedContentSignedBy()$ $endif$
+    <br/>
+    <br/>
+    $_mailContractClosedContentAttached()$ $mailClosedSignup()$
 ####
 mailOfferClosed=
     $_mailDocumentClosedTitleOffer()$
@@ -66,10 +58,11 @@ mailOfferClosed=
     )$
 ####
 mailOfferClosedMainP =
-      $_mailOfferClosedContentOfferAccepted()$
+<br/>
+    $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailOfferClosedContentOfferAccepted()$ $endif$
     <br/>
     <br/>
-    $_mailOfferClosedContentAttached()$ $mailSealFixed()$ $mailClosedSignup()$
+    $_mailOfferClosedContentAttached()$ $mailClosedSignup()$
 ####
 mailOrderClosed=
     $_mailDocumentClosedTitleOrder()$
@@ -80,10 +73,11 @@ mailOrderClosed=
     )$
 ####
 mailOrderClosedMainP=
-        $_mailOrderClosedContentViewed()$
-      <br/>
-      <br/>
-      $_mailOrderClosedContentAttached()$ $mailSealFixed()$ $mailClosedSignup()$
+<br/>
+    $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailOrderClosedContentViewed()$ $endif$
+    <br/>
+    <br/>
+    $_mailOrderClosedContentAttached()$ $mailClosedSignup()$
 ####
 #### REJECTED MAIL
 ####
