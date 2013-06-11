@@ -48,7 +48,7 @@ var InfoTextInputModel = Backbone.Model.extend({
       style : "",
       inputStyle : "",
       autocomplete : false,
-      readonly : false,
+      readonly : false
   },
   infotext : function(){
        return this.get("infotext");
