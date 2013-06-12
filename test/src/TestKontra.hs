@@ -283,9 +283,6 @@ clearTables :: TestEnv ()
 clearTables = do
   kRunRaw "UPDATE users SET company_id = NULL"
   kRunRaw "DELETE FROM evidence_log"
-  kRunRaw "DELETE FROM doc_stat_events"
-  kRunRaw "DELETE FROM user_stat_events"
-  kRunRaw "DELETE FROM sign_stat_events"
   kRunRaw "DELETE FROM companyinvites"
   kRunRaw "DELETE FROM payment_plans"
   kRunRaw "DELETE FROM payment_stats"
