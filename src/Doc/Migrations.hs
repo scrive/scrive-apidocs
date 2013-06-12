@@ -945,6 +945,6 @@ removeStatsTables :: MonadDB m => Migration m
 removeStatsTables =
   Migration
   { mgrTable = tableDocuments
-  , mgrFrom = 23
+  , mgrFrom = 24
   , mgrDo = kRunRaw "DROP TABLE doc_stat_events, sign_stat_events, user_stat_events CASCADE"
   }
