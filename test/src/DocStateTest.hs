@@ -1,8 +1,8 @@
 module DocStateTest (docStateTests) where
 
 import qualified Amazon as AWS
-import AppConf (AppConf(..))
-import Configuration (readConfig)
+import AppConf (AppConf(dbConfig))
+import Configuration (confDefault)
 import Control.Arrow (first)
 import Control.Concurrent (newMVar)
 import Control.Logic
@@ -41,8 +41,6 @@ import Data.Maybe
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
-import qualified Log
-import System.Environment (getProgName)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.Framework.Providers.HUnit (testCase)
@@ -1807,14 +1805,7 @@ testStatusClassSignedWhenAllSigned = doTimes 10 $ do
 
 runScheduler :: MonadIO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
-  appConf <- liftIO $ do
-    -- Make sure we return the test DB configuration instead of the
-    -- one in kontrakcja.conf
-    pgconf <- liftIO $ readFile "kontrakcja_test.conf"
-    appname <- getProgName
-    c <- readConfig Log.cron appname [] "kontrakcja.conf"
-    return c{ dbConfig = pgconf }
-
+  let appConf = confDefault { dbConfig = "" }
   templates <- liftIO $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
   CronEnv.runScheduler appConf filecache templates m
