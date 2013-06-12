@@ -15,11 +15,6 @@ morethenonelistnormal=
 nomorethanonelistnormal=
     $list$
 ###
-poweredByScrive=
-    <p>
-      <small> $_poweredByScrive()$ <br/><a href="$ctxhostpart$">Scrive</a></small>
-    </p>
-#####
 makeEditable=
     <div class="editable" name="$name$">$this:noescape()$</div>
 ####

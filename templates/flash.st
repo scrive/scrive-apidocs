@@ -116,8 +116,6 @@ placeFieldName=	$_placeFieldName()$
 ###
 inviteTextFieldName=	$_inviteTextFieldName()$
 ###
-flashMessageNeedsLetterAndDigit=	$_flashMessageNeedsLetterAndDigit()$
-###
 flashMessageInvalidFormat=	$_flashMessageInvalidFormat()$
 ###
 flashMessageNumberBelowMinimum=	$_flashMessageNumberBelowMinimum()$
@@ -135,8 +133,6 @@ flashMessageInvalidPrintableCharsInInput=	$_flashMessageInvalidPrintableCharsInI
 flashMessageInputLessThanMinLength=	$_flashMessageInputLessThanMinLength()$
 ###
 flashMessageInputExceedsMaxLength=	$_flashMessageInputExceedsMaxLength()$
-###
-flashMessageMissingRequiredField=	$_flashMessageMissingRequiredField()$
 ###
 flashMessageFailedToParseCSV=	$_flashMessageFailedToParseCSV()$
 ###
@@ -165,8 +161,6 @@ flashMessageCompanyAccountDeleted=$_flashMessageCompanyAccountDeleted()$
 flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
 ###
 flashCompanyAccountInviteResent=$_flashCompanyAccountInviteResent()$
-###
-flashMessageChangeEmailMailSent=$_flashMessageChangeEmailMailSent()$
 ###
 flashMessageMismatchedEmails=$_flashMessageMismatchedEmails()$
 ###

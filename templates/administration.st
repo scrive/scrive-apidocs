@@ -837,10 +837,6 @@ companyusagestats=
 </div>
 </div>
 ###
-backtoadminmainlink=
-   <a href="/adminonly">Go back to main admin page</a>
-    <br/><br/>
-###
 daveDocument=
 <div class="mainContainer" >
   <div class="body-container">

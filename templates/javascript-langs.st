@@ -33,8 +33,6 @@ javascriptLocalisation =
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
              , companyNumber : "$_orgnumber()$"
-             , fieldName : "$_fieldName()$"
-             , noNamePerson : "$_noNamePerson()$"
              , statusToolTip: {
                    draft: "$_tooltipdraft()$"
                  , cancelled : "$_tooltipcancelled()$"
@@ -118,13 +116,8 @@ javascriptLocalisation =
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
-            , step1template : "$_step1selectIfTemplate()$"
-            , step1normal   : "$_step1selectIfElse()$"
-            , step2template : "$_step2selectIfTemplate()$"
-            , step2normal   : "$_step2selectIfNotTemplate()$"
             , saveAsTemplate : "$_signStepsMenuEmptyStepSaveAsTemplate()$"
             , saveAsDraft    : "$_saveAsDraft()$"
-            , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
             , months : [ "$_january()$",
                          "$_february()$",
                          "$_march()$",
@@ -249,22 +242,12 @@ javascriptLocalisation =
                 showAnyAuthor : "$_anyAuthor()$"
             }
            , eleg : "$_eleg()$"
-           , editInviteText :"$_editinvitetextlinkInviteText()$"
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
-           , days : "$_days()$"
            , to : "$_to()$"
-           , nextStep : "$_signStepsBodyFunctionsNextStep()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
            , ok : "$_ok()$"
-           , addSignatory : "$_signStepsBodyFunctionsAddPerson()$"
-           , removeSignatory : "$_signStepsBodyFunctionsRemovePerson()$"
-           , isSigningParty : "$_authorsignatoryradioSenderSign()$"
-           , isNotSigningParty : "$_authorsignatoryradioSenderNotSign()$"
-           , signatoryListPartner : "$_signStep2ContentPersons()$"
-           , signatoryListSignOrder : "$_signStep2ContentSignOrder()$"
            , authorattachments: {
-                  changeAuthorAttachments : "$_addattachmentlink()$"
-                , selectAttachments: "$_updateAttachmentsDialogHead()$"
+                  selectAttachments: "$_updateAttachmentsDialogHead()$"
                 , selectAttachment : "$_updateAttachmentsDialogUpLoadChooseAttachment()$"
                 , selectAttachmentsDescription: "$_updateAttachmentsDialogChooseAttachment()$"
                 , storedInScrive: "$_updateAttachmentsDialogUpLoadSaved()$"
@@ -280,15 +263,9 @@ javascriptLocalisation =
               , requestAttachments : "$_pageDocumentForAuthorHelpersLocalDialogsHead()$"
             }
           , save : "$_save()$"
-          , signLast : "$_switchercheckboxSignLast()$"
           , languages : {
-                selectLanguage : "$_documentLanguageLabel()$"
-              , en : "$_English()$"
+                en : "$_English()$"
               , sv : "$_Swedish()$"
-              , changeEnglishToSwedishText :  "$_signInSwedishConfirmText()$"
-              , signInSwedish : "$_signInSwedish()$"
-              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$"
-              , signInEnglish:  "$_signInEnglish()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
@@ -305,58 +282,37 @@ javascriptLocalisation =
            }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
-              withoutParticipant: "$_designViewWithoutParticipant()$",
-              textFieldFor: "$_designViewTextFieldFor()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
               selectField: "$_selectField()$",
-              selectprocess : "$_selectDocumentType()$",
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongMobile : "$_emptyOrNotValidMobile()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
-                    , sameMails : "$_repetedEmailAddress()$"
-                    , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
-                    , notPlacedField : "$_placeAllFields()$"
-                    , fileMustBeAdded : "$_fileMustBeAdded()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
-             , authentication : {
-                      selectmethod: "$_signStepsBodyFunctionsBoxChooseAuthentication()$"
-                }
-             , delivery : {
-                      selectmethod: "$_signStepsBodyFunctionsBoxChooseDelivery()$"
-             }
              , messages : {
                       sendingDocument: "$_designViewMessageSending()$"
-                    , reloadingDocument : "$_designViewMessageReloading()$"
-                    , extraActions : "$_designViewMessageExtraActions()$"
                 }
              , sign : "$_sign()$"
-             , removeFile : "$_removeFile()$"
              , textFields : {
                       textField: "$_textField()$"
                     , obligatory: "$_textFieldObligatory()$"
                     , forThis : "$_textFieldFor()$"
                     , done : "$_textFieldDone()$"
-                    , help : "$_textFieldHelp()$"
              }
              , checkboxes : {
                       checkbox : "$_checkboxCheckbox()$"
                     , prechecked : "$_checkboxPrechecked()$"
                     , obligatory: "$_checkboxObligatory()$"
-                    , name : "$_checkboxName()$"
                     , forThis : "$_checkboxFor()$"
                     , done : "$_checkboxDone()$"
-                    , help : "$_checkboxHelp()$"
              }
-             , saveAsTemplateDescription : "$_saveAsTemplateLongDescription()$"
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
              , optional: "$_designViewOptional()$"
              , optionalField: "$_designViewOptionalField()$"
-             , optionalFieldAbbrev: "$_designViewOptionalFieldAbbrev()$"
              , editSigningProcess: "$_designViewEditSigningProcess()$"
              , startSigning: "$_designViewStartSigning()$"
              , addField: "$_designViewAddField()$"
@@ -377,11 +333,8 @@ javascriptLocalisation =
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
              , fullName: "$_designViewFullName()$"
-             , optional: "$_designViewOptional()$"
              , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
-             , mandatoryForRecipientAbbrev: "$_designViewMandatoryForRecipientAbbrev()$"
              , mandatoryForSender: "$_designViewMandatoryForSender()$"
-             , mandatoryForSenderAbbrev: "$_designViewMandatoryForSenderAbbrev()$"
              , documentName: "$_designViewDocumentName()$"
              , documentType: "$_designViewDocumentType()$"
              , recipientsLanguage: "$_designViewRecipientsLanguage()$"
@@ -390,14 +343,11 @@ javascriptLocalisation =
              , request: "$_designViewRequest()$"
              , editInvitation: "$_designViewEditInvitation()$"
              , previewInvitation: "$_designViewPreviewInvitation()$"
-             , dAndDActions: "$_designViewDAndDActions()$"
              , signatureBox: "$_designViewSignatureBox()$"
              , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
              , freeTextBox: "$_designViewFreeTextBox()$"
-             , offsite: "$_designViewOffsite()$"
              , checkbox: "$_checkBoxFieldName()$"
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
-             , openPDF: "$_designViewOpenPDF()$"
              , chooseDocument: "$_designViewChooseDocument()$"
              , attached : "$_designViewAttached()$"
              , requestedFrom : "$_designViewRequestedFrom()$"
@@ -408,16 +358,12 @@ javascriptLocalisation =
            }
 
          , validation : {
-                firstNameRequired: "$_flashMessageFirstNameIsRequired()$"
-              , secondNameRequired: "$_flashMessageSecondNameIsRequired()$"
-              , required: "$_nameRequired()$"
+                required: "$_nameRequired()$"
               , toolong: "$_nameTooLong()$"
               , invalidnamechars: "$_nameInvalidChars()$"
               , firstNameField: "$_firstNameField()$"
               , lastNameField: "$_lastNameField()$"
-              , fullNameField: "$_fullName()$"
               , companyNumberInvalidChars: "$_companyNumberInvalidChars()$"
-              , companyNumberTooShort: "$_companyNumberTooShort()$"
               , companyNumberTooLong: "$_companyNumberTooLong()$"
               , passwordExceedsMaxLength: "$_PasswordValidationMessageInputExceedsMaxLength()$"
               , passwordLessThanMinLength: "$_PasswordValidationMessageInputLessThanMinLength()$"
@@ -438,18 +384,11 @@ javascriptLocalisation =
              ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
              ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
-             ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
-             ,  sendToDifferentDeviceFor :  "$_sendToDifferentDeviceFor()$"
-             ,  justSend : "$_justSend()$"
-             ,  howDoYouWantToSign : "$_howDoYouWantToSign()$"
              ,  cleanImage : "$_padCleanImage()$"
              ,  notNamedParty : "$_notNamedParty()$"
              ,  changePartyTo : "$_changePartyTo()$"
              ,  giveForSigningThisDevice : "$_padGiveForSigningThisDevice()$"
         }
-         , mobile : {
-                delivery : "$_mobileDelivery()$"
-         }
          , changeEmail : "$_changeEmail()$"
          , changePhone : "$_changePhone()$"
          , onlyPDF : "$_onlyPDF()$"
@@ -473,7 +412,6 @@ javascriptLocalisation =
          }
          , signupModal: {
              modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
-           , mainHeader : "$_signupModalMainHeader()$"
            , alreadyHaveAnAccount : "$_alreadyHaveAccount()$"
          }
          , visitOurPricingPage : "$_visitOurPricingPage()$"
@@ -485,7 +423,6 @@ javascriptLocalisation =
            , modalAccountSetupPhone: "$_modalAccountSetupPhone()$"
            , modalAccountSetupPosition : "$_modalAccountSetupPosition()$"
            , modalAccountSetupCompany : "$_modalAccountSetupCompany()$"
-           , modalAccountOptionalPositions : "$_modalAccountOptionalPositions()$"
            , modalAccountPasswordRequirements : "$_modalAccountPasswordRequirements()$"
            , flashMessageUserAlreadyActivated : "$_flashMessageUserAlreadyActivated()$"
          }
@@ -565,12 +502,6 @@ javascriptLocalisation =
              ,  time: "$_verificationTime()$"
              ,  gateway : "$_verificationGateway()$"
 
-          }
-        , avtal24 : {
-             buy :   "$_buyAvtal24Template()$"
-           , go :    "$_goToAvtal24()$"
-           , title : "$_avtal24Title()$"
-           , description : "$_avtal24Description()$"
           }
         , promo : {
              accept : "$_promoAccept()$"
@@ -957,9 +888,6 @@ javascriptLocalisation =
               , lang            : "$_UserLanguage()$"
               , langSV          : "$_Swedish()$"
               , langEN          : "$_English()$"
-              , footerSection   : "$_userDocumentsSettings()$"
-              , useFooter       : "$_userDocumentSettingsMailFooter()$"
-              , ipMaskSection   : "$_userIPMaskSection()$"
               , save : "$_SaveChanges()$"
             }
           , companySettings : "$_CompanySettings()$"
@@ -1012,14 +940,7 @@ javascriptLocalisation =
           , subscription : "$_Subscription()$"
       }
       , companyBranding : {
-               customiseHeaderFontLabel : "$_customiseHeaderFontLabel()$"
-             , customiseFontLabel : "$_customiseFontLabel()$"
-             , customiseSignViewFooterTextColourLabel : "$_customiseSignViewFooterTextColourLabel()$"
-             , customiseSignViewFooterTextFontLabel : "$_customiseSignViewFooterTextFontLabel()$"
-             , customiseSignViewHeaderTextColourLabel : "$_customiseSignViewHeaderTextColourLabel()$"
-             , customiseSignViewHeaderTextFontLabel : "$_customiseSignViewHeaderTextFontLabel()$"
-             , customiseSignViewHeaderBackgroundColour : "$_customiseSignViewHeaderBackgroundColour()$"
-             , customiseSignViewFooterBackgroundColour : "$_customiseSignViewFooterBackgroundColour()$"
+               customiseFontLabel : "$_customiseFontLabel()$"
              , customiseSignViewBackgroundColour : "$_customiseSignViewBackgroundColour()$"
              , signviewBranding : "$_signviewBranding()$"
              , serviceBranding : "$_serviceBranding()$"
@@ -1038,7 +959,6 @@ javascriptLocalisation =
              , customiseTextColour: "$_CustomiseTextColour()$"
              , selectImageLabel: "$_SelectImageLabel()$"
              , sampleEmailHeader: "$_SampleEmailHeader()$"
-             , sampleEmailSubheader: "$_mailsubheader()$"
              , sampleEmailContent: "$_SampleEmailContent()$"
              , customize : "$_companyBrandingCustomize()$"
       }
@@ -1065,6 +985,5 @@ javascriptLocalisation =
              , dec : "$_datesDec()$"
       }
       , createFromTemplateDescription : "$_createFromTemplateDescription()$"
-      , nofiletext : "$_nofiletext()$"
     };
 ###
