@@ -12,6 +12,7 @@ import Doc.DocStateData
 import User.Model
 import Company.Model
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 import Data.Char
 import Data.Maybe
 import Control.Monad.Trans.Maybe
@@ -24,10 +25,11 @@ data SMS = SMS {
   , smsOriginator :: String -- ^ SMS originator/sender name
   } deriving (Eq, Ord, Show)
 
-mkSMS :: MonadDB m => SignatoryLink -> MessageData -> String -> m SMS
-mkSMS sl msgData msgBody = do
+mkSMS :: MonadDB m => Document -> SignatoryLink -> MessageData -> String -> m SMS
+mkSMS doc sl msgData msgBody = do
   mmsgOriginator <- runMaybeT $ do
-    uid <- MaybeT $ return $ maybesignatory sl
+    authorSL <- MaybeT $ return $ getAuthorSigLink doc
+    uid <- MaybeT $ return $ maybesignatory authorSL
     user <- MaybeT $ dbQuery $ GetUserByID uid
     cid <- MaybeT $ return $ usercompany user
     company <- MaybeT $ dbQuery $ GetCompany cid
