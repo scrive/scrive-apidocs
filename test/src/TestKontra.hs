@@ -294,6 +294,7 @@ clearTables = do
   kRunRaw "DELETE FROM password_reminders"
   kRunRaw "DELETE FROM user_account_requests"
 
+  kRunRaw "DELETE FROM mail_attachments"
   kRunRaw "DELETE FROM author_attachments"
   kRunRaw "DELETE FROM signatory_attachments"
   kRunRaw "DELETE FROM signatory_links"
