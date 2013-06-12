@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 23
+  , tblVersion = 24
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -30,6 +30,7 @@ tableDocuments = tblTable {
        , ("api_callback_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("unsaved_draft", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("object_version", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("seal_status", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE documents ("
@@ -56,6 +57,7 @@ tableDocuments = tblTable {
           <> ", api_callback_url              TEXT             NULL"
           <> ", unsaved_draft                 BOOL         NOT NULL DEFAULT FALSE"
           <> ", object_version                BIGINT       NOT NULL"
+          <> ", seal_status                   SMALLINT         NULL"
           <> ", CONSTRAINT pk_documents PRIMARY KEY (id)"
           <> ")"
         return TVRcreated

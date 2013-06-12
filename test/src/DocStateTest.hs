@@ -1,13 +1,24 @@
 module DocStateTest (docStateTests) where
 
+import qualified Amazon as AWS
+import AppConf (AppConf(..))
+import Configuration (readConfig)
 import Control.Arrow (first)
+import Control.Concurrent (newMVar)
 import Control.Logic
+import qualified CronEnv
 import qualified Data.ByteString as BS
 import DB
+import qualified MemCache
 import User.Model
 import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
+import Doc.ExtendSignature (sealMissingSignatures, extendSignatures)
+import Templates (getTemplatesModTime, readGlobalTemplates)
+import ActionQueue.Monad (ActionQueueT)
+import ActionQueue.Scheduler (SchedulerData(..))
+import Doc.SealStatus (SealStatus(..))
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import IPAddress
@@ -30,6 +41,8 @@ import Data.Maybe
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
+import qualified Log
+import System.Environment (getProgName)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.Framework.Providers.HUnit (testCase)
@@ -44,6 +57,8 @@ import EvidenceLog.Model
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
   dataStructureProperties,
+  testThat "Document with seal status Missing gets sealed" env testSealMissingSignatures,
+  testThat "Document with extensible seal can be extended" env testExtendSignatures,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
@@ -213,6 +228,35 @@ dataStructureProperties = testGroup "data structure properties" [
   testProperty "signatories are different with different fields" propSignatoryDetailsNEq,
   testCase "given example" testSignatories1
   ]
+
+testSealMissingSignatures :: TestEnv ()
+testSealMissingSignatures = do
+  author <- addNewRandomUser
+  let filename = "test/pdfs/simple.pdf"
+  filecontent <- liftIO $ BS.readFile filename
+  file <- addNewFile filename filecontent
+  doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
+  randomUpdate $ \t -> AttachSealedFile (documentid doc) (fileid file) Missing (systemActor t)
+  runScheduler sealMissingSignatures
+  Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  case documentsealstatus doc' of
+    Just (Guardtime{}) -> assertSuccess
+    s -> assertFailure $ "Unexpected seal status: " ++ show s
+
+testExtendSignatures :: TestEnv ()
+testExtendSignatures = do
+  author <- addNewRandomUser
+  let filename = "test/pdfs/extensible.pdf"
+  filecontent <- liftIO $ BS.readFile filename
+  file <- addNewFile filename filecontent
+  doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
+  now <- getMinutesTime
+  dbUpdate $ AttachSealedFile (documentid doc) (fileid file) Guardtime{ extended = False, private = False } (systemActor (2 `monthsBefore` now))
+  runScheduler extendSignatures
+  Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  case documentsealstatus doc' of
+    Just (Guardtime{ extended = True }) -> assertSuccess
+    s -> assertFailure $ "Unexpected extension status: " ++ show s
 
 testNewDocumentForNonCompanyUserInsertsANewContract :: TestEnv ()
 testNewDocumentForNonCompanyUserInsertsANewContract = doTimes 10 $ do
@@ -454,7 +498,7 @@ testAttachSealedFileEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isClosed
   file <- addNewRandomFile
-  randomUpdate $ \t->AttachSealedFile (documentid doc) (fileid file) (systemActor t)
+  randomUpdate $ \t->AttachSealedFile (documentid doc) (fileid file) Missing (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == AttachSealedFileEvidence) lg
@@ -857,7 +901,7 @@ testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
   -- non-existent docid
   time <- rand 10 arbitrary
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    randomUpdate $ (\docid -> AttachSealedFile docid (fileid file) (systemActor time))
+    randomUpdate $ (\docid -> AttachSealedFile docid (fileid file) Missing (systemActor time))
 
 testDocumentAttachSealedPendingRight :: TestEnv ()
 testDocumentAttachSealedPendingRight = doTimes 10 $ do
@@ -872,7 +916,7 @@ testDocumentAttachSealedPendingRight = doTimes 10 $ do
   file <- addNewRandomFile
   time <- rand 10 arbitrary
   --execute
-  success <- randomUpdate $ AttachSealedFile (documentid doc) (fileid file) (systemActor time)
+  success <- randomUpdate $ AttachSealedFile (documentid doc) (fileid file) Missing (systemActor time)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
   assert success
@@ -1760,3 +1804,17 @@ testStatusClassSignedWhenAllSigned = doTimes 10 $ do
   Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
 
   assertEqual "Statusclass for signed documents is signed" SCSigned (documentstatusclass doc')
+
+runScheduler :: MonadIO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
+runScheduler m = do
+  appConf <- liftIO $ do
+    -- Make sure we return the test DB configuration instead of the
+    -- one in kontrakcja.conf
+    pgconf <- liftIO $ readFile "kontrakcja_test.conf"
+    appname <- getProgName
+    c <- readConfig Log.cron appname [] "kontrakcja.conf"
+    return c{ dbConfig = pgconf }
+
+  templates <- liftIO $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
+  filecache <- MemCache.new BS.length 52428800
+  CronEnv.runScheduler appConf filecache templates m

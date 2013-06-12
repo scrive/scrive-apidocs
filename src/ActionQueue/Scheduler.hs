@@ -7,6 +7,7 @@ module ActionQueue.Scheduler (
 
 import Control.Concurrent
 import Control.Monad.Reader
+import Control.Monad.Trans.Control (MonadBaseControl)
 import System.Time
 
 import ActionQueue.Monad
@@ -34,7 +35,7 @@ type Scheduler = ActionQueue SchedulerData
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
-timeoutDocuments :: Scheduler ()
+timeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m) => m ()
 timeoutDocuments = do
   now <- getMinutesTime
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
@@ -48,7 +49,7 @@ timeoutDocuments = do
     timeoutDocuments
 
 
-getGlobalTemplates :: Scheduler KontrakcjaGlobalTemplates
+getGlobalTemplates :: (MonadReader SchedulerData m, MonadIO m) => m KontrakcjaGlobalTemplates
 getGlobalTemplates = do
   sd <- ask
   (_, templates) <- liftIO $ readMVar (sdTemplates sd)

@@ -35,6 +35,13 @@ default (SQL)
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
+addSealStatusToDocument :: MonadDB m => Migration m
+addSealStatusToDocument = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 23
+  , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN seal_status SMALLINT NULL"
+}
+
 setMandatoryExpirationTimeInDocument :: (MonadDB m, MonadIO m) => Migration m
 setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments

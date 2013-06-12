@@ -45,6 +45,7 @@ import User.UserID
 import User.Lang
 import File.FileID
 import File.File
+import Doc.SealStatus (SealStatus)
 import Doc.DocumentID
 import Doc.JpegPages
 import Doc.SignatoryLinkID
@@ -418,6 +419,7 @@ data Document = Document {
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
   , documentobjectversion          :: Int
+  , documentsealstatus             :: Maybe SealStatus
   } deriving (Eq, Ord, Show)
 
 
@@ -443,6 +445,7 @@ instance HasDefaultValue Document where
           , documentstatusclass          = SCDraft
           , documentapicallbackurl       = Nothing
           , documentobjectversion        = 0
+          , documentsealstatus           = Nothing
           }
 
 instance HasLang Document where

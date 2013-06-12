@@ -7,6 +7,7 @@ module Doc.Action (
   , sendReminderEmail
   , sendInvitationEmail1
   , sendAllReminderEmails
+  , sendClosedEmails
   ) where
 
 import Control.Applicative
@@ -130,7 +131,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
         case enewdoc of
-          Right newdoc -> sendClosedEmails newdoc
+          Right newdoc -> sendClosedEmails ctx newdoc False
           Left errmsg -> do
             _ <- dbUpdate $ ErrorDocument documentid errmsg (systemActor time)
             Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ documenttitle
@@ -409,31 +410,29 @@ sendReminderEmail custommessage ctx actor doc siglink = do
   triggerAPICallbackIfThereIsOne doc
   return siglink
 
-{- |
-   Send emails to all parties when a document is closed.
- -}
-sendClosedEmails :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> m ()
-sendClosedEmails document = do
-    ctx <- getContext
+-- | Send emails to all parties when a document is closed.  If
+-- 'sealFixed', then there were earlier emails sent that contained a
+-- document that wasn't digitally sealed, so now we resend the
+-- document with digital seal.
+sendClosedEmails :: (CryptoRNG m, HasMailContext c, MonadDB m, TemplatesMonad m) => c -> Document -> Bool -> m ()
+sendClosedEmails ctx document sealFixed = do
     mailattachments <- makeMailAttachments document
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
-      ml <- handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
+      ml <- handlePostSignSignup ctx (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
       let sendMail = do
-            mail <- mailDocumentClosed ctx document ml sl
-            scheduleEmailSendout (ctxmailsconfig ctx) $
+            mail <- mailDocumentClosed ctx document ml sl sealFixed
+            scheduleEmailSendout (mctxmailsconfig (mailContext ctx)) $
                                  mail { to = [getMailAddress sl]
                                       , attachments = mailattachments
                                       }
-      let sendSMS withMail = (scheduleSMS =<< smsClosedNotification document sl withMail)
-      case (isGood $ asValidEmail $ getEmail sl,isGood $  asValidPhoneForSMS $ getMobile sl) of
-           (False,False) -> return ()
-           (True,False) -> sendMail
-           (False,True) -> sendSMS False
-           (True,True) -> sendMail >> sendSMS True
-
-
-makeMailAttachments :: (KontraMonad m, MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
+      let sendSMS withMail = (scheduleSMS =<< smsClosedNotification ctx document sl withMail sealFixed)
+      let useMail = isGood $ asValidEmail $ getEmail sl
+          useSMS = isGood $  asValidPhoneForSMS $ getMobile sl
+      when useMail $ sendMail
+      when useSMS  $ sendSMS useMail
+ 
+makeMailAttachments :: (MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
   let mainfile = documentsealedfile document `mplus` documentfile document
   let
@@ -485,10 +484,9 @@ sendAllReminderEmails ctx actor user docid = do
    Try to sign up a new user. Returns the confirmation link for the new user.
    Nothing means there is already an account or there was an error creating the user.
  -}
-handlePostSignSignup :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> String -> String -> m (Maybe KontraLink)
-handlePostSignSignup email fn ln = do
-  ctx <- getContext
-  let lang = ctxlang ctx
+handlePostSignSignup :: (CryptoRNG m, MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Email -> String -> String -> m (Maybe KontraLink)
+handlePostSignSignup ctx email fn ln = do
+  let lang = mctxlang (mailContext ctx)
   muser <- dbQuery $ GetUserByEmail email
   case (muser, muser >>= userhasacceptedtermsofservice) of
     (Just user, Nothing) -> do
@@ -499,7 +497,7 @@ handlePostSignSignup email fn ln = do
     (Nothing, Nothing) -> do
       -- this email address is new to the system, so create the user
       -- and send an invite
-      mnewuser <- createUser email (fn, ln) Nothing lang
+      mnewuser <- createUser' ctx email (fn, ln) Nothing lang
       case mnewuser of
         Nothing -> return Nothing
         Just newuser -> do

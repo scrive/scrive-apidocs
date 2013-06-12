@@ -2,6 +2,7 @@ module User.Action (
     handleAccountSetupFromSign
   , handleActivate
   , createUser
+  , createUser'
   , phoneMeRequest
   , checkPasswordsMatch
   ) where
@@ -143,11 +144,16 @@ scheduleNewAccountMail ctx user = do
 createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
 createUser email names mcompanyid lang = do
   ctx <- getContext
+  createUser' ctx email names mcompanyid lang
+
+createUser' :: (CryptoRNG m, HasMailContext c, MonadDB m, TemplatesMonad m) => c -> Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
+createUser' ctx email names mcompanyid lang = do
+  let mctx = mailContext ctx
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid lang (bdurl <$> currentBrandedDomain ctx)
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid lang (bdurl <$> mctxcurrentBrandedDomain mctx)
   case muser of
     Just user -> do
-      _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
+      _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (mctxipnumber mctx) (mctxtime mctx) email (userid <$> mctxmaybeuser mctx)
       return muser
     _ -> return muser
 

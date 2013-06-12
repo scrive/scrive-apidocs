@@ -93,6 +93,7 @@ import Doc.Conditions
 import File.FileID
 import File.Model
 import qualified Control.Monad.State.Lazy as State
+import Doc.SealStatus (SealStatus)
 import Doc.DocUtils
 import User.UserID
 import User.Model
@@ -147,6 +148,7 @@ import Company.Model
 -- the route we got to the document, i. e. signatory_links!.
 data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
+  | DocumentFilterBySealStatus [SealStatus]   -- ^ Any of listed seal statuses
   | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags (warning: this is ALL tags)
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
@@ -165,6 +167,7 @@ data DocumentFilter
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter MinutesTime -- ^ That were modified after given time
+  | DocumentFilterByLatestSignTimeBefore MinutesTime  -- ^ With latest sign time before given time
   deriving Show
 
 -- | Document security domain.
@@ -329,6 +332,8 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
   sqlWhereIn "documents.status" statuses
+documentFilterToSQL (DocumentFilterBySealStatus statuses) = do
+  sqlWhereIn "documents.seal_status" statuses
 documentFilterToSQL (DocumentFilterByStatusClass statuses) = do
   -- I think here we can use the result that we define on select
   -- check this one out later
@@ -344,6 +349,10 @@ documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
             <> ", documents.ctime"
             <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
             <+> ">=" <?> mtime)
+
+documentFilterToSQL (DocumentFilterByLatestSignTimeBefore time) = do
+  sqlWhere ("(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
+            <+> "<" <?> time)
 
 documentFilterToSQL (DocumentFilterByProcess processes) = do
   if null ([minBound..maxBound] \\ processes)
@@ -484,6 +493,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
                    , checkEqualBy "documentlang" documentlang
+                   , checkEqualBy "documentapicallbackurl" documentapicallbackurl
+                   , checkEqualBy "documentsealstatus" documentsealstatus
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
                    ] ++
                    concat (zipWith checkSigLink sl1 sl2)
@@ -510,6 +521,7 @@ documentsSelectors =
   , "documents.sharing"
   , "documents.api_callback_url"
   , "documents.object_version"
+  , "documents.seal_status"
   , documentStatusClassExpression
   ]
 
@@ -522,7 +534,7 @@ fetchDocuments = kFold decoder []
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text
-     lang sharing apicallback objectversion status_class
+     lang sharing apicallback objectversion seal_status status_class
        = Document {
          documentid = did
        , documenttitle = title
@@ -549,6 +561,7 @@ fetchDocuments = kFold decoder []
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
        , documentobjectversion = objectversion
+       , documentsealstatus = seal_status
        } : acc
 
 documentStatusClassExpression :: SQL
@@ -973,26 +986,30 @@ instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, Signa
 
 
 insertDocumentAsIs :: MonadDB m => Document -> m (Maybe Document)
-insertDocumentAsIs document = do
-    let Document { documenttitle
-                 , documentsignatorylinks
-                 , documentfile
-                 , documentsealedfile
-                 , documentstatus
-                 , documenttype
-                 , documentctime
-                 , documentmtime
-                 , documentdaystosign
-                 , documenttimeouttime
-                 , documentinvitetime
-                 , documentinvitetext
-                 , documentsharing
-                 , documenttags
-                 , documentauthorattachments
-                 , documentlang
-                 , documentobjectversion
-                 } = document
-        process = toDocumentProcess documenttype
+insertDocumentAsIs document@(Document
+                   _documentid
+                   documenttitle
+                   documentsignatorylinks
+                   documentfile
+                   documentsealedfile
+                   documentstatus
+                   documenttype
+                   documentctime
+                   documentmtime
+                   documentdaystosign
+                   documenttimeouttime
+                   documentinvitetime
+                   documentinvitetext
+                   documentsharing
+                   documenttags
+                   documentauthorattachments
+                   documentlang
+                   _documentstatusclass
+                   documentapicallbackurl
+                   documentobjectversion
+                   documentsealstatus
+                 ) = do
+    let process = toDocumentProcess documenttype
 
     _ <- kRun $ sqlInsert "documents" $ do
         sqlSet "title" documenttitle
@@ -1014,6 +1031,8 @@ insertDocumentAsIs document = do
         sqlSet "lang" documentlang
         sqlSet "sharing" documentsharing
         sqlSet "object_version" documentobjectversion
+        sqlSet "api_callback_url" documentapicallbackurl
+        sqlSet "seal_status" documentsealstatus
         mapM_ (sqlResult) documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
@@ -1116,11 +1135,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
       sqlWhereDocumentStatusIs Preparation
     updateMTimeAndObjectVersion did (actorTime a)
 
-data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
+data AttachSealedFile = AttachSealedFile DocumentID FileID SealStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
-  update (AttachSealedFile did fid actor) = do
+  update (AttachSealedFile did fid status actor) = do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
       sqlSet "sealed_file_id" fid
+      sqlSet "seal_status" status
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Closed
     _ <- update $ InsertEvidenceEvent
