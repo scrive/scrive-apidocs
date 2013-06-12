@@ -496,7 +496,6 @@ window.Signatory = Backbone.Model.extend({
     makeCsv: function(csv) {
          this.set({"csv": csv});
          this.trigger("change:csv");
-
     },
     signsuccessredirect : function() {
         return this.get("signsuccessredirect");
@@ -561,25 +560,6 @@ window.Signatory = Backbone.Model.extend({
             return 'signatory';
         else
             return 'viewer';
-    },
-    // called when creating a multisend signatory
-    giveStandardFields: function() {
-        var signatory = this;
-        var stdfields = [{name: "fstname",   type : "standard"},
-                         {name: "sndname",   type : "standard"},
-                         {name: "email",     type : "standard"},
-                         {name: "sigco",     type : "standard"},
-                         {name: "sigpersnr", type : "standard"},
-                         {name: "sigcompnr", type : "standard"},
-                         {name: "mobile"   , type : "standard"}
-                        ];
-
-        var fields = _.map(stdfields, function(f) {
-            f.signatory = signatory;
-            return new Field(f);
-        });
-        signatory.set({fields:fields});
-        return signatory;
     },
     ensurePersNr: function() {
         var signatory = this;

@@ -149,10 +149,10 @@ set systemPage
  js   js/designview/attachmentslist.js
  js   js/designview/process.js
  js   js/designview/designviewtabs.js
+ js   js/designview/csvsignatorydesign.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js
- js   js/csvsignatorydesign.js
  js   js/validation.js
  js   js/signaturedrawer.js
  js   js/fieldplacementview.js

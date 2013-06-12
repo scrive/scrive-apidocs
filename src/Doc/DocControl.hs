@@ -108,7 +108,6 @@ import Doc.DocDraft() -- Import instances only
 import qualified User.Action
 import qualified ELegitimation.Control as BankID
 import Util.Actor
-import qualified Text.StringTemplates.Fields as F
 import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp
@@ -859,10 +858,7 @@ handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do
   ctx <- getContext
   _ <- guardJust $ ctxmaybeuser ctx
-  Log.debug "Csv parsing"
-  customfieldscount <- guardJustM $ maybeReadIntM $ getField "customfieldscount"
   input <- getDataFn' (lookInput "csv")
-  eleg <- isFieldSet "eleg"
   res <- case input of
         Just(Input contentspec (Just filename) _ ) -> do
           content <- case contentspec of
@@ -870,29 +866,12 @@ handleParseCSV = do
                        Right content -> return content
           let _title = BS.fromString (takeBaseName filename)
           case parseCSV content of
-                 Left _ -> oneProblemJSON $ renderTemplate_ "flashMessageFailedToParseCSV"
-                 Right contents
-                   | length contents > 1000 -> oneProblemJSON $ renderTemplate "flashMessageCSVHasTooManyRows" $ F.value "maxrows" (1000::Int)
-                   | otherwise -> do
-                       let (problems, csvdata) = cleanCSVContents eleg customfieldscount contents
-                       runJSONGenT $ do
-                         J.objects "problems" $ for problems $ \p -> do
-                           J.valueM "description" $ csvProblemToDescription p
-                           when (isJust $ problemRow p) $
-                             J.value "row" $ fromJust $ problemRow p
-                           when (isJust $ problemCell p) $
-                             J.value "cell" $ fromJust $ problemCell p
-                         J.value "rows" $ csvbody csvdata
-
-        _ -> do
-            oneProblemJSON $ renderTemplate_ "flashMessageFailedToParseCSV"
+                 Right (h:r) -> runJSONGenT $ do
+                         J.value "header" $ h
+                         J.value "rows" $ r
+                 _ -> runJSONGenT $ J.value "parseError" True
+        _ -> runJSONGenT $ J.value "parseError" True
   return res
-  where
-      oneProblemJSON :: Kontrakcja m => m String -> m JSValue
-      oneProblemJSON desc = runJSONGenT $ do
-        J.object "problems" $ do
-          J.valueM "description" desc
-        J.value "rows" ([]::[String])
 
 -- | Switch to document language. Checks first if there is not logged in user. If so it will switch only if this is a different signatory.
 switchLangWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m ()

@@ -328,18 +328,9 @@
                 text: '+ ' + localization.designview.addMultisend,
                 onClick: function() {
                     mixpanel.track('Click add CSV');
-                    model.setParticipantDetail(null);
 
-                    var doc = model.document();
-                    var sig = new Signatory({
-                        document:doc,
-                        signs:true
-                    });
-
-                    sig.giveStandardFields();
-
-                    CsvSignatoryDesignPopup.popup({
-                        signatory: sig,
+                    new CsvSignatoryDesignPopup({
+                        document: model.document(),
                         onAccept: function() {
                             doc.addExistingSignatory(sig);
                             doc.save();
@@ -724,6 +715,18 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-fields');
 
+            div.append(view.detailsFullNameField());
+            div.append(view.detailsInformationField('email', 'standard', localization.email));
+            var ignores = ['fstname', 'sndname', 'email'];
+            $.each(sig.fields(), function(i, e) {
+                    if(e.isBlank())
+                        div.append(view.detailsInformationNewField(e));
+                    else if(e.noName())
+                        div.append(view.detailsInformationCustomFieldName(e));
+                    else if(!_.contains(ignores, e.name()) && e.isText())
+                        div.append(view.detailsInformationField(e.name(), e.type(), e.nicename()));
+            });
+
             if(sig.isCsv()) {
                 var csvButton = Button.init({
                     color: 'blue',
@@ -731,11 +734,8 @@
                     size: 'tiny',
                     onClick: function() {
                         mixpanel.track('Open CSV Popup');
-                        CsvSignatoryDesignPopup.popup({
-                            signatory: sig,
-                            onAccept: function() {
-                                sig.document().save();
-                            }
+                        new CsvSignatoryDesignPopup({
+                            document: sig.document()
                         });
                     }
                 });
@@ -743,23 +743,7 @@
                 wrapperdiv.addClass('design-view-action-participant-details-information-field-wrapper');
                 wrapperdiv.append(csvButton.input());
                 div.append(wrapperdiv);
-            } else {
-                // always show these three fields first
-                div.append(view.detailsFullNameField());
-                div.append(view.detailsInformationField('email', 'standard', localization.email));
-                var ignores = ['fstname', 'sndname', 'email'];
-                $.each(sig.fields(), function(i, e) {
-                    if(e.isBlank())
-                        div.append(view.detailsInformationNewField(e));
-                    else if(e.noName())
-                        div.append(view.detailsInformationCustomFieldName(e));
-                    else if(!_.contains(ignores, e.name()) && e.isText())
-                        div.append(view.detailsInformationField(e.name(), e.type(), e.nicename()));
-                });
-
-                div.append(view.newFieldSelector.el);
             }
-
             div.append(view.newFieldSelector.el);
 
             return div;

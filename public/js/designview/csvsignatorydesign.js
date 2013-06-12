@@ -34,7 +34,6 @@ var CsvProblem = Backbone.Model.extend({
 
  var CsvSignatoryDesign = Backbone.Model.extend({
   defaults : {
-      rows : [],
       problems : []
   },
   problems : function() {
@@ -43,8 +42,14 @@ var CsvProblem = Backbone.Model.extend({
   ready : function() {
            return (this.rows().length > 0) &&  (this.problems().length  == 0);
   },
+  header: function() {
+     return this.get("header");
+  },
   rows : function() {
      return this.get("rows");
+  },
+  csv: function() {
+     return [this.header()].concat(this.rows());
   },
   maxRowLength : function() {
     var max = 0;
@@ -54,14 +59,7 @@ var CsvProblem = Backbone.Model.extend({
     return max;
   },
   isEmpty : function() {
-     return (this.rows().length == 0) &&  (this.problems().length  == 0);
-  },
-  signatory: function() {
-      return this.get("signatory");
-  },
-  initialize: function (args) {
-      if (args.signatory.isCsv())
-          this.set({"rows" : args.signatory.csv()});
+     return ((this.header() == undefined || this.rows() ==  undefined)) &&  (this.problems().length  == 0);
   },
   problemWithRow : function(r) {
       var res;
@@ -87,26 +85,25 @@ var CsvProblem = Backbone.Model.extend({
         });
       return res;
   },
+  csvstandardheaders : ['fstname', 'sndname', 'email', 'mobile',  'sigco', 'sigpersnr', 'sigcompnr'],
   upload : function(input) {
-       var sigdesign = this;
+       var self = this;
        var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"text"});
-       submit.add("customfieldscount",this.signatory().customFields().length);
-       if (this.signatory().elegAuthentication())
-        submit.add("eleg","YES");
        submit.addInputs(input);
        submit.sendAjax(function (resp) {
-        try {
            var jresp = JSON.parse(resp);
-           var extraproblems = [];
-           if(BlockingInfo && BlockingInfo.shouldBlockDocs(jresp.rows.length)) {
-               extraproblems.push(new CsvProblem({description:BlockingInfo.csvMessage(jresp.rows.length)}));
+           var problems = [];
+           if (jresp.parseError)
+              problems.push(new CsvProblem({description: "Parse problem"}));
+           if(BlockingInfo && jresp.rows && BlockingInfo.shouldBlockDocs(jresp.rows.length)) {
+               problems.push(new CsvProblem({description:BlockingInfo.csvMessage(jresp.rows.length)}));
            }
-
-           var problems = _.map(jresp.problems, function(pdata) {return new CsvProblem(pdata);});
-           problems = problems.concat(extraproblems);
-           sigdesign.set({'rows': jresp.rows, 'problems': problems });
-           sigdesign.trigger("change");
-        } catch(e) {}
+           if (jresp.header != undefined) {
+              for(var i=0;i<jresp.header.length;i++)
+                jresp.header[i] = self.csvstandardheaders[i] || jresp.header[i];
+           }
+           self.set({'header': jresp.header , 'rows': jresp.rows, 'problems': problems });
+           self.trigger("change");
       });
   }
 });
@@ -128,27 +125,35 @@ var CsvSignatoryDesignView = Backbone.View.extend({
         });
        return box;
     },
-    // we fix the order of the standard fields
-    csvheaderorder: ['fstname', 'sndname', 'email', 'mobile',  'sigco', 'sigpersnr', 'sigcompnr'],
+    headerName : function(name) {
+       if (name == "fstname")
+                return localization.fstname;
+       if (name == "sndname")
+                return localization.sndname;
+       if (name == "email")
+                return localization.email;
+       if (name == "sigco" )
+                return localization.company;
+       if (name == "sigpersnr")
+                return localization.personamNumber;
+       if (name == "sigcompnr"  )
+                return localization.companyNumber;
+       if (name == "mobile")
+                return localization.phone;
+       return name;
+
+    },
     dataTable : function() {
       var model = this.model;
       var table = $("<table class='csvDataTable'/>");
       var thead = $("<thead/>");
       var tbody = $("<tbody/>");
       table.append(thead).append(tbody);
+      var fieldnames = this.model.header();
 
-      // make sure the field names are in the right order
-      var fieldnames =
-            this.csvheaderorder.concat(
-                _.difference(_.invoke(model.signatory().fields(),  'name'),
-                             this.csvheaderorder));
-      _.each(fieldnames, function(e) {
-          var field = model.signatory().field(e,"standard");
-          if (field == undefined)
-              field =  model.signatory().field(e,"custom");
-          if (field != undefined)
-              thead.append($("<th />").text(field.nicename()));
-      });
+      for(var i=0;i<this.model.header().length;i++)
+         thead.append($("<th />").text(this.headerName(this.model.header()[i])));
+
 
       var rows = model.rows();
       for (var i =0 ; i< rows.length; i++)
@@ -232,10 +237,18 @@ var CsvSignatoryDesignView = Backbone.View.extend({
 });
 
 
-window.CsvSignatoryDesignPopup = {
-    popup: function(args) {
-         var signatory = args.signatory;
-         var model = new CsvSignatoryDesign({ signatory : signatory  });
+window.CsvSignatoryDesignPopup =  function(args) {
+         var csv = [];
+         var csvSignatory = undefined;
+         var document = args.document;
+         _.each(document.signatories(), function(s) {
+           if (s.isCsv()) {
+             csv = s.csv();
+             csvSignatory = s
+           };
+         })
+
+         var model = new CsvSignatoryDesign({ header: _.first(csv),  rows : _.rest(csv)  });
          var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")});
          var popup = Confirmation.popup({
               content  : $(view.el),
@@ -244,10 +257,17 @@ window.CsvSignatoryDesignPopup = {
               width: 960,
               acceptVisible : model.ready(),
               onAccept : function() {
-                  signatory.makeCsv(model.rows());
-                  if(typeof args.onAccept === 'function')
-                      args.onAccept();
-                  //signatory.document().save();
+                  if (csvSignatory == undefined) {
+                    var fields = [];
+                    for(var i = 0; i < model.header().length; i ++)
+                       fields.push({name: model.header()[i],   type : _.contains(model.csvstandardheaders,model.header()[i]) ? "standard" : "custom"});
+                       var signatory = new Signatory({
+                         document : document,
+                         fields : fields,
+                         csv : model.csv()
+                      });
+                    document.addExistingSignatory(signatory);
+                  }
                   return true;
             }
         });
@@ -256,8 +276,6 @@ window.CsvSignatoryDesignPopup = {
                  popup.showAccept();
              else
                  popup.hideAccept(); });
-
-    }
 };
 
 

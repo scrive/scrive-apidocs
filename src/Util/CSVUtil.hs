@@ -24,12 +24,14 @@ parseCSV csvcontents =
   case (exception parseresult, result parseresult) of
     (Just msg, _res) -> Left $ "Parse error : " ++ (show msg)
     (Nothing, res) ->
-      return . map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
+      Right $ fixSize $ map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
   where
     dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
     isEmptyRow = all isEmptyCell
     isEmptyCell = null . dropWhile isSpace . reverse . dropWhile isSpace
-
+    fixSize s = fixSize' (maximum $ map length s) s
+    fixSize' l (s:ss) = (s ++ (replicate (l - length s) "")) : fixSize' l ss
+    fixSize' _ _ = []
 {- |
     This splits up the csv contents, it makes an effort to guess separators
 -}
