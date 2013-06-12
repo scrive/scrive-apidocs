@@ -135,6 +135,7 @@ kontraMigrations = [
   , dropMobileFromUsers
   , removeExternalIDFromCompanies
   , addSealStatusToDocument
+  , removeStatsTables
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

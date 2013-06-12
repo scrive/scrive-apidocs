@@ -940,3 +940,11 @@ changeRegionToLang =
   , mgrFrom = 13
   , mgrDo = kRunRaw "ALTER TABLE documents RENAME COLUMN region TO lang"
   }
+
+removeStatsTables :: MonadDB m => Migration m
+removeStatsTables =
+  Migration
+  { mgrTable = tableDocuments
+  , mgrFrom = 23
+  , mgrDo = kRunRaw "DROP TABLE doc_stat_events, sign_stat_events, user_stat_events CASCADE"
+  }
