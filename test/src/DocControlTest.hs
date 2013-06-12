@@ -169,7 +169,8 @@ testSigningDocumentFromDesignViewSendsInvites = do
        documentstatus d == Preparation
     && isSignable d
     && isSignatory (getAuthorSigLink d)
-    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d))
+    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
+    && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
 
   req <- mkRequest POST [ ("sign", inText "True")
                         , ("timezone", inText "Europe/Stockholm")
@@ -191,10 +192,10 @@ testNonLastPersonSigningADocumentRemainsPending = do
   doc' <- addRandomDocumentWithAuthorAndCondition
             user
             (\d -> documentstatus d == Preparation
-                     && case documenttype d of
+                     && (case documenttype d of
                          Signable _ -> True
-                         _ -> False
-                     {- && documentdeliverymethod d == EmailDelivery -})
+                         _ -> False)
+                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
@@ -238,10 +239,10 @@ testLastPersonSigningADocumentClosesIt = do
   doc' <- addRandomDocumentWithAuthorAndConditionAndFile
             user
             (\d -> documentstatus d == Preparation
-                     && case documenttype d of
-                         Signable _ -> True
-                         _ -> False
-                     {- && documentdeliverymethod d == EmailDelivery -} )
+                     && (case documenttype d of
+                          Signable _ -> True
+                          _ -> False)
+                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
             file
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
@@ -285,9 +286,10 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   doc <- addRandomDocumentWithAuthorAndCondition
             user
             (\d -> documentstatus d == Pending
-                     && case documenttype d of
-                         Signable _ -> True
-                         _ -> False)
+                     && (case documenttype d of
+                          Signable _ -> True
+                          _ -> False)
+                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
 
   assertBool "Precondition" $ (ctxtime ctx) /= documentmtime doc
 
