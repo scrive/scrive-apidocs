@@ -28,9 +28,9 @@ tableDocuments = tblTable {
        , ("sharing", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("api_callback_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("seal_status", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        , ("unsaved_draft", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("object_version", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("seal_status", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE documents ("
@@ -55,9 +55,9 @@ tableDocuments = tblTable {
           <> ", sharing                       SMALLINT     NOT NULL"
           <> ", lang                          SMALLINT     NOT NULL"
           <> ", api_callback_url              TEXT             NULL"
-          <> ", seal_status                   SMALLINT         NULL"
           <> ", unsaved_draft                 BOOL         NOT NULL DEFAULT FALSE"
           <> ", object_version                BIGINT       NOT NULL"
+          <> ", seal_status                   SMALLINT         NULL"
           <> ", CONSTRAINT pk_documents PRIMARY KEY (id)"
           <> ")"
         return TVRcreated
