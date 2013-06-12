@@ -335,7 +335,7 @@ handleAccountSetupPostWithMethod uid token sm = do
                     value "error" ("reload" :: String)
         Just (_, docs) -> do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
-          forM_ docs (\d -> postDocumentPreparationChange d "mailapi")
+          forM_ docs (\d -> postDocumentPreparationChange d)
           ctx <- getContext
           _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
           addFlashM flashMessageUserActivated

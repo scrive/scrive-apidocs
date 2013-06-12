@@ -190,7 +190,7 @@ handleMismatch doc sid msg sfn sln spn = do
            sid)
           Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
           return newdoc
-        postDocumentCanceledChange newdoc "web+eleg"
+        postDocumentCanceledChange newdoc
 
 {- |
     Call after signing in order to save the document for any user, and
@@ -421,9 +421,9 @@ handleIssueSign document timezone = do
                        BankID.Sign sinfo -> Right <$>  authorSignDocument actor (documentid doc) (Just sinfo) timezone screenshots
         case mndoc of
           Right (Right newdocument) -> do
-            postDocumentPreparationChange newdocument "web"
+            postDocumentPreparationChange newdocument
             newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
-            postDocumentPendingChange newdocument' newdocument' "web" -- We call it on same document since there was no change
+            postDocumentPendingChange newdocument' newdocument' -- We call it on same document since there was no change
             return $ Right newdocument'
           Right (Left (DBActionNotAvailable message)) -> return $ Left message
           Right (Left _) -> return $ Left "Server error. Please try again."
@@ -457,7 +457,7 @@ handleIssueSend document timezone = do
         mndoc <- authorSendDocument user actor (documentid doc) timezone
         Log.debug $ "Document send by author " ++ show (documentid doc)
         case mndoc of
-          Right newdocument -> postDocumentPreparationChange newdocument "web"
+          Right newdocument -> postDocumentPreparationChange newdocument
           Left _ -> return ()
         return mndoc
 
@@ -517,7 +517,7 @@ handleIssueSignByAuthor doc = do
 
      case mndoc of
          Right (Right ndoc) -> do
-             postDocumentPendingChange ndoc doc "web"
+             postDocumentPendingChange ndoc doc
              addFlashM flashAuthorSigned
              return $ LinkIssueDoc (documentid doc)
          _ -> return LoopBack

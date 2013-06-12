@@ -234,7 +234,7 @@ apiCallReady did =  api $ do
     mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
     case mndoc of
             Right newdocument -> do
-                lift $ postDocumentPreparationChange newdocument "web"
+                lift $ postDocumentPreparationChange newdocument
                 newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
                 Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
             Left reason -> throwIO . SomeKontraException $ serverError $ "Operation failed: " ++ show reason
@@ -252,7 +252,7 @@ apiCallCancel did =  api $ do
           throwIO . SomeKontraException $ (conflictError "Document is not pending")
     dbUpdate $ CancelDocument (documentid doc) actor
     newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
-    lift $ postDocumentCanceledChange newdocument "api"
+    lift $ postDocumentCanceledChange newdocument
     newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
 
@@ -260,16 +260,16 @@ apiCallCancel did =  api $ do
 apiCallReject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
 apiCallReject did slid = api $ do
   checkObjectVersionIfProvided did
-  (mh,method,muid) <- do
+  (mh,muid) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
-      Just mh'' ->  return (mh'',"web", Nothing)
+      Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Magic hash for signatory was not provided"
-           Just mh''' -> return (mh''',"api", Just $ userid user)
+           Just mh''' -> return (mh''',Just $ userid user)
   edoc <- lift $ getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
     Left _ -> throwIO . SomeKontraException $ serverError "Can't find a document that matches signatory"
@@ -284,7 +284,7 @@ apiCallReject did slid = api $ do
           `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
       Just doc' <- dbQuery $ GetDocumentByDocumentID did
 
-      lift $ postDocumentRejectedChange doc' slid method
+      lift $ postDocumentRejectedChange doc' slid
       Just doc'' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON muid False True True Nothing Nothing doc''
 
@@ -296,16 +296,16 @@ apiCallSign :: Kontrakcja m
 apiCallSign  did slid = api $ do
   checkObjectVersionIfProvided did
   Log.debug $ "Ready to sign a docment " ++ show did ++ " for signatory " ++ show slid
-  (mh,method,muid) <- do
+  (mh,muid) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
-      Just mh'' ->  return (mh'',"web", Nothing)
+      Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
-           Just mh''' -> return (mh''',"api", Just $ userid user)
+           Just mh''' -> return (mh''',Just $ userid user)
   Log.debug "We have magic hash for this operation"
   screenshots <- lift $ (fromMaybe emptySignatoryScreenshots) <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
   fields <- do
@@ -330,7 +330,7 @@ apiCallSign  did slid = api $ do
   Log.debug $ "Signing done, result is " ++ show (isRight edoc)
   case edoc of
     Right (Right (doc, olddoc)) -> do
-      lift $ postDocumentPendingChange doc olddoc method
+      lift $ postDocumentPendingChange doc olddoc
       udoc <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
       lift $ handleAfterSigning udoc slid
       udoc' <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did

@@ -73,11 +73,11 @@ handleDelete = do
                                 then do
                                    dbUpdate $ CancelDocument (documentid doc) actor
                                    doc' <- guardRightM' $ getDocByDocID (documentid doc)
-                                   postDocumentCanceledChange doc' "web+archive"
+                                   postDocumentCanceledChange doc'
                                 else do
                                    dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
                                    doc' <- guardRightM' $ getDocByDocID (documentid doc)
-                                   postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl) "web+archive"
+                                   postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl)
                   _ -> return ()
               dbUpdate $ ArchiveDocument (userid user) (documentid doc) actor
 
@@ -111,7 +111,7 @@ handleCancel = do
         then do
            dbUpdate $ CancelDocument (documentid doc) actor
            doc' <- guardRightM' $ getDocByDocID $ docid
-           postDocumentCanceledChange doc' "web+archive"
+           postDocumentCanceledChange doc'
         else internalError
   J.runJSONGenT $ return ()
 

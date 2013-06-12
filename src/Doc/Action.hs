@@ -73,8 +73,8 @@ logDocEvent name doc user extraProps = do
     numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
     stringProp "Signup Method" (show $ usersignupmethod user)]
 
-postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
-postDocumentPreparationChange doc@Document{documenttitle} _apistring = do
+postDocumentPreparationChange :: Kontrakcja m => Document -> m ()
+postDocumentPreparationChange doc@Document{documenttitle} = do
   let docid = documentid doc
   triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
@@ -105,8 +105,8 @@ postDocumentPreparationChange doc@Document{documenttitle} _apistring = do
 
   return ()
 
-postDocumentPendingChange :: Kontrakcja m => Document -> Document -> String -> m ()
-postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc _apistring = do
+postDocumentPendingChange :: Kontrakcja m => Document -> Document -> m ()
+postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
   triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
     stateMismatchError "postDocumentPendingChange" Pending doc
@@ -141,8 +141,8 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc _apistr
   where
     allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
 
-postDocumentRejectedChange :: Kontrakcja m => Document -> SignatoryLinkID -> String -> m ()
-postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
+postDocumentRejectedChange :: Kontrakcja m => Document -> SignatoryLinkID -> m ()
+postDocumentRejectedChange doc@Document{..} siglinkid = do
   triggerAPICallbackIfThereIsOne doc
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
@@ -157,8 +157,8 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
   return ()
 
-postDocumentCanceledChange :: Kontrakcja m => Document -> String -> m ()
-postDocumentCanceledChange doc@Document{..} _apistring = do
+postDocumentCanceledChange :: Kontrakcja m => Document -> m ()
+postDocumentCanceledChange doc@Document{..} = do
   triggerAPICallbackIfThereIsOne doc
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
