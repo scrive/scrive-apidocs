@@ -1,6 +1,6 @@
 .PHONY : all
 all:
-	javac -classpath ../../PdfVerifier-0.3.2-scrive.jar $$(find . -name '*.java')
+	javac -target 1.5 -classpath ../../PdfVerifier-0.3.2-scrive.jar $$(find . -name '*.java')
 	$(MAKE) makejar TOOL=PdfSigner
 	$(MAKE) makejar TOOL=PdfExtender
 	$(MAKE) makejar TOOL=PdfVerifier
