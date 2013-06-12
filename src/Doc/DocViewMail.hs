@@ -1,5 +1,5 @@
-module Doc.DocViewMail (
-      mailDocumentAwaitingForAuthor
+module Doc.DocViewMail
+    ( mailDocumentAwaitingForAuthor
     , mailDocumentClosed
     , mailDocumentErrorForAuthor
     , mailDocumentErrorForSignatory
@@ -18,6 +18,7 @@ module Doc.DocViewMail (
 
 import Company.Model
 import Control.Logic
+import Doc.DocInfo (getLastSignedTime)
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
@@ -25,6 +26,7 @@ import File.FileID
 import Kontra
 import KontraLink
 import Mails.SendMail
+import MinutesTime (formatMinutesTime)
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
@@ -266,19 +268,22 @@ mailInvitationContent :: (MonadDB m, TemplatesMonad m)
 mailInvitationContent  forMail ctx invitationto document msiglink ispreview = do
      content <$> mailInvitation forMail ctx invitationto document msiglink ispreview
 
-mailDocumentClosed :: (MonadDB m, TemplatesMonad m) => Context -> Document -> Maybe KontraLink -> SignatoryLink -> m Mail
-mailDocumentClosed ctx document l sl = do
+mailDocumentClosed :: (MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Document -> Maybe KontraLink -> SignatoryLink -> Bool -> m Mail
+mailDocumentClosed ctx document l sl sealFixed = do
+   let mctx = mailContext ctx
    partylist <- renderLocalListTemplate document $ map getSmartName $ partyList document
    let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document)
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
-        F.value "confirmationlink" $ (++) (ctxhostpart ctx) <$> show <$> l
+        F.value "confirmationlink" $ (++) (mctxhostpart mctx) <$> show <$> l
         F.value "doclink" $ if isAuthor sl
-                            then (++) (ctxhostpart ctx) $ show $ LinkIssueDoc (documentid document)
-                            else (++) (ctxhostpart ctx) $ show $ LinkSignDoc document sl
+                            then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
+                            else (++) (mctxhostpart mctx) $ show $ LinkSignDoc document sl
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just sl) mainfile
+        F.value "sealFixed" $ sealFixed
+        F.value "closingtime" $ formatMinutesTime "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
 
 mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentAwaitingForAuthor ctx document authorlang = do
@@ -334,18 +339,19 @@ makeEditable name this = renderTemplate "makeEditable" $ do
 makeFullLink :: Context -> String -> String
 makeFullLink ctx link = ctxhostpart ctx ++ link
 
-documentMailWithDocLang :: (MonadDB m, TemplatesMonad m) => Context -> Document -> String -> Fields m () -> m Mail
+documentMailWithDocLang :: (MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Document -> String -> Fields m () -> m Mail
 documentMailWithDocLang ctx doc mailname otherfields = documentMail doc ctx doc mailname otherfields
 
-documentMail :: (HasLang a, MonadDB m, TemplatesMonad m) =>  a -> Context -> Document -> String -> Fields m () -> m Mail
+documentMail :: (HasLang a, HasMailContext c, MonadDB m, TemplatesMonad m) =>  a -> c -> Document -> String -> Fields m () -> m Mail
 documentMail haslang ctx doc mailname otherfields = do
+    let mctx = mailContext ctx
     mcompany <- liftMM (dbQuery . GetCompanyByUserID) (return $ getAuthorSigLink doc >>= maybesignatory)
     let allfields = do
-        F.value "ctxhostpart" (ctxhostpart ctx)
-        F.value "ctxlang" (codeFromLang $ ctxlang ctx)
+        F.value "ctxhostpart" (mctxhostpart mctx)
+        F.value "ctxlang" (codeFromLang $ mctxlang mctx)
         F.value "documenttitle" $ documenttitle doc
         F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-        brandingMailFields (currentBrandedDomain ctx) mcompany
+        brandingMailFields (mctxcurrentBrandedDomain mctx) mcompany
         otherfields
     kontramaillocal haslang mailname allfields
 

@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 23
+  , tblVersion = 24
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -28,6 +28,7 @@ tableDocuments = tblTable {
        , ("sharing", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("api_callback_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("seal_status", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        , ("unsaved_draft", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("object_version", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
@@ -54,6 +55,7 @@ tableDocuments = tblTable {
           <> ", sharing                       SMALLINT     NOT NULL"
           <> ", lang                          SMALLINT     NOT NULL"
           <> ", api_callback_url              TEXT             NULL"
+          <> ", seal_status                   SMALLINT         NULL"
           <> ", unsaved_draft                 BOOL         NOT NULL DEFAULT FALSE"
           <> ", object_version                BIGINT       NOT NULL"
           <> ", CONSTRAINT pk_documents PRIMARY KEY (id)"

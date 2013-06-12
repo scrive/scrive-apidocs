@@ -1,7 +1,9 @@
 module Context (
       Context(..),
       anonymousContext,
-      currentBrandedDomain
+      currentBrandedDomain,
+      MailContext(..),
+      HasMailContext(..)
     ) where
 
 import File.FileID
@@ -61,3 +63,33 @@ anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, 
 -- | Current branded domain
 currentBrandedDomain :: Context -> Maybe BrandedDomain
 currentBrandedDomain ctx = findBrandedDomain (ctxhostpart ctx) (ctxbrandeddomains ctx)
+
+-- TODO: consider breaking KontraMonad into smaller parts for more
+-- fine-grained access to context, because some parts are needed
+-- outside request handlers.
+-- | Subset of context that is used in cron process
+data MailContext = MailContext
+  { mctxhostpart :: String
+  , mctxmailsconfig :: MailsConfig
+  , mctxlang :: Lang
+  , mctxcurrentBrandedDomain :: Maybe BrandedDomain
+  , mctxipnumber :: IPAddress
+  , mctxtime :: MinutesTime
+  , mctxmaybeuser :: Maybe User
+  }
+  deriving Show
+
+class HasMailContext c where
+  mailContext :: c -> MailContext
+
+instance HasMailContext MailContext where
+  mailContext = id
+instance HasMailContext Context where
+  mailContext ctx = MailContext { mctxhostpart = ctxhostpart ctx
+                                , mctxmailsconfig = ctxmailsconfig ctx
+                                , mctxlang = ctxlang ctx
+                                , mctxcurrentBrandedDomain = currentBrandedDomain ctx
+                                , mctxipnumber = ctxipnumber ctx
+                                , mctxtime = ctxtime ctx
+                                , mctxmaybeuser = ctxmaybeuser ctx
+                                }

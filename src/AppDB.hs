@@ -146,6 +146,7 @@ kontraMigrations = [
   , addAssociatedDomainToUsers
   , dropMobileFromUsers
   , removeExternalIDFromCompanies
+  , addSealStatusToDocument
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

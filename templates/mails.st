@@ -44,10 +44,10 @@ mailContractClosed=
 ####
 mailContractClosedMainP =
 <br/>
-      $_mailContractClosedContentSignedBy()$
-      <br/>
-      <br/>
-      $_mailContractClosedContentAttached()$ $mailClosedSignup()$
+    $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailContractClosedContentSignedBy()$ $endif$
+    <br/>
+    <br/>
+    $_mailContractClosedContentAttached()$ $mailClosedSignup()$
 ####
 mailOfferClosed=
     $_mailDocumentClosedTitleOffer()$
@@ -58,7 +58,8 @@ mailOfferClosed=
     )$
 ####
 mailOfferClosedMainP =
-      $_mailOfferClosedContentOfferAccepted()$
+<br/>
+    $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailOfferClosedContentOfferAccepted()$ $endif$
     <br/>
     <br/>
     $_mailOfferClosedContentAttached()$ $mailClosedSignup()$
@@ -72,10 +73,11 @@ mailOrderClosed=
     )$
 ####
 mailOrderClosedMainP=
-        $_mailOrderClosedContentViewed()$
-      <br/>
-      <br/>
-      $_mailOrderClosedContentAttached()$ $mailClosedSignup()$
+<br/>
+    $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailOrderClosedContentViewed()$ $endif$
+    <br/>
+    <br/>
+    $_mailOrderClosedContentAttached()$ $mailClosedSignup()$
 ####
 #### REJECTED MAIL
 ####

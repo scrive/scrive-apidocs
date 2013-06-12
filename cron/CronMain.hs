@@ -4,7 +4,7 @@ module CronMain where
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Reader
+import qualified CronEnv
 import System.Environment
 import qualified System.Time
 import Data.Maybe (catMaybes)
@@ -18,11 +18,14 @@ import AppConf
 import AppDB
 import Configuration
 import Crypto.RNG
+import qualified Data.ByteString as BS
 import DB
 import DB.Checks
 import DB.SQLFunction
 import DB.PostgreSQL
 import Doc.API.Callback.Model
+import Doc.ExtendSignature (extendSignatures, sealMissingSignatures)
+import qualified MemCache
 import Utils.Cron
 import Utils.IO
 import Mails.Events
@@ -53,9 +56,9 @@ main = Log.withLogger $ do
 
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   rng <- newCryptoRNGState
+  filecache <- MemCache.new BS.length 52428800
 
-  let amazoncfg = AWS.AmazonConfig (amazonConfig appConf) undefined
-      runScheduler x = withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng $ AWS.runAmazonMonadT (amazoncfg) $ runReaderT (unAQ x) (SchedulerData appConf templates)
+  let runScheduler = inDB . CronEnv.runScheduler appConf filecache templates
       inDB = liftIO . withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng
   -- Asynchronous event dispatcher; if you want to add a consumer to the event
   -- dispatcher, please combine the two into one dispatcher function rather
@@ -66,7 +69,13 @@ main = Log.withLogger $ do
     token -> return $ Just $ processMixpanelEvent token
 
   withCronJobs
-    ([ forkCron_ True "timeoutDocuments" (60 * 10) $ do
+    ([ forkCron_ True "extendSignatures" (60 * 60 * 24) $ do
+         Log.cron "Running extendSignatures..."
+         runScheduler extendSignatures
+     , forkCron_ True "sealMissingSignatures" (60 * 10) $ do
+         Log.cron "Running sealMissingSignatures..."
+         runScheduler sealMissingSignatures
+     , forkCron_ True "timeoutDocuments" (60 * 10) $ do
          Log.cron "Running timeoutDocuments..."
          runScheduler timeoutDocuments
      , forkCron_ True "EmailChangeRequests" (60 * 60) $ do
