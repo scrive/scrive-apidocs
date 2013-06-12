@@ -27,7 +27,7 @@ schemaspy:
 # Build and run all tests
 .PHONY : test
 test:
-	$(INSTALL) -f-server -f-cron -f-mailing-server -f-update-reference-screenshot -ftest-coverage
+	$(INSTALL) -f-server -f-cron -f-mailing-server -f-messenger-server -f-update-reference-screenshot -ftest-coverage
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
