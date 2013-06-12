@@ -90,6 +90,7 @@ sendDocumentMails mailTo author = do
         randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
 
         isl <- rand 10 arbitrary
+
         now <- getMinutesTime
         let sigs = [authordetails, isl]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
@@ -125,7 +126,7 @@ sendDocumentMails mailTo author = do
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
-        checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl
+        checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl False
         -- Reminder after send
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc) False
   kCommit
