@@ -192,7 +192,7 @@ var LoginView = Backbone.View.extend({
       // Automatically focus the appropriate login field.
       if(model.autofocus()) {
           $(document).ready(function() {
-              if(emailinput.value() != "") {
+              if(emailinput.value() != "" && emailinput.value() != undefined) {
                   passwordinput.focus();
               } else {
                   emailinput.focus();
@@ -330,7 +330,7 @@ var LoginBrandedView = Backbone.View.extend({
       // Automatically focus the appropriate login field.
       if(model.autofocus()) {
           $(document).ready(function() {
-              if(emailinput.value() != "") {
+              if(emailinput.value() != "" && emailinput.value() != undefined) {
                   passwordinput.focus();
               } else {
                   emailinput.focus();
