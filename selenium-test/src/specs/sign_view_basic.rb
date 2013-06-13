@@ -50,7 +50,7 @@ describe "basic signing" do
     puts "find evidence-of-intent attachment"
     # we assume that it is the fourth one - until we figure out a more robust selector
     wh = @h.driver.window_handles()
-    intentno = 2
+    intentno = 3
     @h.wait_until { (@h.driver.find_elements :css => ".s-evidenceattachments a.button ").length > intentno }
     (@h.driver.find_elements :css => ".s-evidenceattachments a.button ")[intentno].click
 
