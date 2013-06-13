@@ -155,10 +155,10 @@ var LoginView = Backbone.View.extend({
       var body = $("<div class='short-input-container-body'/>");
       var header = $("<div class='shadowed'/>");
       var loginFunction = function() {
-          Cookies.set('last_login_email',model.email());
+          LocalStorage.set('login','last_login_email',model.email());
           model.login();
       };
-      model.setEmail(Cookies.get('last_login_email'));
+      model.setEmail(LocalStorage.get('login','last_login_email'));
       header.append($("<h1/>").text(localization.welcomeback));
       if (!model.pad()) $(this.el).append(header);
       content.append(wrapper.append(body));
@@ -288,10 +288,10 @@ var LoginBrandedView = Backbone.View.extend({
       $(this.el).append(header);
 
       var loginFunction = function() {
-          Cookies.set('last_login_email',model.email());
+          LocalStorage.set('login','last_login_email',model.email());
           model.login();
       };
-      model.setEmail(Cookies.get('last_login_email'));
+      model.setEmail(LocalStorage.get('login','last_login_email'));
       header.append($("<img alt='logo'/>").attr('src',model.logolink()));
       header.append($("<div class='divider-line'/>"));
       header.append($("<label style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive));
