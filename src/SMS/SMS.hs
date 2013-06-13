@@ -1,22 +1,12 @@
 module SMS.SMS (
     SMS(..)
   , scheduleSMS
-  , mkSMS
   ) where
 
 import DB
 import SMS.Model
 import qualified Log
 import MessageData
-import Doc.DocStateData
-import User.Model
-import Company.Model
-import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
-import Data.Char
-import Data.Maybe
-import Control.Monad.Trans.Maybe
-import Control.Monad
 
 data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
@@ -24,19 +14,6 @@ data SMS = SMS {
   , smsBody       :: String -- ^ Message body
   , smsOriginator :: String -- ^ SMS originator/sender name
   } deriving (Eq, Ord, Show)
-
-mkSMS :: MonadDB m => Document -> SignatoryLink -> MessageData -> String -> m SMS
-mkSMS doc sl msgData msgBody = do
-  mmsgOriginator <- runMaybeT $ do
-    authorSL <- MaybeT $ return $ getAuthorSigLink doc
-    uid <- MaybeT $ return $ maybesignatory authorSL
-    user <- MaybeT $ dbQuery $ GetUserByID uid
-    cid <- MaybeT $ return $ usercompany user
-    company <- MaybeT $ dbQuery $ GetCompany cid
-    let name = companyname $ companyinfo company
-    guard $ not $ all isSpace name
-    return name
-  return $ SMS (getMobile sl) msgData msgBody $ fromMaybe "Scrive" mmsgOriginator
 
 -- | Schedule SMS sendout. Note that body/originator needs
 -- to be converted to latin1 as sms provider supports latin1 messages only.
