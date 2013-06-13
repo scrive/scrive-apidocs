@@ -236,6 +236,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 }),
                 name: options[selected].name,
                 cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
+                textWidth: "191px",
+                optionsWidth: "218px",
                 onSelect: function(v) {
                     if(field) {
                         mixpanel.track('Choose obligation', {
@@ -1019,11 +1021,15 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             name: signame,
             options: options,
             cssClass: 'signature-field-placement-setter-field-selector',
+            textWidth: "191px",
+            optionsWidth: "218px",
             onSelect: function(s) {
                 mixpanel.track('Choose checkbox signatory');
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);
+                return true;
+
             }
         });
 
@@ -1475,12 +1481,15 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var selector = new Select({
             name: signame,
             options: options,
+            textWidth: "191px",
+            optionsWidth: "218px",
             cssClass: 'signature-field-placement-setter-field-selector',
             onSelect: function(s) {
                 mixpanel.track('Choose signature signatory');
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);
+                return true;
             }
         });
 
