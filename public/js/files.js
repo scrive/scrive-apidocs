@@ -129,7 +129,6 @@ window.File = Backbone.Model.extend({
             });
             this.set({pages: pages});
         }
-        return this;
     }
 });
 

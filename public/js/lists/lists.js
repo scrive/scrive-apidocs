@@ -492,6 +492,7 @@
               model.fetch({ data: schema.getSchemaUrlParams(),
                                 processData: true,
                                 cache: false,
+                                reset: true,
                                 success: function() {view.stopLoading(); },
                                 error : function(list,resp) {
                                   if (resp != undefined && resp.status != undefined && resp.status == 403)
@@ -505,6 +506,7 @@
                 model.fetch({ data: schema.getSchemaUrlParams(),
                                 processData: true,
                                 cache: false,
+                                reset: true,
                                 timeout: args.timeout,
                                 error : function(list,resp) {
                                   if (resp != undefined && resp.status != undefined && resp.status == 403)

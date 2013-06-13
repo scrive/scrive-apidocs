@@ -61,7 +61,6 @@
             expandedByDefault : false
         },
         initialize: function() {
-            _.bindAll(this, 'change');
             var schema = this;
           var paging = this.paging();
           // we reset the page to 0 when we change the filtering
