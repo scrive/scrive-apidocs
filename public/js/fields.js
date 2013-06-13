@@ -266,6 +266,10 @@ window.Field = Backbone.Model.extend({
     isObligatory : function() {
         return this.obligatory();
     },
+    isCsvField : function() {
+        console.log("Csv field " + this.name() + " " + (this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.name())));
+        return this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.name());
+    },
     defaultTip : function() {
       if (this.isCheckbox())
         return "left";
@@ -346,8 +350,9 @@ window.Field = Backbone.Model.extend({
             return false;
         else if(this.requiredForParticipation())
             return false;
-        else
-            return true;
+        else if (this.isCsvField())
+            return false;
+        return true;
     },
     bindBubble: function() {
         var field = this;

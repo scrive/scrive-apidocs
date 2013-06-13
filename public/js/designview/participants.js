@@ -663,12 +663,15 @@
             view.model.bind('change:fields', view.render);
             view.model.bind('change:authentication', view.render);
             view.model.bind('change:delivery', view.render);
+            view.model.bind('change:csv', view.render);
             view.render();
         },
         destroy : function() {
           this.model.unbind('change:fields', this.render);
           this.model.unbind('change:authentication', this.render);
           this.model.unbind('change:delivery', this.render);
+          this.model.unbind('change:csv', this.render);
+
           this.off();
           if (this.participation != undefined) this.participation.destroy();
           this.remove();
@@ -712,11 +715,10 @@
             var view = this;
             var sig = view.model;
 
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-details-information-fields');
+            var div = $("<div class='design-view-action-participant-details-information-fields'/>")
+                        .append(view.detailsFullNameField())
+                        .append(view.detailsInformationField('email', 'standard', localization.email));
 
-            div.append(view.detailsFullNameField());
-            div.append(view.detailsInformationField('email', 'standard', localization.email));
             var ignores = ['fstname', 'sndname', 'email'];
             $.each(sig.fields(), function(i, e) {
                     if(e.isBlank())

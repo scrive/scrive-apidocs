@@ -490,12 +490,24 @@ window.Signatory = Backbone.Model.extend({
     csv: function() {
         return this.get("csv");
     },
+    csvHeader: function() {
+        if (this.isCsv())
+          return this.csv()[0];
+        return undefined;
+    },
+    hasCsvField: function(name) {
+        if (this.csvHeader() != undefined)
+          return _.contains(this.csvHeader(), name);
+        return false;
+    },
+    hasTextFieldWithName : function(name) {
+        return (this.field(name,"standard") != undefined || this.field(name,"custom") != undefined)
+    },
     isCsv: function() {
         return this.csv() != undefined;
     },
-    makeCsv: function(csv) {
-         this.set({"csv": csv});
-         this.trigger("change:csv");
+    setCsv : function(csv) {
+        this.set({"csv" : csv});
     },
     signsuccessredirect : function() {
         return this.get("signsuccessredirect");

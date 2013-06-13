@@ -267,7 +267,19 @@ window.CsvSignatoryDesignPopup =  function(args) {
                          csv : model.csv()
                       });
                     document.addExistingSignatory(signatory);
+                  } else {
+                    for(var i = 0; i < model.header().length; i ++)
+                      if (!csvSignatory.hasTextFieldWithName(model.header()[i])) {
+                        csvSignatory.addField(new Field({
+                              name: model.header()[i],
+                              type: _.contains(model.csvstandardheaders,model.header()[i]) ? "standard" : "custom",
+                              signatory: csvSignatory,
+                          }));
+                      }
+
+                    csvSignatory.setCsv(model.csv());
                   }
+
                   return true;
             }
         });
