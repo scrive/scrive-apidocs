@@ -39,11 +39,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       document.takeSigningScreenshot(function() { Eleg.nordeaSign(document, signatory, document.sign()); });
       return false;
     });
-      mbi.click(function() {
-          mixpanel.track('Click Mobile BankID');
-          document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,document.sign(),null,signatory.personalnumberField().value()); });
-          return false;
-      });
+    mbi.click(function() {
+      mixpanel.track('Click Mobile BankID');
+      document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,document.sign(),null,signatory.personalnumberField().value()); });
+      return false;
+    });
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
   },
   createSignButtonElems: function() {
@@ -139,6 +139,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       // Remove the modal footer but keep the button
       var modalFooter = $('.modal-container .modal-footer');
       var signButton = modalFooter.find('.button').detach();
+      if (signButton.length == 0) {
+        // No sign button means bankid
+        signButton = modalFooter.find('.mbi').addClass("button").detach().prepend('Signera');
+        signButton.find('img').remove();
+      }
       modalFooter.remove();
 
       $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
