@@ -12,8 +12,8 @@ data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
   , smsData       :: MessageData -- ^ Message body
   , smsBody       :: String -- ^ Message body
+  , smsOriginator :: String -- ^ SMS originator/sender name
   } deriving (Eq, Ord, Show)
-
 
 -- | Schedule SMS sendout. Note that body/originator needs
 -- to be converted to latin1 as sms provider supports latin1 messages only.
@@ -23,7 +23,7 @@ data SMS = SMS {
 scheduleSMS :: MonadDB m => SMS -> m ()
 scheduleSMS msg@SMS{..} = do
     now <- getMinutesTime
-    sid <- dbUpdate $ CreateSMS "Scrive" (filter goodChars smsMSISDN) smsBody (show smsData) now
+    sid <- dbUpdate $ CreateSMS smsOriginator (filter goodChars smsMSISDN) smsBody (show smsData) now
     Log.debug $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
     return ()
   where
