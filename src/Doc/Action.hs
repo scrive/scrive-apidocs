@@ -327,6 +327,7 @@ sendInvitationEmails ctx document = do
                       , isCurrentSignatory (documentcurrentsignorder document) sl
                       , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       , not $ hasSigned sl
+                      , (not $ isAuthor sl && documentcurrentsignorder document == SignOrder 1) -- Skip author at begining of signing
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
 
@@ -425,7 +426,7 @@ sendClosedEmails ctx document sealFixed = do
           useSMS = isGood $  asValidPhoneForSMS $ getMobile sl
       when useMail $ sendMail
       when useSMS  $ sendSMS useMail
- 
+
 makeMailAttachments :: (MonadDB m, MonadIO m) => Document -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments document = do
   let mainfile = documentsealedfile document `mplus` documentfile document

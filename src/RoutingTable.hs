@@ -94,7 +94,6 @@ staticRoutes = choice
      , dir "d" $ dir "cancel"       $ hPost $ toK0 $ ArchiveControl.handleCancel
      , dir "d" $ dir "zip"          $ hGet  $ toK0 $ ArchiveControl.handleZip
      , dir "d" $ dir "signview"     $ hPost $ toK1 $ DocControl.handleIssueAuthorGoToSignview
-     , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "d" $ dir "evidenceattachment" $ hGet $ toK2 $ DocControl.handleEvidenceAttachment
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
      , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV

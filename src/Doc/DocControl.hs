@@ -10,13 +10,11 @@ module Doc.DocControl(
     , showCreateFromTemplate
     , handleSignShow
     , handleSignShowSaveMagicHash
-    , splitUpDocumentWorker
     , handleAcceptAccountFromSign
     , handleSigAttach
     , handleDeleteSigAttach
     , handleEvidenceAttachment
     , handleIssueShowGet
-    , handleIssueShowPost
     , handleIssueAuthorGoToSignview
     , handleSetAttachments
     , handleParseCSV
@@ -26,7 +24,6 @@ module Doc.DocControl(
     , handleChangeSignatoryPhone
     , handleRestart
     , handleProlong
-    , handleSignWithEleg
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -35,16 +32,12 @@ module Doc.DocControl(
     , handleVerify
     , handleMarkAsSaved
     , handleAfterSigning
-    , readScreenshots
 ) where
 
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import DB
-import DB.TimeZoneName (TimeZoneName, mkTimeZoneName)
-import DBError
 import Doc.Action
-import Doc.CSVUtils
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery
@@ -56,9 +49,7 @@ import Doc.DocViewMail
 import Doc.SignatoryLinkID
 import Doc.DocumentID
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
-import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import Doc.Tokens.Model
-import Crypto.RNG
 import Attachment.Model
 import InputValidation
 import File.Model
@@ -87,9 +78,6 @@ import Control.Concurrent
 import qualified Control.Exception.Lifted as E
 import Control.Monad
 import Control.Monad.Reader
-import Control.Monad.Trans.Maybe
-import Control.Monad.Base
-import Data.Either
 import Data.List
 import Data.Maybe
 import Happstack.Server.Types
@@ -103,10 +91,8 @@ import System.FilePath
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
-import Text.JSON.FromJSValue
 import Doc.DocDraft() -- Import instances only
 import qualified User.Action
-import qualified ELegitimation.Control as BankID
 import Util.Actor
 import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
@@ -154,42 +140,6 @@ handleAcceptAccountFromSign documentid
       J.value "userid" (show $ userid user)
     Nothing -> runJSONGenT $ do
       return ()
-
-{- | Utils for signing with eleg -}
-
-handleSignWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots -> SignatureProvider
-                     -> m (Either String (Either DBError (Document, Document)))
-handleSignWithEleg documentid signatorylinkid magichash fields screenshots provider = do
-  transactionid <- getDataFnM $ look "transactionid"
-  esigninfo <- case provider of
-    MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash fields transactionid
-    _ -> do
-          signature <- getDataFnM $ look "signature"
-          BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash fields provider signature transactionid
-  case esigninfo of
-    BankID.Problem msg -> return $ Left msg
-    BankID.Mismatch msg sfn sln spn -> do
-      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-      handleMismatch document signatorylinkid msg sfn sln spn
-      return $ Left msg
-    BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
-
-
-handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> String -> String -> String -> m ()
-handleMismatch doc sid msg sfn sln spn = do
-        ctx <- getContext
-        let Just sl = getSigLinkFor doc sid
-        Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
-        Just newdoc <- runMaybeT $ do
-          dbUpdate $ ELegAbortDocument (documentid doc) sid msg sfn sln spn
-           (signatoryActor (ctxtime ctx)
-           (ctxipnumber ctx)
-           (maybesignatory sl)
-           (getEmail sl)
-           sid)
-          Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-          return newdoc
-        postDocumentCanceledChange newdoc
 
 {- |
     Call after signing in order to save the document for any user, and
@@ -333,193 +283,6 @@ handleIssueShowGet docid = checkUserTOSGet $ do
        Log.error $ "internalError in handleIssueShowGet for document #" ++ show (documentid document)
        internalError
 
-{- |
-   Modify a document. Typically called with the "Underteckna" or "Save" button
-   If document is in preparation, we move it to pending
-   If document is in AwaitingAuthor, we move it to Closed
-   Otherwise, we do mzero (NOTE: this is not the correct action to take)
-   User must be logged in.
-   Document must exist
-   User must be author
-   URL: /d/{documentid}
-   Method: POST
- -}
-handleIssueShowPost :: Kontrakcja m => DocumentID -> m (Either KontraLink JSValue)
-handleIssueShowPost docid = do
-  document <- guardRightM $ getDocByDocID docid
-  Context { ctxmaybeuser = muser } <- getContext
-  timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
-  unless (isAuthor (document, muser)) internalError -- still need this because others can read document
-  sign              <- isFieldSet "sign"
-  send              <- isFieldSet "send"
-  -- Behold!
-  case documentstatus document of
-    Preparation | sign              -> Right <$> (linkAsJSON $ handleIssueSign document timezone)
-    Preparation | send              -> Right <$> (linkAsJSON $ handleIssueSend document timezone)
-    _ | canAuthorSignNow document   -> Left  <$> handleIssueSignByAuthor document
-    _ -> return $ Left LinkArchive
- where
-     linkAsJSON :: (Kontrakcja m) => m KontraLink -> m JSValue
-     linkAsJSON lg = do
-         l <- lg
-         runJSONGenT $ J.value "link" (show l)
-
-readScreenshots :: Kontrakcja m => m SignatoryScreenshots.SignatoryScreenshots
-readScreenshots = do
-  mss <- join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
-  case mss of
-       Just ss -> do
-         v <- getFieldJSON "screenshots"
-         Log.debug $ "Screenshots json" ++ show v
-         Log.debug $ "Recieved screenshots " ++ show ss
-         return ss
-       _ -> do
-         internalError
-
-handleIssueSign :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
-handleIssueSign document timezone = do
-    Log.debug "handleIssueSign"
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    screenshots <- readScreenshots
-    mdocs <- splitUpDocument document
-    case mdocs of
-      Right docs -> do
-        mndocs <- mapM (forIndividual actor screenshots) docs
-        case partitionEithers mndocs of
-          ([], [d]) -> do
-            return $ LinkIssueDoc (documentid d)
-          ([], ds) -> do
-              addFlashM $ flashMessageCSVSent $ length ds
-              Log.debug (show $ map documenttype ds)
-              return $ LinkArchive
-          (ls, _) -> do
-            Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" ls
-            addFlash (OperationFailed, intercalate ";" ls)
-            return $ LinkIssueDoc (documentid document)
-      Left link -> return link
-    where
-      forIndividual :: Kontrakcja m => Actor -> SignatoryScreenshots.SignatoryScreenshots -> Document -> m (Either String Document)
-      forIndividual actor screenshots doc = do
-        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
-        mprovider <- readField "eleg"
-        mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocument actor (documentid doc) Nothing timezone screenshots
-                   Just provider -> do
-                     transactionid <- getDataFnM $ look "transactionid"
-                     esigninfo <- case provider of
-                       MobileBankIDProvider -> do
-                         BankID.verifySignatureAndGetSignInfoMobileForAuthor (documentid doc) transactionid
-                       _ -> do
-                         signature <- getDataFnM $ look "signature"
-                         BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
-                     case esigninfo of
-                       BankID.Problem msg -> return $ Left msg
-                       BankID.Mismatch msg _ _ _ -> do
-                         Log.debug $ "got this message: " ++ msg
-                         return $ Left msg
-                       BankID.Sign sinfo -> Right <$>  authorSignDocument actor (documentid doc) (Just sinfo) timezone screenshots
-        case mndoc of
-          Right (Right newdocument) -> do
-            postDocumentPreparationChange newdocument
-            newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
-            postDocumentPendingChange newdocument' newdocument' -- We call it on same document since there was no change
-            return $ Right newdocument'
-          Right (Left (DBActionNotAvailable message)) -> return $ Left message
-          Right (Left _) -> return $ Left "Server error. Please try again."
-          Left s -> return $ Left s
-
-
-handleIssueSend :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
-handleIssueSend document timezone = do
-    Log.debug "handleIssueSend"
-    ctx <- getContext
-    user  <- guardJust $ ctxmaybeuser ctx
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    mdocs <- splitUpDocument document
-    case mdocs of
-      Right docs -> do
-        mndocs <- mapM (forIndividual user actor) docs
-        case partitionEithers mndocs of
-          ([], [d]) -> do
-            return $ LinkIssueDoc (documentid d)
-          ([], ds) -> do
-              addFlashM $ flashMessageCSVSent $ length ds
-              Log.debug (show $ map documenttype ds)
-              return $ LinkArchive
-          (ls, _) -> do
-            Log.debug $ "handleIssueSend had lefts: " ++ intercalate ";" (map show ls)
-            internalError
-      Left link -> return link
-    where
-      forIndividual user actor doc = do
-        Log.debug $ "handleIssueSend for forIndividual " ++ show (documentid doc)
-        mndoc <- authorSendDocument user actor (documentid doc) timezone
-        Log.debug $ "Document send by author " ++ show (documentid doc)
-        case mndoc of
-          Right newdocument -> postDocumentPreparationChange newdocument
-          Left _ -> return ()
-        return mndoc
-
--- | If the document has a multiple part this will pump csv values
--- through it to create multiple docs, and then save the original as a
--- template if it isn't already.  This will make sure to clean the csv
--- data.  It just returns a list containing the original doc on it's
--- own, if the doc hasn't got a multiple part.
---
--- I feel like this is quite dangerous to do all at once, maybe need a
--- transaction?!
-splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
-splitUpDocument doc = do
-  case find (isJust . signatorylinkcsvupload) (documentsignatorylinks doc) of
-    Nothing -> do
-      Log.debug $ "splitUpDocument called on document without csvupload, that is ok"
-      return $ Right [doc]
-    Just sl -> do
-      case (signatorylinkcsvupload sl, getCSVCustomFields sl) of
-        (_, Left msg) -> do
-          Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
-          internalError
-        (Just csvupload, Right csvcustomfields) -> do
-          Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
-          case (cleanCSVContents (signatorylinkauthenticationmethod sl == ELegAuthentication) (length csvcustomfields) $ csvcontents csvupload) of
-            (_prob:_, _) -> do
-               addFlashM flashMessageInvalidCSV
-               Log.debug $ "splitUpDocument: back to document"
-               return $ Left $ LinkIssueDoc $ (documentid doc)
-            ([], CleanCSVData{csvbody}) -> do
-               actor <- guardJustM $ mkAuthorActor <$> getContext
-               Right <$> splitUpDocumentWorker doc actor csvbody
-        _ -> error "Should never happen"
-
-
-splitUpDocumentWorker :: (MonadDB m, TemplatesMonad m, CryptoRNG m, MonadBase IO m)
-                      => Document -> Actor -> [[String]] -> m [Document]
-splitUpDocumentWorker doc actor csvbody = do
-  let preparedData = map (\xs -> let pxs = xs ++ repeat "" in ((pxs!!0),(pxs!!1),(pxs!!2),(pxs!!3),(pxs!!4),(pxs!!5),(pxs!!6),(drop 7 xs))) csvbody
-  dbUpdate $ DocumentFromSignatoryDataV (documentid doc) preparedData actor
-
-
-handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
-handleIssueSignByAuthor doc = do
-     mprovider <- readField "eleg"
-     screenshots <- readScreenshots
-     mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocumentFinal (documentid doc) Nothing screenshots
-                   Just provider -> do
-                      signature     <- getDataFnM $ look "signature"
-                      transactionid <- getDataFnM $ look "transactionid"
-                      esinfo <- BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
-                      case esinfo of
-                        BankID.Problem msg -> return $ Left msg
-                        BankID.Mismatch msg _ _ _ -> return $ Left msg
-                        BankID.Sign sinfo -> Right <$>  authorSignDocumentFinal (documentid doc) (Just sinfo) screenshots
-
-     case mndoc of
-         Right (Right ndoc) -> do
-             postDocumentPendingChange ndoc doc
-             addFlashM flashAuthorSigned
-             return $ LinkIssueDoc (documentid doc)
-         _ -> return LoopBack
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => FileID -> m Response

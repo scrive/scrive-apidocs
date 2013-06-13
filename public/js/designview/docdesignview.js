@@ -303,10 +303,10 @@
                         });
                         document.takeSigningScreenshot(function() {
                             document.afterSave(function() {
-                                document.signByAuthor().sendAjax(function(resp) {
-                                    var link = JSON.parse(resp).link;
-                                    window.location = link;
-                                });
+                                document.makeReadyForSigning().sendAjax(function(resp) {
+                                    var docdata = JSON.parse(resp)
+                                    var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax();
+                                })
                             });
                         });
                     }
@@ -359,11 +359,11 @@
                         mixpanel.track('Click accept sign', {
                             'Button' : 'send'
                         });
-                        LoadingDialog.open(localization.designview.messages.sendingDocument);
-                        document.afterSave(function() {
-                            document.sendByAuthor().sendAjax(function(resp) {
-                                var link = JSON.parse(resp).link;
-                                window.location = link;
+                        document.takeSigningScreenshot(function() {
+                            document.afterSave(function() {
+                                document.makeReadyForSigning().sendAjax(function() {
+                                    window.location.reload();
+                                })
                             });
                         });
                     }

@@ -191,7 +191,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
-      isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
+      isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink) || (forauthor &&  isAuthor siglink)
       rejectedDate = signatorylinkrejectiontime siglink
 
 signatoryAttachmentJSON :: MonadDB m => SignatoryAttachment -> JSONGenT m ()

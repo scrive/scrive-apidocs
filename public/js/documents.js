@@ -104,37 +104,6 @@ window.Document = Backbone.Model.extend({
         document.trigger('change:signatories');
         document.trigger('change:signorder');
     },
-    addSignatory: function() {
-      var document = this;
-      var signatories = document.signatories();
-      var author = document.author();
-      var signorder = 1;
-      if( author.signs()) {
-        if( author.signorder()==1 ) {
-          // author signs first
-          signorder = 2;
-        }
-        else {
-          // author does not sign first
-          signorder = 1;
-        }
-      }
-      else {
-        // author does not sign at all
-        signorder = 1;
-      }
-      var nsigdelivery= "email", nsigauth= "standard";
-      var nsig = new Signatory({"document": document,
-                                 signs: true,
-                                 signorder: signorder,
-                                 authentication : nsigauth,
-                                 delivery: nsigdelivery});
-      signatories[signatories.length] = nsig;
-      document.set({"signatories": signatories});
-        document.trigger('change:signorder');
-      this.fixSignorder();
-      return nsig;
-    },
     authorSignsFirstMode : function() {
       return _.all(this.signatories(), function(sig) {
         return (sig.signs() && sig.author() && sig.signorder() == 1) ||
@@ -295,7 +264,7 @@ window.Document = Backbone.Model.extend({
             fields.push({name: field.name(), value: field.value(), type: field.type()});
         });
         return new Submit({
-            url : "/api/frontend/sign/" + document.documentid() +  "/" + document.viewer().signatoryid(),
+            url : "/api/frontend/sign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
@@ -328,6 +297,16 @@ window.Document = Backbone.Model.extend({
               url : "/d/" + this.documentid(),
               timezone: jstz.determine().name(),
               sign: "YES",
+              method: "POST",
+              screenshots: JSON.stringify(document.get("screenshots")),
+              ajaxtimeout : 120000
+          });
+    },
+    makeReadyForSigning : function() {
+         var document = this;
+         return new Submit({
+              url : "/api/frontend/ready/" + this.documentid(),
+              timezone: jstz.determine().name(),
               method: "POST",
               screenshots: JSON.stringify(document.get("screenshots")),
               ajaxtimeout : 120000
@@ -575,21 +554,22 @@ window.Document = Backbone.Model.extend({
         });
     },
     needRecall : function() {
-      return this.closed() && this.mainfile() == undefined;
+      return this.documentid() != 0 && this.closed() && this.mainfile() == undefined;
     },
     parse: function(args) {
      var self = this;
+
      setTimeout(function() {
          if (self.needRecall())
             self.recall();
      },500);
-      var dataForFile =
+     var dataForFile =
         { documentid: self.documentid(),
           signatoryid: self.viewer().signatoryid()
         };
-        console.log(args.daystosign);
      if (self.file() != undefined) self.file().off();
      return {
+       id: args.id,
        title: args.title,
        file: function() {
            if (args.file) {
@@ -609,10 +589,10 @@ window.Document = Backbone.Model.extend({
          return new File(_.defaults(fileargs, dataForFile));
        }),
        evidenceattachments: args.evidenceattachments,
-       signatories: _.map(args.signatories, function(signatoryargs) {
+       signatories: _.map(args.signatories || [], function(signatoryargs) {
          return new Signatory(_.defaults(signatoryargs, { document: self }));
        }),
-       authoruser: new DocumentAuthor(_.defaults(args.author, { document: self })),
+       authoruser: args.author != undefined ? new DocumentAuthor(_.defaults(args.author, { document: self })) : undefined,
        process: function() {
                         var process= new Process({process : args.process});
                         process.bind("change", function() { self.trigger("change:process")});

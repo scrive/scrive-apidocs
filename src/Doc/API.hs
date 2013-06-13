@@ -34,7 +34,8 @@ import Utils.Monad
 import System.FilePath
 import Data.Maybe
 import qualified Data.String.Utils as String
-
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
+import qualified ELegitimation.Control as BankID
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Util.Actor
@@ -45,7 +46,7 @@ import Doc.Rendering
 import DB
 import DB.SQL2
 import DB.TimeZoneName (mkTimeZoneName)
-
+import DBError
 import MagicHash (MagicHash)
 import Kontra
 import Doc.DocUtils
@@ -85,6 +86,7 @@ import Utils.Tuples
 import Utils.Either
 import Doc.SignatoryScreenshots
 import Doc.Conditions
+import Util.MonadUtils
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -302,6 +304,7 @@ apiCallSign  did slid = api $ do
       Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
+         Log.debug $ "User is " ++ show user
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
@@ -338,6 +341,43 @@ apiCallSign  did slid = api $ do
     Right (Left err) -> throwIO . SomeKontraException $ serverError  $ "Error: DB action " ++ show err
     Left msg ->  throwIO . SomeKontraException $ serverError  $ "Error: " ++ msg
 
+
+{- | Utils for signing with eleg -}
+
+handleSignWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots -> SignatureProvider
+                     -> m (Either String (Either DBError (Document, Document)))
+handleSignWithEleg documentid signatorylinkid magichash fields screenshots provider = do
+  transactionid <- getDataFnM $ look "transactionid"
+  esigninfo <- case provider of
+    MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash fields transactionid
+    _ -> do
+          signature <- getDataFnM $ look "signature"
+          BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash fields provider signature transactionid
+  case esigninfo of
+    BankID.Problem msg -> return $ Left msg
+    BankID.Mismatch msg sfn sln spn -> do
+      document <- guardRightM' $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      handleMismatch document signatorylinkid msg sfn sln spn
+      return $ Left msg
+    BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
+
+handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> String -> String -> String -> m ()
+handleMismatch doc sid msg sfn sln spn = do
+        ctx <- getContext
+        let Just sl = getSigLinkFor doc sid
+        Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
+        Just newdoc <- runMaybeT $ do
+          dbUpdate $ ELegAbortDocument (documentid doc) sid msg sfn sln spn
+           (signatoryActor (ctxtime ctx)
+           (ctxipnumber ctx)
+           (maybesignatory sl)
+           (getEmail sl)
+           sid)
+          Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+          return newdoc
+        postDocumentCanceledChange newdoc
+
+{- End of utils-}
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
 apiCallRemind did =  api $ do
