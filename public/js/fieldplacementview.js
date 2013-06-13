@@ -30,22 +30,23 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     var field;
     var placement;
     var verticaloffset = 0;
+    var initFP = function() {
+      if(typeof fieldOrPlacementFN === 'function') {
+              fieldOrPlacement = fieldOrPlacementFN();
+      } else {
+              fieldOrPlacement = fieldOrPlacementFN;
+      }
 
-    if(typeof fieldOrPlacementFN === 'function') {
-            fieldOrPlacement = fieldOrPlacementFN();
-    } else {
-            fieldOrPlacement = fieldOrPlacementFN;
-    }
-
-    if( fieldOrPlacement.field !=undefined ) {
-            placement = fieldOrPlacement;
-            field = placement.field();
-    }
-    else {
-            placement = undefined;
-            field = fieldOrPlacement;
-    }
-
+      if( fieldOrPlacement.field !=undefined ) {
+              placement = fieldOrPlacement;
+              field = placement.field();
+      }
+      else {
+              placement = undefined;
+              field = fieldOrPlacement;
+      }
+    };
+    initFP();
     if(field.isFake())
             verticaloffset = -1;
     else if (field.isText())
@@ -99,6 +100,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             if (field.signatory().document().mainfile() != undefined)
                 field.signatory().document().mainfile().view.hideCoordinateAxes();
             droppedInside = false;
+            initFP();
         },
         drag: function(event, ui) {
             if (field.signatory().document().mainfile() != undefined)

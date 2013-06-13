@@ -67,7 +67,6 @@
                                        type: 'checkbox',
                                        signatory: viewmodel.document().author(),
                                        name: viewmodel.document().newCheckboxName()});
-                //viewmodel.document().author().addField(field);
                 return field;
             };
 
