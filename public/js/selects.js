@@ -203,7 +203,7 @@ var SelectView = Backbone.View.extend({
         button.append("<div class='select-button-right' />");
 
         if (this.model.hasRemoveOption())
-            button.append($("<div class='closer'/>").click(function() { model.onRemove(); }));
+            button.append($("<div class='closer'/>").click(function() { model.onRemove(); model.set({"expanded" : false}); }));
 
         return button;
     },
