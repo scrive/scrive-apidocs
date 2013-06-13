@@ -15,6 +15,7 @@ module MinutesTime
        , showMinutesTimeForFileName
        , toMinutes
        , toSeconds
+       , toCalendarTime
        , toCalendarTimeInUTC
        , showAsMonth
        , showAsDate
