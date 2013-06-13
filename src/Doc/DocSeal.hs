@@ -34,7 +34,7 @@ import Doc.DocUtils
 import GuardTime (GuardTimeConf)
 import qualified HostClock.Model as HC
 import IPAddress
-import MinutesTime (MinutesTime, daysBefore)
+import MinutesTime (MinutesTime, daysBefore, toCalendarTime)
 import Utils.Directory
 import Utils.Read
 import Utils.String
@@ -43,6 +43,9 @@ import System.Directory
 import System.Exit
 import Kontra
 import Text.StringTemplates.Templates
+import Text.Printf
+import System.Time
+import System.Locale
 import Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
@@ -322,6 +325,16 @@ evidenceOfIntentAttachment title sls = do
                                , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString html
                                }
 
+{-
+ formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
+-}
+formatMinutesTimeForVerificationPage :: MinutesTime -> String
+formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M %Z" caltime ++ " (" ++ tzinfo ++ ")"
+  where
+    caltime = MinutesTime.toCalendarTime mt
+    tzoffset = ctTZ caltime `div` 60 -- convert seconds into minutes
+    tzinfo = printf "%+03d%02d"  (tzoffset `div` 60) (tzoffset `mod` 60)
+
 sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
@@ -376,7 +389,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                         personFields document personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
-                            { Seal.histdate = show (signtime seen)
+                            { Seal.histdate = formatMinutesTimeForVerificationPage (signtime seen)
                             , Seal.histcomment = pureString seenDesc
                             , Seal.histaddress = "IP: " ++ show (signipnumber seen)
                             }
@@ -384,7 +397,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                         personFields document personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
-                            { Seal.histdate = show (signtime signed)
+                            { Seal.histdate = formatMinutesTimeForVerificationPage (signtime signed)
                             , Seal.histcomment = pureString signDesc
                             , Seal.histaddress = "IP: " ++ show (signipnumber signed)
                             }
@@ -432,7 +445,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                     -- ignored here
                     let times = time : map (maximum . map (signtime . fromJust . maybesigninfo)) sortedPeople
                     let mkEntry time' (Just desc) = Just $ Seal.HistEntry
-                                            { Seal.histdate = show time'
+                                            { Seal.histdate = formatMinutesTimeForVerificationPage time'
                                             , Seal.histcomment = pureString desc
                                             , Seal.histaddress = "IP: " ++ show ipnumber
                                             }
@@ -447,7 +460,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       lastHistEntry = do
                        desc <- renderLocalTemplate document "_lastHistEntry" (documentInfoFields document)
                        return $ [Seal.HistEntry
-                                { Seal.histdate = show maxsigntime
+                                { Seal.histdate = formatMinutesTimeForVerificationPage maxsigntime
                                 , Seal.histcomment = pureString desc
                                 , Seal.histaddress = ""
                                 }]
