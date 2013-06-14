@@ -30,22 +30,23 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
     var field;
     var placement;
     var verticaloffset = 0;
+    var initFP = function() {
+      if(typeof fieldOrPlacementFN === 'function') {
+              fieldOrPlacement = fieldOrPlacementFN();
+      } else {
+              fieldOrPlacement = fieldOrPlacementFN;
+      }
 
-    if(typeof fieldOrPlacementFN === 'function') {
-            fieldOrPlacement = fieldOrPlacementFN();
-    } else {
-            fieldOrPlacement = fieldOrPlacementFN;
-    }
-
-    if( fieldOrPlacement.field !=undefined ) {
-            placement = fieldOrPlacement;
-            field = placement.field();
-    }
-    else {
-            placement = undefined;
-            field = fieldOrPlacement;
-    }
-
+      if( fieldOrPlacement.field !=undefined ) {
+              placement = fieldOrPlacement;
+              field = placement.field();
+      }
+      else {
+              placement = undefined;
+              field = fieldOrPlacement;
+      }
+    };
+    initFP();
     if(field.isFake())
             verticaloffset = -1;
     else if (field.isText())
@@ -99,6 +100,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             if (field.signatory().document().mainfile() != undefined)
                 field.signatory().document().mainfile().view.hideCoordinateAxes();
             droppedInside = false;
+            initFP();
         },
         drag: function(event, ui) {
             if (field.signatory().document().mainfile() != undefined)
@@ -234,6 +236,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 }),
                 name: options[selected].name,
                 cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
+                textWidth: "191px",
+                optionsWidth: "218px",
                 onSelect: function(v) {
                     if(field) {
                         mixpanel.track('Choose obligation', {
@@ -1017,11 +1021,15 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             name: signame,
             options: options,
             cssClass: 'signature-field-placement-setter-field-selector',
+            textWidth: "191px",
+            optionsWidth: "218px",
             onSelect: function(s) {
                 mixpanel.track('Choose checkbox signatory');
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);
+                return true;
+
             }
         });
 
@@ -1473,12 +1481,15 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var selector = new Select({
             name: signame,
             options: options,
+            textWidth: "191px",
+            optionsWidth: "218px",
             cssClass: 'signature-field-placement-setter-field-selector',
             onSelect: function(s) {
                 mixpanel.track('Choose signature signatory');
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);
+                return true;
             }
         });
 
