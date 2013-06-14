@@ -109,21 +109,6 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
                            else (head vs, tail vs)
           _          -> (error "you can't use it", vs)
 
-{- |
-    Creates a signable document from a template document.
-    The new signable will have the same process as the template,
-    and it will be in preparation mode.  It won't be shared.
--}
-templateToDocument :: Document -> Document
-templateToDocument doc =
-    let Template process = documenttype doc in
-    doc {
-          documentstatus = Preparation
-        , documenttype =  Signable process
-        , documentsharing = Private
-    }
-
-
 
 {- |
     Replaces signatory data with given user's data.

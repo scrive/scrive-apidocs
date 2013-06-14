@@ -67,9 +67,10 @@ module Doc.Model
   , SetInviteText(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
-  , SignableFromDocumentIDWithUpdatedAuthor(..)
+  , CloneDocumentWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
+  , DocumentFromTemplate(..)
   , TimeoutDocument(..)
   , PostReminderSend(..)
   , AddSignatoryLinkVisitedEvidence(..)
@@ -2119,17 +2120,21 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 
       return link
 
-data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User DocumentID Actor
-instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Maybe Document) where
-  update (SignableFromDocumentIDWithUpdatedAuthor user docid actor) = do
+
+
+data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User DocumentID Actor
+instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
+  update (CloneDocumentWithUpdatedAuthor user docid actor) = do
           mcompany <- maybe (return Nothing) (query . GetCompany) (usercompany user)
           let replaceAuthorSigLink sl
                 | isAuthor sl = replaceSignatoryUser sl user mcompany
                 | otherwise = sl
           let time = actorTime actor
           res <- (flip newFromDocumentID) docid $ \doc ->
-            (templateToDocument doc) {
-              documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
+            doc {
+                documentstatus = Preparation
+              , documentsharing = Private
+              , documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
                                        -- FIXME: Need to remove authorfields?
               , documentctime = time
               , documentmtime = time
@@ -2138,7 +2143,7 @@ instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m SignableFromDocum
             Nothing -> return Nothing
             Just d -> do
               copyEvidenceLogToNewDocument docid $ documentid d
-              return res
+              return $ Just $ documentid d
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where
@@ -2158,6 +2163,17 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument () whe
        sqlSet "status" Preparation
        sqlSet "type" (Template undefined)
        sqlWhereDocumentIDIs did
+       sqlWhereEq "status" Preparation
+
+
+data DocumentFromTemplate = DocumentFromTemplate DocumentID Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m DocumentFromTemplate () where
+  update (DocumentFromTemplate did _actor) = do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+       sqlSet "status" Preparation
+       sqlSet "type" (Signable undefined)
+       sqlWhereDocumentIDIs did
+       sqlWhereEq "status" Preparation
 
 data TimeoutDocument = TimeoutDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where

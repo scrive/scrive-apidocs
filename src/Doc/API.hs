@@ -100,6 +100,7 @@ versionedAPI _version = choice [
 
   dir "createfromfile"     $ hPost $ toK0 $ apiCallCreateFromFile,
   dir "createfromtemplate" $ hPostAllowHttp $ toK1 $ apiCallCreateFromTemplate,
+  dir "clone"              $ hPost $ toK1   $  apiCallClone,
   dir "update"             $ hPost $ toK1 $ apiCallUpdate,
   dir "ready"              $ hPostAllowHttp $ toK1 $ apiCallReady,
   dir "cancel"             $ hPost $ toK1 $ apiCallCancel,
@@ -181,15 +182,38 @@ apiCallCreateFromTemplate did =  api $ do
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission = (userid auser == userid user) ||
                           ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared template)
-  enewdoc <- if (isTemplate template && haspermission)
-                    then dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user did actor
+  mnewdoc <- if (isTemplate template && haspermission)
+                    then do
+                      mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
+                      when (isNothing mndid) $
+                          throwIO . SomeKontraException $ serverError "Can't clone given document"
+                      dbUpdate $ DocumentFromTemplate (fromJust mndid) actor
+                      dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
                     else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
-  case enewdoc of
+  case mnewdoc of
       Just newdoc -> do
           Log.debug $ show "Document created from template"
           when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
           Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
       Nothing -> throwIO . SomeKontraException $ serverError "Create document from template failed"
+
+
+apiCallClone :: Kontrakcja m => DocumentID -> m Response
+apiCallClone did =  api $ do
+  (user, actor, _) <- getAPIUser APIDocCreate
+  doc <- apiGuardJustM (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  if isAuthor (doc,user)
+     then do
+         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
+         when (isNothing mndid) $
+             throwIO . SomeKontraException $ serverError "Can't clone given document"
+         mnewdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
+         case mnewdoc of
+             Just newdoc -> Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
+             Nothing -> throwIO . SomeKontraException $ serverError "Create document from template failed"
+     else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
+
+
 
 
 
