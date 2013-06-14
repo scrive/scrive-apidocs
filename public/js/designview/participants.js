@@ -469,7 +469,8 @@
             box.mCustomScrollbar({ mouseWheel: true
                                    , theme: "dark-2"
                                    , advanced:{
-                                       updateOnContentResize: true // this is polling, might want to have update called in proper times
+                                       updateOnContentResize: true, // this is polling, might want to have update called in proper times
+                                       autoScrollOnFocus : false // Else it jumps when filling the fieds
                                    }
                                    , scrollInertia: 0
                                    , scrollButtons:{
