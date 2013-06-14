@@ -302,6 +302,18 @@ window.Document = Backbone.Model.extend({
               ajaxtimeout : 120000
           });
     },
+    clone : function(callback) {
+       var document = this;
+         return new Submit({
+              url : "/api/frontend/clone/" + this.documentid(),
+              method: "POST",
+              ajaxtimeout : 120000
+              ajaxsuccess : function(resp) {
+                var jresp = JSON.parse(resp)
+                callback(new Document({}).parse(jresp));
+              }
+          });
+    },
     makeReadyForSigning : function() {
          var document = this;
          return new Submit({
