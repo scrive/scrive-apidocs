@@ -233,14 +233,17 @@ apiCallReady did =  api $ do
           throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
     when (isNothing $ documentfile doc) $ do
           throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
-    mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
+    mndoc <- lift $ do
+              t <- ctxtime <$> getContext
+              dbUpdate $ PreparationToPending did actor (Just timezone)
+              dbUpdate $ SetDocumentInviteTime did t actor
+              dbQuery $ GetDocumentByDocumentID did
     case mndoc of
-            Right newdocument -> do
+            Just newdocument -> do
                 lift $ postDocumentPreparationChange newdocument
                 newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
                 Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
-            Left reason -> throwIO . SomeKontraException $ serverError $ "Operation failed: " ++ show reason
-
+            Nothing -> throwIO . SomeKontraException $ serverError $ "Making document ready failed"
 
 apiCallCancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallCancel did =  api $ do
