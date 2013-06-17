@@ -8,7 +8,7 @@ module ActionQueue.Scheduler (
 import Control.Concurrent
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
-import System.Time
+import Data.Time (UTCTime)
 
 import ActionQueue.Monad
 import AppConf
@@ -21,7 +21,7 @@ import qualified Log
 
 data SchedulerData = SchedulerData {
     sdAppConf   :: AppConf
-  , sdTemplates :: MVar (ClockTime, KontrakcjaGlobalTemplates)
+  , sdTemplates :: MVar (UTCTime, KontrakcjaGlobalTemplates)
   }
 
 type Scheduler = ActionQueue SchedulerData

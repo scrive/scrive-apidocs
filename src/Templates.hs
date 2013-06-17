@@ -14,7 +14,7 @@ import Data.List (isSuffixOf)
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Control.Monad.Base
-import System.Time
+import Data.Time.Clock
 
 import Utils.Default
 import User.Lang
@@ -47,7 +47,7 @@ readGlobalTemplates = TL.readGlobalTemplates textsDirectory templateFilesDir
 localizedVersion :: Lang -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
 localizedVersion lang = TL.localizedVersion $ show lang
 
-getTemplatesModTime :: IO ClockTime
+getTemplatesModTime :: IO UTCTime
 getTemplatesModTime = TL.getTemplatesModTime textsDirectory templateFilesDir
 
 instance (Functor m, Monad m) => T.TemplatesMonad (ReaderT KontrakcjaGlobalTemplates m) where

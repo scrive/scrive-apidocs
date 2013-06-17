@@ -46,6 +46,7 @@ import Network.Socket
 
 import System.Directory
 import System.Time
+import Data.Time.Clock
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
@@ -58,7 +59,7 @@ import qualified Static.Resources as SR
   Global application data
 -}
 data AppGlobals
-    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
+    = AppGlobals { templates       :: MVar (UTCTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MemCache.MemCache FileID JpegPages
                  , cryptorng       :: CryptoRNGState
@@ -81,7 +82,7 @@ getStandardLang muser = do
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
 
-maybeReadTemplates :: Bool -> MVar (ClockTime, KontrakcjaGlobalTemplates) -> IO KontrakcjaGlobalTemplates
+maybeReadTemplates :: Bool -> MVar (UTCTime, KontrakcjaGlobalTemplates) -> IO KontrakcjaGlobalTemplates
 maybeReadTemplates production mvar = modifyMVar mvar $ \(modtime, templates) -> do
         if (production)
          then return ((modtime, templates), templates)

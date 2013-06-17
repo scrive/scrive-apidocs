@@ -27,7 +27,7 @@ import Doc.SignatoryLinkID
 import MinutesTime
 import Utils.Read
 import Control.Applicative
-import Data.String.Utils
+import Data.String.Utils (split)
 import Utils.Prelude
 import Text.JSON as JSON
 

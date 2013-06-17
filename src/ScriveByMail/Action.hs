@@ -43,7 +43,7 @@ import Data.Char
 import Data.Int
 import Data.List
 import Data.Maybe
-import Data.String.Utils
+import Data.String.Utils (strip, replace)
 import System.FilePath
 import Text.JSON
 import Text.JSON.String

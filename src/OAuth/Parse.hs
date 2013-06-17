@@ -9,7 +9,7 @@ import Utils.List
 import Utils.Read
 import MagicHash
 
-import Data.String.Utils
+import Data.String.Utils hiding (maybeRead)
 import Data.Maybe
 import Data.List
 import Network.HTTP (urlDecode)

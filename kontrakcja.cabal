@@ -180,7 +180,7 @@ Executable kontrakcja-server
   Build-depends: HTTP == 4000.*
   Build-depends: HUnit
   Build-depends: HaXml == 1.22.5
-  Build-depends: MissingH == 1.1.1.0
+  Build-depends: MissingH >= 1.2
   Build-depends: pretty-show == 1.5
   Build-depends: QuickCheck
   Build-depends: base >= 4 && < 5
@@ -193,14 +193,14 @@ Executable kontrakcja-server
   Build-depends: crypto-api == 0.10.1
   Build-depends: cryptocipher == 0.3.7
   Build-depends: dataenc == 0.14.0.3
-  Build-depends: directory
+  Build-depends: directory >= 1.2
   Build-depends: explicit-exception == 0.1.6
   Build-depends: extensible-exceptions
   Build-depends: filepath
   Build-depends: hS3 == 0.5.6
-  Build-depends: happstack-server==7.0.7
+  Build-depends: happstack-server==7.1.7.1
   Build-depends: happstack-static-routing==0.3.1
-  Build-depends: hslogger==1.1.4
+  Build-depends: hslogger>=1.1.4
   Build-depends: stm == 2.3
   Build-depends: html == 1.0.1.2
   Build-depends: iconv == 0.4.1.0
@@ -222,7 +222,7 @@ Executable kontrakcja-server
   Build-depends: spreadsheet == 0.1.2
   Build-depends: tagsoup == 0.12.3
   Build-depends: template-haskell
-  Build-depends: temporary == 1.1.2.3
+  Build-depends: temporary == 1.1.2.4
   Build-depends: test-framework
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
@@ -235,18 +235,18 @@ Executable kontrakcja-server
   Build-depends: unix
   Build-depends: utf8-string == 0.3.6
   Build-depends: zlib == 0.5.3.1
-  Build-depends: zip-archive == 0.1.1.7
+  Build-depends: zip-archive == 0.1.3.4
   Build-depends: semigroups == 0.8.2
   Build-depends: blaze-html == 0.5.0.0
   Build-depends: tagged == 0.4.1
   Build-depends: fields-json == 0.2.2
-  Build-depends: static-resources == 0.1.5.5
-  Build-depends: recurly == 0.0.34
+  Build-depends: static-resources == 0.1.6
+  Build-depends: recurly == 0.0.35
   Build-depends: threads == 0.5.0.1
   Build-depends: JuicyPixels == 2.0.2
   Build-depends: mixpanel == 0.1.5
   Build-depends: certificate == 1.3.5
-  Build-depends: kontrakcja-templates == 0.1
+  Build-depends: kontrakcja-templates == 0.3
   Main-Is: Main.hs
 
   Extensions: BangPatterns,
