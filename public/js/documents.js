@@ -307,10 +307,12 @@ window.Document = Backbone.Model.extend({
          return new Submit({
               url : "/api/frontend/clone/" + this.documentid(),
               method: "POST",
-              ajaxtimeout : 120000
+              ajaxtimeout : 120000,
               ajaxsuccess : function(resp) {
                 var jresp = JSON.parse(resp)
-                callback(new Document({}).parse(jresp));
+                var nd = new Document({});
+                nd.parse(jresp);
+                callback(nd);
               }
           });
     },
@@ -752,6 +754,30 @@ window.Document = Backbone.Model.extend({
         return _.some(this.signatories(), function(s) {
             return s.emailMobileDelivery();
         });
+    },
+    isCsv : function() {
+      return _.any(this.signatories(),function(s) {
+          return s.isCsv();
+      })
+    },
+    csv : function() {
+      var csv = undefined;
+      _.each(this.signatories(),function(s) {
+        csv = csv || s.csv();
+      });
+      return csv;
+    },
+    normalizeWithFirstCSVLine : function() {
+      return _.each(this.signatories(),function(s) {
+          if (s.isCsv())
+            s.normalizeWithFirstCSVLine();
+      })
+    },
+    dropFirstCSVLine : function() {
+      return _.each(this.signatories(),function(s) {
+          if (s.isCsv())
+            s.dropFirstCSVLine();
+      })
     }
 });
 

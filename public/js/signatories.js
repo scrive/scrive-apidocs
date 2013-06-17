@@ -701,8 +701,23 @@ window.Signatory = Backbone.Model.extend({
         var document = signatory.document();
         if(document)
             document.trigger('bubble');
-    }
+    },
+    normalizeWithFirstCSVLine : function() {
+      if (!this.isCsv()) return;
 
+      var csv = this.csv();
+      for(var i=0;i<csv[0].length;i++)
+      {
+        var field = this.field(csv[0][i],i < 7 ? "standard" : "custom");
+        if (field != undefined) field.setValue(csv[1][i]);
+      }
+      this.setCsv(undefined);
+    },
+    dropFirstCSVLine : function() {
+       var newcsv = _.rest(_.rest(this.csv()));
+       newcsv.unshift(this.csv()[0]);
+       this.set({csv : newcsv});
+    }
 });
 
 })(window);

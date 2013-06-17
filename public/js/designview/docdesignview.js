@@ -360,19 +360,41 @@
                             'Button' : 'send'
                         });
                         document.takeSigningScreenshot(function() {
-                            document.afterSave(function() {
-                                document.makeReadyForSigning().sendAjax(function() {
-                                    window.location.reload();
-                                })
-                            });
+                               view.sendWithCSV(document);
                         });
                     }
                 }).input(),
                 rejectText: localization.cancel,
                 content  : box
             });
-        }
-    });
+    },
+    sendWithCSV : function(doc) {
+      var self = this;
+      if (doc.csv() != undefined && doc.csv().length > 2) {
+        doc.clone(function(doc2) {
+            doc.normalizeWithFirstCSVLine();
+            doc.save();
+            doc.afterSave(function() {
+              doc.makeReadyForSigning().sendAjax(function() {
+                  doc2.dropFirstCSVLine();
+                  self.sendWithCSV(doc2)
+              })
+            });
+        }).sendAjax();
+      } else {
+            var singleDocument = doc.isCsv();
+            doc.normalizeWithFirstCSVLine();
+            doc.save();
+            doc.afterSave(function() {
+            doc.makeReadyForSigning().sendAjax(function() {
+                  if (singleDocument)
+                    window.location = "/d" + (singleDocument ? "/" + doc.documentid() : "");
+              });
+            });
+     }
+  }
+
+});
 
     var DesignViewView = Backbone.View.extend({
         className: 'design-view-frame',
