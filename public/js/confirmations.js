@@ -82,6 +82,7 @@ var ConfirmationModel = Backbone.Model.extend({
             return this.get("extraOption");
   },
   close : function() {
+    if (this.view != undefined)
       this.view.reject();
   }
 });
@@ -168,8 +169,8 @@ var ConfirmationView = Backbone.View.extend({
             }).input();
        if (BrowserInfo.isSmallScreen()) {
          this.acceptButton.css({
-           'padding-left': '35px', 
-           'padding-right': '35px', 
+           'padding-left': '35px',
+           'padding-right': '35px',
            'font-size': 'xx-large'
          });
        }

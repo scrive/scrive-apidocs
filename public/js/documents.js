@@ -282,24 +282,11 @@ window.Document = Backbone.Model.extend({
             }
         });
     },
-    sendByAuthor: function() {
-        return new Submit({
-              url : "/d/" + this.documentid(),
-              timezone: jstz.determine().name(),
-              send: "YES",
+    verifyEleg : function() {
+         var document = this;
+         return new Submit({
+              url : "/d/eleg/verify/" + this.documentid(),
               method: "POST",
-              ajaxtimeout : 120000
-          });
-    },
-    signByAuthor: function() {
-        var document = this;
-        return new Submit({
-              url : "/d/" + this.documentid(),
-              timezone: jstz.determine().name(),
-              sign: "YES",
-              method: "POST",
-              screenshots: JSON.stringify(document.get("screenshots")),
-              ajaxtimeout : 120000
           });
     },
     clone : function(callback) {
@@ -310,8 +297,8 @@ window.Document = Backbone.Model.extend({
               ajaxtimeout : 120000,
               ajaxsuccess : function(resp) {
                 var jresp = JSON.parse(resp)
-                var nd = new Document({});
-                nd.parse(jresp);
+                var nd = new Document({id : jresp.id});
+                nd.set(nd.parse(jresp));
                 callback(nd);
               }
           });
@@ -479,6 +466,11 @@ window.Document = Backbone.Model.extend({
             // We don't support drawing signature in design view
             return false;
         }
+        if (this.author().elegAuthentication() && this.isCsv()) {
+            // We don't support same eleg authorization of different documents
+            return false;
+        }
+
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
             return sig.signs() && sig.signorder() < aidx;
@@ -768,13 +760,15 @@ window.Document = Backbone.Model.extend({
       return csv;
     },
     normalizeWithFirstCSVLine : function() {
-      return _.each(this.signatories(),function(s) {
+      var name;
+      _.each(this.signatories(),function(s) {
           if (s.isCsv())
-            s.normalizeWithFirstCSVLine();
+           name =  s.normalizeWithFirstCSVLine();
       })
+      return name;
     },
     dropFirstCSVLine : function() {
-      return _.each(this.signatories(),function(s) {
+      _.each(this.signatories(),function(s) {
           if (s.isCsv())
             s.dropFirstCSVLine();
       })

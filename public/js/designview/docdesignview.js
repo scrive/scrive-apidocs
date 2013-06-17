@@ -244,12 +244,25 @@
                 var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
                 var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
                 var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
-                var callback = function(submit) {
+                var callback = function(params) {
                     document.afterSave(function(){
-                        submit.sendAjax(function(resp) {
-                            var link = JSON.parse(resp).link;
-                            window.location = link;
-                        });
+                      document.verifyEleg().sendAjax(function(resp) {
+                        var resp = JSON.parse(resp);
+                        if (resp.verified) {
+                          document.makeReadyForSigning().sendAjax(function(resp) {
+                            var docdata = JSON.parse(resp)
+                            var newdoc = new Document(new Document({}).parse(docdata));
+                            newdoc.sign().addMany(params).sendAjax(function() {
+                                window.location.reload();
+                            });
+                          });
+                        }
+                        else {
+                          new FlashMessage({color: "red", content: "Elegitimation varification failed"});
+                          if (view.confirmationpopup != undefined) view.confirmationpopup.close();
+                        }
+                      });
+
                     });
                 };
                 bankid.click(function() {
@@ -258,7 +271,7 @@
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'BankID'
                     });
-                    document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, document.signByAuthor(),callback); });
+                    document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, callback); });
                     return false;
                 });
                 telia.click(function() {
@@ -267,7 +280,7 @@
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Telia'
                     });
-                    document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, document.signByAuthor(),callback); });
+                    document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, callback); });
                     return false;
                 });
                 nordea.click(function() {
@@ -276,7 +289,7 @@
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Nordea'
                     });
-                    document.takeSigningScreenshot(function() { Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback); });
+                    document.takeSigningScreenshot(function() { Eleg.nordeaSign(document,signatory,callback); });
                     return false;
                 });
                 mbi.click(function() {
@@ -285,7 +298,7 @@
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Mobile BankID'
                     });
-                    document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback); });
+                    document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,callback); });
                     return false;
                 });
                 acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
@@ -303,10 +316,7 @@
                         });
                         document.takeSigningScreenshot(function() {
                             document.afterSave(function() {
-                                document.makeReadyForSigning().sendAjax(function(resp) {
-                                    var docdata = JSON.parse(resp)
-                                    var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax();
-                                })
+                                view.signWithCSV(document);
                             });
                         });
                     }
@@ -327,7 +337,7 @@
                 var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
                 content = content.add($("<span/>").append(subhead).append(p));
             }
-            Confirmation.popup({
+            this.confirmationpopup = Confirmation.popup({
                 title : localization.signByAuthor.modalTitle,
                 acceptButton : acceptButton,
                 rejectText: localization.cancel,
@@ -368,27 +378,69 @@
                 content  : box
             });
     },
-    sendWithCSV : function(doc) {
+    signWithCSV : function(doc) {
       var self = this;
       if (doc.csv() != undefined && doc.csv().length > 2) {
         doc.clone(function(doc2) {
-            doc.normalizeWithFirstCSVLine();
+            var name = doc.normalizeWithFirstCSVLine();
+            LoadingDialog.open("Document #" + doc2.documentid() + "created for csv party " + name + ".")
             doc.save();
             doc.afterSave(function() {
-              doc.makeReadyForSigning().sendAjax(function() {
-                  doc2.dropFirstCSVLine();
-                  self.sendWithCSV(doc2)
+              doc.makeReadyForSigning().sendAjax(function(resp) {
+                  var docdata = JSON.parse(resp)
+                  var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(
+                    function() {
+                      doc2.dropFirstCSVLine();
+                      doc2.save();
+                      doc2.afterSave(function() {
+                          self.signWithCSV(doc2)
+                      });
+                   });
               })
             });
         }).sendAjax();
       } else {
-            var singleDocument = doc.isCsv();
-            doc.normalizeWithFirstCSVLine();
+            var singleDocument = !doc.isCsv();
+            var name = doc.normalizeWithFirstCSVLine();
+            if (!singleDocument)
+               LoadingDialog.open("Document #" + doc.documentid() + "created for csv party " + name + ".")
+            doc.save();
+            doc.afterSave(function() {
+            doc.makeReadyForSigning().sendAjax(function(resp) {
+               var docdata = JSON.parse(resp)
+               var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(function() {
+                  window.location = "/d" + (singleDocument ? "/" + doc.documentid() : "");
+                });
+              });
+            });
+     }
+  },
+  sendWithCSV : function(doc) {
+      var self = this;
+      if (doc.csv() != undefined && doc.csv().length > 2) {
+        doc.clone(function(doc2) {
+            var name = doc.normalizeWithFirstCSVLine();
+            LoadingDialog.open("Document #" + doc2.documentid() + "created for csv party " + name + ".")
+            doc.save();
+            doc.afterSave(function() {
+              doc.makeReadyForSigning().sendAjax(function() {
+                  doc2.dropFirstCSVLine();
+                  doc2.save();
+                  doc2.afterSave(function() {
+                      self.sendWithCSV(doc2)
+                  });
+              })
+            });
+        }).sendAjax();
+      } else {
+            var singleDocument = !doc.isCsv();
+            var name = doc.normalizeWithFirstCSVLine();
+            if (!singleDocument)
+               LoadingDialog.open("Document #" + doc.documentid() + "created for csv party " + name + ".")
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().sendAjax(function() {
-                  if (singleDocument)
-                    window.location = "/d" + (singleDocument ? "/" + doc.documentid() : "");
+                 window.location = "/d" + (singleDocument ? "/" + doc.documentid() : "");
               });
             });
      }

@@ -26,22 +26,22 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
     bankid.click(function() {
       mixpanel.track('Click BankID');
-      document.takeSigningScreenshot(function() { Eleg.bankidSign(document, signatory, document.sign()); });
+      document.takeSigningScreenshot(function() { Eleg.bankidSign(document, signatory, function(p) { document.sign().addMany(p).sendAjax(); });});
       return false;
     });
     telia.click(function() {
       mixpanel.track('Click Telia');
-      document.takeSigningScreenshot(function() { Eleg.teliaSign(document, signatory, document.sign()); });
+      document.takeSigningScreenshot(function() { Eleg.teliaSign(document, signatory,  function(p) { document.sign().addMany(p).sendAjax(); });});
       return false;
     });
     nordea.click(function() {
       mixpanel.track('Click Nordea');
-      document.takeSigningScreenshot(function() { Eleg.nordeaSign(document, signatory, document.sign()); });
+      document.takeSigningScreenshot(function() { Eleg.nordeaSign(document, signatory, function(p) { document.sign().addMany(p).sendAjax(); });});
       return false;
     });
     mbi.click(function() {
       mixpanel.track('Click Mobile BankID');
-      document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,document.sign(),null,signatory.personalnumberField().value()); });
+      document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,function(p) { document.sign().addMany(p).sendAjax(); },signatory.personalnumberField().value()); });
       return false;
     });
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);

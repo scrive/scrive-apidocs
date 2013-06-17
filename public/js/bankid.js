@@ -117,7 +117,7 @@ window.Eleg = {
      });
      return text;
    },
-   bankidSign : function(document, signatory, submit, callback) {
+   bankidSign : function(document, signatory, callback) {
       if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
       LoadingDialog.open(localization.startingSaveSigning);
@@ -170,13 +170,11 @@ window.Eleg = {
                 if (!signresult)
                     return;
                 LoadingDialog.open(localization.verifyingSignature);
-                submit.add("signature",signresult);
-                submit.add("transactionid", data.transactionid);
-                submit.add("eleg" , "bankid");
-                if (callback == undefined)
-                    submit.send();
-                else
-                    callback(submit);
+                callback({
+                      "signature" : signresult,
+                      "transactionid" : data.transactionid,
+                      "eleg" : "bankid"
+                });
             }
             else
                new FlashMessage({ content: data.msg, color: "red"});
@@ -185,7 +183,7 @@ window.Eleg = {
             error: repeatForeverWithDelay(250)
       });
     },
-    nordeaSign : function(document, signatory, submit, callback) {
+    nordeaSign : function(document, signatory, callback) {
       if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return;
       var url;
@@ -238,13 +236,11 @@ window.Eleg = {
                 if (!signresult)
                     return;
                 LoadingDialog.open(localization.verifyingSignature);
-                submit.add("signature",signresult);
-                submit.add("transactionid", data.transactionid);
-                submit.add("eleg" , "nordea");
-                if (callback == undefined)
-                    submit.send();
-                else
-                    callback(submit);
+                callback({
+                      "signature" :signresult,
+                      "transactionid" : data.transactionid,
+                      "eleg" : "nordea"
+                 });
             }
             else
                 new FlashMessage({ content: data.msg, color: "red"});
@@ -256,7 +252,7 @@ window.Eleg = {
 
 
     },
-    teliaSign : function(document, signatory, submit, callback) {
+    teliaSign : function(document, signatory, callback) {
       if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
       var url;
@@ -306,13 +302,11 @@ window.Eleg = {
                 if (!signresult)
                     return;
                 LoadingDialog.open(localization.verifyingSignature);
-                submit.add("signature",signresult);
-                submit.add("transactionid", data.transactionid);
-                submit.add("eleg" , "telia");
-                if (callback == undefined)
-                    submit.send();
-                else
-                    callback(submit);
+                callback({
+                      "signature" : signresult,
+                      "transactionid" : data.transactionid,
+                      "eleg" : "telia"
+                 });
 
             }
             else
@@ -325,7 +319,7 @@ window.Eleg = {
 
     });
     },
-    mobileBankIDSign: function(document, signatory, submit, callback, personnummer) {
+    mobileBankIDSign: function(document, signatory, callback, personnummer) {
         var eleg = this;
         var url;
         if(document.preparation())// designview
@@ -359,12 +353,9 @@ window.Eleg = {
                                                  ,trid: data.transactionid
                                                  ,slid: document.viewer().signatoryid()
                                                  ,callback: function() {
-                                                     submit.add("transactionid", data.transactionid);
-                                                     submit.add("eleg" , "mobilebankid");
-                                                     if (!callback)
-                                                         submit.send();
-                                                     else
-                                                         callback(submit);
+                                                     callback({"transactionid" : data.transactionid,
+                                                               "eleg"  : "mobilebankid"
+                                                              });
                                                  }
                                                 });
                 var mv = new MobileBankIDPollingView({model:m});
@@ -372,7 +363,7 @@ window.Eleg = {
 
             }});
         // retry after 5 seconds if it hasn't worked.
-        window.setTimeout(function() {if (fetching) eleg.mobileBankIDSign(document,signatory,submit,callback);}, 5000);
+        window.setTimeout(function() {if (fetching) eleg.mobileBankIDSign(document,signatory,callback);}, 5000);
     }
 
 };

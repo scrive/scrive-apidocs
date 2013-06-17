@@ -11,6 +11,7 @@ module ELegitimation.Control
     , collectMobileBankIDForAuthor
     , verifySignatureAndGetSignInfoMobile
     , verifySignatureAndGetSignInfoMobileForAuthor
+    , verifyTransactionForAuthor
     )
     where
 
@@ -547,6 +548,25 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
                                                     }
       Left s -> return $ Problem s
       _ -> return $ Problem "Signature is not yet complete."
+
+
+{- Precheck for transaction - so we can tell if signing will succeed -}
+verifyTransactionForAuthor :: Kontrakcja m
+                                    => DocumentID
+                                    -> m JSValue
+verifyTransactionForAuthor docid = do
+  mprovider  <- readField "eleg"
+  transactionid <- getField'  "transactionid"
+  signature <- getField'  "signature"
+  vr <- case mprovider of
+                Nothing ->  return $ Problem "No provider"
+                Just MobileBankIDProvider -> verifySignatureAndGetSignInfoMobileForAuthor docid transactionid
+                Just provider ->  verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid
+  case vr of
+      Sign _ -> runJSONGenT $ J.value "verified" True
+      _    -> runJSONGenT $ J.value "verified" False
+
+
 
 mobileBankIDErrorJSON :: TemplatesMonad m => String -> String -> m JSValue
 mobileBankIDErrorJSON e pn = do
