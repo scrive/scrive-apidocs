@@ -120,12 +120,7 @@ signatoryFieldsListForJSON padqueue doc sl = do
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of
       StandardAuthentication -> "standard"
       ELegAuthentication  -> "eleg"
-    J.value "delivery" $ case signatorylinkdeliverymethod sl of
-      EmailDelivery -> "email"
-      PadDelivery   -> "pad"
-      APIDelivery   -> "api"
-      MobileDelivery-> "mobile"
-      EmailAndMobileDelivery-> "email_mobile"
+    J.value "delivery" $ signatorylinkdeliverymethod sl
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl
