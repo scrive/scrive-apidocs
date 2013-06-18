@@ -166,6 +166,10 @@
             var mainrow = $(this.el).first();
 
 
+            /* In code bellow we to two iterations - one to generate all td tags as one string
+             * and next one to fill them with content and add event handlers.
+             * It gives much better performance, but code is terrible
+             */
 
             var row = "";
             for (var i = 0; i < this.schema.size(); i++) {
@@ -451,7 +455,6 @@
             return $("<thead />").append(headline);
         },
         render: function() {
-            var t = new Date().getTime();
 
             if (this.table != undefined)
                 this.table.detach();
@@ -476,6 +479,9 @@
             var schema = this.schema;
             var elems = this.model.first(this.schema.paging().showLimit());
 
+            /* In code bellow we to two iterations - one to generate all tr tags as one string
+             * and next one to connect them to ListObjectViews. Gives much better performance.
+             */
             var trs = "";
             for(var i=0;i<elems.length;i++) {
               trs += "<tr/>"
@@ -502,7 +508,6 @@
                  odd = !odd;
             }
 
-            console.log("Rendering list took " + (new Date().getTime() - t));
             return this;
         },
         toggleSelectAll: function() {
