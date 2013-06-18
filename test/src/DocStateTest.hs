@@ -1170,7 +1170,7 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
 testCreateFromSharedTemplate :: TestEnv ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomUser
-  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (const True)
+  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (\doc -> isPreparation doc)
   tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
   mt <- rand 10 arbitrary
   doc <- if (isTemplate tmpdoc)
@@ -1180,7 +1180,9 @@ testCreateFromSharedTemplate = do
            fromJust <$> (dbQuery $ GetDocumentByDocumentID docid)
   newuser <- addNewRandomUser
 
-  _ <- dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor newuser (documentid doc) (systemActor mt)
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor newuser (documentid doc) (systemActor mt))
+  _ <- dbUpdate $ DocumentFromTemplate docid'  (systemActor mt)
+
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   let [author1] = filter isAuthor $ documentsignatorylinks doc
   let [author2] = filter isAuthor $ documentsignatorylinks ndoc
@@ -1197,7 +1199,7 @@ testCreateFromTemplateCompanyField = doTimes 10 $ do
   user <- addNewRandomUser
   company <- addNewCompany
   _ <- dbUpdate $ SetUserCompany (userid user) (Just (companyid company))
-  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (const True)
+  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (\doc -> isPreparation doc)
   tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
   mt <- rand 10 arbitrary
   doc <- if (isTemplate tmpdoc)
@@ -1206,7 +1208,9 @@ testCreateFromTemplateCompanyField = doTimes 10 $ do
            _ <- dbUpdate $ TemplateFromDocument docid (systemActor mt)
            fromJust <$> (dbQuery $ GetDocumentByDocumentID docid)
   user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
-  doc' <- fromJust <$> (dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user' (documentid doc) (systemActor mt))
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor user' (documentid doc) (systemActor mt))
+  _ <- dbUpdate $ DocumentFromTemplate docid'  (systemActor mt)
+  doc' <- fromJust <$> (dbQuery $ GetDocumentByDocumentID docid')
   let [author] = filter isAuthor $ documentsignatorylinks doc'
   assertEqual "Author signatory link company name is not same as his company" (getCompanyName company) (getCompanyName author)
 

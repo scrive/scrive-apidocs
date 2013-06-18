@@ -26,8 +26,6 @@ import Doc.DocStateData
 import Doc.DocControl
 import Archive.Control
 import Doc.DocUtils
-import IPAddress
-import Test.QuickCheck
 import Company.Model
 import User.Model
 import Util.SignatoryLinkUtils
@@ -45,16 +43,12 @@ docControlTests env = testGroup "Templates" [
   , testThat "Uploading file as offer makes doc" env testUploadingFileAsOffer
   , testThat "Uploading file as order makes doc" env testUploadingFileAsOrder
   , testThat "Uploading file creates unsaved draft" env testNewDocumentUnsavedDraft
-  , testThat "Sending document sends invites" env testSendingDocumentSendsInvites
-  , testThat "Signing document from design view sends invites" env testSigningDocumentFromDesignViewSendsInvites
-  , testThat "Person who isn't last signing a doc leaves it pending" env testNonLastPersonSigningADocumentRemainsPending
   , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
   , testThat "Sending an reminder clears delivery information" env testSendingReminderClearsDeliveryInformation
   , testThat "Sending reminder email works for company admin" env testSendReminderEmailByCompanyAdmin
   , testThat "We can get json for document" env testGetLoggedIn
   , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
-  , testThat "Split document works for csv data" env testSplitDocumentWorkerSucceedes
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
   , testThat "Bankid mismatch happends when it should" env testBankIDMismatch
   ]
@@ -104,127 +98,10 @@ uploadDocAsNewUser doctype = do
   (rsp, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
   return (user, rsp)
 
-testSplitDocumentWorkerSucceedes :: TestEnv ()
-testSplitDocumentWorkerSucceedes = doTimes 10 $ do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> length (documentsignatorylinks d)>=2 && not (isTemplate d))
-  let csvdata = replicate 20 ["First", "Last", "email@email.com", "Company", "Personalnumber", "Companynumber", "Field 1", "Field 2", "Field 3"]
-  let replace2nd 2 link = link { signatorylinkcsvupload = Just (error "should not inspect this field here") }
-      replace2nd _ link = link
-  let doc' = doc { documentsignatorylinks = zipWith replace2nd [1..] (documentsignatorylinks doc) }
-  time <- rand 10 arbitrary
-  let actor = authorActor time noIP (userid author) (getEmail author)
-  docs <- splitUpDocumentWorker doc' actor csvdata
-
-  assertEqual "Number of documents after split equals length of input data" (length csvdata) (length docs)
-
-testSendingDocumentSendsInvites :: TestEnv ()
-testSendingDocumentSendsInvites = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
-       documentstatus d == Preparation
-    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
-    && all (\sl -> signatorylinkdeliverymethod sl == EmailDelivery) (documentsignatorylinks d)
-    && isSignable d)
-
-  req <- mkRequest POST [ ("send", inText "True")
-                        , ("timezone", inText "Europe/Stockholm")
-                        -- this stuff is for updateDocument function, which I believe
-                        -- is being deleted.
-                        , ("docname", inText "Test Doc")
-                        , ("allowedsignaturetypes", inText "Email")
-                        , ("authorrole", inText "secretary")
-                        , ("signatoryrole", inText "signatory")
-                        , ("sigid", inText "EDF92AA6-3595-451D-B5D1-04C823A616FF")
-                        , ("signatoryfstname", inText "Fred")
-                        , ("signatorysndname", inText "Frog")
-                        , ("signatorycompany", inText "")
-                        , ("signatorypersonalnumber", inText "")
-                        , ("signatorycompanynumber", inText "")
-                        , ("signatoriessignorder", inText "1")
-                        , ("signatoryemail", inText "fred@frog.com")
-                        , ("signatoryrole", inText "signatory")
-                        ]
-  (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
-
-  Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "Should be pending" Pending (documentstatus sentdoc)
-  emails <- dbQuery GetEmails
-  assertBool "Emails sent" (length emails > 0)
 
 signScreenshots :: (String, Input)
 signScreenshots = ("screenshots", inText $ Text.JSON.encode $ runJSONGen $ ss "first" >> ss "signing")
   where ss f = value f (0::Int, BS.toString $ RFC2397.encode "image/jpeg" "\255\216\255\224\NUL\DLEJFIF\NUL\SOH\SOH\SOH\NULH\NULH\NUL\NUL\255\219\NULC\NUL\ETX\STX\STX\STX\STX\STX\ETX\STX\STX\STX\ETX\ETX\ETX\ETX\EOT\ACK\EOT\EOT\EOT\EOT\EOT\b\ACK\ACK\ENQ\ACK\t\b\n\n\t\b\t\t\n\f\SI\f\n\v\SO\v\t\t\r\DC1\r\SO\SI\DLE\DLE\DC1\DLE\n\f\DC2\DC3\DC2\DLE\DC3\SI\DLE\DLE\DLE\255\201\NUL\v\b\NUL\SOH\NUL\SOH\SOH\SOH\DC1\NUL\255\204\NUL\ACK\NUL\DLE\DLE\ENQ\255\218\NUL\b\SOH\SOH\NUL\NUL?\NUL\210\207 \255\217")
-
-testSigningDocumentFromDesignViewSendsInvites :: TestEnv ()
-testSigningDocumentFromDesignViewSendsInvites = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
-       documentstatus d == Preparation
-    && isSignable d
-    && isSignatory (getAuthorSigLink d)
-    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
-    && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
-
-  req <- mkRequest POST [ ("sign", inText "True")
-                        , ("timezone", inText "Europe/Stockholm")
-                        , signScreenshots
-                        ]
-  (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
-
-  Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "Not in pending state" Pending (documentstatus sentdoc)
-  emails <- dbQuery GetEmails
-  assertBool "Emails sent" (length emails > 0)
-
-testNonLastPersonSigningADocumentRemainsPending :: TestEnv ()
-testNonLastPersonSigningADocumentRemainsPending = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  doc' <- addRandomDocumentWithAuthorAndCondition
-            user
-            (\d -> documentstatus d == Preparation
-                     && (case documenttype d of
-                         Signable _ -> True
-                         _ -> False)
-                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
-
-  let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
-  True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                   (authorOnly $ signatorydetails . fromJust $ getAuthorSigLink doc')
-                 , (mkSigDetails "Fred" "Frog" "fred@frog.com" False True)
-                 , (mkSigDetails "Gordon" "Gecko" "gord@geck.com" False True)
-               ]) (systemActor $ documentctime doc')
-
-  randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
-  Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
-
-  let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-      siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
-  True <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
-               (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail $ siglink) (signatorylinkid siglink))
-  Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
-
-  assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
-
-  preq <- mkRequest GET [ ]
-  (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
-
-  req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
-  (_link, _ctx') <- runTestKontra req ctx' $ apiCallSign (documentid doc) (signatorylinkid siglink)
-  Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "In pending state" Pending (documentstatus signeddoc)
-  assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
-  emails <- dbQuery GetEmails
-  assertEqual "No email sent" 0 (length emails)
 
 testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do
