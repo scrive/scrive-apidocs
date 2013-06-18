@@ -164,79 +164,44 @@
             var view = this;
             var model = this.model;
             var mainrow = $(this.el).first();
-
-
-            /* In code bellow we to two iterations - one to generate all td tags as one string
-             * and next one to fill them with content and add event handlers.
-             * It gives much better performance, but code is terrible
-             */
-
-            var row = "";
             for (var i = 0; i < this.schema.size(); i++) {
+                var td = $("<td class='row'></td>");
                 var cell = this.schema.cell(i);
+                td.addClass(cell.tdclass());
                 var value = this.model.field(cell.field());
-                var td = undefined;
-
-                if (cell.isSelect()) {
-                    td = "<td class='row "+ cell.tdclass() + "'><div class='checkbox'/></td>"
-                } else if (cell.isRendered() && value != undefined) {
-                    td = "<td class='row "+ cell.tdclass() + "'></td>"
-                } else if (cell.isExpandable() && value != undefined) {
-                    td = "<td class='row "+ cell.tdclass() + "'><a class='expand' /></td>"
-                } else if (cell.isBool()) {
-                    if (value) {
-                         td = "<td class='row "+ cell.tdclass() + "'><center><a>&#10003;</a></center></td>";
-                    }
-                } else if (cell.isLink()) {
-                    if (value != undefined) {
-                        td = "<td class='row "+ cell.tdclass() + "'><a/></td>";
-                    }
-                } else if (value != undefined) {
-                    td = "<td class='row "+ cell.tdclass() + "'><span/></td>";
-                }
-
-                if (td == undefined)
-                  td = "<td class='row "+ cell.tdclass() + "'></td>";
-                row += td;
-            }
-            var tds = $(row);
-
-            for (var i = 0; i < this.schema.size(); i++) {
-                var cell = this.schema.cell(i);
-                var value = this.model.field(cell.field());
-                var td = $(tds[i]);
+                var elem = undefined;
 
                 if (cell.isSelect()) {
                     td.click(function(){view.selectCheck(); return false;});
-                    this.checkbox = $(".checkbox",td);
+                    this.checkbox = $("<div class='checkbox'/>");
                     this.renderSelection();
                     this.checkbox.click(function(){view.selectCheck();return false;});
+                    elem = this.checkbox;
                 } else if (cell.isRendered() && value != undefined) {
-                    td.append(cell.rendering(value, undefined, this.model));
+                    elem = cell.rendering(value, undefined, this.model);
                 } else if (cell.isExpandable() && value != undefined) {
-                    $(".expand",td).text(value).click(function() { model.toggleExpand(); return false;});
+                    elem = $("<a class='expand' />").text(value);
+                    elem.click(function() { model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
-                         $("a",td).attr("href", this.model.link());
+                        elem = $("<center />").append( $("<a>&#10003;</a>").attr("href", this.model.link()));
                     }
                 } else if (cell.isLink()) {
                     if (value != undefined) {
-                        $("a",td).text(value).attr("href",this.model.link());
+                        elem = $("<a />").text(value).attr("href",this.model.link());
                     }
                 } else if (value != undefined) {
-                    $("span",td).text(value);
+                    elem = $("<span/>").text(value);
                 }
+                if( elem!=undefined ) {
+                    td.append(elem);
+                }
+                mainrow.append(td);
             }
-
-            mainrow.append(tds);
-
-
             if (this.model.isExpanded()) {
              if ($(this.el).size() === 1) {
                     for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                        var tr = $("<tr />")
-                        tr.insertAfter($(this.el));
-                        this.el = $(this.el).add(tr);
+                        this.el = $(this.el).add($("<tr />"));
                     }
              }
 
@@ -455,7 +420,6 @@
             return $("<thead />").append(headline);
         },
         render: function() {
-
             if (this.table != undefined)
                 this.table.detach();
 
@@ -477,28 +441,14 @@
             var body = this.tbody;
             var odd = true;
             var schema = this.schema;
-            var elems = this.model.first(this.schema.paging().showLimit());
-
-            /* In code bellow we to two iterations - one to generate all tr tags as one string
-             * and next one to connect them to ListObjectViews. Gives much better performance.
-             */
-            var trs = "";
-            for(var i=0;i<elems.length;i++) {
-              trs += "<tr/>"
-            }
-            trs = $(trs);
-            body.append(trs);
-
-            for(var i=0;i<elems.length;i++) {
-              var e = elems[i];
+            _.each(this.model.first(this.schema.paging().showLimit()),function(e) {
                 if (e.view == undefined)
                   new ListObjectView({
                         model: e,
                         schema: schema,
-                        el: $(trs[i])
+                        el: $("<tr />")
                     });
-                else
-                  $(trs[i]).replaceWith(e.view.el);
+                body.append(e.view.el);
                 if (odd) {
                      $(e.view.el).addClass("odd");
                 }
@@ -506,8 +456,8 @@
                      $(e.view.el).removeClass("odd");
                  }
                  odd = !odd;
-            }
 
+            });
             return this;
         },
         toggleSelectAll: function() {
