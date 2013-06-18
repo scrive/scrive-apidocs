@@ -165,38 +165,41 @@
             var model = this.model;
             var mainrow = $(this.el).first();
             for (var i = 0; i < this.schema.size(); i++) {
-                var td = $("<td class='row'></td>");
                 var cell = this.schema.cell(i);
-                td.addClass(cell.tdclass());
                 var value = this.model.field(cell.field());
-                var elem = undefined;
+                var td = undefined;
 
                 if (cell.isSelect()) {
+                    td = $("<td class='row'><div class='checkbox'/></td>");
                     td.click(function(){view.selectCheck(); return false;});
-                    this.checkbox = $("<div class='checkbox'/>");
+                    this.checkbox = $(".checkbox",td);
                     this.renderSelection();
                     this.checkbox.click(function(){view.selectCheck();return false;});
-                    elem = this.checkbox;
                 } else if (cell.isRendered() && value != undefined) {
-                    elem = cell.rendering(value, undefined, this.model);
+                    td = $("<td class='row'></td>").append(cell.rendering(value, undefined, this.model));
                 } else if (cell.isExpandable() && value != undefined) {
-                    elem = $("<a class='expand' />").text(value);
-                    elem.click(function() { model.toggleExpand(); return false;});
+                    td = $("<td class='row'><a class='expand' /></td>");
+                    $(".expand",td).text(value).click(function() { model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
-                        elem = $("<center />").append( $("<a>&#10003;</a>").attr("href", this.model.link()));
+                         td = $("<td class='row'><center><a>&#10003;</a></center></td>");
+                         $("a",td).attr("href", this.model.link());
                     }
                 } else if (cell.isLink()) {
                     if (value != undefined) {
-                        elem = $("<a />").text(value).attr("href",this.model.link());
+                        td = $("<td class='row'><a/></td>");
+                        $("a",td).text(value).attr("href",this.model.link());
                     }
                 } else if (value != undefined) {
-                    elem = $("<span/>").text(value);
+                    td = $("<td class='row'><span/></td>");
+                    $("span",td).text(value);
                 }
-                if( elem!=undefined ) {
-                    td.append(elem);
-                }
+
+                if (td == undefined)
+                  td = $("<td class='row'></td>");
+                td.addClass(cell.tdclass());
                 mainrow.append(td);
+
             }
             if (this.model.isExpanded()) {
              if ($(this.el).size() === 1) {
@@ -420,6 +423,7 @@
             return $("<thead />").append(headline);
         },
         render: function() {
+
             if (this.table != undefined)
                 this.table.detach();
 
