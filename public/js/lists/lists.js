@@ -164,47 +164,75 @@
             var view = this;
             var model = this.model;
             var mainrow = $(this.el).first();
+
+
+
+            var row = "";
             for (var i = 0; i < this.schema.size(); i++) {
                 var cell = this.schema.cell(i);
                 var value = this.model.field(cell.field());
                 var td = undefined;
 
                 if (cell.isSelect()) {
-                    td = $("<td class='row'><div class='checkbox'/></td>");
+                    td = "<td class='row "+ cell.tdclass() + "'><div class='checkbox'/></td>"
+                } else if (cell.isRendered() && value != undefined) {
+                    td = "<td class='row "+ cell.tdclass() + "'></td>"
+                } else if (cell.isExpandable() && value != undefined) {
+                    td = "<td class='row "+ cell.tdclass() + "'><a class='expand' /></td>"
+                } else if (cell.isBool()) {
+                    if (value) {
+                         td = "<td class='row "+ cell.tdclass() + "'><center><a>&#10003;</a></center></td>";
+                    }
+                } else if (cell.isLink()) {
+                    if (value != undefined) {
+                        td = "<td class='row "+ cell.tdclass() + "'><a/></td>";
+                    }
+                } else if (value != undefined) {
+                    td = "<td class='row "+ cell.tdclass() + "'><span/></td>";
+                }
+
+                if (td == undefined)
+                  td = "<td class='row "+ cell.tdclass() + "'></td>";
+                row += td;
+            }
+            var tds = $(row);
+
+            for (var i = 0; i < this.schema.size(); i++) {
+                var cell = this.schema.cell(i);
+                var value = this.model.field(cell.field());
+                var td = $(tds[i]);
+
+                if (cell.isSelect()) {
                     td.click(function(){view.selectCheck(); return false;});
                     this.checkbox = $(".checkbox",td);
                     this.renderSelection();
                     this.checkbox.click(function(){view.selectCheck();return false;});
                 } else if (cell.isRendered() && value != undefined) {
-                    td = $("<td class='row'></td>").append(cell.rendering(value, undefined, this.model));
+                    td.append(cell.rendering(value, undefined, this.model));
                 } else if (cell.isExpandable() && value != undefined) {
-                    td = $("<td class='row'><a class='expand' /></td>");
                     $(".expand",td).text(value).click(function() { model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
-                         td = $("<td class='row'><center><a>&#10003;</a></center></td>");
                          $("a",td).attr("href", this.model.link());
                     }
                 } else if (cell.isLink()) {
                     if (value != undefined) {
-                        td = $("<td class='row'><a/></td>");
                         $("a",td).text(value).attr("href",this.model.link());
                     }
                 } else if (value != undefined) {
-                    td = $("<td class='row'><span/></td>");
                     $("span",td).text(value);
                 }
-
-                if (td == undefined)
-                  td = $("<td class='row'></td>");
-                td.addClass(cell.tdclass());
-                mainrow.append(td);
-
             }
+
+            mainrow.append(tds);
+
+
             if (this.model.isExpanded()) {
              if ($(this.el).size() === 1) {
                     for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                        this.el = $(this.el).add($("<tr />"));
+                        var tr = $("<tr />")
+                        tr.insertAfter($(this.el));
+                        this.el = $(this.el).add(tr);
                     }
              }
 
@@ -423,6 +451,7 @@
             return $("<thead />").append(headline);
         },
         render: function() {
+            var t = new Date().getTime();
 
             if (this.table != undefined)
                 this.table.detach();
@@ -445,14 +474,25 @@
             var body = this.tbody;
             var odd = true;
             var schema = this.schema;
-            _.each(this.model.first(this.schema.paging().showLimit()),function(e) {
+            var elems = this.model.first(this.schema.paging().showLimit());
+
+            var trs = "";
+            for(var i=0;i<elems.length;i++) {
+              trs += "<tr/>"
+            }
+            trs = $(trs);
+            body.append(trs);
+
+            for(var i=0;i<elems.length;i++) {
+              var e = elems[i];
                 if (e.view == undefined)
                   new ListObjectView({
                         model: e,
                         schema: schema,
-                        el: $("<tr />")
+                        el: $(trs[i])
                     });
-                body.append(e.view.el);
+                else
+                  $(trs[i]).replaceWith(e.view.el);
                 if (odd) {
                      $(e.view.el).addClass("odd");
                 }
@@ -460,8 +500,9 @@
                      $(e.view.el).removeClass("odd");
                  }
                  odd = !odd;
+            }
 
-            });
+            console.log("Rendering list took " + (new Date().getTime() - t));
             return this;
         },
         toggleSelectAll: function() {
