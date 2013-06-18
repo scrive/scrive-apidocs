@@ -121,5 +121,7 @@ tablePaymentStats = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id") ]
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                     { fkOnDelete = ForeignKeyCascade }
+                     ]
   }
