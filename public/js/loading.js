@@ -14,6 +14,7 @@ window.LoadingDialog = {
           var dialog = $("<div class='modal loadingdialog'><div class='modal-container'><div class='modal-body'><div class='modal-content'><div class='body'>" +
                              "<center>" +
                                 "<h4 class='loadingmessage'>Loading</h4>" +
+                                "<h5 class='loadingsubmessage' style='font-size: 18px; color: #808080;'></h5>" +
                                      "<img src='/img/wait30trans.gif' style='margin:30px'/>" +
                              "</center>" +
                         "</div></div></div></div></div>");
@@ -24,10 +25,11 @@ window.LoadingDialog = {
     changeMessage : function(message) {
          $(".loadingmessage").text(message);
     },
-    open: function (message) {
+    open: function (message,submessage) {
          var dialog = LoadingDialog.dialog();
          dialog.css('display','block');
          $(".loadingmessage", dialog).html(message);
+         $(".loadingsubmessage", dialog).html(submessage || "");
          $(".modal-container",dialog).css("top",$(window).scrollTop());
          $(".modal-container",dialog).css("margin-top",($(window).height()- 200) /2);
          $(".modal-container",dialog).css("left",$(window).scrollLeft());

@@ -995,3 +995,6 @@
 "_fontSizeBig","stor","large"
 "_fontSizeLarge","mycket stor","huge"
 "_fontSizeCustom","anpassa","custom"
+"_fromCSV","från .CSV-fil","from .CSV file"
+"_partOf","av","of"
+"_preparingDocumentFor","Bearbetar dokument för ","Preparing document for"

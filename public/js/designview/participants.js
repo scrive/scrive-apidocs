@@ -330,12 +330,7 @@
                     mixpanel.track('Click add CSV');
 
                     new CsvSignatoryDesignPopup({
-                        document: model.document(),
-                        onAccept: function() {
-                            doc.addExistingSignatory(sig);
-                            doc.save();
-                            model.setParticipantDetail(sig);
-                        }
+                        designview : model
                     });
                     return false;
                 }
@@ -401,11 +396,7 @@
             view.render();
         },
         closeAllParticipants : function() {
-            console.log("Closing participants");
             this.model.setParticipantDetail(null);
-
-            console.log("Closing is done");
-
         },
         setup: function() {
             var view = this;
@@ -737,12 +728,11 @@
                     onClick: function() {
                         mixpanel.track('Open CSV Popup');
                         new CsvSignatoryDesignPopup({
-                            document: sig.document()
+                            designview: view.viewmodel
                         });
                     }
                 });
-                var wrapperdiv = $('<div />');
-                wrapperdiv.addClass('design-view-action-participant-details-information-field-wrapper');
+                var wrapperdiv = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
                 wrapperdiv.append(csvButton.input());
                 div.append(wrapperdiv);
             }
@@ -755,8 +745,7 @@
             var sig = view.model;
             var viewmodel = view.viewmodel;
 
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-details-information-field-wrapper');
+            var div = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
 
             var setter = function() {
                 if(input.value()) {
@@ -817,8 +806,7 @@
             var sig = view.model;
             var viewmodel = view.viewmodel;
 
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-details-information-field-wrapper');
+            var div = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
 
             var allFieldOptions = view.possibleFields.concat([]);
 
@@ -905,14 +893,17 @@
             var viewmodel = view.viewmodel;
 
             var value = sig.name();
-            var div = $('<div />');
-            div.addClass('design-view-action-participant-details-information-field-wrapper');
+            var div = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
             var fstnameField = sig.fstnameField();
             var sndnameField = sig.sndnameField();
 
+            var csvfield = fstnameField.isCsvField() && sndnameField.isCsvField();
+            var csvname = localization.designview.fullName + "(" + localization.designview.fromCSV + ")"
+
             var input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-details-information-field',
-                infotext: localization.designview.fullName,
+                infotext: csvfield ? csvname : localization.designview.fullName,
+                readonly : csvfield,
                 value: value,
                 onChange: function(val) {
                     var str = val.trim();
@@ -972,14 +963,16 @@
                 return null;
 
             var value = field.value();
-
+            var csvfield = field.isCsvField();
+            var csvname = (placeholder || name) + " (" + localization.designview.fromCSV + ")"
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
 
             var input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-details-information-field',
-                infotext: placeholder || name,
-                value: value,
+                infotext: csvfield ? csvname : (placeholder || name),
+                readonly : csvfield,
+                value:  value,
                 onChange: function(val) {
                     if(typeof val === 'string')
                         field.setValue(val.trim());
@@ -1053,7 +1046,7 @@
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
             sigco: localization.company,
-            mobile: localization.phone
+            mobile: localization.phone,
         },
         placeholder: function(name) {
             return this.fieldNames[name] || name;

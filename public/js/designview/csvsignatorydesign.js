@@ -98,6 +98,12 @@ var CsvProblem = Backbone.Model.extend({
            if(BlockingInfo && jresp.rows && BlockingInfo.shouldBlockDocs(jresp.rows.length)) {
                problems.push(new CsvProblem({description:BlockingInfo.csvMessage(jresp.rows.length)}));
            }
+           if (jresp.header == undefined || jresp.header.length < 3) {
+              problems.push(new CsvProblem({description: "At least 3 columns must be defined"}));
+           }
+           if (jresp.length < 2) {
+              problems.push(new CsvProblem({description: "At least 1 party must be defined"}));
+           }
            if (jresp.header != undefined) {
               for(var i=0;i<jresp.header.length;i++)
                 jresp.header[i] = self.csvstandardheaders[i] || jresp.header[i];
@@ -240,7 +246,8 @@ var CsvSignatoryDesignView = Backbone.View.extend({
 window.CsvSignatoryDesignPopup =  function(args) {
          var csv = [];
          var csvSignatory = undefined;
-         var document = args.document;
+         var designview = args.designview;
+         var document = designview.document();
          _.each(document.signatories(), function(s) {
            if (s.isCsv()) {
              csv = s.csv();
@@ -264,9 +271,11 @@ window.CsvSignatoryDesignPopup =  function(args) {
                        var signatory = new Signatory({
                          document : document,
                          fields : fields,
+                         signs : true,
                          csv : model.csv()
                       });
                     document.addExistingSignatory(signatory);
+                    designview.setParticipantDetail(signatory);
                   } else {
                     for(var i = 0; i < model.header().length; i ++)
                       if (!csvSignatory.hasTextFieldWithName(model.header()[i])) {

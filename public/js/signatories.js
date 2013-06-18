@@ -373,7 +373,7 @@ window.Signatory = Backbone.Model.extend({
         return this.fieldsByType("signature");
     },
     hasSignatureField : function() {
-      return this.signatures().lenght > 0 ;
+      return this.signatures().length > 0 ;
     },
     hasPlacedSignatures: function() {
         return _.any(this.signatures(), function(signature) {
@@ -711,7 +711,7 @@ window.Signatory = Backbone.Model.extend({
       {
         var field = this.field(csv[0][i],i < 7 ? "standard" : "custom");
         if (field != undefined) field.setValue(csv[1][i]);
-        if (i ==0 || i == 1)  name +=  csv[1][i];
+        if (i ==0 || i == 1)  name +=  " " + csv[1][i];
       }
       this.setCsv(undefined);
       return name;

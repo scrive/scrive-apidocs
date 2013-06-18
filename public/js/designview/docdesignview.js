@@ -316,7 +316,7 @@
                         });
                         document.takeSigningScreenshot(function() {
                             document.afterSave(function() {
-                                view.signWithCSV(document);
+                                view.signWithCSV(document, 1 , document.isCsv() ? document.csv().length - 1 : undefined);
                             });
                         });
                     }
@@ -370,7 +370,7 @@
                             'Button' : 'send'
                         });
                         document.takeSigningScreenshot(function() {
-                               view.sendWithCSV(document);
+                               view.sendWithCSV(document, 1, document.isCsv() ? document.csv().length - 1 : undefined);
                         });
                     }
                 }).input(),
@@ -378,12 +378,12 @@
                 content  : box
             });
     },
-    signWithCSV : function(doc) {
+    signWithCSV : function(doc,index, totalCount) {
       var self = this;
       if (doc.csv() != undefined && doc.csv().length > 2) {
         doc.clone(function(doc2) {
             var name = doc.normalizeWithFirstCSVLine();
-            LoadingDialog.open("Document #" + doc2.documentid() + "created for csv party " + name + ".")
+            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().sendAjax(function(resp) {
@@ -393,7 +393,7 @@
                       doc2.dropFirstCSVLine();
                       doc2.save();
                       doc2.afterSave(function() {
-                          self.signWithCSV(doc2)
+                          self.signWithCSV(doc2,index + 1, totalCount)
                       });
                    });
               })
@@ -403,7 +403,7 @@
             var singleDocument = !doc.isCsv();
             var name = doc.normalizeWithFirstCSVLine();
             if (!singleDocument)
-               LoadingDialog.open("Document #" + doc.documentid() + "created for csv party " + name + ".")
+            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().sendAjax(function(resp) {
@@ -415,19 +415,19 @@
             });
      }
   },
-  sendWithCSV : function(doc) {
+  sendWithCSV : function(doc,index, totalCount) {
       var self = this;
       if (doc.csv() != undefined && doc.csv().length > 2) {
         doc.clone(function(doc2) {
             var name = doc.normalizeWithFirstCSVLine();
-            LoadingDialog.open("Document #" + doc2.documentid() + "created for csv party " + name + ".")
+            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().sendAjax(function() {
                   doc2.dropFirstCSVLine();
                   doc2.save();
                   doc2.afterSave(function() {
-                      self.sendWithCSV(doc2)
+                      self.sendWithCSV(doc2, index + 1, totalCount)
                   });
               })
             });
@@ -436,7 +436,7 @@
             var singleDocument = !doc.isCsv();
             var name = doc.normalizeWithFirstCSVLine();
             if (!singleDocument)
-               LoadingDialog.open("Document #" + doc.documentid() + "created for csv party " + name + ".")
+            LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().sendAjax(function() {

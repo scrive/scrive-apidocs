@@ -178,7 +178,6 @@ window.Field = Backbone.Model.extend({
         }
 
         if (   this.isEmail()
-            && !this.signatory().isCsv()
             && (this.signatory().emailDelivery() || this.signatory().emailMobileDelivery())
            ){
             var msg = localization.designview.validation.missingOrWrongEmail;
@@ -192,11 +191,11 @@ window.Field = Backbone.Model.extend({
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
+            console.log("Email validation");
             return new EmailValidation({message: msg});
         }
 
         if (   this.isMobile()
-            && !this.signatory().isCsv()
             && this.signatory().needsMobile()
            ){
             var msg = localization.designview.validation.missingOrWrongMobile;
@@ -267,8 +266,15 @@ window.Field = Backbone.Model.extend({
         return this.obligatory();
     },
     isCsvField : function() {
-        console.log("Csv field " + this.name() + " " + (this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.name())));
         return this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.name());
+    },
+    csvFieldValues : function() {
+       var csv = this.signatory().csv();
+       var index = _.indexOf(csv[0],this.name());
+       var res = [];
+       for(var i = 1;i< csv.length;i++)
+         res.push(csv[i][index]);
+       return res;
     },
     defaultTip : function() {
       if (this.isCheckbox())
@@ -323,7 +329,14 @@ window.Field = Backbone.Model.extend({
         _.each(this.placements(), function(p) {p.remove();});
     },
     isValid: function(forSigning) {
-        return this.validation(forSigning).validateData(this.value());
+        var self = this;
+        if (!this.isCsvField())
+          return this.validation(forSigning).validateData(this.value());
+        else {
+            var csvValues = this.csvFieldValues();
+            console.log("Validating " + self.name() + " res: " + _.all(this.csvFieldValues(),function(v) {return self.validation(forSigning).validateData(v); }));
+            return _.all(this.csvFieldValues(),function(v) {return self.validation(forSigning).validateData(v); })
+        }
     },
     doValidate: function(forSigning, callback) {
         return this.validation(forSigning)

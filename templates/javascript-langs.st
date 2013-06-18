@@ -355,6 +355,9 @@ javascriptLocalisation =
              , draggablehelp2 : "$_designviewdraggablehelp2()$"
              , days :"$_designviewdays()$"
              , saved : "$_designviewsaved()$"
+             , fromCSV : "$_fromCSV()$"
+             , partOf : "$_partOf()$"
+             , preparingDocumentFor : "$_preparingDocumentFor()$"
            }
 
          , validation : {
