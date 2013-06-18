@@ -178,11 +178,11 @@
                 var td = undefined;
 
                 if (cell.isSelect()) {
-                    td = "<td class='row "+ cell.tdclass() + "'><div class='checkbox'/></td>"
+                    td = "<td class='row "+ cell.tdclass() + "'><div class='checkbox'/></td>";
                 } else if (cell.isRendered() && value != undefined) {
-                    td = "<td class='row "+ cell.tdclass() + "'></td>"
+                    td = "<td class='row "+ cell.tdclass() + "'></td>";
                 } else if (cell.isExpandable() && value != undefined) {
-                    td = "<td class='row "+ cell.tdclass() + "'><a class='expand' /></td>"
+                    td = "<td class='row "+ cell.tdclass() + "'><a class='expand' /></td>";
                 } else if (cell.isBool()) {
                     if (value) {
                          td = "<td class='row "+ cell.tdclass() + "'><center><a>&#10003;</a></center></td>";
@@ -484,7 +484,7 @@
              */
             var trs = "";
             for(var i=0;i<elems.length;i++) {
-              trs += "<tr/>"
+              trs += "<tr/>";
             }
             trs = $(trs);
             body.append(trs);
