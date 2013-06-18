@@ -528,6 +528,7 @@
 "_signMethodPad","personligt möte","in person meeting"
 "_signMethodAPI","API","API"
 "_signMethodMobile","SMS","SMS"
+"_signMethodEmailAndMobile","e-post/SMS","email/SMS"
 "_signStep2ContentPersons","Parter","Parties"
 "_signStep2ContentSignOrder","Signeringsordning","Signing order"
 "_signStepsBodyFunctionsAddPerson","Lägg till part","Add person"
