@@ -234,7 +234,7 @@
             if (this.model.isExpanded()) {
              if ($(this.el).size() === 1) {
                     for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                        var tr = $("<tr />")
+                        var tr = $("<tr />");
                         tr.insertAfter($(this.el));
                         this.el = $(this.el).add(tr);
                     }
