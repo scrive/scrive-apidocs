@@ -410,10 +410,9 @@ javascriptLocalisation =
            , modalNewPasswordViewFooterSave: "$_modalNewPasswordViewFooterSave()$"
            , flashMessagePasswordsDontMatch: "$_flashMessagePasswordsDontMatch()$"
            , flashMessageMissingRequiredField: "$_flashMessageMissingRequiredField()$"
-           , flashMessagePasswordLessThanMinLength: "$_flashMessagePasswordLessThanMinLength()$"
            , flashMessagePasswordExceedsMaxLength: "$_flashMessagePasswordExceedsMaxLength()$"
            , flashMessageInvalidCharsInPassword: "$_flashMessageInvalidCharsInPassword()$"
-           , flashMessageNeedsLetterAndDigit: "$_flashMessageNeedsLetterAndDigit()$"
+           , flashMessagePasswordInvalid: "$_flashMessagePasswordInvalid()$"
            , flashMessagePasswordChangeLinkNotValid: '$_flashMessagePasswordChangeLinkNotValid()$'
          }
          , signupModal: {
