@@ -58,21 +58,12 @@ flashMessageUserWithSameEmailExists=
 	$_flashMessageUserWithSameEmailExists()$
 
 ###
-flashMessageActivationLinkNotValid=
-	$_flashMessageActivationLinkNotValid()$
-###
 flashMessageUserActivated=	$_flashMessageUserActivated()$
-
-###
-flashMessageUserAlreadyActivated=
-	$_flashMessageUserAlreadyActivated()$
 
 ###
 flashMessageNewActivationLinkSend=
 	$_flashMessageNewActivationLinkSend()$
 
-###
-flashMessageUserSignupDone=	$_flashMessageUserSignupDone()$
 ###
 flashAuthorSigned=	$_flashAuthorSigned()$
 ###
@@ -161,8 +152,6 @@ flashMessageCompanyAccountDeleted=$_flashMessageCompanyAccountDeleted()$
 flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
 ###
 flashCompanyAccountInviteResent=$_flashCompanyAccountInviteResent()$
-###
-flashMessageMismatchedEmails=$_flashMessageMismatchedEmails()$
 ###
 flashMessageProblemWithEmailChange=$_flashMessageProblemWithEmailChange()$
 ###

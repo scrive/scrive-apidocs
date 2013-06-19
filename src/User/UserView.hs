@@ -4,7 +4,6 @@ module User.UserView (
     userJSON,
     showAccount,
     pageAcceptTOS,
-    activatePageViewNotValidLink,
 
     -- mails
     newUserMail,
@@ -25,19 +24,11 @@ module User.UserView (
     flashMessagePasswordChangeLinkNotValid,
     flashMessageAccessNewAccountLinkNotValid,
     flashMessageUserWithSameEmailExists,
-    flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
-    flashMessageUserAlreadyActivated,
     flashMessageNewActivationLinkSend,
-    flashMessageUserSignupDone,
-    flashMessageMismatchedEmails,
     flashMessageProblemWithEmailChange,
     flashMessageProblemWithPassword,
     flashMessageYourEmailHasChanged,
-
-    --utils
-    userBasicFields,
-    menuFields,
 
     userStatsToJSON,
     companyStatsToJSON,
@@ -184,18 +175,6 @@ companyStatsToJSON formatTime totalText uuss = map f summarized
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
 
-menuFields :: Monad m => User -> Fields m ()
-menuFields user = do
-  F.value "iscompanyadmin" $ useriscompanyadmin user
-  F.value "seessubscriptiondashboard" $ userSeesSubscriptionDashboard user
-
-userSeesSubscriptionDashboard :: User -> Bool
-userSeesSubscriptionDashboard user = useriscompanyadmin user || isNothing (usercompany user)
-
-activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
-activatePageViewNotValidLink email =
-  renderTemplate "activatePageViewNotValidLink" $ F.value "email" email
-
 accessNewAccountMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 accessNewAccountMail ctx user setpasslink = do
   kontramail "accessNewAccountMail" $ do
@@ -294,32 +273,15 @@ flashMessageUserWithSameEmailExists =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserWithSameEmailExists"
 
 
-flashMessageActivationLinkNotValid :: TemplatesMonad m => m FlashMessage
-flashMessageActivationLinkNotValid =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageActivationLinkNotValid"
-
-
 flashMessageUserActivated :: TemplatesMonad m => m FlashMessage
 flashMessageUserActivated =
   toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageUserActivated"
 
 
-flashMessageUserAlreadyActivated :: TemplatesMonad m => m FlashMessage
-flashMessageUserAlreadyActivated =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserAlreadyActivated"
-
 flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage
 flashMessageNewActivationLinkSend =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageNewActivationLinkSend"
 
-
-flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
-flashMessageUserSignupDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserSignupDone"
-
-flashMessageMismatchedEmails :: TemplatesMonad m => m FlashMessage
-flashMessageMismatchedEmails =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageMismatchedEmails"
 
 flashMessageProblemWithEmailChange :: TemplatesMonad m => m FlashMessage
 flashMessageProblemWithEmailChange =
@@ -333,16 +295,3 @@ flashMessageYourEmailHasChanged :: TemplatesMonad m => m FlashMessage
 flashMessageYourEmailHasChanged =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageYourEmailHasChanged"
 
--------------------------------------------------------------------------------
-
-{- | Basic fields for the user  -}
-userBasicFields :: Monad m => User -> Maybe Company -> Fields m ()
-userBasicFields u mc = do
-    F.value "id" $ show $ userid u
-    F.value "fullname" $ getFullName u
-    F.value "email" $ getEmail u
-    F.value "company" $ getCompanyName mc
-    F.value "phone" $ userphone $ userinfo u
-    F.value "position" $ usercompanyposition $ userinfo u
-    F.value "iscompanyadmin" $ useriscompanyadmin u
-    F.value "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
