@@ -251,9 +251,9 @@ window.CsvSignatoryDesignPopup =  function(args) {
          _.each(document.signatories(), function(s) {
            if (s.isCsv()) {
              csv = s.csv();
-             csvSignatory = s
-           };
-         })
+             csvSignatory = s;
+           }
+         });
 
          var model = new CsvSignatoryDesign({ header: _.first(csv),  rows : _.rest(csv)  });
          var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")});
@@ -282,7 +282,7 @@ window.CsvSignatoryDesignPopup =  function(args) {
                         csvSignatory.addField(new Field({
                               name: model.header()[i],
                               type: _.contains(model.csvstandardheaders,model.header()[i]) ? "standard" : "custom",
-                              signatory: csvSignatory,
+                              signatory: csvSignatory
                           }));
                       }
 

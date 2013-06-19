@@ -501,7 +501,7 @@ window.Signatory = Backbone.Model.extend({
         return false;
     },
     hasTextFieldWithName : function(name) {
-        return (this.field(name,"standard") != undefined || this.field(name,"custom") != undefined)
+        return (this.field(name,"standard") != undefined || this.field(name,"custom") != undefined);
     },
     isCsv: function() {
         return this.csv() != undefined;
@@ -717,7 +717,7 @@ window.Signatory = Backbone.Model.extend({
       return name;
     },
     dropFirstCSVLine : function() {
-       this.csv()[1] = this.csv()[0]
+       this.csv()[1] = this.csv()[0];
        this.csv().shift();
     }
 });

@@ -898,7 +898,7 @@
             var sndnameField = sig.sndnameField();
 
             var csvfield = fstnameField.isCsvField() && sndnameField.isCsvField();
-            var csvname = localization.designview.fullName + "(" + localization.designview.fromCSV + ")"
+            var csvname = localization.designview.fullName + "(" + localization.designview.fromCSV + ")";
 
             var input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-details-information-field',
@@ -964,7 +964,7 @@
 
             var value = field.value();
             var csvfield = field.isCsvField();
-            var csvname = (placeholder || name) + " (" + localization.designview.fromCSV + ")"
+            var csvname = (placeholder || name) + " (" + localization.designview.fromCSV + ")";
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-information-field-wrapper');
 
@@ -1046,7 +1046,7 @@
             sigcompnr: localization.companyNumber,
             sigpersnr: localization.personamNumber,
             sigco: localization.company,
-            mobile: localization.phone,
+            mobile: localization.phone
         },
         placeholder: function(name) {
             return this.fieldNames[name] || name;

@@ -335,7 +335,7 @@ window.Field = Backbone.Model.extend({
         else {
             var csvValues = this.csvFieldValues();
             console.log("Validating " + self.name() + " res: " + _.all(this.csvFieldValues(),function(v) {return self.validation(forSigning).validateData(v); }));
-            return _.all(this.csvFieldValues(),function(v) {return self.validation(forSigning).validateData(v); })
+            return _.all(this.csvFieldValues(),function(v) {return self.validation(forSigning).validateData(v); });
         }
     },
     doValidate: function(forSigning, callback) {

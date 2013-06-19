@@ -286,7 +286,7 @@ window.Document = Backbone.Model.extend({
          var document = this;
          return new Submit({
               url : "/d/eleg/verify/" + this.documentid(),
-              method: "POST",
+              method: "POST"
           });
     },
     clone : function(callback) {
@@ -296,7 +296,7 @@ window.Document = Backbone.Model.extend({
               method: "POST",
               ajaxtimeout : 120000,
               ajaxsuccess : function(resp) {
-                var jresp = JSON.parse(resp)
+                var jresp = JSON.parse(resp);
                 var nd = new Document({id : jresp.id});
                 nd.set(nd.parse(jresp));
                 callback(nd);
@@ -750,7 +750,7 @@ window.Document = Backbone.Model.extend({
     isCsv : function() {
       return _.any(this.signatories(),function(s) {
           return s.isCsv();
-      })
+      });
     },
     csv : function() {
       var csv = undefined;
@@ -764,14 +764,14 @@ window.Document = Backbone.Model.extend({
       _.each(this.signatories(),function(s) {
           if (s.isCsv())
            name =  s.normalizeWithFirstCSVLine();
-      })
+      });
       return name;
     },
     dropFirstCSVLine : function() {
       _.each(this.signatories(),function(s) {
           if (s.isCsv())
             s.dropFirstCSVLine();
-      })
+      });
     }
 });
 

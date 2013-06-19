@@ -250,7 +250,7 @@
                         var resp = JSON.parse(resp);
                         if (resp.verified) {
                           document.makeReadyForSigning().sendAjax(function(resp) {
-                            var docdata = JSON.parse(resp)
+                            var docdata = JSON.parse(resp);
                             var newdoc = new Document(new Document({}).parse(docdata));
                             newdoc.sign().addMany(params).sendAjax(function() {
                                 window.location.reload();
@@ -387,16 +387,16 @@
             doc.save();
             doc.afterSave(function() {
               doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
-                  var docdata = JSON.parse(resp)
+                  var docdata = JSON.parse(resp);
                   var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(
                     function() {
                       doc2.dropFirstCSVLine();
                       doc2.save();
                       doc2.afterSave(function() {
-                          self.signWithCSV(doc2,index + 1, totalCount)
+                          self.signWithCSV(doc2,index + 1, totalCount);
                       });
                    });
-              })
+              });
             });
         }).sendAjax();
       } else {
@@ -407,7 +407,7 @@
             doc.save();
             doc.afterSave(function() {
             doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
-               var docdata = JSON.parse(resp)
+               var docdata = JSON.parse(resp);
                var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(function() {
                   window.location = "/d" + (singleDocument ? "/" + doc.documentid() : "");
                 });
@@ -427,9 +427,9 @@
                   doc2.dropFirstCSVLine();
                   doc2.save();
                   doc2.afterSave(function() {
-                      self.sendWithCSV(doc2, index + 1, totalCount)
+                      self.sendWithCSV(doc2, index + 1, totalCount);
                   });
-              })
+              });
             });
         }).sendAjax();
       } else {
