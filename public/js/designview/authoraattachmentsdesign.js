@@ -249,6 +249,7 @@ window.DesignAuthorAttachmentsPopup = {
                                 color: "red",
                                 content: localization.authorattachments.invalidAttachments
                             });
+                                LoadingDialog.close();
                         }
                       );
                       LoadingDialog.open();
