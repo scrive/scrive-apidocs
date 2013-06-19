@@ -10,7 +10,6 @@ module User.Action (
 import Control.Monad
 import Data.Functor
 import Data.Maybe
-import qualified Control.Exception.Lifted as E
 
 import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
 import Company.CompanyID
@@ -30,8 +29,6 @@ import qualified Log
 import Util.MonadUtils
 import Util.Actor
 import User.History.Model
-import ScriveByMail.Model
-import qualified ScriveByMail.Action as MailAPI
 import ThirdPartyStats.Core
 import Payments.Model
 import Administration.AddPaymentPlan
@@ -51,14 +48,14 @@ handleAccountSetupFromSign document signatorylink = do
                 muser
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
   case mactivateduser of
-    Just (activateduser, _) -> do
+    Just activateduser -> do
       let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
       _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
 
       return $ Just activateduser
     Nothing -> return Nothing
 
-handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> User -> SignupMethod -> m (Maybe (User, [Document]))
+handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> User -> SignupMethod -> m (Maybe User)
 handleActivate mfstname msndname actvuser signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
   when (isJust $ userhasacceptedtermsofservice actvuser) internalError
@@ -98,14 +95,6 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (Just $ userid actvuser) (getEmail actvuser) s
                 dbUpdate $ SaveDocumentForUser d actvuser s actor
 
-              mdelays <- dbQuery $ GetMailAPIDelaysForEmail (getEmail actvuser) (ctxtime ctx)
-              newdocs <- case mdelays of
-                Nothing -> return []
-                Just (delayid, texts) -> do
-                  results <- forM texts (\t -> MailAPI.doMailAPI t `E.catch` (\(_::KontraError) -> return Nothing))
-                  dbUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
-                  return $ catMaybes results
-
               when (haspassword) $ do
                 mpassword <- getRequiredField asValidPassword "password"
                 _ <- case (mpassword) of
@@ -120,11 +109,11 @@ handleActivate mfstname msndname actvuser signupmethod = do
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
-              when (not stoplogin) $ do 
+              when (not stoplogin) $ do
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
               when (promo) $ addManualPricePlan (userid actvuser) TrialTeamPricePlan ActiveStatus
-              return $ Just (tosuser, newdocs)
+              return $ Just tosuser
             else do
               Log.debug $ "No TOS accepted. We cant activate user."
               addFlashM flashMessageMustAcceptTOS

@@ -73,8 +73,8 @@ logDocEvent name doc user extraProps = do
     numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
     stringProp "Signup Method" (show $ usersignupmethod user)]
 
-postDocumentPreparationChange :: Kontrakcja m => Document -> m ()
-postDocumentPreparationChange doc@Document{documenttitle} = do
+postDocumentPreparationChange :: Kontrakcja m => Document -> Bool -> m ()
+postDocumentPreparationChange doc@Document{documenttitle} skipauthorinvitation = do
   let docid = documentid doc
   triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
@@ -100,7 +100,7 @@ postDocumentPreparationChange doc@Document{documenttitle} = do
                                       DocIDProp (documentid doc)]
   logDocEvent "Doc Sent" doc author []
 
-  sendInvitationEmails ctx document'
+  sendInvitationEmails ctx document' skipauthorinvitation
   sendInvitationEmailsToViewers ctx document'
 
   return ()
@@ -136,7 +136,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
     _ -> when (documentcurrentsignorder doc /= documentcurrentsignorder olddoc) $ do
       ctx <- getContext
       Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-      sendInvitationEmails ctx doc
+      sendInvitationEmails ctx doc False
       return ()
   where
     allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
@@ -320,14 +320,14 @@ sendDocumentErrorEmail document author = do
    Send emails to all of the invited parties.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendInvitationEmails :: Kontrakcja m => Context -> Document -> m ()
-sendInvitationEmails ctx document = do
+sendInvitationEmails :: Kontrakcja m => Context -> Document -> Bool -> m ()
+sendInvitationEmails ctx document skipauthorinvitation = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isSignatory sl
                       , isCurrentSignatory (documentcurrentsignorder document) sl
                       , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
                       , not $ hasSigned sl
-                      , (not $ isAuthor sl && documentcurrentsignorder document == SignOrder 1) -- Skip author at begining of signing
+                      , ((not $ isAuthor sl) || (isAuthor sl && not skipauthorinvitation))
                       ]
   forM_ signlinks (sendInvitationEmail1 ctx document)
 

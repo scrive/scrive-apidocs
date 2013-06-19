@@ -15,7 +15,6 @@ import ActionQueue.UserAccountRequest
 import AppView
 import Crypto.RNG
 import DB hiding (update, query)
-import Doc.Action
 import Company.Model
 import InputValidation
 import Kontra
@@ -333,9 +332,8 @@ handleAccountSetupPostWithMethod uid token sm = do
         Nothing -> runJSONGenT $ do
                     value "ok" False
                     value "error" ("reload" :: String)
-        Just (_, docs) -> do
+        Just _ -> do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
-          forM_ docs (\d -> postDocumentPreparationChange d)
           ctx <- getContext
           _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
           addFlashM flashMessageUserActivated

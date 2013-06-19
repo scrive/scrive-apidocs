@@ -42,7 +42,7 @@ handleMailAPI = do
   mresult <- doMailAPI content
   case mresult of
     Just doc -> do
-        _ <- postDocumentPreparationChange doc
+        _ <- postDocumentPreparationChange doc False
         return $ show $ documentid doc
     Nothing -> return ""
 

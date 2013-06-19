@@ -264,7 +264,8 @@ apiCallReady did =  api $ do
               dbQuery $ GetDocumentByDocumentID did
     case mndoc of
             Just newdocument -> do
-                lift $ postDocumentPreparationChange newdocument
+                skipauthorinvitation <- lift $ isFieldSet "skipauthorinvitation"
+                lift $ postDocumentPreparationChange newdocument skipauthorinvitation
                 newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
                 Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
             Nothing -> throwIO . SomeKontraException $ serverError $ "Making document ready failed"

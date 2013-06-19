@@ -386,7 +386,7 @@
             LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
-              doc.makeReadyForSigning().sendAjax(function(resp) {
+              doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
                   var docdata = JSON.parse(resp)
                   var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(
                     function() {
@@ -406,7 +406,7 @@
             LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
-            doc.makeReadyForSigning().sendAjax(function(resp) {
+            doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
                var docdata = JSON.parse(resp)
                var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(function() {
                   window.location = "/d" + (singleDocument ? "/" + doc.documentid() : "");
