@@ -1,5 +1,5 @@
 #####
-contractsealingtexts= 
+contractsealingtexts=
 SealingTexts
     {   verificationTitle="$_contractsealingtexts()$"
       , docPrefix="$_sealingtextsdocPrefix()$"
@@ -31,7 +31,7 @@ SealingTexts
       , verificationFooter="$_verificationFooter()$"
     }
 #####
-ordersealingtexts= 
+ordersealingtexts=
 SealingTexts
     {   verificationTitle="$_ordersealingtextsverificationTitle()$"
       , docPrefix="$_sealingtextsdocPrefix()$"
@@ -47,39 +47,6 @@ SealingTexts
       , verificationFooter="$_verificationFooter()$"
     }
 #####
-contractLastHistEntry=
-$_contractLastHistEntry()$
-#####
-offerLastHistEntry=
-$_offerLastHistEntry()$
-####
-orderLastHistEntry=
-$_orderLastHistEntry()$
-####
-contractInvitationSentEntry=
-    $authorfstname$ $authorsndname$ $_contractInvitationSentEntry()$
-    $if(oneSignatory)$
-        $_contractInvitationSentEntryIfoneSignatory()$
-    $else$
-        $_contractInvitationSentEntryIfElse()$
-    $endif$ 
-###
-offerInvitationSentEntry=
-    $authorfstname$ $authorsndname$ $_offerInvitationSentEntry()$
-    $if(oneSignatory)$
-        $_offerInvitationSentEntryIfoneSignatory()$
-    $else$
-        $_offerInvitationSentEntryIfElse()$
-    $endif$ 
-###
-orderInvitationSentEntry=
-    $authorfstname$ $authorsndname$ $_orderInvitationSentEntry()$
-    $if(oneSignatory)$
-        $_orderInvitationSentEntryIfoneSignatory()$
-    $else$
-        $_orderInvitationSentEntryIfElse()$
-    $endif$ 
-###
 signMethod=
         $if(!provider)$
           $if(email)$
