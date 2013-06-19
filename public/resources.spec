@@ -87,6 +87,7 @@ set systemPage
  js   js/utils/language.js
  js   js/utils/time.js
  js   js/utils/cookie.js
+ js   js/dialog.js
  js   js/loading.js
  js   js/promo.js
  js   js/arrows.js

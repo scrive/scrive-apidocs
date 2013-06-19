@@ -27,9 +27,7 @@
  *  queue.finishWith(fin);
  *
  *  This queue guarantees that finishWith function 'fin' will be
- *  called after last added submit is successfully sent.  Submits put
- *  in the queue should not use "ajaxsuccess" or "ajaxerror"
- *  properties as they will be overwritten.
+ *  called after last added submit is successfully sent.
  *
  *  Submit requests have 10 sec timeout set. If they don't succeed
  *  within this time, or if they fail, they will be silently dropped
@@ -38,8 +36,8 @@
 
  *  'fin' will be called when last Submit is sent with success.
  *
- *  REVIEW: Is the next sentence true?  I think not.
- *  If last event in queue will fail, it will be removed.
+ *  If last event in queue will fail, error message will be displayed
+ *  to the user, forcing him to refresh the page.
  *
  *  After calling finishWith nothing can be added to the queue, until
  *  queue is empty and 'fin' starts executing.
@@ -51,7 +49,30 @@ var QueueRequest = Backbone.Model.extend({
       send : false,
       submit : undefined,
       result : undefined,      // True <=> ajaxsuccess , False <=> ajaxerror
+      num_retries : 0,
       errorCode : 0
+  },
+  initialize: function() {
+    var queueRequest = this;
+    var submit = this.get("submit");
+    var successCallback = submit.get("ajaxsuccess");
+    var errorCallback = submit.get("ajaxerror");
+
+    submit.set({ajax: true,
+                ajaxerror: function(res) {
+                  queueRequest.set({result:false, errorCode : res.status});
+                  queueRequest.trigger("error");
+                  if (errorCallback != undefined) errorCallback();
+                },
+                ajaxsuccess: function() {
+                  queueRequest.set({result:true});
+                  queueRequest.trigger("success");
+                  if (successCallback != undefined) successCallback();
+                },
+                ajaxtimeout: 9900});
+  },
+  num_retries: function() {
+    return this.get('num_retries');
   },
   started : function() {
      return this.get("send");
@@ -60,7 +81,8 @@ var QueueRequest = Backbone.Model.extend({
      return this.get("errorCode");
   },
   restart : function() {
-      this.set({"result" : undefined});
+      this.set({"result" : undefined,
+                "num_retries": this.num_retries() + 1});
       this.run();
   },
   execute : function() {
@@ -71,22 +93,6 @@ var QueueRequest = Backbone.Model.extend({
        this.set({"send" : true});
        var queueRequest = this;
        var submit = this.get("submit");
-       var successCallback = submit.get("ajaxsuccess");
-       var errorCallback = submit.get("ajaxerror");
-
-       submit.set({   ajax : true
-                   ,  ajaxerror: function(res) {
-                        queueRequest.set({result:false, errorCode : res.status});
-                        queueRequest.trigger("error");
-                        if (errorCallback != undefined) errorCallback();
-                       }
-                   ,  ajaxsuccess: function() {
-                        queueRequest.set({result:true});
-                        queueRequest.trigger("success");
-                        if (successCallback != undefined) successCallback();
-                       }
-                   , ajaxtimeout : 9900
-                  });
        submit.send();
        setTimeout(function() {if (queueRequest.get("result") == undefined) queueRequest.trigger("error"); }, 10000);
   }
@@ -126,13 +132,26 @@ window.AjaxQueue = Backbone.Model.extend({
        qr.bind("error", function() {
                 if (errorCallback != undefined) errorCallback(qr.errorCode());
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
-                if (requestQueue.length == 1)
-                    // REVIEW: What prevents the client from getting
-                    // stuck in an infinite loop here if there is
-                    // something wrong with e.g. the parameters in the
-                    // last submission?  Consider giving up after a
-                    // while and call a failure function.
-                    setTimeout(function() {requestQueue[0].restart();},5000);
+                if (requestQueue.length == 1) {
+                  if (requestQueue[0].num_retries() < 12) {
+                     setTimeout(function() {requestQueue[0].restart();},5000);
+                  } else {
+                    var button =  Button.init({color: 'blue',
+                                               size: 'small',
+                                               text: 'Reload page',
+                                               onClick: function() {
+                                                 document.location.reload(true);
+                                               }
+                                              });
+                    var content = $('<div/>');
+                    content.append($(localization.problemContactingServer));
+                    content.append($('<div style="margin-top: 40px;" />'));
+                    content.append(button.input());
+
+                    ScreenBlockingDialog.open({message: ''});
+                    ScreenBlockingDialog.changeMessage(content);
+                  }
+                }
                 else {
                     requestQueue.shift();
                     ajaxQueue.run();
