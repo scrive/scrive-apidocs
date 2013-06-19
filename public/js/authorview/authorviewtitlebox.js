@@ -121,8 +121,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
                                       function(signatory) {
                                         return signatory.hasSigned();
                                       });
-          var modalcontent = somebodysigned ? "SOMEONE HAS SIGNED" : "NOBODY HAS SIGNED";
-          // document.process().processLocalization().cancelmodaltext
+          var modalcontent = somebodysigned ? document.process().processLocalization().cancelmodaltextwithsignatures : document.process().processLocalization().cancelmodaltext;
         Confirmation.popup({
           title: document.process().processLocalization().cancelmodaltitle,
           content: modalcontent,
