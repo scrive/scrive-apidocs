@@ -3,7 +3,6 @@
 module Doc.Model
   ( isTemplate -- fromUtils
   , anyInvitationUndelivered
-  , undeliveredSignatoryLinks
   , insertDocumentAsIs
   , toDocumentProcess
 

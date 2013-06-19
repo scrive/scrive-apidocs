@@ -9,7 +9,36 @@
 -- datatypes in Doc.DocStateData
 -----------------------------------------------------------------------------
 
-module Doc.DocUtils where
+module Doc.DocUtils(
+    partyList
+  , partyListButAuthor
+  , partySignedList
+  , renderListTemplateNormal
+  , renderListTemplate
+  , renderLocalListTemplate
+  , replaceFieldValue
+  , anyInvitationUndelivered
+  , documentcurrentsignorder
+  , signatoryDetailsFromUser
+  , isEligibleForReminder
+  , canAuthorSignNow
+  , canSignatorySignNow
+  , isActivatedSignatory
+  , isCurrentSignatory
+  , isFieldCustom
+  , isAuthorAdmin
+  , findCustomField
+  , getSignatoryAttachment
+  , documentfileM
+  , documentsealedfileM
+  , fileInDocument
+  , documentDeletedForUser
+  , documentReallyDeletedForUser
+  , userCanPerformSigningAction
+  , MaybeTemplate(..)
+  , HasFields(..)
+  , MaybeUser(..)
+) where
 
 import Control.Logic
 import Util.HasSomeCompanyInfo
@@ -106,10 +135,6 @@ instance MaybeUser UserID where
 instance (MaybeUser u) => MaybeUser (Maybe u) where
   getUserID  = join . fmap getUserID
 
-{- |  And this is a function for comparison -}
-sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool
-sameUser u1 u2 = getUserID u1 == getUserID u2
-
 class MaybeTemplate a where
    isTemplate :: a -> Bool
    isSignable :: a -> Bool
@@ -160,19 +185,6 @@ replaceFieldValue :: HasFields a =>  FieldType -> String -> a -> a
 replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
                             Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
                             Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[], sfObligatory = True, sfShouldBeFilledBySender = False}) a
-
--- does this need to change now? -EN
-checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
-checkCSVSigIndex sls n
-  | n < 0 || n >= length sls = Left $ "checkCSVSigIndex: signatory with index " ++ show n ++ " doesn't exist."
-  | isAuthor (sls !! n) = Left $ "checkCSVSigIndex: signatory at index " ++ show n ++ " is an author and can't be set from csv"
-  | otherwise = Right n
-
-{- |
-   Given a Document, return all of the undelivered signatorylinks.
- -}
-undeliveredSignatoryLinks :: Document -> [SignatoryLink]
-undeliveredSignatoryLinks doc = filter isUndelivered $ documentsignatorylinks doc
 
 {- |
    Are there any undelivered signatory links?
@@ -266,12 +278,6 @@ canSignatorySignNow doc sl =
   && isSignatory sl
 
 
--- Please define this better. Maybe in the positive?
-{- |
-   Is this document eligible for a reminder (depends on documentstatus)?
- -}
-isDocumentEligibleForReminder :: Document -> Bool
-isDocumentEligibleForReminder doc = not $ documentstatus doc `elem` [Timedout, Canceled, Rejected]
 
 {- |
    Has the signatory's sign order come up?
@@ -316,20 +322,6 @@ fileInDocument doc fid =
                  ++ maybeToList (documentsealedfile doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
                  ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-
-filterPlacementsByID :: [(String, String, FieldPlacement)]
-                        -> String
-                        -> String
-                        -> [FieldPlacement]
-filterPlacementsByID placements sigid fieldid =
-    [x | (s, f, x) <- placements, s == sigid, f == fieldid]
-
-filterFieldDefsByID :: [(String, SignatoryField)]
-                    -> String
-                    -> [SignatoryField]
-filterFieldDefsByID fielddefs sigid =
-    [x | (s, x) <- fielddefs, s == sigid]
-
 
 
 documentDeletedForUser :: Document -> UserID -> Bool
