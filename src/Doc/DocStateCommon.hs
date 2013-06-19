@@ -1,14 +1,9 @@
 module Doc.DocStateCommon where
 
-import Control.Monad.Base (MonadBase)
-import Control.Monad.Trans (MonadIO)
 import Data.Maybe
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.SignatoryLinkID
-import File.FileID (FileID)
-import qualified Log
-import KontraError (internalError)
 import MagicHash (MagicHash)
 import User.Model
 import Util.HasSomeCompanyInfo
@@ -129,21 +124,3 @@ replaceSignatoryUser siglink user mcompany=
                        (getCompanyNumber  (user,mcompany))
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user }
-
--- | Extract main file ID from document, assuming it has been set
-documentFileID :: (MonadIO m, MonadBase IO m, Log.MonadLog m) => Document -> m FileID
-documentFileID doc =
-    case documentfile doc of
-      Nothing -> do
-        Log.error $ "Missing document file in " ++ show (documentid doc)
-        internalError
-      Just di -> return di
-
--- | Extract main sealed file ID from document, assuming it has been set
-documentSealedFileID :: (MonadIO m, MonadBase IO m, Log.MonadLog m) => Document -> m FileID
-documentSealedFileID doc =
-    case documentsealedfile doc of
-      Nothing -> do
-        Log.error $ "Missing document file in " ++ show (documentid doc)
-        internalError
-      Just di -> return di

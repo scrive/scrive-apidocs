@@ -74,7 +74,6 @@ import Data.Map as Map
 
 import Doc.DocSeal as DocSeal
 import qualified Data.ByteString.UTF8 as BS hiding (length)
-import Doc.DocStateCommon
 import File.Model
 import File.Storage
 import qualified PadQueue.API as PadQueue
@@ -535,11 +534,11 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
                     else apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID did
 
   content <- case documentstatus doc of
-                Closed -> case (documentsealedfile doc) of
-                            Just fileid -> getFileIDContents fileid
-                            Nothing ->  throwIO . SomeKontraException $ noAvailableYet "Not ready, please try later"
+                Closed -> do
+                  file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ documentsealedfileM doc
+                  getFileIDContents $ fileid file
                 _ -> do
-                  sourceFile <- (lift $ documentFileID doc) >>= apiGuardJustM  (serverError "No file") . dbQuery . GetFileByFileID
+                  sourceFile <- apiGuardJustM  (serverError "No file") $ documentfileM doc
                   apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile
   respondWithPDF content
     where
