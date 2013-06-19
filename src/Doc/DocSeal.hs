@@ -98,13 +98,14 @@ personFields _doc (person, signinfo,_seeninfo, _ , mprovider, delivery, _initial
    F.value "signip" $  formatIP (signipnumber signinfo)
    F.value "seenip" $  formatIP (signipnumber signinfo)
    F.value "provider" $ isJust mprovider
-   F.value "bankid" $ mprovider == Just BankIDProvider
-   F.value "nordea" $ mprovider == Just NordeaProvider
-   F.value "telia"  $ mprovider == Just TeliaProvider
-   F.value "email"  $ delivery == EmailDelivery
-   F.value "pad"    $ delivery == PadDelivery
-   F.value "api"    $ delivery == APIDelivery
-   F.value "mobile" $ delivery == MobileDelivery
+   F.value "bankid"       $ mprovider == Just BankIDProvider
+   F.value "nordea"       $ mprovider == Just NordeaProvider
+   F.value "telia"        $ mprovider == Just TeliaProvider
+   F.value "email"        $ delivery == EmailDelivery
+   F.value "pad"          $ delivery == PadDelivery
+   F.value "api"          $ delivery == APIDelivery
+   F.value "mobile"       $ delivery == MobileDelivery
+   F.value "email_mobile" $ delivery == EmailAndMobileDelivery
 
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString)
                           -> SignatoryLink

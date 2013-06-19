@@ -90,6 +90,8 @@ signMethod=
             $_signMethodAPI()$
           $elseif(mobile)$
             $_signMethodMobile()$
+          $elseif(email_mobile)$
+            $_signMethodEmailAndMobile()$
           $endif$
         $elseif(bankid)$
             $_signMethodElegBankID()$

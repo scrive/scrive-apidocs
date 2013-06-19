@@ -466,6 +466,7 @@
 "_signMethodPad","personligt möte","in person meeting"
 "_signMethodAPI","API","API"
 "_signMethodMobile","SMS","SMS"
+"_signMethodEmailAndMobile","e-post/SMS","email/SMS"
 "_onlyPDF","OBS! Endast PDF","PDF only!"
 "_signStepsBodyUploadBoxStepButtonChooseFile","Välj fil (Endast PDF)","Select file (PDF only)"
 "_signStepsMenuEmptyStepSaveAsTemplate","Spara som mall","Save as template"
