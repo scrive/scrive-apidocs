@@ -7,12 +7,20 @@
 --
 -- Utility functions for accessing the innards of Documents.
 -----------------------------------------------------------------------------
-module Doc.DocInfo where
+module Doc.DocInfo(
+    isPending
+  , isPreparation
+  , isClosed
+  , isCanceled
+  , isTimedout
+  , isRejected
+  , isDocumentError
+  , isDocumentShared
+  , getLastSignedTime
+) where
 
 import Doc.DocStateData
 import MinutesTime
-import Data.Maybe
-import Util.SignatoryLinkUtils
 
 -- Predicates on documentstatus
 
@@ -66,28 +74,12 @@ isDocumentError doc = case documentstatus doc of
 isDocumentShared :: Document -> Bool
 isDocumentShared doc = Shared == documentsharing doc
 
-
-{- |
-   How many signatures does this document have?
--}
-countSignatures :: Document -> Int
-countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks
-
-countSignatories :: Document -> Int
-countSignatories = length . filter isSignatory . documentsignatorylinks
-
 {- |
   Get the time of the last signature as Int. Returns MinutesTime 0 when there are no signatures.
 -}
 getLastSignedTime :: Document -> MinutesTime
 getLastSignedTime doc =
   maximum $ fromSeconds 0 : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
-     
-{- |
-  Get the Time the document was sent as Int.
- -}
-getInviteTime :: Document -> Maybe MinutesTime
-getInviteTime doc = case documentinvitetime doc of
-  Nothing -> Nothing
-  Just i -> Just $ signtime i
+
+
 
