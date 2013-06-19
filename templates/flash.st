@@ -1,17 +1,3 @@
-###
-flashDocumentSend=
-    $_flashDocumentSend()$
-###
-flashDocumentSignedAndSend=
-    $_flashDocumentSignedAndSend()$
-###
-flashDocumentDraftSaved=
-	$_flashDocumentDraftSaved()$
-
-######
-flashDocumentTemplateSaved=
-	$_flashDocumentTemplateSaved()$
-
 ######
 flashRemindMailSentNotSigned=
 	$_flashRemindMailSentNotSigned()$ $personname$

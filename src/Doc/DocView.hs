@@ -1,15 +1,10 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module Doc.DocView (
     pageCreateFromTemplate
-  , documentAuthorInfo
   , documentInfoFields
-  , flashDocumentSend
-  , flashDocumentSignedAndSend
   , flashAuthorSigned
-  , flashDocumentDraftSaved
   , flashDocumentRestarted
   , flashDocumentProlonged
-  , flashDocumentTemplateSaved
   , flashMessageCSVSent
   , flashMessageInvalidCSV
   , flashRemindMailSent
@@ -18,7 +13,6 @@ module Doc.DocView (
   , mailDocumentRejected
   , mailDocumentRemind
   , mailInvitation
-  , modalRejectedView
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
@@ -38,7 +32,6 @@ import Kontra
 import KontraLink
 import MinutesTime
 import Utils.Prelude
-import Utils.Monoid
 import Text.StringTemplates.Templates
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -65,34 +58,6 @@ import qualified Amazon as AWS
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
-
-
-modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
-modalRejectedView document = do
-  let activatedSignatories = [sl | sl <- documentsignatorylinks document
-                                 , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
-  partylist <- renderListTemplate . map getSmartName $ partyList (document { documentsignatorylinks = activatedSignatories })
-  toModal <$> (renderTemplate "modalRejectedView" $ do
-    F.value "partyList" partylist
-    F.value "documenttitle" $ documenttitle document)
-
-
-flashDocumentSend :: TemplatesMonad m => m FlashMessage
-flashDocumentSend =
-  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentSend"
-
-flashDocumentSignedAndSend :: TemplatesMonad m => m FlashMessage
-flashDocumentSignedAndSend =
-  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentSignedAndSend"
-
-flashDocumentDraftSaved :: TemplatesMonad m => m FlashMessage
-flashDocumentDraftSaved =
-  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentDraftSaved"
-
-
-flashDocumentTemplateSaved :: TemplatesMonad m => m FlashMessage
-flashDocumentTemplateSaved =
-  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentTemplateSaved"
 
 flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentRestarted document = do
@@ -379,18 +344,6 @@ documentInfoFields  document  = do
   F.value "template" $  isTemplate document
   F.value "hasanyattachments" $ not (null $ (documentauthorattachments document)) || not (null (concatMap signatoryattachments $ documentsignatorylinks document))
   documentStatusFields document
-
-documentAuthorInfo :: Monad m => Document -> Fields m ()
-documentAuthorInfo document =
-  case getAuthorSigLink document of
-    Nothing -> return ()
-    Just siglink -> do
-      F.value "authorfstname"       $ nothingIfEmpty $ getFirstName      siglink
-      F.value "authorsndname"       $ nothingIfEmpty $ getLastName       siglink
-      F.value "authorcompany"       $ nothingIfEmpty $ getCompanyName    siglink
-      F.value "authoremail"         $ nothingIfEmpty $ getEmail          siglink
-      F.value "authorpersonnumber"  $ nothingIfEmpty $ getPersonalNumber siglink
-      F.value "authorcompanynumber" $ nothingIfEmpty $ getCompanyNumber  siglink
 
 -- | Fields indication what is a document status
 documentStatusFields :: Monad m => Document -> Fields m ()

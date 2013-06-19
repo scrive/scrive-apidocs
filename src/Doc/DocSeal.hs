@@ -430,15 +430,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                           return Nothing
                         _ -> do
                           tmpl <- renderLocalTemplate document "_invitationSentEntry" $ do
-                            partylist <- lift $ renderListTemplateNormal . map getSmartName $ peopleWithEmailDelivery
-                            F.value "partyList" partylist
-                            documentInfoFields document
-                            documentAuthorInfo document
-                            case peopleWithEmailDelivery of
-                              [person] -> do
-                                F.value "oneSignatory" True
-                                F.value "personname" $ getFullName person
-                              _ -> return ()
+                            F.valueM "partyList" $ renderListTemplateNormal $ map getSmartName $ peopleWithEmailDelivery
                           return (Just tmpl)
 
                     -- times is offset by one in position wrt

@@ -1,13 +1,3 @@
-#####
-modalRejectedView=
-<script>
-  jQuery(document).ready(function() {
-    var content = jQuery('<p/>').append('$_modalRejectedViewBody()$');
-    Confirmation.popup({title: '$_modalRejectedViewHeader()$',
-                        acceptButtonText: '$_close()$',
-                        content: content});
-  });
-</script>
 ####
 modalDoYouWantToBeCompanyAccount=
 <script>
