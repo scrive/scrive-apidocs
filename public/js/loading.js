@@ -1,6 +1,6 @@
 /* Loading dialog
  *
- * Open with LoadingDialog.open(some html, some html);
+ * Open with LoadingDialog.open(string with html/jquery object, string with html/jquery object);
  * Close with LoadingDialog.close();
 */
 

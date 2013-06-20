@@ -9,10 +9,12 @@
 (function(){
 
 var fillWith = function(e, s) {
+  e.children().detach();
+  e.empty();
   if (typeof s == 'string') {
     e.text(s);
   } else {
-    e.empty().append(s);
+    e.append(s);
   }
 };
 

@@ -96,11 +96,14 @@ var QueueRequest = Backbone.Model.extend({
 window.AjaxQueue = Backbone.Model.extend({
   defaults : {
       queue : [] ,
-      num_retries : 0,
+      numRetries : 0,
       finishWithFunction : undefined
   },
-  num_retries: function() {
-    return this.get('num_retries');
+  numRetries: function() {
+    return this.get('numRetries');
+  },
+  incNumRetries: function() {
+    this.set('numRetries', this.numRetries() + 1);
   },
   run : function() {
      var requestQueue = this.get("queue");
@@ -131,33 +134,31 @@ window.AjaxQueue = Backbone.Model.extend({
        qr.bind("error", function() {
                 if (errorCallback != undefined) errorCallback(qr.errorCode());
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
-                if (requestQueue.length == 1) {
-                  if (ajaxQueue.num_retries() < 12) {
-                     setTimeout(function() {
-                       ajaxQueue.set('num_retries', ajaxQueue.num_retries() + 1);
-                       requestQueue[0].restart();
-                     }, 5000);
+                if (ajaxQueue.numRetries() < 12) {
+                  ajaxQueue.incNumRetries();
+                  if (requestQueue.length == 1) {
+                    setTimeout(function() {
+                      requestQueue[0].restart();
+                    }, 5000);
                   } else {
-                    var button =  Button.init({color: 'blue',
-                                               size: 'small',
-                                               text: 'Reload page',
-                                               onClick: function() {
-                                                 document.location.reload(true);
-                                               }
-                                              });
-                    var content = $('<div/>');
-                    content.append($(localization.problemContactingServer));
-                    content.append($('<div style="margin-top: 40px;" />'));
-                    content.append(button.input());
-
-                    ScreenBlockingDialog.open({header: content});
-                  }
-                }
-                else {
                     requestQueue.shift();
                     ajaxQueue.run();
+                  }
+                } else {
+                  var button =  Button.init({color: 'blue',
+                                             size: 'small',
+                                             text: 'Reload page',
+                                             onClick: function() {
+                                               document.location.reload(true);
+                                             }
+                                            });
+                  var content = $('<div/>');
+                  content.append($(localization.problemContactingServer));
+                  content.append($('<div style="margin-top: 40px;" />'));
+                  content.append(button.input());
+                  ScreenBlockingDialog.open({header: content});
                 }
-            });
+       });
        requestQueue.push(qr);
        ajaxQueue.run();
   },
