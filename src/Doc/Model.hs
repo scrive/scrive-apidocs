@@ -10,12 +10,9 @@ module Doc.Model
   , DocumentDomain(..)
   , DocumentOrderBy(..)
 
-  , CheckIfDocumentExists(..)
-
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
   , ArchiveDocument(..)
-  , AttachCSVUpload(..)
   , AttachFile(..)
   , DetachFile(..)
   , AttachSealedFile(..)
@@ -1069,11 +1066,6 @@ newFromDocument :: (MonadDB m, MonadIO m) => (Document -> Document) -> Document 
 newFromDocument f doc = do
   Just `liftM` insertNewDocument (f doc)
 
-data CheckIfDocumentExists = CheckIfDocumentExists DocumentID
-instance MonadDB m => DBQuery m CheckIfDocumentExists Bool where
-  query (CheckIfDocumentExists did) =
-    checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ?" [toSql did]
-
 data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
   update (ArchiveDocument uid did _actor) = do
@@ -1095,21 +1087,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
 
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
 
-
-data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload () where
-  update (AttachCSVUpload did slid csvupload _actor) = do
-    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-      sqlFrom "documents"
-      sqlWhere "documents.id = signatory_links.document_id"
-
-      sqlSet "csv_title" (csvtitle csvupload)
-      sqlSet "csv_contents" (csvcontents csvupload)
-      sqlWhereDocumentIDIs did
-      sqlWhereSignatoryLinkIDIs slid
-      sqlWhereDocumentStatusIs Preparation
-
-      sqlWhereSignatoryIsNotAuthor
 
 data AttachFile = AttachFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where

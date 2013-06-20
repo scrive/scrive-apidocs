@@ -28,7 +28,6 @@ import Utils.Default
 import TestingUtil
 import TestKontra
 import DB.SQL2
-import Doc.SignatoryLinkID
 import Company.Model
 import Doc.TestInvariants
 import MinutesTime
@@ -178,10 +177,6 @@ docStateTests env = testGroup "DocState" [
   testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" env testNotPreparationResetSignatoryDetailsAlwaysLeft,
   testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" env testPreparationResetSignatoryDetailsAlwaysRight,
   testThat "ResetSignatoryDetails2 works as expected" env testPreparationResetSignatoryDetails2Works,
-  testThat "when I call attachcsvupload with a doc that does not exist, always returns left" env testNoDocumentAttachCSVUploadAlwaysLeft,
-  testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" env testNotPreparationAttachCSVUploadAlwaysLeft,
-  testThat "when I call attachcsvupload and the csvindex is the author, return left" env testPreparationAttachCSVUploadAuthorIndexLeft,
-  testThat "when I call attachcsvupload and not existing signatory link, return left" env testPreparationAttachCSVUploadNonExistingSignatoryLink,
 
   testThat "addDocumentAttachment fails if not in preparation" env testAddDocumentAttachmentFailsIfNotPreparation,
   testThat "addDocumentAttachment doesn't fail if there's no attachments" env testAddDocumentAttachmentOk,
@@ -982,49 +977,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   --assert
   assert $ not success
 
-testNoDocumentAttachCSVUploadAlwaysLeft :: TestEnv ()
-testNoDocumentAttachCSVUploadAlwaysLeft = doTimes 10 $ do
-  -- setup
-  --execute
-  --assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-  assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
-    randomUpdate $ \did slid csv t->AttachCSVUpload did slid csv (systemActor t)
 
-testNotPreparationAttachCSVUploadAlwaysLeft :: TestEnv ()
-testNotPreparationAttachCSVUploadAlwaysLeft = doTimes 10 $ do
-  -- setup
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author ((not . isPreparation) &&^ (any isSignatory . documentsignatorylinks))
-  slid <- rand 10 $ elements [signatorylinkid sl | sl <- documentsignatorylinks doc, isSignatory sl]
-  --execute
-  assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
-    randomUpdate $ \csv t -> AttachCSVUpload (documentid doc) slid csv (systemActor t)
-
-testPreparationAttachCSVUploadAuthorIndexLeft :: TestEnv ()
-testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
-  -- setup
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  (csvupload, t) <- rand 10 arbitrary
-  let Just sl = getAuthorSigLink doc
-  --execute
-  assertRaisesKontra (\SignatoryIsAuthor {} -> True) $ do
-    dbUpdate $ AttachCSVUpload (documentid doc)
-          (signatorylinkid sl)
-          (csvupload)
-          (systemActor t)
-
-testPreparationAttachCSVUploadNonExistingSignatoryLink :: TestEnv ()
-testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
-  -- setup
-  (csvupload, time) <- rand 10 arbitrary
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  slid <- unsafeSignatoryLinkID <$> rand 10 arbitrary
-  --execute
-  assertRaisesKontra (\SignatoryLinkDoesNotExist {} -> True) $ do
-    dbUpdate $ AttachCSVUpload (documentid doc)
-          slid csvupload (systemActor time)
 
 testGetDocumentsSharedInCompany :: TestEnv ()
 testGetDocumentsSharedInCompany = doTimes 10 $ do
