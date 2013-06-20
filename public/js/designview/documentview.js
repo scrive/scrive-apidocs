@@ -20,7 +20,6 @@
             view.render();
             view.model.bind('change:ready', view.render);
             view.model.bind('change:file', view.render);
-            view.model.bind('change:flux', view.render);
             $(window).resize(function() {
                 var myTop = view.$el.offset().top;
                 var winHeight = $(window).height();
@@ -33,9 +32,6 @@
             $(window).resize();
         },
         render: function() {
-            if( !this.model.ready() )
-                return this;
-
             var view = this;
             if(view.file) {
                 view.file.destroy();
@@ -44,7 +40,7 @@
             var model = view.viewmodel;
             var document = view.model;
             view.$el.children().detach();
-            if(document.flux()) {
+            if(!document.ready()) {
                 view.$el.html(view.loading());
             } else if(document.mainfile()) {
                 view.$el.html(view.renderDocument());
@@ -139,13 +135,13 @@
                             console.log(d);
                             if(a === 'parsererror') { // file too large
                                 new FlashMessage({content: localization.fileTooLarge, color: "red"});
-                                document.unsetFlux();
+                                document.markAsNotReady();
                                 mixpanel.track('Error',
                                                {Message: 'main file too large'});
 
                             } else {
                                 new FlashMessage({content: localization.couldNotUpload, color: "red"});
-                                document.unsetFlux();
+                                document.markAsNotReady();
                                 mixpanel.track('Error',
                                                {Message: 'could not upload main file'});
                             }
@@ -159,7 +155,7 @@
                                      name: 'file',
                                      maxlength: 2,
                                      onAppend: function(input, title, multifile) {
-                                       document.setFlux();
+                                       document.markAsNotReady();
                                        submit.addInputs(input);
 
                                        document.save();

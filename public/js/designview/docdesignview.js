@@ -165,7 +165,7 @@
             div.append(view.removeDocumentButtonLabel());
             div.click(function() {
                 mixpanel.track('Click remove file');
-                doc.setFlux();
+                doc.markAsNotReady();
                 doc.removeTypeSetters();
                 doc.save();
                 doc.afterSave( function() {

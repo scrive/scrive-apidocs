@@ -68,8 +68,7 @@ window.Document = Backbone.Model.extend({
         delivery: "email",
         template: false,
         saveQueue : new AjaxQueue(),
-        screenshots : {},
-        flux: false
+        screenshots : {}
     },
     initialize: function(args) {
         var params = { evidenceAttachments: args.evidenceAttachments };
@@ -632,20 +631,11 @@ window.Document = Backbone.Model.extend({
        signviewbarscolour: args.signviewbarscolour,
        signviewbarstextcolour: args.signviewbarstextcolour,
        signviewbackgroundcolour: args.signviewbackgroundcolour,
-       flux: false,
        ready: true
      };
     },
-    setFlux: function() {
-        this.set({flux:true});
-        return this;
-    },
-    flux: function() {
-        return this.get('flux');
-    },
-    unsetFlux: function() {
-        this.set({flux:false});
-        return this;
+    markAsNotReady: function() {
+        this.set({ready:false});
     },
     // validation
     hasProblems: function(forSigning) {
