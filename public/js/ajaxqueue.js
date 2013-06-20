@@ -49,7 +49,6 @@ var QueueRequest = Backbone.Model.extend({
       send : false,
       submit : undefined,
       result : undefined,      // True <=> ajaxsuccess , False <=> ajaxerror
-      num_retries : 0,
       errorCode : 0
   },
   initialize: function() {
@@ -71,9 +70,6 @@ var QueueRequest = Backbone.Model.extend({
                 },
                 ajaxtimeout: 9900});
   },
-  num_retries: function() {
-    return this.get('num_retries');
-  },
   started : function() {
      return this.get("send");
   },
@@ -81,8 +77,7 @@ var QueueRequest = Backbone.Model.extend({
      return this.get("errorCode");
   },
   restart : function() {
-      this.set({"result" : undefined,
-                "num_retries": this.num_retries() + 1});
+      this.set("result", undefined);
       this.run();
   },
   execute : function() {
@@ -101,7 +96,11 @@ var QueueRequest = Backbone.Model.extend({
 window.AjaxQueue = Backbone.Model.extend({
   defaults : {
       queue : [] ,
+      num_retries : 0,
       finishWithFunction : undefined
+  },
+  num_retries: function() {
+    return this.get('num_retries');
   },
   run : function() {
      var requestQueue = this.get("queue");
@@ -133,8 +132,11 @@ window.AjaxQueue = Backbone.Model.extend({
                 if (errorCallback != undefined) errorCallback(qr.errorCode());
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 if (requestQueue.length == 1) {
-                  if (requestQueue[0].num_retries() < 12) {
-                     setTimeout(function() {requestQueue[0].restart();},5000);
+                  if (ajaxQueue.num_retries() < 12) {
+                     setTimeout(function() {
+                       ajaxQueue.set('num_retries', ajaxQueue.num_retries() + 1);
+                       requestQueue[0].restart();
+                     }, 5000);
                   } else {
                     var button =  Button.init({color: 'blue',
                                                size: 'small',
@@ -148,8 +150,7 @@ window.AjaxQueue = Backbone.Model.extend({
                     content.append($('<div style="margin-top: 40px;" />'));
                     content.append(button.input());
 
-                    ScreenBlockingDialog.open({message: ''});
-                    ScreenBlockingDialog.changeMessage(content);
+                    ScreenBlockingDialog.open({header: content});
                   }
                 }
                 else {
