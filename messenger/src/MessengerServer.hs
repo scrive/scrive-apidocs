@@ -43,7 +43,7 @@ main = Log.withLogger $ do
      msender <- newMVar sender
      withCronJobs
        ([ forkCron_ True "SMS Dispatcher" 5 $ dispatcher rng sender msender dbconf
-        , forkCron_ True "SMS Cleaner" (60*60*24) $ cleaner rng dbconf
+        , forkCron_ True "SMS Cleaner" (60*60) $ cleaner rng dbconf
         ]) $ \_ -> do
             waitForTermination
             Log.messengerServer $ "Termination request received"
