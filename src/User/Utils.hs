@@ -1,16 +1,21 @@
-module User.Utils where
+module User.Utils (
+      getCompanyForUser
+    , withUserPost
+    , withUserGet
+    , checkUserTOSGet
+    , withCompanyAdmin
+    , withCompanyUserOrAdminOnly
+    , withCompanyAdminOrAdminOnly
+)where
 
-import Control.Monad.State
 import Control.Arrow (first)
 import Data.Functor
 
 import DB
-import Doc.DocStateData
 import Company.Model
 import Kontra
 import KontraLink
 import User.Model
-import Util.SignatoryLinkUtils
 import Util.MonadUtils
 
 {- |
@@ -41,18 +46,6 @@ withUserGet action = do
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
     Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
-
-{- |
-     Takes a document and a action
-     Runs an action only if current user (from context) is author of document
-| -}
-withDocumentAuthor :: Kontrakcja m => Document -> m a -> m a
-withDocumentAuthor document action = do
-  ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  sl <- guardJust $ getAuthorSigLink document
-  unless (isSigLinkFor user sl) internalError
-  action
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.

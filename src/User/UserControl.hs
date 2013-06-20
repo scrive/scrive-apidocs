@@ -1,4 +1,30 @@
-module User.UserControl where
+module User.UserControl(
+    handleAccountGet
+  , handleRequestPhoneCall
+  , sendChangeToExistingEmailInternalWarningMail
+  , handleGetChangeEmail
+  , handlePostChangeEmail
+  , getUserInfoUpdate
+  , getCompanyInfoUpdate
+  , handleUsageStatsJSONForUserDays
+  , handleUsageStatsJSONForUserMonths
+  , handlePostUserMailAPI
+  , isUserDeletable
+  , sendNewUserMail
+  , createNewUserByAdmin
+  , handleAcceptTOSGet
+  , handleAcceptTOSPost
+  , handleAccountSetupGet
+  , handleAccountSetupGetWithMethod
+  , handleAccountSetupPostWithMethod
+  , handleAccountSetupPost
+  , handleAccessNewAccountGet
+  , handleAccessNewAccountPost
+  , handlePasswordReminderGet
+  , handlePasswordReminderPost
+  , handleContactUs
+  , getUsersAndStatsInv
+) where
 
 import Control.Monad.State
 import Data.Functor
