@@ -74,7 +74,6 @@ docStateTests env = testGroup "DocState" [
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
   testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
-  testThat "DocumentFromSignatoryData adds to the log" env testDocumentFromSignatoryDataEvidenceLog,
   testThat "SaveSigAttachment adds to the log" env testSaveSigAttachmentEvidenceLog,
   testThat "DeleteSigAttachment will not work after signing" env testDeleteSigAttachmentAlreadySigned,
   testThat "DeleteSigAttachment adds to the log" env testDeleteSigAttachmentEvidenceLog,
@@ -193,8 +192,6 @@ docStateTests env = testGroup "DocState" [
   testThat "UpdateSigAttachments works as advertised" env testUpdateSigAttachmentsAttachmentsOk,
 
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
-  testThat "DocumentFromSignatoryData fails when document doesn't exist" env testDocumentFromSignatoryDataFailsDoesntExist,
-  testThat "DocumentFromSignatoryData succeeds when document exists" env testDocumentFromSignatoryDataSucceedsExists,
   testThat "TimeoutDocument fails when document is not signable" env testTimeoutDocumentNonSignableLeft,
 
   -- archive & doc deletion tests
@@ -409,20 +406,6 @@ testErrorDocumentEvidenceLog  = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == ErrorDocumentEvidence) lg
 
-testDocumentFromSignatoryDataEvidenceLog :: TestEnv ()
-testDocumentFromSignatoryDataEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
-  randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
-                        [SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                             , signatoryattachmentname        = "attachment"
-                                             , signatoryattachmentdescription = "gimme!"
-                                             }] (systemActor t)
-  mdoc <- randomUpdate $ \t a b c d e f h -> DocumentFromSignatoryData (documentid doc) a b c d e f h [] (systemActor t)
-  assertJust mdoc
-  let ndoc = fromJust mdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid ndoc)
-  assertJust $ find (\e -> evType e == AuthorUsesCSVEvidence)    lg
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
 testSaveSigAttachmentEvidenceLog = do
@@ -1298,21 +1281,6 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
                  (Just (fileid file2) `elem` map signatoryattachmentfile (signatoryattachments $ (documentsignatorylinks ndoc2) !! 0))
 
 ------------------------------------------------
-
-testDocumentFromSignatoryDataFailsDoesntExist :: TestEnv ()
-testDocumentFromSignatoryDataFailsDoesntExist = doTimes 10 $ do
-  (did, a, b, c, d, e, f, g, h, aa :: AuthorActor) <- rand 10 arbitrary
-  mdoc <- randomUpdate $ DocumentFromSignatoryData did a b c d e f g h (unAuthorActor aa)
-  assertNothing mdoc
-
-testDocumentFromSignatoryDataSucceedsExists :: TestEnv ()
-testDocumentFromSignatoryDataSucceedsExists = doTimes 10 $ do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthor' author
-  (time, a, b, c, d, e, f, g, h) <- rand 10 arbitrary
-  mdoc <- randomUpdate $ DocumentFromSignatoryData (documentid doc) a b c d e f g h
-          (authorActor time noIP (userid author) (getEmail author))
-  assertJust mdoc
 
 testTimeoutDocumentNonSignableLeft :: TestEnv ()
 testTimeoutDocumentNonSignableLeft = doTimes 10 $ do

@@ -26,8 +26,6 @@ module Doc.Model
   , CloseDocument(..)
   , DeleteSigAttachment(..)
   , RemoveOldDrafts(..)
-  , DocumentFromSignatoryData(..)
-  , DocumentFromSignatoryDataV(..)
   , ErrorDocument(..)
   , GetDocuments(..)
   , GetDocuments2(..)
@@ -1349,49 +1347,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () wher
                     actor
     return ()
 
-
-data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String String [String] Actor
-instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
-  update (DocumentFromSignatoryData docid fstname sndname email mobile company personalnumber companynumber fieldvalues actor) =
-    listToMaybe <$> update (DocumentFromSignatoryDataV docid [(fstname,sndname,email, mobile, company,personalnumber,companynumber,fieldvalues)] actor)
-
-data DocumentFromSignatoryDataV = DocumentFromSignatoryDataV DocumentID
-                                  [(String,String,String,String,String,String,String,[String])] Actor
-instance (CryptoRNG m, MonadDB m,TemplatesMonad m, MonadIO m) => DBUpdate m DocumentFromSignatoryDataV [Document] where
-  update (DocumentFromSignatoryDataV docid csvdata actor) = do
-    mdocument <- query $ GetDocumentByDocumentID docid
-    case mdocument of
-      Nothing -> do
-        Log.error $ "In DocumentFromSignatoryData: document $" ++ show docid ++ " does not exist"
-        return []
-      Just document -> do
-        let sigs = length (documentsignatorylinks document)
-        mds <- forM csvdata $ \csvdata1 -> do
-          mhs <- replicateM sigs random
-          md <- newFromDocument (toNewDoc csvdata1 mhs) document
-          return $ $fromJust md
-        copyEvidenceLogToNewDocuments docid (map documentid mds)
-        update $ InsertEvidenceEventForManyDocuments
-              AuthorUsesCSVEvidence
-              (value "actor" (actorWho actor))
-              (map documentid mds)
-              actor
-        return mds
-   where
-     now = actorTime actor
-     toNewDoc csvdata1 mhs d = d { documentsignatorylinks = zipWith (toNewSigLink csvdata1) mhs (documentsignatorylinks d)
-                                 , documenttype = newDocType $ documenttype d
-                                 , documentctime = now
-                                 , documentmtime = now
-                                 }
-     newDocType :: DocumentType -> DocumentType
-     newDocType (Signable p) = Signable p
-     newDocType (Template p) = Signable p
-     toNewSigLink csvdata1 mh sl
-         | isJust (signatorylinkcsvupload sl) = (pumpData csvdata1 sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
-         | otherwise = sl { signatorymagichash = mh }
-     pumpData (fstname,sndname,email,mobile,company,personalnumber,companynumber,fieldvalues) siglink =
-       replaceSignatoryData siglink fstname sndname email mobile company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where

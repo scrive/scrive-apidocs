@@ -14,4 +14,4 @@ cleaner rng dbconf = withPostgreSQL dbconf . runCryptoRNGT rng $ do
   removedCount <- dbUpdate $ DeleteSMSesOlderThenDays daylimit
   Log.messengerServer $ show removedCount ++ " mails were removed."
   where
-    daylimit = 14
+    daylimit = 3
