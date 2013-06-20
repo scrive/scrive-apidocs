@@ -75,9 +75,8 @@ getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response 
 getStandardLang muser = do
   rq <- askRq
   currentcookielang <- optional $ readCookieValue "lang"
-  let urllang = (listToMaybe $ rqPaths rq) >>= langFromCode
-      browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-      newlang = fromMaybe browserlang $ msum [urllang, (getLang <$> muser), currentcookielang]
+  let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+      newlang = fromMaybe browserlang $ msum [(getLang <$> muser), currentcookielang]
       newlangcookie = mkCookie "lang" (show newlang)
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
