@@ -1,28 +1,21 @@
 /* Loading dialog
  *
- * Open with LoadingDialog.open(some html);
+ * Open with LoadingDialog.open(some html, some html);
  * Close with LoadingDialog.close();
 */
 
 (function(){
 
 window.LoadingDialog = {
-    dialog : function() {
-      return ScreenBlockingDialog({'message': message, withSpinner: true});
-    },
-    changeMessage : function(message) {
-      return ScreenBlockingDialog.changeMessage(message);
-    },
-    changeSubMessage : function(message) {
-      return ScreenBlockingDialog.changeSubMessage(message);
-    },
     open: function (message, submessage) {
       submessage = submessage || '';
-      return ScreenBlockingDialog.open({message: message, submessage: submessage, withSpinner: true});
+      var spinner = $("<img src='/img/wait30trans.gif' style='margin:30px'/>");
+      return ScreenBlockingDialog.open({header: message,
+                                        subheader: submessage,
+                                        content: spinner});
     },
     close : function() {
       return ScreenBlockingDialog.close();
     }
 };
 })();
-

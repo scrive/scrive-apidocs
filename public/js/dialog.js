@@ -1,76 +1,83 @@
 /* Screen blocking dialog
  *
- * Open with ScreenBlockingDialog.open({'message': some html,
- *                                      'submessage': some html,
- *                                      'withSpinner': true/false});
+ * Open with ScreenBlockingDialog.open({'header': some html/jquery object,
+ *                                      'subheader': some html/jquery object,
+ *                                      'content': some html/jquery object});
  * Close with ScreenBlockingDialog.close();
 */
 
 (function(){
 
+var fillWith = function(e, s) {
+  if (typeof s == 'string') {
+    e.text(s);
+  } else {
+    e.empty().append(s);
+  }
+};
+
+var buildDialog = function(cfg) {
+  var dialog = $('<div class="modal screenblockingdialog" />');
+  var modalcontainer = $('<div class="modal-container" />');
+  dialog.append(modalcontainer);
+  var modalbody = $('<div class="modal-body" />');
+  modalcontainer.append(modalbody);
+  var modalcontent = $('<div class="modal-content" />');
+  modalbody.append(modalcontent);
+  var body = $('<div class="body" />');
+  modalcontent.append(body);
+  var center = $('<center />');
+  body.append(center);
+
+  var header = $('<h4 class="screenblockingheader" />');
+  fillWith(header, cfg.header);
+  center.append(header);
+
+  var subheader = $('<h4 class="screenblockingsubheader" />');
+  fillWith(subheader, cfg.subheader);
+  center.append(subheader);
+
+  var content = $('<div class="screenblockingcontent" />');
+  fillWith(content, cfg.content);
+  center.append(content);
+
+  modalcontainer.css('top', $(window).scrollTop());
+  modalcontainer.css('margin-top', ($(window).height()- 200) /2);
+  modalcontainer.css('left', $(window).scrollLeft());
+  modalcontainer.css('margin-left', ($(window).width() - 650) / 2);
+
+  $('body').append(dialog);
+  return dialog;
+};
+
 window.ScreenBlockingDialog = {
     dialog : function(cfg) {
-        ScreenBlockingDialog.close();
-        cfg.defaultSubMessage = cfg.defaultSubMessage || '';
-        var spinner = cfg.withSpinner ? "<img src='/img/wait30trans.gif' style='margin:30px'/>" : "";
-        var dialog = $('.screenblockingdialog') ;
-        var dialog = $("<div class='modal screenblockingdialog'><div class='modal-container'><div class='modal-body'><div class='modal-content'><div class='body'>" +
-                             "<center>" +
-                                "<h4 class='screenblockingmessage'>" + cfg.defaultMessage + "</h4>" +
-                                "<h5 class='screenblockingsubmessage'>" + cfg.defaultSubMessage + "</h6>" +
-                                spinner +
-                             "</center>" +
-                        "</div></div></div></div></div>");
-        $('body').append(dialog);
+      var dialog = $('.modal.screenblockingdialog');
+      if (dialog.size() == 0) {
+        return buildDialog(cfg);
+      } else {
         return dialog;
-    },
-    changeMessage : function(message) {
-      if (typeof message == 'string') {
-        $(".screenblockingmessage").text(message);
-      } else {
-        // message must be jquery object
-        $(".screenblockingmessage").empty().append(message);
       }
-      ScreenBlockingDialog.fixDimensions();
-    },
-    changeSubMessage : function(message) {
-      if (typeof message == 'string') {
-        $(".screenblockingsubmessage").text(message);
-      } else {
-        // message must be jquery object
-        $(".screenblockingsubmessage").empty().append(message);
-      }
-      ScreenBlockingDialog.fixDimensions();
-    },
-    getDialog: function() {
-      return $('.modal.screenblockingdialog');
-    },
-    fixDimensions: function() {
-      var dialog = ScreenBlockingDialog.getDialog();
-
-      $(".modal-container",dialog).css("top",$(window).scrollTop());
-      $(".modal-container",dialog).css("margin-top",($(window).height()- 200) /2);
-      $(".modal-container",dialog).css("left",$(window).scrollLeft());
-      $(".modal-container",dialog).css("margin-left",($(window).width() - 650) / 2);
     },
     open: function (cfg) {
          var dialog = ScreenBlockingDialog.dialog(cfg);
+         var header = $('.screenblockingheader', dialog);
+         fillWith(header, cfg.header);
+         var subheader = $('.screenblockingsubheader', dialog);
+         fillWith(subheader, cfg.subheader);
+         var content = $('.screenblockingcontent', dialog);
+         fillWith(content, cfg.content);
          dialog.css('display','block');
-         $(".screenblockingmessage", dialog).html(cfg.message);
-         $(".screenblockingsubmessage", dialog).html(cfg.submessage);
-         ScreenBlockingDialog.fixDimensions();
          dialog.addClass('active');
          return dialog;
     },
     close : function() {
-       var dialog =  $('.screenblockingdialog');
+       var dialog = $('.screenblockingdialog');
        if (dialog.size() > 0 ) {
          dialog.removeClass("active");
          if (BrowserInfo.isIE9orLower())
            dialog.css('display','none');
-         dialog.remove();
       }
     }
 };
 })();
-
