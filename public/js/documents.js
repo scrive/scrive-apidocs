@@ -51,7 +51,7 @@ window.DocumentAuthor = Backbone.Model.extend({
 });
 
 window.Document = Backbone.Model.extend({
-    defaults: {
+    defaults: function() { return {
         id: 0,
         title: "",
         signatories: [],
@@ -69,7 +69,7 @@ window.Document = Backbone.Model.extend({
         template: false,
         saveQueue : new AjaxQueue(),
         screenshots : {}
-    },
+    }},
     initialize: function(args) {
         var params = { evidenceAttachments: args.evidenceAttachments };
         this.url = "/api/frontend/get/" + args.id + "?" + $.param(params,true);
@@ -296,8 +296,9 @@ window.Document = Backbone.Model.extend({
               ajaxtimeout : 120000,
               ajaxsuccess : function(resp) {
                 var jresp = JSON.parse(resp);
-                var nd = new Document({id : jresp.id});
+                var nd = new Document({id : jresp.id, screenshots : document.get("screenshots") }); // Note that we are not cloning screenshot object, as it may be too big.
                 nd.set(nd.parse(jresp));
+                console.log(nd.get("screenshots"));
                 callback(nd);
               }
           });

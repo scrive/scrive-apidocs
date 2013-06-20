@@ -388,7 +388,9 @@
             doc.afterSave(function() {
               doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
                   var docdata = JSON.parse(resp);
-                  var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(
+                  var newdoc = new Document(new Document({}).parse(docdata));
+                  newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
+                  newdoc.sign().sendAjax(
                     function() {
                       doc2.dropFirstCSVLine();
                       doc2.save();
@@ -408,7 +410,9 @@
             doc.afterSave(function() {
             doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
                var docdata = JSON.parse(resp);
-               var newdoc = new Document(new Document({}).parse(docdata)).sign().sendAjax(function() {
+               var newdoc = new Document(new Document({}).parse(docdata));
+               newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
+               newdoc.sign().sendAjax(function() {
                   window.location = "/d" + (singleDocument ? "/" + doc.documentid() : "");
                 });
               });
