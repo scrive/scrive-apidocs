@@ -37,16 +37,14 @@
         return localization.newPasswordModal.flashMessagePasswordsDontMatch;
       } else if (password === '') {
         return localization.newPasswordModal.flashMessageMissingRequiredField;
-      } else if (password.length < 8) {
-        return localization.newPasswordModal.flashMessagePasswordLessThanMinLength;
+      } else if (password.length < 8 ||
+                 password.replace(/[^a-zA-Z]/g, '').length < 1 ||
+                 password.replace(/[^0-9]/g, '').length < 1) {
+        return localization.newPasswordModal.flashMessagePasswordInvalid;
       } else if (password.length > 250) {
         return localization.newPasswordModal.flashMessagePasswordExceedsMaxLength;
       } else if (password.match(validCharsRegex) === null) {
         return localization.newPasswordModal.flashMessageInvalidCharsInPassword;
-      } else if (password.replace(/[^a-zA-Z]/g, '').length < 1) {
-        return localization.newPasswordModal.flashMessageNeedsLetterAndDigit;
-      } else if (password.replace(/[^0-9]/g, '').length < 1) {
-        return localization.newPasswordModal.flashMessageNeedsLetterAndDigit;
       } else {
         return null;
       }

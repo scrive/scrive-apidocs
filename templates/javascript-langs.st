@@ -152,6 +152,7 @@ javascriptLocalisation =
                    cancelbuttontext: "$_contractcancelbuttontext()$",
                    cancelmodaltitle: "$_contractcancelmodaltitle()$",
                    cancelmodaltext: "$_contractcancelmodaltext()$",
+                   cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                    rejectbuttontext: "$_contractrejectbuttontext()$",
                    signatorysignmodaltitle: "$_contractsignatorysignmodaltitle()$",
                    signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
@@ -178,6 +179,7 @@ javascriptLocalisation =
                    cancelbuttontext: "$_offercancelbuttontext()$",
                    cancelmodaltitle: "$_offercancelmodaltitle()$",
                    cancelmodaltext: "$_offercancelmodaltext()$",
+                   cancelmodaltextwithsignatures: "$_offercancelmodaltextwithsignatures()$",
                    rejectbuttontext: "$_offerrejectbuttontext()$",
                    signatorysignmodaltitle: "$_offersignatorysignmodaltitle()$",
                    signatorysignmodalcontent: "<p>$_offersignatorysignmodalcontent()$ </p>",
@@ -204,6 +206,7 @@ javascriptLocalisation =
                    cancelbuttontext: "$_ordercancelbuttontext()$",
                    cancelmodaltitle: "$_ordercancelmodaltitle()$",
                    cancelmodaltext: "$_ordercancelmodaltext()$",
+                   cancelmodaltextwithsignatures: "$_ordercancelmodaltextwithsignatures()$",
                    rejectbuttontext: "$_orderrejectbuttontext()$",
                    signatorysignmodaltitle: "$_ordersignatorysignmodaltitle()$",
                    signatorysignmodalcontent: "<p>$_ordersignatorysignmodalcontent()$ </p>",
@@ -407,10 +410,9 @@ javascriptLocalisation =
            , modalNewPasswordViewFooterSave: "$_modalNewPasswordViewFooterSave()$"
            , flashMessagePasswordsDontMatch: "$_flashMessagePasswordsDontMatch()$"
            , flashMessageMissingRequiredField: "$_flashMessageMissingRequiredField()$"
-           , flashMessagePasswordLessThanMinLength: "$_flashMessagePasswordLessThanMinLength()$"
            , flashMessagePasswordExceedsMaxLength: "$_flashMessagePasswordExceedsMaxLength()$"
            , flashMessageInvalidCharsInPassword: "$_flashMessageInvalidCharsInPassword()$"
-           , flashMessageNeedsLetterAndDigit: "$_flashMessageNeedsLetterAndDigit()$"
+           , flashMessagePasswordInvalid: "$_flashMessagePasswordInvalid()$"
            , flashMessagePasswordChangeLinkNotValid: '$_flashMessagePasswordChangeLinkNotValid()$'
          }
          , signupModal: {
