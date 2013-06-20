@@ -1,6 +1,5 @@
-module Doc.Invariants (
-    listInvariantProblems
-  , invariantProblems
+module Doc.TestInvariants (
+    invariantProblems
   , documentInvariants
   ) where
 
@@ -19,9 +18,6 @@ import InputValidation
 import Data.List
 import Data.Maybe
 
-listInvariantProblems :: MinutesTime -> [Document] -> [String]
-listInvariantProblems now docs = catMaybes $ map (invariantProblems now) docs
-
 invariantProblems :: MinutesTime -> Document -> Maybe String
 invariantProblems now document =
   case catMaybes $ map (\f -> f now document) documentInvariants of
@@ -33,7 +29,7 @@ invariantProblems now document =
     and Just message to describe a problem.
 
    MinutesTime is the current time, in case an invariant depends on age.
- -} 
+ -}
 documentInvariants :: [MinutesTime -> Document -> Maybe String]
 documentInvariants = [ documentHasOneAuthor
                      , noDeletedSigLinksForSigning
@@ -83,7 +79,7 @@ noDeletedSigLinksForSigning _ document =
 noSigningOrSeeingInPrep :: MinutesTime -> Document -> Maybe String
 noSigningOrSeeingInPrep _ document =
   assertInvariant "document has seen and/or signed siglinks when still in Preparation" $
-    isPreparation document =>> 
+    isPreparation document =>>
     none (hasSigned ||^ hasSeen) (documentsignatorylinks document)
 
 {- |
@@ -93,7 +89,7 @@ noSigningOrSeeingInPrep _ document =
 signatoryLinksHaveDifferentIDs :: MinutesTime -> Document -> Maybe String
 signatoryLinksHaveDifferentIDs _ document =
   let slids = map signatorylinkid (documentsignatorylinks document)
-  in assertInvariant ("some of document signatory links have same id: " ++ 
+  in assertInvariant ("some of document signatory links have same id: " ++
                    show slids) $
           (all ((==1) . length) . group . sort . filter ((/=) (unsafeSignatoryLinkID 0))) slids
 
@@ -110,7 +106,7 @@ connectedSigLinkOnTemplateOrPreparation _ document =
    Author must have a user
  -}
 authorHasUser :: MinutesTime -> Document -> Maybe String
-authorHasUser _ document = 
+authorHasUser _ document =
   assertInvariant "author does not have a user connected." $
     hasUser (getAuthorSigLink document)
 
@@ -118,7 +114,7 @@ authorHasUser _ document =
   Assert an upper bound on number of signatories.
  -}
 signatoryLimit :: MinutesTime -> Document -> Maybe String
-signatoryLimit _ document = 
+signatoryLimit _ document =
   let maxsigs = 150 in
   assertInvariant (show (length (documentsignatorylinks document)) ++ " signatorylinks--max is " ++ show maxsigs) $
     length (documentsignatorylinks document) <= maxsigs
@@ -127,26 +123,26 @@ signatoryLimit _ document =
  -}
 allSignedWhenClosed :: MinutesTime -> Document -> Maybe String
 allSignedWhenClosed _ document =
-  assertInvariant "some signatories are not signed when it is closed" $ 
+  assertInvariant "some signatories are not signed when it is closed" $
   isClosed document =>> all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
-  
+
 {- | All signed implies all closed
  -}
 closedWhenAllSigned :: MinutesTime -> Document -> Maybe String
 closedWhenAllSigned _ document =
   assertInvariant "all signatories signed but doc is not closed" $
-  (any isSignatory (documentsignatorylinks document) && 
-   all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)) =>> 
+  (any isSignatory (documentsignatorylinks document) &&
+   all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)) =>>
   (isClosed document || isPreparation document || isDocumentError document)
 
-  
+
 {- | If a sig has signed, all his attachments are uploaded
  -}
 hasSignedAttachments :: MinutesTime -> Document -> Maybe String
 hasSignedAttachments _ document =
   assertInvariant "a signatory has signed without attaching his requested attachment" $
   all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (signatoryattachments))) (documentsignatorylinks document)
-       
+
 {- |
    Has signed implies has seen.
 
@@ -155,14 +151,14 @@ seenWhenSigned _ document =
   assertInvariant "some signatories have signed but not seen" $
     all (hasSigned =>>^ hasSeen) (documentsignatorylinks document)
 -}
-    
+
 {- |
    max length of fields
  -}
 maxLengthOnFields :: MinutesTime -> Document -> Maybe String
 maxLengthOnFields _ document =
   let maxlength = 512 :: Int
-      lengths :: [Int] 
+      lengths :: [Int]
       -- signature field can be longer than max
       lengths = [length $ sfValue f | s <- documentsignatorylinks document
                                     , f <- signatoryfields $ signatorydetails s
@@ -171,18 +167,18 @@ maxLengthOnFields _ document =
                                         _ -> True ]
       m = maximum (0 : lengths) in
   assertInvariant ("some fields were too long: " ++ show m ++ ". max is " ++ show maxlength) $ m <= maxlength
-    
+
 {- |
    max number of placements per field
  -}
 maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
 maxNumberOfPlacements _ document =
   let maxlength = 25 :: Int
-      lengths :: [Int] 
+      lengths :: [Int]
       lengths = concatMap (map (length . sfPlacements) . signatoryfields . signatorydetails) (documentsignatorylinks document)
       m = maximum (0 : lengths) in
   assertInvariant ("document had too many placements: " ++ show m ++ ". max is " ++ show maxlength ++ " (25 * number of fields)") $ m <= maxlength
-    
+
 {- |
    At least one signatory in Pending AwaitingAuthor or Closed
  -}
@@ -191,7 +187,7 @@ atLeastOneSignatory _ document =
   assertInvariant "there are no signatories, though doc is pending, awaiting author, or closed" $
     (isPending document || isClosed document) =>>
     (any isSignatory (documentsignatorylinks document))
-    
+
 
 {- |
    If you're not a signatory, you shouldn't be signed
@@ -200,7 +196,7 @@ notSignatoryNotSigned :: MinutesTime -> Document -> Maybe String
 notSignatoryNotSigned _ document =
   assertInvariant "there are non-signatories who have signed" $
     (all ((not . isSignatory) =>>^ (not . hasSigned)) (documentsignatorylinks document))
-    
+
 {- |
    Maximum number of custom fields
  -}
@@ -237,18 +233,18 @@ hasValidEmail _ document =
     all (\sl -> (isPending document || isClosed document) =>>
                 (isGood $ asValidEmail $ getEmail sl))
         (documentsignatorylinks document)
-    
+
 -- | Has only one of each type of field
 hasAtMostOneOfEachTypeOfField :: MinutesTime -> Document -> Maybe String
 hasAtMostOneOfEachTypeOfField _ document =
- nothingIfEmpty $ intercalate ";" $ catMaybes $ 
+ nothingIfEmpty $ intercalate ";" $ catMaybes $
    for [FirstNameFT, LastNameFT, CompanyFT, PersonalNumberFT, CompanyNumberFT, EmailFT] $ \t ->
     assertInvariant ("signatory with more than one " ++ show t) $
       all (\sl -> 1 >= length (filter (fieldIsOfType t) (signatoryfields $ signatorydetails sl)))
         (documentsignatorylinks document)
-      
--- some helpers  
-       
+
+-- some helpers
+
 assertInvariant :: String -> Bool -> Maybe String
 assertInvariant _ True = Nothing
 assertInvariant s False  = Just s

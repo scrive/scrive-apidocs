@@ -45,7 +45,7 @@ import Utils.Default
 import IPAddress
 import File.Model
 import Data.Typeable
-import Doc.Invariants
+import Doc.TestInvariants
 import System.Random.CryptoRNG ()
 import Text.JSON
 import TestKontra

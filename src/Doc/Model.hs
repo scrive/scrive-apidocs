@@ -103,7 +103,6 @@ import Doc.DocumentID
 import OurPrelude
 import Control.Logic
 import Doc.DocStateData
-import Doc.Invariants
 import Data.Maybe hiding (fromJust)
 import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
@@ -1705,18 +1704,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentauthorattachments    = []
                 }
 
-  case invariantProblems ctime doc of
-        Nothing -> do
-
-           midoc <- insertDocumentAsIs doc
-           case midoc of
-             Just _ -> return midoc
-             Nothing -> do
-               Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-               return Nothing
-        Just a -> do
-           Log.debug $ "insertDocumentAsIs invariants violated: " ++ show a
-           return Nothing
+  midoc <- insertDocumentAsIs doc
+  case midoc of
+      Just _ -> return midoc
+      Nothing -> do
+        Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+        return Nothing
 
 data ReallyDeleteDocument = ReallyDeleteDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool where

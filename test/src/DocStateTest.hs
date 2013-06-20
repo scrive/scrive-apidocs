@@ -30,7 +30,7 @@ import TestKontra
 import DB.SQL2
 import Doc.SignatoryLinkID
 import Company.Model
-import Doc.Invariants
+import Doc.TestInvariants
 import MinutesTime
 import Test.HUnit.Base (Assertion)
 import Util.HasSomeUserInfo
