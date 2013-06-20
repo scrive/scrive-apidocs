@@ -389,7 +389,7 @@
                 external_plugins: {
                   hide_toolbar: '/js/tinymce_plugins/hide_toolbar.js'
                 },
-		readonly: !view.emaildeliveryused,
+                readonly: !view.emaildeliveryused,
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul,i[style<_color: #AAAAAA;]",
                 width: cwidth, // automatically adjust for different swed/eng text
                 setup: function(editor) {

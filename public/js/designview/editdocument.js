@@ -51,15 +51,10 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var div = $('<div />');
-            div.addClass('design-view-action-document-draggables-checkbox');
-            var wra = $('<div />');
-            wra.addClass('design-view-action-document-draggables-checkbox-wrapper');
-            var txt = $('<div />');
-            txt.addClass('design-view-action-document-draggables-checkbox-text');
-
-            var imgdiv = $('<div />');
-            imgdiv.addClass('design-view-action-document-draggables-checkbox-icon');
+            var div = $("<div class='design-view-action-document-draggables-checkbox'/>");
+            var wra = $("<div class='design-view-action-document-draggables-checkbox-wrapper'/>");
+            var txt = $("<div class='design-view-action-document-draggables-checkbox-text'/>");
+            var imgdiv = $("<div class='design-view-action-document-draggables-checkbox-icon'/>");
 
             // a function because author is not yet defined
             var getcheckbox = function() {
@@ -85,15 +80,10 @@
             var doc = viewmodel.document();
             var author = doc.author();
 
-            var div = $('<div />');
-            div.addClass('design-view-action-document-draggables-signature');
-            var wra = $('<div />');
-            wra.addClass('design-view-action-document-draggables-signature-wrapper');
-            var txt = $('<div />');
-            txt.addClass('design-view-action-document-draggables-signature-text');
-
-            var imgdiv = $('<div />');
-            imgdiv.addClass('design-view-action-document-draggables-signature-icon');
+            var div = $("<div class='design-view-action-document-draggables-signature'/>");
+            var wra = $("<div class='design-view-action-document-draggables-signature-wrapper'/>");
+            var txt = $("<div class='design-view-action-document-draggables-signature-text'/>");
+            var imgdiv = $("<div class='design-view-action-document-draggables-signature-icon'/>");
 
             var getsignature = function() {
                 var signature = new Field({fresh:false,
@@ -115,15 +105,10 @@
             var view      = this;
             var viewmodel = view.model;
 
-            var div = $('<div />');
-            div.addClass('design-view-action-document-draggables-textbox');
-            var wra = $('<div />');
-            wra.addClass('design-view-action-document-draggables-textbox-wrapper');
-            var txt = $('<div />');
-            txt.addClass('design-view-action-document-draggables-textbox-text');
-
-            var imgdiv = $('<div />');
-            imgdiv.addClass('design-view-action-document-draggables-textbox-icon');
+            var div = $("<div class='design-view-action-document-draggables-textbox'/>");
+            var wra = $("<div class='design-view-action-document-draggables-textbox-wrapper'/>");
+            var txt = $("<div class='design-view-action-document-draggables-textbox-text'/>");
+            var imgdiv = $("<div class='design-view-action-document-draggables-textbox-icon'/>");
 
             var gettext = function() {
                 return new Field({
@@ -142,16 +127,6 @@
             txt.append(localization.designview.freeTextBox);
 
             return div;
-        },
-        hide: function() {
-            var view = this;
-            view.$el.toggleClass('hidden', true);
-            return view;
-        },
-        unhide: function() {
-            var view = this;
-            view.$el.toggleClass('hidden', false);
-            return view;
         }
     });
 
