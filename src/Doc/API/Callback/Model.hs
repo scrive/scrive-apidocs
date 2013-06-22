@@ -25,9 +25,9 @@ documentAPICallback :: Action DocumentID DocumentAPICallback (DocumentID, String
 documentAPICallback = Action {
     qaTable = tableDocumentApiCallbacks
   , qaFields = \(did, url) -> [
-      sql "document_id" did
-    , sql "url" url
-    , sql "attempt" (1::Int)
+      ("document_id", toSql did)
+    , ("url", toSql url)
+    , ("attempt", toSql (1::Int))
     ]
   , qaSelectFields = ["document_id", "expires", "url", "attempt"]
   , qaIndexField = "document_id"

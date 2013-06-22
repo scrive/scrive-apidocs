@@ -297,13 +297,10 @@ asyncProcessEvents process numEvts = do
 --   constructor, whereas others may be arbitrarily named using `someProp`.
 asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> m ()
 asyncLogEvent name props = do
-    kRun_ $ mkSQL INSERT tableAsyncEventQueue serializedEvent
-    return ()
+  kRun_ $ sqlInsert "async_event_queue" $ do
+    sqlSet "event" $ mkBinary $ AsyncEvent name props
   where
-    serializedEvent = [sql "event" . mkBinary $ AsyncEvent name props]
     mkBinary = DB.Binary . B.concat . BL.toChunks . encode
-
-
 
 
 -- Arbitrary instances for testing

@@ -196,7 +196,7 @@ module DB.SQL2
 
 import DB.SQL
 import DB.Core
-import DB.Functions hiding (sql)
+import DB.Functions
 
 import DB.Fetcher
 import DB.Exception

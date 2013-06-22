@@ -10,22 +10,13 @@ module DB.Functions (
   , kRun01_
   , kGetTables
   , kDescribeTable
-  , ColumnValue
-  , sql
-  , sqlGeneric
-  , SQLType(..)
-  , mkSQL
   ) where
 
 import Control.Monad.State.Strict hiding (state)
-import Data.Convertible (Convertible)
-import Database.HDBC hiding (originalQuery)
 
 import DB.Core
 import DB.Exception
-import DB.SQL (RawSQL, SQL(..), raw, (<+>), sqlConcatComma, parenthesize, IsSQL, toSQLCommand)
-import DB.Model (Table(..))
-
+import DB.SQL (RawSQL, raw, IsSQL, toSQLCommand)
 
 
 kRunRaw :: MonadDB m => RawSQL -> m ()
@@ -53,32 +44,3 @@ kRun01 presql = do
 
 kRun01_ :: (MonadDB m, IsSQL sql) => sql -> m ()
 kRun01_ presql = kRun01 presql >> return ()
-
--- | Represents the binding of an SQL expression to a column in an INSERT or
---   UPDATE statement.
-data ColumnValue = ColumnValue RawSQL SQL
-
--- | Behaves like `sql` but accepts generic SQL.
---   It's useful when inserting data straight from another table and thus don't
---   have an extra parameter to pass in.
-sqlGeneric :: RawSQL -> SQL -> ColumnValue
-sqlGeneric column expr = ColumnValue column expr
-
-sql :: Convertible a SqlValue => RawSQL -> a -> ColumnValue
-sql column value =
-  ColumnValue column (SQL "?" [toSql value])
-
-data SQLType = INSERT | UPDATE
-
-mkSQL :: SQLType -> Table -> [ColumnValue] -> SQL
-mkSQL qtype Table{tblName} columnvalues = case qtype of
-  INSERT ->
-    "INSERT INTO" <+> raw tblName <+>
-    parenthesize (sqlConcatComma $ map raw columns) <+>
-    "SELECT" <+> sqlConcatComma values
-  UPDATE ->
-    "UPDATE" <+> raw tblName <+> "SET" <+>
-    sqlConcatComma (zipWith (\c v -> raw c <+> "=" <+> v) columns values)
-  where
-    (columns, values) =
-      unzip [(col, val) | ColumnValue col val <- columnvalues]

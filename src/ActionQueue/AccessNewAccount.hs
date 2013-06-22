@@ -31,8 +31,8 @@ accessNewAccount :: Action UserID AccessNewAccount (UserID, MagicHash) Scheduler
 accessNewAccount = Action {
     qaTable = tableAccessNewAccounts
   , qaFields = \(uid, token) -> [
-      sql "user_id" uid
-    , sql "token" token
+      ("user_id", toSql uid)
+    , ("token", toSql token)
     ]
   , qaSelectFields = ["user_id", "expires", "token"]
   , qaIndexField = "user_id"
