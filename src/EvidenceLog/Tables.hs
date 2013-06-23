@@ -3,7 +3,6 @@ module EvidenceLog.Tables (tableEvidenceLog) where
 import DB
 
 {- |
-
 Description of the table to store the evidence log.
 
 The main principle of this table is that it should be as independent
@@ -11,66 +10,33 @@ as possible from other tables to avoid migration conflicts. Hence the
 lack of foreign keys.
 
 Also, it is insert only. No updates, no deletes.
-
 -}
 tableEvidenceLog :: Table
 tableEvidenceLog = tblTable {
   tblName = "evidence_log"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> case desc of
-      [("id",                SqlColDesc { colType     = SqlBigIntT
-                                        , colNullable = Just False}),
-       ("document_id",       SqlColDesc { colType     = SqlBigIntT
-                                        , colNullable = Just True}),
-       ("user_id",           SqlColDesc { colType     = SqlBigIntT
-                                        , colNullable = Just True}),
-       ("email",             SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just True}),
-       ("time",              SqlColDesc { colType     = SqlTimestampWithZoneT
-                                        , colNullable = Just False}),
-       ("request_ip_v4",     SqlColDesc { colType     = SqlBigIntT
-                                        , colNullable = Just True}),
-       ("request_ip_v6",     SqlColDesc { colType     = SqlBigIntT
-                                        , colNullable = Just True}),
-       ("signatory_link_id", SqlColDesc { colType     = SqlBigIntT
-                                        , colNullable = Just True}),
-       ("text",              SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just False}),
-       ("event_type",        SqlColDesc { colType     = SqlSmallIntT
-                                        , colNullable = Just False}),
-       ("version_id",        SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just False}),
-       ("api_user",          SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just True}),
-       ("affected_signatory_link_id", SqlColDesc { colType  = SqlBigIntT
-                                        , colNullable = Just True}),
-       ("message_text",      SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just True})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE evidence_log ("
-          <> "  id            BIGSERIAL   NOT NULL"
-          <> ", document_id   BIGINT          NULL"          
-          <> ", user_id       BIGINT          NULL"
-          <> ", email         VARCHAR         NULL"
-          <> ", time          TIMESTAMPTZ NOT NULL"
-          <> ", request_ip_v4 BIGINT          NULL"
-          <> ", request_ip_v6 BIGINT          NULL"          
-          <> ", signatory_link_id BIGINT      NULL"
-          <> ", text          VARCHAR     NOT NULL"
-          <> ", event_type    SMALLINT    NOT NULL"
-          <> ", version_id    VARCHAR     NOT NULL"
-          <> ", api_user      VARCHAR         NULL"
-          <> ", affected_signatory_link_id BIGINT NULL"
-          <> ", message_text   VARCHAR        NULL"
-          <> ", CONSTRAINT pk_evidence_log PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblIndexes = [ tblIndexOnColumn "user_id"
-                 , tblIndexOnColumn "document_id"
-                 , tblIndexOnColumn "email"
-                 , tblIndexOnColumn "signatory_link_id"
-                 , tblIndexOnColumn "affected_signatory_link_id"
-                 ]
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "document_id", colType = BigIntT }
+    , tblColumn { colName = "user_id", colType = BigIntT }
+    , tblColumn { colName = "email", colType = TextT }
+    , tblColumn { colName = "time", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "request_ip_v4", colType = BigIntT }
+    , tblColumn { colName = "request_ip_v6", colType = BigIntT }
+    , tblColumn { colName = "signatory_link_id", colType = BigIntT }
+    , tblColumn { colName = "text", colType = TextT, colNullable = False }
+    , tblColumn { colName = "event_type", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "version_id", colType = TextT, colNullable = False }
+    , tblColumn { colName = "api_user", colType = TextT }
+    , tblColumn { colName = "affected_signatory_link_id", colType = BigIntT }
+    , tblColumn { colName = "message_text", colType = TextT }
+    ]
+  , tblPrimaryKey = ["id"]
+  , tblIndexes = [
+      tblIndexOnColumn "user_id"
+    , tblIndexOnColumn "document_id"
+    , tblIndexOnColumn "email"
+    , tblIndexOnColumn "signatory_link_id"
+    , tblIndexOnColumn "affected_signatory_link_id"
+    ]
   }

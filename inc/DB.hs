@@ -1,6 +1,5 @@
 module DB (
-    module Database.HDBC.ColTypes
-  , module Database.HDBC.SqlValue
+    module Database.HDBC.SqlValue
   , module DB.Binary
   , module DB.Core
   , module DB.Derive
@@ -13,7 +12,6 @@ module DB (
   , module DB.Utils
   ) where
 
-import Database.HDBC.ColTypes
 import Database.HDBC.SqlValue
 import DB.Binary
 import DB.Core

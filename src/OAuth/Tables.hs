@@ -1,11 +1,8 @@
 module OAuth.Tables where
 
-import Database.HDBC
-
 import DB
 
 {- |
-       
    Module: OAuth.Tables
    Author: Eric Normand
 
@@ -22,122 +19,80 @@ import DB
      through a flow where he/she grants permissions to the service.
 
      These tables manage that flow.
-
 -}
 
-
 {- |
-   
    A User may have one or more API Tokens, which allow it to request privileges from other Users.
 
    These API tokens are used in the first step of the OAuth permission flow.
 
    Users may add and delete the API Tokens in their account screen, though most users will not 
    use them.
-
 -}
 tableAPIToken :: Table
 tableAPIToken = tblTable {
   tblName = "oauth_api_token"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> do
-    case desc of
-      [("id",         SqlColDesc { colType     = SqlBigIntT
-                                 , colNullable = Just False}),
-       ("api_token",  SqlColDesc { colType     = SqlBigIntT
-                                 , colNullable = Just False}),
-       ("api_secret", SqlColDesc { colType     = SqlBigIntT
-                                 , colNullable = Just False}),
-       ("user_id",    SqlColDesc { colType     = SqlBigIntT
-                                 , colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE oauth_api_token ("
-          <> "  id         BIGSERIAL   NOT NULL"
-          <> ", api_token  BIGINT      NOT NULL"          
-          <> ", api_secret BIGINT      NOT NULL"          
-          <> ", user_id    BIGINT      NOT NULL"
-          <> ", CONSTRAINT pk_oauth_api_token PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "api_token", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "api_secret", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
+    ]
+  , tblPrimaryKey = ["id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
   }
 
 {-
-
     Access Tokens belong to an API Token and grant privileges from a User.
 
     Access Tokens are generated in the last step of the OAuth flow. They are
     linked to a User account and to an API Token. This signifies that the owner
     of the API Token has been granted privileges by the User refered to by
     user_id.
-
 -}
 tableAccessToken :: Table
 tableAccessToken = tblTable {
   tblName = "oauth_access_token"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> do
-    case desc of
-      [("id", SqlColDesc { colType = SqlBigIntT
-                         , colNullable = Just False}),
-       ("access_token",  SqlColDesc { colType     = SqlBigIntT
-                                    , colNullable = Just False}),
-       ("access_secret", SqlColDesc { colType     = SqlBigIntT
-                                    , colNullable = Just False}),
-       ("api_token_id",  SqlColDesc { colType     = SqlBigIntT
-                                    , colNullable = Just False}),
-       ("user_id",       SqlColDesc { colType     = SqlBigIntT
-                                    , colNullable = Just False}),
-       ("created",       SqlColDesc { colType     = SqlTimestampWithZoneT
-                                    , colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE oauth_access_token ("
-          <> "  id            BIGSERIAL   NOT NULL"
-          <> ", access_token  BIGINT      NOT NULL" 
-          <> ", access_secret BIGINT      NOT NULL" 
-          <> ", api_token_id  BIGINT      NOT NULL"
-          -- UserID of the resource owner          
-          <> ", user_id       BIGINT      NOT NULL"
-          -- the creation date
-          <> ", created       TIMESTAMPTZ NOT NULL"
-          <> ", CONSTRAINT pk_oauth_access_token PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
-                       { fkOnDelete = ForeignKeyCascade }
-                     , (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "access_token", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "access_secret", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "api_token_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
+    ]
+  , tblPrimaryKey = ["id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
   }
 
 {-
     Privileges granted to an Access token by a User.
 
     These privileges belong to an Access Token.
-
 -}
 tablePrivilege :: Table
 tablePrivilege = tblTable {
   tblName = "oauth_privilege"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> do
-    case desc of
-      [("access_token_id",  SqlColDesc { colType     = SqlBigIntT
-                                    , colNullable = Just False}),
-       ("privilege",     SqlColDesc { colType     = SqlSmallIntT
-                                    , colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE oauth_privilege ("
-          <> "  access_token_id  BIGINT      NOT NULL" 
-          <> ", privilege     SMALLINT    NOT NULL"
-          <> ", CONSTRAINT pk_oauth_privilege PRIMARY KEY (access_token_id, privilege)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "access_token_id" "oauth_access_token" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+  , tblColumns = [
+      tblColumn { colName = "access_token_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "privilege", colType = SmallIntT, colNullable = False }
+    ]
+  , tblPrimaryKey = ["access_token_id", "privilege"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "access_token_id" "oauth_access_token" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
   }
 
 migrateTempCredentialRemoveEmail ::  MonadDB m => Migration m
@@ -154,88 +109,57 @@ migrateTempCredentialRemoveEmail =
         <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
         <> " DEFERRABLE INITIALLY IMMEDIATE"
 
-  } 
+  }
 
 {- |
-   
    Temporary Credentials are used during the OAuth flow.
 
    A Temporary Credential is created at the beginning of the OAuth flow
    and represents a request for privileges.
 
    They should expire after 10 minutes and only be used once.
-
 -}
 tableTempCredential :: Table
 tableTempCredential = tblTable {
   tblName = "oauth_temp_credential"
   , tblVersion = 3
-  , tblCreateOrValidate = \desc -> do
-    case desc of
-      [("id", SqlColDesc { colType = SqlBigIntT
-                         , colNullable = Just False}),
-       ("temp_token",   SqlColDesc { colType     = SqlBigIntT
-                                   , colNullable = Just False}),
-       ("temp_secret",  SqlColDesc { colType     = SqlBigIntT
-                                   , colNullable = Just False}),
-       ("api_token_id",  SqlColDesc { colType     = SqlBigIntT
-                                 , colNullable = Just False}),
-       ("verifier",    SqlColDesc { colType     = SqlBigIntT
-                                 , colNullable = Just False}),
-       ("expires",    SqlColDesc { colType     = SqlTimestampWithZoneT
-                                 , colNullable = Just False}),
-       ("callback",  SqlColDesc { colType = SqlVarCharT
-                                , colNullable = Just False}),
-       ("user_id",    SqlColDesc { colType      = SqlBigIntT
-                                 , colNullable  = Just True})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE oauth_temp_credential ("
-          <> "  id          BIGSERIAL   NOT NULL"
-          <> ", temp_token  BIGINT      NOT NULL"          
-          <> ", temp_secret BIGINT      NOT NULL"          
-          <> ", api_token_id BIGINT      NOT NULL"          
-          <> ", verifier    BIGINT      NOT NULL"
-          <> ", expires     TIMESTAMPTZ NOT NULL"
-          <> ", callback    VARCHAR     NOT NULL"
-          <> ", user_id     BIGINT          NULL"
-          <> ", CONSTRAINT pk_oauth_temp_credential PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id")
-                       { fkOnDelete = ForeignKeyCascade }
-                     , (tblForeignKeyColumn "user_id" "users" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "temp_token", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "temp_secret", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "api_token_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "verifier", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "callback", colType = TextT, colNullable = False }
+    , tblColumn { colName = "user_id", colType = BigIntT }
+    ]
+  , tblPrimaryKey = ["id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    , (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
   }
-                      
-                      
+
 {- |
-   
    Temporary Privileges are the privileges that are being requested from
    the User.
 
    They belong to a Temp Credential.
-
 -}
 tableTempPrivileges :: Table
 tableTempPrivileges = tblTable {
   tblName = "oauth_temp_privileges"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> do
-    case desc of
-      [("temp_token_id",   SqlColDesc { colType     = SqlBigIntT
-                                   , colNullable = Just False}),
-       ("privilege", SqlColDesc { colType = SqlSmallIntT
-                                , colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE oauth_temp_privileges ("
-          <> "  temp_token_id  BIGINT      NOT NULL"          
-          <> ", privilege   SMALLINT    NOT NULL"          
-          <> ", CONSTRAINT pk_oauth_temp_privileges PRIMARY KEY (temp_token_id, privilege)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "temp_token_id" "oauth_temp_credential" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+  , tblColumns = [
+      tblColumn { colName = "temp_token_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "privilege", colType = SmallIntT, colNullable = False }
+    ]
+  , tblPrimaryKey = ["temp_token_id", "privilege"]
+  , tblForeignKeys = [
+    (tblForeignKeyColumn "temp_token_id" "oauth_temp_credential" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
   }

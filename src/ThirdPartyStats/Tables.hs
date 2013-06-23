@@ -1,6 +1,7 @@
 -- | Queue table for stowing stats to be sent to a third party until someone
 --   has the time to deal with them.
 module ThirdPartyStats.Tables where
+
 import DB
 
 -- | The table used to queue up async events.
@@ -11,19 +12,9 @@ import DB
 tableAsyncEventQueue :: Table
 tableAsyncEventQueue = tblTable {
   tblName = "async_event_queue"
-  , tblVersion = 0
-  , tblCreateOrValidate = \desc -> case desc of
-      [("sequence_number", SqlColDesc { colType       = SqlBigIntT
-                                      , colNullable   = Just False}),
-       ("event",           SqlColDesc { colType       = SqlVarCharT
-                                      , colNullable   = Just False})] ->
-        return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE async_event_queue ("
-          <> "  sequence_number SERIAL      NOT NULL"
-          <> ", event           TEXT        NOT NULL"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = []
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "sequence_number", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "event", colType = TextT, colNullable = False }
+    ]
   }

@@ -34,22 +34,16 @@ tableDocumentSessionTokens :: Table
 tableDocumentSessionTokens = tblTable {
     tblName = "document_session_tokens"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("session_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE document_session_tokens ("
-          <> "  session_id BIGINT NOT NULL"
-          <> ", signatory_link_id BIGINT NULL"
-          <> ", token BIGINT NOT NULL"
-          <> ", CONSTRAINT pk_document_session_tokens PRIMARY KEY (session_id, signatory_link_id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "session_id" "sessions" "id")
-                       { fkOnDelete = ForeignKeyCascade }
-                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
-}
+  , tblColumns = [
+      tblColumn { colName = "session_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
+    ]
+  , tblPrimaryKey = ["session_id", "signatory_link_id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+    , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
+  }

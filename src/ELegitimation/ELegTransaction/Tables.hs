@@ -47,44 +47,29 @@ tableELegTransactions :: Table
 tableELegTransactions = tblTable {
     tblName = "eleg_transactions"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("session_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("nonce", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("tbs", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("encoded_tbs", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("status", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("cr_transaction_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("cr_signature", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("cr_attributes", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("oref", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE eleg_transactions ("
-          <> "  id TEXT NOT NULL"
-          <> ", session_id BIGINT NOT NULL"
-          <> ", nonce TEXT NULL"
-          <> ", tbs TEXT NOT NULL"
-          <> ", encoded_tbs TEXT NULL"
-          <> ", signatory_link_id BIGINT NULL"
-          <> ", document_id BIGINT NOT NULL"
-          <> ", token BIGINT NULL"
-          <> ", status TEXT NOT NULL"
-          <> ", cr_transaction_id TEXT NULL"
-          <> ", cr_signature TEXT NULL"
-          <> ", cr_attributes TEXT NULL"
-          <> ", oref TEXT NULL"
-          <> ", CONSTRAINT pk_eleg_transactions PRIMARY KEY (id, session_id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "session_id" "sessions" "id")
-                       { fkOnDelete = ForeignKeyCascade }
-                     , (tblForeignKeyColumn "document_id" "documents" "id")
-                       { fkOnDelete = ForeignKeyCascade }
-                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
-}
+  , tblColumns = [
+      tblColumn { colName = "id", colType = TextT, colNullable = False }
+    , tblColumn { colName = "session_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "nonce", colType = TextT }
+    , tblColumn { colName = "tbs", colType = TextT, colNullable = False }
+    , tblColumn { colName = "encoded_tbs", colType = TextT }
+    , tblColumn { colName = "signatory_link_id", colType = BigIntT }
+    , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "token", colType = BigIntT }
+    , tblColumn { colName = "status", colType = TextT, colNullable = False }
+    , tblColumn { colName = "cr_transaction_id", colType = TextT }
+    , tblColumn { colName = "cr_signature", colType = TextT }
+    , tblColumn { colName = "cr_attributes", colType = TextT }
+    , tblColumn { colName = "oref", colType = TextT }
+    ]
+  , tblPrimaryKey = ["id", "session_id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+    , (tblForeignKeyColumn "document_id" "documents" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
+  }
