@@ -67,6 +67,7 @@ accessNewAccountPage=
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
+    mixpanel.track('View access new account page');
     jQuery('.inner').append(new NewPassword({
       linkchangepassword: "$linkchangepassword$",
       accessnewaccount: true
@@ -116,6 +117,9 @@ $doctype()$
   </div>
 <script type="text/javascript">
   jQuery(document).ready(function() {
+    mixpanel.track('View access new account page', {
+        branded: true
+    });
     jQuery('.inner').append(new NewPassword({
                         linkchangepassword: "$linkchangepassword$",
                         accessnewaccount: true,
