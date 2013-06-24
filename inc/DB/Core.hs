@@ -11,6 +11,7 @@ module DB.Core (
   , DBUpdate(..)
   , dbQuery
   , dbUpdate
+  , kThrow
   ) where
 
 import Control.Applicative
@@ -148,7 +149,8 @@ instance WebMonad r m => WebMonad r (DBT m) where
 -- just when they want. Transaction management should be done at top
 -- level and only sometimes at very specific points.
 --
--- 'kThrow' is there so that throwIO is lifted into MonadDB instances.
+-- 'kThrow' and 'kThrow2' are there so that throwIO is lifted into
+-- 'MonadDB' instances.
 --
 -- The 'getNexus' and 'localNexus' are bits of wart of history. The
 -- point of this monad class is to not allow direct access to
@@ -168,11 +170,14 @@ class (Functor m, {- MonadIO m, MonadBase IO m, -} MonadLog m) => MonadDB m wher
   kGetTables :: m [String]
   kDescribeTable :: RawSQL -> m [(String, SqlColDesc)]
   kFold2     :: (a -> [SqlValue] -> Either SQLError a) -> a -> m a
-  kThrow     :: (E.Exception e) => e -> m a
+  kThrow2    :: (E.Exception e) => (SQL -> e) -> m a
   getMinutesTime :: m MinutesTime
 
 getQuery :: Statement -> RawSQL
 getQuery = unsafeFromString . Database.HDBC.originalQuery
+
+kThrow :: (MonadDB m, E.Exception e) => e -> m a
+kThrow ex = kThrow2 (const ex)
 
 instance (Functor m, MonadIO m, MonadBase IO m, MonadLog m) => MonadDB (DBT m) where
   getNexus     = DBT ask
@@ -221,7 +226,13 @@ instance (Functor m, MonadIO m, MonadBase IO m, MonadLog m) => MonadDB (DBT m) w
       Nothing -> return ()
   kGetTables = DBT $ ask >>= liftIO . getTables
   kDescribeTable table = DBT $ ask >>= \c -> liftIO (describeTable c (unRawSQL table))
-  kThrow = DBT . E.throwIO
+  kThrow2 ex = DBT $ do
+    DBEnvSt {dbStatement,dbValues} <- get
+    case dbStatement of
+      Just st -> do
+        E.throwIO $ ex (SQL (getQuery st) dbValues)
+      Nothing -> do
+        E.throwIO $ ex (SQL "" [])
   kFold2 decoder !init_acc = DBT $ do
     DBEnvSt {dbStatement,dbValues} <- get
     case dbStatement of
@@ -262,7 +273,7 @@ instance MonadDB m => MonadDB (CryptoRNGT m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -276,7 +287,7 @@ instance (MonadDB m) => MonadDB (ReaderT r m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -290,7 +301,7 @@ instance MonadDB m => MonadDB (ContT r m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -304,7 +315,7 @@ instance (Error e, MonadDB m) => MonadDB (ErrorT e m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -318,7 +329,7 @@ instance MonadDB m => MonadDB (IdentityT m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2       = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -332,7 +343,7 @@ instance MonadDB m => MonadDB (ListT m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -346,7 +357,7 @@ instance MonadDB m => MonadDB (MaybeT m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -360,7 +371,7 @@ instance MonadDB m => MonadDB (SS.StateT s m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -374,7 +385,7 @@ instance MonadDB m => MonadDB (LS.StateT s m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -388,7 +399,7 @@ instance (MonadDB m, Monoid w) => MonadDB (LW.WriterT w m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -402,7 +413,7 @@ instance (MonadDB m, Monoid w) => MonadDB (SW.WriterT w m) where
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2      = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)
@@ -416,7 +427,7 @@ instance (MonadBase IO (T.TemplatesT m), MonadDB m) => MonadDB (T.TemplatesT m) 
   kClone       = lift kClone
   kRunSQL      = lift . kRunSQL
   kFinish      = lift kFinish
-  kThrow       = lift . kThrow
+  kThrow2       = lift . kThrow2
   kDescribeTable  = lift . kDescribeTable
   kGetTables      = lift kGetTables
   kFold2 decoder init_acc = lift (kFold2 decoder init_acc)

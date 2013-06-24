@@ -98,7 +98,7 @@ instance MonadDB TestEnv where
   kGetTables   = TestEnv $ kGetTables
   kDescribeTable   = TestEnv . kDescribeTable
   kFold2 decoder init_acc = TestEnv (kFold2 decoder init_acc)
-  kThrow       = TestEnv . kThrow
+  kThrow2      = TestEnv . kThrow2
   getMinutesTime = TestEnv $ getMinutesTime
 
 instance TemplatesMonad TestEnv where

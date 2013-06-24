@@ -10,7 +10,6 @@ module DB.Utils (
 
 import Data.Convertible
 import Data.Maybe
-import Data.Monoid
 import Data.Typeable
 import Database.HDBC.SqlValue
 
@@ -40,8 +39,8 @@ instance OneObjectReturnedGuard [] where
 oneRowAffectedGuard :: MonadDB m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False
 oneRowAffectedGuard 1 = return True
-oneRowAffectedGuard n = kThrow TooManyObjects {
-    originalQuery = mempty
+oneRowAffectedGuard n = kThrow2 $ \sql' -> TooManyObjects {
+    originalQuery = sql'
   , tmoExpected = 1
   , tmoGiven = n
   }
@@ -49,8 +48,8 @@ oneRowAffectedGuard n = kThrow TooManyObjects {
 oneObjectReturnedGuard :: MonadDB m => [a] -> m (Maybe a)
 oneObjectReturnedGuard []  = return Nothing
 oneObjectReturnedGuard [x] = return $ Just x
-oneObjectReturnedGuard xs  = kThrow TooManyObjects {
-    originalQuery = mempty
+oneObjectReturnedGuard xs  = kThrow2 $ \sql' -> TooManyObjects {
+    originalQuery = sql'
   , tmoExpected = 1
   , tmoGiven = fromIntegral $ length xs
   }
