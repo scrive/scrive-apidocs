@@ -134,6 +134,7 @@ signupPage=
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
+    mixpanel.track('Visit signup page');
     jQuery('.inner').append(new Signup({email:     "$email:noescape()$",
                                         autofocus: true}).el());
   });
@@ -156,6 +157,7 @@ $doctype()$
   </div>
   <script type="text/javascript">
     jQuery(document).ready(function() {
+      mixpanel.track('Visit signup page');
       jQuery('.inner').append(new Signup({
                                          branded : true,
                                          logolink:   "$logolink$",
