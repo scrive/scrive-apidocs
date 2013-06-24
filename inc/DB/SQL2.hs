@@ -1117,7 +1117,7 @@ kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
             -- most generic one.
             kThrow ex
     [r] -> return r
-    _ -> kThrow TooManyObjects { originalQuery = mempty
+    _ -> kThrow TooManyObjects { originalQuery = toSQLCommand sqlcommand
                                , tmoExpected = 1
                                , tmoGiven = fromIntegral $ length results
                                }
