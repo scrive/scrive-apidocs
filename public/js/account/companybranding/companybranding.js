@@ -198,7 +198,7 @@ window.CompanyBrandingView = Backbone.View.extend({
 });
 
 window.CompanyBranding = function(args) {
-    var model = new CompanyBrandingModel(args);
+    var model = new CompanyBrandingModel(args || {});
     var view = new CompanyBrandingView({ model: model, el:$("<div class='tab-container account'/>") });
     return {
       refresh: function() {view.clean(); model.refresh();},
