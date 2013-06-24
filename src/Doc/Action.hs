@@ -68,6 +68,7 @@ logDocEvent name doc user extraProps = do
     MailProp   email,
     IPProp     ip,
     NameProp   fullname,
+    stringProp "Company Name" (show $ fromMaybe "undefined" usercompany doc),
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),
     numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
