@@ -24,6 +24,11 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfImportedPage;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.Phrase;
 
 public class AppendMode {
     /** The resulting PDF. */
@@ -58,6 +63,28 @@ public class AppendMode {
         writer.setPageEmpty(false);
         document.newPage();
         document.add(new Paragraph("The previous page was a blank page!"));
+
+
+        PdfPTable table = new PdfPTable(3);
+        table.setWidthPercentage(288 / 5.23f);
+        table.setWidths(new int[]{2, 1, 1});
+        PdfPCell cell;
+        cell = new PdfPCell(new Phrase("Table 1"));
+        cell.setColspan(3);
+        table.addCell(cell);
+        cell = new PdfPCell(new Phrase("Cell with rowspan 2"));
+        cell.setRowspan(2);
+        cell.setBorder(Rectangle.LEFT | Rectangle.TOP | Rectangle.RIGHT);
+        cell.setBorderColor(BaseColor.CYAN);
+        cell.setBorderWidth(5);
+
+        table.addCell(cell);
+        table.addCell("row 1; cell 1");
+        table.addCell("row 1; cell 2");
+        table.addCell("row 2; cell 1");
+        table.addCell("row 2; cell 2");
+        document.add(table);
+
         // step 5
         document.close();
     }
