@@ -71,13 +71,20 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   hasExtraDetailsSection : function() {
     if (!this.document().currentSignatoryCanSign()) return false;
+
+    var signatory = this.document().currentSignatory();
     var res = false;
-    _.each(this.document().currentSignatory().fields(), function(field) {
+    // Name check is outside the look, since we have two fields for that
+    if (signatory.name() == ""
+        && (signatory.fstnameField() != undefined && !signatory.fstnameField().hasPlacements())
+        && (signatory.sndnameField() != undefined && !signatory.sndnameField().hasPlacements())
+       )
+    res = true;
+
+    _.each(signatory.fields(), function(field) {
       if (field.isEmail() && field.value() == "" && !field.hasPlacements())
         res = true;
-      if (field.isFstName() && field.value() == "" && !field.hasPlacements())
-        res = true;
-      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && field.signatory().elegAuthentication())
+      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && signatory.elegAuthentication())
         res = true;
     });
     if( !res && this.document().currentSignatory().padDelivery() && this.document().currentSignatory().hasSignatureField()) {
@@ -333,12 +340,15 @@ var DocumentSignViewModel = Backbone.Model.extend({
          var task = new PageTask({
                     isComplete: function() {
                         var res = true;
-                        _.each(document.currentSignatory().fields(), function(field) {
+                        var signatory = document.currentSignatory();
+
+                        // Name check is outside the look, since we have two fields for that
+                        if (signatory.name() == "")  res = false;
+
+                        _.each(signatory.fields(), function(field) {
                             if (field.isEmail() && (!new EmailValidation().validateData(field.value())))
                                 res = false;
-                            if (field.isFstName() && field.value() == "")
-                                res = false;
-                            if (field.isSSN()    && (field.value() == "") && field.signatory().elegAuthentication())
+                            if (field.isSSN()    && (field.value() == "") && signatory.elegAuthentication())
                                 res = false;
                              if (field.isSignature() && (field.value() == "")
                                  && field.placements().length == 0 && !document.currentSignatory().anySignatureHasImageOrPlacement()
