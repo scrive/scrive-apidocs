@@ -419,7 +419,9 @@ sendClosedEmails ctx document sealFixed = do
     mailattachments <- makeMailAttachments document
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
-      ml <- handlePostSignSignup ctx (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
+      ml <- if (isGood $ asValidEmail $ getEmail sl)
+               then handlePostSignSignup ctx (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
+               else return $ Nothing
       let sendMail = do
             mail <- mailDocumentClosed ctx document ml sl sealFixed
             scheduleEmailSendout (mctxmailsconfig (mailContext ctx)) $
