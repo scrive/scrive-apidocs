@@ -9,6 +9,8 @@ import Text.JSON
 import Text.JSON.Gen
 import qualified Text.JSON.Gen as J
 
+import Data.Maybe
+
 import Kontra
 
 import User.Model
@@ -74,6 +76,10 @@ companyStatus u = case (useriscompanyadmin u, usercompany u) of
   (False, Nothing) -> "solo"
   (False, Just _ ) -> "sub"
 
+-- A heuristic that is good enough for now
+companyBranding :: Company -> Bool
+companyBranding company = isJust $ companysignviewlogo $ companyui $ company
+
 -- | A safe version of !!
 (??) :: [a] -> Int -> Maybe a
 (??) l i = if i < length l then Just (l !! i) else Nothing
@@ -106,6 +112,7 @@ instance ToJSValue AnalyticsData where
 
     mnop (J.value "Company Status") $ escapeHTML <$> companyStatus <$> aUser
     mnop (J.value "Company Name") $ join $ maybeS <$> escapeHTML <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
+    mnop (J.value "Company Branding") $ companyBranding <$> aCompany
 
     mnop (J.value "Signup Method") $ join $ maybeS <$> escapeHTML <$> show <$> usersignupmethod <$> aUser
 
