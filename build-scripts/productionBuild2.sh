@@ -5,6 +5,11 @@
 # This script assumes SRV which is the name of the server (ie, production, staging)
 # This script assumes AMZN which is a boolean whether to upload to Amazon
 
+if [ -z "$1" ]; then
+  echo "Usage: $0 <cabal-dev sandbox directory path>"
+  exit 1
+fi
+
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
 #BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
 
@@ -15,7 +20,7 @@ echo "TMP: "$TMP
 echo "Server: "$SRV
 
 echo "Building Clean"
-./build-scripts/runCleanCompile.sh > build-report.txt
+./build-scripts/runCleanCompile.sh "$1" > build-report.txt
 
 echo "Running unit tests"
 ./build-scripts/runAllUnitTests.sh > test-report.txt
