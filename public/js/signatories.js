@@ -163,7 +163,11 @@ window.Signatory = Backbone.Model.extend({
         return this.emailField().value();
     },
     mobile: function() {
-        return this.mobileField().value();
+        if (this.mobileField() != undefined) {
+          return this.mobileField().value();
+        } else {
+          return '';
+        }
     },
     fstname: function() {
         return this.fstnameField().value();
