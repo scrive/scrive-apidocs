@@ -2,7 +2,7 @@
 
 if [ -z "$1" ]; then
   echo "Usage: $0 <cabal-dev sandbox directory path>"
-  exit
+  exit 1
 fi
 
 rm -f kontrakcja-test.tix
