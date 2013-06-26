@@ -228,13 +228,23 @@ window.Signatory = Backbone.Model.extend({
         if (this.current())
          return localization.you;
         else
-         return this.nameOrEmail();
+         return this.nameOrEmailOrMobile();
     },
     nameOrEmail: function() {
          if (this.name() != "")
          return this.name();
         else
          return this.email();
+    },
+    nameOrEmailOrMobile: function() {
+         if (this.name() != '') {
+           return this.name();
+         } else if (this.email() != '') {
+           return this.email();
+         } else {
+           // no name&email, signatory must be identified by just phone number
+           return this.mobile();
+         }
     },
     saved: function() {
       return this.get("saved");

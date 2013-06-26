@@ -72,7 +72,7 @@ var DocumentSignSignatoriesListView = Backbone.View.extend({
           var sigdiv     = $("<div class='sig' />");
           if(index === 0)
               sigdiv.addClass('first');
-          var name       = $("<div class='name' />").text(signatory.nameOrEmail());
+          var name       = $("<div class='name' />").text(signatory.nameOrEmailOrMobile());
           name.css(sigbox.textstyle());
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle' />");
@@ -169,7 +169,6 @@ var DocumentSignSignatoryView = Backbone.View.extend({
               .attr('title', signatory.personalnumber());
       }
       var contactspace = $('<div class="spacing contactspace" />');
-      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
 
       if( orgnum ) {
           numspace.append(orgnum);
@@ -178,7 +177,18 @@ var DocumentSignSignatoryView = Backbone.View.extend({
           numspace.append(persnum);
       }
 
-      numspace.append(email);
+      if (signatory.email() != '') {
+        var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+        numspace.append(email);
+      }
+
+
+      if (signatory.mobileField() != undefined) {
+        // no email, signatory must be identified by phone number
+        // without email, signatory.mobile() fails
+        var mobile   = $('<div class="mobile field" />').text(signatory.mobile()).attr('title', signatory.mobile());
+        numspace.append(mobile);
+      }
 
       inner.append(face);
 
