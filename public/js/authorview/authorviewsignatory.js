@@ -390,7 +390,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
 
       if (signatory.mobileField() != undefined) {
         // no email, signatory must be identified by phone number
-        // without email, signatory.mobile() fails
+        // without mobile field, signatory.mobile() fails
         var mobile   = $('<div class="mobile field" />').text(signatory.mobile()).attr('title', signatory.mobile());
         numspace.append(mobile);
       }
