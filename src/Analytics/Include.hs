@@ -112,7 +112,7 @@ instance ToJSValue AnalyticsData where
 
     mnop (J.value "Company Status") $ escapeHTML <$> companyStatus <$> aUser
     mnop (J.value "Company Name") $ join $ maybeS <$> escapeHTML <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
-    mnop (J.value "Company Branding") $ companyBranding <$> aCompany
+    mnop (J.value "Company Branding") $ isJust <$> companysignviewlogo <$> companyui <$> aCompany
 
     mnop (J.value "Signup Method") $ join $ maybeS <$> escapeHTML <$> show <$> usersignupmethod <$> aUser
 

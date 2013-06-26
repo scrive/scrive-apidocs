@@ -61,11 +61,7 @@ logDocEvent name doc user extraProps = do
   let uid = userid user
       email = Email $ getEmail user
       fullname = getFullName user
-      msl = getSigLinkFor doc uid
-  deliverymethod <- case msl of
-    Just sl -> do
-      return $ show $ signatorylinkdeliverymethod sl
-    Nothing -> return "undefined"
+      deliverymethod = fromMaybe "undefined" $ show . signatorylinkdeliverymethod <$> getSigLinkFor doc uid
   asyncLogEvent name $ extraProps ++ [
     UserIDProp uid,
     DocIDProp  (documentid doc),
