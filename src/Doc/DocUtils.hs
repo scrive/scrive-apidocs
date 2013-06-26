@@ -241,7 +241,7 @@ signatoryDetailsFromUser user (is_author, is_partner) = do
 -}
 isEligibleForReminder :: User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder user document@Document{documentstatus} siglink =
-       signatorylinkdeliverymethod siglink == EmailDelivery
+       documentDeliverableTosignatory
     && signatoryActivated
     && userIsAuthor
     && not isUserSignator
@@ -256,6 +256,7 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
     wasNotSigned = isNothing (maybesigninfo siglink)
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
+    documentDeliverableTosignatory =  signatorylinkdeliverymethod siglink `elem` [EmailDelivery, MobileDelivery, EmailAndMobileDelivery]
 
 -- | Can author sign now according to sign order?
 canAuthorSignNow :: Document -> Bool
