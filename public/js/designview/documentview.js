@@ -97,11 +97,44 @@
             div.append(this.innerDiv);
 
             this.innerDiv.append(view.title()).append(view.buttons());
+            this.innerDiv.append(view.exampleDocument());
             this.wrapperDiv.append(div);
 
             this.refreshMargins();
 
             return this.wrapperDiv;
+        },
+        exampleDocument: function() {
+            var view = this;
+            var document = view.model;
+            var div = $('<div />');
+            var uploadFileLink = $('<a href="#"></a>');
+            uploadFileLink.click(function(e) {
+                e.preventDefault();
+                FakeFileUpload.changeMainFile(
+                    function() { 
+                        mixpanel.track('Upload main file', {
+                            'example': true
+                        });
+                        document.killAllPlacements();
+                        document.recall();
+                    }, 
+                    function() { 
+                        
+                    }, 
+                    "/pdf/example_document.pdf",
+                    document.documentid()
+                );
+            });
+
+            uploadFileLink.text("Use our example document");
+
+            div.addClass('design-view-document-buttons-title');
+
+            div.text("Not sure what document to send? ");
+            div.append(uploadFileLink);
+
+            return div;
         },
         title: function() {
             var view = this;
