@@ -1001,3 +1001,7 @@
 "_partOf","av","of"
 "_preparingDocumentFor","Bearbetar dokument för ","Preparing document for"
 "_problemContactingServer","Vi har problem att hantera ditt dokument.<br/>Vänligen ladda om sidan och försök igen.","We're experiencing difficulties handling your document.<br/>Please reload the page and try again."
+"_exampleDocumentWantHelp","Har du inget dokument tillgängligt?","Not sure what document to send?"
+"_exampleDocumentUploadIt","Använd ett av våra dokument","Use our example document"
+"_exampleDocumentTitle","Provar Scrive","Testing Scrive"
+"_exampleDocumentInvitationMessage","<p>Scrive är en tjänst för e-signering, som låter dig skapa och skicka dokument för juridiskt bindande underskrifter.</p>","<p>Scrive is an e-signing solution that lets you safely and easily create and send documents for legally binding signatures.</p>"
