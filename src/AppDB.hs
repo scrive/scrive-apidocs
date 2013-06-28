@@ -37,6 +37,7 @@ import Payments.Tables
 import Payments.Migrations
 import Attachment.Tables
 import ThirdPartyStats.Tables
+import User.CallbackScheme.Tables
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
@@ -177,4 +178,5 @@ kontraTables = [
   , tableELegTransactions
   , tableAsyncEventQueue
   , tableHostClock
+  , tableUsersCallbackScheme
   ] ++ mailerTables

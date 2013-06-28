@@ -52,3 +52,7 @@ getGlobalTemplates = do
   sd <- ask
   (_, templates) <- liftIO $ readMVar (sdTemplates sd)
   return templates
+
+
+instance HasAppConf SchedulerData where
+  getAppConf = sdAppConf

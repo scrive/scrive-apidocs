@@ -1,5 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module AppConf (
-    AppConf(..)
+      AppConf(..)
+    , HasAppConf(..)
   ) where
 
 import Configuration
@@ -13,6 +15,8 @@ import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig(..))
 import BrandedDomains
+import Salesforce.Conf
+import Control.Monad.Reader
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -42,6 +46,7 @@ data AppConf = AppConf {
   , homebase           :: String                       -- ^ url fragment where to fetch scripts
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , brandedDomains     :: BrandedDomains               -- ^ List of branded domains
+  , salesforceConf     :: SalesforceConf             -- ^ Configuration of salesforce
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -80,6 +85,13 @@ instance Configuration AppConf where
     , homebase           = "https://staging.scrive.com"
     , ntpServers         = defaultNtpServers
     , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#CCCCCCC" "#AAAAAA" "blue" "hsl(215,30%,60%)" "#364963" "#7A94B8" "#C2000A"]
+    , salesforceConf     = SalesforceConf
+                              { salesforceAuthenticationUrl = "https://login.salesforce.com/services/oauth2/authorize"
+                              , salesforceTokenUrl = "https://login.salesforce.com/services/oauth2/token"
+                              , salesforceConsumerKey = "3MVG9A2kN3Bn17htNVdtvb5RT3xDFJXCsLqYZX0eYz18WEOqZcOCwrusUxSEOanVBEZRYhhFpZbtjEQGJI7Db"
+                              , salesforceConsumerSecret = "5081538550608494771"
+                              , salesforceRedirectUrl = "https://scrive.com/salesforce/integration"
+                              }
     }
   confOptions = [
   {-
@@ -101,3 +113,15 @@ instance Configuration AppConf where
       "Turn on production environment"
     ]
   confVerify _ = return $ Right ()
+
+
+class HasAppConf c where
+  getAppConf :: c -> AppConf
+  getAppConfM :: (MonadReader c m, HasAppConf c) => m AppConf
+  getAppConfM =  ask >>= return . getAppConf
+
+instance HasAppConf AppConf where
+  getAppConf = id
+
+instance (HasAppConf c) => HasSalesforceConf c where
+  getSalesforceConf = salesforceConf . getAppConf

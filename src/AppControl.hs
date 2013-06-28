@@ -54,6 +54,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Static.Resources as SR
+import Salesforce.Conf
 
 {- |
   Global application data
@@ -319,4 +320,5 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxmixpaneltoken = mixpanelToken appConf
         , ctxhomebase = homebase appConf
         , ctxbrandeddomains = brandedDomains appConf
+        , ctxsalesforceconf = getSalesforceConf appConf
         }

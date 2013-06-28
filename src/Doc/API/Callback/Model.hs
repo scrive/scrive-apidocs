@@ -1,16 +1,10 @@
 module Doc.API.Callback.Model (
     DocumentAPICallback
   , documentAPICallback
-  , triggerAPICallbackIfThereIsOne 
+  , triggerAPICallbackIfThereIsOne
   ) where
 
 import Control.Applicative
-import Data.Int
-import Data.Typeable
-import System.Exit
-import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
-
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import DB
@@ -19,17 +13,13 @@ import Doc.API.Callback.Tables
 import Doc.DocumentID
 import Doc.DocStateData
 import Control.Monad.IO.Class
-
-import Utils.IO
 import MinutesTime
 import qualified Log
-
-data DocumentAPICallback = DocumentAPICallback {
-    dacDocumentID :: DocumentID
-  , dacExpires :: MinutesTime
-  , dacURL :: String
-  , dacAttempt :: Int32
-  } deriving (Show, Typeable)
+import Doc.API.Callback.DocumentAPICallback
+import Doc.API.Callback.Execute
+import User.CallbackScheme.Model
+import Util.SignatoryLinkUtils
+import Control.Monad
 
 documentAPICallback :: Action DocumentID DocumentAPICallback (DocumentID, String) Scheduler
 documentAPICallback = Action {
@@ -59,17 +49,10 @@ documentAPICallback = Action {
       } : acc
 
     evaluateDocumentCallback dac@DocumentAPICallback{..} = do
-      Log.debug $ "Calling " ++ show dacURL ++ " (documentid = " ++ show dacDocumentID ++ ")..."
-      (exitcode, stdout, stderr) <- readCurl [
-          "-X", "POST"
-        , "-d", "documentid=" ++ show dacDocumentID
-        , dacURL
-        ] BSL.empty
-      Log.debug $ "Call result: " ++ BSL.toString stdout
-      case exitcode of
-        ExitSuccess -> deleteAction
-        ExitFailure _ -> do
-          Log.debug $ "Call failed: " ++ BSL.toString stderr
+      res <- execute dac
+      case res of
+        True -> deleteAction
+        False -> do
           case dacAttempt of
             1 -> evaluateAgainAfter 5
             2 -> evaluateAgainAfter 10
@@ -95,12 +78,21 @@ documentAPICallback = Action {
 triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadIO m) => Document -> m ()
 triggerAPICallbackIfThereIsOne doc = do
       case (documentapicallbackurl doc) of
-        Nothing -> return () 
-        Just url -> do
+        Nothing -> do
+          case (join $ maybesignatory <$> getAuthorSigLink doc) of
+            Nothing -> return () --This should never happend
+            Just userid -> do
+             mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
+             case mcallbackschema of
+                 Just (ConstantUrlScheme url) -> addAPICallback url
+                 _ -> return () -- No callback defined for document and for user
+        Just url -> addAPICallback url
+  where
+    addAPICallback url = do
           -- Race condition. Andrzej said that he can fix it later.
           Log.debug $ "Triggering API callback for document " ++ show (documentid doc)
-          now <- getMinutesTime   
+          now <- getMinutesTime
           _ <- dbUpdate $ DeleteAction documentAPICallback (documentid doc)
           _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
           return ()
-          
+

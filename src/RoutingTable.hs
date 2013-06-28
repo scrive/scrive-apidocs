@@ -29,7 +29,7 @@ import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import AppView
 import qualified PadQueue.Control as PadQueue
 import PadApplication.API
-
+import Salesforce.Control as Salesforce
 {- |
    The routing table for the app.
    Routes in this table should be of the form
@@ -166,6 +166,8 @@ staticRoutes = choice
      , allLangDirs $ dir "accountsetup"  $ hPostNoXToken $ toK3 $ UserControl.handleAccountSetupPostWithMethod
 
      , dir "payments" $ dir "contact" $ hPostAllowHttp $ toK0 $ UserControl.handleContactUs
+
+     , dir "salesforce" $ dir "integration" $ hGet $ toK0 $ Salesforce.handleSalesforceIntegration
 
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes

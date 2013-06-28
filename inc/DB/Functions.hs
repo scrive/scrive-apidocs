@@ -7,6 +7,7 @@ module DB.Functions (
   , kRun_
   , kRun
   , kRun01
+  , kRun01_
   , kGetTables
   , kDescribeTable
   , ColumnValue
@@ -49,6 +50,9 @@ kRun01 presql = do
       , tmoGiven = result
     }
   return $ result == 1
+
+kRun01_ :: (MonadDB m, IsSQL sql) => sql -> m ()
+kRun01_ presql = kRun01 presql >> return ()
 
 -- | Represents the binding of an SQL expression to a column in an INSERT or
 --   UPDATE statement.

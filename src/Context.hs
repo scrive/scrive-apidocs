@@ -24,6 +24,7 @@ import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig)
 import BrandedDomains
+import Salesforce.Conf
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -53,6 +54,7 @@ data Context = Context
     , ctxmixpaneltoken       :: String
     , ctxhomebase            :: String
     , ctxbrandeddomains      :: BrandedDomains
+    , ctxsalesforceconf      :: SalesforceConf
     }
 
 -- | anonymousContext changes given context into one that does not hold any user details.
@@ -93,3 +95,6 @@ instance HasMailContext Context where
                                 , mctxtime = ctxtime ctx
                                 , mctxmaybeuser = ctxmaybeuser ctx
                                 }
+
+instance HasSalesforceConf Context where
+  getSalesforceConf = ctxsalesforceconf

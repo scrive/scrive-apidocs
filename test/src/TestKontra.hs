@@ -60,7 +60,7 @@ import qualified Doc.JpegPages as JpegPages
 import Data.Time.Clock
 import Data.Time
 import qualified Log
-
+import Salesforce.Conf
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
@@ -270,6 +270,8 @@ mkContext lang = do
         , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
         , ctxhomebase = "https://staging.scrive.com"
         , ctxbrandeddomains = []
+        , ctxsalesforceconf = SalesforceConf "" "" "" "" ""
+
     }
 
 -- pgsql database --
