@@ -7,6 +7,7 @@ import DB
 import SMS.Model
 import qualified Log
 import MessageData
+import Data.Char
 
 data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
@@ -23,10 +24,24 @@ data SMS = SMS {
 scheduleSMS :: MonadDB m => SMS -> m ()
 scheduleSMS msg@SMS{..} = do
     now <- getMinutesTime
-    sid <- dbUpdate $ CreateSMS smsOriginator (filter goodChars smsMSISDN) smsBody (show smsData) now
+    sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData) now
     Log.debug $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
     return ()
+
+
+fixPhoneNumber :: String -> String
+fixPhoneNumber = filter goodChars
   where
     goodChars ' ' = False
     goodChars '-' = False
+    goodChars '(' = False
+    goodChars ')' = False
     goodChars _   = True
+
+
+fixOriginator :: String -> String
+fixOriginator s = map fixChars $ take 11 s
+  where
+   fixChars c = if (isAlphaNum c ||isSpace c)
+                 then c
+                 else ' '
