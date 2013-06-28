@@ -60,7 +60,7 @@ sendSMS2 (user, password) originator msisdn body ref = do
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 ->
       return True
     _ -> do
-      Log.messengerServer $ "sendSMS2 failed with message " ++ BSLU.toString stderr
+      Log.messengerServer $ "sendSMS2 failed with code: " ++ show code ++ " and message:" ++ BSLU.toString stdout ++ " and stderr:"++ BSLU.toString stderr
       return False
   where
     latin_user = toLatin user
