@@ -57,7 +57,15 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         if (alreadyClicked(this))
           return false;
         trackTimeout('Accept', {'Accept' : 'sign document'});
-        document.takeSigningScreenshot(function() { document.sign().send(); });
+        var errorCallback = function(xhr) {
+          if (xhr.status == 403) {
+            // session timed out
+            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+          } else {
+            window.location.reload();
+          }
+        };
+        document.takeSigningScreenshot(function() { document.sign(errorCallback).send(); });
       }
     }).input().css('margin-top', '-10px')
               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');

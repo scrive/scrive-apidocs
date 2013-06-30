@@ -1006,3 +1006,4 @@
 "_exampleDocumentUploadIt","Använd ett av våra dokument","Use our example document"
 "_exampleDocumentTitle","Provar Scrive","Testing Scrive"
 "_exampleDocumentInvitationMessage","<p>Scrive är en tjänst för e-signering, som låter dig skapa och skicka dokument för juridiskt bindande underskrifter.</p>","<p>Scrive is an e-signing solution that lets you safely and easily create and send documents for legally binding signatures.</p>"
+"_sessionTimedoutInSignview","Det tog för lång tid att slutföra signeringen. För att fortsätta klicka på länken i mailet igen.","Your session has timed out. You can access your document again by following the link in your email."
