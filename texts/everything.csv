@@ -1001,3 +1001,4 @@
 "_partOf","av","of"
 "_preparingDocumentFor","Bearbetar dokument för ","Preparing document for"
 "_problemContactingServer","Vi har problem att hantera ditt dokument.<br/>Vänligen ladda om sidan och försök igen.","We're experiencing difficulties handling your document.<br/>Please reload the page and try again."
+"_signviewAttachmentUploadedInOtherWindow","Tyvärr kan vi inte ladda upp din fil eftersom du har det här dokumentet öppet i ett annat fönster eller tab.","Sorry, we are unable to upload your file because this document is open in another window. Please reload your page to continue."

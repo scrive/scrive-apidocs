@@ -67,6 +67,25 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
           attachment.loading();
         },
         ajaxerror: function(d, a) {
+          try {
+            var response = JSON.parse(d.responseText);
+            if (response.message == 'There is already a file attached for that attachment request.') {
+              var button =  Button.init({color: 'blue',
+                                         size: 'small',
+                                         text: 'Reload page',
+                                         onClick: function() {
+                                           document.location.reload(true);
+                                         }
+                                        });
+              var content = $('<div/>');
+              content.text(localization.signviewAttachmentUploadedInOtherWindow);
+              content.append($('<div style="margin-top: 40px;" />'));
+              content.append(button.input());
+              ScreenBlockingDialog.open({header: content});
+              return;
+            }
+          } catch (e) {
+          }
           if (a === 'parsererror') // file too large
             new FlashMessage({content: localization.fileTooLarge, color: "red"});
           else
