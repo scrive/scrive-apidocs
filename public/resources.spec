@@ -88,7 +88,6 @@ set systemPage
  js   js/utils/language.js
  js   js/utils/time.js
  js   js/utils/cookie.js
- js   js/utils/fakefileupload.js
  js   js/loading.js
  js   js/promo.js
  js   js/arrows.js
@@ -152,6 +151,7 @@ set systemPage
  js   js/designview/process.js
  js   js/designview/designviewtabs.js
  js   js/designview/csvsignatorydesign.js
+ js   js/designview/uploadexampledocument.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js

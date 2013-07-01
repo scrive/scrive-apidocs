@@ -1,6 +1,4 @@
 (function(window) {
-    window.FakeFileUpload = {};
-
     /*
      * Fake a form submission that has a <input type="file"> in it. 
      * 
@@ -24,15 +22,18 @@
         content.push('--' + boundary + "--");
 
         return content.join('\r\n');
-    }
+    };
 
     /*
      * This function uploads the base64 encoded pdf that is supplied 
      * as an url in the url argument and changes the main file of document with id
      * documentId to it.
      * The document's title is supplied in documentTitle.
+     *
+     * Example usage:
+     * uploadExampleDocument(function(documentData) { ... }, function(){}, "/pdf/foo.base64.pdf", 1337, "New title");
      */
-    var changeMainFile = function(successCallback, errorCallback, url, documentId, documentTitle) {
+    window.uploadExampleDocument = function(successCallback, errorCallback, url, documentId, documentTitle) {
         var title = documentTitle || 'My first Scrive document';
         var xtoken = Cookies.get('xtoken');
         var boundary = '-------SCRIVESCRIVESCRIVE';
@@ -54,7 +55,5 @@
             });
         });
     };
-
-    window.FakeFileUpload.changeMainFile = changeMainFile;
 
 })(window);
