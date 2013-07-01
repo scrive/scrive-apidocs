@@ -97,7 +97,9 @@
             div.append(this.innerDiv);
 
             this.innerDiv.append(view.title()).append(view.buttons());
-            this.innerDiv.append(view.exampleDocument());
+            // Help the user along a bit if s/he signed up from post sign view
+            if (SessionStorage.get('postsignview', 'signup') === 'true') 
+                this.innerDiv.append(view.exampleDocument());
             this.wrapperDiv.append(div);
 
             this.refreshMargins();
@@ -111,13 +113,22 @@
             var uploadFileLink = $('<a href="#"></a>');
             uploadFileLink.click(function(e) {
                 e.preventDefault();
+                view.$el.html(view.loading());
                 FakeFileUpload.changeMainFile(
                     function() { 
                         mixpanel.track('Upload main file', {
                             'example': true
                         });
-                        document.killAllPlacements();
-                        document.recall();
+                        
+                        document.setTitle("Testing Scrive");
+                        // Set and save the invitation message, and let the process 
+                        // tab know (setInvitationMessage is silent:ed).
+                        document.setInvitationMessage('<p>Scrive is an e-signing solution that lets you safely and easily create and send documents for legally binding signatures.</p>');
+                        document.trigger('change');
+                        document.save(function() {
+                            document.killAllPlacements();
+                            document.recall();
+                        });
                     }, 
                     function() { 
                         
