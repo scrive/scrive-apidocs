@@ -1029,7 +1029,7 @@
 "_accessNewAccountButton","Spara lösenord och gå till e-arkivet","Set password and go to the e-archive"
 "_accessNewAccountMailContentBody","Du har mottagit ett signerat dokument i ett separat mail. På din begäran har vi också sparat dokumentet. Klicka på <a href=""$ctxhostpart$$passwordlink$"">denna länk för att komma till ditt e-arkiv.</a>","You have received a signed document in separate email.  On your request we have also saved the document. Click <a href=""$ctxhostpart$$passwordlink$"">this link to access your e-archive.</a>"
 "_accessNewAccountMailTitle","Ett dokument har sparats i ditt e-arkiv","A document was saved in your e-archive"
-"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target='_blank' class='clickable' href='/Scrive/terms'>Scrive Allmänna Villkor</a>","I have read and accept the <a target='_blank' class='clickable' href='/Scrive/terms'>Scrive Terms of Service</a>"
+"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target='_blank' class='clickable' href='/sv/terms'>Scrive Allmänna Villkor</a>","I have read and accept the <a target='_blank' class='clickable' href='/en/terms'>Scrive Terms of Service</a>"
 "_signViewCreateAccountTitle","Spara en säkerhetskopia?","Save a safety copy?"
 "_signViewCreateAccountSubTitle","Vill du spara en egen säkerhetskopia i Scrives e-arkiv? Det kostar inget.","Do you want to save your own safety copy in Scrive's e-archive? It's free of charge."
 "_signViewCreateAccountLabel","Spara dokumentet","Save document"
