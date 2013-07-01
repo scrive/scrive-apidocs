@@ -79,6 +79,7 @@ describe "subscribe with a credit card" do
     puts "click subscribe"
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
+    # if the test fails here please read http://wiki.scrive.lan/index.php?title=Selenium_Test_Introduction#Payments_tests_fail
     (@h.wait_until { @h.driver.find_element :css => ".modal-footer a.button"}).click
 
   end
