@@ -133,7 +133,7 @@
                     function() { 
                         
                     }, 
-                    "/pdf/example_document.pdf",
+                    "/pdf/example_document_" + localization.code + ".base64.pdf",
                     document.documentid()
                 );
             });
