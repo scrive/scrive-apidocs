@@ -98,8 +98,10 @@
 
             this.innerDiv.append(view.title()).append(view.buttons());
             // Help the user along a bit if s/he signed up from post sign view
-            if (SessionStorage.get('postsignview', 'signup') === 'true') 
+            if (SessionStorage.get('postsignview', 'signup') === 'true') {
                 this.innerDiv.append(view.exampleDocument());
+                SessionStorage.set('postsignview', 'signup', false);
+            }
             this.wrapperDiv.append(div);
 
             this.refreshMargins();
@@ -131,6 +133,8 @@
                         });
                     }, 
                     function() { 
+                        mixpanel.track('Error',
+                        {Message: 'could not upload example document'});
                         
                     }, 
                     "/pdf/example_document_" + localization.code + ".base64.pdf",
