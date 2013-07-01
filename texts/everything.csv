@@ -1171,3 +1171,7 @@
 "_fontSizeBig","stor","large"
 "_fontSizeLarge","mycket stor","huge"
 "_fontSizeCustom","anpassa","custom"
+"_exampleDocumentWantHelp","Har du inget dokument tillgängligt?","Not sure what document to send?"
+"_exampleDocumentUploadIt","Använd ett av våra dokument","Use our example document"
+"_exampleDocumentTitle","Provar Scrive","Testing Scrive"
+"_exampleDocumentInvitationMessage","<p>Scrive är en tjänst för e-signering, som låter dig skapa och skicka dokument för juridiskt bindande underskrifter.</p>","<p>Scrive is an e-signing solution that lets you safely and easily create and send documents for legally binding signatures.</p>"

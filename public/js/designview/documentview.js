@@ -120,10 +120,10 @@
                             'example': true
                         });
                         
-                        document.setTitle("Testing Scrive");
+                        document.setTitle(localization.designview.exampledocument.documentTitle);
                         // Set and save the invitation message, and let the process 
                         // tab know (setInvitationMessage is silent:ed).
-                        document.setInvitationMessage('<p>Scrive is an e-signing solution that lets you safely and easily create and send documents for legally binding signatures.</p>');
+                        document.setInvitationMessage(localization.designview.exampledocument.documentInvitationMessage);
                         document.trigger('change');
                         document.save(function() {
                             document.killAllPlacements();
@@ -138,11 +138,11 @@
                 );
             });
 
-            uploadFileLink.text("Use our example document");
+            uploadFileLink.text(localization.designview.exampledocument.uploadIt);
 
             div.addClass('design-view-document-buttons-title');
 
-            div.text("Not sure what document to send? ");
+            div.text(localization.designview.exampledocument.wantHelp + ' ');
             div.append(uploadFileLink);
 
             return div;
