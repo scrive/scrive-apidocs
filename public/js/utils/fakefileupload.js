@@ -24,7 +24,7 @@
         content.push('--' + boundary + "--");
 
         return content.join('\r\n');
-    }
+    };
 
     /*
      * This function uploads the base64 encoded pdf that is supplied 
