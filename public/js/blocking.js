@@ -78,7 +78,7 @@
             model.fetch({success: function() {
                 model.trigger('fetch');
                 mixpanel.people.set({
-                    'Payment Plan'        : model.plan(),
+                    'Price plan'          : model.plan(),
                     'Subscription status' : model.status(),
                     'Documents used'      : model.docsUsed(),
                     'Documents total'     : model.docsTotal(),

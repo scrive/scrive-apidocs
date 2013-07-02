@@ -97,59 +97,11 @@
             div.append(this.innerDiv);
 
             this.innerDiv.append(view.title()).append(view.buttons());
-            // Help the user along a bit if s/he signed up from post sign view
-            if (SessionStorage.get('postsignview', 'signup') === 'true') {
-                this.innerDiv.append(view.exampleDocument());
-                SessionStorage.set('postsignview', 'signup', false);
-            }
             this.wrapperDiv.append(div);
 
             this.refreshMargins();
 
             return this.wrapperDiv;
-        },
-        exampleDocument: function() {
-            var view = this;
-            var document = view.model;
-            var div = $('<div />');
-            var uploadFileLink = $('<a href="#"></a>');
-            uploadFileLink.click(function(e) {
-                e.preventDefault();
-                view.$el.html(view.loading());
-                FakeFileUpload.changeMainFile(
-                    function() { 
-                        mixpanel.track('Upload main file', {
-                            'example': true
-                        });
-                        
-                        document.setTitle(localization.designview.exampledocument.documentTitle);
-                        // Set and save the invitation message, and let the process 
-                        // tab know (setInvitationMessage is silent:ed).
-                        document.setInvitationMessage(localization.designview.exampledocument.documentInvitationMessage);
-                        document.trigger('change');
-                        document.save(function() {
-                            document.killAllPlacements();
-                            document.recall();
-                        });
-                    }, 
-                    function() { 
-                        mixpanel.track('Error',
-                        {Message: 'could not upload example document'});
-                        
-                    }, 
-                    "/pdf/example_document_" + localization.code + ".base64.pdf",
-                    document.documentid()
-                );
-            });
-
-            uploadFileLink.text(localization.designview.exampledocument.uploadIt);
-
-            div.addClass('design-view-document-buttons-title');
-
-            div.text(localization.designview.exampledocument.wantHelp + ' ');
-            div.append(uploadFileLink);
-
-            return div;
         },
         title: function() {
             var view = this;
