@@ -165,7 +165,7 @@ showAdminUserDocuments userId = onlySalesOrAdmin $ do
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
-    params <- getListParamsNew
+    params <- getListParams
     let
       filters = companySearchingFromParams params
       sorting = companySortingFromParams params
@@ -246,7 +246,7 @@ userSortingFromParams params =
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
-    params <- getListParamsNew
+    params <- getListParams
     let filters = userSearchingFromParams params
         sorting = userSortingFromParams params
         pagination = ((listParamsOffset params),(usersPageSize * 4))
@@ -653,7 +653,7 @@ Used signatures last 12 months
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
 
-  params <- getListParamsNew
+  params <- getListParams
   muserid <- readField "userid"
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params

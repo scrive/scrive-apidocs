@@ -98,7 +98,7 @@ handleCompanyAccountsInternal cid = do
       , cadeletable = True
       , caactivated = False
       }
-  params <- getListParamsNew
+  params <- getListParams
   let companypage = companyAccountsSortSearchPage params companyaccounts
   runJSONGenT $ do
     objects "list" $ for (take companyAccountsPageSize $ list companypage) $ \f -> do

@@ -1,4 +1,8 @@
-module OAuth.Util where
+module OAuth.Util(
+    getTempCredRequest
+  , getTokenRequest
+  , getAuthorization
+) where
 
 import Kontra
 import OAuth.Model
@@ -41,7 +45,7 @@ getTempCredRequest = do
           mcallback         = parseURI =<< UTF.decode <$> (URL.decode =<< lookupAndRead "oauth_callback" params)
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           mprivileges       = readPrivileges =<< mprivilegesstring
-          errors            = intercalate "; " 
+          errors            = intercalate "; "
                    (["oauth_signature_method must be 'PLAINTEXT'"]         <| Just "PLAINTEXT" /= msigtype   |> [] ++
                     ["oauth_signature was missing or in bad format"]       <| isNothing mapisecret           |> [] ++
                     ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] ++
@@ -54,9 +58,9 @@ getTempCredRequest = do
         else return $ Right $ OAuthTempCredRequest { tcCallback   = fromJust mcallback
                                                    , tcAPIToken   = fromJust mapitoken
                                                    , tcAPISecret  = fromJust $ fst $ fromJust mapisecret
-                                                   , tcPrivileges = fromJust mprivileges           
+                                                   , tcPrivileges = fromJust mprivileges
                                                    }
-          
+
 getTokenRequest :: Kontrakcja m => m (Either String OAuthTokenRequest)
 getTokenRequest = do
   eparams <- getAuthorizationHeader
@@ -68,7 +72,7 @@ getTokenRequest = do
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           mtemptoken        = lookupAndReadString "oauth_token" params
           mverifier         = lookupAndReadString "oauth_verifier" params
-          errors            = intercalate "; " 
+          errors            = intercalate "; "
                    (["oauth_signature_method must be 'PLAINTEXT'"]             <| Just "PLAINTEXT" /= msigtype   |> [] ++
                     ["oauth_signature was missing or in bad format"]           <| isNothing mapisecret           |> [] ++
                     ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] ++
@@ -96,7 +100,7 @@ getAuthorization = do
           mapisecret        = splitSignature =<< lookupAndRead "oauth_signature" params
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           macctoken         = lookupAndReadString "oauth_token" params
-          errors            = intercalate "; " 
+          errors            = intercalate "; "
                    (["oauth_signature_method must be 'PLAINTEXT'"]             <| Just "PLAINTEXT" /= msigtype   |> [] ++
                     ["oauth_signature was missing or in bad format"]           <| isNothing mapisecret           |> [] ++
                     ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] ++

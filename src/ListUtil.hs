@@ -29,8 +29,7 @@ module ListUtil(
               PagedList(..)
             , ListParams
             , emptyListParams
-            , getListParamsNew
-            , getListParamsForSearch
+            , getListParams
             , listSortSearchPage
             , SortingFunction
             , SearchingFunction
@@ -117,8 +116,8 @@ emptyListParams =
   }
 
 {- New version working with JSON interface-}
-getListParamsNew :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams
-getListParamsNew = do
+getListParams :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams
+getListParams = do
     offset'  <- readField "offset"
     limit'   <- readField "limit"
     search  <- getField "textfilter"
@@ -163,12 +162,6 @@ singlePageListToJSON items =
         value "pageCurrent" (0 :: Int)
         value "itemMin"     (0 :: Int)
         value "itemMax"     (itemCount - 1)
-
-
-getListParamsForSearch :: (ServerMonad m, Functor m, HasRqData m, MonadIO m) => m ListParams
-getListParamsForSearch = do
-    search <- getField "search"
-    return $ emptyListParams { search  = search}
 
 
 {- | Applying  params to the list -}

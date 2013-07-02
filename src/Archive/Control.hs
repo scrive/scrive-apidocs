@@ -170,7 +170,7 @@ jsonDocumentsList = do
   Log.debug $ "Long list " ++ (show $ map fromEnum [SCDraft,SCCancelled,SCRejected,SCTimedout,SCError,SCDeliveryProblem,SCSent,SCDelivered,SCRead,SCOpened,SCSigned])
   user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
   doctype <- getField' "documentType"
-  params <- getListParamsNew
+  params <- getListParams
   let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted False False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
