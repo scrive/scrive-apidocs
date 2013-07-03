@@ -255,7 +255,7 @@ window.Document = Backbone.Model.extend({
             function() { callDone() },
             3000);
     },
-    sign: function() {
+    sign: function(errorCallback) {
         var document = this;
         var fields = [];
         _.each(this.currentSignatory().fields(), function(field) {
@@ -276,8 +276,12 @@ window.Document = Backbone.Model.extend({
                 window.location.reload();
               }
             },
-            ajaxerror : function() {
-              window.location.reload();
+            ajaxerror : function(xhr) {
+              if (errorCallback != undefined) {
+                errorCallback(xhr);
+              } else {
+                window.location.reload();
+              }
             }
         });
     },

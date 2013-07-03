@@ -9,6 +9,8 @@ javascriptLocalisation =
              , welcomeback : "$_welcomeback()$"
              , problemContactingServer : "$_problemContactingServer()$"
              , esigningpoweredbyscrive : "E-signing powered by Scrive"
+             , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"
+             , signviewSigningFailed : "$_signviewSigningFailed()$"
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"
