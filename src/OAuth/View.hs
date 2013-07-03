@@ -7,7 +7,6 @@ import Data.Int
 import Text.StringTemplates.Templates
 import OAuth.Model
 import qualified Text.StringTemplates.Fields as F
-import User.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import Text.JSON
@@ -34,12 +33,6 @@ pagePrivilegesConfirm ctx privileges companyname token = do
          contextInfoFields ctx
      simpleHtmlResonseClrFlash rsp
 
-showAPIDashboard :: TemplatesMonad m => User -> m String
-showAPIDashboard user = do
-  renderTemplate "apiDashboard" $ do
-      F.value "iscompanyadmin" $ useriscompanyadmin user
-      F.value "seessubscriptiondashboard" $ useriscompanyadmin user || (usercompany user) == Nothing
-
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
 privilegeDescription APIDocCreate = renderTemplate_ "_apiConfiramtionCreatePersmission"
 privilegeDescription APIDocCheck  = renderTemplate_ "_apiConfiramtionReadPermission"
@@ -62,14 +55,9 @@ jsonFromAPIToken (apitoken, apisecret) =
     J.value "apisecret" $ show apisecret
 
 jsonFromGrantedPrivilege :: (Int64, String, [APIPrivilege]) -> [(APIPrivilege, String)] -> [JSValue]
-jsonFromGrantedPrivilege (tokenid, name, ps) ds =
-  [runJSONGen $ do
-      J.value "tokenid" $ show tokenid
-      J.value "name" name
-      J.value "privilege" ""] ++
-  (for ps $ \p -> do
+jsonFromGrantedPrivilege (tokenid, name, ps) ds =for ps $ \p -> do
       runJSONGen $ do
         J.value "tokenid" $ show tokenid
         J.value "name" name
         J.value "privilegedescription" $ lookup p ds
-        J.value "privilege" $ show p)
+        J.value "privilege" $ show p

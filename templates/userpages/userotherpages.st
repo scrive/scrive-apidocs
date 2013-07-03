@@ -1,3 +1,0 @@
-####
-statsOrgTotal=$_statsOrgTotal()$
-###

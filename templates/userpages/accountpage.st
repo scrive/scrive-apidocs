@@ -14,3 +14,5 @@ showAccount =
 </div>
 
 #####
+statsOrgTotal=$_statsOrgTotal()$
+###

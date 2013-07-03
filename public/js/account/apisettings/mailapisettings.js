@@ -241,7 +241,7 @@ var MailAPISettingsView = Backbone.View.extend({
        var model = this.model;
        if (!model.ready()) return;
        var container = $(this.el).empty();
-       var box = $("<div class='tab-content account'/>");
+       var box = $("<div class='tab-content'/>");
        container.append(box);
 
        box.append(this.personalSettings());
@@ -257,7 +257,7 @@ var MailAPISettingsView = Backbone.View.extend({
 
 window.MailAPISettings = function(args) {
           var model = new MailAPISettingsModel();
-          var view =  new MailAPISettingsView({model : model, el : $("<div class='tab-container'/>")});
+          var view =  new MailAPISettingsView({model : model, el : $("<div class='tab-container mailapisettings'/>")});
           return {
               refresh : function() {model.user().fetch({cache: false}); model.trigger("reset");},
               el  : function() {return $(view.el);}

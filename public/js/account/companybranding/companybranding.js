@@ -187,7 +187,7 @@ window.CompanyBrandingView = Backbone.View.extend({
       return this;
     }
     $(this.el).children().detach();
-    var container = $("<div class='tab-content companybranding' />");
+    var container = $("<div class='tab-content' />");
     $(this.el).append(container);
     container.append(model.tabs().el());
 
@@ -199,7 +199,7 @@ window.CompanyBrandingView = Backbone.View.extend({
 
 window.CompanyBranding = function(args) {
     var model = new CompanyBrandingModel(args || {});
-    var view = new CompanyBrandingView({ model: model, el:$("<div class='tab-container account'/>") });
+    var view = new CompanyBrandingView({ model: model, el:$("<div class='tab-container companybranding'/>") });
     return {
       refresh: function() {view.clean(); model.refresh();},
       el : function() { return $(view.el); }

@@ -7,11 +7,7 @@ module CompanyAccounts.CompanyAccountsView (
     pageDoYouWantToBeCompanyAccount,
 
     -- flash messages
-    flashMessageCompanyAccountInviteSent,
-    flashMessageCompanyAccountInviteResent,
-    flashMessageUserHasBecomeCompanyAccount,
-    flashMessageUserHasLiveDocs,
-    flashMessageCompanyAccountDeleted
+    flashMessageUserHasBecomeCompanyAccount
     ) where
 
 import Control.Applicative ((<$>))
@@ -71,25 +67,9 @@ pageDoYouWantToBeCompanyAccount company =
 
 -------------------------------------------------------------------------------
 
-flashMessageCompanyAccountInviteSent :: TemplatesMonad m => m FlashMessage
-flashMessageCompanyAccountInviteSent =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashCompanyAccountInviteSent"
-
-flashMessageCompanyAccountInviteResent :: TemplatesMonad m => m FlashMessage
-flashMessageCompanyAccountInviteResent =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashCompanyAccountInviteResent"
-
 flashMessageUserHasBecomeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage
 flashMessageUserHasBecomeCompanyAccount company =
   toFlashMsg OperationDone <$> renderTemplate "flashMessageUserHasBecomeCompanyAccount"
                                   (F.value "companyname" $ getCompanyName company)
-
-flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
-flashMessageUserHasLiveDocs =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserHasLiveDocs"
-
-flashMessageCompanyAccountDeleted :: TemplatesMonad m => m FlashMessage
-flashMessageCompanyAccountDeleted =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageCompanyAccountDeleted"
 
 -------------------------------------------------------------------------------

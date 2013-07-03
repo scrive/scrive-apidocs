@@ -49,6 +49,8 @@ set systemPage
  less less/archive.less
  less less/account.less
  less less/companybranding.less
+ less less/companyaccountsandstats.less
+ less less/apisettings.less
  less less/signaturedrawer.less
  less less/paddeviceview.less
  less less/createfromtemplate.less
@@ -176,11 +178,14 @@ set systemPage
  js   js/account/mailapi.js
  js   js/account/company.js
  js   js/account/user.js
- js   js/account/stats.js
- js   js/account/accountsettings.js
- js   js/account/securitysettings.js
- js   js/account/mailapisettings.js
- js   js/account/companyaccounts.js
+ js   js/account/accountsettings/accountsettings.js
+ js   js/account/accountsettings/changepasswordpopup.js
+ js   js/account/apisettings/apisettings.js
+ js   js/account/apisettings/mailapisettings.js
+ js   js/account/apisettings/oauthdashboard.js
+ js   js/account/usersandstats/stats.js
+ js   js/account/usersandstats/companyaccounts.js
+ js   js/account/usersandstats/companyaccountsandstats.js
  js   js/account/companybranding/companybrandingutils.js
  js   js/account/companybranding/companybrandingemail.js
  js   js/account/companybranding/companybrandingsignview.js

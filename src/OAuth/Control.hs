@@ -11,14 +11,12 @@ import Utils.List
 import Utils.Read
 import KontraLink
 import Happstack.StaticRouting(Route, choice, dir)
-import User.Utils
 import Util.MonadUtils
 import Control.Exception.Lifted
 import DB.SQL2
 import OAuth.View
 import OAuth.Util
 import User.Model
-import AppView
 import qualified Log
 import ListUtil
 
@@ -46,7 +44,6 @@ oauth = choice [
   dir "oauth" $ dir "createpersonaltoken"  $ hPost $ toK0 $ createPersonalToken,
   dir "oauth" $ dir "deletepersonaltoken"  $ hPost $ toK0 $ deletePersonalToken,
   dir "oauth" $ dir "deleteprivilege"      $ hPost $ toK0 $ deletePrivilege,
-  dir "oauth" $ dir "dashboard"            $ hGet  $ toK0 $ apiDashboard,
   dir "oauth" $ dir "dashboard" $ dir "personaltoken"     $ hGet $ toK0 $ apiDashboardPersonalTokens,
   dir "oauth" $ dir "dashboard" $ dir "apitokens"         $ hGet $ toK0 $ apiDashboardAPITokens,
   dir "oauth" $ dir "dashboard" $ dir "grantedprivileges" $ hGet $ toK0 $ apiDashboardGrantedPrivileges
@@ -122,13 +119,6 @@ tokenCredRequest = api $ do
       return $ FormEncoded [("oauth_token",        show accesstoken)
                            ,("oauth_token_secret", show accesssecret)
                            ]
-
--- Show API Dashboard
-
-apiDashboard :: Kontrakcja m => m (Either KontraLink Response)
-apiDashboard = checkUserTOSGet $ do
-  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
-  showAPIDashboard user >>= renderFromBody kontrakcja
 
 apiDashboardPersonalTokens :: Kontrakcja m => m JSValue
 apiDashboardPersonalTokens = do

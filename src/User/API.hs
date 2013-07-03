@@ -51,6 +51,7 @@ import Doc.Model
 import ActionQueue.Core
 import ActionQueue.PasswordReminder
 import KontraLink
+import Utils.Monad
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -143,6 +144,10 @@ apiCallUpdateUserProfile = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   ctx <- getContext
   infoUpdate <- lift $ getUserInfoUpdate
+
+  mlang <- lift $  (join . (fmap langFromCode)) <$> getField "lang"
+  when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = fromJust mlang  }
+
   _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
   _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                                (userinfo user) (infoUpdate $ userinfo user)

@@ -2,11 +2,8 @@
 module Doc.DocView (
     pageCreateFromTemplate
   , documentInfoFields
-  , flashAuthorSigned
   , flashDocumentRestarted
   , flashDocumentProlonged
-  , flashMessageCSVSent
-  , flashMessageInvalidCSV
   , flashRemindMailSent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
@@ -75,18 +72,6 @@ flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
     template_name =
       maybe "flashRemindMailSentNotSigned"
       (const "flashRemindMailSentSigned")
-
-flashAuthorSigned :: TemplatesMonad m => m FlashMessage
-flashAuthorSigned =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashAuthorSigned"
-
-flashMessageInvalidCSV :: TemplatesMonad m => m FlashMessage
-flashMessageInvalidCSV =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidCSV"
-
-flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
-flashMessageCSVSent doccount =
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do

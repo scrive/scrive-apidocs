@@ -138,7 +138,11 @@ staticRoutes = choice
      , dir "account" $ dir "phoneme" $ hPostNoXToken $ toK0 $ UserControl.handleRequestPhoneCall
 
      --CompanyAccountsControl
-     , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ CompanyAccounts.handlePostCompanyAccounts
+     , dir "account" $ dir "companyaccounts" $ dir "add" $ hPost $ toK0 $ CompanyAccounts.handleAddCompanyAccount
+     , dir "account" $ dir "companyaccounts" $ dir "resend" $ hPost $ toK0 $ CompanyAccounts.handleResendToCompanyAccount
+     , dir "account" $ dir "companyaccounts" $ dir "changerole" $ hPost $ toK0 $ CompanyAccounts.handleChangeRoleOfCompanyAccount
+     , dir "account" $ dir "companyaccounts" $ dir "remove" $ hPost $ toK0 $ CompanyAccounts.handleRemoveCompanyAccount
+
      , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
      , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
      , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount

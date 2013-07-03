@@ -848,15 +848,20 @@ javascriptLocalisation =
            , deny : "$_apiConfiramtionDeny()$"
       }
       , apiDashboard : {
-            deleteToken :  "$_apiDashboardDelete()$"
+            name : "$_apiOauthSettings()$"
+          , reveal : "$_apiOauthReveal()$"
+          , deleteToken :  "$_apiDashboardDelete()$"
           , deleteAll : "$_apiDashboardDeleteAll()$"
           , grantedPriviligesDescription: "$_apiDashboardGrantedPriviligesDescription()$"
           , personalTokenDescription: "$_apiDashboardpersonalTokenDescription()$"
           , personalTokenCreate: "$_apiDashboardPersonalTokenCreate()$"
           , apiTokenDescription : "$_apiDashboardApiTokenDescription()$"
-          , apiTokenCreate : "$_apiDashboardApiTokenCreate()$"
+          , apiTokenCreate  : "$_apiDashboardApiTokenCreate()$"
           , personOrCompany : "$_apiDashboardPersonOrCompany()$"
-          , privilige       :  "$_apiDashboardPrivilige()$"
+          , privilige       : "$_apiDashboardPrivilige()$"
+          , personalTokens  : "$_apiDashboardPersonalToken()$"
+          , grandedTokens   : "$_apiDashboardGrantedPriviliges()$"
+          , apiTokens       : "$_apiDashboardApiToken()$"
       }
       , account :{
             accountDetails :  {
@@ -893,6 +898,9 @@ javascriptLocalisation =
               , companyCreated : "$_flashMessageCompanyCreated()$"
 
             }
+          , apiSettings : {
+                name : "$_apiSettings()$"
+          }
           , accountSecurity : {
                 name            : "$_HeadAccountSettings()$"
               , passwordSection : "$_password()$"
@@ -922,6 +930,9 @@ javascriptLocalisation =
               , deleteModalBody : "$_listLocalDialogsBody()$ "
               , deleteModalTitle : "$_delete()$"
               , deleteFailedHasDocuments : "$_flashMessageUserHasLiveDocs()$"
+              , companyInviteSent : "$_flashCompanyAccountInviteSent()$"
+              , companyInviteResent : "$_flashCompanyAccountInviteResent()$"
+              , companyAccountDeleted : "$_flashMessageCompanyAccountDeleted()$"
               , columnName :  "$_name()$"
               , columnEmail : "$_email()$"
               , columnRole :  "$_role()$"

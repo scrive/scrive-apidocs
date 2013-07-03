@@ -25,6 +25,7 @@ import TestingUtil
 import TestKontra as T
 import Util.HasSomeUserInfo
 import qualified Control.Exception.Lifted as E
+import Text.JSON.Gen
 
 companyAccountsTests :: TestEnvSt -> Test
 companyAccountsTests env = testGroup "CompanyAccounts" [
@@ -93,11 +94,10 @@ test_addingANewCompanyAccount = do
                         , ("fstname", inText "Bob")
                         , ("sndname", inText "Blue")
                         ]
-  (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _) <- runTestKontra req ctx $ handleAddCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
+
 
   Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
   assertEqual "New user is in company" (Just $ companyid company) (usercompany newuser)
@@ -125,11 +125,9 @@ test_addingExistingPrivateUserAsCompanyAccount = do
                         , ("fstname", inText "Bob")
                         , ("sndname", inText "Blue")
                         ]
-  (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _) <- runTestKontra req ctx $ handleAddCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
 
   Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
   assertEqual "Invited user still has no company" (usercompany updatedexistinguser) Nothing
@@ -152,10 +150,9 @@ test_addingExistingCompanyUserAsCompanyAccount = do
                         , ("fstname", inText "Bob")
                         , ("sndname", inText "Blue")
                         ]
-  (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _) <- runTestKontra req ctx $ handleAddCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 0 (length $ ctxflashmessages ctx') -- We don't have a flash on fail there
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" False)
 
   Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
   assertEqual "Invited user's company stays the same" (usercompany updatedexistinguser)
@@ -180,11 +177,10 @@ test_resendingInviteToNewCompanyAccount = do
                         , ("resendemail", inText "bob@blue.com")
                         , ("sndname", inText "Blue")
                         ]
-  (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _) <- runTestKontra req ctx $ handleResendToCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "resent" True)
+
 
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
@@ -206,11 +202,10 @@ test_resendingInviteToPrivateUser = do
                         , ("resendemail", inText "bob@blue.com")
                         , ("sndname", inText "Blue")
                         ]
-  (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _ ) <- runTestKontra req ctx $ handleResendToCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "resent" True)
+
 
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
@@ -228,9 +223,9 @@ test_switchingStandardToAdminUser = do
                         , ("changeid", inText $ show (userid standarduser))
                         , ("makeadmin", inText $ "true")
                         ]
-  (res, _ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "changed" True)
 
   Just updateduser <- dbQuery $ GetUserByID (userid standarduser)
   assertBool "User is now an admin" (useriscompanyadmin updateduser)
@@ -251,9 +246,9 @@ test_switchingAdminToStandardUser = do
                         , ("changeid", inText $ show (userid adminuser))
                         , ("makeadmin", inText $ "false")
                         ]
-  (res, _ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "changed" True)
 
   Just updateduser <- dbQuery $ GetUserByID (userid adminuser)
   assertBool "User is now standard" (not $ useriscompanyadmin updateduser)
@@ -272,9 +267,9 @@ test_removingCompanyAccountInvite = do
                         , ("removeid", inText $ "0")
                         , ("removeemail", inText $ "bob@blue.com")
                         ]
-  (res, _ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
+  (res, _ctx') <- runTestKontra req ctx $ handleRemoveCompanyAccount
 
-  assertEqual "Response code is 303" 303 (rsCode res)
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "removed" True)
 
   assertCompanyInvitesAre company []
 
@@ -298,8 +293,10 @@ test_removingCompanyAccountWorks = do
                         , ("removeid", inText $ show (userid standarduser))
                         , ("removeemail", inText $ "jony@blue.com")
                         ]
-  (_res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts
-  assertEqual "Flash message is of type indicating success"  OperationDone (getFlashType (head (ctxflashmessages ctx')))
+  (res, _) <- runTestKontra req ctx $ handleRemoveCompanyAccount
+
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "removed" True)
+
   deleteduser <- dbQuery $ GetUserByID (userid standarduser)
   assertEqual "User has been deleted" Nothing deleteduser
 

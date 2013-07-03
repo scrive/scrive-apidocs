@@ -131,14 +131,6 @@ flashMessageCSVSent=	$_flashMessageCSVSent()$
 ###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###
-flashMessageUserHasLiveDocs=$_flashMessageUserHasLiveDocs()$
-###
-flashMessageCompanyAccountDeleted=$_flashMessageCompanyAccountDeleted()$
-###
-flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
-###
-flashCompanyAccountInviteResent=$_flashCompanyAccountInviteResent()$
-###
 flashMessageProblemWithEmailChange=$_flashMessageProblemWithEmailChange()$
 ###
 flashMessageYourEmailHasChanged=$_flashMessageYourEmailHasChanged()$

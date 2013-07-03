@@ -21,6 +21,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
     return fullname;
   },
   addCompanyAccountButton : function() {
+    var self = this;
     return Button.init({
         color: "green",
         size: "tiny",
@@ -49,7 +50,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
             body.append(table);
 
 
-            Confirmation.popup({
+            var popup = Confirmation.popup({
               onAccept : function() {
 
                  var callback = function(t,e,v) {   e.css("border-color", "red"); };
@@ -66,15 +67,20 @@ var CompanyAccountsModel = Backbone.Model.extend({
                   if (_.every(vresult, function(a) {return a;})) {
 
                     new Submit({
-                        url: "/account/companyaccounts",
+                        url: "/account/companyaccounts/add",
                         method: "POST",
-                        add : "true",
                         fstname : fstname.val(),
                         sndname : sndname.val(),
                         email : email.val(),
-                        mixpanel : {name : 'Accept',
-                                    props : {'Accept' : 'new account'}}
-                    }).send();
+                        ajax : true,
+                        ajaxsuccess : function(resp) {
+                          self.userList().recall();
+                          if (JSON.parse(resp).added)
+                             new FlashMessage({color: "green", content : localization.account.companyAccounts.companyInviteSent});
+                          popup.close();
+                        },
+                        mixpanel : {name : 'Accept',  props : {'Accept' : 'new account'}}
+                    }).sendAjax();
                  }
               },
               title : localization.account.companyAccounts.createNewModalTitle,
@@ -114,24 +120,18 @@ var CompanyAccountsModel = Backbone.Model.extend({
                               label =  localization.account.companyAccounts.rolePending;
                             }
                             if (user.field("isctxuser") || user.field("role")=="RolePending") {
-                              var role = jQuery("<span>");
-                              role.text(label);
-                              return role;
+                              return  $("<span>").text(label);
                             } else {
-                              var role = jQuery("<a>");
-                              role.text(label);
-
-                              var submitRoleChange = function() {
-                                (new Submit({
-                                  url: "/account/companyaccounts",
-                                  method: "POST",
-                                  changerole: true,
-                                  makeadmin: user.field("role")=="RoleStandard",
-                                  changeid: user.field("id")
-                                })).send();
-                              };
-                              role.click(submitRoleChange);
-                              return role;
+                              return $("<a>").text(label)
+                                             .click(function() {
+                                                  new Submit({
+                                                      url: "/account/companyaccounts/changerole",
+                                                      method: "POST",
+                                                      makeadmin: user.field("role")=="RoleStandard",
+                                                      changeid: user.field("id")
+                                                    }).sendAjax(function() { self.userList().recall();});
+                                                  return false;
+                                             });
                             }
                           }}),
                 new Cell({width: "16px", field:"activated", special: "rendered",
@@ -141,25 +141,29 @@ var CompanyAccountsModel = Backbone.Model.extend({
                               icon.addClass("remind").addClass("icon").css("margin-top","3px");
 
                               var popupResendConfirmation = function() {
-                                  mixpanel.track('Click resend confirmation');
-                                var submit = new Submit({
-                                  url: "/account/companyaccounts",
-                                  method: "POST",
-                                  resend: "true",
-                                  resendid: user.field("id"),
-                                  resendemail: user.field("email"),
-                                    mixpanel : {name : 'Accept',
-                                                props : {'Accept' : 'resend confirmation'}}
-                                });
-                                var text = localization.account.companyAccounts.resendModalBody + self.userFullName(user) + "?";
-                                var content = jQuery("<p/>").text(text);
-                                console.log("text: " + text);
-                                Confirmation.popup({
-                                  submit: submit,
+                                var popup = Confirmation.popup({
+                                  onAccept: function() {
+                                     mixpanel.track('Click resend confirmation');
+                                      var submit = new Submit({
+                                        url: "/account/companyaccounts/resend",
+                                        ajax : true,
+                                        ajaxsuccess : function(resp) {
+                                          popup.close();
+                                          if (JSON.parse(resp).resent)
+                                              new FlashMessage({color: "green", content : localization.account.companyAccounts.companyInviteResent});
+                                          self.userList().recall();
+                                        },
+                                        method: "POST",
+                                        resendid: user.field("id"),
+                                        resendemail: user.field("email"),
+                                        mixpanel : {name : 'Accept',
+                                                      props : {'Accept' : 'resend confirmation'}}
+                                      }).sendAjax();
+                                  },
                                   acceptText: localization.account.companyAccounts.resendModalAccept,
                                   rejectText: localization.cancel,
                                   title: localization.account.companyAccounts.resendModalTitle,
-                                  content: content
+                                  content: $("<p/>").text(localization.account.companyAccounts.resendModalBody + self.userFullName(user) + "?")
                                 });
                               };
                               icon.click(popupResendConfirmation);
@@ -172,47 +176,48 @@ var CompanyAccountsModel = Backbone.Model.extend({
                           rendering: function(value, idx, user) {
                             if (!user.field("isctxuser")) {
                               if (user.field("deletable")) {
-                                var icon = jQuery("<a>");
-                                icon.addClass("icon");
-                                icon.addClass("delete");
-
-                                var popupDeleteConfirmation = function() {
+                                return $("<a class='icon delete'>").click(function() {
                                     mixpanel.track('Click delete user');
-                                  var submit = new Submit({
-                                    url: "/account/companyaccounts",
-                                    method: "POST",
-                                    remove: "true",
-                                    removeid: user.field("id"),
-                                    removeemail: user.field("email"),
-                                      mixpanel : {name : 'Accept',
-                                                  props : {'Accept' : 'delete user'}}
-                                  });
-                                  var text = localization.account.companyAccounts.deleteModalBody + self.userFullName(user) + "?";
-                                  var content = jQuery("<p/>").text(text);
-                                  console.log("text: " + text);
-                                  Confirmation.popup({
-                                    submit: submit,
-                                    acceptText: localization.ok,
-                                    rejectText: localization.cancel,
-                                    title: localization.account.companyAccounts.deleteModalTitle,
-                                    content: content
-                                  });
-                                };
-                                icon.click(popupDeleteConfirmation);
+                                    var text = localization.account.companyAccounts.deleteModalBody + self.userFullName(user) + "?";
+                                    var content = jQuery("<p/>").text(text);
+                                    console.log("text: " + text);
+                                    var popup = Confirmation.popup({
+                                      onAccept: function() {
+                                        mixpanel.track('Click delete user');
+                                        var submit = new Submit({
+                                          url: "/account/companyaccounts/remove",
+                                          method: "POST",
+                                          ajax : true,
+                                          ajaxsuccess : function(resp) {
+                                            popup.close();
+                                            if (JSON.parse(resp).removed)
+                                              new FlashMessage({color: "green", content : localization.account.companyAccounts.companyAccountDeleted});
+                                            else
+                                              new FlashMessage({color: "red", content : localization.account.companyAccounts.deleteFailedHasDocuments});
+                                            self.userList().recall();
+                                          },
+                                          removeid: user.field("id"),
+                                          removeemail: user.field("email"),
+                                          mixpanel : {name : 'Accept', props : {'Accept' : 'delete user'}}
+                                        }).sendAjax();
 
-                                return icon;
+                                      },
+                                      acceptText: localization.ok,
+                                      rejectText: localization.cancel,
+                                      title: localization.account.companyAccounts.deleteModalTitle,
+                                      content: content
+                                    });
+                                    return false;
+                                  }
+                                );
                               } else {
-                                var icon = jQuery("<span>");
-                                icon.addClass("icon");
-                                icon.addClass("delete");
-                                icon.addClass("gray");
-
+                                var icon = jQuery("<span class='icon delete gray'>");
                                 ToolTip.set({ on: icon,
                                               tip: localization.account.companyAccounts.deleteFailedHasDocuments });
                                 return icon;
                               }
                             } else {
-                              return jQuery("<span>");
+                              return $("<span>");
                             }
                         }})
               ]

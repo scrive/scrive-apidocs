@@ -367,7 +367,8 @@
             }
             $(this.el).append(this.tablebox);
             if (this.bottomExtras != undefined) {
-                this.tableboxfooter.append(this.bottomExtras);
+                if (this.bottomExtras instanceof jQuery)
+                  this.tableboxfooter.append(this.bottomExtras);
             }
             if (!this.schema.paging().disabled()) {
                 var pagingFooter = $("<div class='table-paginate'/>");
@@ -459,6 +460,9 @@
             if (this.table != undefined)
                 this.table.detach();
 
+            if (this.bottomExtras != undefined && this.bottomExtras instanceof Function)
+                this.tableboxfooter.empty().append(this.bottomExtras(this.model.length));
+
             if (this.model.length > 0 || this.emptyAlternative == undefined) {
                 if (this.emptyAlternative != undefined) this.emptyAlternative.detach();
                 this.table = $("<table />");
@@ -473,6 +477,7 @@
             else {
                 this.tablebox.prepend(this.emptyAlternative);
             }
+
 
             var body = this.tbody;
             var odd = true;

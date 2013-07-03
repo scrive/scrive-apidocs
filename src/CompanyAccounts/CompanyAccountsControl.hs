@@ -1,7 +1,9 @@
 module CompanyAccounts.CompanyAccountsControl (
     handleCompanyAccounts
-  , handlePostCompanyAccounts
   , handleAddCompanyAccount
+  , handleResendToCompanyAccount
+  , handleChangeRoleOfCompanyAccount
+  , handleRemoveCompanyAccount
   , handleGetBecomeCompanyAccount
   , handlePostBecomeCompanyAccount
   -- this shares some handy stuff with the adminonly section
@@ -166,32 +168,11 @@ companyAccountsSortFunc _ = const $ const EQ
 companyAccountsPageSize :: Int
 companyAccountsPageSize = 100
 
---
-
-{- |
-    Handles a post from the company accounts page and routes
-    it through to either add, remove, change role, or send a resend an invite
-    depending on the flags set within the post variables.
--}
-handlePostCompanyAccounts :: Kontrakcja m => m KontraLink
-handlePostCompanyAccounts = withCompanyAdmin $ \_ -> do
-  add <- isFieldSet "add"
-  resend <- isFieldSet "resend"
-  changerole <- isFieldSet "changerole"
-  remove <- isFieldSet "remove"
-  case True of
-    _ | add -> handleAddCompanyAccount
-    _ | resend -> handleResendToCompanyAccount
-    _ | changerole -> handleChangeRoleOfCompanyAccount
-    _ | remove -> handleRemoveCompanyAccount
-    _ -> return ()
-  return LinkCompanyAccounts
-
 {- |
     Handles adding a company user either by creating them or
     by inviting them to be taken over.
 -}
-handleAddCompanyAccount :: Kontrakcja m => m ()
+handleAddCompanyAccount :: Kontrakcja m => m JSValue
 handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
@@ -229,21 +210,26 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
       _ -> return Nothing
 
   -- record the invite and flash a message
-  when (isJust minvitee) $ do
-    email <- guardJust memail
-    _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
-            invitedemail = Email email
-          , invitedfstname = fstname
-          , invitedsndname = sndname
-          , invitingcompany = companyid company
-          }
-    addFlashM flashMessageCompanyAccountInviteSent
+  if (isJust minvitee)
+    then do
+        email <- guardJust memail
+        _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
+                invitedemail = Email email
+              , invitedfstname = fstname
+              , invitedsndname = sndname
+              , invitingcompany = companyid company
+              }
+        runJSONGenT $ value "added" True
+    else
+        runJSONGenT $ value "added" False
+
+
 
 {- |
     Handles a resend by checking for the user and invite
     and resending the invite that they would've received.
 -}
-handleResendToCompanyAccount :: Kontrakcja m => m ()
+handleResendToCompanyAccount :: Kontrakcja m => m JSValue
 handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   resendid <- getCriticalField asValidUserID "resendid"
   resendemail <- getCriticalField asValidEmail "resendemail"
@@ -272,7 +258,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
           return False
       _ -> return False
 
-  when resent $ addFlashM flashMessageCompanyAccountInviteResent
+  runJSONGenT $ value "resent" resent
 
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
@@ -307,7 +293,7 @@ sendTakeoverCompanyInternalWarningMail inviter company user = do
     Handles a role change by switching a user from
     admin or to company.
 -}
-handleChangeRoleOfCompanyAccount :: Kontrakcja m => m ()
+handleChangeRoleOfCompanyAccount :: Kontrakcja m => m JSValue
 handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   changeid <- getCriticalField asValidUserID "changeid"
   makeadmin <- getField "makeadmin"
@@ -315,13 +301,13 @@ handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   changecompanyid <- guardJust $ usercompany changeuser
   unless (changecompanyid == companyid company) internalError --make sure user is in same company
   _ <- dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
-  return ()
+  runJSONGenT $ value "changed" True
 
 {- |
     Handles deletion of a company user or the deletion of the company invite
     if they haven't yet accepted.
 -}
-handleRemoveCompanyAccount :: Kontrakcja m => m ()
+handleRemoveCompanyAccount :: Kontrakcja m => m JSValue
 handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   removeid <- getCriticalField asValidUserID "removeid"
   removeemail <- getCriticalField asValidEmail "removeemail"
@@ -336,12 +322,12 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
            then do
              _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email $ getEmail removeuser)
              _ <- dbUpdate $ DeleteUser (userid removeuser)
-             addFlashM flashMessageCompanyAccountDeleted
+             runJSONGenT $ value "removed" True
            else
-             addFlashM flashMessageUserHasLiveDocs
+             runJSONGenT $ value "removed" False
     _ -> do
       _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email removeemail)
-      addFlashM flashMessageCompanyAccountDeleted
+      runJSONGenT $ value "removed" True
 
 {- |
     This handles the company account takeover links, and replaces

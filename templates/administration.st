@@ -146,7 +146,7 @@ adminuserpayments=
 	  <li class="float-left"><a href="/adminonly/useradmin/$userid$">Användaruppgifter</a></li>
 	  <li class="active float-left"><a href="/adminonly/useradmin/payments/$userid$">Payment info</a></li>
 	  <li class="float-left"><a href="/adminonly/useradmin/usagestats/$userid$">Statistics</a></li>
-      <li class="float-left"><a href="/adminonly/useradmin/documents/$user.id$">Documents</a></li>
+      <li class="float-left"><a href="/adminonly/useradmin/documents/$userid$">Documents</a></li>
 
           <li class="float-right"/>
 	</ul>

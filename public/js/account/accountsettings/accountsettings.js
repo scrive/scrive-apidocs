@@ -111,7 +111,12 @@ var AccountSettingsModel = Backbone.Model.extend({
   setCompanycountry : function(v) {
      this.set({"companycountry" : v});
   },
-
+  lang : function() {
+    return this.get("lang");
+  },
+  setLang : function(v) {
+    this.set({"lang" : v});
+  },
   reset : function() {
     if (!this.ready()) return;
     this.set({
@@ -122,6 +127,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       , newemail : ""
       , newemailagain : ""
       , phone : this.user().phone()
+      , lang :  this.user().lang() != "sv" ?  "en" : "sv"
       , companyname :    !this.user().hasCompany() ? this.user().usercompanyname() : this.company().companyname()
       , companynumber :  !this.user().hasCompany() ? this.user().usercompanynumber()   : this.company().companynumber()
       , companyposition : this.user().companyposition()
@@ -175,6 +181,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       personalnumber : this.personnumber(),
       email : this.email(),
       phone : this.phone(),
+      lang  : this.lang(),
       companyname :  this.companyname(),
       companynumber :  this.companynumber(),
       companyposition : this.companyposition(),
@@ -205,9 +212,14 @@ var AccountSettingsModel = Backbone.Model.extend({
     if (!self.valid()) {
       return;
     }
+    var languageHasChanged = self.user().lang() != self.lang();
     this.updateProfile(function() {
-      new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue"});
-      self.refresh();
+      if (languageHasChanged)
+        Language.changeOnCurrentPage(self.lang() , function() {
+                new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue", withReload: true});
+        })
+      else
+        new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue", withReload: false});
     });
   },
   refresh : function() {
@@ -231,6 +243,7 @@ var AccountSettingsView = Backbone.View.extend({
     },
     accountSettings : function() {
       // Building frame
+      var self = this;
       var model = this.model;
       var box = $("<div class='blue-box'/>");
       if (model.user().hasCompany())
@@ -263,11 +276,15 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.personnumber))).append($("<td/>").append(personnumberinput)));
 
-      var emailinput = $("<input type='text' disabled='disabled' style='width:140px;margin-right:10px'/>").val(model.email());
+      var emailinput = $("<input type='text' disabled='disabled' style='width:140px;margin-right:10px;;border-color:white;color: #333333;'/>").val(model.email());
       emailinput.change(function() {
           model.setEmail(emailinput.val());
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.email))).append($("<td/>").append(emailinput).append(this.changeEmailButton())));
+
+      var passwordinput = $("<input type='text' disabled='disabled' style='width:140px;margin-right:10px;border-color:white;color: #333333;'/>").val("************");
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Password"))).append($("<td/>").append(passwordinput).append(this.changePasswordButton())));
+
 
       var phoneinput = $("<input type='text' name='phone'/>").val(model.phone());
       phoneinput.change(function() {
@@ -296,7 +313,24 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyposition))).append($("<td/>").append(companypositioninput)));
 
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.lang))).append($("<td/>").append(this.langSelect().el())));
+
+
       return box;
+    },
+    langSelect : function() {
+      var self = this;
+      var model = this.model;
+      this.langselect = new Select({
+                             textWidth : "90px",
+                             name : model.lang() == "en" ? localization.account.accountSecurity.langEN : localization.account.accountSecurity.langSV,
+                             onSelect : function(v) {model.setLang(v); self.langselect.el().replaceWith(self.langSelect().el()); return true;},
+                             options:   model.lang() == "en" ? [{name: localization.account.accountSecurity.langSV, value: "sv"}] :
+                                                                        [{name: localization.account.accountSecurity.langEN, value: "en"}],
+                             textWidth : "203px",
+                             optionsWidth : "230px"
+                           });
+      return this.langselect;
     },
     companySettings : function() {
       // Building frame
@@ -354,6 +388,18 @@ var AccountSettingsView = Backbone.View.extend({
             body.append(table);
 
       return box;
+    },
+    changePasswordButton : function() {
+      var model = this.model;
+      return Button.init({
+        color: "blue",
+        size: "tiny",
+        text: localization.account.accountDetails.changeEmailButton,
+        cssClass : "new-mail-button",
+        onClick: function() {
+            new ChangePasswordPopup();
+          }
+      }).input();
     },
     changeEmailButton : function() {
       var model = this.model;

@@ -39,7 +39,7 @@ var Attachment = Backbone.Model.extend({
       url : "/a/rename/" + attachmentid,
       docname : name,
       method : "POST",
-      ajaxSuccess : function() {
+      ajaxsuccess : function() {
         self.set({title: name}, {silent: true});
         f();
       },
