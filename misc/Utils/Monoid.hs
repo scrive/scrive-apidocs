@@ -3,14 +3,6 @@ module Utils.Monoid where
 import Control.Monad
 import Data.Monoid
 
--- intercalate for monoids
-mintercalate :: Monoid s => (s -> s -> s) -> [s] -> s
-mintercalate f = go
-  where
-    go []     = mempty
-    go (s:[]) = s
-    go (s:ss) = s `f` go ss
-
 -- | Pack value to just unless we have 'mzero'.  Since we can not check
 -- emptyness of string in templates we want to pack it in maybe.
 nothingIfEmpty :: (Eq a, Monoid a) => a -> Maybe a
