@@ -81,7 +81,6 @@ import Data.String.Utils (replace)
 import EvidenceLog.Control
 import Control.Exception.Lifted
 import Doc.DocControl
-import Utils.Tuples
 import Utils.Either
 import Doc.SignatoryScreenshots
 import Doc.Conditions
@@ -346,7 +345,9 @@ apiCallSign  did slid = api $ do
              mvalues <- withJSValue fieldsJSON $ fromJSValueCustomMany $ do
                   ft <- fromJSValueM
                   val <- fromJSValueField "value"
-                  return $ pairMaybe ft val
+                  return $ case (ft,val) of
+                            (Just ft', Just val') -> Just (ft',val')
+                            _ -> Nothing
              case mvalues of
                Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
                Just values -> return values
