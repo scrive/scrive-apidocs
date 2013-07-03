@@ -297,6 +297,12 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
+             , exampledocument : {
+                      wantHelp: "$_exampleDocumentWantHelp()$"
+                    , uploadIt : "$_exampleDocumentUploadIt()$"
+                    , documentTitle : "$_exampleDocumentTitle()$"
+                    , documentInvitationMessage : "$_exampleDocumentInvitationMessage()$"
+             }
              , messages : {
                       sendingDocument: "$_designViewMessageSending()$"
                 }
