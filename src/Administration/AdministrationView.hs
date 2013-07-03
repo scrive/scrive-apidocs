@@ -179,7 +179,6 @@ companyFields mc = do
         F.value "companyzip" $  maybe "" (companyzip . companyinfo)  mc
         F.value "companycity" $  maybe "" (companycity . companyinfo) mc
         F.value "companycountry" $ maybe "" (companycountry . companyinfo) mc
-        F.value "companyemaildomain" $ maybe "" (fromMaybe "" . (companyemaildomain . companyinfo)) mc
         F.value "companyipaddressmasklist" $ maybe "" (intercalate "," . fmap show . companyipaddressmasklist . companyinfo) mc
 
 {-| Full fields set about user -}

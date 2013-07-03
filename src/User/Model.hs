@@ -601,7 +601,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.zip"
   <> ", c.city"
   <> ", c.country"
-  <> ", email_domain"
   <> ", ip_address_mask_list"
   -- InviteInfo:
   <> ", user_invite_infos.inviter_id"
@@ -621,7 +620,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone
      email lang company_name company_number is_free associated_domain cid
-     name number address zip' city country email_domain ip_address_mask inviter_id
+     name number address zip' city country ip_address_mask inviter_id
      invite_time invite_type
      = (
        User {
@@ -658,7 +657,6 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companyzip = fromJust zip'
                 , companycity = fromJust city
                 , companycountry = fromJust country
-                , companyemaildomain = email_domain
                 , companyipaddressmasklist = maybe [] read ip_address_mask
                 }
               , companyui = CompanyUI {

@@ -6,7 +6,6 @@ module ScriveByMail.Action
 
     where
 
-import Company.Model
 import Control.Logic
 import DB
 import Doc.DocStateData
@@ -17,7 +16,6 @@ import Doc.Model
 import File.Model
 import Kontra
 import KontraLink
-import MagicHash
 import Mails.SendMail
 import MinutesTime
 import Utils.Either
@@ -40,7 +38,6 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Char
-import Data.Int
 import Data.List
 import Data.Maybe
 import Data.String.Utils (strip, replace)
@@ -92,7 +89,6 @@ doMailAPI content = do
 
   -- access control
 
-  ctx <- getContext
   let username = parseEmail from
     -- 'extension' is a piece of data that is after + sign in email
     -- addres. example: api+1234@api.skrivapa.se here '1234' is
@@ -121,38 +117,8 @@ doMailAPI content = do
                _ -> do
                    Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User exists but key is wrong; Company does not exist; not sending error because of opportunity for abuse."
                    return Nothing
-    _ ->  -- no user for this address
-      case break (== '@') $ map toLower username of
-        (_, '@':domain) -> do
-          mcompany <- dbQuery $ GetCompanyByEmailDomain domain
-          case mcompany of
-            Just company -> do
-              mcmailapi <- dbQuery $ GetCompanyMailAPI (companyid company)
-              case mcmailapi of
-                Just cmailapi | Just (umapiKey cmailapi) == maybeRead extension -> do
-                  -- we have a non-user with company email domain with matching company mailapi key
-                  -- we need to store the email, send a confirmation to the company admins, a message to the sender
-                  mdelay <- dbUpdate $ AddMailAPIDelay username content (companyid company) (ctxtime ctx)
-                  case mdelay of
-                    Just (delayid, key, True) -> do
-                      cusers <- dbQuery $ GetCompanyAccounts (companyid company)
-                      forM_ (filter useriscompanyadmin cusers) $ \admin -> do
-                        sendMailAPIDelayAdminEmail (getEmail admin) username delayid key (ctxtime ctx)
-                      return ()
-                    Just (_, _, False) -> return () -- no need to do anything; we already have sent an admin confirmation
-                    Nothing -> do
-                      Log.scrivebymail $ "Could not create delay; email: " ++ username ++ " companyid: " ++ show (companyid company)
-                      return () -- this means we had an error
-                  sendMailAPIDelayUserEmail username
-                  return Nothing
-                _ -> do
-                  Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; domain matches but key is wrong; not sending error because of opportunity for abuse."
-                  return Nothing
-            Nothing -> do
-                  Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; domain does not match; not sending error because of opportunity for abuse."
-                  return Nothing
-        _ -> do
-          Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; domain does not match a company: " ++ username ++ "; not sending error because of opportunity for abuse."
+    _ -> do
+          Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; not sending error because of opportunity for abuse."
           return Nothing
 
   -- at this point, the user has been authenticated
@@ -317,30 +283,6 @@ sendMailAPIErrorEmail ctx email msg = do
   kCommit -- Needed because ActionControl will roll back on the error we'll throw
   internalError
 
-sendMailAPIDelayAdminEmail :: Kontrakcja m => String -> String -> Int64 -> MagicHash -> MinutesTime -> m ()
-sendMailAPIDelayAdminEmail adminemail email delayid key now = do
-  ctx <- getContext
-  mail <- mailMailApiDelayAdmin ctx adminemail email delayid key now
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress adminemail adminemail] }
-
-sendMailAPIDelayUserEmail :: Kontrakcja m => String -> m ()
-sendMailAPIDelayUserEmail email = do
-  ctx  <- getContext
-  mail <- mailMailApiDelayUser ctx email
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress email email] }
-
-{- Removed because we should not be marking invitation and seen for author.
-markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> m ()
-markDocumentAuthorReadAndSeen doc@Document{documentid} = do
-  let Just sl@SignatoryLink{signatorylinkid, signatorymagichash, maybesignatory} =
-        getAuthorSigLink doc
-  time <- ctxtime <$> getContext
-  _ <- dbUpdate $ MarkInvitationRead documentid signatorylinkid
-       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
-  _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash
-       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
-  return ()
--}
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
   where
@@ -394,8 +336,8 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
       sendMailAPIErrorEmail ctx username $ "<p>I do not know what the problem is. Perhaps try again with a different email program or contact <a href='mailto:eric@scrive.com'>Mail API Support</a> for help.</p>"
   let jsonString = BS.toString recodedPlain'
-      
-  -- some mail clients insert carriage returns + newlines wherever they want, even 
+
+  -- some mail clients insert carriage returns + newlines wherever they want, even
   -- in the middle of JSON strings! -- Eric
   let ejson = runGetJSON readJSValue $ replace "\n" "" $ replace "\r" "" jsonString
 
@@ -565,7 +507,7 @@ decodeWordsMIME s =  if (utfString `isInfixOf` (toLower <$> s) || utfBString `is
                         then unwords $ map decodeWordsMIMEUTF $ words s
                         else decodeWords s
 
-decodeWordsMIMEUTF :: String -> String                        
+decodeWordsMIMEUTF :: String -> String
 decodeWordsMIMEUTF s = if (utfString `isPrefixOf` (toLower <$> s))
                           then BS.toString  $ BS.pack $ map BSI.c2w $ PQ.decode $ takeWhile ((/=) '?') $ drop (length utfString) s
                           else if (utfBString `isPrefixOf` (toLower <$> s))

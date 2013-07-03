@@ -1,12 +1,6 @@
-module ScriveByMail.Model 
+module ScriveByMail.Model
     (
      MailAPIInfo(..),
-     DeleteMailAPIDelays(..),
-     AddMailAPIDelay(..),
-     GetMailAPIUserRequest(..),
-     GetMailAPIDelaysForEmail(..),
-     ConfirmBossDelay(..),
-     DelayStatus(..),
 
      GetUserMailAPI(..),
      SetUserMailAPIKey(..),
@@ -23,17 +17,11 @@ module ScriveByMail.Model
     )
     where
 
-import Crypto.RNG
 import DB
 import MagicHash
-import MinutesTime
-import qualified Data.ByteString as BS
 import Company.Model
 import User.Model
-import qualified Log
-
 import Control.Monad
-import Data.Maybe
 import Data.Int
 
 data MailAPIInfo = MailAPIInfo {
@@ -169,82 +157,3 @@ data RemoveCompanyMailAPI = RemoveCompanyMailAPI CompanyID
 instance MonadDB m => DBUpdate m RemoveCompanyMailAPI Bool where
   update (RemoveCompanyMailAPI cid) =
     (== 1) `liftM` kRun (SQL "DELETE FROM company_mail_apis WHERE company_id = ?" [toSql cid])
-
-data DelayStatus = DelayWaitAdmin
-                 | DelayWaitUser
-$(enumDeriveConvertible ''DelayStatus)
-
-{- |
-   Create a new Delay to request confirmation from the BOSS.
--}
-data AddMailAPIDelay = AddMailAPIDelay String BS.ByteString CompanyID MinutesTime
-instance (CryptoRNG m, MonadDB m) => DBUpdate m AddMailAPIDelay (Maybe (Int64, MagicHash, Bool)) where
-  update (AddMailAPIDelay email text cid now) = do
-    key :: MagicHash <- random
-    r <- kRun $ SQL ("INSERT INTO mail_api_user_request ("
-                 <> " key"
-                 <> ",email"
-                 <> ",time"
-                 <> ",expires"
-                 <> ",status"
-                 <> ",company_id"
-                 <> ") SELECT ?,?,?,?,?,? "
-                 <> "WHERE NOT EXISTS (SELECT 1 FROM mail_api_user_request WHERE email = ? AND company_id = ?) ")
-                  [ toSql key
-                  , toSql email
-                  , toSql now
-                  , toSql $ 3 `daysAfter` now
-                  , toSql DelayWaitAdmin
-                  , toSql cid
-                  , toSql email
-                  , toSql cid]
-    Log.debug $ "number of rows AddMailAPIDelay: " ++ show r
-    _ <- kRun $ SQL "SELECT id, key FROM mail_api_user_request WHERE email = ? AND company_id = ?"
-                      [toSql email, toSql cid]
-    a <- listToMaybe `liftM` kFold f []
-    case a of
-      Nothing -> return Nothing
-      Just (requestid, key') -> do
-        kRun_ $ SQL ("INSERT INTO mail_api_delay ("
-                     <> " email_text"
-                     <> ",user_request_id"
-                     <> ") VALUES (?,?) ")
-                      [ toSql text
-                      , toSql requestid]
-        return $ Just (requestid, key', r == 1) -- r is 1 when user_request is new
-    where f acc delayid key = (delayid, key):acc
-
-data GetMailAPIUserRequest = GetMailAPIUserRequest Int64 MagicHash MinutesTime
-instance MonadDB m => DBQuery m GetMailAPIUserRequest (Maybe (String, CompanyID)) where
-  query (GetMailAPIUserRequest delayid key now) = do
-    kRun_ $ SQL ("SELECT email, company_id FROM mail_api_user_request "
-            <> "WHERE id = ? AND key = ? AND expires >= ? AND status = ?")
-            [toSql delayid, toSql key, toSql now, toSql DelayWaitAdmin]
-    kFold f [] >>= oneObjectReturnedGuard
-    where f acc email cid = (email, cid):acc
-
-data DeleteMailAPIDelays = DeleteMailAPIDelays Int64 MinutesTime
-instance MonadDB m => DBUpdate m DeleteMailAPIDelays () where
-  update (DeleteMailAPIDelays delayid now) = do
-    kRun_ $ SQL ("DELETE FROM mail_api_user_request "
-            <> "WHERE id = ? "
-            <> "   OR expires < ?")
-            [toSql delayid, toSql now]
-    return ()
-
-data GetMailAPIDelaysForEmail = GetMailAPIDelaysForEmail String MinutesTime
-instance MonadDB m => DBQuery m GetMailAPIDelaysForEmail (Maybe (Int64, [BS.ByteString])) where
-  query (GetMailAPIDelaysForEmail email now) = do
-    kRun_ $ SQL ("SELECT mail_api_user_request.id, mail_api_delay.email_text FROM mail_api_user_request "
-            <> "JOIN mail_api_delay ON mail_api_delay.user_request_id = mail_api_user_request.id "
-            <> "WHERE email = ? AND expires >= ? AND status = ?")
-            [toSql email, toSql now, toSql DelayWaitUser]
-    kFold f Nothing
-    where f Nothing i e = Just (i, [e])
-          f (Just (i, acc)) _ e = Just (i, e:acc)
-
-data ConfirmBossDelay = ConfirmBossDelay Int64 MinutesTime
-instance MonadDB m => DBUpdate m ConfirmBossDelay Bool where
-  update (ConfirmBossDelay delayid now) = do
-    (==1) `liftM` (kRun $ SQL "UPDATE mail_api_user_request SET status = ?, expires = ? WHERE id = ? and expires >= ?"
-                        [toSql DelayWaitUser, toSql $ 30 `daysAfter` now, toSql delayid, toSql now])

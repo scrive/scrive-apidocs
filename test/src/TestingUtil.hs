@@ -124,7 +124,6 @@ instance Arbitrary CompanyInfo where
                          , companyzip        = d
                          , companycity       = e
                          , companycountry    = f
-                         , companyemaildomain = Nothing
                          , companyipaddressmasklist = []
                          }
 
@@ -510,7 +509,6 @@ addNewCompany = do
     companyzip <- rand 10 $ arbString 3 30
     companycity <- rand 10 $ arbString 3 30
     companycountry <- rand 10 $ arbString 3 30
-    companyemaildomain <- rand 10 $ arbString 3 30
     _ <- dbUpdate $ SetCompanyInfo cid $ CompanyInfo
          { companyname = companyname
          , companynumber = companynumber
@@ -518,7 +516,6 @@ addNewCompany = do
          , companyzip = companyzip
          , companycity = companycity
          , companycountry = companycountry
-         , companyemaildomain = Just companyemaildomain
          , companyipaddressmasklist = []
          }
     Just company <- dbQuery $ GetCompany cid

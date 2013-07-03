@@ -137,6 +137,7 @@ kontraMigrations = [
   , removeExternalIDFromCompanies
   , addSealStatusToDocument
   , removeStatsTables
+  , removeEmailDomainFromCompany
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -155,8 +156,6 @@ kontraTables = [
   , tableEvidenceLog
   , tablePadQueue
   , tableCompanyMailAPIs
-  , tableUserRequest
-  , tableMailAPIDelay
   , tableDocumentTags
   , tableSignatoryLinkFields
   , tableSignatoryScreenshots

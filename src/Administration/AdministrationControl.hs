@@ -526,7 +526,6 @@ getCompanyInfoChange = do
   mcompanyzip     <- getField "companyzip"
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
-  mcompanyemaildomain <- getField "companyemaildomain"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   return $ \CompanyInfo{..} ->  CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
@@ -535,9 +534,6 @@ getCompanyInfoChange = do
       , companyzip         = fromMaybe companyzip mcompanyzip
       , companycity        = fromMaybe companycity mcompanycity
       , companycountry     = fromMaybe companycountry mcompanycountry
-      , companyemaildomain = case mcompanyemaildomain of
-                               Just a | not $ null a -> Just a
-                               _                     -> Nothing
       , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
     }
 

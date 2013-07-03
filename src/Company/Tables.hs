@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 12
+  , tblVersion = 13
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -14,7 +14,6 @@ tableCompanies = tblTable {
        , ("zip", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("city", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("email_domain", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("ip_address_mask_list", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_bordercolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_font", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -44,7 +43,6 @@ tableCompanies = tblTable {
           <> ", zip             TEXT   NOT NULL DEFAULT ''"
           <> ", city            TEXT   NOT NULL DEFAULT ''"
           <> ", country         TEXT   NOT NULL DEFAULT ''"
-          <> ", email_domain    TEXT       NULL"
           <> ", ip_address_mask_list    TEXT       NULL"
           <> ", email_bordercolour TEXT    NULL"
           <> ", email_font         TEXT    NULL"

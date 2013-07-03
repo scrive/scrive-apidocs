@@ -52,7 +52,6 @@ staticRoutes = choice
      ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
      -- this is SMTP to HTTP gateway
      , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
-     , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
 
      -- Top level handlers - buttons on top bar, when user is logged in

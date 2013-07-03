@@ -144,3 +144,12 @@ addCustomBrandingOptions =
       kRunRaw "ALTER TABLE companies ADD COLUMN custom_barssecondarycolour TEXT NULL"
       kRunRaw "ALTER TABLE companies ADD COLUMN custom_backgroundcolour TEXT NULL"
   }
+
+removeEmailDomainFromCompany :: MonadDB m => Migration m
+removeEmailDomainFromCompany =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 12
+  , mgrDo = do
+      kRunRaw "ALTER TABLE companies DROP COLUMN email_domain"
+  }

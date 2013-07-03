@@ -506,7 +506,7 @@ mailTakeoverPrivateUserInviteP=
   <ol>
     $_mailTakeoverPrivateUserInviteContentInstructionSecond()$
   </ol>
-  $_mailTakeoverPrivateUserInviteContentLink()$ $_mailTakeoverPrivateUserInviteContentInstructionThird()$ 
+  $_mailTakeoverPrivateUserInviteContentLink()$ $_mailTakeoverPrivateUserInviteContentInstructionThird()$
   $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailTakeoverPrivateUserInviteAcceptButton())$
 ####
 mailRequestChangeEmail=
@@ -571,27 +571,6 @@ mailMailAPIError=
         mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
         mailp2 = "We were unable to process the mail you sent us and therefore have not forwarded the document to anyone.";
         mailp3 = errormsg;
-        mailp4 = "Thanks for using Scrive by Mail"
-    )$
-#####
-mailMailAPIDelayAdmin=
-    Scrive by Mail User Confirmation
-    $nicemail(
-        mailheader= "Scrive by Mail User Confirmation";
-        mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
-        mailp2 = concat(a1="We have just received an email from ";a2=email;a3=" which is an account on your domain, requesting to be added to your Scrive account.");
-        mailp3 = "If this is a valid email address within your company or organization, please click on the confirmation link below and we will create the new account. This link expires in three days for security reasons.";
-        mailp4 = linkk(href=confirmationlink;text="Click here to confirm this account.");
-        mailp5 = "If you received this email in error or if the email address is incorrect, please ignore this email.<br/><br/>Thanks for using Scrive by Mail."
-    )$
-#####
-mailMailAPIDelayUser=
-    Scrive by Mail
-    $nicemail(
-        mailheader= "Scrive By Mail";
-        mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
-        mailp2 = "We were unable to immediately process the mail you sent us and therefore have not forwarded the document to anyone.";
-        mailp3 = "At this point in time, there is no account associated with this email address. We have contacted the Company Account administrators and asked them to confirm the creation of your new account. Upon creation of your account, we will continue processing the document. If you have not received an invitation within three days, please contact the administrator of the Company Account.";
         mailp4 = "Thanks for using Scrive by Mail"
     )$
 #####

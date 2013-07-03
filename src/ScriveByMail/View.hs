@@ -13,15 +13,10 @@ import Data.Maybe
 import Doc.DocProcess
 import Util.SignatoryLinkUtils
 import KontraLink
-import MagicHash
-import MinutesTime
 import ScriveByMail.Model
-import FlashMessage
 import qualified Text.StringTemplates.Fields as F
 import qualified Text.JSON.Gen as J
 import Text.JSON
-import Control.Applicative
-import Data.Int
 import Mails.SendMail(kontramail)
 
 mailMailAPIConfirm :: (MonadDB m, TemplatesMonad m)
@@ -56,20 +51,6 @@ mailMailApiError ctx err = kontramail "mailMailAPIError" $ do
   F.value "errormsg" err
   F.value "ctxhostpart" (ctxhostpart ctx)
 
-mailMailApiDelayAdmin :: TemplatesMonad m => Context -> String -> String -> Int64 -> MagicHash -> MinutesTime -> m Mail
-mailMailApiDelayAdmin ctx adminemail email delayid key expires =
-  kontramail "mailMailAPIDelayAdmin" $ do
-    F.value "ctxhostpart" $ ctxhostpart ctx
-    F.value "confirmationlink" $ ctxhostpart ctx ++ (show $ LinkMailAPIDelayConfirmation adminemail delayid key)
-    F.value "email" email
-    F.value "expires" $ showDateDMY expires
-
-mailMailApiDelayUser :: TemplatesMonad m => Context -> String -> m Mail
-mailMailApiDelayUser ctx email =
-  kontramail "mailMailAPIDelayUser" $ do
-    F.value "ctxhostpart" $ ctxhostpart ctx
-    F.value "email" email
-
 mailAPIInfoFields :: Monad m => MailAPIInfo -> Fields m ()
 mailAPIInfoFields info = do
   F.value "mailapikey"   $ show $ umapiKey        info
@@ -81,11 +62,3 @@ mailAPIInfoJSON info = J.runJSONGenT $ do
   J.value "key"   $ show $ umapiKey        info
   J.value "limit" $ show $ umapiDailyLimit info
   J.value "sent"  $ show $ umapiSentToday  info
-
-
-modalDenyDelay :: TemplatesMonad m => m FlashMessage
-modalDenyDelay = toModal <$> renderTemplate_ "modalDenyDelay"
-
-modalConfirmDelay :: TemplatesMonad m => String -> m FlashMessage
-modalConfirmDelay email =
-  toModal <$> renderTemplate "modalConfirmDelay" (F.value "email" email)

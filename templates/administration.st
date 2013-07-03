@@ -330,12 +330,6 @@ admincompany=
 		    <input type="text" style="width:200px;margin:0" value="$companycountry$" name="companycountry" />
 		  </td>
 		</tr>
-		<tr> <td style="padding-top:10px"><strong>Company email domain</strong></td> <td>optional; be careful with this; example input: <b>scrive.com</b></td></tr>
-		<tr> <td>Email domain:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$companyemaildomain$" name="companyemaildomain" />
-		  </td>
-		</tr>
 		<tr> <td>IP address mask list:</td>
 		  <td>
 		    <input type="text" style="width:200px;margin:0" value="$companyipaddressmasklist$" name="companyipaddressmasklist" />

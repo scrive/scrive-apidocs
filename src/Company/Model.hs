@@ -10,8 +10,6 @@ module Company.Model (
   , CreateCompany(..)
   , SetCompanyInfo(..)
   , UpdateCompanyUI(..)
-  , GetCompanyByEmailDomain(..)
-  , SetCompanyEmailDomain(..)
   , SetCompanyIPAddressMaskList(..)
 
   , CompanyFilter(..)
@@ -40,7 +38,6 @@ data CompanyInfo = CompanyInfo {
   , companyzip     :: String
   , companycity    :: String
   , companycountry :: String
-  , companyemaildomain :: Maybe String
   , companyipaddressmasklist :: [IPAddressWithMask]
   } deriving (Eq, Ord, Show)
 
@@ -74,7 +71,7 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
   mapM_ (sqlWhere . findWord) (words text)
   where
       findWordInField word field = ("companies." <> field) <+> "ILIKE" <?> sqlwordpat word
-      findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country", "email_domain"]
+      findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country"]
       findWord word = sqlConcatOR $ findWordList word
       sqlwordpat word = "%" ++ concatMap escape word ++ "%"
       escape '\\' = "\\\\"
@@ -160,7 +157,6 @@ instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
       sqlSet "zip" companyzip
       sqlSet "city" companycity
       sqlSet "country" companycountry
-      sqlSet "email_domain" companyemaildomain
       sqlSet "ip_address_mask_list" $ case companyipaddressmasklist of
                                         [] -> Nothing
                                         x -> Just (show x)
@@ -190,22 +186,6 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
       sqlSet "custom_backgroundcolour" $ companycustombackgroundcolour cui
       sqlWhereEq "id" cid
 
-data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
-instance MonadDB m => DBUpdate m SetCompanyEmailDomain Bool where
-  update (SetCompanyEmailDomain cid mdomain) = do
-    kRun01 $ sqlUpdate "companies" $ do
-      sqlSet "email_domain" mdomain
-      sqlWhereEq "id" cid
-      sqlWhere $ SQL "NOT EXISTS (SELECT 1 FROM companies WHERE email_domain = ?)" [toSql mdomain]
-
-data GetCompanyByEmailDomain = GetCompanyByEmailDomain String
-instance MonadDB m => DBQuery m GetCompanyByEmailDomain (Maybe Company) where
-  query (GetCompanyByEmailDomain domain) = do
-    kRun_ $ sqlSelect "companies" $ do
-      selectCompaniesSelectors
-      sqlWhereEq "email_domain" domain
-    fetchCompanies >>= oneObjectReturnedGuard
-
 -- helpers
 
 selectCompaniesSelectors :: (SqlResult command) => State command ()
@@ -217,7 +197,6 @@ selectCompaniesSelectors = do
   sqlResult "companies.zip"
   sqlResult "companies.city"
   sqlResult "companies.country"
-  sqlResult "companies.email_domain"
   sqlResult "companies.ip_address_mask_list"
   sqlResult "companies.email_font"
   sqlResult "companies.email_bordercolour"
@@ -243,7 +222,7 @@ fetchCompanies :: MonadDB m => m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid name number address zip' city country
-      email_domain ip_address_mask_list email_font
+      ip_address_mask_list email_font
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
       signview_textfont signview_barscolour signview_barstextcolour
@@ -257,7 +236,6 @@ fetchCompanies = kFold decoder []
         , companyzip = zip'
         , companycity = city
         , companycountry = country
-        , companyemaildomain = email_domain
         , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
         }
       , companyui = CompanyUI {

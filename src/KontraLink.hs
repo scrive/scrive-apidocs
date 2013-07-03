@@ -1,6 +1,5 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrDesignViewLink) where
 
-import Data.Int
 import qualified Data.ByteString.Char8 as BSC
 import Doc.DocStateData
 import Doc.SignatoryLinkID
@@ -8,8 +7,6 @@ import MagicHash
 import Doc.DocumentID
 import Utils.List
 import User.Model
-import qualified Codec.Binary.Url as URL
-import qualified Codec.Binary.UTF8.String as UTF
 import Company.Model
 import File.FileID
 import OAuth.Model
@@ -67,7 +64,6 @@ data KontraLink
     | LinkAttachmentView AttachmentID
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
-    | LinkMailAPIDelayConfirmation String Int64 MagicHash
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
     | LinkCompanyAdminPayments CompanyID
@@ -130,7 +126,6 @@ instance Show KontraLink where
                  "/" ++ show fid)
     showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid)
-    showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
     showsPrec _ (LinkOAuthAuthorization token) = (++) ("/oauth/authorization?oauth_token=" ++ show token)
     showsPrec _ (LinkOAuthCallback url token (Just verifier)) =
       (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
