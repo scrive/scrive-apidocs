@@ -36,7 +36,7 @@ var OauthDashboardModel = Backbone.Model.extend({
                                   ajaxsuccess: function() {self.personalTokensTable().recall()}
                                 }).send();
                               }
-                            }).input())
+                            }).input());
           },
           schema: new Schema({
           url: "/oauth/dashboard/personaltoken",
@@ -46,7 +46,7 @@ var OauthDashboardModel = Backbone.Model.extend({
                       rendering: function(token) {
                           return $("<span style='cursor: pointer; color: #7A94B8'>").text(localization.apiDashboard.reveal).click(function() {
                             $(this).replaceWith($("<span>").text(token));
-                          })
+                          });
 
                       }
               }),
@@ -55,7 +55,7 @@ var OauthDashboardModel = Backbone.Model.extend({
                       rendering: function(token) {
                           return $("<span style='cursor: pointer; color: #7A94B8'>").text(localization.apiDashboard.reveal).click(function() {
                             $(this).replaceWith($("<span>").text(token));
-                          })
+                          });
 
                       }
               }),
@@ -94,7 +94,7 @@ var OauthDashboardModel = Backbone.Model.extend({
                                     ajaxsuccess: function() {self.grantedPrivilegesTable().recall()}
                                   }).send();
                                   return false;
-                               })
+                               });
 
                       }})
           ]})});
@@ -125,7 +125,7 @@ var OauthDashboardModel = Backbone.Model.extend({
                         rendering: function(token) {
                             return $("<span style='cursor: pointer; color: #7A94B8'>").text(localization.apiDashboard.reveal).click(function() {
                               $(this).replaceWith($("<span>").text(token));
-                            })
+                            });
 
                         }
               }),
