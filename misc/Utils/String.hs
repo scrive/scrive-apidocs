@@ -1,4 +1,4 @@
-module Utils.String where
+module Utils.String(concatChunks, pureString, levenshtein, maxLev, maybeS, escapeString) where
 
 import Data.Char
 import qualified Data.ByteString as BS
@@ -38,3 +38,16 @@ maxLev' s1 s2 m i j
   | otherwise = any id [maxLev' s1 s2 (m - 1) (i - 1) j
                        ,maxLev' s1 s2 (m - 1) i (j - 1)
                        ,maxLev' s1 s2 (m - 1) (i - 1) (j - 1)]
+
+maybeS :: Maybe String -> Maybe String
+maybeS (Just "") = Nothing
+maybeS s  = s
+
+escapeString :: String -> String
+escapeString =  concatMap escape
+        where escape '<' = "&lt;"
+              escape '>' = "&gt;"
+              escape '&' = "&amp;"
+              escape '"' = "\\\""
+              escape '\\' = "\\\\"
+              escape c   = [c]

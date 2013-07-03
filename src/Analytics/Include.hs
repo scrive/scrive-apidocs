@@ -1,4 +1,8 @@
-module Analytics.Include
+module Analytics.Include(
+    AnalyticsData
+  , getAnalyticsData
+  , analyticsTemplates
+)
 
 where
 
@@ -22,6 +26,8 @@ import Control.Applicative
 
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
+import Utils.String
+
 import MinutesTime
 
 import DB
@@ -76,45 +82,26 @@ companyStatus u = case (useriscompanyadmin u, usercompany u) of
   (False, Nothing) -> "solo"
   (False, Just _ ) -> "sub"
 
--- A heuristic that is good enough for now
-companyBranding :: Company -> Bool
-companyBranding company = isJust $ companysignviewlogo $ companyui $ company
-
--- | A safe version of !!
-(??) :: [a] -> Int -> Maybe a
-(??) l i = if i < length l then Just (l !! i) else Nothing
-
--- | Empty strings become Nothing
-maybeS :: String -> Maybe String
-maybeS "" = Nothing
-maybeS s  = Just s
-
-escapeHTML :: String -> String
-escapeHTML =  concatMap escape
-        where escape '<' = "&lt;"
-              escape '>' = "&gt;"
-              escape c   = [c]
-
 instance ToJSValue AnalyticsData where
   toJSValue AnalyticsData{..} = runJSONGen $ do
-    mnop (J.value "$email") $ escapeHTML <$> getEmail <$> aUser
+    mnop (J.value "$email") $ escapeString <$> getEmail <$> aUser
     mnop (J.value "userid") $ show <$> userid <$> aUser
 
     mnop (J.value "Signup Method") $ show <$> usersignupmethod <$> aUser
     mnop (J.value "TOS Date" . formatMinutesTimeRealISO) $ join $ userhasacceptedtermsofservice <$> aUser
-    mnop (J.value "Full Name") $ join $ maybeS <$> escapeHTML <$> getFullName <$> aUser
-    mnop (J.value "Smart Name") $ join $ maybeS <$> escapeHTML <$> getSmartName <$> aUser
-    mnop (J.value "$first_name") $ join $ maybeS <$> escapeHTML <$> getFirstName <$> aUser
-    mnop (J.value "$last_name") $ join $ maybeS <$> escapeHTML <$> getLastName <$> aUser
-    mnop (J.value "$username") $ escapeHTML <$> getEmail <$> aUser
-    mnop (J.value "Phone") $ join $ maybeS <$> escapeHTML <$> (userphone . userinfo) <$> aUser
-    mnop (J.value "Position") $ join $ maybeS <$> escapeHTML <$> usercompanyposition <$> userinfo  <$> aUser
+    mnop (J.value "Full Name") $ maybeS $ escapeString <$> getFullName <$> aUser
+    mnop (J.value "Smart Name") $ maybeS $ escapeString <$> getSmartName <$> aUser
+    mnop (J.value "$first_name") $ maybeS $ escapeString <$> getFirstName <$> aUser
+    mnop (J.value "$last_name") $ maybeS $ escapeString <$> getLastName <$> aUser
+    mnop (J.value "$username") $ escapeString <$> getEmail <$> aUser
+    mnop (J.value "Phone") $ maybeS $ escapeString <$> (userphone . userinfo) <$> aUser
+    mnop (J.value "Position") $ maybeS $ escapeString <$> usercompanyposition <$> userinfo  <$> aUser
 
-    mnop (J.value "Company Status") $ escapeHTML <$> companyStatus <$> aUser
-    mnop (J.value "Company Name") $ join $ maybeS <$> escapeHTML <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
+    mnop (J.value "Company Status") $ escapeString <$> companyStatus <$> aUser
+    mnop (J.value "Company Name") $ maybeS $ escapeString <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
     mnop (J.value "Company Branding") $ isJust <$> companysignviewlogo <$> companyui <$> aCompany
 
-    mnop (J.value "Signup Method") $ join $ maybeS <$> escapeHTML <$> show <$> usersignupmethod <$> aUser
+    mnop (J.value "Signup Method") $ maybeS $ escapeString <$> show <$> usersignupmethod <$> aUser
 
     J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage

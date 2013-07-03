@@ -32,6 +32,7 @@ import Redirect
 import Routing (hGet, hPost, toK0, toK1)
 import User.Utils
 import Util.MonadUtils
+import Utils.String
 import qualified Log
 import Text.JSON.Gen
 import BrandedDomains
@@ -121,9 +122,6 @@ companyUiFromJSON jsv = withJSValue jsv $ do
   , companycustombarssecondarycolour = maybeS jsoncompanycustombarssecondarycolour
   , companycustombackgroundcolour = maybeS jsoncompanycustombackgroundcolour
   }
-  where
-    maybeS (Just "")  = Nothing
-    maybeS str = str
 
 handleCompanyLogo :: Kontrakcja m => (CompanyUI -> Maybe Binary) -> CompanyID -> m Response
 handleCompanyLogo field cid = do

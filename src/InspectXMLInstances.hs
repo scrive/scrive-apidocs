@@ -26,7 +26,7 @@ import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import IPAddress
 import Text.JSON
-
+import Utils.String
 import ScriveByMail.Model
 
 instance (InspectXML a, Show a) => InspectXML [a] where
@@ -72,14 +72,8 @@ instance InspectXML (S.Set DocumentTag) where
   inspectXML = inspectXML . S.toList
 
 instance InspectXML String where
-  inspectXML str = "\"" ++ escape str ++ "\""
-        where escapeChar '<' = "&lt;"
-              escapeChar '>' = "&gt;"
-              escapeChar '&' = "&amp;"
-              escapeChar '"' = "\\\""
-              escapeChar '\\' = "\\\\"
-              escapeChar c   = [c]
-              escape = concatMap escapeChar
+  inspectXML str = "\"" ++ escapeString str ++ "\""
+
 instance InspectXML BS.ByteString where
   inspectXML = inspectXML . BS.toString
 
