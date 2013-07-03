@@ -1,6 +1,8 @@
 /* Main and only flash messages module
  * Usage
- *   new FlashMessages({ color : "red | green | blue" , content: "Text to be displayed"})
+ *   new FlashMessages({ color : "red | green | blue",
+ *                       content: "Text to be displayed"
+ *                       withReload: true/false})
  *
  */
 

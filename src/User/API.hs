@@ -272,7 +272,6 @@ apiCallSendPasswordReminder = api $ do
 
 apiCallAddFlash :: Kontrakcja m => m Response
 apiCallAddFlash = api $  do
-  (_, _ , _) <- getAPIUser APIPersonal
   color <- lift $ getField' "color"
   content <- lift $ getField' "content"
   case color of

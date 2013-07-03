@@ -62,7 +62,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
             // session timed out
             ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
           } else {
-            window.location.reload();
+            new FlashMessage({content: localization.signviewSigningFailed,
+                              color: 'red',
+                              withReload: true});
           }
         };
         document.takeSigningScreenshot(function() { document.sign(errorCallback).send(); });
@@ -202,6 +204,17 @@ window.DocumentSignSignSection = Backbone.View.extend({
        mixpanel.people.set(ps);
 
        mixpanel.track('View sign view');
+
+       var rejectErrorCallback = function(xhr) {
+         if (xhr.status == 403) {
+           // session timed out
+           ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+         } else {
+           new FlashMessage({content: localization.signviewSigningFailed,
+                             color: 'red',
+                             withReload: true});
+         }
+       };
        this.rejectButton = Button.init({
                                         size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                                         color: "red",
@@ -227,7 +240,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                                              function() {
                                                                  document.currentSignatory().reject(customtext).sendAjax(
                                                                    function() {window.location.reload();},
-                                                                   function() {window.location.reload();}
+                                                                   rejectErrorCallback
                                                                 );
                                                              });
                                               }
