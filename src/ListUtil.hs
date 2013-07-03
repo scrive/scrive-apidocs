@@ -192,20 +192,11 @@ doSorting sortFunc  = sortBy . compareList . map sortFunc
     where compareList l a1 a2 = foldMap (\f -> f a1 a2) l
 
 
-class ViewOrd a where
-    viewCompare:: a -> a -> Ordering
+viewComparing:: (Show a) => (b -> a) -> b -> b -> Ordering
+viewComparing f a1 a2 = comparing (map toUpper . show) (f a1) (f a2)
 
-instance ViewOrd String where
-    viewCompare = comparing (map toUpper)
-
-instance (Ord a) => ViewOrd a where
-    viewCompare = compare
-
-viewComparing:: (ViewOrd a) => (b -> a) -> b -> b -> Ordering
-viewComparing f a1 a2 = viewCompare (f a1) (f a2)
-
-viewComparingRev:: (ViewOrd a) => (b -> a) -> b -> b -> Ordering
-viewComparingRev f a1 a2 = viewCompare (f a2) (f a1)
+viewComparingRev:: (Show a) =>  (b -> a) -> b -> b -> Ordering
+viewComparingRev f a1 a2 = comparing (map toUpper . show) (f a2) (f a1)
 
 doSearching::SearchingFunction a -> Maybe String -> [a] -> [a]
 doSearching _ Nothing = id

@@ -54,8 +54,12 @@ staticRoutes = choice
      , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
      , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
-     , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
 
+     -- Top level handlers - buttons on top bar, when user is logged in
+     , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
+     , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
+
+     -- Sign view + eleg
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
      , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
@@ -67,7 +71,7 @@ staticRoutes = choice
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
-
+     -- Attachments
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
      , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
@@ -78,7 +82,6 @@ staticRoutes = choice
      , dir "a" $ dir "download"    $ hGet  $ toK3 $ AttachmentControl.handleDownloadAttachment
 
 
-     , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
 
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
