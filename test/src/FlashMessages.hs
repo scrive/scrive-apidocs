@@ -23,7 +23,7 @@ instance Arbitrary FlashMessage where
                     ]
 
 instance Arbitrary FlashType where
-  arbitrary = elements [SigningRelated, OperationDone, OperationFailed, Modal]
+  arbitrary = elements [SigningRelated, OperationDone, OperationFailed]
 
 flashEncodeDecode :: Property
 flashEncodeDecode =

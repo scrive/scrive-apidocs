@@ -28,24 +28,20 @@ td=<td style="text-align:center">$it:noescape()$</td>
 th=<th style="width:60px;text-align:center">$it:noescape()$</th>
 ###
 #### Puts an invisible box with flash messages. jScripts do all show magic.
+#### Bellow is a hack for (if(flash)) for String templates syntax
 ####
 flashmessages =
 <script>
    jQuery(function(){
      $flashmessages:{ flash |
-         $if(!flash.isModal)$
+        $if(flash)$
             new FlashMessage({
               "color" : "$flash.type$",
               "content": "$flash.message:noescape()$"
             })
-         $endif$
+        $endif$
      }$
    })
 </script>
 
-$flashmessages:{ flash |
-    $if(flash.isModal)$
-          $flash.message:noescape()$
-    $endif$
-}$
 ####

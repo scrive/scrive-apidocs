@@ -238,26 +238,13 @@ contextInfoFields ctx@Context{ ctxlang } = do
   F.value "ctxlang" $ codeFromLang ctxlang
 
 
-flashMessageFields :: TemplatesMonad m => FlashMessage -> Fields m ()
+flashMessageFields :: (Monad m) => FlashMessage -> Fields m ()
 flashMessageFields flash = do
-  F.valueM "type" $ (\t -> case t of
+  F.value "type" $  case flashType flash of
     SigningRelated  -> "blue"
     OperationDone   -> "green"
     OperationFailed -> "red"
-    _               -> "") <$> ftype
-  F.valueM "message" $ do
-      isFModal <- (== Modal) <$> ftype
-      if (isFModal )
-         then filter (not . isControl) <$> msg
-         else replace "\"" "'" <$> filter (not . isControl) <$> msg
-  F.valueM "isModal" $ (== Modal) <$> ftype
-  where
-    fm :: TemplatesMonad m => m (FlashType, String)
-    fm = fromJust . unFlashMessage <$> instantiate flash
-    ftype :: TemplatesMonad m => m FlashType
-    ftype = fst <$> fm
-    msg :: TemplatesMonad m => m String
-    msg = snd <$> fm
+  F.value "message" $ replace "\"" "'" $ filter (not . isControl) $ flashMessage flash
 
 localizationScript :: Kontrakcja m => String -> m Response
 localizationScript _ = do
