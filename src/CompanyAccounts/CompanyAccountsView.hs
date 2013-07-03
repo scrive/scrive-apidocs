@@ -3,8 +3,8 @@ module CompanyAccounts.CompanyAccountsView (
     mailNewCompanyUserInvite,
     mailTakeoverPrivateUserInvite,
 
-    -- modals
-    modalDoYouWantToBeCompanyAccount,
+    -- pages
+    pageDoYouWantToBeCompanyAccount,
 
     -- flash messages
     flashMessageCompanyAccountInviteSent,
@@ -64,10 +64,10 @@ basicLinkFields hostpart link = do
 
 -------------------------------------------------------------------------------
 
-modalDoYouWantToBeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage
-modalDoYouWantToBeCompanyAccount company =
-  toModal <$> renderTemplate "modalDoYouWantToBeCompanyAccount"
-                 (F.value "companyname" $ getCompanyName company)
+pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m String
+pageDoYouWantToBeCompanyAccount company =
+  renderTemplate "pageDoYouWantToBeCompanyAccount" $ do
+      F.value "companyname" $ getCompanyName company
 
 -------------------------------------------------------------------------------
 

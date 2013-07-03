@@ -4,6 +4,7 @@ module User.UserView (
     userJSON,
     showAccount,
     pageAcceptTOS,
+    pageDoYouWantToChangeEmail,
 
     -- mails
     newUserMail,
@@ -11,9 +12,6 @@ module User.UserView (
     accessNewAccountMail,
     resetPasswordMail,
     mailEmailChangeRequest,
-
-    -- modals
-    modalDoYouWantToChangeEmail,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -226,10 +224,10 @@ mailEmailChangeRequest ctx user newemail link = do
 
 -------------------------------------------------------------------------------
 
-modalDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m FlashMessage
-modalDoYouWantToChangeEmail newemail = do
-  toModal <$> (renderTemplate "modalDoYouWantToChangeEmail" $
-                 F.value "newemail" $ unEmail newemail)
+pageDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m String
+pageDoYouWantToChangeEmail newemail =
+  renderTemplate "pageDoYouWantToChangeEmail" $ do
+                 F.value "newemail" $ unEmail newemail
 
 flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
 flashMessageLoginRedirectReason reason =

@@ -904,11 +904,9 @@ guardMethodM m = do
 -- | Checks type of flash message
 isFlashOfType :: FlashMessage -> FlashType -> Bool
 isFlashOfType (FlashMessage ft _) t = ft == t
-isFlashOfType (FlashTemplate ft _ _) t = ft == t
 
 getFlashType :: FlashMessage -> FlashType
 getFlashType (FlashMessage ft _) = ft
-getFlashType (FlashTemplate ft _ _) = ft
 
 instance Arbitrary Lang where
   arbitrary = elements [LANG_SV, LANG_EN]

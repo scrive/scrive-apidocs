@@ -117,16 +117,12 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
     , content = content
     }
 
-handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
+handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink (Either KontraLink String))
 handleGetChangeEmail uid hash = withUserGet $ do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   case mnewemail of
-    Nothing -> addFlashM $ flashMessageProblemWithEmailChange
-    Just newemail -> addFlashM $ modalDoYouWantToChangeEmail newemail
-  Context{ctxmaybeuser = Just user} <- getContext
-  mcompany <- getCompanyForUser user
-  content <- showAccount user mcompany
-  renderFromBody kontrakcja content
+    Just newemail -> Right <$> pageDoYouWantToChangeEmail newemail
+    Nothing -> (addFlashM flashMessageProblemWithEmailChange) >> (return  $ Left LinkAccount)
 
 handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
 handlePostChangeEmail uid hash = withUserPost $ do

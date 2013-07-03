@@ -1,5 +1,9 @@
 ####
-modalDoYouWantToBeCompanyAccount=
+pageDoYouWantToBeCompanyAccount=
+<div class="mainContainer" >
+  <div class="body-container">
+  </div>
+</div>
 <script>
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
@@ -7,13 +11,18 @@ modalDoYouWantToBeCompanyAccount=
     Confirmation.popup({onAccept: function() {
                                     new Submit({method: 'POST', url: ''}).send();
                                   },
+                        onReject : function() { window.location = '/account' ; },
                         title: '$_modalDoYouWantToBeCompanyAccountHeader()$',
                         acceptButtonText: '$_modalDoYouWantToBeCompanyAccountFooterAccept()$',
                         content: content});
   });
 </script>
 ####
-modalDoYouWantToChangeEmail=
+pageDoYouWantToChangeEmail=
+<div class="mainContainer" >
+  <div class="body-container">
+  </div>
+</div>
 <script>
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
@@ -25,6 +34,7 @@ modalDoYouWantToChangeEmail=
                                                 url: '',
                                                 password: password_input.val()}).send();
                                   },
+                        onReject : function() { window.location = '/account' ; },
                         title: '$_modalDoYouWantToChangeEmailHeader()$',
                         acceptButtonText: 'OK',
                         content: content});

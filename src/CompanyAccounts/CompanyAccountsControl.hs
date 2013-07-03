@@ -15,13 +15,11 @@ import Data.Char
 import Data.Functor
 import Data.List
 import Data.Maybe
-import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 import Utils.Prelude
 
 import ActionQueue.UserAccountRequest
-import AppView
 import DB
 import Company.Model
 import CompanyAccounts.Model
@@ -40,7 +38,6 @@ import Utils.IO
 import User.Action
 import User.Utils
 import User.UserControl
-import User.UserView
 import User.History.Model
 import Payments.Model
 import Recurly
@@ -351,15 +348,11 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     the old stuff that was based in UserID.  It checks that the logged in
     user has actually been invited to join the company in the URL.
 -}
-handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either KontraLink Response)
+handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either KontraLink String)
 handleGetBecomeCompanyAccount companyid = withUserGet $ do
   _ <- guardGoodForTakeover companyid
-  Context{ctxmaybeuser = Just user} <- getContext
-  mcompany <- getCompanyForUser user
   newcompany <- guardJustM $ dbQuery $ GetCompany companyid
-  addFlashM $ modalDoYouWantToBeCompanyAccount newcompany
-  content <- showAccount user mcompany
-  renderFromBody kontrakcja content
+  pageDoYouWantToBeCompanyAccount newcompany
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do

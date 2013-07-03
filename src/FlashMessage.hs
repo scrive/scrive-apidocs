@@ -5,7 +5,6 @@ module FlashMessage (
     , toFlashMsg
     , toModal
     , isModal
-    , toFlashTemplate
     , instantiate
     , updateFlashCookie
     , addFlashCookie
@@ -28,7 +27,6 @@ import Utils.HTTP
 import Utils.Monoid
 import Utils.Read
 import Text.StringTemplates.Templates
-import Text.StringTemplates.TemplatesLoader
 
 data FlashType
     = SigningRelated
@@ -63,7 +61,6 @@ data FlashType
 
 data FlashMessage
     = FlashMessage FlashType String
-    | FlashTemplate FlashType String [(String, String)]
     deriving (Eq, Ord, Read, Show)
 
 toFlashMsg :: FlashType -> String -> FlashMessage
@@ -74,19 +71,12 @@ toModal = FlashMessage Modal
 
 isModal :: FlashMessage -> Bool
 isModal (FlashMessage  ft _) = Modal == ft
-isModal (FlashTemplate ft _ _) = Modal == ft
 
-toFlashTemplate :: FlashType -> String -> [(String, String)] -> FlashMessage
-toFlashTemplate = FlashTemplate
 
 unFlashMessage :: FlashMessage -> Maybe (FlashType, String)
 unFlashMessage (FlashMessage ftype msg) = Just (ftype, msg)
-unFlashMessage _ = Nothing
 
 instantiate :: TemplatesMonad m => FlashMessage -> m FlashMessage
-instantiate (FlashTemplate ftype templatename fields) = do
-  ts <- getTemplates
-  return $ toFlashMsg ftype $ renderTemplateMain ts templatename fields id
 instantiate fm = return fm
 
 updateFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => [FlashMessage] -> [FlashMessage] -> m ()

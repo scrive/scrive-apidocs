@@ -20,7 +20,6 @@ flashMessagesTests = testGroup "FlashMessages"
 
 instance Arbitrary FlashMessage where
   arbitrary = oneof [ FlashMessage  <$> arbitrary <*> arbitrary
-                    , FlashTemplate <$> arbitrary <*> arbitrary <*> arbitrary
                     ]
 
 instance Arbitrary FlashType where
