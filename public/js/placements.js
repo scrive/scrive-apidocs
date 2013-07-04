@@ -9,7 +9,7 @@ window.FieldPlacement = Backbone.Model.extend({
       tip: undefined,
       wrel: 0,
       hrel: 0,
-      fsrel: 0.153,
+      fsrel: 0.0168,
       withTypeSetter : false,
       alive: true,
       step: 'edit'
@@ -59,7 +59,10 @@ window.FieldPlacement = Backbone.Model.extend({
         return this.get("hrel");
     },
     fsrel : function() {
+      if (this.get("fsrel") != 0)
         return this.get("fsrel");
+      else
+        return 0.0168;
     },
     page : function() {
         return this.get("page");
