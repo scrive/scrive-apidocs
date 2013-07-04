@@ -645,7 +645,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         }
 
         if(field && field.isValid(true)) {
-            $(this.el).css('background-color', 'white');
+            $(this.el).css('background-color', '');
         } else {
             $(this.el).css('background-color', '#f33');
         }

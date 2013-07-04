@@ -117,11 +117,18 @@
     white-space: nowrap;
     font-size: 10px * @page-div-width / @a4-width-in-pt;
     line-height: 10px * @page-div-width / @a4-width-in-pt;
-    padding: 8px 7px 6px 7px;
+    margin: 8px 7px 6px 7px;
     background-color: white;
     filter: ~"alpha(opacity=95)";
     -moz-opacity: 0.95;
     opacity: 0.95;
+}
+/*  In design view we have also border so we want to change margin to padding.
+ *  But in other view we don't want fields overlaping if texts are not overlaping.
+ */
+.designview .placedfieldvalue {
+    margin: 0;
+    padding: 8px 7px 6px 7px;
 }
 
 .placedcheckbox {
