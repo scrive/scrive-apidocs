@@ -70,6 +70,7 @@ class Field {
 }
 
 class SealSpec {
+    public Boolean preseal;
     public String input;
     public String output;
     public String documentNumber;
@@ -123,17 +124,50 @@ class FileDesc {
     public String attachedBy;
 }
 
-public class AppendMode {
-    /** The resulting PDF. */
-    public static final String RESULT
-        = "appended.pdf";
-    public static final String INPUT
-        = "input.pdf";
+/*
 
+Sealing works like this:
+
+1. Open seal spec file (json/yaml) given as argument on the command line.
+2. Open input file (if any).
+3. On pages of input file add fields at exact positions.
+4. Save it to byte stream.
+5. Create final seal pages (if preseal == False).
+6. Concatenate 4 and 6.
+7. Save to output.
+
+*/
+
+
+public class PDFSeal {
+
+    /** The resulting PDF. */
+    public static final String RESULT = "appended.pdf";
+    public static final String INPUT  = "input.pdf";
+
+    public static void concatenatePdfsInto(PdfReader sources[], OutputStream os)
+        throws IOException, DocumentException
+    {
+        Document document = new Document();
+        PdfCopy writer = new PdfSmartCopy(document, os);
+        document.open();
+
+        for(PdfReader reader: sources) {
+            int count = reader.getNumberOfPages();
+            for( int i=1; i<=count; i++ ) {
+                PdfImportedPage page = writer.getImportedPage(reader, i);
+                writer.addPage(page);
+            }
+            writer.freeReader(reader);
+            reader.close();
+        }
+
+        document.close();
+    }
 
     public void prepareSealPages(OutputStream os)
-        throws IOException, DocumentException {
-
+        throws IOException, DocumentException
+    {
         Document document = new Document();
         PdfWriter writer = PdfWriter.getInstance(document, os);
 
@@ -195,35 +229,8 @@ public class AppendMode {
 
         prepareSealPages(os);
 
-
-        // step 1
-        Document document = new Document();
-        // step 2
-        PdfCopy writer
-            = new PdfSmartCopy(document, new FileOutputStream(dest));
-
-        document.open();
-
-        PdfReader reader = new PdfReader(src);
-        int count = reader.getNumberOfPages();
-        for( int i=1; i<=count; i++ ) {
-            PdfImportedPage page = writer.getImportedPage(reader, i);
-            writer.addPage(page);
-        }
-        writer.freeReader(reader);
-        reader.close();
-
-        reader = new PdfReader(os.toByteArray());
-        count = reader.getNumberOfPages();
-        for( int i=1; i<=count; i++ ) {
-            PdfImportedPage page = writer.getImportedPage(reader, i);
-            writer.addPage(page);
-        }
-        writer.freeReader(reader);
-
-        reader.close();
-
-        document.close();
+        concatenatePdfsInto(new PdfReader[] { new PdfReader(src), new PdfReader(os.toByteArray()) },
+                            new FileOutputStream(dest));
     }
 
     /**
