@@ -157,6 +157,13 @@ data PreSealSpec = PreSealSpec
     }
     deriving (Eq,Ord,Show,Read)
 
+instance J.ToJSValue PreSealSpec where
+  toJSValue PreSealSpec{..} = J.runJSONGen $ do
+    J.value "input" pssInput
+    J.value "output" pssOutput
+    J.value "fields" $ map J.toJSValue $ pssFields
+    J.value "preseal" True
+
 data HistEntry = HistEntry
     { histdate    :: String
     , histcomment :: String
