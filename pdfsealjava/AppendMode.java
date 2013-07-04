@@ -1,10 +1,15 @@
 
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
+import org.yaml.snakeyaml.*;
+import org.yaml.snakeyaml.constructor.Constructor;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -28,9 +33,9 @@ import com.itextpdf.text.Phrase;
 
 
 class HistEntry {
-    public String histdate;
-    public String histcomment;
-    public String histaddress;
+    public String date;
+    public String comment;
+    public String address;
 }
 
 class Person {
@@ -59,6 +64,8 @@ class Field {
     public int internal_image_h;
     public Boolean includeInSummary;
     public Boolean onlyForSummary;
+    public double fontSize;
+    public Boolean greyed;
     public ArrayList<Integer> keyColor;
 }
 
@@ -73,13 +80,47 @@ class SealSpec {
     public String hostpart;
     public Map<String,String> staticTexts;
     public ArrayList<SealAttachment> attachments;
-    public ArrayList<SealAttachment> filesList;
+    public ArrayList<FileDesc> filesList;
+
+    public static Yaml getYaml() {
+        Constructor constructor = new Constructor(SealSpec.class);
+
+        TypeDescription sealSpecDesc = new TypeDescription(SealSpec.class);
+        sealSpecDesc.putListPropertyType("persons", Person.class);
+        sealSpecDesc.putListPropertyType("secretaries", Person.class);
+        sealSpecDesc.putListPropertyType("history", HistEntry.class);
+        sealSpecDesc.putMapPropertyType("staticTexts", String.class, String.class);
+        sealSpecDesc.putListPropertyType("attachments", SealAttachment.class);
+        sealSpecDesc.putListPropertyType("filesList", FileDesc.class);
+        constructor.addTypeDescription(sealSpecDesc);
+
+
+        TypeDescription personDesc = new TypeDescription(Person.class);
+        personDesc.putListPropertyType("fields", Field.class);
+        constructor.addTypeDescription(personDesc);
+
+        Yaml yaml = new Yaml(constructor);
+        return yaml;
     }
+
+    public static SealSpec loadFromFile(String fileName) throws IOException {
+        InputStream input = new FileInputStream(new File(fileName));
+        Yaml yaml = getYaml();
+        return (SealSpec)yaml.load(input);
+    }
+}
 
 class SealAttachment {
     public String fileName;
     public String mimeType;
     public String fileBase64Content;
+}
+
+class FileDesc {
+    public String title;
+    public String role;
+    public String pagesText;
+    public String attachedBy;
 }
 
 public class AppendMode {
@@ -193,6 +234,31 @@ public class AppendMode {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException, DocumentException {
+
+
+        DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        //options.setDefaultFlowStyle(DumperOptions.FlowStyle.FLOW );
+        //options.setDefaultScalarStyle(DumperOptions.ScalarStyle.DOUBLE_QUOTED );
+        Yaml yaml = new Yaml(options);
+        SealSpec spec = SealSpec.loadFromFile("example_spec.json");
+
+        /*
+        SealSpec spec = new SealSpec();
+        spec.input = "input.pdf";
+        spec.output = "output.pdf";
+        spec.documentNumber = "123114234124";
+        spec.persons = new ArrayList<Person>();
+        spec.filesList = new ArrayList<FileDesc>();
+        FileDesc fileDesc = new FileDesc();
+        fileDesc.fileTitle = "  File title  ";
+        fileDesc.fileRole = "File role";
+        fileDesc.filePagesText = "null";
+        fileDesc.fileAttachedBy = "File attached by";
+        spec.filesList.add(fileDesc);
+        */
+        System.out.println(yaml.dump(spec));
+
         new AppendMode().manipulatePdf(INPUT, RESULT);
     }
 }
