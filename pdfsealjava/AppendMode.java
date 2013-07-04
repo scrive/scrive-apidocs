@@ -1,14 +1,10 @@
-/*
- * This class is part of the book "iText in Action - 2nd Edition"
- * written by Bruno Lowagie (ISBN: 9781935182610)
- * For more info, go to: http://itextpdf.com/examples/
- * This example only works with the AGPL version of iText.
- */
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Map;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -29,6 +25,62 @@ import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.Phrase;
+
+
+class HistEntry {
+    public String histdate;
+    public String histcomment;
+    public String histaddress;
+}
+
+class Person {
+
+    public String fullname;
+    public String company;
+    public String personalnumber;
+    public String companynumber;
+    public String email;
+    public Boolean fullnameverified;
+    public Boolean companyverified;
+    public Boolean numberverified;
+    public Boolean emailverified;
+    public ArrayList<Field> fields;
+
+}
+
+class Field {
+    public String valueBase64;
+    public String value;
+    public Double x, y;
+    public int page;
+    public double image_w;
+    public double image_h;
+    public int internal_image_w;
+    public int internal_image_h;
+    public Boolean includeInSummary;
+    public Boolean onlyForSummary;
+    public ArrayList<Integer> keyColor;
+}
+
+class SealSpec {
+    public String input;
+    public String output;
+    public String documentNumber;
+    public ArrayList<Person> persons;
+    public ArrayList<Person> secretaries;
+    public ArrayList<HistEntry> history;
+    public String initials;
+    public String hostpart;
+    public Map<String,String> staticTexts;
+    public ArrayList<SealAttachment> attachments;
+    public ArrayList<SealAttachment> filesList;
+    }
+
+class SealAttachment {
+    public String fileName;
+    public String mimeType;
+    public String fileBase64Content;
+}
 
 public class AppendMode {
     /** The resulting PDF. */
