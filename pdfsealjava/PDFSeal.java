@@ -33,6 +33,7 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Jpeg;
 import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.CMYKColor;
 
 class HistEntry {
     public String date;
@@ -188,6 +189,10 @@ public class PDFSeal {
                         System.out.println("Placing " + field.value + " at " + realx + "," + realy);
 
                         Font font = new Font(FontFamily.HELVETICA, (float)(cropBox.getWidth() * field.fontSize));
+
+                        if( field.greyed ) {
+                            font.setColor( new CMYKColor(0,0,0,127));
+                        }
 
                         ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
                                                    new Phrase(field.value, font),
