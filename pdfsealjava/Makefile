@@ -6,7 +6,7 @@ all : run
 
 
 run : PDFSeal.class
-	java -cp $(CLASSPATH) PDFSeal
+	java -cp $(CLASSPATH) PDFSeal example_spec.json
 
 %.class : %.java
 	javac -target 1.5 -cp $(CLASSPATH) PDFSeal.java

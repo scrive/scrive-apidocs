@@ -25,12 +25,13 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfImportedPage;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.Font.FontFamily;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.Phrase;
-
+import com.itextpdf.text.pdf.ColumnText;
 
 class HistEntry {
     public String date;
@@ -56,7 +57,7 @@ class Person {
 class Field {
     public String valueBase64;
     public String value;
-    public Double x, y;
+    public float x, y;
     public int page;
     public double image_w;
     public double image_h;
@@ -141,10 +142,6 @@ Sealing works like this:
 
 public class PDFSeal {
 
-    /** The resulting PDF. */
-    public static final String RESULT = "appended.pdf";
-    public static final String INPUT  = "input.pdf";
-
     public static void concatenatePdfsInto(PdfReader sources[], OutputStream os)
         throws IOException, DocumentException
     {
@@ -165,7 +162,62 @@ public class PDFSeal {
         document.close();
     }
 
-    public void prepareSealPages(OutputStream os)
+    public static void stampFieldsOverPdf(PdfReader reader, ArrayList<Field> fields, OutputStream os)
+        throws DocumentException, IOException
+    {
+        PdfStamper stamper = new PdfStamper(reader, os);
+
+        int count = reader.getNumberOfPages();
+        for( int i=1; i<=count; i++ ) {
+
+            Rectangle cropBox = reader.getCropBox(i);
+
+            PdfContentByte canvas = stamper.getOverContent(i);
+            for( Field field : fields ) {
+                if( field.page==i &&
+                    (field.onlyForSummary == null || !field.onlyForSummary)) {
+
+                    /*
+                     * FIXME: this should somehow know the /Rotate flag.
+                     */
+                    float realx = field.x * cropBox.getWidth() + cropBox.getLeft();
+                    float realy = field.y * cropBox.getHeight() + cropBox.getBottom();
+
+                    if( !field.value.isEmpty()) {
+                        System.out.println("Placing " + field.value + " at " + realx + "," + realy);
+
+                        Font font = new Font(FontFamily.HELVETICA, (float)(cropBox.getWidth() * field.fontSize));
+
+                        ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
+                                                   new Phrase(field.value, font),
+                                                   realx, realy,
+                                                   0);
+                    }
+                    else if( !field.valueBase64.isEmpty()) {
+                        /*
+                         * Add image
+                         */
+                    }
+                }
+            }
+        }
+        stamper.close();
+        reader.close();
+    }
+
+    public static ArrayList<Field> getAllFields(SealSpec spec)
+    {
+        ArrayList<Field> result = new ArrayList<Field>();
+        for( Person person : spec.persons ) {
+            result.addAll(person.fields);
+        }
+        for( Person person : spec.secretaries ) {
+            result.addAll(person.fields);
+        }
+        return result;
+    }
+
+    public static void prepareSealPages(OutputStream os)
         throws IOException, DocumentException
     {
         Document document = new Document();
@@ -223,14 +275,16 @@ public class PDFSeal {
      * @throws IOException
      * @throws DocumentException
      */
-    public void manipulatePdf(String src, String dest) throws IOException, DocumentException {
+    public static void manipulatePdf(SealSpec spec) throws IOException, DocumentException {
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-
         prepareSealPages(os);
 
-        concatenatePdfsInto(new PdfReader[] { new PdfReader(src), new PdfReader(os.toByteArray()) },
-                            new FileOutputStream(dest));
+        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
+        stampFieldsOverPdf(new PdfReader(spec.input), getAllFields(spec), os2);
+
+        concatenatePdfsInto(new PdfReader[] { new PdfReader(os2.toByteArray()), new PdfReader(os.toByteArray()) },
+                            new FileOutputStream(spec.output));
     }
 
     /**
@@ -241,31 +295,15 @@ public class PDFSeal {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException, DocumentException {
-
-
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         //options.setDefaultFlowStyle(DumperOptions.FlowStyle.FLOW );
         //options.setDefaultScalarStyle(DumperOptions.ScalarStyle.DOUBLE_QUOTED );
         Yaml yaml = new Yaml(options);
-        SealSpec spec = SealSpec.loadFromFile("example_spec.json");
+        SealSpec spec = SealSpec.loadFromFile(args[0]);
 
-        /*
-        SealSpec spec = new SealSpec();
-        spec.input = "input.pdf";
-        spec.output = "output.pdf";
-        spec.documentNumber = "123114234124";
-        spec.persons = new ArrayList<Person>();
-        spec.filesList = new ArrayList<FileDesc>();
-        FileDesc fileDesc = new FileDesc();
-        fileDesc.fileTitle = "  File title  ";
-        fileDesc.fileRole = "File role";
-        fileDesc.filePagesText = "null";
-        fileDesc.fileAttachedBy = "File attached by";
-        spec.filesList.add(fileDesc);
-        */
         System.out.println(yaml.dump(spec));
 
-        new AppendMode().manipulatePdf(INPUT, RESULT);
+        manipulatePdf(spec);
     }
 }
