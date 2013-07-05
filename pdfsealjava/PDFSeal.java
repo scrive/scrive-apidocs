@@ -31,6 +31,7 @@ import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.Jpeg;
 import com.itextpdf.text.pdf.ColumnText;
 
 class HistEntry {
@@ -59,8 +60,8 @@ class Field {
     public String value;
     public float x, y;
     public int page;
-    public double image_w;
-    public double image_h;
+    public float image_w;
+    public float image_h;
     public int internal_image_w;
     public int internal_image_h;
     public Boolean includeInSummary;
@@ -183,7 +184,7 @@ public class PDFSeal {
                     float realx = field.x * cropBox.getWidth() + cropBox.getLeft();
                     float realy = field.y * cropBox.getHeight() + cropBox.getBottom();
 
-                    if( !field.value.isEmpty()) {
+                    if( field.value != null ) {
                         System.out.println("Placing " + field.value + " at " + realx + "," + realy);
 
                         Font font = new Font(FontFamily.HELVETICA, (float)(cropBox.getWidth() * field.fontSize));
@@ -193,10 +194,16 @@ public class PDFSeal {
                                                    realx, realy,
                                                    0);
                     }
-                    else if( !field.valueBase64.isEmpty()) {
-                        /*
-                         * Add image
-                         */
+                    else if( field.valueBase64 !=null ) {
+                        byte jpegdata[] = Base64.decode(field.valueBase64);
+                        Jpeg jpeg = new Jpeg(jpegdata);
+
+                        jpeg.setAbsolutePosition(realx, realy);
+                        jpeg.scaleAbsoluteWidth(field.image_w * cropBox.getWidth());
+                        jpeg.scaleAbsoluteHeight(field.image_h * cropBox.getHeight());
+
+                        // jpeg.setTransparency();
+                        canvas.addImage(jpeg);
                     }
                 }
             }
