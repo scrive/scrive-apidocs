@@ -202,7 +202,11 @@ public class PDFSeal {
                         jpeg.scaleAbsoluteWidth(field.image_w * cropBox.getWidth());
                         jpeg.scaleAbsoluteHeight(field.image_h * cropBox.getHeight());
 
-                        // jpeg.setTransparency();
+                        if( field.keyColor!=null ) {
+                            jpeg.setTransparency(new int[] { field.keyColor.get(0),
+                                                             field.keyColor.get(1),
+                                                             field.keyColor.get(2)} );
+                        }
                         canvas.addImage(jpeg);
                     }
                 }
