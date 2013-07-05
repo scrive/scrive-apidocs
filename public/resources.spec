@@ -63,6 +63,7 @@ set systemPage
  less less/designview/editdocument.less
  less less/designview/documentview.less
  less less/designview/process.less
+ less less/designview/welcomemodal.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  jsx  tiny_mce/tinymce.min.js
@@ -91,7 +92,6 @@ set systemPage
  js   js/utils/time.js
  js   js/utils/cookie.js
  js   js/loading.js
- js   js/promo.js
  js   js/arrows.js
  js   js/flashmessages.js
  js   js/infotextinputs.js
@@ -154,6 +154,7 @@ set systemPage
  js   js/designview/designviewtabs.js
  js   js/designview/csvsignatorydesign.js
  js   js/designview/uploadexampledocument.js
+ js   js/designview/welcomemodal.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js

@@ -9,6 +9,7 @@ var ConfirmationModel = Backbone.Model.extend({
       content  : jQuery("<p/>"),
       cantCancel : false,
       width: BrowserInfo.isSmallScreen() ? 980 : 640,
+      footerVisible : true,
       acceptVisible : true,
       extraOption : undefined,
       textfont : undefined,
@@ -71,6 +72,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   hideAccept : function() {
       this.set({acceptVisible : false});
+  },
+  footerVisible : function() {
+      return this.get("footerVisible");
   },
   acceptVisible : function() {
       return this.get("acceptVisible");
@@ -178,7 +182,8 @@ var ConfirmationView = Backbone.View.extend({
        footer.append( this.acceptButton);
        container.append(header);
        container.append(body);
-       container.append(footer);
+       if (model.footerVisible()) 
+         container.append(footer);
        $(this.el).append(container);
        return this;
     },

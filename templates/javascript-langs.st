@@ -287,6 +287,15 @@ javascriptLocalisation =
              , placeYourTip : "$_signaturePlaceYourTip()$"
              , confirmSignature : "$_signatureConfirm()$"
            }
+         , welcomemodal : {
+               title: "$_welcomeTitle()$"
+             , subtitle: "$_welcomeSubtitle()$"
+             , subtitlelink: "$_welcomeSubtitleLink()$"
+             , trybutton: "$_welcomeTryButton()$"
+             , trytext: "$_welcomeScriveTry()$"
+             , whatIsScrive: "$_welcomeWhatIsScrive()$"
+             , possibleWithScrive: "$_welcomeScrivePossible()$"
+           }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
