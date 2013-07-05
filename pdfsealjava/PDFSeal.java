@@ -72,6 +72,21 @@ class Field {
     public ArrayList<Integer> keyColor;
 }
 
+class SealingTexts {
+    public String verificationTitle;
+    public String docPrefix;
+    public String signedText;
+    public String partnerText;
+    public String secretaryText;
+    public String documentText;
+    public String orgNumberText;
+    public String personalNumberText;
+    public String eventsText;
+    public String dateText;
+    public String historyText;
+    public String verificationFooter;
+}
+
 class SealSpec {
     public Boolean preseal;
     public String input;
@@ -82,7 +97,7 @@ class SealSpec {
     public ArrayList<HistEntry> history;
     public String initials;
     public String hostpart;
-    public Map<String,String> staticTexts;
+    public SealingTexts staticTexts;
     public ArrayList<SealAttachment> attachments;
     public ArrayList<FileDesc> filesList;
 
@@ -233,7 +248,7 @@ public class PDFSeal {
         return result;
     }
 
-    public static void prepareSealPages(OutputStream os)
+    public static void prepareSealPages(SealSpec spec, OutputStream os)
         throws IOException, DocumentException
     {
         Document document = new Document();
@@ -241,25 +256,100 @@ public class PDFSeal {
 
         document.open();
 
-        BaseFont bf;
-        Font font;
-        bf = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.EMBEDDED);
+        CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
+        CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
 
-        font = new Font(bf, 12);
+        /*
+         * FIXME: To use chineese characters you need to define BaseFont, like this:
+         *
+         * BaseFont bf = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.EMBEDDED);
+         *
+         */
+
+        Font font;
 
         // step 4
         document.newPage();
-        document.add(new Paragraph("This page will NOT be followed by a blank page! \u5341\u950a\u57cb\u4f0f", font));
-        document.newPage();
-        // we don't add anything to this page: newPage() will be ignored
-        document.newPage();
-        document.add(new Paragraph("This page will be followed by a blank page!"));
-        document.newPage();
-        writer.setPageEmpty(false);
-        document.newPage();
-        document.add(new Paragraph("The previous page was a blank page!"));
 
+        font = new Font(FontFamily.HELVETICA, 21, Font.NORMAL, darkTextColor );
+        document.add(new Paragraph(spec.staticTexts.verificationTitle, font));
 
+        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, lightTextColor );
+        document.add(new Paragraph(spec.staticTexts.docPrefix + " " + spec.documentNumber, font));
+
+        /*
+         * Document part
+         */
+        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+        document.add(new Paragraph(spec.staticTexts.documentText, font));
+        for( FileDesc file : spec.filesList ) {
+            font = new Font(FontFamily.HELVETICA, 12, Font.BOLD, darkTextColor );
+            document.add(new Paragraph(file.title, font));
+            font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+            document.add(new Paragraph(file.role, font));
+            font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+            document.add(new Paragraph(file.pagesText, font));
+            font = new Font(FontFamily.HELVETICA, 12, Font.ITALIC, darkTextColor );
+            document.add(new Paragraph(file.attachedBy, font));
+        }
+
+        /*
+         * Partners part
+         */
+        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+        document.add(new Paragraph(spec.staticTexts.partnerText, font));
+
+        for( Person person: spec.persons ) {
+            font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
+            document.add(new Paragraph(person.fullname, font));
+            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+            document.add(new Paragraph(person.company, font));
+            if( person.personalnumber!=null && person.personalnumber!="" ) {
+                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                document.add(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
+            }
+            if( person.companynumber!=null && person.companynumber!="" ) {
+                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                document.add(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
+            }
+        }
+
+        /*
+         * Secretaries part
+         */
+        if( spec.secretaries!=null && !spec.secretaries.isEmpty()) {
+            font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+            document.add(new Paragraph(spec.staticTexts.secretaryText, font));
+
+            for( Person person: spec.secretaries ) {
+                font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
+                document.add(new Paragraph(person.fullname, font));
+                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                document.add(new Paragraph(person.company, font));
+                if( person.personalnumber!=null && person.personalnumber!="" ) {
+                    font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                    document.add(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
+                }
+                if( person.companynumber!=null && person.companynumber!="" ) {
+                    font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                    document.add(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
+                }
+            }
+        }
+
+        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+        document.add(new Paragraph(spec.staticTexts.eventsText, font));
+
+        for( HistEntry entry: spec.history ) {
+            font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
+            document.add(new Paragraph(entry.date, font));
+            font = new Font(FontFamily.HELVETICA, 8, Font.ITALIC, lightTextColor );
+            document.add(new Paragraph(entry.address, font));
+            font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
+            document.add(new Paragraph(entry.comment, font));
+        }
+
+        // old crap
         PdfPTable table = new PdfPTable(3);
         table.setWidthPercentage(288 / 5.23f);
         table.setWidths(new int[]{2, 1, 1});
@@ -294,7 +384,7 @@ public class PDFSeal {
     public static void manipulatePdf(SealSpec spec) throws IOException, DocumentException {
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        prepareSealPages(os);
+        prepareSealPages(spec, os);
 
         ByteArrayOutputStream os2 = new ByteArrayOutputStream();
         stampFieldsOverPdf(new PdfReader(spec.input), getAllFields(spec), os2);
