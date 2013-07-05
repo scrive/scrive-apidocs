@@ -130,7 +130,7 @@ instance J.ToJSValue SealSpec where
     J.value "history" history
     J.value "initials" initials
     J.value "hostpart" hostpart
-    --J.value staticTexts    :: SealingTexts
+    J.value "staticTexts" staticTexts
     J.value "attachments" attachments
     J.value "filesList" filesList
 
@@ -197,3 +197,18 @@ data SealingTexts = SealingTexts
   , verificationFooter :: String -- Long text all the end saying that doc was verified
   }
   deriving (Eq,Ord,Show,Read)
+
+instance J.ToJSValue SealingTexts where
+  toJSValue SealingTexts{..} = J.runJSONGen $ do
+   J.value "verificationTitle" verificationTitle
+   J.value "docPrefix" docPrefix
+   J.value "signedText" signedText
+   J.value "partnerText" partnerText
+   J.value "secretaryText" secretaryText
+   J.value "documentText" documentText
+   J.value "orgNumberText" orgNumberText
+   J.value "personalNumberText" personalNumberText
+   J.value "eventsText" eventsText
+   J.value "dateText" dateText
+   J.value "historyText" historyText
+   J.value "verificationFooter" verificationFooter
