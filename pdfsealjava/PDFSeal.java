@@ -248,6 +248,65 @@ public class PDFSeal {
         return result;
     }
 
+    public static void addPersonsTable(Iterable<Person> persons, Document document, SealSpec spec)
+        throws DocumentException, IOException
+    {
+        CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
+        CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
+
+        PdfPTable table = new PdfPTable(2);
+        table.setWidthPercentage(100f);
+        table.setWidths(new int[]{1, 1});
+
+        int cells = 0;
+        for( Person person: persons ) {
+            PdfPCell cell;
+            cell = new PdfPCell();
+            cell.setBorderColor(lightTextColor);
+
+            Font font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
+            cell.addElement(new Paragraph(person.fullname, font));
+            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+            cell.addElement(new Paragraph(person.company, font));
+            if( person.personalnumber!=null && person.personalnumber!="" ) {
+                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                cell.addElement(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
+            }
+            if( person.companynumber!=null && person.companynumber!="" ) {
+                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                cell.addElement(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
+            }
+            for( Field field : person.fields ) {
+                if( field.valueBase64!=null &&
+                    field.valueBase64!="" &&
+                    field.includeInSummary ) {
+                        byte jpegdata[] = Base64.decode(field.valueBase64);
+                        Jpeg jpeg = new Jpeg(jpegdata);
+
+                        if( field.keyColor!=null ) {
+                            jpeg.setTransparency(new int[] { field.keyColor.get(0),
+                                                             field.keyColor.get(1),
+                                                             field.keyColor.get(2)} );
+                        }
+                        jpeg.scaleAbsoluteWidth(150);
+                        jpeg.setBorder(Rectangle.BOTTOM);
+                        jpeg.setBorderWidth(1f);
+                        jpeg.setBorderColor(lightTextColor);
+                        cell.addElement(jpeg);
+                }
+            }
+            table.addCell(cell);
+            cells++;
+        }
+        if( (cells&1)!=0 ) {
+            PdfPCell cell = new PdfPCell();
+            cell.setBorder(PdfPCell.NO_BORDER);
+            table.addCell(cell);
+        }
+
+        document.add(table);
+    }
+
     public static void prepareSealPages(SealSpec spec, OutputStream os)
         throws IOException, DocumentException
     {
@@ -321,40 +380,9 @@ public class PDFSeal {
         /*
          * Partners part
          */
-        table = new PdfPTable(2);
-        table.setWidthPercentage(100f);
-        table.setWidths(new int[]{1, 1});
         font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
         document.add(new Paragraph(spec.staticTexts.partnerText, font));
-
-        cells = 0;
-        for( Person person: spec.persons ) {
-            PdfPCell cell;
-            cell = new PdfPCell();
-            cell.setBorderColor(lightTextColor);
-
-            font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
-            cell.addElement(new Paragraph(person.fullname, font));
-            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-            cell.addElement(new Paragraph(person.company, font));
-            if( person.personalnumber!=null && person.personalnumber!="" ) {
-                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                cell.addElement(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
-            }
-            if( person.companynumber!=null && person.companynumber!="" ) {
-                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                cell.addElement(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
-            }
-            table.addCell(cell);
-            cells++;
-        }
-        if( (cells&1)!=0 ) {
-            PdfPCell cell = new PdfPCell();
-            cell.setBorder(PdfPCell.NO_BORDER);
-            table.addCell(cell);
-        }
-
-        document.add(table);
+        addPersonsTable(spec.persons, document, spec);
 
         /*
          * Secretaries part
@@ -362,39 +390,7 @@ public class PDFSeal {
         if( spec.secretaries!=null && !spec.secretaries.isEmpty()) {
             font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
             document.add(new Paragraph(spec.staticTexts.secretaryText, font));
-
-            table = new PdfPTable(2);
-            table.setWidthPercentage(100f);
-            table.setWidths(new int[]{1, 1});
-            cells = 0;
-
-            for( Person person: spec.secretaries ) {
-                PdfPCell cell;
-                cell = new PdfPCell();
-                cell.setBorderColor(lightTextColor);
-
-                font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
-                cell.addElement(new Paragraph(person.fullname, font));
-
-                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                cell.addElement(new Paragraph(person.company, font));
-                if( person.personalnumber!=null && person.personalnumber!="" ) {
-                    font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                    cell.addElement(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
-                }
-                if( person.companynumber!=null && person.companynumber!="" ) {
-                    font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                    cell.addElement(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
-                }
-                table.addCell(cell);
-                cells++;
-            }
-            if( (cells&1)!=0 ) {
-                PdfPCell cell = new PdfPCell();
-                cell.setBorder(PdfPCell.NO_BORDER);
-                table.addCell(cell);
-            }
-            document.add(table);
+            addPersonsTable(spec.secretaries, document, spec);
         }
 
         font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
