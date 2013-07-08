@@ -211,6 +211,7 @@ var SignatureDrawer = Backbone.View.extend({
     }
 });
 
+
 var SignatureDrawerWrapper = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
@@ -226,8 +227,10 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     },
     drawingBox : function() {
         var div = $("<div class='signatureDrawingBoxWrapper'>");
-        this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width, modal : this.modal});
-        div.append(this.drawer.el);
+        //this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width, modal : this.modal});
+        //div.append(this.drawer.el);
+        this.typer = new SignatureTyper({text : this.model.signatory().nameOrEmail(), height: this.height, width: this.width});
+        div.append(this.typer.el());
         div.width(820);
         div.height(820 * this.height / this.width);
         return div;
@@ -242,7 +245,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                     size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                     text: localization.signature.confirmSignature,
                     onClick : function(){
-                        view.drawer.saveImage();
+                        //view.drawer.saveImage();
                         view.onClose();
                         return false;
                     }
@@ -255,20 +258,26 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                 size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                 text: localization.pad.cleanImage,
                 onClick : function() {
-                    view.drawer.clear();
+                    //view.drawer.clear();
                     return false;
                 }
         }).el();
     },
     footer : function() {
+           var self = this;
            var signatory = this.model.signatory();
            var abutton = this.acceptButton();
            abutton.addClass("float-right");
            var detailsBox = $("<div class='details-box' />");
            var name = signatory.nameOrEmail();
            var company = signatory.company();
+           var textinput = $("<input type='text'>").val(signatory.nameOrEmail())
+                                                   .change(function() {self.typer.setText(textinput.val())})
+                                                   .keyup(function() {self.typer.setText(textinput.val())});
+
            detailsBox.append($("<h1/>").text(name));
            detailsBox.append($("<h2/>").text(company ));
+           detailsBox.append(textinput);
            var cbutton = this.clearButton();
            cbutton.addClass("float-left");
            return $("<div class='footer'/>").append(cbutton).append(abutton).append(detailsBox);

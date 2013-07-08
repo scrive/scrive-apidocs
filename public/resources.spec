@@ -159,6 +159,7 @@ set systemPage
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js
  js   js/validation.js
+ js   js/signaturetyper.js
  js   js/signaturedrawer.js
  js   js/fieldplacementview.js
  js   js/padview.js

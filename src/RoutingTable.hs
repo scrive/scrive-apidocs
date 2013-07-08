@@ -29,6 +29,7 @@ import AppView
 import qualified PadQueue.Control as PadQueue
 import PadApplication.API
 import Salesforce.Control as Salesforce
+import qualified ServerUtils.ServerUtils as ServerUtils
 {- |
    The routing table for the app.
    Routes in this table should be of the form
@@ -180,5 +181,6 @@ staticRoutes = choice
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
 
      -- public services
-     , dir "serialize_image" $ hPost $ toK0 $ Company.handleSerializeImage
+     , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
+     , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
    ]

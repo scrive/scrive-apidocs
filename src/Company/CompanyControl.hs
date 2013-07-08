@@ -6,7 +6,6 @@ module Company.CompanyControl (
   , routes
   , adminRoutes
   , withCompanyAdmin
-  , handleSerializeImage
   ) where
 
 import Control.Monad.State
@@ -57,11 +56,6 @@ handleAdminGetCompany :: Kontrakcja m => CompanyID -> m String
 handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $
   const $ adminCompanyBrandingPage cid
 
-handleSerializeImage :: Kontrakcja m => m JSValue
-handleSerializeImage = do
-  guardLoggedIn
-  logo <- guardJustM $ getFileField "logo"
-  runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
 
 handlePostCompany :: Kontrakcja m => Maybe CompanyID -> m KontraLink
 handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
