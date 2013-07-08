@@ -373,8 +373,8 @@ $endif$
           <a class="page last-link"   href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a>
       </li>
       <li class="session-login float-right">
-        <a class="button button-small" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
-        <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
+        <a class="button" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
+        <a class="button" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
       </li>
       $endif$
     </ul>

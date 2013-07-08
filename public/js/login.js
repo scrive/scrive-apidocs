@@ -261,7 +261,6 @@ var LoginView = Backbone.View.extend({
     },
     render: function () {
        var model = this.model;
-       $("#page-login").addClass("button-gray");
        $(this.el).empty();
        if (model.loginView())
            $(this.el).append(this.loginSection());
@@ -418,7 +417,6 @@ var LoginBrandedView = Backbone.View.extend({
     },
     render: function () {
        var model = this.model;
-       $("#page-login").addClass("button-gray");
        $(this.el).empty();
        if (model.loginView())
            $(this.el).append(this.loginSection());
