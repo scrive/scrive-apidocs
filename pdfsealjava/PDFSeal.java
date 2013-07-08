@@ -253,6 +253,7 @@ public class PDFSeal {
     {
         CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
         CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
+        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
 
         PdfPTable table = new PdfPTable(2);
         table.setWidthPercentage(100f);
@@ -262,18 +263,22 @@ public class PDFSeal {
         for( Person person: persons ) {
             PdfPCell cell;
             cell = new PdfPCell();
-            cell.setBorderColor(lightTextColor);
+            cell.setBorderColor(frameColor);
+            cell.setPadding(15);
+            cell.setPaddingTop(5);
+            cell.setPaddingBottom(12);
+            cell.setBorderWidth(1f);
 
-            Font font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
+            Font font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, lightTextColor );
             cell.addElement(new Paragraph(person.fullname, font));
-            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
             cell.addElement(new Paragraph(person.company, font));
             if( person.personalnumber!=null && person.personalnumber!="" ) {
-                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
                 cell.addElement(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
             }
             if( person.companynumber!=null && person.companynumber!="" ) {
-                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
+                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
                 cell.addElement(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
             }
             for( Field field : person.fields ) {
@@ -307,6 +312,18 @@ public class PDFSeal {
         document.add(table);
     }
 
+    public static void addSubtitle(Document document, String text)
+        throws DocumentException
+    {
+        CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
+        Font font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+        Paragraph para = new Paragraph(text, font);
+        para.setFirstLineIndent(7f);
+        para.setSpacingBefore(10);
+        para.setSpacingAfter(10);
+        document.add(para);
+    }
+
     public static void prepareSealPages(SealSpec spec, OutputStream os)
         throws IOException, DocumentException
     {
@@ -317,6 +334,7 @@ public class PDFSeal {
 
         CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
         CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
+        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
 
         /*
          * FIXME: To use chineese characters you need to define BaseFont, like this:
@@ -345,8 +363,7 @@ public class PDFSeal {
         /*
          * Document part
          */
-        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
-        document.add(new Paragraph(spec.staticTexts.documentText, font));
+        addSubtitle(document, spec.staticTexts.documentText);
 
         PdfPTable table = new PdfPTable(2);
         int cells;
@@ -357,15 +374,19 @@ public class PDFSeal {
         for( FileDesc file : spec.filesList ) {
             PdfPCell cell;
             cell = new PdfPCell();
-            cell.setBorderColor(lightTextColor);
+            cell.setBorderColor(frameColor);
+            cell.setPadding(15);
+            cell.setPaddingTop(5);
+            cell.setPaddingBottom(12);
+            cell.setBorderWidth(1f);
 
-            font = new Font(FontFamily.HELVETICA, 12, Font.BOLD, darkTextColor );
+            font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, lightTextColor );
             cell.addElement(new Paragraph(file.title, font));
-            font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
             cell.addElement(new Paragraph(file.role, font));
-            font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
+            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
             cell.addElement(new Paragraph(file.pagesText, font));
-            font = new Font(FontFamily.HELVETICA, 12, Font.ITALIC, darkTextColor );
+            font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
             cell.addElement(new Paragraph(file.attachedBy, font));
             table.addCell(cell);
             cells++;
@@ -380,21 +401,18 @@ public class PDFSeal {
         /*
          * Partners part
          */
-        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
-        document.add(new Paragraph(spec.staticTexts.partnerText, font));
+        addSubtitle(document, spec.staticTexts.partnerText);
         addPersonsTable(spec.persons, document, spec);
 
         /*
          * Secretaries part
          */
         if( spec.secretaries!=null && !spec.secretaries.isEmpty()) {
-            font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
-            document.add(new Paragraph(spec.staticTexts.secretaryText, font));
+            addSubtitle(document, spec.staticTexts.secretaryText);
             addPersonsTable(spec.secretaries, document, spec);
         }
 
-        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
-        document.add(new Paragraph(spec.staticTexts.eventsText, font));
+        addSubtitle(document, spec.staticTexts.eventsText);
 
         table = new PdfPTable(2);
         table.setWidthPercentage(100f);
@@ -404,7 +422,8 @@ public class PDFSeal {
 
             PdfPCell cell;
             cell = new PdfPCell();
-            cell.setBorderColor(lightTextColor);
+            cell.setBorderColor(frameColor);
+            cell.setBorderWidth(1f);
 
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
             cell.addElement(new Paragraph(entry.date, font));
@@ -413,7 +432,7 @@ public class PDFSeal {
             table.addCell(cell);
 
             cell = new PdfPCell();
-            cell.setBorderColor(lightTextColor);
+            cell.setBorderColor(frameColor);
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
             cell.addElement(new Paragraph(entry.comment, font));
             table.addCell(cell);
