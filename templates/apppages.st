@@ -345,10 +345,10 @@ $endif$
           <a class="s-archive page"  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
       </li>
       <li class="session-create float-right">
-          <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
+          <a class="button button fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
-          <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
+          <a class="button button js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
       </li>
       $else$
       <li class="page-first float-left" >

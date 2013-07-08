@@ -1,53 +1,43 @@
 header.site {
-  min-width: 1020px;
+  min-width: 1200px;
   &.thin { min-width: 960px; }
   top : 0;
   left : 0;
   width : 100%;
   z-index : 100;
-  background : #fff;
-  border-top : 3px solid #fff;
-  box-shadow : b10 0 0 8px;
-  background : w97;
-  background : #fff;
+  background : #495259;
   font-size: 16px;
+  font-family: @source;
   nav {
     position : relative;
-    border-top : 1px solid @blue-border;
-    min-height : 95px;
-    border-bottom : 1px solid @blue-border;
+    height: 80px;
+    border-bottom : 1px solid black;
     ul.ct {
       .clearfix;
-      min-height : 95px;
+      height: 80px;
       margin: 0 auto;
-      width: 1020px;
+      width: 1200px;
       position : relative;
       &.thin { width: 960px; }
       li {
-        border-left : 1px solid @blue-border;
         height : 24px;
-        margin : 35px 0 34px;
+        margin : 32px 0 24px;
         a.page {
           display : block;
-          font : 1em/95px @source;
+          font : 1em/80px @source;
           text-align : center;
-          color : @text-medium;
-          text-shadow : #fff 0 1px 0;
-          min-height : 95px + 4px;
+          color : @text-very-light;
+          height : 80px;
           margin-top : -39px;
           border-top : 4px solid transparent;
-          transition : .15s ease-in-out all;
           padding: 0 1em;
           &.last-link {
             padding: 0 0 0 1em;
           }
           &:hover {
-            border-top-color : @blue-medium;
             color : @blue-medium;
           }
          &.active {
-          border-top-color: #C2000A;
-          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
           color: #C2000A;
           cursor: default;
           font-weight: bold;
@@ -57,7 +47,7 @@ header.site {
           margin-right: 16px;
           width : auto;
           .clearfix;
-          a.button.button-small {
+          a.button {
             margin-top : -4px;
             margin-left: 8px;
             margin-right : 0px;
@@ -72,14 +62,16 @@ header.site {
           }
         }
         &.session-create {
-          padding-right : 30px;
-          width : 140px;
+          padding-right : 10px;
+          min-width : 200px;
           .clearfix;
-          a.button.button-small {
-            width: 120px;
-            margin-top : -4px;
+          a.button {
+            min-width: 200px;
+            margin-top : -18px;
+            font-size: 17px;
             margin-right : 0px;
-            min-width : 40px;
+            padding-left: 20px;
+            padding-right: 20px;
             float : left;
             transform : translateZ(0);
           }
@@ -100,7 +92,7 @@ header.site {
             text-align : left;
             padding-left: 14px;
             img {
-              margin : 27px 0 26px;
+              margin : 20px 0 26px;
               padding-top: 10px;
               padding-bottom: 10px;
             }
