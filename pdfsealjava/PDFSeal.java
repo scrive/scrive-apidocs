@@ -268,7 +268,6 @@ public class PDFSeal {
 
         Font font;
 
-        // step 4
         document.newPage();
 
         font = new Font(FontFamily.HELVETICA, 21, Font.NORMAL, darkTextColor );
@@ -278,41 +277,84 @@ public class PDFSeal {
         document.add(new Paragraph(spec.staticTexts.docPrefix + " " + spec.documentNumber, font));
 
         /*
+         * Warning for future generations:
+         *
+         * itext will not show row of a table that is not full of
+         * cells. You have to add one last empty cell to get it going.
+         */
+
+        /*
          * Document part
          */
         font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
         document.add(new Paragraph(spec.staticTexts.documentText, font));
+
+        PdfPTable table = new PdfPTable(2);
+        int cells;
+        table.setWidthPercentage(100f);
+        table.setWidths(new int[]{1, 1});
+
+        cells = 0;
         for( FileDesc file : spec.filesList ) {
+            PdfPCell cell;
+            cell = new PdfPCell();
+            cell.setBorderColor(lightTextColor);
+
             font = new Font(FontFamily.HELVETICA, 12, Font.BOLD, darkTextColor );
-            document.add(new Paragraph(file.title, font));
+            cell.addElement(new Paragraph(file.title, font));
             font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
-            document.add(new Paragraph(file.role, font));
+            cell.addElement(new Paragraph(file.role, font));
             font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
-            document.add(new Paragraph(file.pagesText, font));
+            cell.addElement(new Paragraph(file.pagesText, font));
             font = new Font(FontFamily.HELVETICA, 12, Font.ITALIC, darkTextColor );
-            document.add(new Paragraph(file.attachedBy, font));
+            cell.addElement(new Paragraph(file.attachedBy, font));
+            table.addCell(cell);
+            cells++;
         }
+        if( (cells&1)!=0 ) {
+            PdfPCell cell = new PdfPCell();
+            cell.setBorder(PdfPCell.NO_BORDER);
+            table.addCell(cell);
+        }
+        document.add(table);
 
         /*
          * Partners part
          */
+        table = new PdfPTable(2);
+        table.setWidthPercentage(100f);
+        table.setWidths(new int[]{1, 1});
         font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
         document.add(new Paragraph(spec.staticTexts.partnerText, font));
 
+        cells = 0;
         for( Person person: spec.persons ) {
+            PdfPCell cell;
+            cell = new PdfPCell();
+            cell.setBorderColor(lightTextColor);
+
             font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
-            document.add(new Paragraph(person.fullname, font));
+            cell.addElement(new Paragraph(person.fullname, font));
             font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-            document.add(new Paragraph(person.company, font));
+            cell.addElement(new Paragraph(person.company, font));
             if( person.personalnumber!=null && person.personalnumber!="" ) {
                 font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                document.add(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
+                cell.addElement(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
             }
             if( person.companynumber!=null && person.companynumber!="" ) {
                 font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                document.add(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
+                cell.addElement(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
             }
+            table.addCell(cell);
+            cells++;
         }
+        if( (cells&1)!=0 ) {
+            PdfPCell cell = new PdfPCell();
+            cell.setBorder(PdfPCell.NO_BORDER);
+            table.addCell(cell);
+        }
+
+        document.add(table);
 
         /*
          * Secretaries part
@@ -321,56 +363,67 @@ public class PDFSeal {
             font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
             document.add(new Paragraph(spec.staticTexts.secretaryText, font));
 
+            table = new PdfPTable(2);
+            table.setWidthPercentage(100f);
+            table.setWidths(new int[]{1, 1});
+            cells = 0;
+
             for( Person person: spec.secretaries ) {
+                PdfPCell cell;
+                cell = new PdfPCell();
+                cell.setBorderColor(lightTextColor);
+
                 font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, darkTextColor );
-                document.add(new Paragraph(person.fullname, font));
+                cell.addElement(new Paragraph(person.fullname, font));
+
                 font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                document.add(new Paragraph(person.company, font));
+                cell.addElement(new Paragraph(person.company, font));
                 if( person.personalnumber!=null && person.personalnumber!="" ) {
                     font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                    document.add(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
+                    cell.addElement(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
                 }
                 if( person.companynumber!=null && person.companynumber!="" ) {
                     font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, darkTextColor );
-                    document.add(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
+                    cell.addElement(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
                 }
+                table.addCell(cell);
+                cells++;
             }
+            if( (cells&1)!=0 ) {
+                PdfPCell cell = new PdfPCell();
+                cell.setBorder(PdfPCell.NO_BORDER);
+                table.addCell(cell);
+            }
+            document.add(table);
         }
 
         font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
         document.add(new Paragraph(spec.staticTexts.eventsText, font));
 
+        table = new PdfPTable(2);
+        table.setWidthPercentage(100f);
+        table.setWidths(new int[]{1, 2});
+
         for( HistEntry entry: spec.history ) {
+
+            PdfPCell cell;
+            cell = new PdfPCell();
+            cell.setBorderColor(lightTextColor);
+
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
-            document.add(new Paragraph(entry.date, font));
+            cell.addElement(new Paragraph(entry.date, font));
             font = new Font(FontFamily.HELVETICA, 8, Font.ITALIC, lightTextColor );
-            document.add(new Paragraph(entry.address, font));
+            cell.addElement(new Paragraph(entry.address, font));
+            table.addCell(cell);
+
+            cell = new PdfPCell();
+            cell.setBorderColor(lightTextColor);
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
-            document.add(new Paragraph(entry.comment, font));
+            cell.addElement(new Paragraph(entry.comment, font));
+            table.addCell(cell);
         }
-
-        // old crap
-        PdfPTable table = new PdfPTable(3);
-        table.setWidthPercentage(288 / 5.23f);
-        table.setWidths(new int[]{2, 1, 1});
-        PdfPCell cell;
-        cell = new PdfPCell(new Phrase("Table 1"));
-        cell.setColspan(3);
-        table.addCell(cell);
-        cell = new PdfPCell(new Phrase("Cell with rowspan 2"));
-        cell.setRowspan(2);
-        cell.setBorder(Rectangle.LEFT | Rectangle.TOP | Rectangle.RIGHT);
-        cell.setBorderColor(BaseColor.CYAN);
-        cell.setBorderWidth(5);
-
-        table.addCell(cell);
-        table.addCell("row 1; cell 1");
-        table.addCell("row 1; cell 2");
-        table.addCell("row 2; cell 1");
-        table.addCell("row 2; cell 2");
         document.add(table);
 
-        // step 5
         document.close();
     }
 
