@@ -222,16 +222,19 @@ public class PDFSeal {
                     float realy = field.y * cropBox.getHeight() + cropBox.getBottom();
 
                     if( field.value != null ) {
-                        System.out.println("Placing " + field.value + " at " + realx + "," + realy);
 
-                        Font font = new Font(FontFamily.HELVETICA, (float)(cropBox.getWidth() * field.fontSize));
-
-                        if( field.greyed ) {
-                            font.setColor( new CMYKColor(0,0,0,127));
+                        BaseColor color;
+                        if( !field.greyed ) {
+                            color = new CMYKColor(0,0,0,1f);
+                        }
+                        else {
+                            color = new CMYKColor(0,0,0,127);
                         }
 
+                        Paragraph para = createParagraph(field.value, (float)(cropBox.getWidth() * field.fontSize), Font.NORMAL, color);
+
                         ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
-                                                   new Phrase(field.value, font),
+                                                   para,
                                                    realx, realy,
                                                    0);
                     }
@@ -291,24 +294,20 @@ public class PDFSeal {
             cell.setPaddingBottom(12);
             cell.setBorderWidth(1f);
 
-            Font font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, lightTextColor );
-            para = new Paragraph(person.fullname, font);
+            para = createParagraph(person.fullname, 10, Font.BOLD, lightTextColor );
             para.setLeading(0f, 1.2f);
             cell.addElement(para);
-            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-            para = new Paragraph(person.company, font);
+            para = createParagraph(person.company, 10, Font.NORMAL, lightTextColor);
             para.setLeading(0f, 1.2f);
             para.setSpacingAfter(13);
             cell.addElement(para);
             if( person.personalnumber!=null && person.personalnumber!="" ) {
-                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-                para = new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font);
+                para = createParagraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, 10, Font.NORMAL, lightTextColor );
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
             if( person.companynumber!=null && person.companynumber!="" ) {
-                font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-                para = new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font);
+                para = createParagraph(spec.staticTexts.orgNumberText + " " + person.companynumber, 10, Font.NORMAL, lightTextColor);
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
@@ -344,11 +343,10 @@ public class PDFSeal {
     }
 
     public static void addSubtitle(Document document, String text)
-        throws DocumentException
+        throws DocumentException, IOException
     {
         CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
-        Font font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, darkTextColor );
-        Paragraph para = new Paragraph(text, font);
+        Paragraph para = createParagraph(text, 12, Font.NORMAL, darkTextColor);
         para.setFirstLineIndent(7f);
         para.setSpacingBefore(10);
         para.setSpacingAfter(10);
@@ -386,11 +384,9 @@ public class PDFSeal {
 
         document.newPage();
 
-        font = new Font(FontFamily.HELVETICA, 21, Font.NORMAL, darkTextColor );
-        document.add(new Paragraph(spec.staticTexts.verificationTitle, font));
+        document.add(createParagraph(spec.staticTexts.verificationTitle, 21, Font.NORMAL, darkTextColor));
 
-        font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, lightTextColor );
-        Paragraph para = new Paragraph(spec.staticTexts.docPrefix + " " + spec.documentNumber, font);
+        Paragraph para = createParagraph(spec.staticTexts.docPrefix + " " + spec.documentNumber, 12, Font.NORMAL, lightTextColor);
         para.setSpacingAfter(50);
         document.add(para);
 
@@ -421,20 +417,16 @@ public class PDFSeal {
             cell.setPaddingBottom(12);
             cell.setBorderWidth(1f);
 
-            font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, lightTextColor );
-            para = new Paragraph(file.title, font);
+            para = createParagraph(file.title, 10, Font.BOLD, lightTextColor);
             para.setLeading(0f, 1.2f);
             cell.addElement(para);
-            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-            para = new Paragraph(file.role, font);
+            para = createParagraph(file.role, 10, Font.NORMAL, lightTextColor);
             para.setLeading(0f, 1.2f);
             cell.addElement(para);
-            font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-            para = new Paragraph(file.pagesText, font);
+            para = createParagraph(file.pagesText, 10, Font.NORMAL, lightTextColor);
             para.setLeading(0f, 1.2f);
             cell.addElement(para);
-            font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
-            para = new Paragraph(file.attachedBy, font);
+            para = createParagraph(file.attachedBy, 10, Font.ITALIC, lightTextColor);
             para.setLeading(0f, 1.2f);
             cell.addElement(para);
             table.addCell(cell);
@@ -477,18 +469,15 @@ public class PDFSeal {
             cell.setPaddingLeft(15);
             cell.setPaddingRight(15);
 
-            font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
-            cell.addElement(new Paragraph(entry.date, font));
-            font = new Font(FontFamily.HELVETICA, 8, Font.ITALIC, lightTextColor );
-            cell.addElement(new Paragraph(entry.address, font));
+            cell.addElement(createParagraph(entry.date, 10, Font.ITALIC, lightTextColor));
+            cell.addElement(createParagraph(entry.address, 8, Font.ITALIC, lightTextColor));
             table.addCell(cell);
 
             cell = new PdfPCell();
             cell.setBorder(0);
             cell.setPaddingLeft(15);
             cell.setPaddingRight(15);
-            font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
-            para = new Paragraph(entry.comment, font);
+            para = createParagraph(entry.comment, 10, Font.ITALIC, lightTextColor);
             para.setLeading(0f, 1.2f);
             para.setSpacingAfter(7);
             cell.addElement(para);
@@ -555,12 +544,11 @@ public class PDFSeal {
             columnText.setSimpleColumn(footerTextRect);
             columnText.setLeading(0f, 1.2f);
 
-            Font font = new Font(FontFamily.HELVETICA, 8, Font.NORMAL, lightTextColor );
-            Paragraph para = new Paragraph(spec.staticTexts.verificationFooter, font);
+            Paragraph para = createParagraph(spec.staticTexts.verificationFooter, 8, Font.NORMAL, lightTextColor);
             para.setLeading(0f, 1.2f);
             columnText.addElement(para);
 
-            para = new Paragraph(i + "/" + pageCount, font);
+            para = createParagraph(i + "/" + pageCount, 8, Font.NORMAL, lightTextColor);
             para.setLeading(3f, 1.2f);
             columnText.addElement(para);
             columnText.go();
@@ -591,6 +579,25 @@ public class PDFSeal {
         concatenatePdfsInto(new PdfReader[] { new PdfReader(sourceWithFields.toByteArray()),
                                               new PdfReader(sealPages.toByteArray()) },
                             new FileOutputStream(spec.output));
+    }
+
+
+    static BaseFont baseFontHelvetica;
+    static Font getFontForString(String text, float size, int style, BaseColor color)
+        throws DocumentException, IOException
+    {
+        if(baseFontHelvetica==null ) {
+            baseFontHelvetica = BaseFont.createFont("helvetica.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            baseFontHelvetica.setSubset(true);
+        }
+        return new Font(baseFontHelvetica, size, style, color);
+    }
+
+    static Paragraph createParagraph(String text, float size, int style, BaseColor color)
+        throws DocumentException, IOException
+    {
+        Font font = getFontForString(text, size, style, color);
+        return new Paragraph(text, font);
     }
 
     /**
