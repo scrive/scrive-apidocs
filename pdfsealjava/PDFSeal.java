@@ -158,7 +158,6 @@ class PdfPTableDrawFrameAroundTable extends PdfPTableEventForwarder
         frame.setBorderWidth(1);
         lineCanvas.rectangle(frame);
 
-        System.out.println("Table rect " + frame.toString());
         super.tableLayout(table, widths, heights, headerRows, rowStart, canvases);
     }
 }
@@ -506,10 +505,6 @@ public class PDFSeal {
         float printableWidth = 567f;
         float printableMargin = 23f;
         Rectangle pageSize = document.getPageSize();
-        System.out.println("Margin left " + document.leftMargin());
-        System.out.println("Margin right " + document.rightMargin());
-        System.out.println("Page width " + pageSize.getWidth());
-
 
         Rectangle footerFrame = new Rectangle(document.leftMargin(), document.bottomMargin(),
                                               pageSize.getWidth() - document.rightMargin(), document.bottomMargin() + 80);
