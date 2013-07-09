@@ -473,17 +473,72 @@ public class PDFSeal {
     public static void stampFooterOverSealPages(SealSpec spec, PdfReader reader, ByteArrayOutputStream sealPages)
         throws IOException, DocumentException {
         CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
+        CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
         PdfStamper stamper = new PdfStamper(reader, sealPages);
-        Rectangle rect = new Rectangle(581.839f-567.36f, 14.37f, 581.839f, 813.12f + 14.37f);
-        rect.setBorderColor(frameColor);
-        rect.setBorderWidth(1);
-        rect.setBorder(15);
+        PdfReader sealMarker = new PdfReader("files/sealmarker.pdf");
+        Rectangle pageFrame = new Rectangle(581.839f-567.36f, 14.37f, 581.839f, 813.12f + 14.37f);
+        pageFrame.setBorderColor(frameColor);
+        pageFrame.setBorderWidth(1);
+        pageFrame.setBorder(15);
+
+
+        Document document = new Document();
+        document.open();
+
+        float printableWidth = 567f;
+        float printableMargin = 23f;
+        Rectangle pageSize = document.getPageSize();
+        System.out.println("Margin left " + document.leftMargin());
+        System.out.println("Margin right " + document.rightMargin());
+        System.out.println("Page width " + pageSize.getWidth());
+
+
+        Rectangle footerFrame = new Rectangle(document.leftMargin(), document.bottomMargin(),
+                                              pageSize.getWidth() - document.rightMargin(), document.bottomMargin() + 80);
+        footerFrame.setBorderColor(frameColor);
+        footerFrame.setBorderWidth(1);
+        footerFrame.setBorder(15);
+
+
+        PdfImportedPage sealMarkerImported = stamper.getImportedPage(sealMarker, 1);
+
+        Rectangle footerTextRect = new Rectangle(footerFrame.getLeft() + 15,
+                                                 footerFrame.getBottom() + 15,
+                                                 footerFrame.getRight() - sealMarkerImported.getWidth() - 5 - 15,
+                                                 footerFrame.getTop() - 15);
 
         int pageCount = reader.getNumberOfPages();
         for( int i=1; i<=pageCount; i++ ) {
-            PdfContentByte canvas = stamper.getUnderContent(i);
+            PdfContentByte canvasUnder = stamper.getUnderContent(i);
 
-            canvas.rectangle(rect);
+            canvasUnder.rectangle(pageFrame);
+
+            PdfContentByte canvasOver = stamper.getOverContent(i);
+
+            canvasOver.rectangle(footerFrame);
+
+            canvasOver.addTemplate(sealMarkerImported, footerFrame.getRight() - sealMarkerImported.getWidth() - 5,
+                                   footerFrame.getBottom() +
+                                   (footerFrame.getHeight() - sealMarkerImported.getHeight())/2);
+
+            ColumnText columnText = new ColumnText(canvasOver);
+
+            columnText.setSimpleColumn(footerTextRect);
+            columnText.setLeading(0f, 1.2f);
+
+            Font font = new Font(FontFamily.HELVETICA, 8, Font.NORMAL, lightTextColor );
+            Paragraph para = new Paragraph(spec.staticTexts.verificationFooter, font);
+            Phrase phrase = new Phrase();
+            para.setLeading(0f, 1.2f);
+            phrase.add(para);
+            //columnText.addText(para);
+
+            para = new Paragraph(i + "/" + pageCount, font);
+            para.setLeading(3f, 1.2f);
+            phrase.add(para);
+            //columnText.addText(para);
+            columnText.addText(phrase);
+            columnText.go();
         }
         stamper.close();
         reader.close();
