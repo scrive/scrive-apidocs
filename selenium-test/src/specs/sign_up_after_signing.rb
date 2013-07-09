@@ -36,7 +36,6 @@ describe "sign up after signing a document" do
 
     puts "we should be given the option to save the doc in the archive and create an account"
     @h.wait_until { @h.driver.find_element :css => "a.button.button-large" }.click
-    (@h.wait_until { @h.driver.find_element :css => ".tst-action" }).click
 
     puts "should be logged in and able to upload a document"
     @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
