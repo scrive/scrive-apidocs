@@ -168,7 +168,9 @@ companyStatsToJSON formatTime totalText uuss = map f summarized
              value "name" ((\(_,_,n) -> n) <$> uusUser uus')
              value "email" ((\(_,e,_) -> e) <$> uusUser uus')
            | uus' <- uuss,
-             uusTimeSpan uus' == uusTimeSpan uus]
+             uusTimeSpan uus' == uusTimeSpan uus,
+             ((uusDocumentsClosed uus' > 0) || (uusDocumentsSent uus' > 0) || (uusSignaturesClosed uus' > 0))
+             ]
 
 
 
