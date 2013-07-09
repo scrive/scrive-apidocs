@@ -1,11 +1,11 @@
 input[type="submit"]::-moz-focus-inner {border:0;}
 
 .button {
-  //.gradient(hsl(@blueH,@blueS,35%), hsl(@blueH,@blueS,30%), hsl(@blueH,@blueS,40%));
   background-color: #3b434c;
   max-height: 16px;
   .border-radius(1px,1px,1px,1px);
   font-size: @em;
+  font-weight: 300;
   text-decoration: none;
   padding: 14px 20px;
   margin: 0;
@@ -93,12 +93,11 @@ input[type="submit"]::-moz-focus-inner {border:0;}
       background-color: #3b434c;
   }
   &.button-small {
-    max-height: 12px;
+    max-height: 14px;
     background-color: #3b434c;
-    font-size: 12px;
-    font-weight: bold;
+    font-size: 13px;
     font-family: @source;
-    line-height: 12px;
+    line-height: 14px;
     padding: 8px 12px;
 
     &.button-gray { background: #f6f6f6; color: #333 !important }
