@@ -582,7 +582,7 @@ public class PDFSeal {
         throws DocumentException, IOException
     {
         if(baseFontHelvetica==null ) {
-            baseFontHelvetica = BaseFont.createFont("helvetica.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            baseFontHelvetica = BaseFont.createFont("Helvetica.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             baseFontHelvetica.setSubset(true);
         }
         return new Font(baseFontHelvetica, size, style, color);
