@@ -1342,7 +1342,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 img.attr('src',image);
                 box.append(img);
             }
-            box.click(function() {new SignatureDrawerPopup({field: field, width: width, height: height})});
+            box.click(function() {new SignatureDrawOrTypeModal({field: field, width: width, height: height})});
             return this;
     }
 });

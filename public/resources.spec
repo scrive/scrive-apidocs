@@ -161,6 +161,7 @@ set systemPage
  js   js/validation.js
  js   js/signaturetyper.js
  js   js/signaturedrawer.js
+ js   js/signaturemodal.js
  js   js/fieldplacementview.js
  js   js/padview.js
  js   js/fileverifier.js

@@ -1,14 +1,41 @@
 
 (function(window){
 
+var SignatureDrawerModel = Backbone.Model.extend({
+  defaults: {
+        text: true
+  },
+  text : function() {
+     return this.get("text");
+  },
+  setText: function(v) {
+    this.set({text : v});
+  },
+  height : function() {
+     return this.get("height");
+  },
+  width: function() {
+     return this.get("width");
 
-var SignatureDrawer = Backbone.View.extend({
+  },
+  field : function() {
+    return this.get("field");
+  },
+  value : function() {
+    return this.field().value();
+  },
+  valueTMP : function() {
+    return this.field().valueTMP();
+  },
+  modal: function() {
+    return this.get("modal");
+  }
+});
+
+
+var SignatureDrawerView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.view = this;
-        this.height = args.height;
-        this.width = args.width;
-        this.modal = args.modal;
         this.empty = true;
         this.render();
     },
@@ -18,7 +45,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
              e.preventDefault();
         };
-        this.modal.css("-ms-touch-action","none");
+        this.model.modal().css("-ms-touch-action","none");
     },
     stopDrawing : function() {
         var view = this;
@@ -27,7 +54,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
             return true;
         };
-        this.modal.css("-ms-touch-action","auto");
+         this.model.modal().css("-ms-touch-action","auto");
     },
     modal : function() {
       return this.get("modal");
@@ -157,22 +184,22 @@ var SignatureDrawer = Backbone.View.extend({
     },
     saveImage : function(callback) {
         if (this.empty) {
-          this.model.setValue("");
+          this.model.field().setValue("");
           if (callback != undefined) callback();
         } else {
           var self = this;
-          var field = this.model;
+          var field = this.model.field();
           var image = this.canvas[0].toDataURL("image/png",1.0);
           var img = new Image();
           img.type = 'image/png';
           img.src = image;
           img.onload = function() {
                var canvas = $("<canvas class='signatureCanvas' />");
-               canvas.attr("width",4* self.width);
-               canvas.attr("height",4* self.height);
+               canvas.attr("width",4* self.model.width());
+               canvas.attr("height",4* self.model.height());
                canvas[0].getContext('2d').fillStyle = "#ffffff";
-               canvas[0].getContext('2d').fillRect (0,0,4*self.width,4*self.height);
-               canvas[0].getContext('2d').drawImage(img,0,0,4*self.width,4*self.height);
+               canvas[0].getContext('2d').fillRect (0,0,4*self.model.width(),4*self.model.height());
+               canvas[0].getContext('2d').drawImage(img,0,0,4*self.model.width(),4*self.model.height());
 
 
                field.setValue(canvas[0].toDataURL("image/jpeg",1.0));
@@ -183,26 +210,28 @@ var SignatureDrawer = Backbone.View.extend({
        }
     },
     clear: function() {
-          this.canvas[0].getContext('2d').clearRect(0,0,820,820 * this.height / this.width);
+          this.canvas[0].getContext('2d').clearRect(0,0,820,820 * this.model.height()/ this.model.width());
           this.canvas[0].width = this.canvas[0].width;
           this.empty  = true;
     },
     render: function () {
         var signature = this.model;
-        var view = this;
+        var self = this;
         this.container = $(this.el);
         this.container.addClass("signatureDrawingBox");
         this.canvas = $("<canvas class='signatureCanvas' />");
         this.canvas.attr("width",820);
+        this.container.width(820);
         this.canvas.width(820);
-        this.canvas.attr("height",820 * this.height / this.width);
-        this.canvas.height(820 * this.height / this.width);
+        this.canvas.attr("height",820 * this.model.height() / this.model.width());
+        this.canvas.height(820 * this.model.height() / this.model.width());
+        this.container.height(820 * this.model.height() / this.model.width());
         this.picture =  this.canvas[0].getContext('2d');
         if (this.model.value() != "" && this.model.valueTMP() != undefined && this.model.valueTMP() != "") {
           var img = new Image();
           img.type = 'image/png';
           img.src = this.model.valueTMP() ;
-          this.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * this.height / this.width);
+          this.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * self.model.height()/ self.model.width());
           this.empty = false;
         }
         this.initDrawing();
@@ -212,124 +241,13 @@ var SignatureDrawer = Backbone.View.extend({
 });
 
 
-var SignatureDrawerWrapper = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render');
-        this.onClose = args.onClose;
-        this.height = args.height;
-        this.width = args.width;
-        this.modal = args.modal;
-        this.render();
-    },
-    header: function() {
-        var h = $("<h1>").text(localization.pad.drawSignatureBoxHeader);
-        return $("<div class='header'/>").append(h);
-    },
-    drawingBox : function() {
-        var div = $("<div class='signatureDrawingBoxWrapper'>");
-        //this.drawer = new SignatureDrawer({model : this.model, height: this.height, width: this.width, modal : this.modal});
-        //div.append(this.drawer.el);
-        this.typer = new SignatureTyper({text : this.model.signatory().nameOrEmail(), height: this.height, width: this.width});
-        div.append(this.typer.el());
-        div.width(820);
-        div.height(820 * this.height / this.width);
-        return div;
-    },
-    acceptButton : function() {
-        var view = this;
-        var field = this.model;
-        var signatory = field.signatory();
-        var document = signatory.document();
-        return new Button({
-                    color : 'green',
-                    size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
-                    text: localization.signature.confirmSignature,
-                    onClick : function(){
-                        //view.drawer.saveImage();
-                        view.onClose();
-                        return false;
-                    }
-            }).el();
-    },
-    clearButton : function() {
-        var view = this;
-        return new Button({
-                color : 'red',
-                size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
-                text: localization.pad.cleanImage,
-                onClick : function() {
-                    //view.drawer.clear();
-                    return false;
-                }
-        }).el();
-    },
-    footer : function() {
-           var self = this;
-           var signatory = this.model.signatory();
-           var abutton = this.acceptButton();
-           abutton.addClass("float-right");
-           var detailsBox = $("<div class='details-box' />");
-           var name = signatory.nameOrEmail();
-           var company = signatory.company();
-           var textinput = $("<input type='text'>").val(signatory.nameOrEmail())
-                                                   .change(function() {self.typer.setText(textinput.val())})
-                                                   .keyup(function() {self.typer.setText(textinput.val())});
-
-           detailsBox.append($("<h1/>").text(name));
-           detailsBox.append($("<h2/>").text(company ));
-           detailsBox.append(textinput);
-           var cbutton = this.clearButton();
-           cbutton.addClass("float-left");
-           return $("<div class='footer'/>").append(cbutton).append(abutton).append(detailsBox);
-    },
-    render: function () {
-        var box = $(this.el);
-        box.append(this.header());
-        box.append(this.drawingBox());
-        box.append(this.footer());
-        return this;
-    }
-});
-
-
-window.SignatureDrawerPopup = function(args){
-
-        var self = this;
-        if (BrowserInfo.isIE8orLower())
-        {
-            alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
-            return;
-        }
-        var modal = $("<div class='modal'></div>");
-
-        var width = BrowserInfo.isSmallScreen() ? 980 : 900;
-        var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
-
-        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
-        container.css("top",$(window).scrollTop());
-        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
-        container.css("left","0px");
-        var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
-        container.css("margin-left",left > 20 ? left : 20);
-
-        var close =  function() {
-              console.log("Closing");
-              modal.removeClass('active');
-              document.ontouchmove = function(e){
-                 return true;
-              };
-              setTimeout(function() {modal.detach();},500);
-            };
-
-        var closeButton = $("<div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/>").click(close);
-
-        container.append(closeButton);
-        self.dw = new SignatureDrawerWrapper({model : args.field, width: args.width, height: args.height, onClose : close, modal : modal});
-        container.append(self.dw.el);
-        modal.append(container);
-
-        $('body').append(modal );
-        modal.addClass('active');
+window.SignatureDrawer = function(args) {
+          var model = new SignatureDrawerModel(args);
+          var view  = new SignatureDrawerView({model : model});
+          this.el    = function() { return $(view.el);};
+          this.saveImage = function(callback) { view.saveImage(callback)};
+          this.clear = function() {view.clear();};
 };
+
 
 })(window);
