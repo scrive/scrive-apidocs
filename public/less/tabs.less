@@ -1,12 +1,13 @@
 /* Tab Viewer */
+@import 'designview/util.less'; // refactor
 
 .tab-viewer {
-   width: 1200px;
+   width: 100%;
   .tabs {
-      background: #f4f4f4;
-      border: solid #808080;
-      border-width: 1px 0px 1px 0px;
       height: 48px;
+      width: 1018px;
+      margin-left: auto;
+      margin-right: auto;
       li {
         font-size: 11px;
         height: 20px;
@@ -30,7 +31,7 @@
             cursor: pointer;
         }
         h5 {
-          font-size: 16px;
+          font-size: 17px;
         }
         &.active {
             background: url(../img/bg-header.jpg);
@@ -39,35 +40,31 @@
                 cursor: pointer;
             }
         }
-        
-        &.float-left:first-child {
-            border: solid #808080;
-            border-width: 0px 0px 0px 1px;
-        }
-        &.float-right.last-tab {
-            border: solid #808080;
-            border-width: 0px 1px 0px 0px;
-        }
-
-        &.float-right.empty {
-            padding: 0px 0px 0px 0px;
-            height: 60px;
-        }
-
-        &.float-left.active:first-child {
-            border-width: 0;
-        }
-        &.float-right.active.last-tab {
-            border-width: 0;
-        }
      }
   }
 
+  .tab-viewer-header {
+    margin-bottom: 37px;
+    width: 100%;
+    background: #fff;
+    border-top: 3px #eee;
+    .box-shadow(0px 4px #eee);
+  }
+
+  &.inner {
+    .tab-viewer-header {
+      background: none;
+      .box-shadow(none);
+    }
+    .tabs {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 15px;
+    }
+  }
+
   .tab-container {
-     border: solid #808080;
-     border-width: 0 1px 1px 1px;
-     -moz-border-radius: 0 0 5px 5px;
-     -webkit-border-radius: 0 0 5px 5px;
+     width: 1018px;
+     margin: auto;
   }
 
 }
