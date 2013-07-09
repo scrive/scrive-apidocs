@@ -21,7 +21,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
         new Cell({name: localization.archive.documents.columns.time, width:"140px", field:"time", special: "rendered",
                   rendering: function(time) {
                          if (time != undefined && time != "")
-                           return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                           return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                          else return $("<div/>");
         }}),
         new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
@@ -149,6 +149,7 @@ window.DocumentsListDefinition = function(archive) { return {
             name :  localization.archive.documents.sendreminder.action,
             emptyMessage :  localization.archive.documents.sendreminder.emptyMessage,
             notAvailableMessage :  localization.archive.documents.sendreminder.notAvailableMessage,
+            size: "normal",
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -195,6 +196,7 @@ window.DocumentsListDefinition = function(archive) { return {
             name :  localization.archive.documents.cancel.action,
             emptyMessage :  localization.archive.documents.cancel.emptyMessage,
             notAvailableMessage :  localization.archive.documents.cancel.notAvailableMessage,
+            size: 'normal',
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -231,6 +233,7 @@ window.DocumentsListDefinition = function(archive) { return {
         new ListAction({
             name : localization.archive.documents.remove.action,
             emptyMessage :  localization.archive.documents.cancel.emptyMessage,
+            size: 'normal',
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
                          var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");

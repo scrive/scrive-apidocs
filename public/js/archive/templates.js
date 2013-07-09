@@ -22,7 +22,7 @@ window.TemplatesListDefinition = function(archive) { return {
 
         new Cell({name: localization.archive.templates.columns.time, width:"150px", field:"time", special: "rendered",
                   rendering: function(time) {
-                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                         return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                   }}),
         new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
                   rendering: function(value, idx, model) {
@@ -43,7 +43,6 @@ window.TemplatesListDefinition = function(archive) { return {
                 avaible : function() {return true;},
                 acceptEmpty : true,
                 button: new Button({
-                            size: "tiny",
                             color : "black",
                             width : "144",
                             text: localization.archive.templates.createnew,

@@ -44,6 +44,15 @@ if (!Date.prototype.toISOString) {
     };
 }
 
+if (!Date.prototype.toYMDString) {
+    Date.prototype.toYMDString = function() {
+        function pad(n) { return n < 10 ? '0' + n : n } // refactor
+        return this.getUTCFullYear() + '-'
+         + pad(this.getUTCMonth() + 1) + '-'
+         + pad(this.getUTCDate());
+    }
+}
+
 if (!Date.prototype.toTimeAbrev) {
     Date.prototype.toTimeAbrev = function() {
         var curr = new Date();

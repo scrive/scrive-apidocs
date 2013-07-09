@@ -1,11 +1,62 @@
+@import 'designview/util.less';
+
+body.archive {
+    .mainContainer {
+        margin: 0px auto;
+        width: 100%;
+    }
+
+    .tab-viewer {
+        width: 100%;
+
+        li > h5 {
+            font-size: 17px; // fix
+        }
+    }
+
+    .tab-viewer-header {
+        margin-bottom: 37px;
+        width: 100%;
+        background: #f4f4f4;
+        border-top: 3px #eee;
+        border-bottom: 1px #dbdbda;
+        .box-shadow(0px 4px #eee);
+    }
+
+    .tabs {
+        margin-left: auto;
+        margin-right: auto;
+        border: none;
+        background: none;
+        width: 1018px;
+
+        li.float-left:first-child {
+            border: none;
+        }
+
+        li.float-left:last-child {
+            border: none;
+        }
+    }
+
+    .list-container {
+        border: 1px solid #8a8a89;
+        width: 1018px;
+        margin: auto;
+        background: #fff;
+    }
+}
+
+
 .archive .scrolled .option-top-box{
     position: fixed;
     top: -61px;
     background : #ffffff;
-    width: 1018px;
+    width: 1200px;
     border-bottom : 1px solid #808080;
 
 }
+
 .table-statuses {
       background: #fff;
       border: 1px solid #e0e0e0;
