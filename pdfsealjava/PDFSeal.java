@@ -357,14 +357,6 @@ public class PDFSeal {
 
         document.newPage();
 
-
-        Rectangle rect = new Rectangle(581.839f-567.36f, 14.37f, 581.839f, 813.12f + 14.37f);
-        rect.setBorderColor(frameColor);
-        rect.setBorderWidth(1);
-        rect.setBorder(15);
-
-        document.add(rect);
-
         font = new Font(FontFamily.HELVETICA, 21, Font.NORMAL, darkTextColor );
         document.add(new Paragraph(spec.staticTexts.verificationTitle, font));
 
@@ -478,6 +470,25 @@ public class PDFSeal {
         document.close();
     }
 
+    public static void stampFooterOverSealPages(SealSpec spec, PdfReader reader, ByteArrayOutputStream sealPages)
+        throws IOException, DocumentException {
+        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
+        PdfStamper stamper = new PdfStamper(reader, sealPages);
+        Rectangle rect = new Rectangle(581.839f-567.36f, 14.37f, 581.839f, 813.12f + 14.37f);
+        rect.setBorderColor(frameColor);
+        rect.setBorderWidth(1);
+        rect.setBorder(15);
+
+        int pageCount = reader.getNumberOfPages();
+        for( int i=1; i<=pageCount; i++ ) {
+            PdfContentByte canvas = stamper.getUnderContent(i);
+
+            canvas.rectangle(rect);
+        }
+        stamper.close();
+        reader.close();
+    }
+
     /**
      * Manipulates a PDF file src with the file dest as result
      * @param src the original PDF
@@ -487,13 +498,18 @@ public class PDFSeal {
      */
     public static void manipulatePdf(SealSpec spec) throws IOException, DocumentException {
 
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        prepareSealPages(spec, os);
+        ByteArrayOutputStream sealPagesRaw = new ByteArrayOutputStream();
+        ByteArrayOutputStream sealPages = new ByteArrayOutputStream();
+        ByteArrayOutputStream sourceWithFields = new ByteArrayOutputStream();
 
-        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
-        stampFieldsOverPdf(new PdfReader(spec.input), getAllFields(spec), os2);
+        prepareSealPages(spec, sealPagesRaw);
 
-        concatenatePdfsInto(new PdfReader[] { new PdfReader(os2.toByteArray()), new PdfReader(os.toByteArray()) },
+        stampFooterOverSealPages(spec, new PdfReader(sealPagesRaw.toByteArray()), sealPages);
+
+        stampFieldsOverPdf(new PdfReader(spec.input), getAllFields(spec), sourceWithFields);
+
+        concatenatePdfsInto(new PdfReader[] { new PdfReader(sourceWithFields.toByteArray()),
+                                              new PdfReader(sealPages.toByteArray()) },
                             new FileOutputStream(spec.output));
     }
 
