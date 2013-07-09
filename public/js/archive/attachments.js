@@ -20,7 +20,7 @@ window.AttachmentsListDefinition = function(archive) {
         new Cell({name: localization.archive.attachments.columns.attachment, width:"600px", field:"title",  special: "link"}),
         new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time", special: "rendered",
                   rendering: function(time) {
-                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                         return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                   }})
         ],
     actions : [
@@ -29,7 +29,6 @@ window.AttachmentsListDefinition = function(archive) {
                 avaible : function(){return true;},
                 acceptEmpty : true,
                 button: new UploadButton({
-                            size: "tiny",
                             width : 144,
                             color : "black",
                             text: localization.archive.attachments.createnew.action,
