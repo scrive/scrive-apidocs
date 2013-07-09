@@ -254,6 +254,7 @@ public class PDFSeal {
         CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
         CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
         CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
+        Paragraph para;
 
         PdfPTable table = new PdfPTable(2);
         table.setWidthPercentage(100f);
@@ -270,16 +271,25 @@ public class PDFSeal {
             cell.setBorderWidth(1f);
 
             Font font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, lightTextColor );
-            cell.addElement(new Paragraph(person.fullname, font));
+            para = new Paragraph(person.fullname, font);
+            para.setLeading(0f, 1.2f);
+            cell.addElement(para);
             font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-            cell.addElement(new Paragraph(person.company, font));
+            para = new Paragraph(person.company, font);
+            para.setLeading(0f, 1.2f);
+            para.setSpacingAfter(13);
+            cell.addElement(para);
             if( person.personalnumber!=null && person.personalnumber!="" ) {
                 font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-                cell.addElement(new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font));
+                para = new Paragraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, font);
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
             }
             if( person.companynumber!=null && person.companynumber!="" ) {
                 font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-                cell.addElement(new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font));
+                para = new Paragraph(spec.staticTexts.orgNumberText + " " + person.companynumber, font);
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
             }
             for( Field field : person.fields ) {
                 if( field.valueBase64!=null &&
@@ -347,11 +357,21 @@ public class PDFSeal {
 
         document.newPage();
 
+
+        Rectangle rect = new Rectangle(581.839f-567.36f, 14.37f, 581.839f, 813.12f + 14.37f);
+        rect.setBorderColor(frameColor);
+        rect.setBorderWidth(1);
+        rect.setBorder(15);
+
+        document.add(rect);
+
         font = new Font(FontFamily.HELVETICA, 21, Font.NORMAL, darkTextColor );
         document.add(new Paragraph(spec.staticTexts.verificationTitle, font));
 
         font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, lightTextColor );
-        document.add(new Paragraph(spec.staticTexts.docPrefix + " " + spec.documentNumber, font));
+        Paragraph para = new Paragraph(spec.staticTexts.docPrefix + " " + spec.documentNumber, font);
+        para.setSpacingAfter(50);
+        document.add(para);
 
         /*
          * Warning for future generations:
@@ -381,13 +401,21 @@ public class PDFSeal {
             cell.setBorderWidth(1f);
 
             font = new Font(FontFamily.HELVETICA, 10, Font.BOLD, lightTextColor );
-            cell.addElement(new Paragraph(file.title, font));
+            para = new Paragraph(file.title, font);
+            para.setLeading(0f, 1.2f);
+            cell.addElement(para);
             font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-            cell.addElement(new Paragraph(file.role, font));
+            para = new Paragraph(file.role, font);
+            para.setLeading(0f, 1.2f);
+            cell.addElement(para);
             font = new Font(FontFamily.HELVETICA, 10, Font.NORMAL, lightTextColor );
-            cell.addElement(new Paragraph(file.pagesText, font));
+            para = new Paragraph(file.pagesText, font);
+            para.setLeading(0f, 1.2f);
+            cell.addElement(para);
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
-            cell.addElement(new Paragraph(file.attachedBy, font));
+            para = new Paragraph(file.attachedBy, font);
+            para.setLeading(0f, 1.2f);
+            cell.addElement(para);
             table.addCell(cell);
             cells++;
         }
@@ -424,6 +452,8 @@ public class PDFSeal {
             cell = new PdfPCell();
             cell.setBorderColor(frameColor);
             cell.setBorderWidth(1f);
+            cell.setPaddingLeft(15);
+            cell.setPaddingRight(15);
 
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
             cell.addElement(new Paragraph(entry.date, font));
@@ -433,8 +463,14 @@ public class PDFSeal {
 
             cell = new PdfPCell();
             cell.setBorderColor(frameColor);
+            cell.setBorderWidth(1f);
+            cell.setPaddingLeft(15);
+            cell.setPaddingRight(15);
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
-            cell.addElement(new Paragraph(entry.comment, font));
+            para = new Paragraph(entry.comment, font);
+            para.setLeading(0f, 1.2f);
+            para.setSpacingAfter(7);
+            cell.addElement(para);
             table.addCell(cell);
         }
         document.add(table);
