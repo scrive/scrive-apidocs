@@ -74,7 +74,9 @@ window.CompanyBrandingModel = Backbone.Model.extend({
                     pagehash :  "branding-service",
                     elems : [serviceBranding.el()]
                   })
-                ]
+                ],
+            inner: true,
+            innerText: 'Customize'
         });
       this.set({ "emailBranding" : emailBranding ,
                  "signviewBranding" : signviewBranding,
