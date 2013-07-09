@@ -27,13 +27,13 @@ import com.itextpdf.text.pdf.PdfImportedPage;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Font.FontFamily;
 import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Jpeg;
 import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.CMYKColor;
+import com.itextpdf.text.pdf.events.PdfPTableEventForwarder;
 
 class HistEntry {
     public String date;
@@ -140,6 +140,27 @@ class FileDesc {
     public String role;
     public String pagesText;
     public String attachedBy;
+}
+
+
+class PdfPTableDrawFrameAroundTable extends PdfPTableEventForwarder
+{
+    public void tableLayout(PdfPTable table, float[][] widths, float[] heights, int headerRows, int rowStart, PdfContentByte[] canvases)
+    {
+        PdfContentByte lineCanvas = canvases[PdfPTable.LINECANVAS];
+        Rectangle frame = new Rectangle(widths[0][0],
+                                        heights[0],
+                                        widths[0][widths[0].length-1],
+                                        heights[heights.length-1]);
+        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
+        frame.setBorderColor(frameColor);
+        frame.setBorder(15);
+        frame.setBorderWidth(1);
+        lineCanvas.rectangle(frame);
+
+        System.out.println("Table rect " + frame.toString());
+        super.tableLayout(table, widths, heights, headerRows, rowStart, canvases);
+    }
 }
 
 /*
@@ -346,6 +367,9 @@ public class PDFSeal {
         CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
         CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
 
+
+        PdfPTableDrawFrameAroundTable drawFrame = new PdfPTableDrawFrameAroundTable();
+
         /*
          * FIXME: To use chineese characters you need to define BaseFont, like this:
          *
@@ -354,6 +378,11 @@ public class PDFSeal {
          */
 
         Font font;
+
+        document.setMargins(document.leftMargin(),
+                            document.rightMargin(),
+                            document.topMargin(),
+                            document.bottomMargin() + 130);
 
         document.newPage();
 
@@ -438,12 +467,13 @@ public class PDFSeal {
         table.setWidthPercentage(100f);
         table.setWidths(new int[]{1, 2});
 
+        table.setTableEvent(drawFrame);
+
         for( HistEntry entry: spec.history ) {
 
             PdfPCell cell;
             cell = new PdfPCell();
-            cell.setBorderColor(frameColor);
-            cell.setBorderWidth(1f);
+            cell.setBorder(0);
             cell.setPaddingLeft(15);
             cell.setPaddingRight(15);
 
@@ -454,8 +484,7 @@ public class PDFSeal {
             table.addCell(cell);
 
             cell = new PdfPCell();
-            cell.setBorderColor(frameColor);
-            cell.setBorderWidth(1f);
+            cell.setBorder(0);
             cell.setPaddingLeft(15);
             cell.setPaddingRight(15);
             font = new Font(FontFamily.HELVETICA, 10, Font.ITALIC, lightTextColor );
@@ -503,9 +532,9 @@ public class PDFSeal {
         PdfImportedPage sealMarkerImported = stamper.getImportedPage(sealMarker, 1);
 
         Rectangle footerTextRect = new Rectangle(footerFrame.getLeft() + 15,
-                                                 footerFrame.getBottom() + 15,
+                                                 footerFrame.getBottom() + 10,
                                                  footerFrame.getRight() - sealMarkerImported.getWidth() - 5 - 15,
-                                                 footerFrame.getTop() - 15);
+                                                 footerFrame.getTop() - 10);
 
         int pageCount = reader.getNumberOfPages();
         for( int i=1; i<=pageCount; i++ ) {
@@ -528,16 +557,12 @@ public class PDFSeal {
 
             Font font = new Font(FontFamily.HELVETICA, 8, Font.NORMAL, lightTextColor );
             Paragraph para = new Paragraph(spec.staticTexts.verificationFooter, font);
-            Phrase phrase = new Phrase();
             para.setLeading(0f, 1.2f);
-            phrase.add(para);
-            //columnText.addText(para);
+            columnText.addElement(para);
 
             para = new Paragraph(i + "/" + pageCount, font);
             para.setLeading(3f, 1.2f);
-            phrase.add(para);
-            //columnText.addText(para);
-            columnText.addText(phrase);
+            columnText.addElement(para);
             columnText.go();
         }
         stamper.close();
