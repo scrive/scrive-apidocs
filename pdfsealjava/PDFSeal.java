@@ -599,9 +599,9 @@ public class PDFSeal {
         PdfImportedPage sealMarkerImported = stamper.getImportedPage(sealMarker, 1);
 
         Rectangle footerTextRect = new Rectangle(footerFrame.getLeft() + 15,
-                                                 footerFrame.getBottom() + 10,
+                                                 footerFrame.getBottom() + 7,
                                                  footerFrame.getRight() - sealMarkerImported.getWidth() - 5 - 15,
-                                                 footerFrame.getTop() - 10);
+                                                 footerFrame.getTop() - 7);
 
         int pageCount = reader.getNumberOfPages();
         for( int i=1; i<=pageCount; i++ ) {
