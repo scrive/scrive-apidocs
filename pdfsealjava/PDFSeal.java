@@ -192,8 +192,7 @@ class PdfPTableDrawFrameAroundTable implements PdfPTableEvent
                                         heights[0],
                                         widths[0][widths[0].length-1],
                                         heights[heights.length-1]);
-        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
-        frame.setBorderColor(frameColor);
+        frame.setBorderColor(PDFSeal.frameColor);
         frame.setBorder(15);
         frame.setBorderWidth(1);
         lineCanvas.rectangle(frame);
@@ -216,6 +215,15 @@ Sealing works like this:
 
 
 public class PDFSeal {
+
+
+    /*
+     * Define some colors.
+     */
+
+    static CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
+    static CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
+    static CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
 
     /*
      * Concatenate all documents, page by page, output to OutputStream
@@ -338,8 +346,10 @@ public class PDFSeal {
                 String docnrtext = spec.staticTexts.docPrefix + " " + spec.documentNumber;
                 String signedinitials = spec.staticTexts.signedText + ": " + spec.initials;
 
+                /*
+                 * This is the blue line at the bottom color
+                 */
                 CMYKColor color = new CMYKColor(0.8f, 0.6f, 0.3f, 0.4f);
-                CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
                 Paragraph para = createParagraph(docnrtext, 8, Font.NORMAL, lightTextColor);
 
                 ColumnText.showTextAligned(canvas, Element.ALIGN_RIGHT,
@@ -410,9 +420,6 @@ public class PDFSeal {
     public static void addPersonsTable(Iterable<Person> persons, Document document, SealSpec spec)
         throws DocumentException, IOException
     {
-        CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
-        CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
-        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
         Paragraph para;
 
         PdfPTable table = new PdfPTable(2);
@@ -483,7 +490,6 @@ public class PDFSeal {
     public static void addSubtitle(Document document, String text)
         throws DocumentException, IOException
     {
-        CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
         Paragraph para = createParagraph(text, 12, Font.NORMAL, darkTextColor);
         para.setFirstLineIndent(7f);
         para.setSpacingBefore(10);
@@ -505,11 +511,6 @@ public class PDFSeal {
         PdfWriter writer = PdfWriter.getInstance(document, os);
 
         document.open();
-
-        CMYKColor darkTextColor = new CMYKColor(0.806f, 0.719f, 0.51f, 0.504f);
-        CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
-        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
-
 
         PdfPTableDrawFrameAroundTable drawFrame = new PdfPTableDrawFrameAroundTable();
 
@@ -634,8 +635,6 @@ public class PDFSeal {
 
     public static void stampFooterOverSealPages(SealSpec spec, PdfReader reader, ByteArrayOutputStream sealPages)
         throws IOException, DocumentException {
-        CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
-        CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
         PdfStamper stamper = new PdfStamper(reader, sealPages);
         PdfReader sealMarker = getSealMarker();
         Rectangle pageFrame = new Rectangle(581.839f-567.36f, 14.37f, 581.839f, 813.12f + 14.37f);
