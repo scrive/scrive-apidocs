@@ -15,3 +15,8 @@ PDFSeal.class : PDFSeal.java
 
 open : ../test/pdfs/simple.pdf-javasealed.pdf
 	open $+
+
+jar : pdfseal.jar
+
+pdfseal.jar : PDFSeal.class Manifest.txt Helvetica.ttf
+	jar cfm $@ Manifest.txt *.class Helvetica.ttf
