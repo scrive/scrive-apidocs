@@ -44,11 +44,14 @@ import System.Exit
 import Kontra
 import Text.StringTemplates.Templates
 import Text.Printf
+import Text.JSON.Gen
+import Text.JSON.Pretty (pp_value)
 import System.Time
 import System.Locale
 import Templates
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
+import qualified Data.ByteString.Lazy as BSL (empty)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Base64 as B64
 import qualified SealSpec as Seal
@@ -67,7 +70,6 @@ import Control.Arrow (first)
 import EvidenceLog.Model
 import EvidenceLog.View
 import Util.Actor
-import Control.Concurrent
 import Control.Monad.Trans.Maybe
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic
@@ -579,8 +581,11 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
     config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog ces content tmpin tmpout
-    (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
-    liftIO $ threadDelay 500000
+
+    (code,_stdout,stderr) <- liftIO $ do
+      let sealspecpath = tmppath ++ "/sealspec.json"
+      liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
+      readProcessWithExitCode' "java" ["-jar", "pdfsealjava/pdfseal.jar", sealspecpath] (BSL.empty)
 
     Log.debug $ "Sealing completed with " ++ show code
     case code of
@@ -684,8 +689,11 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
     emptyFieldsText <- emptyFieldsTextT
     let config = presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
-    (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
-    liftIO $ threadDelay 500000
+
+    (code,_stdout,stderr) <- liftIO $ do
+      let sealspecpath = tmppath ++ "/sealspec.json"
+      liftIO $ BS.writeFile sealspecpath (BS.fromString $ show $ pp_value (toJSValue config))
+      readProcessWithExitCode' "java" ["-jar", "pdfsealjava/pdfseal.jar", sealspecpath] (BSL.empty)
     Log.debug $ "PreSealing completed with " ++ show code
     case code of
       ExitSuccess -> do
