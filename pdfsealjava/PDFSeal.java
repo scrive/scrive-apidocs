@@ -252,7 +252,7 @@ public class PDFSeal {
     {
         PdfStamper stamper = new PdfStamper(reader, os);
 
-        PdfReader sealMarker = new PdfReader(PDFSeal.class.getResource("/sealmarker.pdf"));
+        PdfReader sealMarker = getSealMarker();
         PdfImportedPage sealMarkerImported = stamper.getImportedPage(sealMarker, 1);
 
         int count = reader.getNumberOfPages();
@@ -637,7 +637,7 @@ public class PDFSeal {
         CMYKColor frameColor = new CMYKColor(0f, 0f, 0f, 0.333f);
         CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
         PdfStamper stamper = new PdfStamper(reader, sealPages);
-        PdfReader sealMarker = new PdfReader(PDFSeal.class.getResource("/sealmarker.pdf"));
+        PdfReader sealMarker = getSealMarker();
         Rectangle pageFrame = new Rectangle(581.839f-567.36f, 14.37f, 581.839f, 813.12f + 14.37f);
         pageFrame.setBorderColor(frameColor);
         pageFrame.setBorderWidth(1);
@@ -764,6 +764,17 @@ public class PDFSeal {
         Font font = getFontForString(text, size, style, color);
         return new Paragraph(text, font);
     }
+
+    static PdfReader sealMarkerCached;
+    static PdfReader getSealMarker()
+        throws DocumentException, IOException
+    {
+        if( sealMarkerCached==null ) {
+            sealMarkerCached = new PdfReader(PDFSeal.class.getResource("/sealmarker.pdf"));
+        }
+        return sealMarkerCached;
+    }
+
 
     /**
      * Main method.
