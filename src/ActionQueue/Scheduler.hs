@@ -18,6 +18,7 @@ import Doc.Model
 import Templates
 import Util.Actor
 import qualified Log
+import Salesforce.Conf
 
 data SchedulerData = SchedulerData {
     sdAppConf   :: AppConf
@@ -54,5 +55,5 @@ getGlobalTemplates = do
   return templates
 
 
-instance HasAppConf SchedulerData where
-  getAppConf = sdAppConf
+instance HasSalesforceConf SchedulerData where
+  getSalesforceConf =  getSalesforceConf . sdAppConf

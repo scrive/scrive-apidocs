@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module AppConf (
       AppConf(..)
-    , HasAppConf(..)
   ) where
 
 import Configuration
@@ -16,7 +15,6 @@ import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig(..))
 import BrandedDomains
 import Salesforce.Conf
-import Control.Monad.Reader
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -114,14 +112,5 @@ instance Configuration AppConf where
     ]
   confVerify _ = return $ Right ()
 
-
-class HasAppConf c where
-  getAppConf :: c -> AppConf
-  getAppConfM :: (MonadReader c m, HasAppConf c) => m AppConf
-  getAppConfM =  ask >>= return . getAppConf
-
-instance HasAppConf AppConf where
-  getAppConf = id
-
-instance (HasAppConf c) => HasSalesforceConf c where
-  getSalesforceConf = salesforceConf . getAppConf
+instance HasSalesforceConf AppConf where
+  getSalesforceConf =  salesforceConf
