@@ -1,4 +1,17 @@
-
+/*
+ *
+ * This program does the following:
+ *
+ * 1. Stamps fields over pdf content.
+ * 2. Add pagination marks over pdf content.
+ * 3. Appends pdf seal pages created from source data.
+ *
+ * Usage:
+ *
+ *     java -jar pdfseal.jar config.json
+ *
+ * Where config.json file is a configuration file. For its spec read the code below.
+ */
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -34,16 +47,20 @@ import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Jpeg;
 import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.CMYKColor;
-import com.itextpdf.text.pdf.events.PdfPTableEventForwarder;
+import com.itextpdf.text.pdf.PdfPTableEvent;
 
-class HistEntry {
+/*
+ * Class that directly serve deserialization of JSON data.
+ */
+class HistEntry
+{
     public String date;
     public String comment;
     public String address;
 }
 
-class Person {
-
+class Person
+{
     public String fullname;
     public String company;
     public String personalnumber;
@@ -57,7 +74,8 @@ class Person {
 
 }
 
-class Field {
+class Field
+{
     public String valueBase64;
     public String value;
     public float x, y;
@@ -73,7 +91,8 @@ class Field {
     public ArrayList<Integer> keyColor;
 }
 
-class SealingTexts {
+class SealingTexts
+{
     public String verificationTitle;
     public String docPrefix;
     public String signedText;
@@ -88,7 +107,23 @@ class SealingTexts {
     public String verificationFooter;
 }
 
-class SealSpec {
+class SealAttachment
+{
+    public String fileName;
+    public String mimeType;
+    public String fileBase64Content;
+}
+
+class FileDesc
+{
+    public String title;
+    public String role;
+    public String pagesText;
+    public String attachedBy;
+}
+
+class SealSpec
+{
     public Boolean preseal;
     public String input;
     public String output;
@@ -103,9 +138,18 @@ class SealSpec {
     public ArrayList<FileDesc> filesList;
     public ArrayList<Field> fields;
 
+    /*
+     * YAML is compatible with JSON (at least with the JSON we generate).
+     *
+     * It was the simplest method to read in JSON values.
+     */
     public static Yaml getYaml() {
         Constructor constructor = new Constructor(SealSpec.class);
 
+        /*
+         * Java reflection is missing some crucial information about
+         * elements of containers.  Add this information here.
+         */
         TypeDescription sealSpecDesc = new TypeDescription(SealSpec.class);
         sealSpecDesc.putListPropertyType("persons", Person.class);
         sealSpecDesc.putListPropertyType("secretaries", Person.class);
@@ -131,21 +175,15 @@ class SealSpec {
     }
 }
 
-class SealAttachment {
-    public String fileName;
-    public String mimeType;
-    public String fileBase64Content;
-}
-
-class FileDesc {
-    public String title;
-    public String role;
-    public String pagesText;
-    public String attachedBy;
-}
-
-
-class PdfPTableDrawFrameAroundTable extends PdfPTableEventForwarder
+/*
+ * This class is needed to draw frame around a table in PDF. We draw
+ * frames around each table part after the table is split between
+ * pages.
+ *
+ * Sadly there is no such thing as 'table border' property. If it were
+ * we would need not do such a kludge.
+ */
+class PdfPTableDrawFrameAroundTable implements PdfPTableEvent
 {
     public void tableLayout(PdfPTable table, float[][] widths, float[] heights, int headerRows, int rowStart, PdfContentByte[] canvases)
     {
@@ -159,8 +197,6 @@ class PdfPTableDrawFrameAroundTable extends PdfPTableEventForwarder
         frame.setBorder(15);
         frame.setBorderWidth(1);
         lineCanvas.rectangle(frame);
-
-        super.tableLayout(table, widths, heights, headerRows, rowStart, canvases);
     }
 }
 
@@ -181,6 +217,12 @@ Sealing works like this:
 
 public class PDFSeal {
 
+    /*
+     * Concatenate all documents, page by page, output to OutputStream
+     *
+     * I did not find a way to do this without directly serializing
+     * document.
+     */
     public static void concatenatePdfsInto(PdfReader sources[], OutputStream os)
         throws IOException, DocumentException
     {
@@ -201,7 +243,11 @@ public class PDFSeal {
         document.close();
     }
 
-    public static void stampFieldsOverPdf(SealSpec spec, PdfReader reader, ArrayList<Field> fields, OutputStream os)
+    /*
+     * Process each page of a source document and put all fields on
+     * top of it.  If sealing add also paginatin markers.
+     */
+    public static void stampFieldsAndPaginationOverPdf(SealSpec spec, PdfReader reader, ArrayList<Field> fields, OutputStream os)
         throws DocumentException, IOException
     {
         PdfStamper stamper = new PdfStamper(reader, os);
@@ -224,11 +270,11 @@ public class PDFSeal {
                 if( field.page==i &&
                     (field.onlyForSummary == null || !field.onlyForSummary)) {
 
-
                     if( field.value != null ) {
-
                         /*
-                         * FIXME: this should somehow know the /Rotate flag.
+                         * This font characteristics were taken from
+                         * Helvetica.afm that is one of standard Adobe
+                         * PDF 14 fonts.
                          */
                         float fontBaseline = 931f/(931f+225f);
                         float fontOffset   = 166f/(931f+225f);
@@ -256,9 +302,7 @@ public class PDFSeal {
                                                    0);
                     }
                     else if( field.valueBase64 !=null ) {
-                        /*
-                         * FIXME: this should somehow know the /Rotate flag.
-                         */
+
                         float realx = field.x * cropBox.getWidth() + cropBox.getLeft();
                         float realy = (1 - field.y - field.image_h) * cropBox.getHeight() + cropBox.getBottom();
 
@@ -280,7 +324,7 @@ public class PDFSeal {
             }
 
             /*
-             * Add pagination
+             * Add pagination at the bottom of the page, only if not presealing.
              */
             if( spec.preseal==null || !spec.preseal ) {
                 float requestedSealSize = 18f;
@@ -291,8 +335,8 @@ public class PDFSeal {
                                    cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize/2,
                                    cropBox.getBottom() + 23 - requestedSealSize/2);
 
-                String signedinitials = spec.staticTexts.signedText + ": " + spec.initials;
                 String docnrtext = spec.staticTexts.docPrefix + " " + spec.documentNumber;
+                String signedinitials = spec.staticTexts.signedText + ": " + spec.initials;
 
                 CMYKColor color = new CMYKColor(0.8f, 0.6f, 0.3f, 0.4f);
                 CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
@@ -337,6 +381,9 @@ public class PDFSeal {
         reader.close();
     }
 
+    /*
+     * Gather all fields from all places they could be in SealSpec.
+     */
     public static ArrayList<Field> getAllFields(SealSpec spec)
     {
         ArrayList<Field> result = new ArrayList<Field>();
@@ -356,6 +403,10 @@ public class PDFSeal {
         return result;
     }
 
+    /*
+     * Helper function that creates a box for each person involve in a
+     * document signing process.
+     */
     public static void addPersonsTable(Iterable<Person> persons, Document document, SealSpec spec)
         throws DocumentException, IOException
     {
@@ -426,6 +477,9 @@ public class PDFSeal {
         document.add(table);
     }
 
+    /*
+     * Add a subtitle, care for its style.
+     */
     public static void addSubtitle(Document document, String text)
         throws DocumentException, IOException
     {
@@ -437,6 +491,13 @@ public class PDFSeal {
         document.add(para);
     }
 
+    /*
+     * Prepare seal pages that will be appended to a source PDF document.
+     *
+     * I did not find a way to do this without first serializing this
+     * document.  Interestingly just appending pages in place did not
+     * work with stamping.  itext seems limited here.
+     */
     public static void prepareSealPages(SealSpec spec, OutputStream os)
         throws IOException, DocumentException
     {
@@ -451,13 +512,6 @@ public class PDFSeal {
 
 
         PdfPTableDrawFrameAroundTable drawFrame = new PdfPTableDrawFrameAroundTable();
-
-        /*
-         * FIXME: To use chineese characters you need to define BaseFont, like this:
-         *
-         * BaseFont bf = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.EMBEDDED);
-         *
-         */
 
         Font font;
 
@@ -537,6 +591,9 @@ public class PDFSeal {
             addPersonsTable(spec.secretaries, document, spec);
         }
 
+        /*
+         * History log part
+         */
         addSubtitle(document, spec.staticTexts.eventsText);
 
         table = new PdfPTable(2);
@@ -660,26 +717,41 @@ public class PDFSeal {
 
             stampFooterOverSealPages(spec, new PdfReader(sealPagesRaw.toByteArray()), sealPages);
 
-            stampFieldsOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), sourceWithFields);
+            stampFieldsAndPaginationOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), sourceWithFields);
 
             concatenatePdfsInto(new PdfReader[] { new PdfReader(sourceWithFields.toByteArray()),
                                                   new PdfReader(sealPages.toByteArray()) },
                 new FileOutputStream(spec.output));
         }
         else {
-            stampFieldsOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), new FileOutputStream(spec.output));
+            stampFieldsAndPaginationOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), new FileOutputStream(spec.output));
         }
     }
 
 
     static BaseFont baseFontHelvetica;
+
+    /*
+     * Fontology in PDF seems to be the most annying thing in the world.
+     *
+     * For all reasonable alphabets we use Helvetica.ttf that we embed
+     * inside jar file.
+     *
+     * CJK case needs a bit more research. As it seems proper font
+     * needs to be chosen for each of the scripts. Font needs to be
+     * embedded. As example how to create a Chineese font:
+     *
+     * BaseFont bf = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.EMBEDDED);
+     * Font font = new Font(bf, 12)
+     *
+     */
+
     static Font getFontForString(String text, float size, int style, BaseColor color)
         throws DocumentException, IOException
     {
         if(baseFontHelvetica==null ) {
             URL url = PDFSeal.class.getResource("/Helvetica.ttf");
-            System.out.println("Helvetica: " + url);
-            //baseFontHelvetica = BaseFont.createFont("Helvetica.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+
             baseFontHelvetica = BaseFont.createFont(url.toString(),  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             baseFontHelvetica.setSubset(true);
         }
@@ -696,20 +768,26 @@ public class PDFSeal {
     /**
      * Main method.
      *
-     * @param    args    no arguments needed
+     * @param    args    single argument, json config to open
      * @throws DocumentException
      * @throws IOException
      */
     public static void main(String[] args) throws IOException, DocumentException {
-        DumperOptions options = new DumperOptions();
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        //options.setDefaultFlowStyle(DumperOptions.FlowStyle.FLOW );
-        //options.setDefaultScalarStyle(DumperOptions.ScalarStyle.DOUBLE_QUOTED );
-        Yaml yaml = new Yaml(options);
-        SealSpec spec = SealSpec.loadFromFile(args[0]);
+        if( args.length!=1) {
+            System.err.println("Usage:");
+            System.err.println("    java -jar pdfseal.jar config.json");
+        }
+        else {
+            DumperOptions options = new DumperOptions();
+            Yaml yaml = new Yaml(options);
+            SealSpec spec = SealSpec.loadFromFile(args[0]);
 
-        System.out.println(yaml.dump(spec));
+            /*
+            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            System.out.println(yaml.dump(spec));
+            */
 
-        manipulatePdf(spec);
+            manipulatePdf(spec);
+        }
     }
 }
