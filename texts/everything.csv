@@ -621,7 +621,7 @@
 "_showOffersOnly","Offerter","Offers"
 "_showAnyStatusClass","Alla statusar","All statuses"
 "_contractsignatorysignmodalcontentauthoronly","När du signerat dokumentet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.","When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be registered by the e-signing service Scrive."
-"_offersignatorysignmodalcontentauthoronly","När du accepterat offerten <strong class='documenttitle'>$documenttitle$</strong> kommer din accept att registreras av e-signeringstjänsten Scrive.","When you've accepted the offer <strong class='documenttitle'>$documenttitle$</strong> your accept will be registered by the e-signing service Scrive."
+"_offersignatorysignmodalcontentauthoronly","När du signerat din offert <strong class='documenttitle'>$documenttitle$</strong> kommer den att registreras av e-signeringstjänsten Scrive.","When you've accepted the offer <strong class='documenttitle'>$documenttitle$</strong> your accept will be registered by the e-signing service Scrive."
 "_ordersignatorysignmodalcontentauthoronly","När du bekräftat ordern <strong class='documenttitle'>$documenttitle$</strong> kommer din bekräftelse att registreras av e-signeringstjänsten Scrive.","When you've confirmed the order <strong class='documenttitle'>$documenttitle$</strong> your confirmation will be registered by the e-signing service Scrive."
 "_missingPlacedAuthorFieldValue","Alla avsändarens fält måste vara ifyllda.","All author fields must be filled."
 "_checkboxPleaseCheck","Kryssa i där","Check there"
