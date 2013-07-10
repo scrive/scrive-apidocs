@@ -67,7 +67,7 @@ class Field {
     public int internal_image_h;
     public Boolean includeInSummary;
     public Boolean onlyForSummary;
-    public double fontSize;
+    public float fontSize;
     public Boolean greyed;
     public ArrayList<Integer> keyColor;
 }
@@ -214,13 +214,21 @@ public class PDFSeal {
                 if( field.page==i &&
                     (field.onlyForSummary == null || !field.onlyForSummary)) {
 
-                    /*
-                     * FIXME: this should somehow know the /Rotate flag.
-                     */
-                    float realx = field.x * cropBox.getWidth() + cropBox.getLeft();
-                    float realy = field.y * cropBox.getHeight() + cropBox.getBottom();
 
                     if( field.value != null ) {
+
+                        /*
+                         * FIXME: this should somehow know the /Rotate flag.
+                         */
+                        float fontBaseline = 931f/(931f+225f);
+                        float fontOffset   = 166f/(931f+225f);
+                        float fs = field.fontSize * cropBox.getWidth();
+
+                        if( fs<=0 )
+                            fs = 10f;
+
+                        float realx = field.x * cropBox.getWidth() + cropBox.getLeft() - fontOffset * fs;
+                        float realy = (1 - field.y) * cropBox.getHeight() + cropBox.getBottom() - fontBaseline * fs;
 
                         BaseColor color;
                         if( !field.greyed ) {
@@ -230,7 +238,7 @@ public class PDFSeal {
                             color = new CMYKColor(0,0,0,127);
                         }
 
-                        Paragraph para = createParagraph(field.value, (float)(cropBox.getWidth() * field.fontSize), Font.NORMAL, color);
+                        Paragraph para = createParagraph(field.value, fs, Font.NORMAL, color);
 
                         ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
                                                    para,
@@ -238,6 +246,12 @@ public class PDFSeal {
                                                    0);
                     }
                     else if( field.valueBase64 !=null ) {
+                        /*
+                         * FIXME: this should somehow know the /Rotate flag.
+                         */
+                        float realx = field.x * cropBox.getWidth() + cropBox.getLeft();
+                        float realy = (1 - field.y - field.image_h) * cropBox.getHeight() + cropBox.getBottom();
+
                         byte jpegdata[] = Base64.decode(field.valueBase64);
                         Jpeg jpeg = new Jpeg(jpegdata);
 
