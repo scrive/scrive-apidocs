@@ -275,54 +275,56 @@ public class PDFSeal {
             /*
              * Add pagination
              */
-            float requestedSealSize = 18f;
-            canvas.addTemplate(sealMarkerImported,
-                               requestedSealSize/sealMarkerImported.getWidth(),
-                               0, 0,
-                               requestedSealSize/sealMarkerImported.getHeight(),
-                               cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize/2,
-                               cropBox.getBottom() + 23 - requestedSealSize/2);
+            if( spec.preseal==null || !spec.preseal ) {
+                float requestedSealSize = 18f;
+                canvas.addTemplate(sealMarkerImported,
+                                   requestedSealSize/sealMarkerImported.getWidth(),
+                                   0, 0,
+                                   requestedSealSize/sealMarkerImported.getHeight(),
+                                   cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize/2,
+                                   cropBox.getBottom() + 23 - requestedSealSize/2);
 
-            String signedinitials = spec.staticTexts.signedText + ": " + spec.initials;
-            String docnrtext = spec.staticTexts.docPrefix + " " + spec.documentNumber;
+                String signedinitials = spec.staticTexts.signedText + ": " + spec.initials;
+                String docnrtext = spec.staticTexts.docPrefix + " " + spec.documentNumber;
 
-            CMYKColor color = new CMYKColor(0.8f, 0.6f, 0.3f, 0.4f);
-            CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
-            Paragraph para = createParagraph(docnrtext, 8, Font.NORMAL, lightTextColor);
+                CMYKColor color = new CMYKColor(0.8f, 0.6f, 0.3f, 0.4f);
+                CMYKColor lightTextColor = new CMYKColor(0.597f, 0.512f, 0.508f, 0.201f);
+                Paragraph para = createParagraph(docnrtext, 8, Font.NORMAL, lightTextColor);
 
-            ColumnText.showTextAligned(canvas, Element.ALIGN_RIGHT,
-                                       para,
-                                       cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize,
-                                       20,
-                                       0);
-            float docnrtextwidth = ColumnText.getWidth(para);
+                ColumnText.showTextAligned(canvas, Element.ALIGN_RIGHT,
+                                           para,
+                                           cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize,
+                                           20,
+                                           0);
+                float docnrtextwidth = ColumnText.getWidth(para);
 
-            para = createParagraph(signedinitials, 8, Font.NORMAL, color);
-            ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
-                                       para,
-                                       cropBox.getLeft() + cropBox.getWidth()/2 + requestedSealSize,
-                                       20,
-                                       0);
-            float signedinitialswidth = ColumnText.getWidth(para);
+                para = createParagraph(signedinitials, 8, Font.NORMAL, color);
+                ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
+                                           para,
+                                           cropBox.getLeft() + cropBox.getWidth()/2 + requestedSealSize,
+                                           20,
+                                           0);
+                float signedinitialswidth = ColumnText.getWidth(para);
 
-            Rectangle rect;
-            rect = new Rectangle(cropBox.getLeft() + 60,
-                                 23,
-                                 cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize - docnrtextwidth - requestedSealSize/2,
-                                 23);
-            rect.setBorderWidth(1);
-            rect.setBorderColor(color);
-            rect.setBorder(Rectangle.BOTTOM);
-            canvas.rectangle(rect);
+                Rectangle rect;
+                rect = new Rectangle(cropBox.getLeft() + 60,
+                                     23,
+                                     cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize - docnrtextwidth - requestedSealSize/2,
+                                     23);
+                rect.setBorderWidth(1);
+                rect.setBorderColor(color);
+                rect.setBorder(Rectangle.BOTTOM);
+                canvas.rectangle(rect);
 
-            rect = new Rectangle(cropBox.getRight() - 60,
-                                 23,
-                                 cropBox.getLeft() + cropBox.getWidth()/2 + requestedSealSize + signedinitialswidth + requestedSealSize/2,
-                                 23);
-            rect.setBorderWidth(1);
-            rect.setBorderColor(color);
-            rect.setBorder(Rectangle.BOTTOM);
-            canvas.rectangle(rect);
+                rect = new Rectangle(cropBox.getRight() - 60,
+                                     23,
+                                     cropBox.getLeft() + cropBox.getWidth()/2 + requestedSealSize + signedinitialswidth + requestedSealSize/2,
+                                     23);
+                rect.setBorderWidth(1);
+                rect.setBorderColor(color);
+                rect.setBorder(Rectangle.BOTTOM);
+                canvas.rectangle(rect);
+            }
         }
         stamper.close();
         reader.close();
@@ -628,21 +630,28 @@ public class PDFSeal {
      * @throws IOException
      * @throws DocumentException
      */
-    public static void manipulatePdf(SealSpec spec) throws IOException, DocumentException {
+    public static void manipulatePdf(SealSpec spec)
+        throws IOException, DocumentException
+    {
+        if( spec.preseal==null || !spec.preseal ) {
 
-        ByteArrayOutputStream sealPagesRaw = new ByteArrayOutputStream();
-        ByteArrayOutputStream sealPages = new ByteArrayOutputStream();
-        ByteArrayOutputStream sourceWithFields = new ByteArrayOutputStream();
+            ByteArrayOutputStream sealPagesRaw = new ByteArrayOutputStream();
+            ByteArrayOutputStream sealPages = new ByteArrayOutputStream();
+            ByteArrayOutputStream sourceWithFields = new ByteArrayOutputStream();
 
-        prepareSealPages(spec, sealPagesRaw);
+            prepareSealPages(spec, sealPagesRaw);
 
-        stampFooterOverSealPages(spec, new PdfReader(sealPagesRaw.toByteArray()), sealPages);
+            stampFooterOverSealPages(spec, new PdfReader(sealPagesRaw.toByteArray()), sealPages);
 
-        stampFieldsOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), sourceWithFields);
+            stampFieldsOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), sourceWithFields);
 
-        concatenatePdfsInto(new PdfReader[] { new PdfReader(sourceWithFields.toByteArray()),
-                                              new PdfReader(sealPages.toByteArray()) },
-                            new FileOutputStream(spec.output));
+            concatenatePdfsInto(new PdfReader[] { new PdfReader(sourceWithFields.toByteArray()),
+                                                  new PdfReader(sealPages.toByteArray()) },
+                new FileOutputStream(spec.output));
+        }
+        else {
+            stampFieldsOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), new FileOutputStream(spec.output));
+        }
     }
 
 
