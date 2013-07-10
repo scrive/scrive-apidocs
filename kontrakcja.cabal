@@ -204,10 +204,7 @@ Executable kontrakcja-server
   Build-depends: stm == 2.3
   Build-depends: html == 1.0.1.2
   Build-depends: iconv == 0.4.1.0
-  if impl(ghc >= 7.4.1)
-    Build-depends: json == 0.5
-  else
-    Build-depends: json == 0.4.4
+  Build-depends: json == 0.5
   Build-depends: list-tries == 0.4.1.1
   Build-depends: mime == 0.3.3.2
   Build-depends: mmap==0.5.*
