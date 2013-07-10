@@ -1,7 +1,9 @@
+@import 'colors.less';
+
 input[type="submit"]::-moz-focus-inner {border:0;}
 
 .button {
-  background-color: #3b434c;
+  background-color: @blue;
   max-height: 16px;
   .border-radius(1px,1px,1px,1px);
   font-size: @em;
@@ -23,19 +25,13 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   *display:inline;
 
   &.button-green {
-    .gradient(hsl(@greenH,@greenS,35%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,40%));
-    .box-shadow(inset hsl(@greenH,66%,60%) 0 0 0 2px);
-    border: 2px solid hsl(@greenH,@greenS,23%);
+    background-color: @green;
     &:hover {
-      .gradient(hsl(@greenH,@greenS,38%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,47%));
-      .box-shadow(inset hsl(@greenH,66%,75%) 0 0 0 2px);
-      border-color: hsl(@greenH,@greenS,23%);
+       background-color: darken(@green, 25%);
       .transition(.15s, ease-in-out);
     }
     &:active, &.active {
-      .gradient(hsl(@greenH,@greenS,17%), hsl(@greenH,@greenS,13%), hsl(@greenH,@greenS,20%));
-      .box-shadow(inset hsl(@greenH,30%,50%) 0 0 0 2px);
-      border-color: hsl(@greenH,@greenS,23%);
+       background-color: @green;
       .transition(.15s, ease-in-out);
     }
 
@@ -87,14 +83,14 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   }
 
   &:hover {
-      background-color: #2b232c;
+      background-color: darken(@blue, 25%);
   }
   &:active, &.active {
-      background-color: #3b434c;
+      background-color: @blue;
   }
   &.button-small {
     max-height: 14px;
-    background-color: #3b434c;
+    background-color: @blue;
     font-size: 13px;
     font-family: @source;
     line-height: 14px;
@@ -114,10 +110,12 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     &.button-red:hover{.box-shadow(inset hsl(@redH,66%,73%) 0 0 0 1px)}
     &.button-red:active,
     &.button-red.active{.box-shadow(inset hsl(@redH,54%,60%) 0 0 0 1px)}
+    /*
     &.button-green {.box-shadow(inset hsl(@greenH,66%,65%) 0 0 0 1px)}
     &.button-green:hover {.box-shadow(inset hsl(@greenH,66%,77%) 0 0 0 1px)}
     &.button-green:active,
     &.button-green.active {.box-shadow(inset hsl(@greenH,30%,75%) 0 0 0 1px)}
+    */
   }
 
   &.button-large {

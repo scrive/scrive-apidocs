@@ -91,110 +91,100 @@
         },
         saveAsDraft: function() {
             var view = this;
-            var viewmodel = view.model;
-
-            var div = $('<div />');
-            div.addClass('design-view-button1');
-            div.append($('<div />')
-                       .addClass('design-view-button1-text')
-                       .append(localization.saveAsDraft));
-
-            div.click(function() {
-                mixpanel.track('Click save as draft');
-                viewmodel.document().save(function() {
-                  new Submit({
-                                          ajax : 'true',
-                                          method : 'POST',
-                                          url : '/d/save/' + viewmodel.document().documentid(),
-                                          ajaxsuccess : function() {
-                                              new FlashMessage({color: "green", content : localization.designview.saved});
-                                          }
-                                        }).send();
-                });
+            var model = view.model;
+7
+            var saveAsDraftButton = Button.init({
+                text: localization.saveAsDraft,
+                color: 'blue',
+                onClick: function() {
+                    mixpanel.track('Click save as draft');
+                    model.document().save(function() {
+                      new Submit({
+                        ajax : 'true',
+                        method : 'POST',
+                        url : '/d/save/' + viewmodel.document().documentid(),
+                        ajaxsuccess : function() {
+                          new FlashMessage({color: "green", content : localization.designview.saved});
+                        }
+                      }).send();
+                    });
+                }
             });
 
-            return div;
+            return saveAsDraftButton.input();
         },
         saveAsTemplate: function() {
             var view = this;
-            var viewmodel = view.model;
+            var model = view.model;
 
-            var div = $('<div />');
-            div.addClass('design-view-button2');
-            div.append($('<div />')
-                       .addClass('design-view-button2-text')
-                       .append(localization.saveAsTemplate));
-
-            div.click(function() {
-                viewmodel.document().makeTemplate();
-                viewmodel.document().save();
-                mixpanel.track('Click save as template');
+            var saveAsTemplateButton = Button.init({
+                text: localization.saveAsTemplate,
+                color: 'blue',
+                onClick: function() {
+                    model.document().makeTemplate();
+                    model.document().save();
+                    mixpanel.track('Click save as template');
+                }
             });
 
-            return div;
+            return saveAsTemplateButton.input()
         },
         send: function() {
             var view = this;
 
-            this.sendButton = $('<div />');
-            this.sendButton .addClass('design-view-button3');
-            this.sendButton .append($('<div />')
-                       .addClass('design-view-button3-text')
-                       .append(localization.designview.startSigning));
+            this.sendButton = Button.init({
+                text: localization.designview.startSigning,
+                color: 'green',
+                size: 'big',
+                cssClass: 'sendButton'
+            }).input();
             this.updateSaveButton();
-            return this.sendButton ;
+            return this.sendButton;
         },
         updateSaveButton : function() {
            if (this.sendButton != undefined) {
              if (this.model.document().hasProblems(true)) {
-              this.sendButton.removeClass("active");
+              this.sendButton.addClass('disabled');
               this.sendButton.unbind('click');
              } else  {
-              this.sendButton.addClass("active");
+              this.sendButton.removeClass("disabled");
               this.sendButton.unbind('click').click(this.finalClick);
              }
            }
         },
         removeDocumentButton: function() {
             var view = this;
-            var viewmodel = view.model;
-            var doc = viewmodel.document();
+            var model = view.model;
+            var doc = model.document();
 
-            var div = $('<div />');
-            div.addClass('design-view-button-remove');
-            div.append(view.removeDocumentButtonLabel());
-            div.click(function() {
-                mixpanel.track('Click remove file');
-                doc.markAsNotReady();
-                doc.removeTypeSetters();
-                doc.save();
-                doc.afterSave( function() {
-                    new Submit({
-                        method : "POST",
-                        url :  "/api/frontend/changemainfile/" + doc.documentid(),
-                        ajax: true,
-                        onSend: function() {
+            var removeDocumentButton = Button.init({
+                text: localization.designview.removeThisDocument,
+                color: 'blue',
+                onClick: function() {
+                    mixpanel.track('Click remove file');
+                    doc.markAsNotReady();
+                    doc.removeTypeSetters();
+                    doc.save();
+                    doc.afterSave(function() {
+                        new Submit({
+                            method : "POST",
+                            url :  "/api/frontend/changemainfile/" + doc.documentid(),
+                            ajax: true,
+                            onSend: function() {
 
-                        },
-                        ajaxerror: function(d,a){
-                            doc.recall();
-                        },
-                        ajaxsuccess: function() {
-                            doc.recall();
+                            },
+                            ajaxerror: function(d,a){
+                                doc.recall();
+                            },
+                            ajaxsuccess: function() {
+                                doc.recall();
 
-                        }}).send();
-                });
-
+                            }}).send();
+                    });
+                }
             });
-            return div;
-        },
-        removeDocumentButtonLabel: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-button-remove-label');
-            div.append(localization.designview.removeThisDocument);
-            return div;
 
+            return removeDocumentButton.input();
         },
         finalClick: function() {
             var view = this;

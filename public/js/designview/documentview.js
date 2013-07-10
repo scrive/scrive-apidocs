@@ -79,14 +79,16 @@
             return div;
         },
         refreshMargins : function() {
+          // TODO get rid of the arbitrary numbers, where does 256 come from?
           if (this.wrapperDiv != undefined)
-            this.wrapperDiv.css("height", ($(window).height() - 306) + "px");
+            this.wrapperDiv.css("height", ($(window).height() - 256) + "px");
           if (this.wrapperDiv != undefined)
-            this.innerDiv.css("margin-top", (Math.floor($(window).height() - 306)/2) - 60) + "px";
+            this.innerDiv.css("margin-top", (Math.floor($(window).height() - 256)/2) - 60) + "px";
         },
         uploadButtons: function() {
             var view = this;
-            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper'/>");
+            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper-outer'/>");
+            var innerWrapper = $("<div class='design-view-document-buttons-wrapper'/>");
             var div = $("<div class='design-view-document-buttons'/>");
 
             this.innerDiv = $("<div class='design-view-document-buttons-inner'/>");
@@ -98,7 +100,8 @@
                 this.innerDiv.append(view.exampleDocument());
                 SessionStorage.set('postsignview', 'signup', false);
             }
-            this.wrapperDiv.append(div);
+            innerWrapper.append(div);
+            this.wrapperDiv.append(innerWrapper);
 
             this.refreshMargins();
 
