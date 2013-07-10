@@ -1,0 +1,2 @@
+Main-Class: PDFSeal
+Class-Path: itextpdf-5.4.2.jar itext-asian.jar snakeyaml-1.12.jar

@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
+import java.net.URL;
 import org.yaml.snakeyaml.*;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -660,7 +661,10 @@ public class PDFSeal {
         throws DocumentException, IOException
     {
         if(baseFontHelvetica==null ) {
-            baseFontHelvetica = BaseFont.createFont("Helvetica.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            URL url = PDFSeal.class.getResource("/Helvetica.ttf");
+            System.out.println("Helvetica: " + url);
+            //baseFontHelvetica = BaseFont.createFont("Helvetica.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            baseFontHelvetica = BaseFont.createFont(url.toString(),  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             baseFontHelvetica.setSubset(true);
         }
         return new Font(baseFontHelvetica, size, style, color);
