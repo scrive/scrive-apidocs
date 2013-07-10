@@ -3,13 +3,25 @@
 
 var SignatureTyperModel = Backbone.Model.extend({
   defaults: {
-        text: false
+        text: false,
+        font: "JenniferLynne"
+  },
+  initialize: function (args) {
+      this.loadFromTMPValue();
   },
   text : function() {
      return this.get("text");
   },
   setText: function(v) {
     this.set({text : v});
+    this.saveToTMPValue();
+  },
+  font: function() {
+    return this.get("font");
+  },
+  setFont: function(v) {
+    this.set({font : v});
+    this.saveToTMPValue();
   },
   height : function() {
      return this.get("height");
@@ -22,6 +34,25 @@ var SignatureTyperModel = Backbone.Model.extend({
   },
   modal: function() {
     return this.get("modal");
+  },
+  loadFromTMPValue : function(){
+    var tmp = this.field().valueTMP();
+    if (tmp != undefined && tmp.text != undefined)
+      this.setText(tmp.text);
+    if (tmp != undefined && tmp.font != undefined)
+      this.setFont(tmp.font);
+  },
+  saveToTMPValue : function() {
+    var tmp = this.field().valueTMP();
+
+    if (tmp != undefined && tmp instanceof Object) {
+      tmp.text = this.text();
+      tmp.font = this.font();
+    }
+    else
+      tmp = {text: this.text(), font: this.font()};
+
+    this.field().setValueTMP(tmp);
   }
 });
 
@@ -33,10 +64,10 @@ var SignatureTyperView = Backbone.View.extend({
         this.render();
     },
     imageSrc : function() {
-      return "/text_to_image?width="+this.imageWidth()+"&height="+this.imageHeight()+"&text="+ encodeURIComponent(this.model.text());
+      return "/text_to_image?width="+this.imageWidth()+"&height="+this.imageHeight()+"&font="+this.model.font()+"&text="+ encodeURIComponent(this.model.text());
     },
     imageBase64Url : function() {
-      return "/text_to_image?base64=true&width="+(4*this.model.width())+"&height="+(4*this.model.height())+"&text="+ encodeURIComponent(this.model.text());
+      return "/text_to_image?base64=true&width="+(4*this.model.width())+"&height="+(4*this.model.height())+"&font="+this.model.font()+"&text="+ encodeURIComponent(this.model.text());
     },
     imageHeight: function() {
       return Math.floor(820 * this.model.height() / this.model.width());
@@ -78,8 +109,13 @@ window.SignatureTyper = function(args) {
           var model = new SignatureTyperModel(args);
           var view  = new SignatureTyperView({model : model});
           this.el    = function() { return $(view.el);};
+          this.text    = function(text) { return model.text();};
           this.setText    = function(text) { model.setText(text);};
+          this.font    = function(text) { return model.font();};
+          this.setFont    = function(font) { model.setFont(font);};
           this.saveImage = function(callback) { view.saveImage(callback)};
+          this.isTyper = function() { return true;};
+
 
 };
 

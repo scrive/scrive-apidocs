@@ -247,6 +247,7 @@ window.SignatureDrawer = function(args) {
           this.el    = function() { return $(view.el);};
           this.saveImage = function(callback) { view.saveImage(callback)};
           this.clear = function() {view.clear();};
+          this.isTyper = function() { return false;};
 };
 
 

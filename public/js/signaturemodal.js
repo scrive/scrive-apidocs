@@ -6,14 +6,14 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   defaults: {
         typingMode: true
   },
-  isTyping : function() {
+  typingMode : function() {
      return this.get("typingMode") == true;
   },
-  isDrawing : function() {
-     return !this.isTyping();
+  drawingMode : function() {
+     return !this.typingMode();
   },
   toogleMode : function() {
-    this.set({typingMode: !this.isTyping()});
+    this.set({typingMode: !this.typingMode()});
   },
   onClose : function() {
      return this.get("onClose")();
@@ -29,7 +29,20 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   },
   width: function() {
      return this.get("width");
-  }
+  },
+  typerOrDrawer : function() {
+     var tod = this.get('typerOrDrawer')
+     if (tod == undefined || (tod.isTyper() != this.typingMode()))
+     {
+       if (this.drawingMode()) {
+          tod  = new SignatureDrawer({field : this.field(), height: this.height(), width: this.width(), modal : this.modal()});
+        } else {
+          tod = new SignatureTyper({field: this.field(), text : this.field().signatory().nameOrEmail(), height: this.height(), width: this.width()});
+        }
+       this.set({"typerOrDrawer" : tod});
+     }
+    return tod;
+   }
 });
 
 
@@ -43,27 +56,34 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     header: function() {
         var self = this;
         var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 15px 40px;'/>")
-        header.append($("<div style='font-size:20px;line-height:32px'>").text(localization.pad.drawSignatureBoxHeader));
+        header.append($("<div style='font-size:20px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
-        row1.append($("<label class='clickable'>Or draw your signature</label>").click(function() { self.model.toogleMode(); return false;}));
-        if (this.model.isDrawing()) {
-          row1.append($("<label class='clickable' style='float:right'>Clear image</label>").click(function() { self.typerOrDrawer.clear(); return false;}));
+        row1.append($("<div style='display:inline-block'/>").text(localization.pad.or).append($("<label class='clickable' style='margin-left:5px'/>")
+                                                            .text(this.model.drawingMode() ? localization.pad.typeSignature : localization.pad.drawSignature)
+                                                            .click(function() { self.model.toogleMode(); return false;}))
+                   );
+        if (this.model.drawingMode()) {
+          row1.append($("<label class='clickable' style='float:right'>Clear image</label>").click(function() { self.model.typerOrDrawer().clear(); return false;}));
         }
         else {
           var textInput = new InfoTextInput({
                                infotext : "Please type your name",
-                               value : this.model.field().signatory().nameOrEmail(),
+                               value : self.model.typerOrDrawer().text(),
                                onChange: function(val) {
-                                 self.typerOrDrawer.setText(val);
+                                 self.model.typerOrDrawer().setText(val);
                                }
                           });
           var fontSelect = new Select({
                                 name : "Change font",
                                 cssClass : "float-right",
-                                options: [{name : "Nice font", onSelect: function() {} },{name : "Nice font", onSelect: function() {} }]
+                                options: [
+                                  {name : "Nice font 1", onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');} },
+                                  {name : "Nice font 2", onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');} },
+                                  {name : "Nice font 3", onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');} }
+                                ]
                             });
-          var row2 = $("<div>");
+          var row2 = $("<div style='margin:4px 0px'>");
           header.append(row2);
           row2.append(textInput.el()).append(fontSelect.el());
         }
@@ -73,12 +93,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     drawingOrTypingBox : function() {
         var model = this.model;
         var div = $("<div class='signatureDrawingBoxWrapper'>");
-        if (this.model.isDrawing())
-          this.typerOrDrawer = new SignatureDrawer({field : model.field(), height: model.height(), width: model.width(), modal : model.modal()});
-        else
-          this.typerOrDrawer = new SignatureTyper({field: model.field(), text : model.field().signatory().nameOrEmail(), height: model.height(), width: model.width()});
-
-        return div.append(this.typerOrDrawer.el()).width(820).height(820 * this.height / this.width);
+        return div.append(this.model.typerOrDrawer().el()).width(820).height(820 * this.height / this.width);
     },
     acceptButton : function() {
         var self = this;
@@ -88,7 +103,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                     size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                     text: localization.signature.confirmSignature,
                     onClick : function(){
-                        self.typerOrDrawer.saveImage();
+                        self.model.typerOrDrawer().saveImage();
                         self.model.onClose();
                         return false;
                     }
@@ -109,8 +124,8 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
            var name = signatory.nameOrEmail();
            var company = signatory.company();
 
-           detailsBox.append($("<h1/>").text(name));
-           detailsBox.append($("<h2/>").text(company ));
+           detailsBox.append($("<div class='header'/>").text(name));
+           detailsBox.append($("<div class='subheader'/>").text(company ));
 
            return $("<div class='footer'/>").append(abutton).append(canceloption).append(detailsBox);
     },
