@@ -10,11 +10,6 @@ Description:
 Cabal-version: >= 1.6.0.0
 Build-type: Simple
 
-Flag pdfseal
-  Description: Build pdfseal
-  Manual: True
-  Default: True
-
 Flag cron
   Description: Build executable that run various jobs periodically
   Manual: True
@@ -268,32 +263,6 @@ Executable kontrakcja-server
               TypeOperators,
               TypeSynonymInstances,
               UndecidableInstances
-
-Executable pdfseal
-  if flag(pdfseal)
-    Buildable: True
-  else
-    Buildable: False
-
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
-  Hs-source-dirs: pdfseal/src pdfseal/inc
-  Main-is: SealMain.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              RankNTypes,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances
 
 Executable cron
   if flag(cron)
