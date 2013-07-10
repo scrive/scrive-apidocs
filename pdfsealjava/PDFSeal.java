@@ -101,6 +101,7 @@ class SealSpec {
     public SealingTexts staticTexts;
     public ArrayList<SealAttachment> attachments;
     public ArrayList<FileDesc> filesList;
+    public ArrayList<Field> fields;
 
     public static Yaml getYaml() {
         Constructor constructor = new Constructor(SealSpec.class);
@@ -334,11 +335,18 @@ public class PDFSeal {
     public static ArrayList<Field> getAllFields(SealSpec spec)
     {
         ArrayList<Field> result = new ArrayList<Field>();
-        for( Person person : spec.persons ) {
-            result.addAll(person.fields);
+        if( spec.persons!=null ) {
+            for( Person person : spec.persons ) {
+                result.addAll(person.fields);
+            }
         }
-        for( Person person : spec.secretaries ) {
-            result.addAll(person.fields);
+        if( spec.secretaries!=null ) {
+            for( Person person : spec.secretaries ) {
+                result.addAll(person.fields);
+            }
+        }
+        if( spec.fields!=null ) {
+            result.addAll(spec.fields);
         }
         return result;
     }
