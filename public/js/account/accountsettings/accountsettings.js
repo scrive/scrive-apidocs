@@ -284,13 +284,13 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.personnumber))).append($("<td/>").append(personnumberinput)));
 
-      var emailinput = $("<input type='text' disabled='disabled' style='width:140px;margin-right:10px;;border-color:white;color: #333333;'/>").val(model.email());
+      var emailinput = $("<input type='text' disabled='disabled' class='emailinput' />").val(model.email());
       emailinput.change(function() {
           model.setEmail(emailinput.val());
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.email))).append($("<td/>").append(emailinput).append(this.changeEmailButton())));
 
-      var passwordinput = $("<input type='text' disabled='disabled' style='width:140px;margin-right:10px;border-color:white;color: #333333;'/>").val("************");
+      var passwordinput = $("<input type='text' disabled='disabled' class='newpassword'/>").val("************");
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Password"))).append($("<td/>").append(passwordinput).append(this.changePasswordButton())));
 
 
