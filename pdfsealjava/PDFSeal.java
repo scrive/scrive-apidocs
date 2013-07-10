@@ -789,11 +789,11 @@ public class PDFSeal {
             System.err.println("    java -jar pdfseal.jar config.json");
         }
         else {
-            DumperOptions options = new DumperOptions();
-            Yaml yaml = new Yaml(options);
             SealSpec spec = SealSpec.loadFromFile(args[0]);
 
             /*
+            DumperOptions options = new DumperOptions();
+            Yaml yaml = new Yaml(options);
             options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
             System.out.println(yaml.dump(spec));
             */
