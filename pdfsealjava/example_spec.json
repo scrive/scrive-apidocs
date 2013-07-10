@@ -1,4 +1,4 @@
-{"input": "input.pdf", "output": "output.pdf",
+{"input": "../test/pdfs/simple.pdf", "output": "../test/pdfs/simple.pdf-javasealed.pdf",
  "documentNumber": "0000001234",
  "persons": [{"fullname": "żółw Lukas Duczko \u00c4\u00c5\u00d6\u00e4\u00e5\u00f6 \u017c\u00f3\u0142w \u017b\u00d3\u0141W 1",
               "company": "CEO, żółw, გრაციან ფოლაკ",
