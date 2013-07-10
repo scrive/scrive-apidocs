@@ -213,6 +213,11 @@ public class PDFSeal {
         for( int i=1; i<=count; i++ ) {
 
             Rectangle cropBox = reader.getCropBox(i);
+            int rotate = reader.getPageRotation(i);
+            while (rotate > 0) {
+                cropBox = cropBox.rotate();
+                rotate -= 90;
+            }
 
             PdfContentByte canvas = stamper.getOverContent(i);
             for( Field field : fields ) {
