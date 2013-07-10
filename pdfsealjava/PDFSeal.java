@@ -538,15 +538,18 @@ public class PDFSeal {
             cell = new PdfPCell();
             cell.setBorder(0);
             cell.setPaddingLeft(15);
-            cell.setPaddingRight(15);
 
-            cell.addElement(createParagraph(entry.date, 10, Font.ITALIC, lightTextColor));
-            cell.addElement(createParagraph(entry.address, 8, Font.ITALIC, lightTextColor));
+            para = createParagraph(entry.date, 10, Font.ITALIC, lightTextColor);
+            para.setLeading(0f, 1.2f);
+            cell.addElement(para);
+            para = createParagraph(entry.address, 8, Font.ITALIC, lightTextColor);
+            para.setLeading(0f, 1.2f);
+            para.setSpacingAfter(7);
+            cell.addElement(para);
             table.addCell(cell);
 
             cell = new PdfPCell();
             cell.setBorder(0);
-            cell.setPaddingLeft(15);
             cell.setPaddingRight(15);
             para = createParagraph(entry.comment, 10, Font.ITALIC, lightTextColor);
             para.setLeading(0f, 1.2f);
