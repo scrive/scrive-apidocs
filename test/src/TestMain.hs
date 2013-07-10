@@ -30,212 +30,80 @@ import TestKontra
 -- if e.g. for some reason they stop compiling. Also, please keep them in
 -- alphabetic order.
 
-#ifndef NO_COMPANYSTATE
 import CompanyStateTest
-#endif
-#ifndef NO_COMPANYCONTROL
 import CompanyControlTest
-#endif
-#ifndef NO_DOCSTATE
 import DocStateTest
-#endif
-#ifndef NO_DOCCONTROL
 import DocControlTest
-#endif
-#ifndef NO_DOCAPI
 import DocAPITest
-#endif
-#ifndef NO_DOCSTATEQUERY
 import DocStateQueryTest
-#endif
 import EvidenceAttachmentsTest
-#ifndef NO_HTML
 import HtmlTest
-#endif
-#ifndef NO_INPUTVALIDATION
 import InputValidationTest
-#endif
-#ifndef NO_LOGIN
 import LoginTest
-#endif
-#ifndef NO_SIGNUP
 import SignupTest
-#endif
-#ifndef NO_ACCOUNTINFO
 import AccountInfoTest
-#endif
-#ifndef NO_MAILAPI
 import MailAPITest
-#endif
-#ifndef NO_MAILMODEL
 import MailModelTest
-#endif
-#ifndef NO_REDIRECT
 import RedirectTest
-#endif
-#ifndef NO_USERSTATE
 import UserStateTest
-#endif
-#ifndef NO_USERHISTORY
 import UserHistoryTest
-#endif
-#ifndef NO_CSVUTIL
 import CSVUtilTest
-#endif
-#ifndef NO_SIMPLEEMAIL
 import SimpleMailTest
-#endif
-#ifndef NO_LANG
 import LangTest
-#endif
-#ifndef NO_COMPANYACCOUNTS
 import CompanyAccountsTest
-#endif
-#ifndef NO_MAILS
 import MailsTest
-#endif
-#ifndef NO_JSON
 import JSONUtilTest
-#endif
-#ifndef NO_SQLUTILS
 import SQLUtilsTest
-#endif
-#ifndef NO_SESSIONS
 import SessionsTest
-#endif
-#ifndef NO_FILE
 import FileTest
-#endif
-#ifndef NO_DOCJSON
 import Doc.TestJSON
-#endif
-#ifndef NO_EVIDENCELOG
 import EvidenceLogTest
-#endif
-#ifndef NO_PAD
 import PadTest
-#endif
-#ifndef NO_LIVEDOCX
 --import LiveDocxTest
-#endif
-#ifndef NO_OAUTH
 import OAuth
-#endif
-#ifndef NO_FLASHMSGS
 import FlashMessages
-#endif
-#ifndef NO_PAYMENTS
 import PaymentsTest
-#endif
-#ifndef NO_THIRDPARTYSTATS
 import ThirdPartyStats
-#endif
 
 allTests :: [(String, [String] -> TestEnvSt -> Test)]
 allTests = tail tests
   where
     tests = [
         undefined
-#ifndef NO_COMPANYSTATE
       , ("companystate", const companyStateTests)
-#endif
-#ifndef NO_COMPANYCONTROL
       , ("companycontrol", const companyControlTests)
-#endif
-#ifndef NO_DOCSTATE
       , ("docstate", const docStateTests)
-#endif
-#ifndef NO_DOCCONTROL
       , ("doccontrol", const docControlTests)
-#endif
-#ifndef NO_DOCAPI
       , ("docapi", const docAPITests)
-#endif
-#ifndef NO_DOCSTATEQUERY
       , ("docstatequery", const $ const docStateQueryTests)
-#endif
       , ("evidenceattachments", const $ const evidenceAttachmentsTest)
-#ifndef NO_HTML
       , ("html", const $ const htmlTests)
-#endif
-#ifndef NO_INPUTVALIDATION
       , ("inputvalidation", const $ const inputValidationTests)
-#endif
-#ifndef NO_LOGIN
       , ("login", const loginTests)
-#endif
-#ifndef NO_SIGNUP
       , ("signup", const signupTests)
-#endif
-#ifndef NO_ACCOUNTINFO
-     , ("accountinfo", const accountInfoTests)
-#endif
-#ifndef NO_MAILAPI
+      , ("accountinfo", const accountInfoTests)
       , ("mailapi", const mailApiTests)
-#endif
-#ifndef NO_REDIRECT
       , ("redirect", const redirectTests)
-#endif
-#ifndef NO_USERSTATE
       , ("userstate", const userStateTests)
-#endif
-#ifndef NO_USERSTATE
       , ("userhistory", const userHistoryTests)
-#endif
-#ifndef NO_CSVUTIL
       , ("csvutil", const $ const csvUtilTests)
-#endif
-#ifndef NO_SIMPLEEMAIL
       , ("simplemail", const $ const simpleMailTests)
-#endif
-#ifndef NO_MAILMODEL
       , ("mailmodel", const mailModelTests)
-#endif
-#ifndef NO_LANG
       , ("lang", const langTests)
-#endif
-#ifndef NO_COMPANYACCOUNTS
       , ("companyaccounts", const companyAccountsTests)
-#endif
-#ifndef NO_MAILS
       , ("mails", mailsTests )
-#endif
-#ifndef NO_JSON
       , ("jsonutil", const jsonUtilTests )
-#endif
-#ifndef NO_FILE
       , ("file", const fileTests )
-#endif
-#ifndef NO_DOCJSON
       , ("docjson", const documentJSONTests)
-#endif
-#ifndef NO_SQLUTILS
       , ("sqlutil", const sqlUtilsTests )
-#endif
-#ifndef NO_EVIDENCELOG
       , ("evidencelog", const evidenceLogTests)
-#endif
-#ifndef NO_PAD
       , ("pad", const padTests)
-#endif
-#ifndef NO_LIVEDOCX
 --      , ("livedocx", const $ const liveDocxTests)
-#endif
-#ifndef NO_OAUTH
       , ("oauth", const oauthTest)
-#endif
-#ifndef NO_FLASHMSGS
       , ("flashmessages", const $ const flashMessagesTests)
-#endif
-#ifndef NO_PAYMENTS
       , ("payments", const paymentsTests)
-#endif
-#ifndef NO_SESSIONS
       , ("sessions", const sessionsTests)
-#endif
-#ifndef NO_THIRDPARTYSTATS
       , ("thirdpartystats", const thirdPartyStatsTests)
-#endif
       ]
 
 testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]

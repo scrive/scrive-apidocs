@@ -486,43 +486,6 @@ Executable kontrakcja-test
   if os(windows)
     cpp-options: -DWINDOWS
 
-  if !flag(test-companystate)
-    cpp-options: -DNO_COMPANYSTATE
-  if !flag(test-companycontrol)
-    cpp-options: -DNO_COMPANYCONTROL
-  if !flag(test-docstate)
-    cpp-options: -DNO_DOCSTATE
-  if !flag(test-html)
-    cpp-options: -DNO_HTML
-  if !flag(test-input-validation)
-    cpp-options: -DNO_INPUTVALIDATION
-  if !flag(test-login)
-    cpp-options: -DNO_LOGIN
-  if !flag(test-signup)
-    cpp-options: -DNO_SIGNUP
-  if !flag(test-accountinfo)
-    cpp-options: -DNO_ACCOUNTINFO
-  if !flag(test-mailapi)
-    cpp-options: -DNO_MAILAPI
-  if !flag(test-userstate)
-    cpp-options: -DNO_USERSTATE
-  if !flag(test-csvutil)
-    cpp-options: -DNO_CSVUTIL
-  if !flag(test-locale)
-    cpp-options: -DNO_LOCALE
-  if !flag(test-companyaccounts)
-    cpp-options: -DNO_COMPANYACCOUNTS
-  if !flag(test-redirect)
-    cpp-options: -DNO_REDIRECT
-  if !flag(test-docstatequery)
-    cpp-options: -DNO_DOCSTATEQUERY
-  if !flag(test-userhistory)
-    cpp-options: -DNO_USERHISTORY
-  if !flag(test-livedocx)
-    cpp-options: -DNO_LIVEDOCX
-  if !flag(test-sessions)
-    cpp-options: -DNO_SESSIONS
-
   cpp-options: -DTestMain=Main
   Main-is: TestMain.hs
 
