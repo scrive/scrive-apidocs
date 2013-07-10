@@ -204,6 +204,9 @@ public class PDFSeal {
     {
         PdfStamper stamper = new PdfStamper(reader, os);
 
+        PdfReader sealMarker = new PdfReader("files/sealmarker.pdf");
+        PdfImportedPage sealMarkerImported = stamper.getImportedPage(sealMarker, 1);
+
         int count = reader.getNumberOfPages();
         for( int i=1; i<=count; i++ ) {
 
@@ -268,6 +271,17 @@ public class PDFSeal {
                     }
                 }
             }
+
+            /*
+             * Add pagination
+             */
+            float requestedSealSize = 18f;
+            canvas.addTemplate(sealMarkerImported,
+                               requestedSealSize/sealMarkerImported.getWidth(),
+                               0, 0,
+                               requestedSealSize/sealMarkerImported.getHeight(),
+                               cropBox.getLeft() + cropBox.getWidth()/2 - requestedSealSize/2,
+                               cropBox.getBottom() + 23 - requestedSealSize/2);
         }
         stamper.close();
         reader.close();
