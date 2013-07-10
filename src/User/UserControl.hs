@@ -8,7 +8,6 @@ module User.UserControl(
   , getCompanyInfoUpdate
   , handleUsageStatsJSONForUserDays
   , handleUsageStatsJSONForUserMonths
-  , handlePostUserMailAPI
   , isUserDeletable
   , sendNewUserMail
   , createNewUserByAdmin
@@ -39,7 +38,6 @@ import ActionQueue.PasswordReminder
 import ActionQueue.AccessNewAccount
 import ActionQueue.UserAccountRequest
 import AppView
-import Crypto.RNG
 import DB hiding (update, query)
 import Company.Model
 import InputValidation
@@ -49,7 +47,6 @@ import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime hiding (toClockTime)
 import Happstack.Fields
-import Utils.Monad
 import Redirect
 import Text.StringTemplates.Templates
 import User.Model
@@ -61,7 +58,6 @@ import qualified Log
 import User.Action
 import User.Utils
 import User.History.Model
-import ScriveByMail.Model
 import ListUtil
 import qualified Text.StringTemplates.Fields as F
 import Routing
@@ -226,39 +222,6 @@ handleUsageStatsJSONForUserMonths = do
     else do
       stats <- dbQuery $ GetUserUsageStats (Just $ userid user) Nothing timespans
       return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m") stats
-
-
-handlePostUserMailAPI :: Kontrakcja m => m KontraLink
-handlePostUserMailAPI = withUserPost $ do
-    User{userid} <- fromJust . ctxmaybeuser <$> getContext
-    mapi <- dbQuery $ GetUserMailAPI userid
-    getDefaultedField False asValidCheckBox "api_enabled"
-      >>= maybe (return LinkUserMailAPI) (\enabledapi -> do
-        case mapi of
-             Nothing -> do
-                 when enabledapi $ do
-                     apikey <- random
-                     _ <- dbUpdate $ SetUserMailAPIKey userid apikey 50
-                     return ()
-             Just api -> do
-                 if not enabledapi
-                    then do
-                        _ <- dbUpdate $ RemoveUserMailAPI userid
-                        return ()
-                    else do
-                        mresetkey <- getDefaultedField False asValidCheckBox "reset_key"
-                        mresetsenttoday <- getDefaultedField False asValidCheckBox "reset_senttoday"
-                        mdailylimit <- getRequiredField asValidNumber "daily_limit"
-                        case (mresetkey, mresetsenttoday, mdailylimit) of
-                             (Just resetkey, Just resetsenttoday, Just dailylimit) -> do
-                                 newkey <- if resetkey
-                                   then random
-                                   else return $ umapiKey api
-                                 _ <- dbUpdate $ SetUserMailAPIKey userid newkey dailylimit
-                                 when_ resetsenttoday $ dbUpdate $ ResetUserMailAPI userid
-                                 return ()
-                             _ -> return ()
-        return LinkUserMailAPI)
 
 {- |
     Checks for live documents owned by the user.

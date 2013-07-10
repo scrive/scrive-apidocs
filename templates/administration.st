@@ -335,39 +335,6 @@ admincompany=
 		    <input type="text" style="width:200px;margin:0" value="$companyipaddressmasklist$" name="companyipaddressmasklist" />
 		  </td>
 		</tr>
-                $if(hasmailapi)$
-		<tr> <td style="padding-top:10px"><strong>Company Mail API</strong></td> <td> </td></tr>
-		<tr> <td>emails:</td>
-		  <td>
-
-                 <ul id="mailapiemailslist">
-                  <li><a href="mailto:contract+$mailapikey$@api.scrive.com">
-                    contract+$mailapikey$@api.scrive.com
-                   </a></li>
-                   <li><a href="mailto:offer+$mailapikey$@api.scrive.com">
-                     offer+$mailapikey$@api.scrive.com
-                   </a></li>
-                   <li><a href="mailto:order+$mailapikey$@api.scrive.com">
-                     order+$mailapikey$@api.scrive.com
-                   </a></li>
-                 </ul>
-
-		  </td>
-		</tr>
-		<tr> <td>daily limit:</td>
-		  <td>
-                    $mailapilimit$
-                  </td>
-                </tr>
-		<tr> <td>documents sent today:</td>
-		  <td>
-                    $mailapisent$
-                  </td>
-                </tr>
-                $endif$
-	    </tbody></table>
-	    <br/>
-            $if(!hasmailapi)$(Clicking "Change" will add MailAPI key for company; new policy is that all companies have it activated by default.) <br />$endif$
 	    <input type="submit" style="width:200px;font-weight:bold"
 	    value="Change" name="change" />
 	  </div>

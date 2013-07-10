@@ -48,8 +48,6 @@ import MinutesTime
 import Data.List
 import Text.JSON
 import Text.JSON.Gen
-import ScriveByMail.Model
-import ScriveByMail.View
 import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as B64
@@ -62,8 +60,8 @@ showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "noCompany" $ isNothing mcompany
 
-userJSON :: Monad m => Context -> User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> Bool -> m JSValue
-userJSON ctx user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
+userJSON :: Monad m => Context -> User -> Maybe Company -> Bool -> m JSValue
+userJSON ctx user mcompany companyuieditable = runJSONGenT $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -75,12 +73,9 @@ userJSON ctx user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $
     value "usercompanyname" $ getCompanyName (user,mcompany)
     value "usercompanynumber" $ getCompanyNumber (user,mcompany)
     value "lang"   $ codeFromLang $ getLang user
-    valueM "mailapi" $ case (mumailapi) of
-                            Nothing -> return JSNull
-                            Just umailapi -> mailAPIInfoJSON umailapi
     valueM "company" $ case (mcompany) of
                             Nothing -> return JSNull
-                            Just company -> companyJSON ctx company mcmailapi companyuieditable
+                            Just company -> companyJSON ctx company companyuieditable
 
 companyUIJson :: Monad m => Context -> Company -> Bool -> m JSValue
 companyUIJson ctx company editable = runJSONGenT $ do
@@ -114,8 +109,8 @@ companyUIJson ctx company editable = runJSONGenT $ do
     value "editable" editable
 
 
-companyJSON :: Monad m => Context -> Company -> Maybe MailAPIInfo -> Bool -> m JSValue
-companyJSON ctx company mcmailapi editable = runJSONGenT $ do
+companyJSON :: Monad m => Context -> Company -> Bool -> m JSValue
+companyJSON ctx company editable = runJSONGenT $ do
     value "companyid" $ show $ companyid company
     value "address" $ companyaddress $ companyinfo company
     value "city" $ companycity $ companyinfo company
@@ -123,9 +118,6 @@ companyJSON ctx company mcmailapi editable = runJSONGenT $ do
     value "zip" $ companyzip $ companyinfo company
     value "companyname" $ getCompanyName company
     value "companynumber" $ getCompanyNumber company
-    valueM "mailapi" $ case (mcmailapi) of
-                            Nothing -> return JSNull
-                            Just cmailapi -> mailAPIInfoJSON cmailapi
     valueM "companyui" $ companyUIJson ctx company editable
 
 userStatsToJSON :: (MinutesTime -> String) -> [UserUsageStats] -> [JSValue]

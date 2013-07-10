@@ -181,9 +181,9 @@ var OauthDashboardView = Backbone.View.extend({
 window.OauthDashboard = function(args) {
           var model = new OauthDashboardModel(args);
           var view =  new OauthDashboardView({model : model, el : $("<div class='tab-container apidashboard'/>")});
-          return {
-              el  : function() {return $(view.el);}
-            };
+          this.el  = function() {return $(view.el);}
+          this.refresh  = function() {return;}
+
 };
 
 })(window);

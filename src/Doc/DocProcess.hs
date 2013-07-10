@@ -53,7 +53,6 @@ data DocProcessInfo =
   , processmailinvitationtosign :: String
   , processmailinvitationtosigndefaultheader :: String
   , processmailremindnotsigned :: String
-  , processmailconfirmbymailapi :: String
   , processwhohadsignedinfoformail :: String
 
   -- process specific flash message templates
@@ -73,7 +72,6 @@ contractProcess =
   , processmailinvitationtosign = "mailInvitationToSignContract"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
   , processmailremindnotsigned = "remindMailNotSignedContract"
-  , processmailconfirmbymailapi = "mailMailAPIConfirmContract"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
@@ -94,7 +92,6 @@ offerProcess =
   , processmailinvitationtosign = "mailInvitationToSignOffer"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
   , processmailremindnotsigned= "remindMailNotSignedOffer"
-  , processmailconfirmbymailapi = "mailMailAPIConfirmOffer"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
@@ -115,7 +112,6 @@ orderProcess =
   , processmailinvitationtosign = "mailInvitationToSignOrder"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
   , processmailremindnotsigned = "remindMailNotSignedOrder"
-  , processmailconfirmbymailapi = "mailMailAPIConfirmOrder"
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages

@@ -157,7 +157,6 @@ instance ExtendWithRandomnes SignatoryDetails where
 newtype AuthorActor    = AuthorActor    { unAuthorActor    :: Actor }
 newtype SystemActor    = SystemActor    { unSystemActor    :: Actor }
 newtype SignatoryActor = SignatoryActor { unSignatoryActor :: Actor }
-newtype MailAPIActor   = MailAPIActor   { unMailAPIActor   :: Actor }
 
 instance Arbitrary AuthorActor where
   arbitrary = do
@@ -173,11 +172,6 @@ instance Arbitrary SignatoryActor where
   arbitrary = do
     (time, ip, uid, eml, slid) <- arbitrary
     return $ SignatoryActor $ signatoryActor time ip uid eml slid
-
-instance Arbitrary MailAPIActor where
-  arbitrary = do
-    (time, uid, eml) <- arbitrary
-    return $ MailAPIActor $ mailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary

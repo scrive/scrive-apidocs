@@ -525,36 +525,8 @@ mailRequestChangeEmailP=
     $ctxhostpart$$link$
   </a>
 ####
-#### Mail API EMAILS
-####
-mailMailAPIConfirmContract=
-   $_mailMailAPIConfirmTitle()$
-   $nicemail(
-        mailheader=_mailMailAPIConfirmTitle();
-        mailp1=_mailMailAPIConfirm()
-    )$
-####
-mailMailAPIConfirmOrder=
-   $_mailMailAPIConfirmTitle()$
-   $nicemail(
-        mailheader=_mailMailAPIConfirmTitle();
-        mailp1=_mailMailAPIConfirm()
-    )$
-####
-mailMailAPIConfirmOffer=
-   $_mailMailAPIConfirmTitle()$
-   $nicemail(
-        mailheader=_mailMailAPIConfirmTitle();
-        mailp1=_mailMailAPIConfirm()
-    )$
-####
-####
 ####   UTILS
 ####
-####
-timetosigninfo=
-    <span>$_timetosigninfo()$ <strong>$time$</strong>.</span><br/>
-###
 legalparagraph=
 $_legalparagraphBody()$
 ####
@@ -563,17 +535,6 @@ $_legalparagraphBody()$
 #### DOCUMENT INFORMATION PREVIEW FOR MAIL
 ####
 ####
-####
-mailMailAPIError=
-    Scrive by Mail Error
-    $nicemail(
-        mailheader= "Scrive by Mail Error";
-        mailp1 = "<strong>Greetings from Scrive by Mail,</strong>";
-        mailp2 = "We were unable to process the mail you sent us and therefore have not forwarded the document to anyone.";
-        mailp3 = errormsg;
-        mailp4 = "Thanks for using Scrive by Mail"
-    )$
-#####
 linkk=<a href="$href$">$text$</a>
 ####
 concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$

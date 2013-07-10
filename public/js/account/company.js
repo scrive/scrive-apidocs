@@ -158,11 +158,9 @@ window.Company = Backbone.Model.extend({
       zip       : "",
       city      : "",
       country    : "",
-      mailapi   : undefined,
       companyui : undefined
   },
   initialize : function(args) {
-    if (args.mailapi != undefined) this.set({"mailapi" : new MailApi(args.mailapi)});
     if (args.companyui != undefined) this.set({"companyui" : new CompanyUI(args.companyui)});
   },
   companyid : function() {
@@ -186,14 +184,8 @@ window.Company = Backbone.Model.extend({
   country : function() {
      return this.get("country");
   },
-  mailapi : function() {
-     return this.get("mailapi");
-  },
   companyui : function() {
      return this.get("companyui");
-  },
-  hasMailApi : function() {
-     return this.mailapi() != undefined;
   }
 
 });
