@@ -66,7 +66,7 @@ tableSignatoryAttachments = tblTable {
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False, colDefault = Just "0" }
     ]
-  , tblPrimaryKey = ["name", "signatory_link_id"]
+  -- , tblPrimaryKey = ["name", "signatory_link_id"]
   , tblForeignKeys = [
       tblForeignKeyColumn "file_id" "files" "id"
     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
