@@ -169,7 +169,6 @@ preCheckPDFHelper content tmppath =
       checkSize
       checkHeader
       checkNormalize
-      checkSealing
       readOutput
   where
     sourcepath = tmppath ++ "/source.pdf"
@@ -254,18 +253,6 @@ preCheckPDFHelper content tmppath =
 
       when (any (BSL.pack "is greater than numGlyphs" `BSL.isPrefixOf`) (BSL.tails stderr1)) $ do
          liftIO $ BS.writeFile normalizedpath content
-
-    checkSealing = do
-      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal"
-                                   [] (BSL.pack (show sealSpec))
-      when (exitcode /= ExitSuccess ) $ do
-        liftIO $ do
-          systmp <- getTemporaryDirectory
-          (_path,handle) <- openTempFile systmp ("pre-sealing-failed-.pdf")
-          BS.hPutStr handle content
-          hClose handle
-
-        throwError (FileSealingError stderr1)
 
     readOutput = liftIO $ BS.readFile normalizedpath
 
