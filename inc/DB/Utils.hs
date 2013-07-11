@@ -39,20 +39,24 @@ instance OneObjectReturnedGuard [] where
 oneRowAffectedGuard :: MonadDB m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False
 oneRowAffectedGuard 1 = return True
-oneRowAffectedGuard n = kThrow2 $ \sql' -> TooManyObjects {
-    originalQuery = sql'
-  , tmoExpected = 1
-  , tmoGiven = n
-  }
+oneRowAffectedGuard n = do
+  sql' <- kLastSQL
+  kThrow $ TooManyObjects
+           { originalQuery = sql'
+           , tmoExpected = 1
+           , tmoGiven = n
+           }
 
 oneObjectReturnedGuard :: MonadDB m => [a] -> m (Maybe a)
 oneObjectReturnedGuard []  = return Nothing
 oneObjectReturnedGuard [x] = return $ Just x
-oneObjectReturnedGuard xs  = kThrow2 $ \sql' -> TooManyObjects {
-    originalQuery = sql'
-  , tmoExpected = 1
-  , tmoGiven = fromIntegral $ length xs
-  }
+oneObjectReturnedGuard xs  = do
+  sql' <- kLastSQL
+  kThrow $ TooManyObjects
+           { originalQuery = sql'
+           , tmoExpected = 1
+           , tmoGiven = fromIntegral $ length xs
+           }
 
 checkIfOneObjectReturned :: MonadDB m => [a] -> m Bool
 checkIfOneObjectReturned xs = oneObjectReturnedGuard xs

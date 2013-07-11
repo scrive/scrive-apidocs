@@ -13,6 +13,7 @@ import DB
 import TestingUtil
 import TestKontra
 import Control.Monad.State.Class
+import Data.Monoid
 
 sqlUtilsTests :: TestEnvSt -> Test
 sqlUtilsTests env = testGroup "SQLUtils" [
@@ -27,7 +28,7 @@ sqlUtilsTests env = testGroup "SQLUtils" [
 runDeepTest :: DBT TestEnv () -> TestEnv ()
 runDeepTest action = do
   nex <- getNexus
-  runDBT nex (DBEnvSt Nothing [] Nothing) $ action
+  runDBT nex (DBEnvSt Nothing [] Nothing mempty) $ action
 
 injectStatement :: [[SqlValue]] -> DBT TestEnv (IORef ([[SqlValue]], Bool))
 injectStatement results = DBT $ do

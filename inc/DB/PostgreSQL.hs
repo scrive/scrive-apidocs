@@ -8,11 +8,13 @@ import qualified Database.HDBC.PostgreSQL as PG
 
 import DB.Core
 import DB.Nexus
+import DB.SQL
+import Data.Monoid
 
 withPostgreSQL :: (MonadBaseControl IO m, MonadIO m) => String -> DBT m a -> m a
 withPostgreSQL conf m =
   E.bracket (liftIO $ PG.connectPostgreSQL conf) (liftIO . disconnect) $ \conn -> do
     nex <- mkNexus conn
-    res <- runDBT nex (DBEnvSt Nothing [] Nothing) m
+    res <- runDBT nex (DBEnvSt Nothing [] Nothing (mempty :: SQL)) m
     liftIO $ commit conn
     return res

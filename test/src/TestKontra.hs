@@ -26,6 +26,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Maybe
+import Data.Monoid
 import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
 import Happstack.Server.Internal.Monads
 import System.FilePath
@@ -79,7 +80,7 @@ runTestEnv st m = do
   can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
   when can_be_run $ do
     atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
-    E.finally (runDBT (teNexus st) (DBEnvSt Nothing [] Nothing) $ ununTestEnv st $ withTestDB m) $ do
+    E.finally (runDBT (teNexus st) (DBEnvSt Nothing [] Nothing (mempty :: SQL)) $ ununTestEnv st $ withTestDB m) $ do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
@@ -95,11 +96,12 @@ instance MonadDB TestEnv where
   kRollback    = TestEnv $ kRollback
   kClone       = TestEnv $ kClone
   kRunSQL      = TestEnv . kRunSQL
+  kLastSQL     = TestEnv $ kLastSQL
   kFinish      = TestEnv $ kFinish
   kGetTables   = TestEnv $ kGetTables
   kDescribeTable   = TestEnv . kDescribeTable
   kFold2 decoder init_acc = TestEnv (kFold2 decoder init_acc)
-  kThrow2      = TestEnv . kThrow2
+  kThrow       = TestEnv . kThrow
   getMinutesTime = TestEnv $ getMinutesTime
 
 instance TemplatesMonad TestEnv where
@@ -123,7 +125,7 @@ runTestKontraHelper rq ctx tk = do
   nex <- getNexus
   rng <- getCryptoRNGState
   mres <- liftIO . ununWebT $ runServerPartT
-    (runOurServerPartT . runDBT nex (DBEnvSt Nothing [] Nothing) . runCryptoRNGT rng $
+    (runOurServerPartT . runDBT nex (DBEnvSt Nothing [] Nothing (mempty :: SQL)) . runCryptoRNGT rng $
       AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
