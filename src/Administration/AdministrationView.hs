@@ -208,11 +208,22 @@ statisticsFields formatTime = map f
                 F.value "sent" (uusDocumentsSent uus)
 
 statisticsCompanyFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
-statisticsCompanyFields formatTime = map f
+statisticsCompanyFields formatTime = map f . appendTotalsPerTimespan . filter nonZero
   where f uus = do
                 F.value "date" $ formatTime (fst $ uusTimeSpan uus)
-                F.value "user" $ ((\(_,_,n) -> n) <$> uusUser uus)
-                F.value "istotal" False -- FIMXE: need totals...
+                F.value "user" $ maybe "=> Company total" (\(_,_,n) -> n) (uusUser uus)
                 F.value "closed" $ uusDocumentsClosed uus
                 F.value "signatures" $ uusSignaturesClosed uus
                 F.value "sent" $ uusDocumentsSent uus
+        nonZero uus = uusDocumentsClosed uus > 0 ||
+                      uusDocumentsSent uus > 0 ||
+                      uusSignaturesClosed uus > 0
+        appendTotalsPerTimespan = concat . map appendTotal . groupBySameTimeSpan
+        groupBySameTimeSpan x = groupBy (\a b -> uusTimeSpan a == uusTimeSpan b) x
+        appendTotal uuss = uuss ++ [(summarize uuss) { uusUser = Nothing}]
+        summarize :: [UserUsageStats] -> UserUsageStats
+        summarize uuss' = foldl1' addTwo uuss'
+        addTwo u1 u2 = u1 { uusDocumentsSent    = uusDocumentsSent u1    + uusDocumentsSent u2
+                          , uusDocumentsClosed  = uusDocumentsClosed u1  + uusDocumentsClosed u2
+                          , uusSignaturesClosed = uusSignaturesClosed u1 + uusSignaturesClosed u2
+                          }

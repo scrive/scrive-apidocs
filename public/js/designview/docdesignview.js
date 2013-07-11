@@ -249,8 +249,7 @@
                       document.verifyEleg().sendAjax(function(resp) {
                         var resp = JSON.parse(resp);
                         if (resp.verified) {
-                          document.makeReadyForSigning().sendAjax(function(resp) {
-                            var docdata = JSON.parse(resp);
+                          document.makeReadyForSigning().sendAjax(function(docdata) {
                             var newdoc = new Document(new Document({}).parse(docdata));
                             newdoc.sign().addMany(params).sendAjax(function() {
                                 window.location.reload();
@@ -386,8 +385,7 @@
             LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
-              doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
-                  var docdata = JSON.parse(resp);
+              doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
                   var newdoc = new Document(new Document({}).parse(docdata));
                   newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
                   newdoc.sign().sendAjax(
@@ -408,8 +406,7 @@
             LoadingDialog.open(localization.designview.preparingDocumentFor + " " + name, index + " " + localization.designview.partOf + " " + totalCount);
             doc.save();
             doc.afterSave(function() {
-            doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(resp) {
-               var docdata = JSON.parse(resp);
+            doc.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
                var newdoc = new Document(new Document({}).parse(docdata));
                newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
                newdoc.sign().sendAjax(function() {

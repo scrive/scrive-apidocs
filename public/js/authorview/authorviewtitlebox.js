@@ -30,7 +30,7 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
   },
   cancel : function() {
-    this.document().cancel().sendAjax(function() {window.location = window.location;});
+    this.document().cancel().sendAjax(function() {window.location.reload();});
   },
   canGoToSignView : function() {
     return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign();
