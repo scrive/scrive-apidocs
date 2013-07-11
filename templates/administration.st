@@ -335,6 +335,7 @@ admincompany=
 		    <input type="text" style="width:200px;margin:0" value="$companyipaddressmasklist$" name="companyipaddressmasklist" />
 		  </td>
 		</tr>
+-       </tbody></table>
 	    <input type="submit" style="width:200px;font-weight:bold"
 	    value="Change" name="change" />
 	  </div>
