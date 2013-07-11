@@ -33,9 +33,9 @@ passwordReminder :: Action UserID PasswordReminder (UserID, Int32, MagicHash) Sc
 passwordReminder = Action {
     qaTable = tablePasswordReminders
   , qaFields = \(uid, remained_emails, token) -> [
-      sql "user_id" uid
-    , sql "remained_emails" remained_emails
-    , sql "token" token
+      ("user_id", toSql uid)
+    , ("remained_emails", toSql remained_emails)
+    , ("token", toSql token)
     ]
   , qaSelectFields = ["user_id", "expires", "remained_emails", "token"]
   , qaIndexField = "user_id"

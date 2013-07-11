@@ -18,86 +18,55 @@ tableMails :: Table
 tableMails = tblTable {
     tblName = "mails"
   , tblVersion = 3
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("sender", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("receivers", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("content", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("x_smtp_attrs", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("to_be_sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just False})
-       , ("sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just True})
-       , ("service_test" , SqlColDesc { colType = SqlBitT, colNullable = Just False})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE mails ("
-          <> "  id BIGSERIAL NOT NULL"
-          <> ", token BIGINT NOT NULL"
-          <> ", sender TEXT NOT NULL"
-          <> ", receivers TEXT NOT NULL"
-          <> ", title TEXT NULL"
-          <> ", content TEXT NULL"
-          <> ", x_smtp_attrs TEXT NULL"
-          <> ", to_be_sent TIMESTAMPTZ NOT NULL"
-          <> ", sent TIMESTAMPTZ NULL"
-          <> ", service_test BOOL NOT NULL"
-          <> ", CONSTRAINT pk_mails PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = return ()
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "sender", colType = TextT, colNullable = False }
+    , tblColumn { colName = "receivers", colType = TextT, colNullable = False }
+    , tblColumn { colName = "title", colType = TextT }
+    , tblColumn { colName = "content", colType = TextT }
+    , tblColumn { colName = "x_smtp_attrs", colType = TextT }
+    , tblColumn { colName = "to_be_sent", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "sent", colType = TimestampWithZoneT }
+    , tblColumn { colName = "service_test", colType = BoolT, colNullable = False }
+    ]
+  , tblPrimaryKey = ["id"]
   }
 
 tableMailAttachments :: Table
 tableMailAttachments = tblTable {
     tblName = "mail_attachments"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("id",      SqlColDesc {colType = SqlBigIntT,    colNullable = Just False})
-       , ("mail_id", SqlColDesc {colType = SqlBigIntT,    colNullable = Just False})
-       , ("name",    SqlColDesc {colType = SqlVarCharT,   colNullable = Just False})
-       , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True })
-       , ("file_id", SqlColDesc {colType = SqlBigIntT,    colNullable = Just True })
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE mail_attachments ("
-          <> "  id        BIGSERIAL PRIMARY KEY"
-          <> ", mail_id   BIGINT    NOT NULL"
-          <> ", name      TEXT      NOT NULL"
-          <> ", content   BYTEA         NULL"
-          <> ", file_id   BIGINT        NULL"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblIndexes = [ tblIndexOnColumn "mail_id" ]
-  , tblForeignKeys = [ (tblForeignKeyColumn "mail_id" "mails" "id")
-                       { fkOnDelete = ForeignKeyCascade }
-                     , (tblForeignKeyColumn "file_id" "files" "id")
-                     ]
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "mail_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "content", colType = BinaryT }
+    , tblColumn { colName = "file_id", colType = BigIntT }
+    ]
+  , tblPrimaryKey = ["id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "mail_id" "mails" "id") { fkOnDelete = ForeignKeyCascade }
+    , tblForeignKeyColumn "file_id" "files" "id"
+    ]
+  , tblIndexes = [tblIndexOnColumn "mail_id"]
   }
 
 tableMailEvents :: Table
 tableMailEvents = tblTable {
     tblName = "mail_events"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("mail_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("event", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("event_read", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE mail_events ("
-          <> "  id BIGSERIAL NOT NULL"
-          <> ", mail_id BIGINT NOT NULL"
-          <> ", event TEXT NOT NULL"
-          <> ", event_read TIMESTAMPTZ NULL"
-          <> ", CONSTRAINT pk_mail_events PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblIndexes = [ tblIndexOnColumn "mail_id" ]
-  , tblForeignKeys = [ (tblForeignKeyColumn "mail_id" "mails" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "mail_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "event", colType = TextT, colNullable = False }
+    , tblColumn { colName = "event_read", colType = TimestampWithZoneT }
+    ]
+  , tblPrimaryKey = ["id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "mail_id" "mails" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
+  , tblIndexes = [tblIndexOnColumn "mail_id"]
   }

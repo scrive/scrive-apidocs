@@ -1,41 +1,93 @@
 module DB.Model where
-import Database.HDBC
+
+import Data.Convertible
+import Database.HDBC.SqlValue
 
 import DB.Core
-
 import DB.SQL (RawSQL)
 
-data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
-  deriving (Eq, Ord, Show)
+data ColumnType
+  = BigIntT
+  | BigSerialT
+  | BinaryT
+  | BoolT
+  | DateT
+  | DoubleT
+  | IntegerT
+  | SmallIntT
+  | TextT
+  | TimestampWithZoneT
+  deriving (Eq, Show)
+
+instance Convertible SqlValue ColumnType where
+  safeConvert v = do
+    t <- safeConvert v
+    case t of
+      "bigint" -> return BigIntT
+      "bytea" -> return BinaryT
+      "boolean" -> return BoolT
+      "date" -> return DateT
+      "double precision" -> return DoubleT
+      "integer" -> return IntegerT
+      "smallint" -> return SmallIntT
+      "text" -> return TextT
+      "character varying" -> return TextT
+      "timestamp with time zone" -> return TimestampWithZoneT
+      _ -> Left ConvertError {
+          convSourceValue = t
+        , convSourceType = "String"
+        , convDestType = "ColumnType"
+        , convErrorMessage = "Unknown data type"
+        }
+
+data TableColumn = TableColumn {
+    colName     :: RawSQL
+  , colType     :: ColumnType
+  , colNullable :: Bool
+  , colDefault  :: Maybe RawSQL
+  } deriving Show
+
+tblColumn :: TableColumn
+tblColumn = TableColumn {
+    colName = error "Column name must be specified"
+  , colType = error "Column type must be specified"
+  , colNullable = True
+  , colDefault = Nothing
+  }
+
+data TableCheck = TableCheck { chkName :: RawSQL, chkCondition :: RawSQL }
+  deriving (Ord, Eq, Show)
 
 data Table = Table {
     tblName             :: RawSQL
   , tblVersion          :: Int
-  , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> m TableValidationResult
-  , tblPutProperties    :: MonadDB m => m ()
-  , tblIndexes          :: [TableIndex]
+  , tblColumns          :: [TableColumn]
+  , tblPrimaryKey       :: [RawSQL]
+  , tblUniques          :: [[RawSQL]]
+  , tblChecks           :: [TableCheck]
   , tblForeignKeys      :: [ForeignKey]
+  , tblIndexes          :: [TableIndex]
+  , tblPutProperties    :: MonadDB m => m ()
   }
 
 tblTable :: Table
 tblTable = Table
   { tblName = error "Table name must be specified"
   , tblVersion = error "Table version must be specified"
-  , tblCreateOrValidate = \_ -> return TVRinvalid
-  , tblPutProperties = return ()
-  , tblIndexes = []
+  , tblColumns = error "Table columns must be specified"
+  , tblPrimaryKey = []
+  , tblUniques = []
+  , tblChecks = []
   , tblForeignKeys = []
+  , tblIndexes = []
+  , tblPutProperties = return ()
   }
 
-data TableIndex = TableIndex
-  { tblIndexColumns     :: [RawSQL]
-  }
+data TableIndex = TableIndex { tblIndexColumns :: [RawSQL] }
   deriving (Eq, Ord, Show)
 
 tblTableIndex :: TableIndex
-tblTableIndex = TableIndex
-  { tblIndexColumns = []
-  }
+tblTableIndex = TableIndex { tblIndexColumns = [] }
 
 tblIndexOnColumn :: RawSQL -> TableIndex
 tblIndexOnColumn column = TableIndex { tblIndexColumns = [column] }

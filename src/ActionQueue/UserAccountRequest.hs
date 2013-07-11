@@ -40,8 +40,8 @@ userAccountRequest :: Action UserID UserAccountRequest (UserID, MagicHash) Sched
 userAccountRequest = Action {
     qaTable = tableUserAccountRequests
   , qaFields = \(user_id, token) -> [
-      sql "user_id" user_id
-    , sql "token" token
+      ("user_id", toSql user_id)
+    , ("token", toSql token)
     ]
   , qaSelectFields = ["user_id", "expires", "token"]
   , qaIndexField = "user_id"

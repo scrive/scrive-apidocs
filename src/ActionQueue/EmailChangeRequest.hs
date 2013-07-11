@@ -35,9 +35,9 @@ emailChangeRequest :: Action UserID EmailChangeRequest (UserID, Email, MagicHash
 emailChangeRequest = Action {
     qaTable = tableEmailChangeRequests
   , qaFields = \(uid, new_email, token) -> [
-      sql "user_id" uid
-    , sql "new_email" new_email
-    , sql "token" token
+      ("user_id", toSql uid)
+    , ("new_email", toSql new_email)
+    , ("token", toSql token)
     ]
   , qaSelectFields = ["user_id", "expires", "new_email", "token"]
   , qaIndexField = "user_id"

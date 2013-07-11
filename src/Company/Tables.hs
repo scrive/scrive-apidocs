@@ -6,64 +6,33 @@ tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
   , tblVersion = 13
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("address", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("zip", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("city", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("ip_address_mask_list", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("email_bordercolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("email_font", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("email_buttoncolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("email_emailbackgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("email_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("email_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("email_logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       , ("signview_logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       , ("signview_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_textfont", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_barscolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_barstextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("signview_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("custom_logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       , ("custom_barscolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("custom_barstextcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("custom_barssecondarycolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("custom_backgroundcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE companies ("
-          <> "  id              BIGSERIAL NOT NULL"
-          <> ", name            TEXT   NOT NULL DEFAULT ''"
-          <> ", number          TEXT   NOT NULL DEFAULT ''"
-          <> ", address         TEXT   NOT NULL DEFAULT ''"
-          <> ", zip             TEXT   NOT NULL DEFAULT ''"
-          <> ", city            TEXT   NOT NULL DEFAULT ''"
-          <> ", country         TEXT   NOT NULL DEFAULT ''"
-          <> ", ip_address_mask_list    TEXT       NULL"
-          <> ", email_bordercolour TEXT    NULL"
-          <> ", email_font         TEXT    NULL"
-          <> ", email_buttoncolour TEXT    NULL"
-          <> ", email_emailbackgroundcolour TEXT    NULL"
-          <> ", email_backgroundcolour TEXT    NULL"
-          <> ", email_textcolour TEXT    NULL"
-          <> ", email_logo BYTEA      NULL"
-          <> ", signview_logo BYTEA      NULL"
-          <> ", signview_textcolour TEXT NULL"
-          <> ", signview_textfont TEXT NULL"
-          <> ", signview_barscolour TEXT NULL"
-          <> ", signview_barstextcolour TEXT NULL"
-          <> ", signview_backgroundcolour TEXT NULL"
-          <> ", custom_logo BYTEA      NULL"
-          <> ", custom_barscolour TEXT NULL"
-          <> ", custom_barstextcolour TEXT NULL"
-          <> ", custom_barssecondarycolour TEXT NULL"
-          <> ", custom_backgroundcolour TEXT NULL"
-          <> ", CONSTRAINT pk_companies PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "number", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "address", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "zip", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "city", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "country", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "ip_address_mask_list", colType = TextT }
+    , tblColumn { colName = "email_bordercolour", colType = TextT }
+    , tblColumn { colName = "email_font", colType = TextT }
+    , tblColumn { colName = "email_buttoncolour", colType = TextT }
+    , tblColumn { colName = "email_emailbackgroundcolour", colType = TextT }
+    , tblColumn { colName = "email_backgroundcolour", colType = TextT }
+    , tblColumn { colName = "email_textcolour", colType = TextT }
+    , tblColumn { colName = "email_logo", colType = BinaryT }
+    , tblColumn { colName = "signview_logo", colType = BinaryT }
+    , tblColumn { colName = "signview_textcolour", colType = TextT }
+    , tblColumn { colName = "signview_textfont", colType = TextT }
+    , tblColumn { colName = "signview_barscolour", colType = TextT }
+    , tblColumn { colName = "signview_barstextcolour", colType = TextT }
+    , tblColumn { colName = "signview_backgroundcolour", colType = TextT }
+    , tblColumn { colName = "custom_logo", colType = BinaryT }
+    , tblColumn { colName = "custom_barscolour", colType = TextT }
+    , tblColumn { colName = "custom_barstextcolour", colType = TextT }
+    , tblColumn { colName = "custom_barssecondarycolour", colType = TextT }
+    , tblColumn { colName = "custom_backgroundcolour", colType = TextT }
+    ]
+  , tblPrimaryKey = ["id"]
   }

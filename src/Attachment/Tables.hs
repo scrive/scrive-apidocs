@@ -6,30 +6,18 @@ tableAttachments :: Table
 tableAttachments = tblTable {
     tblName = "attachments"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("id",      SqlColDesc {colType = SqlBigIntT,            colNullable = Just False})
-       , ("title",   SqlColDesc {colType = SqlVarCharT,           colNullable = Just False})
-       , ("ctime",   SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
-       , ("mtime",   SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
-       , ("user_id", SqlColDesc {colType = SqlBigIntT,            colNullable = Just False})
-       , ("file_id", SqlColDesc {colType = SqlBigIntT,            colNullable = Just False})
-       , ("shared",  SqlColDesc {colType = SqlBitT,               colNullable = Just False})
-       , ("deleted", SqlColDesc {colType = SqlBitT,               colNullable = Just False})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE attachments"
-          <> "( id         BIGSERIAL   NOT NULL"
-          <> ", title      TEXT        NOT NULL"
-          <> ", ctime      TIMESTAMPTZ NOT NULL"
-          <> ", mtime      TIMESTAMPTZ NOT NULL"
-          <> ", user_id    BIGINT      NOT NULL"
-          <> ", file_id    BIGINT      NOT NULL"
-          <> ", shared     BOOL        NOT NULL"
-          <> ", deleted    BOOL        NOT NULL"
-          <> ", CONSTRAINT pk_attachments PRIMARY KEY (id)"
-          <> ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
-                       { fkOnDelete = ForeignKeyCascade } ]
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "title", colType = TextT, colNullable = False }
+    , tblColumn { colName = "ctime", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "mtime", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "shared", colType = BoolT, colNullable = False }
+    , tblColumn { colName = "deleted", colType = BoolT, colNullable = False }
+    ]
+  , tblPrimaryKey = ["id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
   }

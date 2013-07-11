@@ -10,11 +10,12 @@ module ActionQueue.Core (
 import Data.Monoid
 import Data.Typeable
 import DB
+import DB.SQL2
 import MinutesTime
 
 data Action idx t con n = Action {
     qaTable           :: Table
-  , qaFields          :: con -> [ColumnValue]
+  , qaFields          :: con -> [(RawSQL, SqlValue)]
   , qaSelectFields    :: [SQL]
   , qaIndexField      :: SQL
   , qaExpirationDelay :: RawSQL
@@ -52,8 +53,10 @@ instance MonadDB m => DBQuery m (GetExpiredActions idx t con n) [t] where
 data NewAction idx t con n = NewAction (Action idx t con n) MinutesTime con
 instance (MonadDB m, Typeable t) => DBUpdate m (NewAction idx t con n) t where
   update (NewAction Action{..} expires con) = do
-    kRun_ $ mkSQL INSERT qaTable (sql "expires" expires : qaFields con)
-        <+> "RETURNING" <+> sqlConcatComma qaSelectFields
+    kRun_ $ sqlInsert (tblName qaTable) $ do
+      sqlSet "expires" expires
+      mapM_ (uncurry sqlSet) (qaFields con)
+      sqlResult $ sqlConcatComma qaSelectFields
     qaDecode >>= exactlyOneObjectReturnedGuard
 
 data UpdateAction idx t con n = UpdateAction (Action idx t con n) t

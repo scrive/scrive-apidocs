@@ -38,6 +38,7 @@ import Payments.Migrations
 import Attachment.Tables
 import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
+import ThirdPartyStats.Migrations
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
@@ -138,6 +139,7 @@ kontraMigrations = [
   , addSealStatusToDocument
   , removeStatsTables
   , removeEmailDomainFromCompany
+  , asyncEventQueueChangePrimaryKeyToBigSerial
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

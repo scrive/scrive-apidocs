@@ -1,9 +1,6 @@
 module SMS.Model where
 
 import SMS.Data
-import SMS.Tables
-
-import Data.Monoid
 
 import DB
 import DB.SQL2
@@ -50,13 +47,13 @@ instance MonadDB m => DBUpdate m CreateSMS ShortMessageID where
 
 insertSMS :: MonadDB m => String -> String -> String -> String -> MinutesTime -> m (Maybe ShortMessageID)
 insertSMS originator msisdn body sdata to_be_sent =
-  getOne $ mkSQL INSERT tableSMSes [
-      sql "originator" originator
-    , sql "msisdn" msisdn
-    , sql "body" body
-    , sql "to_be_sent" to_be_sent
-    , sql "data" sdata
-    ] <> SQL "RETURNING id" []
+  getOne $ sqlInsert "smses" $ do
+    sqlSet "originator" originator
+    sqlSet "msisdn" msisdn
+    sqlSet "body" body
+    sqlSet "to_be_sent" to_be_sent
+    sqlSet "data" sdata
+    sqlResult "id"
 
 data GetIncomingSMSes = GetIncomingSMSes
 instance MonadDB m => DBQuery m GetIncomingSMSes [ShortMessage] where

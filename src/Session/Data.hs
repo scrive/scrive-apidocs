@@ -45,10 +45,10 @@ session :: Action SessionID Session (Maybe UserID, Maybe UserID, MagicHash, Magi
 session = Action {
     qaTable = tableSessions
   , qaFields = \(uid, puid, token, csrf_token) -> [
-      sql "user_id" uid
-    , sql "pad_user_id" puid
-    , sql "token" token
-    , sql "csrf_token" csrf_token
+      ("user_id", toSql uid)
+    , ("pad_user_id", toSql puid)
+    , ("token", toSql token)
+    , ("csrf_token", toSql csrf_token)
     ]
   , qaSelectFields = ["id", "user_id", "pad_user_id", "expires", "token", "csrf_token"]
   , qaIndexField = "id"
