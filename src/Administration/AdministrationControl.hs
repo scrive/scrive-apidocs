@@ -841,7 +841,7 @@ showAdminUserUsageStats userid = onlySalesOrAdmin $ do
 
   Context{ctxtime} <- getContext
   let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
-                     | daysBack <- [0 .. 30]
+                     | daysBack <- [0 .. 180]
                      , t <- [daysBefore daysBack ctxtime]
                     ]
   stats <- dbQuery $ GetUserUsageStats (Just userid) Nothing timespans
@@ -859,7 +859,7 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
 
   Context{ctxtime} <- getContext
   let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
-                     | daysBack <- [0 .. 30]
+                     | daysBack <- [0 .. 180]
                      , t <- [daysBefore daysBack ctxtime]
                     ]
   stats <- dbQuery $ GetUserUsageStats Nothing (Just companyid) timespans
