@@ -203,8 +203,12 @@ var SignatureDrawerView = Backbone.View.extend({
 
 
                field.setValue(canvas[0].toDataURL("image/jpeg",1.0));
-               field.setValueTMP(image);
-
+               var tmp = field.valueTMP();
+               if (tmp != undefined)
+                  tmp.img = image
+               else
+                  tmp = {img: image}
+               field.setValueTMP(tmp);
                if (callback != undefined) callback();
          };
        }
@@ -227,10 +231,10 @@ var SignatureDrawerView = Backbone.View.extend({
         this.canvas.height(820 * this.model.height() / this.model.width());
         this.container.height(820 * this.model.height() / this.model.width());
         this.picture =  this.canvas[0].getContext('2d');
-        if (this.model.value() != "" && this.model.valueTMP() != undefined && this.model.valueTMP() != "") {
+        if (this.model.value() != "" && this.model.valueTMP() != undefined && this.model.valueTMP().img != undefined && this.model.valueTMP().img != "") {
           var img = new Image();
           img.type = 'image/png';
-          img.src = this.model.valueTMP() ;
+          img.src =  this.model.valueTMP().img ;
           this.canvas[0].getContext('2d').drawImage(img,0,0,820,820 * self.model.height()/ self.model.width());
           this.empty = false;
         }

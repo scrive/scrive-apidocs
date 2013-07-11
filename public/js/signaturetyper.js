@@ -38,14 +38,14 @@ var SignatureTyperModel = Backbone.Model.extend({
   loadFromTMPValue : function(){
     var tmp = this.field().valueTMP();
     if (tmp != undefined && tmp.text != undefined)
-      this.setText(tmp.text);
+       this.set({text : tmp.text});
     if (tmp != undefined && tmp.font != undefined)
-      this.setFont(tmp.font);
+       this.set({font : tmp.font});
   },
   saveToTMPValue : function() {
     var tmp = this.field().valueTMP();
 
-    if (tmp != undefined && tmp instanceof Object) {
+    if (tmp != undefined) {
       tmp.text = this.text();
       tmp.font = this.font();
     }
@@ -115,6 +115,7 @@ window.SignatureTyper = function(args) {
           this.setFont    = function(font) { model.setFont(font);};
           this.saveImage = function(callback) { view.saveImage(callback)};
           this.isTyper = function() { return true;};
+          this.clear = function() {model.setText("");};
 
 
 };

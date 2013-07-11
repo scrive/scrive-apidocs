@@ -191,6 +191,10 @@ var InfoTextInputView = Backbone.View.extend({
               this.input.removeClass("grayed");
           }
         }
+        else {
+          this.input.val("");
+          this.input.removeClass("grayed");
+        }
         return this;
     },
     addFocus: function(){

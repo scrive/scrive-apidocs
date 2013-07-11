@@ -4,7 +4,11 @@
 
 var SignatureDrawOrTypeModel= Backbone.Model.extend({
   defaults: {
-        typingMode: true
+        typingMode: false
+  },
+  initialize : function() {
+    var tmp = this.field().valueTMP();
+    if (tmp != undefined && tmp.typingMode) this.set({typingMode : true});
   },
   typingMode : function() {
      return this.get("typingMode") == true;
@@ -14,6 +18,10 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
   },
   toogleMode : function() {
     this.set({typingMode: !this.typingMode()});
+
+    var tmp = this.field().valueTMP();
+    if (tmp != undefined ) tmp.typingMode = this.typingMode();
+
   },
   onClose : function() {
      return this.get("onClose")();
@@ -69,6 +77,8 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         else {
           var textInput = new InfoTextInput({
                                infotext : "Please type your name",
+                               cssClass : "float-left",
+                               style: "margin-right:10px;border: 1px solid #7A94B8;",
                                value : self.model.typerOrDrawer().text(),
                                onChange: function(val) {
                                  self.model.typerOrDrawer().setText(val);
@@ -76,23 +86,39 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                           });
           var fontSelect = new Select({
                                 name : "Change font",
-                                cssClass : "float-right",
+                                cssClass : "float-left",
                                 options: [
-                                  {name : "Nice font 1", onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');} },
-                                  {name : "Nice font 2", onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');} },
-                                  {name : "Nice font 3", onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');} }
+                                  {  name : ""
+                                   , style:"display:inline-block;height:20px;width:100px;background-image: url(/text_to_image?width=100&height=20&transparent=true&left=true&font=JenniferLynne&text=Font1)"
+                                   , onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');}
+                                  },
+                                  {  name : ""
+                                   , style:"display:inline-block;height:20px;width:100px;background-image: url(/text_to_image?width=100&height=20&transparent=true&left=true&font=TalkingToTheMoon&text=Font1)"
+                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');}
+                                  },
+                                  {  name : ""
+                                   , style:"display:inline-block;height:20px;width:100px;background-image: url(/text_to_image?width=100&height=20&transparent=true&left=true&font=TheOnlyException&text=Font1)"
+                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');} }
                                 ]
                             });
-          var row2 = $("<div style='margin:4px 0px'>");
+          var row2 = $("<div style='margin:4px 0px;height:32px'>");
           header.append(row2);
-          row2.append(textInput.el()).append(fontSelect.el());
+          row2.append(textInput.el())
+              .append(fontSelect.el())
+              .append($("<label class='clickable' style='float:right'>Clear image</label>").click(
+                  function() {
+                      textInput.setValue("");
+                      textInput.focus();
+                      return false;
+                  })
+          );
         }
-
         return header;
     },
     drawingOrTypingBox : function() {
         var model = this.model;
         var div = $("<div class='signatureDrawingBoxWrapper'>");
+        if (this.model.drawingMode()) div.css("border-color","#7A94B8");
         return div.append(this.model.typerOrDrawer().el()).width(820).height(820 * this.height / this.width);
     },
     acceptButton : function() {

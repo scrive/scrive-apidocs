@@ -111,6 +111,7 @@ window.Signatory = Backbone.Model.extend({
         return this.get("document");
     },
     saveurl: function() {
+      console.log("Generating save url");
       return "/s/" + this.document().id + "/" + this.signatoryid();
     },
     signIndex: function() {
