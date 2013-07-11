@@ -309,6 +309,7 @@ window.Document = Backbone.Model.extend({
               url : "/api/frontend/ready/" + this.documentid(),
               timezone: jstz.determine().name(),
               method: "POST",
+              expectedType : "json",
               screenshots: JSON.stringify(document.get("screenshots")),
               ajaxtimeout : 120000
           });
