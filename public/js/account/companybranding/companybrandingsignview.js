@@ -207,9 +207,6 @@ window.CompanyBrandingSignViewView = Backbone.View.extend({
     var options = $("<div style='width: 220px; margin:20px 0px 20px 20px; display: inline-block;vertical-align: top;height: 100%'/>");
     container.append(options);
 
-
-    options.append($("<h5 style='margin-bottom: 10px'/>").text(localization.companyBranding.customize));
-
     options.append($("<div class='option' style='display:block'/>").append(this.model.signviewlogo().el()));
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.signviewtextfont().el()));
@@ -222,7 +219,7 @@ window.CompanyBrandingSignViewView = Backbone.View.extend({
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.signviewbackgroundcolour().el()));
 
-    var sample = $("<div style='width: 600px;   margin:20px; padding-left: 30px; border-left: 1px solid #333333; display: inline-block;'/>");
+    var sample = $("<div style='width: 600px; margin:20px; display: inline-block;'/>");
     container.append(sample.append(new CompanyBrandingSignViewSampleView({model : this.model, el : $("<div/>")}).el));
 
     $(this.el).append("<div class='clearfix'></div>");

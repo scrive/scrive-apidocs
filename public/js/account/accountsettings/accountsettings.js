@@ -481,6 +481,7 @@ var AccountSettingsView = Backbone.View.extend({
 
        box.append(this.accountSettings());
        box.append(this.companySettings());
+
        var footerbox = $("<div class='account-footer'/>");
        box.append(footerbox);
        footerbox.append(this.saveButton());

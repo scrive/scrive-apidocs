@@ -923,8 +923,7 @@
 
             var div = $('<div class="col" />');
             var header = $('<div class="account-header" />')
-                .append($('<h2 />')
-                        .text(localization.payments.table.currentplan));
+                .text(localization.payments.table.currentplan);
             var table = $('<div class="account-body" />')
                 .append($('<div class="plan-name" />')
                         .text(localization.payments.plans[model.paidPlan()].name))

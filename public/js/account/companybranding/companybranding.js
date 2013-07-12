@@ -189,7 +189,7 @@ window.CompanyBrandingView = Backbone.View.extend({
     $(this.el).append(container);
     container.append(model.tabs().el());
 
-    container.append($("<div class='float-right save'/>").append(this.saveButton()));
+    container.append($("<div class='float-left save'/>").append(this.saveButton()));
     $(this.el).append("<div class='clearfix'></div>");
     return this;
   }
