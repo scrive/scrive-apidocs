@@ -16,7 +16,6 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Control.Monad.Base
-import Control.Concurrent.MVar
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Mails.MailsConfig
 
@@ -294,9 +293,12 @@ postBackCache pr = do
 handleRecurlyPostBack :: Kontrakcja m => m ()
 handleRecurlyPostBack = do
   Log.payments "Got a Push notification from Recurly"
-  vbody <- rqBody <$> askRq
-  bdy <- liftIO $ BSL.toString <$> unBody <$> takeMVar vbody
-  case parsePush bdy of
+
+  -- takeRequestBody uses tryTakeMVar which never blocks
+  -- so even if the body mvar was already read (e.g. by decodeBody)
+  -- we will never block here
+  vbody <- askRq >>= takeRequestBody
+  case parsePush =<< BSL.toString <$> unBody <$> vbody of
     Just ps -> postBackCache ps
     _       -> return ()
 
