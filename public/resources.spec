@@ -159,9 +159,9 @@ set systemPage
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js
  js   js/validation.js
- js   js/signaturetyper.js
- js   js/signaturedrawer.js
- js   js/signaturemodal.js
+ js   js/signaturemodal/signaturetyper.js
+ js   js/signaturemodal/signaturedrawer.js
+ js   js/signaturemodal/signaturemodal.js
  js   js/fieldplacementview.js
  js   js/padview.js
  js   js/fileverifier.js

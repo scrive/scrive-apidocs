@@ -1,3 +1,19 @@
+/* Modal for drawing or typing signature. For old IE only typing mode is available.
+ * Value, as Base64 image is saved to field value.
+ * valueTMP of field is ussed to store some internal values (for reediting).
+ *
+ * Usage:
+ *
+ *    new SignatureDrawOrTypeModal({
+ *          field : field // must be of type signature
+ *          width : widthOfFinalImage
+ *          height: heightOfFinalImage
+ *    })
+ *
+ * Final image will be larger then width and height for quality reasons, but it will hold ration.
+ * Note that expected size of signatue image is not directly connected to field, but rather it depends on placements and/or rendered page size.
+ *
+ */
 
 (function(window){
 
@@ -67,12 +83,14 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         header.append($("<div style='font-size:20px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
+        if (!BrowserInfo.isIE8orLower()) {
         row1.append($("<div style='display:inline-block'/>").text(localization.pad.or).append($("<label class='clickable' style='margin-left:5px'/>")
                                                             .text(this.model.drawingMode() ? localization.pad.typeSignature : localization.pad.drawSignature)
                                                             .click(function() { self.model.toogleMode(); return false;}))
                    );
+        }
         if (this.model.drawingMode()) {
-          row1.append($("<label class='clickable' style='float:right'>Clear image</label>").click(function() { self.model.typerOrDrawer().clear(); return false;}));
+          row1.append($("<label class='clickable' style='float:right'/>").text(localization.pad.cleanImage).click(function() { self.model.typerOrDrawer().clear(); return false;}));
         }
         else {
           var textInput = new InfoTextInput({
@@ -84,28 +102,42 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                                  self.model.typerOrDrawer().setText(val);
                                }
                           });
+          var fontBackground = function(fontName) {
+                            var text = "";
+                            if (fontName == "JenniferLynne")
+                              text = localization.pad.font1;
+                            else if (fontName == "TalkingToTheMoon")
+                              text = localization.pad.font2;
+                            else
+                              text = localization.pad.font3;
+                            return "background-image: url(/text_to_image?width=200&height=50&transparent=true&left=true&font="+fontName+"&text="+  encodeURIComponent(text)+ ")";
+                          };
           var fontSelect = new Select({
-                                name : "Change font",
+                                name : "",
                                 cssClass : "float-left",
+                                style : "background-position: 10px -10px;height:30px;" + fontBackground(self.model.typerOrDrawer().font()),
                                 options: [
                                   {  name : ""
-                                   , style:"display:inline-block;height:20px;width:100px;background-image: url(/text_to_image?width=100&height=20&transparent=true&left=true&font=JenniferLynne&text=Font1)"
-                                   , onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');}
+                                   , disabled : (self.model.typerOrDrawer().font() == "JenniferLynne")
+                                   , style: "display:inline-block;height:20px;width:120px;background-position: 0px -15px;"  + fontBackground("JenniferLynne")
+                                   , onSelect: function() {self.model.typerOrDrawer().setFont('JenniferLynne');self.render();return true;}
                                   },
                                   {  name : ""
-                                   , style:"display:inline-block;height:20px;width:100px;background-image: url(/text_to_image?width=100&height=20&transparent=true&left=true&font=TalkingToTheMoon&text=Font1)"
-                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');}
+                                   , disabled : (self.model.typerOrDrawer().font() == "TalkingToTheMoon")
+                                   , style:"display:inline-block;height:20px;width:120px;background-position: 0px -15px;"  +  fontBackground("TalkingToTheMoon")
+                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TalkingToTheMoon');self.render();return true;}
                                   },
                                   {  name : ""
-                                   , style:"display:inline-block;height:20px;width:100px;background-image: url(/text_to_image?width=100&height=20&transparent=true&left=true&font=TheOnlyException&text=Font1)"
-                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');} }
+                                   , disabled : (self.model.typerOrDrawer().font() == "TheOnlyException")
+                                   , style: "display:inline-block;height:20px;width:120px;background-position: 0px -15px;"  +  fontBackground("TheOnlyException")
+                                   , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');self.render();return true;} }
                                 ]
                             });
           var row2 = $("<div style='margin:4px 0px;height:32px'>");
           header.append(row2);
           row2.append(textInput.el())
               .append(fontSelect.el())
-              .append($("<label class='clickable' style='float:right'>Clear image</label>").click(
+              .append($("<label class='clickable' style='float:right'/>").text(localization.pad.cleanImage).click(
                   function() {
                       textInput.setValue("");
                       textInput.focus();
@@ -168,12 +200,6 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
 window.SignatureDrawOrTypeModal = function(args){
 
         var self = this;
-        if (BrowserInfo.isIE8orLower())
-        {
-            alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
-            return;
-        }
-
         var width = BrowserInfo.isSmallScreen() ? 980 : 900;
         var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
         var modal = $("<div class='modal'></div>");
@@ -190,6 +216,7 @@ window.SignatureDrawOrTypeModal = function(args){
                                                   width: args.width,
                                                   height: args.height,
                                                   modal : modal,
+                                                  typingMode : (BrowserInfo.isIE8orLower() ? true : undefined),
                                                   onClose : function() {
                                                     modal.removeClass('active');
                                                     document.ontouchmove = function(e){

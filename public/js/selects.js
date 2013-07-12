@@ -19,6 +19,7 @@
                         value* : "1" // Value that will be propagated to onSelect
                         onSelect* : function(v) {} // Function to be called on selection. It overwrites top level function
                         style* : "font-size: 8px" // Extra styling of label
+                        disabled : false // If set to tru, option will not be visible
                       },
                       { name : "Option 2"
                         value* : "2"
@@ -47,7 +48,8 @@
 var SelectOptionModel = Backbone.Model.extend({
   defaults : {
       onSelect : function(){return false;},
-      style : ""
+      style : "",
+      disabled : false
   },
   name : function(){
        return this.get("name");
@@ -61,6 +63,9 @@ var SelectOptionModel = Backbone.Model.extend({
   selected : function() {
        if (this.get("onSelect")(this.value()) == true)
            this.trigger("done");
+  },
+  disabled : function() {
+      return this.get("disabled");
   }
 });
 
@@ -240,7 +245,8 @@ var SelectView = Backbone.View.extend({
                                 .css("width", this.model.optionsWidth());
 
               _.each(model.options(),function(e){
-                    options.append($(new SelectOptionView({model : e, el : $("<li/>")}).el));
+                    if (!e.disabled())
+                      options.append($(new SelectOptionView({model : e, el : $("<li/>")}).el));
               });
 
               // Prepare area simillar to $(this.el) with extra styles, copy of button and options appended, positioned over current el

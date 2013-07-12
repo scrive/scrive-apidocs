@@ -1,3 +1,6 @@
+/* Internal of SignatureDrawOrTypeModal - panel for drawing a signature.
+   Internally canvas is used.
+ */
 
 (function(window){
 

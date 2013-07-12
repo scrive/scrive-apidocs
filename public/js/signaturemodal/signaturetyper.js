@@ -1,3 +1,6 @@
+/* Internal of SignatureDrawOrTypeModal - preview of text rendered using some `handwriting` looking font.
+   View is img based. No canvas is used.
+ */
 
 (function(window){
 
