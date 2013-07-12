@@ -229,7 +229,9 @@ var TabsView = Backbone.View.extend({
             container.addClass('inner');
             var li = $('<li/>');
             li.addClass('float-left');
-            li.append($('<h4/>').text(model.innerText() + ' > '));
+            var h4 = $('<h4/>').text(model.innerText());
+            h4.append($('<img src="/img/gray-arrow.png" />').css('margin-left', '10px'));
+            li.append(h4);
             tabsrow.append(li);
         }
         _.each(this.model.tabs(), function(tab)

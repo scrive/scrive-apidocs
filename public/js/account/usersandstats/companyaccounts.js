@@ -24,7 +24,6 @@ var CompanyAccountsModel = Backbone.Model.extend({
     var self = this;
     return new Button({
         color: "green",
-        size: "tiny",
         text: localization.account.companyAccounts.createNewButtonText,
         onClick: function() {
             mixpanel.track('Click new account');

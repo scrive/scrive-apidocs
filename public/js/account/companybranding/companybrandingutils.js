@@ -478,8 +478,7 @@ var CompanyBrandingLogoView = Backbone.View.extend({
     });
     var checkboxlabel = $("<label />").append(model.label());
 
-    this.upload = new UploadButton({color: 'blue',
-                                     size: 'tiny',
+    this.upload = new UploadButton({color: 'black',
                                      text: localization.companyBranding.selectImageLabel,
                                      width: 150,
                                      name: 'logo',
