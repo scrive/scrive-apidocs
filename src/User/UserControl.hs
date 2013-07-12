@@ -176,6 +176,7 @@ getCompanyInfoUpdate = do
   mcompanyzip <- getField "companyzip"
   mcompanycity <- getField "companycity"
   mcompanycountry <- getField "companycountry"
+  mcompanysmsoriginator <- getField "companysmsoriginator"
   return $ \ci ->
       ci {
          companyname = fromMaybe (companyname ci) mcompanyname
@@ -184,6 +185,7 @@ getCompanyInfoUpdate = do
       ,  companyzip = fromMaybe (companyzip ci) mcompanyzip
       ,  companycity = fromMaybe (companycity ci) mcompanycity
       ,  companycountry = fromMaybe (companycountry ci) mcompanycountry
+      ,  companysmsoriginator = fromMaybe (companysmsoriginator ci) mcompanysmsoriginator
       }
   where
     getValidField = getDefaultedField ""

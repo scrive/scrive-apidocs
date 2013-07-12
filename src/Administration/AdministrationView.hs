@@ -175,6 +175,8 @@ companyFields mc = do
         F.value "companycity" $  maybe "" (companycity . companyinfo) mc
         F.value "companycountry" $ maybe "" (companycountry . companyinfo) mc
         F.value "companyipaddressmasklist" $ maybe "" (intercalate "," . fmap show . companyipaddressmasklist . companyinfo) mc
+        F.value "companysmsoriginator" $ maybe "" (companysmsoriginator . companyinfo) mc
+
 
 {-| Full fields set about user -}
 userFields :: Monad m => User -> Fields m ()

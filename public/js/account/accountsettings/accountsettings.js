@@ -141,7 +141,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       , companyzip :      this.user().hasCompany() ? this.company().zip()  : undefined
       , companycity :     this.user().hasCompany() ? this.company().city()  : undefined
       , companycountry :  this.user().hasCompany() ? this.company().country()  : undefined
-      , companysmsoriginator : this.user().hasCompany() ? this.company().companysmsoriginator()  : undefined
+      , companysmsoriginator : this.user().hasCompany() ? this.company().smsoriginator()  : undefined
     }, {silent : true});
     this.trigger("reset");
   },
