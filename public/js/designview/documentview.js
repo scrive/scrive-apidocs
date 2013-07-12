@@ -113,13 +113,13 @@
                 e.preventDefault();
                 view.$el.html(view.loading());
                 uploadExampleDocument(
-                    function() { 
+                    function() {
                         mixpanel.track('Upload main file', {
                             'example': true
                         });
-                        
+
                         document.setTitle(localization.designview.exampledocument.documentTitle);
-                        // Set and save the invitation message, and let the process 
+                        // Set and save the invitation message, and let the process
                         // tab know (setInvitationMessage is silent:ed).
                         document.setInvitationMessage(localization.designview.exampledocument.documentInvitationMessage);
                         document.trigger('change');
@@ -127,12 +127,12 @@
                             document.killAllPlacements();
                             document.recall();
                         });
-                    }, 
-                    function() { 
+                    },
+                    function() {
                         mixpanel.track('Error',
                         {Message: 'could not upload example document'});
-                        
-                    }, 
+
+                    },
                     "/pdf/example_document_" + localization.code + ".base64.pdf",
                     document.documentid()
                 );
@@ -193,7 +193,7 @@
                                 mixpanel.track('Error',
                                                {Message: 'could not upload main file'});
                             }
-                            document.trigger('change');
+                            document.recall();
                         }
              });
             var input = UploadButton.init({    color: 'green',
