@@ -231,14 +231,13 @@ checkDBConsistency logger tables migrations = do
             uniquesToSQL = intersperse ", " $ map uniqueToSQL tblUniques
             checksToSQL = intersperse ", " $ map checkToSQL tblChecks
 
-        primaryKeyToSQL = if null tblPrimaryKey then
-                              ""
-                          else
-                                  "CONSTRAINT"
-                              <+> genPrimaryKeyName
-                              <+> "PRIMARY KEY ("
-                              <+> intersperse ", " (map raw tblPrimaryKey)
-                              <+> ")"
+        primaryKeyToSQL = if null tblPrimaryKey
+          then ""
+          else "CONSTRAINT"
+            <+> genPrimaryKeyName
+            <+> "PRIMARY KEY ("
+            <+> intersperse ", " (map raw tblPrimaryKey)
+            <+> ")"
 
         uniqueToSQL unique = "CONSTRAINT"
             <+> genUniqueName unique
