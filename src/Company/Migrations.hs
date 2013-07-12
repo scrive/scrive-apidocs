@@ -154,15 +154,3 @@ removeEmailDomainFromCompany =
       kRunRaw "ALTER TABLE companies DROP COLUMN email_domain"
   }
 
-addSMSOriginatorToCompany :: MonadDB m => Migration m
-addSMSOriginatorToCompany =
-  Migration {
-    mgrTable = tableCompanies
-  , mgrFrom = 13
-  , mgrDo = do
-      kRunRaw "ALTER TABLE companies ADD COLUMN sms_originator TEXT NOT NULL DEFAULT ''"
-      kRunRaw "UPDATE companies SET sms_originator = name WHERE name IS NOT NULL"
-
-
-  }
-

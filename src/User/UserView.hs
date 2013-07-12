@@ -118,7 +118,9 @@ companyJSON ctx company editable = runJSONGenT $ do
     value "zip" $ companyzip $ companyinfo company
     value "companyname" $ getCompanyName company
     value "companynumber" $ getCompanyNumber company
+    value "smsoriginator" $ companysmsoriginator $ companyinfo company
     valueM "companyui" $ companyUIJson ctx company editable
+
 
 userStatsToJSON :: (MinutesTime -> String) -> [UserUsageStats] -> [JSValue]
 userStatsToJSON formatTime uuss = map tojson uuss

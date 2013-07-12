@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 14
+  , tblVersion = 13
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -15,7 +15,6 @@ tableCompanies = tblTable {
     , tblColumn { colName = "city", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "country", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
-    , tblColumn { colName = "sms_originator", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "email_bordercolour", colType = TextT }
     , tblColumn { colName = "email_font", colType = TextT }
     , tblColumn { colName = "email_buttoncolour", colType = TextT }
@@ -34,6 +33,8 @@ tableCompanies = tblTable {
     , tblColumn { colName = "custom_barstextcolour", colType = TextT }
     , tblColumn { colName = "custom_barssecondarycolour", colType = TextT }
     , tblColumn { colName = "custom_backgroundcolour", colType = TextT }
+    , tblColumn { colName = "sms_originator", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+
     ]
   , tblPrimaryKey = ["id"]
   }

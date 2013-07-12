@@ -158,6 +158,7 @@ window.Company = Backbone.Model.extend({
       zip       : "",
       city      : "",
       country    : "",
+      smsoriginator : "",
       companyui : undefined
   },
   initialize : function(args) {
@@ -183,6 +184,9 @@ window.Company = Backbone.Model.extend({
   },
   country : function() {
      return this.get("country");
+  },
+  smsoriginator : function() {
+     return this.get("smsoriginator");
   },
   companyui : function() {
      return this.get("companyui");
