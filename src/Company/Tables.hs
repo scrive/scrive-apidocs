@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 13
+  , tblVersion = 14
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -15,6 +15,7 @@ tableCompanies = tblTable {
     , tblColumn { colName = "city", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "country", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
+    , tblColumn { colName = "sms_originator", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "email_bordercolour", colType = TextT }
     , tblColumn { colName = "email_font", colType = TextT }
     , tblColumn { colName = "email_buttoncolour", colType = TextT }

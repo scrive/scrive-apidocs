@@ -185,6 +185,7 @@ jsonCompanies = onlySalesOrAdmin $ do
                     value "companyzip"     $ companyzip . companyinfo $ company
                     value "companycity"    $ companycity . companyinfo $ company
                     value "companycountry" $ companycountry . companyinfo $ company
+                    value "companysmsoriginator" $ companysmsoriginator . companyinfo $ company
                 value "link" $ show $ LinkCompanyAdmin $ Just $ companyid $ company
             value "paging" $ pagingParamsJSON companies
 
@@ -520,6 +521,7 @@ getCompanyInfoChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
+  mcompanysmsoriginator <- getField "companysmsoriginator"
   return $ \CompanyInfo{..} ->  CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
@@ -528,6 +530,7 @@ getCompanyInfoChange = do
       , companycity        = fromMaybe companycity mcompanycity
       , companycountry     = fromMaybe companycountry mcompanycountry
       , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
+      , companysmsoriginator = fromMaybe companysmsoriginator mcompanysmsoriginator
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}

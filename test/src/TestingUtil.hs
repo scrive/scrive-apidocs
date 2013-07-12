@@ -118,6 +118,7 @@ instance Arbitrary CompanyInfo where
     d <- arbitrary
     e <- arbitrary
     f <- arbitrary
+    g <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -125,6 +126,7 @@ instance Arbitrary CompanyInfo where
                          , companycity       = e
                          , companycountry    = f
                          , companyipaddressmasklist = []
+                         , companysmsoriginator = g
                          }
 
 instance Arbitrary MagicHash where
@@ -503,6 +505,7 @@ addNewCompany = do
     companyzip <- rand 10 $ arbString 3 30
     companycity <- rand 10 $ arbString 3 30
     companycountry <- rand 10 $ arbString 3 30
+    companysmsoriginator <- rand 10 $ arbString 0 10
     _ <- dbUpdate $ SetCompanyInfo cid $ CompanyInfo
          { companyname = companyname
          , companynumber = companynumber
@@ -511,6 +514,7 @@ addNewCompany = do
          , companycity = companycity
          , companycountry = companycountry
          , companyipaddressmasklist = []
+         , companysmsoriginator = companysmsoriginator
          }
     Just company <- dbQuery $ GetCompany cid
     return company
