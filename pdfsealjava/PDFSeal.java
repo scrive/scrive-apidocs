@@ -696,6 +696,20 @@ public class PDFSeal {
         reader.close();
     }
 
+    public static void addFileAttachments(PdfReader reader, Iterable<SealAttachment> attachments, OutputStream os )
+        throws IOException, DocumentException
+    {
+        PdfStamper stamper = new PdfStamper(reader, os);
+
+        for( SealAttachment attachment : attachments ) {
+            byte data[] = Base64.decode(attachment.fileBase64Content);
+            if(data!=null ) {
+                stamper.addFileAttachment(attachment.fileName, data, null, attachment.fileName);
+            }
+        }
+        stamper.close();
+        reader.close();
+    }
     /**
      * Manipulates a PDF file src with the file dest as result
      * @param src the original PDF
@@ -711,6 +725,8 @@ public class PDFSeal {
             ByteArrayOutputStream sealPagesRaw = new ByteArrayOutputStream();
             ByteArrayOutputStream sealPages = new ByteArrayOutputStream();
             ByteArrayOutputStream sourceWithFields = new ByteArrayOutputStream();
+            ByteArrayOutputStream concatenatedPdf = new ByteArrayOutputStream();
+
 
             prepareSealPages(spec, sealPagesRaw);
 
@@ -720,7 +736,11 @@ public class PDFSeal {
 
             concatenatePdfsInto(new PdfReader[] { new PdfReader(sourceWithFields.toByteArray()),
                                                   new PdfReader(sealPages.toByteArray()) },
-                new FileOutputStream(spec.output));
+                concatenatedPdf);
+
+            addFileAttachments(new PdfReader(concatenatedPdf.toByteArray()),
+                               spec.attachments,
+                               new FileOutputStream(spec.output));
         }
         else {
             stampFieldsAndPaginationOverPdf(spec, new PdfReader(spec.input), getAllFields(spec), new FileOutputStream(spec.output));
