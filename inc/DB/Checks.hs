@@ -204,17 +204,20 @@ checkDBConsistency logger tables migrations = do
           <+> colTypeToSQL colType
           <+> if colNullable then "NULL" else "NOT NULL"
           <+> maybe "" ("DEFAULT" <+>) colDefault
-          where
-            colTypeToSQL BigIntT = "BIGINT"
-            colTypeToSQL BigSerialT = "BIGSERIAL"
-            colTypeToSQL BinaryT = "BYTEA"
-            colTypeToSQL BoolT = "BOOLEAN"
-            colTypeToSQL DateT = "DATE"
-            colTypeToSQL DoubleT = "DOUBLE PRECISION"
-            colTypeToSQL IntegerT = "INTEGER"
-            colTypeToSQL SmallIntT = "SMALLINT"
-            colTypeToSQL TextT = "TEXT"
-            colTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
+
+        colTypeToSQL BigIntT = "BIGINT"
+        colTypeToSQL BigSerialT = "BIGSERIAL"
+        colTypeToSQL BinaryT = "BYTEA"
+        colTypeToSQL BoolT = "BOOLEAN"
+        colTypeToSQL DateT = "DATE"
+        colTypeToSQL DoubleT = "DOUBLE PRECISION"
+        colTypeToSQL IntegerT = "INTEGER"
+        colTypeToSQL SmallIntT = "SMALLINT"
+        colTypeToSQL TextT = "TEXT"
+        colTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
+
+        colTypeToSQLForAlter BigSerialT = colTypeToSQL BigIntT
+        colTypeToSQLForAlter x = colTypeToSQL x
 
         createStatement = mconcat [
             raw $ "CREATE TABLE" <+> tblName <+> "("
@@ -280,7 +283,7 @@ checkDBConsistency logger tables migrations = do
             validateNames True = mempty
             validateNames False = ValidationError $ errorMsg ("no. " ++ show (n+1)) "names" (unRawSQL . colName)
             validateTypes True = mempty
-            validateTypes False = ValidationError $ errorMsg cname "types" (show . colType)
+            validateTypes False = ValidationOk ["ALTER TABLE" <+> raw tblName <+> "ALTER COLUMN" <+> raw (colName d) <+> "TYPE" <+> colTypeToSQLForAlter (colType d)]
             validateNullables True = mempty
             validateNullables False = ValidationOk ["ALTER TABLE" <+> raw tblName <+> "ALTER COLUMN" <+> raw (colName d) <+> (if colNullable d then "DROP" else "SET") <+> "NOT NULL"]
             validateDefaults True = mempty
@@ -290,7 +293,6 @@ checkDBConsistency logger tables migrations = do
                   Just v -> "SET DEFAULT" <+> raw v
                   Nothing -> "DROP DEFAULT"
 
-            cname = "'" ++ unRawSQL (colName d) ++ "'"
             errorMsg ident attr f = "Column " ++ ident ++ " differs in " ++ attr ++ " (definition: " ++ f d ++ ", database: " ++ f c ++ ")"
 
         checkPrimaryKey :: [RawSQL] -> Maybe (RawSQL, Set RawSQL) -> ValidationResult
