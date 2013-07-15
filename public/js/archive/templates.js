@@ -13,16 +13,6 @@ window.TemplatesListDefinition = function(archive) { return {
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
-    selectfiltering : [ new SelectFiltering({
-                             name: "process",
-                             textWidth : "106px",
-                             options: [
-                                        {name: localization.filterByProcess.showAllProcessesTemplates, value: ""},
-                                        {name: localization.filterByProcess.showContractsOnly, value: "contract"},
-                                        {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
-                                        {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
-                                      ]})
-            ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.templates.columns.shared, width:"60px", field:"shared", special: "rendered",
@@ -46,15 +36,6 @@ window.TemplatesListDefinition = function(archive) { return {
                          return res;
                   }}),
         new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
-        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process",
-              rendering: function(value, _idx, _model) {
-                      var txt = "";
-                      if( localization.process[value] !== undefined ) {
-                          txt = localization.process[value].shortName;
-                      }
-                      return jQuery("<span />").text(txt);
-                    }
-        })
         ],
     actions : [
        new ListAction({

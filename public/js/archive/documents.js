@@ -75,24 +75,14 @@ window.DocumentCellsDefinition = function(archive) { return  [
                         return actionIcon;
                      }
 
-                 }}),
-        new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.type, width:"50px", field:"process",
-                  rendering: function(value, _idx, _model) {
-                      var txt = "";
-                      if( localization.process[value] !== undefined ) {
-                          txt = localization.process[value].shortName;
-                      }
-                      return jQuery("<span />").text(txt);
-                    }
-                 })
+                 }})
         ];
 };
 
 window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
             new SelectFiltering({
                              name: "status",
-                             textWidth : "107px",
+                             textWidth : "109px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
@@ -100,18 +90,10 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                                          {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
                                          {name: localization.filterByStatus.showSigned,    value: "[signed]"}
                                         ])}),
-            new SelectFiltering({
-                             name: "process",
-                             textWidth : "107px",
-                             options: [ {name: localization.filterByProcess.showAllProcesses,  value: ""},
-                                        {name: localization.filterByProcess.showContractsOnly, value: "contract"},
-                                        {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
-                                        {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
-                                      ]}),
             archive.forCompanyAdmin() ?
               [new SelectAjaxFiltering({
                              name: "sender",
-                             textWidth : "107px",
+                             textWidth : "109px",
                              text : "sender",
                              optionsURL : "/companyaccounts",
                              defaultName : localization.filterByAuthor.showAnyAuthor,
@@ -131,7 +113,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                  })] : [],
             new IntervalDoubleSelectFiltering({
                              name: "time",
-                             textWidth : "107px",
+                             textWidth : "109px",
                              selectedBottomPrefix : localization.filterByTime.filterForm,
                              selectedTopPrefix :    localization.filterByTime.filterTo ,
                              options: function() {

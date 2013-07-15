@@ -14,16 +14,6 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
               sorting: new Sorting({ fields: ["title", "time", "process"]}),
               paging: new Paging({}),
               textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
-              selectfiltering : [ new SelectFiltering({
-                                      name: "process",
-                                      textWidth : "100px",
-                                      options: [
-                                                  {name: localization.filterByProcess.showAllProcesses, value: ""},
-                                                  {name: localization.filterByProcess.showContractsOnly, value: "contract"},
-                                                  {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
-                                                  {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
-                                                ]})
-                      ],
               cells : [
                   new Cell({name: localization.archive.templates.columns.shared, width:"52px", field:"shared", special: "rendered",
                             rendering: function(shared) {
@@ -71,16 +61,7 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
                                           return false;
                                       });
                                       return link;
-                                  }}),
-                  new Cell({name: localization.archive.templates.columns.type, width:"80px", field:"process",
-                        rendering: function(value, _idx, _model) {
-                                var txt = "";
-                                if( localization.process[value] !== undefined ) {
-                                    txt = localization.process[value].shortName;
-                                }
-                                return jQuery("<span />").text(txt);
-                              }
-                  })
+                                  }})
                   ]
               })
         })

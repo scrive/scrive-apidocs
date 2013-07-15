@@ -26,14 +26,6 @@ window.DocumentAdminListDefinition = function(isAdmin, userid) {
                         return jQuery("<small/>").text(value);
                     }
         }),
-        new Cell({name: "Service", width:"40px", field:"service", special: "rendered",
-                    rendering: function(value, idx, doc) {
-                        if (value == undefined)
-                            return jQuery("<small/>").text(value);
-
-                        return jQuery("<small>Scrive</small>");
-                    }
-        }),
         new Cell({name: "Status", width:"40px", field:"status",  special: "rendered",
                     rendering: function(value, idx, doc) {
                         return jQuery("<small/>").text(value);
