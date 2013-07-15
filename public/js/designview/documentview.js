@@ -79,9 +79,10 @@
             return div;
         },
         refreshMargins : function() {
-          // TODO get rid of the arbitrary numbers, where does 256 come from?
+          console.log(this.wrapperDiv);
+          // TODO get rid of the arbitrary numbers, where does these constants come from?
           if (this.wrapperDiv != undefined)
-            this.wrapperDiv.css("height", ($(window).height() - 256) + "px");
+            this.wrapperDiv.css("height", ($(window).height() - 216) + "px");
           if (this.wrapperDiv != undefined)
             this.innerDiv.css("margin-top", (Math.floor($(window).height() - 256)/2) - 60) + "px";
         },
@@ -201,6 +202,7 @@
              });
             return new UploadButton({    color: 'green',
                                      size: 'big',
+                                     shape: 'rounded',
                                      text: localization.uploadButton,
                                      width: 245,
                                      name: 'file',

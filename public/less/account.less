@@ -1,11 +1,15 @@
-.account .new-mail-button {
-    width: 40px;
+@import 'branding/colors.less';
+
+.account input {
+    padding-left: 10px;
 }
+
 .account input.emailinput[type="text"],
 .account input.newpassword[type="text"] {
     width: 140px;
     margin-right: 10px;
     border-color: transparent;
+    background: transparent;
     color: #222;
 }
 .account input[type="text"],
@@ -20,16 +24,12 @@
 }
 
 .account-body table td {
-   padding: 4px;
+   padding: 5px;
    text-align: right;
-}
 
-.account-body table td:first-child {
-   width: 120px;
-}
-
-.account-body table td{
-   padding: 4px;
+   &:first-child {
+    width: 120px;
+   }  
 }
 
 .account > .col,
@@ -49,6 +49,7 @@
 }
 
 .account-header {
+   width: 450px;
    min-height: 32px;
    margin: 20px 18px 5px 18px;
    padding-bottom: 15px;
@@ -75,6 +76,11 @@
     float: left;
     margin-left: 45px;
     margin-bottom: 20px;
+
+    .save {
+        margin-left: 240px;
+        margin-top: -10px;
+    }
 }
 
 .account-body .col .account-footer {
@@ -87,7 +93,8 @@
 }
 
 .account-body label {
-    font-size: 16px;
+    font-size: 15px;
+    color: @text-very-dark;
 }
 
 

@@ -1,22 +1,23 @@
 header.site {
-  min-width: 1200px;
+  min-width: 1018px;
   &.thin { min-width: 960px; }
   top : 0;
   left : 0;
   width : 100%;
   z-index : 100;
   background : #495259;
-  font-size: 16px;
+  font-size: @regular-font-size;
   font-family: @source;
   nav {
     position : relative;
     height: 80px;
     border-bottom : 1px solid black;
+    .box-shadow(0 4px 0 rgba(0, 0, 0, 0.1));
     ul.ct {
       .clearfix;
       height: 80px;
       margin: 0 auto;
-      width: 1200px;
+      width: 1018px;
       position : relative;
       &.thin { width: 960px; }
       li {
@@ -24,7 +25,7 @@ header.site {
         margin : 32px 0 24px;
         a.page {
           display : block;
-          font : 17px/80px @source;
+          font : 15px/80px @source;
           text-align : center;
           color : @text-very-light;
           height : 80px;
@@ -70,7 +71,7 @@ header.site {
           a.button {
             min-width: 200px;
             margin-top : -14px;
-            font-size: 17px;
+            font-size: @regular-font-size;
             font-weight: 400;
             margin-right : 0px;
             padding: 14px 20px;

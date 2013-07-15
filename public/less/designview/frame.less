@@ -10,7 +10,7 @@ body.designview > footer {
 body.designview .mainContainer {
     margin-top: 0;
     margin-bottom: 0;
-    min-height : auto;
+    min-height : 0;
     width: 100%;
 }
 
@@ -19,12 +19,12 @@ body.designview .mainContainer {
     border: 1px solid #ccc;
     border-bottom: none;
     position: relative;
-    background-color: @designview-background;
+    background-color: @darker-grey-background;
 }
 
 .design-view-frame-top-bar {
     width: 100%;
-    height: 91px;
+    height: 60px;
     z-index: 1000;
     left: 0;
     position: relative;
@@ -33,7 +33,7 @@ body.designview .mainContainer {
 
 .design-view-tab-container {
     .box-sizing(border-box);
-    height: 91px;
+    height: 60px;
     border-bottom: 1px solid #ccc;
     font-size:16px;
     cursor: pointer;
@@ -67,13 +67,13 @@ body.designview .mainContainer {
         margin: auto;
         width: 1018px;
         border: none;
-        height: 90px;
+        height: 60px;
         li {
-          padding: 36px 24px 34px 24px;
+          padding: 22px 24px 18px 24px;
           line-height: 32px;
           &.inactive, &.inactive:hover{
-            border-top-color : #FBFBFB;
-            background-color: #FBFBFB;
+            border-top-color : @disabled-grey-background;
+            background-color: @disabled-grey-background;
             .design-view-tab-text {
               color: #AAAAAA;
               .design-view-tab-text-optional {
@@ -83,7 +83,7 @@ body.designview .mainContainer {
           }
           &.active, &:hover {
               border-top: 4px solid #7A94B8;
-              padding: 32px 24px 34px 24px;
+              padding: 18px 24px 18px 24px;
               background: none repeat scroll 0 0 white;
               h5 {
                   color : #333333;
@@ -98,7 +98,7 @@ body.designview .mainContainer {
               position: relative;
               text-align : center;
               &.grayed {
-                  background-color: #FBFBFB;
+                  background-color: @disabled-grey-background;
                   color: #AAAAAA;
                   .design-view-tab-text-optional {
                     color: #AAAAAA;
@@ -119,18 +119,12 @@ body.designview .mainContainer {
         &.float-left:first-child {
           border-right: 1px solid #CCCCCC;
           border-left: none;
-          padding: 36px 24px 34px 24px;
-          &.active, &:hover {
-              border-top: 4px solid #7A94B8;
-              padding: 32px 24px 34px 24px;
-          }
-
         }
       }
     }
 
     .design-view-tab-center {
-        background-color: #ededed;
+        background-color: @darker-grey-background;
     }
   }
 }
@@ -172,10 +166,6 @@ body.designview .mainContainer {
     overflow: auto;
     min-height: 300px;
     margin: auto;
-    /*
-    padding-top: 20px;
-    padding-bottom: 60px; // room for the button bar
-    */
     position: relative;
 }
 
@@ -202,7 +192,6 @@ body.designview .mainContainer {
     a.button {
         margin-top: 15px;
         margin-right: 15px;
-        font-weight: normal;
     }
     
     a.sendButton {
