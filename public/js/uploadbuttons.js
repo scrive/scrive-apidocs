@@ -1,6 +1,6 @@
 /* Upload buttons
  * Usage
- *  var button =  UploadButton.init({
+ *  var button =  new UploadButton({
  *                   width: 100 // Expected size of the button.
  *                   name: "Name that will be used for input element"
  *                   text: "Text that will be put inside of button",
@@ -12,7 +12,7 @@
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
  *
- *  button.input()
+ *  button.el()
  *
  *  ! FOR now this module is based on MultiFile jQuery plugin, but this may change soon.
  *  We do not store internally any data about uploaded files.
@@ -85,6 +85,9 @@ var UploadButtonModel = Backbone.Model.extend({
   shape : function() {
         return this.get("shape");
   },
+  cssClass : function() {
+        return this.get("cssClass");
+  },
   click: function() {
       if(this.get('onClick')) {
           return this.get('onClick')();
@@ -108,7 +111,7 @@ var UploadButtonView = Backbone.View.extend({
         var model = this.model;
         var button = model.button();
         if (!button) {
-            button = Button.init({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), labelstyle: model.labelstyle(), onClick : function() {return false;}}).input();
+            button = new Button({size: model.size(), color: model.color(), shape : model.shape(), width: model.width(), text: model.text(), labelstyle: model.labelstyle(), onClick : function() {return false;}}).el();
         }
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         if (model.type() != "")
@@ -163,25 +166,21 @@ var UploadButtonView = Backbone.View.extend({
                 }
             }
         });
-        button.append($("<span/>").append(fileinput)); // This span is bugfix for error cases
-        //this.fileinput = fileinput;
+        button.append($("<span/>").append(fileinput)); // This span is is needed to fix some browser bug
         button.click(function() {return model.click()} );
         $(this.el).append(button);
-        //$(this.el).append($("<span/>").append(fileinput).css({display:'none'}));
+        if (model.cssClass() != undefined)
+          $(this.el).addClass(model.cssClass());
         return this;
     }
 });
 
 /* We add extra div here for some browsers compatibility */
-window.UploadButton = {
-    init: function (args) {
+window.UploadButton = function (args) {
           var model = new UploadButtonModel(args);
-          var input = $("<div style='position:relative;overflow:hidden;'/>");
-          var view = new UploadButtonView({model : model, el : input});
-          return new Object({
-              input : function() {return input;}
-          });
-        }
+          var view = new UploadButtonView({model : model, el : $("<div style='position:relative;overflow:hidden;'/>")});
+          this.el = function() {return $(view.el);};
+
 };
 
 

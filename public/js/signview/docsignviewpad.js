@@ -61,16 +61,16 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
            box.empty();
            box.addClass('giveForSigningBox');
            var giveForSigningSelector = this.sigSelector(function() {return model.selectedSignatory()}, function(a) {model.setSignatory(a)});
-           var giveForSigningButton = Button.init({
+           var giveForSigningButton = new Button({
                                 size: "tiny",
                                 color : "green",
                                 text : model.document().process().processLocalization().sendbuttontext,
-                                //cssClass: "float-right" ,
+                                style: "display:inline-block" ,
                                 onClick : function() {
                                     model.giveForSigning();
                                     return false;
                                 }
-                              }).input().css("display", "inline-block");
+                              }).el();
            var giveForSigning =  $("<span class='giveForSigning'/>").append($("<span/>").text(localization.pad.signingOnSameDeviceFor1))
                                                                 .append(giveForSigningSelector)
                                                                 .append($("<span/>").text(localization.pad.signingOnSameDeviceFor2))

@@ -302,7 +302,7 @@
                 });
                 acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
             } else {
-                acceptButton = Button.init({
+                acceptButton = new Button({
                     size: "tiny",
                     color : "blue",
                     shape : "rounded",
@@ -319,7 +319,7 @@
                             });
                         });
                     }
-                }).input();
+                }).el();
             }
             var content = $("<span/>");
             if (document.authorIsOnlySignatory())
@@ -357,7 +357,7 @@
 
             Confirmation.popup({
                 title : document.process().processLocalization().confirmsendtitle,
-                acceptButton : Button.init({
+                acceptButton : new Button({
                     size: "tiny",
                     color : "green",
                     shape : "rounded",
@@ -372,7 +372,7 @@
                                view.sendWithCSV(document, 1, document.isCsv() ? document.csv().length - 1 : undefined);
                         });
                     }
-                }).input(),
+                }).el(),
                 rejectText: localization.cancel,
                 content  : box
             });

@@ -174,7 +174,6 @@ set systemPage
  js   js/admin/useradmin.js
  js   js/admin/documentadmin.js
  js   js/admin/csvstatsview.js
- js   js/admin/createuser.js
  js   js/admin/useradminsales.js
  js   js/account/company.js
  js   js/account/user.js

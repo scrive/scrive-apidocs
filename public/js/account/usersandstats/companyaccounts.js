@@ -22,7 +22,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
   },
   addCompanyAccountButton : function() {
     var self = this;
-    return Button.init({
+    return new Button({
         color: "green",
         size: "tiny",
         text: localization.account.companyAccounts.createNewButtonText,
@@ -95,7 +95,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
         if (this.get("userList") != undefined) return this.get("userList");
         this.set({ "userList" :  new KontraList({
             name : "CompanyAccountsTable",
-            headerExtras: self.addCompanyAccountButton().input(),
+            headerExtras: self.addCompanyAccountButton().el(),
             loadOnInit : false,
             schema: new Schema({
               url: "/companyaccounts",

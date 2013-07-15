@@ -104,7 +104,7 @@
             });
         }
 
-        var signupButton = Button.init({
+        var signupButton = new Button({
             size  : 'small',
             color : 'blue',
             text: localization.signup + " ›",
@@ -115,7 +115,7 @@
             }
           });
 
-        body.append($("<div class='position first withEmail'/>").append(emailInput.el()).append(signupButton.input()));
+        body.append($("<div class='position first withEmail'/>").append(emailInput.el()).append(signupButton.el()));
         $(this.el).append(content);
       }
   });
@@ -171,7 +171,7 @@
             });
         }
 
-        var signupButton = Button.init({
+        var signupButton = new Button({
             size  : 'tiny',
             color : model.buttoncolorclass(),
             text: localization.signup + " ›",
@@ -184,7 +184,7 @@
           });
 
         body.append($("<div class='position withEmail'/>").append(emailInput.el().attr("autocomplete","false").css("width","245px").css("padding","7px 14px").css("font-size","16px")));
-        body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(signupButton.input()));
+        body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(signupButton.el()));
 
         var dontHaveAccount = $("<label class='label-with-link'/>").html(localization.signupModal.alreadyHaveAnAccount);
         var paymentsPage = $("<label class='label-with-link'/>").html(localization.visitOurPricingPage);

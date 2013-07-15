@@ -393,7 +393,7 @@ var TextTypeSetterView = Backbone.View.extend({
     doneOption : function() {
         var view = this;
         var field = this.model.field();
-        return Button.init({color:"green",
+        return new Button({color:"green",
                             size: "tiny",
                             text: localization.designview.textFields.done,
                             style: "position: relative;  z-index: 107;margin-top: 4px;",
@@ -413,7 +413,7 @@ var TextTypeSetterView = Backbone.View.extend({
                                 }
                                 return false;
                             }
-                           }).input();
+                           }).el();
     },
     place : function() {
         var placement = this.model;
@@ -832,7 +832,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             suppressSpace: (field.name()=="fstname")
         });
 
-        var button = Button.init({
+        var button = new Button({
             color: 'black',
             size: 'tiny',
             text: localization.ok,
@@ -841,7 +841,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         });
 
         div.append(input.el());
-        div.append(button.input());
+        div.append(button.el());
         return div;
     },
     editor: function() {
@@ -1094,7 +1094,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     doneOption : function() {
         var view = this;
         var field = this.model.field();
-        return Button.init({color:"green",
+        return new Button({color:"green",
                             size: "tiny",
                             text: localization.designview.checkboxes.done,
                             style: "position: relative;  z-index: 107;margin-top: 4px;",
@@ -1112,7 +1112,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                                 }
                                 return false;
                             }
-            }).input();
+            }).el();
     },
     title: function() {
         return $("<div class='title'/>").text(localization.designview.checkboxes.checkbox);
@@ -1438,7 +1438,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
     doneOption : function() {
         var view = this;
         var field = this.model.field();
-        return Button.init({color:"green",
+        return new Button({color:"green",
                             size: "tiny",
                             text: localization.designview.textFields.done,
                             style: "position: relative;  z-index: 107;margin-top: 4px;",
@@ -1455,7 +1455,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
                                 }
                                 return false;
                             }
-                           }).input();
+                           }).el();
     },
     title : function() {
         return $("<div class='title'/>").text(localization.designview.signatureBoxSettings);

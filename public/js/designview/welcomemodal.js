@@ -8,7 +8,7 @@
 var popup;
 
 /*
- * The actual welcoming modal. 
+ * The actual welcoming modal.
  */
 var WelcomeInformation = Backbone.View.extend({
     initialize: function (args) {
@@ -25,8 +25,8 @@ var WelcomeInformation = Backbone.View.extend({
         middleText.append($('<h2/>').html(localization.welcomemodal.trytext));
         div.append(middleText);
 
-        div.append(Button.init({
-            text: localization.welcomemodal.trybutton, 
+        div.append(new Button({
+            text: localization.welcomemodal.trybutton,
             labelstyle: 'font-size: 22px',
             cssClass: 'trybutton',
             size: 'big',
@@ -36,8 +36,8 @@ var WelcomeInformation = Backbone.View.extend({
                     popup.view.clear();
                 });
             }
-        }).input());
-    
+        }).el());
+
         return div;
     },
     render: function () {
@@ -52,14 +52,14 @@ var WelcomeInformation = Backbone.View.extend({
     }
 });
 
-window.WelcomeModal = function(args) { 
+window.WelcomeModal = function(args) {
     var clickToSee = $('<span />').addClass('modal-subtitle');
-    var documentLink = $('<a class="documentlink" href="/d/' + args.documentId + '"></a>'); 
+    var documentLink = $('<a class="documentlink" href="/d/' + args.documentId + '"></a>');
     clickToSee.text(localization.welcomemodal.subtitle + ' ');
     documentLink.text(localization.welcomemodal.subtitlelink);
     clickToSee.append(documentLink);
 
-    mixpanel.track_links('.welcomemodal .documentlink', 'Documend saved document link clicked'); 
+    mixpanel.track_links('.welcomemodal .documentlink', 'Documend saved document link clicked');
 
     popup = Confirmation.popup({
         title: $('<span/>').text(localization.welcomemodal.title).append($('<br />')).append(clickToSee),

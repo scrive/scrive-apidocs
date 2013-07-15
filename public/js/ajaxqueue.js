@@ -145,7 +145,7 @@ window.AjaxQueue = Backbone.Model.extend({
                     ajaxQueue.run();
                   }
                 } else {
-                  var button =  Button.init({color: 'blue',
+                  var button =  new Button({color: 'blue',
                                              size: 'small',
                                              text: 'Reload page',
                                              onClick: function() {
@@ -155,7 +155,7 @@ window.AjaxQueue = Backbone.Model.extend({
                   var content = $('<div/>');
                   content.append($(localization.problemContactingServer));
                   content.append($('<div style="margin-top: 40px;" />'));
-                  content.append(button.input());
+                  content.append(button.el());
                   ScreenBlockingDialog.open({header: content});
                 }
        });

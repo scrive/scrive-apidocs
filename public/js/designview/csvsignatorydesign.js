@@ -189,7 +189,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
          var box = $("<div class='option-box middle-box'>");
          var header = $("<div class='header'/>").text(localization.csv.selectFileHeader);
          var subheader = $("<div class='sheader'/>").text(localization.csv.selectFileSubheader);
-         var uploadButton = UploadButton.init({
+         var uploadButton = new UploadButton({
                     name: "csv",
                     color : "green",
                     size: "small",
@@ -204,12 +204,12 @@ var CsvSignatoryDesignView = Backbone.View.extend({
             });
          box.append(header);
          box.append(subheader);
-         box.append($("<div class='buttonbox'/>").append(uploadButton.input()));
+         box.append($("<div class='buttonbox'/>").append(uploadButton.el()));
          return box;
     },
     nextUploadButton : function(){
          var model = this.model;
-         var uploadButton = UploadButton.init({
+         var uploadButton = new UploadButton({
                     name: "csv",
                     color : "green",
                     size: "tiny",
@@ -222,7 +222,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     },
                     onError : function() {}
             });
-         return uploadButton.input();
+         return uploadButton();
     },
     render: function () {
         var view = this;

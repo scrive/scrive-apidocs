@@ -22,7 +22,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   removeButton: function() {
     var attachment = this.model;
     var deleteurl = this.apiURL();
-    var button = Button.init({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
+    var button = new Button({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
             attachment.loading();
             $.ajax(deleteurl, {
               type: 'DELETE',
@@ -42,7 +42,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   uploadButton: function() {
     var attachment = this.model;
     var uploadurl = this.apiURL();
-    return UploadButton.init({
+    return new UploadButton({
       width: 120,
       size : 'tiny',
       name: "file",
@@ -70,7 +70,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
           try {
             var response = JSON.parse(d.responseText);
             if (response.message == 'There is already a file attached for that attachment request.') {
-              var button =  Button.init({color: 'blue',
+              var button =  new Button({color: 'blue',
                                          size: 'small',
                                          text: 'Reload page',
                                          onClick: function() {
@@ -80,7 +80,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
               var content = $('<div/>');
               content.text(localization.signviewAttachmentUploadedInOtherWindow);
               content.append($('<div style="margin-top: 40px;" />'));
-              content.append(button.input());
+              content.append(button.el());
               ScreenBlockingDialog.open({header: content});
               return;
             }
@@ -106,7 +106,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   reviewButton: function() {
       var model = this.model;
-      var button = Button.init({color: "green", text: localization.reviewPDF, size:'tiny', cssClass : 's-review-sigattachment', onClick: function() {
+      var button = new Button({color: "green", text: localization.reviewPDF, size:'tiny', cssClass : 's-review-sigattachment', onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
           }});
       return button;
@@ -122,12 +122,12 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
           label.append($("<div class='name' />").text(this.model.file().name() + ".pdf"));
           label.append($("<div class='clearfix' />"));
           container.append(label);
-          container.append(this.reviewButton().input());
+          container.append(this.reviewButton().el());
           if (attachment.signatory().document().currentSignatoryCanSign())
-            container.append(this.removeButton().input());
+            container.append(this.removeButton().el());
 
       } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
-          container.append(this.uploadButton().input().addClass('float-right').css("height","40px").css("overflow","hidden"));
+          container.append(this.uploadButton().el().addClass('float-right').css("height","40px").css("overflow","hidden"));
       }
       container.append($("<div class='clearfix' />"));
 

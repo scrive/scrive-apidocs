@@ -117,7 +117,7 @@
       });
       body.append($("<div class='position'/>").append(password2Input.el()));
 
-      var changePasswordButton = Button.init({
+      var changePasswordButton = new Button({
           size  : 'small',
           color : 'blue',
           text  : this.options.button,
@@ -126,7 +126,7 @@
           }
         });
 
-     body.append($("<div class='position'/>").append(changePasswordButton.input()));
+     body.append($("<div class='position'/>").append(changePasswordButton.el()));
      $(this.el).append(content);
     }
   });
@@ -182,7 +182,7 @@
       });
       body.append($("<div class='position' style='margin-top:6px;'/>").append(password2Input.el()));
 
-      var changePasswordButton = Button.init({
+      var changePasswordButton = new Button({
           size  : 'tiny',
           color : model.buttoncolorclass(),
           text  : this.options.button,
@@ -192,7 +192,7 @@
           }
         });
 
-     body.append($("<div class='position' style='text-align:center;margin-top:10px'/>").append(changePasswordButton.input()));
+     body.append($("<div class='position' style='text-align:center;margin-top:10px'/>").append(changePasswordButton.el()));
      $(this.el).append(content);
     }
   });
