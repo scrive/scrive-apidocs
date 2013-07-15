@@ -297,7 +297,7 @@ checkDBConsistency logger tables migrations = do
         checkPrimaryKey :: [RawSQL] -> Maybe (RawSQL, Set RawSQL) -> ValidationResult
         checkPrimaryKey [] Nothing = mempty
         checkPrimaryKey _ Nothing = ValidationOk ["ALTER TABLE " <+> raw tblName <+> "ADD" <+> primaryKeyToSQL table]
-        checkPrimaryKey [] (Just (_, cols)) = ValidationError $ "No primary key in the definition, but key present in the database on columns: " ++ L.intercalate ", " (map unRawSQL $ S.toList cols)
+        checkPrimaryKey [] (Just (name, _cols)) = ValidationOk ["ALTER TABLE " <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name]
         checkPrimaryKey def (Just (name, cols))
           | S.fromList def == cols = ValidationOk $ if raw name /= genPrimaryKeyName table
             -- rename index that represents primary key
