@@ -4,7 +4,6 @@ module Doc.Model
   ( isTemplate -- fromUtils
   , anyInvitationUndelivered
   , insertDocumentAsIs
-  , toDocumentProcess
 
   , DocumentFilter(..)
   , DocumentDomain(..)
@@ -56,7 +55,6 @@ module Doc.Model
   , SetDocumentUnsavedDraft(..)
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
-  , SetDocumentProcess(..)
   , SetEmailInvitationDeliveryStatus(..)
   , SetSMSInvitationDeliveryStatus(..)
   , SetInviteText(..)
@@ -145,7 +143,6 @@ data DocumentFilter
   | DocumentFilterBySealStatus [SealStatus]   -- ^ Any of listed seal statuses
   | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags (warning: this is ALL tags)
-  | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByDelivery DeliveryMethod   -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
@@ -188,7 +185,6 @@ data DocumentOrderBy
   | DocumentOrderByCTime       -- ^ Order by creation time
   | DocumentOrderByStatusClass -- ^ Order by status class.
   | DocumentOrderByType        -- ^ Order by document type.
-  | DocumentOrderByProcess     -- ^ Order by process
   | DocumentOrderByPartners    -- ^ Order by partner names or emails
   | DocumentOrderByAuthor      -- ^ Order by author name or email
 
@@ -200,7 +196,6 @@ documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
 documentOrderByToSQL DocumentOrderByCTime = SQL "documents.ctime" []
 documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
-documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 documentOrderByToSQL DocumentOrderByPartners =
   parenthesize (selectSignatoryLinksSmartNames False True)
 documentOrderByToSQL DocumentOrderByAuthor =
@@ -299,7 +294,7 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
-      sqlWhereEq "documents.type" $ Signable undefined
+      sqlWhereEq "documents.type" $ Signable
       sqlWhere "signatory_links.is_partner"
       sqlWhereNotExists $ sqlSelect "signatory_links AS earlier_signatory_links" $ do
                             sqlWhere "signatory_links.document_id = earlier_signatory_links.document_id"
@@ -310,12 +305,12 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
       sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
-      sqlWhereEq "documents.type" $ Signable undefined
+      sqlWhereEq "documents.type" $ Signable
       sqlWhere "NOT signatory_links.is_partner"
     sqlWhereAll $ do           -- 4. see shared templates
       sqlWhereEq "same_company_users.id" uid
       sqlWhereEq "documents.sharing" Shared
-      sqlWhereEq "documents.type" $ Template undefined
+      sqlWhereEq "documents.type" $ Template
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 5: see documents of subordinates
       sqlWhereEq "same_company_users.id" uid
@@ -347,11 +342,6 @@ documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
 documentFilterToSQL (DocumentFilterByLatestSignTimeBefore time) = do
   sqlWhere ("(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
             <+> "<" <?> time)
-
-documentFilterToSQL (DocumentFilterByProcess processes) = do
-  if null ([minBound..maxBound] \\ processes)
-    then sqlWhere "TRUE"
-    else sqlWhereIn "documents.process" processes
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
   sqlWhere $ raw $ unsafeFromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
@@ -396,7 +386,7 @@ documentFilterToSQL (DocumentFilterLinkIsPartner flag) = do
 documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
   sqlWhereAny $ do
     sqlWhereEq "documents.unsaved_draft" flag
-    sqlWhereNotEq "documents.type" (Signable undefined)
+    sqlWhereNotEq "documents.type" Signable
     sqlWhereNotEq "documents.status" Preparation
 
 
@@ -419,10 +409,10 @@ documentFilterToSQL (DocumentFilterByDocumentIDs dids) = do
   sqlWhereIn "documents.id" dids
 
 documentFilterToSQL (DocumentFilterSignable) = do
-  sqlWhereEq "documents.type" (Signable undefined)
+  sqlWhereEq "documents.type" Signable
 
 documentFilterToSQL (DocumentFilterTemplate) = do
-  sqlWhereEq "documents.type" (Template undefined)
+  sqlWhereEq "documents.type" Template
 
 documentFilterToSQL (DocumentFilterDeleted flag1 flag2) = do
   sqlWhereEq "signatory_links.deleted" flag1
@@ -503,7 +493,6 @@ documentsSelectors =
   , "documents.status"
   , "documents.error_text"
   , "documents.type"
-  , "documents.process"
   , "documents.ctime"
   , "documents.mtime"
   , "documents.days_to_sign"
@@ -525,8 +514,8 @@ fetchDocuments = kFold decoder []
   where
     -- Note: this function gets documents in reversed order, but all queries
     -- use reversed order too, so in the end everything is properly ordered.
-    decoder acc did title file_id sealed_file_id status error_text simple_type
-     process ctime mtime days_to_sign timeout_time invite_time
+    decoder acc did title file_id sealed_file_id status error_text doc_type
+      ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text
      lang sharing apicallback objectversion seal_status status_class
        = Document {
@@ -539,7 +528,7 @@ fetchDocuments = kFold decoder []
            (DocumentError{}, Just text) -> DocumentError text
            (DocumentError{}, Nothing) -> DocumentError "document error"
            _ -> status
-       , documenttype = documentType (simple_type, process)
+       , documenttype = doc_type
        , documentctime = ctime
        , documentmtime = mtime
        , documentdaystosign = days_to_sign
@@ -1003,8 +992,6 @@ insertDocumentAsIs document@(Document
                    documentobjectversion
                    documentsealstatus
                  ) = do
-    let process = toDocumentProcess documenttype
-
     _ <- kRun $ sqlInsert "documents" $ do
         sqlSet "title" documenttitle
         sqlSet "file_id" $ documentfile
@@ -1014,7 +1001,6 @@ insertDocumentAsIs document@(Document
           DocumentError msg -> toSql msg
           _ -> SqlNull
         sqlSet "type" documenttype
-        sqlSet "process" process
         sqlSet "ctime" documentctime
         sqlSet "mtime" documentmtime
         sqlSet "days_to_sign" documentdaystosign
@@ -1139,7 +1125,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ELegAbortDocument () where
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
                  sqlWhereDocumentIDIs did
-                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereDocumentTypeIs Signable
                  sqlWhereDocumentStatusIs Pending
 
     kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
@@ -1151,7 +1137,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ELegAbortDocument () where
                  sqlSet "eleg_data_mismatch_personal_number" personNumber
 
                  sqlWhereDocumentIDIs did
-                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereDocumentTypeIs Signable
                  sqlWhereSignatoryLinkIDIs slid
 
     sl <- query $ GetSignatoryLinkByID did slid Nothing
@@ -1176,7 +1162,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument () where
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
                  sqlWhereDocumentIDIs did
-                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereDocumentTypeIs Signable
                  sqlWhereDocumentStatusIs Pending
     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   CancelDocumentEvidence
@@ -1268,7 +1254,7 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
                             <+> "+ (interval '1 day') * documents.days_to_sign"
                 sqlResult "lang"
                 sqlWhereDocumentIDIs docid
-                sqlWhereDocumentTypeIs (Signable undefined)
+                sqlWhereDocumentTypeIs Signable
                 sqlWhereDocumentStatusIs Preparation
 
               Just tot <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
@@ -1289,7 +1275,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Closed
                  sqlWhereDocumentIDIs docid
-                 sqlWhereDocumentTypeIs $ Signable undefined
+                 sqlWhereDocumentTypeIs Signable
                  sqlWhereDocumentStatusIs Pending
                  sqlWhereAllSignatoriesHaveSigned
     _ <- update $ InsertEvidenceEvent
@@ -1530,11 +1516,11 @@ instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
     query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (0,maxBound))
 
-data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
+data GetAvailableTemplates = GetAvailableTemplates UserID
 instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
-  query (GetAvailableTemplates uid processes) =
+  query (GetAvailableTemplates uid) =
     query (GetDocuments [DocumentsVisibleToUser uid]
-                            [DocumentFilterByProcess processes, DocumentFilterTemplate, DocumentFilterDeleted False False]
+                            [DocumentFilterTemplate, DocumentFilterDeleted False False]
                             [Asc DocumentOrderByMTime]
                             (0,maxBound))
 
@@ -1564,7 +1550,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
             sqlWhere "sign_time IS NULL"
             sqlWhereExists $ sqlSelect "documents" $ do
                sqlWhereEq "id" did
-               sqlWhereEq "type" $ Signable undefined
+               sqlWhereEq "type" $ Signable
                sqlWhereNotEq "status" Preparation
                sqlWhereNotEq "status" Closed
           -- it's okay if we don't update the doc because it's been seen or signed already
@@ -1680,7 +1666,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where
 
                                      sqlWhereDocumentIDIs docid
                                      sqlWhereSignatoryLinkIDIs slid
-                                     sqlWhereDocumentTypeIs (Signable undefined)
+                                     sqlWhereDocumentTypeIs Signable
                                      sqlWhereDocumentStatusIs Pending
 
     kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
@@ -1895,7 +1881,7 @@ setInvitationDeliveryStatusWorker did slid status actor fieldName getFieldValue
         sqlWhereSignatoryLinkIDIs slid
         sqlWhereDocumentIDIs did
 
-        sqlWhereDocumentTypeIs (Signable undefined)
+        sqlWhereDocumentTypeIs Signable
 
     sig <- query $ GetSignatoryLinkByID did slid Nothing
     let (fieldValue, changed) = (getFieldValue sig, old_status /= status)
@@ -1954,7 +1940,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
                  sqlWhere "documents.id = signatory_links.document_id"
                  sqlWhereDocumentIDIs docid
                  sqlWhereSignatoryLinkIDIs slid
-                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereDocumentTypeIs Signable
                  sqlWhereDocumentStatusIs Pending
                  sqlWhereSignatoryIsPartner
                  sqlWhereSignatoryHasNotSigned
@@ -2086,7 +2072,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument () whe
   update (TemplateFromDocument did _actor) = do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "status" Preparation
-       sqlSet "type" (Template undefined)
+       sqlSet "type" Template
        sqlWhereDocumentIDIs did
        sqlWhereEq "status" Preparation
 
@@ -2096,7 +2082,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DocumentFromTemplate () whe
   update (DocumentFromTemplate did _actor) = do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "status" Preparation
-       sqlSet "type" (Signable undefined)
+       sqlSet "type" Signable
        sqlWhereDocumentIDIs did
        sqlWhereEq "status" Preparation
 
@@ -2106,7 +2092,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "status" Timedout
        sqlWhereDocumentIDIs did
-       sqlWhereDocumentTypeIs (Signable undefined)
+       sqlWhereDocumentTypeIs Signable
        sqlWhereDocumentStatusIs Pending
     _ <- update $ InsertEvidenceEvent
         TimeoutDocumentEvidence
@@ -2125,7 +2111,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
        sqlSet "mtime" time
        sqlSetCmd "timeout_time" "now() + (interval '1 day')"
        sqlWhereDocumentIDIs did
-       sqlWhereDocumentTypeIs (Signable undefined)
+       sqlWhereDocumentTypeIs Signable
        sqlWhereDocumentStatusIs Timedout
     _ <- update $ InsertEvidenceEvent
         ProlongDocumentEvidence
@@ -2134,27 +2120,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
         actor
     return ()
 
-{-
-
--- this as to be merged in equivalen for signatory link
--- I cannot find it, find it later
-
-data SetDocumentAuthenticationMethod = SetDocumentAuthenticationMethod DocumentID AuthenticationMethod Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMethod Bool where
-  update (SetDocumentAuthenticationMethod did auth actor) =
-    updateOneWithEvidenceIfChanged did "authentication_method" auth $ do
-      let evidence = case auth of
-            StandardAuthentication -> SetStandardAuthenticationMethodEvidence
-            ELegAuthentication  -> SetELegAuthenticationMethodEvidence
-      return $ InsertEvidenceEvent evidence
-        (value "authentication" (show auth) >> value "actor" (actorWho actor))
-        (Just did)
-        actor
--}
-
-data SetDocumentProcess = SetDocumentProcess DocumentID DocumentProcess Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentProcess Bool where
-  update (SetDocumentProcess did process _actor) = updateWithoutEvidence did "process" process
 
 data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL DocumentID (Maybe String)
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL Bool where
@@ -2251,7 +2216,7 @@ instance MonadDB m => DBUpdate m RemoveOldDrafts Integer where
       "WHERE id = any (array(SELECT id" <+>
                             "FROM documents" <+>
                             "WHERE unsaved_draft IS TRUE" <+>
-                              "AND type = " <?> Signable undefined <+>
+                              "AND type = " <?> Signable <+>
                               "AND status = " <?> Preparation <+>
                               "AND mtime < (now() - '7 days'::interval)" <+>
                             "LIMIT " <?> limit <+>
@@ -2297,7 +2262,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "AND documents.invite_time <  ? " <>
                "AND documents.type = ? "   <>
                "AND documents.status <> ? ")
-            [toSql uid, toSql start, toSql end, toSql $ Signable undefined, toSql Preparation]
+            [toSql uid, toSql start, toSql end, toSql $ Signable, toSql Preparation]
     kFold (+) 0
 
 data GetDocsSent = GetDocsSent UserID
@@ -2310,7 +2275,7 @@ instance MonadDB m => DBQuery m GetDocsSent Int where
                "AND is_author " <>
                "AND documents.type = ? "   <>
                "AND documents.status <> ? ")
-            [toSql uid, toSql $ Signable undefined, toSql Preparation]
+            [toSql uid, toSql $ Signable, toSql Preparation]
     kFold (+) 0
 
 -- | Get the signatories that belong to this email that were viewed or signed

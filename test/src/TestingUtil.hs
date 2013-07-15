@@ -235,28 +235,17 @@ instance Arbitrary DocumentID where
   arbitrary = unsafeDocumentID . abs <$> arbitrary
 
 documentAllTypes :: [DocumentType]
-documentAllTypes = [ Signable Contract
-                   , Signable Order
-                   , Signable Offer
-                   , Template Contract
-                   , Template Order
-                   , Template Offer
+documentAllTypes = [ Signable
+                   , Template
                    ]
 
 documentSignableTypes :: [DocumentType]
-documentSignableTypes = [ Signable Contract
-                        , Signable Order
-                        , Signable Offer
+documentSignableTypes = [ Signable
                         ]
 
 documentTemplateTypes :: [DocumentType]
-documentTemplateTypes = [ Template Contract
-                        , Template Order
-                        , Template Offer
+documentTemplateTypes = [ Template
                         ]
-
-instance Arbitrary DocumentProcess where
-  arbitrary = elements [Contract, Order, Offer]
 
 instance Arbitrary DocumentType where
   arbitrary = elements documentAllTypes
@@ -583,13 +572,7 @@ data RandomDocumentAllows = RandomDocumentAllows
 
 randomDocumentAllowsDefault :: User -> RandomDocumentAllows
 randomDocumentAllowsDefault user = RandomDocumentAllows
-                              { randomDocumentAllowedTypes = [ Signable Contract
-                                                             , Signable Order
-                                                             , Signable Offer
-                                                             , Template Contract
-                                                             , Template Order
-                                                             , Template Offer
-                                                             ]
+                              { randomDocumentAllowedTypes = [ Signable , Template ]
                               , randomDocumentAllowedStatuses = [ Preparation
                                                                 , Pending
                                                                 , Closed

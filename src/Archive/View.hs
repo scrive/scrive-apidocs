@@ -80,12 +80,9 @@ docFieldsListForJSON userid padqueue doc = do
     J.value "template" $ isTemplate doc
     J.value "partiescount" $ length $ (documentsignatorylinks doc)
     J.value "type" $ case documenttype doc of
-                        Template _ -> "template"
-                        Signable _ -> "signable"
-    J.value "process" $ case toDocumentProcess (documenttype doc) of
-                          Contract -> "contract"
-                          Offer    -> "offer"
-                          Order    -> "order"
+                        Template -> "template"
+                        Signable -> "signable"
+    J.value "process" $ "contract" -- Constant. Need to leave it till we will change API version
     J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
       [StandardAuthentication] -> "standard"
       [ELegAuthentication]     -> "eleg"

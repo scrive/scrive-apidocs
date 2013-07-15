@@ -74,13 +74,12 @@ testDocumentMails mailTo = do
 
 sendDocumentMails :: Maybe String -> User -> TestEnv ()
 sendDocumentMails mailTo author = do
-  forM_ allLangs $ \l ->
-    forM_ [Contract,Offer,Order] $ \doctype -> do
+  forM_ allLangs $ \l ->  do
         -- make  the context, user and document all use the same lang
         ctx <- mailingContext l
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
         let aa = authorActor (ctxtime ctx) noIP (userid author) (getEmail author)
-        Just d <- randomUpdate $ NewDocument author "Document title" (Signable doctype) 0 aa
+        Just d <- randomUpdate $ NewDocument author "Document title" Signable 0 aa
         True <- dbUpdate $ SetDocumentLang (documentid d) l (systemActor $ ctxtime ctx)
 
         let docid = documentid d
@@ -107,8 +106,8 @@ sendDocumentMails mailTo author = do
         let checkMail s mg = do
                               Log.debug $ "Checking mail " ++ s
                               m <- fst <$> (runTestKontra req ctx $ mg)
-                              validMail (s ++ " "++ show doctype) m
-                              sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
+                              validMail s m
+                              sendoutForManualChecking s req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl) False
         -- DELIVERY MAILS
         checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc sl
@@ -119,8 +118,7 @@ sendDocumentMails mailTo author = do
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl False
         -- awaiting author email
-        when (doctype == Contract) $ do
-          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
+        checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
         randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))

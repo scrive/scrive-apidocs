@@ -87,12 +87,8 @@ docStateTests env = testGroup "DocState" [
   testThat "GetDocumentsByCompanyWithFiltering finds" env testGetDocumentsByCompanyWithFilteringFinds,
   testThat "GetDocumentsByCompanyWithFiltering finds with multiple" env testGetDocumentsByCompanyWithFilteringFindsMultiple,
   testThat "GetDocumentsByCompanyWithFiltering finds with company filter" env testGetDocumentsByCompanyWithFilteringCompany,
-  testThat "NewDocument inserts a new contract for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewContract,
-  testThat "NewDocument inserts a new contract for a company user successfully" env testNewDocumentForACompanyUserInsertsANewContract,
-  testThat "NewDocument inserts a new offer for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewOffer,
-  testThat "NewDocument inserts a new offer for a company user successfully" env testNewDocumentForACompanyUserInsertsANewOffer,
-  testThat "NewDocument inserts a new order for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewOrder,
-  testThat "NewDocument inserts a new order for a company user successfully" env testNewDocumentForACompanyUserInsertsANewOrder,
+  testThat "NewDocument inserts a new contract for a single user successfully" env testNewDocumentForNonCompanyUser,
+  testThat "NewDocument inserts a new contract for a company user successfully" env testNewDocumentForACompanyUser,
 
   testThat "CancelDocument cancels a document" env testCancelDocumentCancelsDocument,
   testThat "CancelDocument fails if doc not pending or awaiting author" env testCancelDocumentReturnsLeftIfDocInWrongState,
@@ -248,38 +244,16 @@ testExtendSignatures = do
     Just (Guardtime{ extended = True }) -> assertSuccess
     s -> assertFailure $ "Unexpected extension status: " ++ show s
 
-testNewDocumentForNonCompanyUserInsertsANewContract :: TestEnv ()
-testNewDocumentForNonCompanyUserInsertsANewContract = doTimes 10 $ do
-  result <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc title"
-  assertGoodNewDocument Nothing (Signable Contract) "doc title" result
+testNewDocumentForNonCompanyUser :: TestEnv ()
+testNewDocumentForNonCompanyUser = doTimes 10 $ do
+  result <- performNewDocumentWithRandomUser Nothing (Signable) "doc title"
+  assertGoodNewDocument Nothing (Signable) "doc title" result
 
-testNewDocumentForACompanyUserInsertsANewContract :: TestEnv ()
-testNewDocumentForACompanyUserInsertsANewContract = doTimes 10 $ do
+testNewDocumentForACompanyUser :: TestEnv ()
+testNewDocumentForACompanyUser = doTimes 10 $ do
   company <- addNewCompany
-  result <- performNewDocumentWithRandomUser (Just company) (Signable Contract) "doc title"
-  assertGoodNewDocument (Just company) (Signable Contract) "doc title" result
-
-testNewDocumentForNonCompanyUserInsertsANewOffer :: TestEnv ()
-testNewDocumentForNonCompanyUserInsertsANewOffer = doTimes 10 $ do
-  result <- performNewDocumentWithRandomUser Nothing (Signable Offer) "doc title"
-  assertGoodNewDocument Nothing (Signable Offer) "doc title" result
-
-testNewDocumentForACompanyUserInsertsANewOffer :: TestEnv ()
-testNewDocumentForACompanyUserInsertsANewOffer = doTimes 10 $ do
-  company <- addNewCompany
-  result <- performNewDocumentWithRandomUser (Just company) (Signable Offer) "doc title"
-  assertGoodNewDocument (Just company) (Signable Offer) "doc title" result
-
-testNewDocumentForNonCompanyUserInsertsANewOrder :: TestEnv ()
-testNewDocumentForNonCompanyUserInsertsANewOrder = doTimes 10 $ do
-  result <- performNewDocumentWithRandomUser Nothing (Signable Order) "doc title"
-  assertGoodNewDocument Nothing (Signable Order) "doc title" result
-
-testNewDocumentForACompanyUserInsertsANewOrder :: TestEnv ()
-testNewDocumentForACompanyUserInsertsANewOrder = doTimes 10 $ do
-  company <- addNewCompany
-  result <- performNewDocumentWithRandomUser (Just company) (Signable Offer) "doc title"
-  assertGoodNewDocument (Just company) (Signable Offer) "doc title" result
+  result <- performNewDocumentWithRandomUser (Just company) (Signable) "doc title"
+  assertGoodNewDocument (Just company) (Signable) "doc title" result
 
 testRejectDocumentEvidenceLog :: TestEnv ()
 testRejectDocumentEvidenceLog = do
@@ -883,11 +857,7 @@ testDocumentAttachSealedPendingRight :: TestEnv ()
 testDocumentAttachSealedPendingRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  doc <- addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedTypes = [ Signable Offer
-                                                                                                , Signable Contract
-                                                                                                , Signable Offer
-                                                                                                ]
-                                                                 , randomDocumentAllowedStatuses = [Closed]
+  doc <- addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedStatuses = [Closed]
                                                                  })
   file <- addNewRandomFile
   time <- rand 10 arbitrary
@@ -1020,12 +990,12 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   _ <- dbUpdate $ SetDocumentSharing [docid4] False
   _ <- dbUpdate $ SetDocumentSharing [docid1, docid2, docid3, docid5, docid6] True
 
-  dlist1 <- dbQuery $ GetAvailableTemplates (userid user1) [Offer, Order, Contract]
-  dlist2 <- dbQuery $ GetAvailableTemplates (userid user2) [Offer, Order, Contract]
-  dlist3 <- dbQuery $ GetAvailableTemplates (userid user3) [Offer, Order, Contract]
-  dlist4 <- dbQuery $ GetAvailableTemplates (userid user4) [Offer, Order, Contract]
-  dlist5 <- dbQuery $ GetAvailableTemplates (userid user5) [Offer, Order, Contract]
-  dlist6 <- dbQuery $ GetAvailableTemplates (userid user6) [Offer, Order, Contract]
+  dlist1 <- dbQuery $ GetAvailableTemplates (userid user1)
+  dlist2 <- dbQuery $ GetAvailableTemplates (userid user2)
+  dlist3 <- dbQuery $ GetAvailableTemplates (userid user3)
+  dlist4 <- dbQuery $ GetAvailableTemplates (userid user4)
+  dlist5 <- dbQuery $ GetAvailableTemplates (userid user5)
+  dlist6 <- dbQuery $ GetAvailableTemplates (userid user6)
 
   assertEqual "Documents not shared in user without company (X) by user 5" 1 (length dlist5)
   assertEqual "Documents not shared in user without company (Y) by user 6" 1 (length dlist6)
@@ -1097,7 +1067,6 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
             , Desc DocumentOrderByMTime
             , Desc DocumentOrderByStatusClass
             , Desc DocumentOrderByType
-            , Desc DocumentOrderByProcess
             , Desc DocumentOrderByPartners
             ]
             (0,maxBound)

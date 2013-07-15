@@ -181,9 +181,6 @@ jsonDocumentsList = do
                           "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])
                           _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
-      fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
-      fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
-      fltSpec ("process", "offer") = [DocumentFilterByProcess [Offer]]
       fltSpec ("time", tostr) = case reads tostr of
                                     (((Just from',Just to'),""):_) -> [DocumentFilterByMonthYearFrom from',DocumentFilterByMonthYearTo to']
                                     (((Nothing ,Just to'),""):_) -> [DocumentFilterByMonthYearTo to']
@@ -247,8 +244,6 @@ docSortingFromParams params =
     x "partyREV"          = [Desc DocumentOrderByPartners]
     x "partner"           = [Asc DocumentOrderByPartners]
     x "partnerREV"        = [Desc DocumentOrderByPartners]
-    x "process"           = [Asc DocumentOrderByProcess]
-    x "processREV"        = [Desc DocumentOrderByProcess]
     x "type"              = [Asc DocumentOrderByType]
     x "typeREV"           = [Desc DocumentOrderByType]
     x "author"            = [Asc DocumentOrderByAuthor]

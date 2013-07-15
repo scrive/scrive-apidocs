@@ -19,7 +19,6 @@ module Doc.DocView (
 
 import AppView (kontrakcja, standardPageFields, brandingFields, companyForPage)
 import Company.Model
-import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -34,7 +33,6 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
-import Doc.JSON()
 import Doc.DocInfo
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -58,11 +56,11 @@ pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 
 flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentRestarted document = do
-  toFlashMsg OperationDone <$> (renderTemplateForProcess document processflashmessagerestarted $ documentInfoFields document)
+  toFlashMsg OperationDone <$> (renderTemplate "flashMessageContractRestarted" $ documentInfoFields document)
 
 flashDocumentProlonged :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentProlonged document = do
-  toFlashMsg OperationDone <$> (renderTemplateForProcess document processflashmessageprolonged $ documentInfoFields document)
+  toFlashMsg OperationDone <$> (renderTemplate "flashMessageContractProlonged" $ documentInfoFields document)
 
 flashRemindMailSent :: TemplatesMonad m => SignatoryLink -> m FlashMessage
 flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
@@ -127,7 +125,7 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       when (isJust mviewer) $
         J.value "canperformsigning" $ userCanPerformSigningAction (fromJust mviewer) doc
       J.value "objectversion" $ documentobjectversion doc
-      J.value "process" $ show $ toDocumentProcess (documenttype doc)
+      J.value "process" $ "contract"
       J.value "isviewedbyauthor" $ isSigLinkFor mviewer (getAuthorSigLink doc)
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))

@@ -21,7 +21,6 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
 import Doc.SignatoryLinkID
-import Doc.JSON
 import Text.JSON.Pretty
 import Doc.DocumentID
 import Doc.Tokens.Model
@@ -129,9 +128,8 @@ apiCallCreateFromFile :: Kontrakcja m => m Response
 apiCallCreateFromFile = api $ do
   ctx <- getContext
   (user, actor, external) <- getAPIUser APIDocCreate
-  dtype <- lift $ fromMaybe (Contract) <$> readField "type"
   isTpl <- lift $ isFieldSet "template"
-  let doctype = (Template <| isTpl |> Signable) dtype
+  let doctype = (Template <| isTpl |> Signable)
   minput <- lift $ getDataFn' (lookInput "file")
   (mfile, title) <- case minput of
     Nothing -> do
@@ -738,3 +736,17 @@ checkObjectVersionIfProvidedAndThrowError did err = lift $ do
                       `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
         Nothing -> return ()
     throwIO . SomeKontraException $ err
+
+
+-- I really want to add a url to the file in the json, but the only
+-- url at the moment requires a sigid/mh pair
+jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe File -> JSValue
+jsonSigAttachmentWithFile sa mfile =
+  runJSONGen $ do
+    value "name"        $ signatoryattachmentname sa
+    value "description" $ signatoryattachmentdescription sa
+    case mfile of
+      Nothing   -> value "requested" True
+      Just file -> object "file" $ do
+        value "id"   $ show (fileid file)
+        value "name" $ filename file

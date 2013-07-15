@@ -22,7 +22,6 @@ import Data.Function (on)
 import Data.Maybe
 import Data.List
 import Data.Ord
-import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocumentID (DocumentID)
 import Doc.Model
@@ -471,7 +470,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       -- signatories actions before what happened with a document
       let history = sortBy (comparing Seal.histdate) events
       -- Log.debug ("about to render staticTexts")
-      staticTexts <- renderLocalTemplateForProcess document processsealingtext $ do
+      staticTexts <- renderLocalTemplate document "contractsealingtexts" $ do
                         documentInfoFields document
                         F.value "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)

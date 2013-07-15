@@ -14,7 +14,6 @@ tableDocuments = tblTable {
     , tblColumn { colName = "status", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "error_text", colType = TextT }
     , tblColumn { colName = "type", colType = SmallIntT, colNullable = False }
-    , tblColumn { colName = "process", colType = SmallIntT }
     , tblColumn { colName = "ctime", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "mtime", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "days_to_sign", colType = IntegerT, colNullable = False }

@@ -19,7 +19,6 @@ module Doc.DocViewMail
 import Company.Model
 import Control.Logic
 import Doc.DocInfo (getLastSignedTime)
-import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
 import File.FileID
@@ -82,7 +81,7 @@ remindMailNotSigned forMail customMessage ctx document signlink ispreview = do
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document)
         authorname = getAuthorName document
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
-    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
+    documentMailWithDocLang ctx document "remindMailNotSignedContract" $ do
         F.value  "custommessage" customMessage
         F.value  "authorname" authorname
         F.value "partners" $ map getSmartName $ partyList document
@@ -160,7 +159,7 @@ mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
                      -> Bool
                      -> m Mail
 mailDocumentRejected customMessage ctx document rejector ispreview = do
-   documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
+   documentMailWithDocLang ctx document "mailRejectContractMail" $ do
         F.value "rejectorName" $ getSmartName rejector
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
@@ -214,23 +213,24 @@ mailInvitation forMail
     let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
-    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
+    documentMailWithDocLang ctx document "mailInvitationToSignContract" $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail
         F.value "javascriptmagic" $ not forMail
         F.valueM "header" $ do
-          defaultHeader <- if isSignatory msiglink || not forMail then
-                            renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
-                              F.value "creatorname" $ creatorname
-                              F.value "personname" $ Just personname <| personname /= "" |> Nothing
-                              F.value "documenttitle" $ documenttitle
-                              F.value "hascustommessage" $ not $ null documentinvitetext
-                          else
-                            renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
-                              F.value "creatorname" creatorname
-                              F.value "personname" personname
-                              F.value "documenttitle" $ documenttitle
-                              F.value "hascustommessage" $ not $ null documentinvitetext
+          defaultHeader <- if isSignatory msiglink || not forMail
+                            then
+                              renderLocalTemplate document "mailInvitationToSignContractDefaultHeader" $ do
+                                F.value "creatorname" $ creatorname
+                                F.value "personname" $ Just personname <| personname /= "" |> Nothing
+                                F.value "documenttitle" $ documenttitle
+                                F.value "hascustommessage" $ not $ null documentinvitetext
+                            else
+                              renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
+                                F.value "creatorname" creatorname
+                                F.value "personname" personname
+                                F.value "documenttitle" $ documenttitle
+                                F.value "hascustommessage" $ not $ null documentinvitetext
 
           if null documentinvitetext then
             return defaultHeader
@@ -273,7 +273,7 @@ mailDocumentClosed ctx document l sl sealFixed = do
    let mctx = mailContext ctx
    partylist <- renderLocalListTemplate document $ map getSmartName $ partyList document
    let mainfile = fromMaybe (unsafeFileID 0) (documentsealedfile document)
-   documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
+   documentMailWithDocLang ctx document "mailContractClosed" $ do
         F.value "partylist" $ partylist
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document

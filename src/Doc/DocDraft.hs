@@ -39,12 +39,8 @@ data DraftData = DraftData {
     , template :: Bool
     , tags :: Maybe [DocumentTag]
     , apicallbackurl :: Maybe String
-    , process :: Maybe DocumentProcess
     , authorattachments :: Maybe [FileID]
     } deriving Show
-
-instance FromJSValue DocumentProcess where
-  fromJSValue j = fromJSValue j >>= maybeRead
 
 instance FromJSValue DocumentTag where
     fromJSValue = do
@@ -76,7 +72,6 @@ instance FromJSValue DraftData where
         template' <- fromJSValueField "template"
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
-        process' <- fromJSValueField "process"
         authorattachments' <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
         case (title', daystosign') of
             (Just t, Just daystosign)
@@ -92,7 +87,6 @@ instance FromJSValue DraftData where
                                     , template = joinB template'
                                     , tags = tags'
                                     , apicallbackurl = apicallbackurl'
-                                    , process = process'
                                     , authorattachments = authorattachments'
                                  }
             _ -> return Nothing
@@ -114,10 +108,6 @@ applyDraftDataToDocument doc draft actor = do
                               }) actor
       when_ (template draft && (not $ isTemplate doc)) $ do
            dbUpdate $ TemplateFromDocument (documentid doc) actor
-      Log.debug $ "Process: "  ++ show (process draft)
-      when_ (isJust (process draft) && fromJust (process draft) /= toDocumentProcess (documenttype doc)) $ do
-           Log.debug "Changing document process"
-           dbUpdate $ SetDocumentProcess  (documentid doc) (fromJust (process draft)) actor
       when_ (isJust $ authorattachments draft) $ do
            forM_ (documentauthorattachments doc) $ \att -> do
               when_ (not $ (authorattachmentfile att) `elem` (fromJust $ authorattachments draft)) $ do
@@ -166,7 +156,6 @@ draftIsChangingDocument DraftData{..} doc@Document{..}  =
         (title /= documenttitle)
      || ((isJust invitationmessage) && (fromJust invitationmessage) /= documentinvitetext)
      || ((isJust lang) && (fromJust lang) /= documentlang)
-     || ((isJust process) && (fromJust process) /= toDocumentProcess documenttype)
      || ((isJust tags) && (Set.fromList $ fromJust tags) /= documenttags)
      || (apicallbackurl /= documentapicallbackurl)
      || (template /= isTemplate doc)

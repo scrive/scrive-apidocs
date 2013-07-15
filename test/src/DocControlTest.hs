@@ -38,10 +38,8 @@ docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
     testThat "Sending a reminder updates last modified date on doc" env testSendReminderEmailUpdatesLastModifiedDate
   , testThat "Create document from template" env testDocumentFromTemplate
-  , testThat "Uploading file as contract makes doc" env testUploadingFileAsContract
+  , testThat "Uploading file as contract makes doc" env testUploadingFile
   , testThat "Create document from template | Shared" env testDocumentFromTemplateShared
-  , testThat "Uploading file as offer makes doc" env testUploadingFileAsOffer
-  , testThat "Uploading file as order makes doc" env testUploadingFileAsOrder
   , testThat "Uploading file creates unsaved draft" env testNewDocumentUnsavedDraft
   , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
   , testThat "Sending an reminder clears delivery information" env testSendingReminderClearsDeliveryInformation
@@ -53,25 +51,9 @@ docControlTests env = testGroup "Templates" [
   , testThat "Bankid mismatch happends when it should" env testBankIDMismatch
   ]
 
-testUploadingFileAsContract :: TestEnv ()
-testUploadingFileAsContract = do
-  (user, rsp) <- uploadDocAsNewUser Contract
-  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
-  assertEqual "New doc" 1 (length docs)
-  let newdoc = head docs
-  assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
-
-testUploadingFileAsOffer :: TestEnv ()
-testUploadingFileAsOffer = do
-  (user, rsp) <- uploadDocAsNewUser Offer
-  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
-  assertEqual "New doc" 1 (length docs)
-  let newdoc = head docs
-  assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
-
-testUploadingFileAsOrder :: TestEnv ()
-testUploadingFileAsOrder = do
-  (user, rsp) <- uploadDocAsNewUser Order
+testUploadingFile :: TestEnv ()
+testUploadingFile = do
+  (user, rsp) <- uploadDocAsNewUser
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
@@ -79,7 +61,7 @@ testUploadingFileAsOrder = do
 
 testNewDocumentUnsavedDraft :: TestEnv ()
 testNewDocumentUnsavedDraft = do
-  (user, _rsp) <- uploadDocAsNewUser Contract
+  (user, _rsp) <- uploadDocAsNewUser
   docs <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False False] [] (0,maxBound)
   assertEqual "Draft is there" 1 (length docs)
   docs' <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False False] [] (0,maxBound)
@@ -87,14 +69,13 @@ testNewDocumentUnsavedDraft = do
 
 
 
-uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, Response)
-uploadDocAsNewUser doctype = do
+uploadDocAsNewUser :: TestEnv (User, Response)
+uploadDocAsNewUser = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
 
-  req <- mkRequest POST [ ("type", inText (show $ Signable doctype))
-                        , ("file", inFile "test/pdfs/simple.pdf") ]
+  req <- mkRequest POST [ ("file", inFile "test/pdfs/simple.pdf") ]
   (rsp, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
   return (user, rsp)
 
@@ -117,7 +98,7 @@ testLastPersonSigningADocumentClosesIt = do
             user
             (\d -> documentstatus d == Preparation
                      && (case documenttype d of
-                          Signable _ -> True
+                          Signable -> True
                           _ -> False)
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
             file
@@ -164,7 +145,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
             user
             (\d -> documentstatus d == Pending
                      && (case documenttype d of
-                          Signable _ -> True
+                          Signable -> True
                           _ -> False)
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
 
@@ -200,7 +181,7 @@ testSendReminderEmailByCompanyAdmin = do
             user
             (\d -> documentstatus d == Pending
                      && case documenttype d of
-                         Signable _ -> True
+                         Signable -> True
                          _ -> False
                      && (all (== EmailDelivery) $ signatorylinkdeliverymethod <$> documentsignatorylinks d)   )
 
@@ -243,7 +224,7 @@ testSendingReminderClearsDeliveryInformation = do
             user
             (\d -> documentstatus d == Pending
                      && case documenttype d of
-                         Signable _ -> True
+                         Signable -> True
                          _ -> False)
   let sl = head . reverse $ documentsignatorylinks doc
       actor  =  systemActor $ ctxtime ctx
@@ -260,7 +241,7 @@ testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
     doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
-                                                            Template _ -> True
+                                                            Template -> True
                                                             _ -> False)
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (\c -> c { ctxmaybeuser = Just user })
@@ -275,7 +256,7 @@ testDocumentFromTemplateShared = do
     (Company {companyid}) <- addNewCompany
     (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
     doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
-                                                            Template _ -> True
+                                                            Template -> True
                                                             _ -> False)
     _ <- randomUpdate $ SetDocumentSharing [documentid doc] True
     (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid

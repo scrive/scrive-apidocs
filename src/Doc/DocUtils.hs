@@ -140,10 +140,8 @@ class MaybeTemplate a where
    isSignable :: a -> Bool
 
 instance MaybeTemplate DocumentType where
-   isTemplate (Template _) = True
-   isTemplate _ = False
-   isSignable (Signable _) = True
-   isSignable _ = False
+   isTemplate t = t == Template
+   isSignable t = t == Signable
 
 instance MaybeTemplate Document where
    isTemplate = isTemplate . documenttype

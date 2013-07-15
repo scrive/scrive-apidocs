@@ -54,7 +54,6 @@ import JSONUtilTest
 import SQLUtilsTest
 import SessionsTest
 import FileTest
-import Doc.TestJSON
 import EvidenceLogTest
 import PadTest
 --import LiveDocxTest
@@ -90,7 +89,6 @@ allTests = tail tests
       , ("mails", mailsTests )
       , ("jsonutil", const jsonUtilTests )
       , ("file", const fileTests )
-      , ("docjson", const documentJSONTests)
       , ("sqlutil", const sqlUtilsTests )
       , ("evidencelog", const evidenceLogTests)
       , ("pad", const padTests)

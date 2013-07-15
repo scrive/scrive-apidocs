@@ -8,7 +8,6 @@ module Doc.DocStateData (
   , DocumentStatus(..)
   , DocumentTag(..)
   , DocumentType(..)
-  , DocumentProcess(..)
   , FieldPlacement(..)
   , File(..)
   , FileStorage(..)
@@ -30,8 +29,6 @@ module Doc.DocStateData (
   , StatusClass(..)
   , getFieldOfType
   , getValueOfType
-  , documentType
-  , toDocumentProcess
   ) where
 
 import Data.Data
@@ -331,39 +328,26 @@ instance Show DocumentStatus where
   show Rejected = "Rejected"
   show (DocumentError _) = "DocumentError"
 
-data DocumentProcess = Contract | Offer | Order
-  deriving (Eq, Ord, Show, Read, Bounded, Enum)
 
-data DocumentType = Signable DocumentProcess
-                  | Template DocumentProcess
+data DocumentType = Signable | Template
   deriving (Eq, Ord, Show, Read)
 
 instance Convertible DocumentType SqlValue where
   safeConvert v = Right . SqlInt32 $ case v of
-    Signable _ -> 1
-    Template _ -> 2
-
-documentType :: (Int, DocumentProcess) -> DocumentType
-documentType (1, p) = Signable p
-documentType (2, p) = Template p
-documentType v = error $ "documentType: wrong values: " ++ show v
+    Signable -> 1
+    Template -> 2
 
 instance Convertible SqlValue DocumentType where
   safeConvert v = do
     (val :: Int) <- safeConvert v
     case val of
-      1 -> return (Signable undefined)
-      2 -> return (Template undefined)
+      1 -> return Signable
+      2 -> return Template
       x -> Left (ConvertError { convSourceValue = show v
                               , convSourceType = show (typeOf v)
                               , convDestType = "DocumentType"
                               , convErrorMessage = "Value " ++ show x ++ " is not in [1,2]"
                               })
-
-
-toDocumentProcess :: DocumentType -> DocumentProcess
-toDocumentProcess (Signable p) = p
-toDocumentProcess (Template p) = p
 
 data DocumentSharing = Private
                      | Shared -- means that the document is shared with subaccounts, and those with same parent accounts
@@ -418,7 +402,7 @@ instance HasDefaultValue Document where
           , documentsignatorylinks       = []
           , documentfile                 = Nothing
           , documentstatus               = Preparation
-          , documenttype                 = Signable Contract
+          , documenttype                 = Signable
           , documentctime                = fromSeconds 0
           , documentmtime                = fromSeconds 0
           , documentdaystosign           = 14
@@ -465,7 +449,6 @@ data MailsDeliveryStatus = Delivered
 
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
-$(enumDeriveConvertible ''DocumentProcess)
 $(enumDeriveConvertible ''StatusClass)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)
