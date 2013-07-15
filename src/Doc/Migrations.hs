@@ -948,3 +948,11 @@ removeStatsTables =
   , mgrFrom = 24
   , mgrDo = kRunRaw "DROP TABLE doc_stat_events, sign_stat_events, user_stat_events CASCADE"
   }
+
+removeProcessFromDocuments :: MonadDB m => Migration m
+removeProcessFromDocuments =
+  Migration
+  { mgrTable = tableDocuments
+  , mgrFrom = 25
+  , mgrDo = kRunRaw "ALTER TABLE documents DROP COLUMN process"
+  }

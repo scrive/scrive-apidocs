@@ -125,7 +125,7 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       when (isJust mviewer) $
         J.value "canperformsigning" $ userCanPerformSigningAction (fromJust mviewer) doc
       J.value "objectversion" $ documentobjectversion doc
-      J.value "process" $ "contract"
+      J.value "process" $ "Contract"
       J.value "isviewedbyauthor" $ isSigLinkFor mviewer (getAuthorSigLink doc)
       when (not $ forapi) $ do
         J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))

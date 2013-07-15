@@ -1362,7 +1362,6 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
     header : function() {
         var field = this.model;
         var signatory = this.model.signatory();
-        var process = signatory.document().process();
         var box = $("<div class='signatureHeader'>");
         var sname = signatory.nameOrEmail();
         if (sname == "")
@@ -1370,7 +1369,7 @@ var SignaturePlacementViewWithoutPlacement = Backbone.View.extend({
             if (signatory.isCsv())
              sname =  localization.csv.title;
             else
-             sname =  process.processLocalization().signatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
+             sname =  localization.process.contract.signatoryname + " " + signatory.signIndex();
         }
             box.text(localization.signature.placeFor(sname));
         return box;
@@ -1557,7 +1556,6 @@ var SignaturePlacementView = Backbone.View.extend({
     header : function() {
         var placement = this.model;
         var signatory = this.model.field().signatory();
-        var process = signatory.document().process();
         var box = $("<div class='signatureHeader'>");
         var sname = signatory.nameOrEmail();
         if (sname == "")
@@ -1565,7 +1563,7 @@ var SignaturePlacementView = Backbone.View.extend({
             if (signatory.isCsv())
              sname =  localization.csv.title;
             else
-             sname =  process.processLocalization().signatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
+             sname =  localization.process.contract.signatoryname + (localization.process.contract.numberedsignatories() ? " " + signatory.signIndex() : "");
         }
         if (placement.field().value() == "")
             box.text(localization.signature.placeFor(sname));

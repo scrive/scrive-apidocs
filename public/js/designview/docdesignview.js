@@ -323,11 +323,11 @@
             }
             var content = $("<span/>");
             if (document.authorIsOnlySignatory())
-                content = $(document.process().processLocalization().signatorysignmodalcontentauthoronly);
+                content = $(localization.process.contract.signatorysignmodalcontentauthoronly);
             else if (signatory.elegAuthentication())
-                content = $(document.process().processLocalization().signatorysignmodalcontentdesignvieweleg);
+                content = $(localization.process.contract.signatorysignmodalcontentdesignvieweleg);
             else
-                content = $(document.process().processLocalization().signatorysignmodalcontent);
+                content = $(localization.process.contract.signatorysignmodalcontent);
 
             DocumentDataFiller.fill(document, content);
             if (signatory.elegAuthentication()) {
@@ -349,19 +349,19 @@
             var document = model.document();
             var signatory = document.currentSignatory();
             var box = $('<div />');
-            var content = $("<p/>").append($("<span/>").append(document.process().processLocalization().confirmsendtext));
+            var content = $("<p/>").append($("<span/>").append(localization.process.contract.confirmsendtext));
             if (!document.authorIsOnlySignatory())
                     content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
             content.append($("<span>?</span>"));
             box.append(DocumentDataFiller.fill(document,content));
 
             Confirmation.popup({
-                title : document.process().processLocalization().confirmsendtitle,
+                title : localization.process.contract.confirmsendtitle,
                 acceptButton : new Button({
                     size: "tiny",
                     color : "green",
                     shape : "rounded",
-                    text : document.process().processLocalization().sendbuttontext,
+                    text : localization.process.contract.sendbuttontext,
                     onClick : function() {
                         if (alreadyClicked(this))
                             return;

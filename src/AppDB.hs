@@ -139,6 +139,7 @@ kontraMigrations = [
   , removeStatsTables
   , removeEmailDomainFromCompany
   , asyncEventQueueChangePrimaryKeyToBigSerial
+  , removeProcessFromDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

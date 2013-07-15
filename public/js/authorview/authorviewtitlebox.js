@@ -78,7 +78,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "red",
       size: "small",
-      text: document.process().processLocalization().restartbuttontext,
+      text: localization.process.contract.restartbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return;
@@ -93,7 +93,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "green",
       size: "small",
-      text: document.process().processLocalization().prolongbuttontext,
+      text: localization.process.contract.prolongbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return;
@@ -108,7 +108,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "red",
       size: "small",
-      text: document.process().processLocalization().cancelbuttontext,
+      text: localization.process.contract.cancelbuttontext,
       cssClass: "s-withdraw-button",
       onClick: function() {
           mixpanel.track('Click withdraw button');
@@ -121,11 +121,11 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
                                       function(signatory) {
                                         return signatory.hasSigned();
                                       });
-          var modalcontent = somebodysigned ? document.process().processLocalization().cancelmodaltextwithsignatures : document.process().processLocalization().cancelmodaltext;
+          var modalcontent = somebodysigned ? localization.process.contract.cancelmodaltextwithsignatures : localization.process.contract.cancelmodaltext;
         Confirmation.popup({
-          title: document.process().processLocalization().cancelmodaltitle,
+          title: localization.process.contract.cancelmodaltitle,
           content: modalcontent,
-          acceptText: document.process().processLocalization().cancelbuttontext,
+          acceptText: localization.process.contract.cancelbuttontext,
           rejectText: localization.cancel,
           acceptColor: "red",
           extraClass : "s-withdraw-confirmation",

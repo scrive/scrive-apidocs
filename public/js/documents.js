@@ -152,9 +152,6 @@ window.Document = Backbone.Model.extend({
     readOnlyView: function() {
         return this.get("readOnlyView");
     },
-    process: function() {
-        return this.get("process");
-    },
     lang: function() {
         return this.get("lang");
     },
@@ -344,7 +341,6 @@ window.Document = Backbone.Model.extend({
           apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
-          process : this.process().process(),
           template: this.isTemplate(),
           authorattachments : _.map(this.authorattachments(), function(a) {return a.draftData()})
       };
@@ -604,15 +600,8 @@ window.Document = Backbone.Model.extend({
          return new Signatory(_.defaults(signatoryargs, { document: self }));
        }),
        authoruser: args.author != undefined ? new DocumentAuthor(_.defaults(args.author, { document: self })) : undefined,
-       process: function() {
-                        var process= new Process({process : args.process});
-                        process.bind("change", function() { self.trigger("change:process")});
-                        // This is not used but nice to have. Please leave it.
-                        // It is used now --Eric
-                        return process;
-                }(),
        lang: (function() {
-           var lang = new Lang({lang : args.lang});
+           var lang = new DocLang({lang : args.lang});
            lang.bind('change', function() {
                self.trigger('change:lang');
            });

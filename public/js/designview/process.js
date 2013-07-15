@@ -40,7 +40,6 @@
             div.addClass('design-view-action-process-left-column');
 
             div.append(view.documentName());
-            div.append(view.documentType());
             div.append(view.language());
             div.append(view.deadline());
             //div.append(view.attachments());
@@ -104,58 +103,6 @@
             div.append(field.el());
 
             return div;
-        },
-        documentType: function() {
-            var view = this;
-            var viewmodel = view.model;
-            var doc = viewmodel.document();
-
-            var labelText = localization.designview.documentType;
-
-            var process = doc.process();
-            var processName = 'Contract';
-            if(process)
-                processName = process.process();
-
-            var processText = {
-                Contract : { name : localization.process.contract.name,
-                             value : 'Contract' },
-                Offer    : { name : localization.process.offer.name,
-                             value : 'Offer'    },
-                Order    : { name : localization.process.order.name,
-                             value : 'Order'    }
-            };
-
-            var processTypes = ['Contract', 'Offer', 'Order'];
-
-            var div = $('<div />');
-            div.addClass('design-view-action-process-left-column-document-type');
-
-            var label = $('<div />');
-            label.addClass('design-view-action-process-left-column-document-type-label');
-            label.text(labelText + ':');
-
-            var select = new Select({
-                options: _.map(processTypes, function(e) {
-                    return processText[e];
-                }),
-                name: processText[processName].name,
-                textWidth: "130px",
-                cssClass : 'design-view-action-process-left-column-document-type-field',
-                onSelect: function(v) {
-                    mixpanel.track('Select document type', {
-                        'Document type' : v
-                    });
-                    doc.process().setProcess(v);
-                    return true;
-                }
-            });
-            doc.bind('change:process', function() {
-                    select.setName(processText[doc.process().process()].name);
-                });
-
-            return div.append(label).append(select.el());
-
         },
         language: function() {
             var view = this;
