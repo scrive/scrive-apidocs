@@ -345,10 +345,18 @@ checkDBConsistency logger tables migrations = do
         deleteFirst f xs = let (a, b) = break f xs in a ++ drop 1 b
 
     checkVersion table = do
-      mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblName table]
-      case mver of
-        Just ver -> return ver
-        Nothing  -> return (-1)
+      doesExist <- getOne $ sqlSelect "pg_catalog.pg_class c" $ do
+            sqlResult "TRUE"
+            sqlLeftJoinOn "pg_catalog.pg_namespace n" "n.oid = c.relnamespace"
+            sqlWhereEq "c.relname" $ tblNameString table
+            sqlWhere "pg_catalog.pg_table_is_visible(c.oid)"
+      case doesExist of
+        Just (_::Bool) -> do
+          mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblName table]
+          case mver of
+            Just ver -> return ver
+            Nothing  -> return (-1)
+        Nothing -> return (-1)
 
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
       if tblName (mgrTable m) == tblName t && mgrFrom m >= from
