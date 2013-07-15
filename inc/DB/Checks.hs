@@ -58,7 +58,7 @@ currentCatalog = do
 checkDBTimeZone :: MonadDB m => (String -> m ()) -> m ()
 checkDBTimeZone logger = do
   dbname <- currentCatalog
-  logger $ "Setting " ++ unRawSQL dbname ++ " database to return timestamps in UTC"
+  logger $ "Setting '" ++ unRawSQL dbname ++ "' database to return timestamps in UTC"
   kRunRaw $ "ALTER DATABASE " <> dbname <> " SET TIMEZONE = 'UTC'"
   return ()
 
@@ -89,10 +89,8 @@ checkDBConsistency logger tables migrations = do
     tblPutProperties table
 
   forM_ tables $ \table -> do
-    logger $ "Ensuring indexes on table '" ++ tblNameString table ++ "'..."
     checkIndexes table
 
-    logger $ "Ensuring foreign keys on table '" ++ tblNameString table ++ "'..."
     checkForeignKeys table
 
   where
@@ -101,13 +99,11 @@ checkDBConsistency logger tables migrations = do
 
     checkTables = (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
     checkTable table@Table{..} = do
-      logger $ "Checking table '" ++ tblNameString table ++ "'..."
       ver <- checkVersion table
       if ver < 0
         then do
-          logger "Table doesn't exist, creating..."
+          logger $ "Creating table '" ++ tblNameString table ++ "' at version " ++ show tblVersion ++ "..."
           kRun_ (createStatement table)
-          logger $ "Table created, writing version information..."
           kRun_ . sqlInsert "table_versions" $ do
             sqlSet "name" tblName
             sqlSet "version" tblVersion
@@ -122,14 +118,14 @@ checkDBConsistency logger tables migrations = do
                                    error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
                   ValidationOk sqls -> do
                                    if null sqls
-                                     then logger "Table structure is valid."
+                                     then do
+                                       logger $ "Table '" ++ tblNameString table ++ "' version " ++ show tblVersion
                                      else do
-                                       mapM_ (logger . show) sqls
-                                       logger $ "Correcting structure..."
+                                       logger $ "Table '" ++ tblNameString table ++ "' version " ++ show tblVersion ++ ", structure corrected..."
                                        mapM_ kRun_ sqls
                                    return $ Right $ Nothing
         else do
-          logger "Table is outdated, scheduling for migration."
+          logger $ "Table '" ++ tblNameString table ++ "' scheduled for migration " ++ show ver ++ "=>" ++ show tblVersion ++"..."
           return $ Right $ Just (table, ver)
 
     createStatement table@Table{..} = mconcat [
@@ -357,10 +353,10 @@ checkDBConsistency logger tables migrations = do
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
       if tblName (mgrTable m) == tblName t && mgrFrom m >= from
          then do
-           logger $ "Migrating table '" ++ tblNameString t ++ "' from version " ++ show (mgrFrom m) ++ "..."
            ver <- checkVersion $ mgrTable m
+           logger $ "Migrating table '" ++ tblNameString t ++ "' " ++ show ver ++ "=>" ++ show (mgrFrom m + 1) ++ "..."
            when (ver /= mgrFrom m) $
-             error $ "Migration can't be performed because current table version (" ++ show ver ++ ") doesn't match parameter mgrFrom of next migration to be run (" ++ show (mgrFrom m) ++ "). Make sure that migrations were put in migrationsList in correct order."
+             error $ "Migrations are in wrong order in migrations list."
            mgrDo m
            kRun_ $ SQL "UPDATE table_versions SET version = ? WHERE name = ?"
                    [toSql $ succ $ mgrFrom m, toSql $ tblName t]
@@ -436,6 +432,9 @@ checkDBConsistency logger tables migrations = do
           shouldAdd index = not (any (structurallySame index) present)
           structurallySame (_name1,index1) (_name2,index2) =
             tblIndexColumns index1 == tblIndexColumns index2
+
+      when (not (null toDrop) || not (null toAdd)) $ do
+        logger $ "Ensuring indexes on table '" ++ tblNameString table ++ "'..."
 
       forM_ toDrop $ \(name,_def) -> do
         logger $ "   dropping index '" ++ unRawSQL name ++ "'"
@@ -548,14 +547,16 @@ checkDBConsistency logger tables migrations = do
                 <+> (if fkDeferrable fk then "DEFERRABLE" else "NOT DEFERRABLE")
                 <+> (if fkDeferred fk then "INITIALLY DEFERRED" else "INITIALLY IMMEDIATE")
 
-      forM_ (foreignKeysToDrop L.\\ foreignKeysToAddNames) $ \name -> do
-        logger $ "   dropping foreign key '" ++ unRawSQL name ++ "'"
-      forM_ (L.intersect foreignKeysToDrop foreignKeysToAddNames) $ \name -> do
-        logger $ "   updating foreign key '" ++ unRawSQL name ++ "'"
-      forM_ (foreignKeysToAddNames L.\\ foreignKeysToDrop) $ \name -> do
-        logger $ "   adding foreign key '" ++ unRawSQL name ++ "'"
 
       when (not (null foreignKeysToDrop) || not (null foreignKeysToAdd)) $ do
+         logger $ "Ensuring foreign keys on table '" ++ tblNameString table ++ "'..."
+         forM_ (foreignKeysToDrop L.\\ foreignKeysToAddNames) $ \name -> do
+           logger $ "   dropping foreign key '" ++ unRawSQL name ++ "'"
+         forM_ (L.intersect foreignKeysToDrop foreignKeysToAddNames) $ \name -> do
+           logger $ "   updating foreign key '" ++ unRawSQL name ++ "'"
+         forM_ (foreignKeysToAddNames L.\\ foreignKeysToDrop) $ \name -> do
+           logger $ "   adding foreign key '" ++ unRawSQL name ++ "'"
+
          kRun_ $ "ALTER TABLE" <+> raw (tblName table)
                  <+> intersperse "," (map xdrop foreignKeysToDrop ++
                                      map xadd foreignKeysToAdd)
