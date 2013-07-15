@@ -30,7 +30,7 @@ var AccountModel = Backbone.Model.extend({
   },
   apisettings : function() {
         if (this.get("apisettings") != undefined) return this.get("apisettings");
-        this.set({ "apisettings" : new APISettings() });
+        this.set({ "apisettings" : new OauthDashboard() });
         return this.apisettings();
   },
   stats : function() {
@@ -96,7 +96,7 @@ var AccountModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.account.apiSettings.name,
                         elems: [function() {return $(account.apisettings().el());}],
-                        pagehash : ["api-dashboard","api-mailapi"],
+                        pagehash : ["api-dashboard"],
                         onActivate : function() {
                             account.apisettings().refresh();
                             mixpanel.register({Subcontext : 'API settings tab'});

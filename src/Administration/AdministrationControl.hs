@@ -47,8 +47,6 @@ import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
-import ScriveByMail.Model
-import Crypto.RNG(random)
 import Util.Actor
 import Payments.Action
 import Payments.Model
@@ -141,8 +139,7 @@ showAdminUsers userId = onlySalesOrAdmin $ do
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
   company  <- guardJustM . dbQuery $ GetCompany companyid
-  mmailapi <- dbQuery $ GetCompanyMailAPI companyid
-  adminCompanyPage company mmailapi
+  adminCompanyPage company
 
 showAdminCompanyPayments :: Kontrakcja m => CompanyID -> m String
 showAdminCompanyPayments companyid = onlySalesOrAdmin $ do
@@ -382,10 +379,6 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
   _ <- dbUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
-  mmailapi <- dbQuery $ GetCompanyMailAPI companyid
-  when_ (isNothing mmailapi) $ do
-    key <- random
-    dbUpdate $ SetCompanyMailAPIKey companyid key 1000
   return $ LinkCompanyAdmin $ Just companyid
 
 handleCompanyPaymentsChange :: Kontrakcja m => CompanyID -> m KontraLink

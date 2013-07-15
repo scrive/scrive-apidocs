@@ -30,7 +30,6 @@ import DB
 import DB.SQL2
 import User.UserView
 import User.Utils
-import ScriveByMail.Model
 import Control.Logic
 import InputValidation
 import User.History.Model
@@ -40,7 +39,6 @@ import Company.Model
 import Mails.SendMail
 import ActionQueue.EmailChangeRequest
 import Util.HasSomeUserInfo
-import Crypto.RNG
 import Util.FlashUtil
 import ActionQueue.UserAccountRequest
 import ThirdPartyStats.Core
@@ -99,10 +97,8 @@ apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
-  mumailapi <- dbQuery $ GetUserMailAPI $ userid user
   mcompany <- getCompanyForUser user
-  mcmailapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
-  Ok <$> userJSON ctx user mumailapi mcompany mcmailapi (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
+  Ok <$> userJSON ctx user mcompany (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
 
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
@@ -189,8 +185,6 @@ apiCallCreateCompany =  api $  do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
   company <- dbUpdate $ CreateCompany
-  mailapikey <- random
-  _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   -- payment plan needs to migrate to company

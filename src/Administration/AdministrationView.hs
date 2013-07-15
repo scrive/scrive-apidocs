@@ -33,12 +33,9 @@ import MinutesTime
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Kontra
-import ScriveByMail.Model
-import ScriveByMail.View
 import qualified Text.StringTemplates.Fields as F
 import Payments.Model
 import Data.Functor
-import Control.Monad
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => Context -> m String
@@ -111,13 +108,11 @@ adminUserDocumentsPage uid ctx =
 
 
 {- | Manager company page - can change company info and settings here -}
-adminCompanyPage :: TemplatesMonad m => Company -> Maybe MailAPIInfo -> m String
-adminCompanyPage company mmailapiinfo =
+adminCompanyPage :: TemplatesMonad m => Company ->  m String
+adminCompanyPage company =
   renderTemplate "admincompany" $ do
     F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     companyFields (Just company)
-    when (isJust mmailapiinfo) $ mailAPIInfoFields (fromJust mmailapiinfo)
-    F.value "hasmailapi" $ isJust mmailapiinfo
     F.value "adminlink" $ show $ LinkAdminOnly
 
 adminCompanyPaymentPage :: TemplatesMonad m => Maybe PaymentPlan -> Int -> CompanyID -> String -> m String

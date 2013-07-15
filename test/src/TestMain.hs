@@ -42,13 +42,11 @@ import InputValidationTest
 import LoginTest
 import SignupTest
 import AccountInfoTest
-import MailAPITest
 import MailModelTest
 import RedirectTest
 import UserStateTest
 import UserHistoryTest
 import CSVUtilTest
-import SimpleMailTest
 import LangTest
 import CompanyAccountsTest
 import MailsTest
@@ -82,12 +80,10 @@ allTests = tail tests
       , ("login", const loginTests)
       , ("signup", const signupTests)
       , ("accountinfo", const accountInfoTests)
-      , ("mailapi", const mailApiTests)
       , ("redirect", const redirectTests)
       , ("userstate", const userStateTests)
       , ("userhistory", const userHistoryTests)
       , ("csvutil", const $ const csvUtilTests)
-      , ("simplemail", const $ const simpleMailTests)
       , ("mailmodel", const mailModelTests)
       , ("lang", const langTests)
       , ("companyaccounts", const companyAccountsTests)

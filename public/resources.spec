@@ -176,13 +176,10 @@ set systemPage
  js   js/admin/csvstatsview.js
  js   js/admin/createuser.js
  js   js/admin/useradminsales.js
- js   js/account/mailapi.js
  js   js/account/company.js
  js   js/account/user.js
  js   js/account/accountsettings/accountsettings.js
  js   js/account/accountsettings/changepasswordpopup.js
- js   js/account/apisettings/apisettings.js
- js   js/account/apisettings/mailapisettings.js
  js   js/account/apisettings/oauthdashboard.js
  js   js/account/usersandstats/stats.js
  js   js/account/usersandstats/companyaccounts.js

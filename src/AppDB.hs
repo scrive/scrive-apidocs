@@ -29,7 +29,6 @@ import PadQueue.Migrations
 import Session.Tables
 import Mails.Migrations
 import OAuth.Tables
-import ScriveByMail.Tables
 import ELegitimation.ELegTransaction.Tables
 import EvidenceLog.Tables
 import EvidenceLog.Migrations
@@ -145,7 +144,6 @@ kontraMigrations = [
 kontraTables :: [Table]
 kontraTables = [
     tableUsers
-  , tableUserMailAPIs
   , tableUserInviteInfos
   , tableUsersHistory
   , tableCompanies
@@ -157,7 +155,6 @@ kontraTables = [
   , tableSignatoryAttachments
   , tableEvidenceLog
   , tablePadQueue
-  , tableCompanyMailAPIs
   , tableDocumentTags
   , tableSignatoryLinkFields
   , tableSignatoryScreenshots

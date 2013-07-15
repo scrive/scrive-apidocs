@@ -18,7 +18,6 @@ import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.Control as BankID
 import qualified User.UserControl as UserControl
-import qualified ScriveByMail.Control as MailAPI
 import qualified Payments.Control as Payments
 import qualified Attachment.Control as AttachmentControl
 import Doc.API
@@ -50,8 +49,6 @@ staticRoutes = choice
      [  allLangDirs $                          hGet $ toK0 $ sendRedirect $ LinkDesignView
      ,  allLangDirs $  dir "localization"    $ hGet $ toK1 localizationScript
      ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
-     -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
 
 
      -- Top level handlers - buttons on top bar, when user is logged in
@@ -129,7 +126,6 @@ staticRoutes = choice
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "company" $ Company.routes
-     , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
      , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet

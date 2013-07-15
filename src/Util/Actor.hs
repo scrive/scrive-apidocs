@@ -3,7 +3,6 @@ module Util.Actor (
   , authorActor
   , signatoryActor
   , systemActor
-  , mailAPIActor
   , mailSystemActor
   , userActor
   , adminActor
@@ -85,18 +84,6 @@ signatoryActor time ip muid email slid = Actor {
   , actorWho = "the signatory (" ++ email ++ ")"
 }
 
--- | For documents created using mailapi/scrivebymail
-mailAPIActor :: MinutesTime -> UserID -> String -> Actor
-mailAPIActor time uid email = Actor {
-    actorTime = time
-  , actorIP = Nothing
-  , actorUserID = Just uid
-  , actorEmail = Just email
-  , actorSigLinkID = Nothing
-  , actorAPIString = Just "Mail API"
-  , actorWho = "the user (" ++ email ++ ") (using the Mail API)"
-}
-
 -- | For delivery/reading notifications from the mail system
 mailSystemActor :: MinutesTime -> Maybe UserID -> String -> SignatoryLinkID -> Actor
 mailSystemActor time muid email slid = Actor {
@@ -141,5 +128,5 @@ apiActor time ip uid email apistring = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Nothing
   , actorAPIString = Just apistring
-  , actorWho = "the user (" ++ show email ++ ") (using the API)" 
+  , actorWho = "the user (" ++ show email ++ ") (using the API)"
   }
