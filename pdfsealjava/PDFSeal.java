@@ -200,6 +200,11 @@ class PdfPTableDrawFrameAroundTable implements PdfPTableEvent
     }
 }
 
+
+class Base64DecodeException extends Exception
+{
+}
+
 /*
 
 Sealing works like this:
@@ -250,6 +255,7 @@ public class PDFSeal {
         }
 
         document.close();
+        writer.close();
     }
 
     /*
@@ -257,7 +263,7 @@ public class PDFSeal {
      * top of it.  If sealing add also paginatin markers.
      */
     public static void stampFieldsAndPaginationOverPdf(SealSpec spec, PdfReader reader, ArrayList<Field> fields, OutputStream os)
-        throws DocumentException, IOException
+        throws DocumentException, IOException, Base64DecodeException
     {
         PdfStamper stamper = new PdfStamper(reader, os);
 
@@ -316,6 +322,9 @@ public class PDFSeal {
                         float realy = (1 - field.y - field.image_h) * cropBox.getHeight() + cropBox.getBottom();
 
                         byte jpegdata[] = Base64.decode(field.valueBase64);
+                        if( jpegdata==null ) {
+                            throw new Base64DecodeException();
+                        }
                         Jpeg jpeg = new Jpeg(jpegdata);
 
                         jpeg.setAbsolutePosition(realx, realy);
@@ -400,12 +409,16 @@ public class PDFSeal {
         ArrayList<Field> result = new ArrayList<Field>();
         if( spec.persons!=null ) {
             for( Person person : spec.persons ) {
-                result.addAll(person.fields);
+                if( person.fields!=null ) {
+                    result.addAll(person.fields);
+                }
             }
         }
         if( spec.secretaries!=null ) {
             for( Person person : spec.secretaries ) {
-                result.addAll(person.fields);
+                if( person.fields!=null ) {
+                    result.addAll(person.fields);
+                }
             }
         }
         if( spec.fields!=null ) {
@@ -415,11 +428,11 @@ public class PDFSeal {
     }
 
     /*
-     * Helper function that creates a box for each person involve in a
+     * Helper function that creates a box for each person involved in a
      * document signing process.
      */
     public static void addPersonsTable(Iterable<Person> persons, Document document, SealSpec spec)
-        throws DocumentException, IOException
+        throws DocumentException, IOException, Base64DecodeException
     {
         Paragraph para;
 
@@ -437,13 +450,20 @@ public class PDFSeal {
             cell.setPaddingBottom(12);
             cell.setBorderWidth(1f);
 
-            para = createParagraph(person.fullname, 10, Font.BOLD, lightTextColor );
-            para.setLeading(0f, 1.2f);
-            cell.addElement(para);
-            para = createParagraph(person.company, 10, Font.NORMAL, lightTextColor);
-            para.setLeading(0f, 1.2f);
-            para.setSpacingAfter(13);
-            cell.addElement(para);
+            if( person.fullname!=null && person.fullname!="" ) {
+                para = createParagraph(person.fullname, 10, Font.BOLD, lightTextColor );
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
+            }
+            if( person.company!=null && person.company!="" ) {
+                para = createParagraph(person.company, 10, Font.NORMAL, lightTextColor);
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
+            }
+            /*
+             * Spacing.
+             */
+            cell.addElement(new Paragraph(""));
             if( person.personalnumber!=null && person.personalnumber!="" ) {
                 para = createParagraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, 10, Font.NORMAL, lightTextColor );
                 para.setLeading(0f, 1.2f);
@@ -459,6 +479,10 @@ public class PDFSeal {
                     field.valueBase64!="" &&
                     field.includeInSummary ) {
                         byte jpegdata[] = Base64.decode(field.valueBase64);
+                        if( jpegdata==null ) {
+                            throw new Base64DecodeException();
+                        }
+
                         Jpeg jpeg = new Jpeg(jpegdata);
 
                         if( field.keyColor!=null ) {
@@ -506,7 +530,7 @@ public class PDFSeal {
      * work with stamping.  itext seems limited here.
      */
     public static void prepareSealPages(SealSpec spec, OutputStream os)
-        throws IOException, DocumentException
+        throws IOException, DocumentException, Base64DecodeException
     {
         Document document = new Document();
         PdfWriter writer = PdfWriter.getInstance(document, os);
@@ -698,15 +722,16 @@ public class PDFSeal {
     }
 
     public static void addFileAttachments(PdfReader reader, Iterable<SealAttachment> attachments, OutputStream os )
-        throws IOException, DocumentException
+        throws IOException, DocumentException, Base64DecodeException
     {
         PdfStamper stamper = new PdfStamper(reader, os);
 
         for( SealAttachment attachment : attachments ) {
             byte data[] = Base64.decode(attachment.fileBase64Content);
-            if(data!=null ) {
-                stamper.addFileAttachment(attachment.fileName, data, null, attachment.fileName);
+            if( data==null ) {
+                throw new Base64DecodeException();
             }
+            stamper.addFileAttachment(attachment.fileName, data, null, attachment.fileName);
         }
         stamper.close();
         reader.close();
@@ -719,7 +744,7 @@ public class PDFSeal {
      * @throws DocumentException
      */
     public static void manipulatePdf(SealSpec spec)
-        throws IOException, DocumentException
+        throws IOException, DocumentException, Base64DecodeException
     {
         if( spec.preseal==null || !spec.preseal ) {
 
@@ -750,9 +775,11 @@ public class PDFSeal {
 
     static Boolean hasCJK(String str) {
         /*
-         * Warning: Java represents 16bit values as 'char'. This is not a Unicode code point!
-         * Basically surrogate pairs are represented as two separate chars. This means the following
-         * needs to be adjusted to cover chars if the range 0x10000-0x1FFFF.
+         * Warning: Java represents 16bit values as 'char'. This is
+         * not a Unicode code point!  Basically surrogate pairs are
+         * represented as two separate chars. This means the following
+         * needs to be adjusted to cover chars if the range
+         * 0x10000-0x1FFFF.
          *
          * For now I have no idea how to do this correctly.
          */
@@ -782,7 +809,7 @@ public class PDFSeal {
     static BaseFont baseFontKochiMincho;
 
     /*
-     * Fontology in PDF seems to be the most annying thing in the world.
+     * Fontology in PDF seems to be the most annoying thing in the world.
      *
      * For all reasonable alphabets we use Helvetica.ttf that we embed
      * inside jar file.
@@ -846,7 +873,9 @@ public class PDFSeal {
      * @throws DocumentException
      * @throws IOException
      */
-    public static void main(String[] args) throws IOException, DocumentException {
+    public static void main(String[] args)
+        throws IOException, DocumentException, Base64DecodeException
+    {
         if( args.length!=1) {
             System.err.println("Usage:");
             System.err.println("    java -jar pdfseal.jar config.json");
