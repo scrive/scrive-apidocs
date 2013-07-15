@@ -24,6 +24,12 @@
 }
 @font-face {
   font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 600;
+  src: local('Source Sans Pro SemiBold'), local('SourceSansPro-SemiBold'), url(/css/fonts/SourceSansPro-SemiBold.woff) format('woff');
+}
+@font-face {
+  font-family: 'Source Sans Pro';
   font-style: italic;
   font-weight: 700;
   src: local('Source Sans Pro Bold Italic'), local('SourceSansPro-BoldIt'), url(/css/fonts/SourceSansPro-BoldIt.woff) format('woff');

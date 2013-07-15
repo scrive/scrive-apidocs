@@ -408,7 +408,7 @@ var AccountSettingsView = Backbone.View.extend({
     changePasswordButton : function() {
       var model = this.model;
       return new Button({
-        color: "blue",
+        color: "black",
         size: "tiny",
         text: localization.account.accountDetails.changeEmailButton,
         cssClass : "new-mail-button",
@@ -420,7 +420,7 @@ var AccountSettingsView = Backbone.View.extend({
     changeEmailButton : function() {
       var model = this.model;
       return new Button({
-        color: "blue",
+        color: "black",
         size: "tiny",
         text: localization.account.accountDetails.changeEmailButton,
         cssClass : "new-mail-button",
