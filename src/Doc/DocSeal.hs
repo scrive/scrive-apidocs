@@ -54,7 +54,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.Lazy as BSL (empty)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Base64 as B64
-import qualified SealSpec as Seal
+import qualified Doc.SealSpec as Seal
 import qualified GuardTime as GT
 import qualified Log
 import System.IO.Temp

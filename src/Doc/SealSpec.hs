@@ -1,5 +1,5 @@
 
-module SealSpec where
+module Doc.SealSpec where
 
 import qualified Text.JSON.Gen as J
 
