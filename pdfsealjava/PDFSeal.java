@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 import java.net.URL;
+import java.lang.Character.UnicodeBlock;
 import org.yaml.snakeyaml.*;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -747,8 +748,38 @@ public class PDFSeal {
         }
     }
 
+    static Boolean hasCJK(String str) {
+        /*
+         * Warning: Java represents 16bit values as 'char'. This is not a Unicode code point!
+         * Basically surrogate pairs are represented as two separate chars. This means the following
+         * needs to be adjusted to cover chars if the range 0x10000-0x1FFFF.
+         *
+         * For now I have no idea how to do this correctly.
+         */
+        for( int i=0; i<str.length(); i++ ) {
+            char c = str.charAt(i);
+            UnicodeBlock cblock = UnicodeBlock.of(c);
+            if( cblock==UnicodeBlock.CJK_COMPATIBILITY
+                || cblock==UnicodeBlock.CJK_COMPATIBILITY_FORMS
+                || cblock==UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+                || cblock==UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT
+                || cblock==UnicodeBlock.CJK_RADICALS_SUPPLEMENT
+                || cblock==UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                || cblock==UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                || cblock==UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                || cblock==UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                /* These are present in newer Java:
+                || cblock==UnicodeBlock.CJK_STROKES
+                || cblock==UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C
+                || cblock==UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D */
+                )
+                return true;
+        }
+        return false;
+    }
 
     static BaseFont baseFontHelvetica;
+    static BaseFont baseFontKochiMincho;
 
     /*
      * Fontology in PDF seems to be the most annying thing in the world.
@@ -768,13 +799,26 @@ public class PDFSeal {
     static Font getFontForString(String text, float size, int style, BaseColor color)
         throws DocumentException, IOException
     {
-        if(baseFontHelvetica==null ) {
-            URL url = PDFSeal.class.getResource("/Helvetica.ttf");
+        Font font = null;
+        if( font==null && hasCJK(text)) {
+            if(baseFontKochiMincho==null ) {
+                URL url = PDFSeal.class.getResource("/kochi-mincho-subst.ttf");
 
-            baseFontHelvetica = BaseFont.createFont(url.toString(),  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-            baseFontHelvetica.setSubset(true);
+                baseFontKochiMincho = BaseFont.createFont(url.toString(),  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                baseFontKochiMincho.setSubset(true);
+            }
+            font = new Font(baseFontKochiMincho, size, style, color);
         }
-        return new Font(baseFontHelvetica, size, style, color);
+        if( font==null ) {
+            if(baseFontHelvetica==null ) {
+                URL url = PDFSeal.class.getResource("/Helvetica.ttf");
+
+                baseFontHelvetica = BaseFont.createFont(url.toString(),  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                baseFontHelvetica.setSubset(true);
+            }
+            font = new Font(baseFontHelvetica, size, style, color);
+        }
+        return font;
     }
 
     static Paragraph createParagraph(String text, float size, int style, BaseColor color)

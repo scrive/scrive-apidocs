@@ -18,5 +18,5 @@ open : ../test/pdfs/simple.pdf-javasealed.pdf
 
 jar : pdfseal.jar
 
-pdfseal.jar : PDFSeal.class Manifest.txt Helvetica.ttf sealmarker.pdf
-	jar cfm $@ Manifest.txt *.class Helvetica.ttf sealmarker.pdf
+pdfseal.jar : PDFSeal.class Manifest.txt Helvetica.ttf kochi-mincho-subst.ttf sealmarker.pdf
+	jar cfm $@ Manifest.txt *.class Helvetica.ttf kochi-mincho-subst.ttf sealmarker.pdf
