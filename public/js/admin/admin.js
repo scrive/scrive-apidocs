@@ -54,7 +54,7 @@ var AdminModel = Backbone.Model.extend({
                             admin.documents().recall();
                         }
                     });
-  },
+  }
 });
 
 var AdminView = Backbone.View.extend({

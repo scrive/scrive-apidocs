@@ -128,14 +128,14 @@
                                             else return $("<small/>");
                                     }
 			    })
-                ],
+                ]
             }),
             headerExtras: function() {
                 var buttons = $('<div></div>');
                 buttons.append(createUserButton.el());
                 buttons.append(downloadCSVButton.el());
                 return buttons;
-            },
+            }
         };
     };
 })(window);
