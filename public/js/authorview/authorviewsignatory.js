@@ -133,7 +133,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
          var signatory = this.model.signatory();
          var button = $("<label class='clickable prepareToSendReminderMail'/>");
          var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
-         var text = signatory.hasSigned() ? localization.process.contract.remindagainbuttontext : localization.reminder.send;
+         var text = signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.send;
          var textbox = $("<span/>").text(text);
          button.append(icon).append(textbox);
          button.click(function() {
@@ -141,7 +141,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                             {'Signatory index':signatory.signIndex()});
              if( signatory.emailDelivery()) {
                  ConfirmationWithEmail.popup({
-                     title: signatory.hasSigned() ? localization.process.contract.remindagainbuttontext : localization.reminder.formHead,
+                     title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
                      mail: signatory.remindMail(),
                      acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
                      editText: localization.reminder.formOwnMessage,
@@ -158,7 +158,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                  });
              } else if( signatory.mobileDelivery()) {
                  Confirmation.popup({
-                     title: signatory.hasSigned() ? localization.process.contract.remindagainbuttontext : localization.reminder.formHead,
+                     title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
                      content: $("<div>").text(localization.reminder.mobileQuestion),
                      acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
                      rejectText: localization.cancel,
@@ -174,7 +174,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                  });
              } else if( signatory.emailMobileDelivery()) {
                  Confirmation.popup({
-                     title: signatory.hasSigned() ? localization.process.contract.remindagainbuttontext : localization.reminder.formHead,
+                     title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
                      content: $("<div>").text(localization.reminder.emailMobileQuestion),
                      acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
                      rejectText: localization.cancel,

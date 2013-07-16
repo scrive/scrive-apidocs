@@ -144,96 +144,29 @@ javascriptLocalisation =
             , couldNotUpload: "$_couldNotUpload()$"
             , goBack: "$_goBack()$"
             , process : {
-                contract: {
-                   name: "$_contractname()$",
-                   shortName: "$_contractshortname()$",
-                   sendbuttontext: "$_contractsendbuttontext()$",
-                   confirmsendtext: "$_contractconfirmsendtext()$",
-                   confirmsendtitle: "$_contractconfirmsendtitle()$",
-                   expirytext: "$_contractexpirytext()$",
-                   restartbuttontext: "$_contractrestartbuttontext()$",
-                   prolongbuttontext: "$_contractprolongbuttontext()$",
-                   cancelbuttontext: "$_contractcancelbuttontext()$",
-                   cancelmodaltitle: "$_contractcancelmodaltitle()$",
-                   cancelmodaltext: "$_contractcancelmodaltext()$",
-                   cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
-                   rejectbuttontext: "$_contractrejectbuttontext()$",
-                   signatorysignmodaltitle: "$_contractsignatorysignmodaltitle()$",
-                   signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
-                   signatorysignmodalcontentdesignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
-                   signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
-                   signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
-                   signbuttontext: "$_contractsignbuttontext()$",
-                   signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
-                   remindagainbuttontext: "$_contractremindagainbuttontext()$",
-                   authorname: "$_contractauthorname()$",
-                   authorsignatoryname: "$_contractauthorsignatoryname()$",
-                   signatoryname: "$_contractsignatoryname()$",
-                   nonsignatoryname: "$_contractnonsignatoryname()$"
-                },
-                offer: {
-                   name: "$_offername()$",
-                   shortName: "$_offershortname()$",
-                   sendbuttontext: "$_offersendbuttontext()$",
-                   confirmsendtext: "$_offerconfirmsendtext()$",
-                   confirmsendtitle: "$_offerconfirmsendtitle()$",
-                   expirytext: "$_offerexpirytext()$",
-                   restartbuttontext: "$_offerrestartbuttontext()$",
-                   prolongbuttontext: "$_offerprolongbuttontext()$",
-                   cancelbuttontext: "$_offercancelbuttontext()$",
-                   cancelmodaltitle: "$_offercancelmodaltitle()$",
-                   cancelmodaltext: "$_offercancelmodaltext()$",
-                   cancelmodaltextwithsignatures: "$_offercancelmodaltextwithsignatures()$",
-                   rejectbuttontext: "$_offerrejectbuttontext()$",
-                   signatorysignmodaltitle: "$_offersignatorysignmodaltitle()$",
-                   signatorysignmodalcontent: "<p>$_offersignatorysignmodalcontent()$ </p>",
-                   signatorysignmodalcontentdesignvieweleg: "<p>$_offersignatorysignmodalcontentdesignvieweleg()$ </p>",
-                   signatorysignmodalcontentsignvieweleg: "<p>$_offersignatorysignmodalcontentdesignvieweleg()$ </p>",
-                   signatorysignmodalcontentauthoronly: "<p>$_offersignatorysignmodalcontentauthoronly()$ </p>",
-                   signbuttontext: "$_offersignbuttontext()$",
-                   signatorycancelmodaltitle: "$_offersignatorycancelmodaltitle()$",
-                   remindagainbuttontext: "$_offerremindagainbuttontext()$",
-                   authorname: "$_offerauthorname()$",
-                   authorsignatoryname: "$_offerauthorsignatoryname()$",
-                   signatoryname: "$_offersignatoryname()$",
-                   nonsignatoryname: "$_offernonsignatoryname()$"
-                },
-                order: {
-                   name: "$_ordername()$",
-                   shortName: "$_ordershortname()$",
-                   sendbuttontext: "$_ordersendbuttontext()$",
-                   confirmsendtext: "$_orderconfirmsendtext()$",
-                   confirmsendtitle: "$_orderconfirmsendtitle()$",
-                   expirytext: "$_orderexpirytext()$",
-                   restartbuttontext: "$_orderrestartbuttontext()$",
-                   prolongbuttontext: "$_orderprolongbuttontext()$",
-                   cancelbuttontext: "$_ordercancelbuttontext()$",
-                   cancelmodaltitle: "$_ordercancelmodaltitle()$",
-                   cancelmodaltext: "$_ordercancelmodaltext()$",
-                   cancelmodaltextwithsignatures: "$_ordercancelmodaltextwithsignatures()$",
-                   rejectbuttontext: "$_orderrejectbuttontext()$",
-                   signatorysignmodaltitle: "$_ordersignatorysignmodaltitle()$",
-                   signatorysignmodalcontent: "<p>$_ordersignatorysignmodalcontent()$ </p>",
-                   signatorysignmodalcontentdesignvieweleg: "<p>$_ordersignatorysignmodalcontentdesignvieweleg()$ </p>",
-                   signatorysignmodalcontentsignvieweleg: "<p>$_ordersignatorysignmodalcontentdesignvieweleg()$ </p>",
-                   signatorysignmodalcontentauthoronly: "<p>$_ordersignatorysignmodalcontentauthoronly()$ </p>",
-                   signbuttontext: "$_ordersignbuttontext()$",
-                   signatorycancelmodaltitle: "$_ordersignatorycancelmodaltitle()$",
-                   remindagainbuttontext: "$_orderremindagainbuttontext()$",
-                   authorname: "$_orderauthorname()$",
-                   authorsignatoryname: "$_orderauthorsignatoryname()$",
-                   signatoryname: "$_ordersignatoryname()$",
-                   nonsignatoryname: "$_ordernonsignatoryname()$"
-                }
-
+               sendbuttontext: "$_contractsendbuttontext()$",
+               confirmsendtext: "$_contractconfirmsendtext()$",
+               confirmsendtitle: "$_contractconfirmsendtitle()$",
+               restartbuttontext: "$_contractrestartbuttontext()$",
+               prolongbuttontext: "$_contractprolongbuttontext()$",
+               cancelbuttontext: "$_contractcancelbuttontext()$",
+               cancelmodaltitle: "$_contractcancelmodaltitle()$",
+               cancelmodaltext: "$_contractcancelmodaltext()$",
+               cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
+               rejectbuttontext: "$_contractrejectbuttontext()$",
+               signatorysignmodaltitle: "$_contractsignatorysignmodaltitle()$",
+               signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
+               signatorysignmodalcontentdesignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
+               signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
+               signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
+               signbuttontext: "$_contractsignbuttontext()$",
+               signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
+               remindagainbuttontext: "$_contractremindagainbuttontext()$",
+               authorname: "$_contractauthorname()$",
+               authorsignatoryname: "$_contractauthorsignatoryname()$",
+               signatoryname: "$_contractsignatoryname()$",
+               nonsignatoryname: "$_contractnonsignatoryname()$"
               }
-            , filterByProcess: {
-                showAllProcesses: "$_showAllProcesses()$",
-                showAllProcessesTemplates: "$_showAllProcessesTemplates()$",
-                showContractsOnly: "$_showContractsOnly()$",
-                showOrdersOnly: "$_showOrdersOnly()$",
-                showOffersOnly: "$_showOffersOnly()$"
-            }
             , filterByTime: {
                 filterForm: "$_fromFilter()$",
                 filterTo: "$_toFilter()$"
@@ -314,9 +247,6 @@ javascriptLocalisation =
                     , documentTitle : "$_exampleDocumentTitle()$"
                     , documentInvitationMessage : "$_exampleDocumentInvitationMessage()$"
              }
-             , messages : {
-                      sendingDocument: "$_designViewMessageSending()$"
-                }
              , sign : "$_sign()$"
              , textFields : {
                       textField: "$_textField()$"
@@ -358,7 +288,6 @@ javascriptLocalisation =
              , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
              , mandatoryForSender: "$_designViewMandatoryForSender()$"
              , documentName: "$_designViewDocumentName()$"
-             , documentType: "$_designViewDocumentType()$"
              , recipientsLanguage: "$_designViewRecipientsLanguage()$"
              , signingDeadline: "$_designViewSigningDeadline()$"
              , addRemove: "$_designViewAddRemove()$"
@@ -527,10 +456,6 @@ javascriptLocalisation =
              ,  gateway : "$_verificationGateway()$"
 
           }
-        , promo : {
-             accept : "$_promoAccept()$"
-           , decline : "$_promoDecline()$"
-        }
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
@@ -668,7 +593,6 @@ javascriptLocalisation =
                             , sender : "$_SortSender()$"
                             , party  : "$_SortParty()$"
                             , title  : "$_SortDoc()$"
-                            , type   : "$_SortType()$"
 
                        }
                 }
@@ -691,7 +615,6 @@ javascriptLocalisation =
                     ,  search : "$_SearchDoc()$"
                     ,  columns :{
                               time       : "$_SortTime()$"
-                            , type       : "$_SortType()$"
                             , template   : "$_SortTemplate()$"
                             , shared      : "$_share()$"
                             , verificationMethod : "$_verificationMethod()$"
@@ -857,8 +780,7 @@ javascriptLocalisation =
            , deny : "$_apiConfiramtionDeny()$"
       }
       , apiDashboard : {
-            name : "$_apiOauthSettings()$"
-          , reveal : "$_apiOauthReveal()$"
+            reveal : "$_apiOauthReveal()$"
           , deleteToken :  "$_apiDashboardDelete()$"
           , deleteAll : "$_apiDashboardDeleteAll()$"
           , grantedPriviligesDescription: "$_apiDashboardGrantedPriviligesDescription()$"
@@ -912,16 +834,13 @@ javascriptLocalisation =
                 name : "$_apiSettings()$"
           }
           , accountSecurity : {
-                name            : "$_HeadAccountSettings()$"
-              , passwordSection : "$_password()$"
+                passwordSection : "$_password()$"
               , oldpassword     : "$_PresentPassword()$"
               , newpassword1    : "$_NewPassword()$"
               , newpassword2    : "$_RepeatNewPassword()$"
-              , langSection     : "$_LanguageSettings()$"
               , lang            : "$_UserLanguage()$"
               , langSV          : "$_Swedish()$"
               , langEN          : "$_English()$"
-              , save : "$_SaveChanges()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {
@@ -948,20 +867,6 @@ javascriptLocalisation =
               , columnRole :  "$_role()$"
 
             }
-          , mailAPI : {
-                name : "$_HeadMailApi()$"
-              , save : "$_SaveChanges()$"
-              , activeMails : "$_MailAPIActiveEmail()$"
-              , dailyLimit : "$_MailAPILimitsDaily()$"
-              , processedToday : "$_MailAPILimitsProcessedToday()$"
-              , personalMailAPIHeader : "$_MailAPISettings()$"
-              , enablePersonal : "$_MailAPIEnable()$"
-              , resetKeys : "$_MailAPIResetKey()$"
-              , limitMailAPIHeader : "$_MailAPILimitHead()$"
-              , resetLimit : "$_MailAPILimitsResetToday()$"
-              , companyMailAPIHeader : "$_CompanyMailAPI()$"
-
-          }
           , stats : {
                 name : "$_HeadUsageStats()$"
               , last30days : "$_last30Days()$"

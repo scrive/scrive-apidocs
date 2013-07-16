@@ -78,7 +78,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "red",
       size: "small",
-      text: localization.process.contract.restartbuttontext,
+      text: localization.process.restartbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return;
@@ -93,7 +93,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "green",
       size: "small",
-      text: localization.process.contract.prolongbuttontext,
+      text: localization.process.prolongbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return;
@@ -108,7 +108,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       color: "red",
       size: "small",
-      text: localization.process.contract.cancelbuttontext,
+      text: localization.process.cancelbuttontext,
       cssClass: "s-withdraw-button",
       onClick: function() {
           mixpanel.track('Click withdraw button');
@@ -121,11 +121,11 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
                                       function(signatory) {
                                         return signatory.hasSigned();
                                       });
-          var modalcontent = somebodysigned ? localization.process.contract.cancelmodaltextwithsignatures : localization.process.contract.cancelmodaltext;
+          var modalcontent = somebodysigned ? localization.process.cancelmodaltextwithsignatures : localization.process.cancelmodaltext;
         Confirmation.popup({
-          title: localization.process.contract.cancelmodaltitle,
+          title: localization.process.cancelmodaltitle,
           content: modalcontent,
-          acceptText: localization.process.contract.cancelbuttontext,
+          acceptText: localization.process.cancelbuttontext,
           rejectText: localization.cancel,
           acceptColor: "red",
           extraClass : "s-withdraw-confirmation",

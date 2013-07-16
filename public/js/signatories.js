@@ -216,13 +216,13 @@ window.Signatory = Backbone.Model.extend({
        if (signatory.isCsv())
         return localization.csv.title;
        if (signatory.signs() &&  signatory.author())
-        return localization.process.contract.authorsignatoryname + " " + signatory.signIndex();
+        return localization.process.authorsignatoryname + " " + signatory.signIndex();
        else if(signatory.author())
-        return localization.process.contract.authorname;
+        return localization.process.authorname;
        else if (signatory.signs())
-        return localization.process.contract.signatoryname + " " + signatory.signIndex();
+        return localization.process.signatoryname + " " + signatory.signIndex();
        else
-        return process.processLocalization().nonsignatoryname;
+        return localization.process.nonsignatoryname;
     },
     smartname: function() {
         if (this.current())

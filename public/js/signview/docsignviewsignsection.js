@@ -52,7 +52,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "blue",
-      text: localization.process.contract.signbuttontext,
+      text: localization.process.signbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return false;
@@ -79,11 +79,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (signatory.author) {
      var content = $("<div />");
      if (document.authorIsOnlySignatory())
-            content = $(localization.process.contract.signatorysignmodalcontentauthoronly);
+            content = $(localization.process.signatorysignmodalcontentauthoronly);
      else if (signatory.elegAuthentication())
-          content.append(localization.process.contract.signatorysignmodalcontentsignvieweleg);
+          content.append(localization.process.signatorysignmodalcontentsignvieweleg);
      else
-          content.append(localization.process.contract.signatorysignmodalcontent);
+          content.append(localization.process.signatorysignmodalcontent);
 
      if (signatory.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
@@ -95,9 +95,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     } else {
       var content = $("<div />");
       if (signatory.elegAuthentication())
-          content.append(localization.process.contract.signatorysignmodalcontentsignvieweleg);
+          content.append(localization.process.signatorysignmodalcontentsignvieweleg);
       else
-          content.append(localization.process.contract.signatorysignmodalcontent);
+          content.append(localization.process.signatorysignmodalcontent);
 
       if (signatory.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
@@ -124,7 +124,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var signatory = document.currentSignatory();
 
     Confirmation.popup({
-      title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.contract.signatorysignmodaltitle,
+      title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
       textcolor : this.model.usebranding() ? document.signviewtextcolour() : undefined,
@@ -220,11 +220,11 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         color: "red",
                                         shape : "rounded",
                                         width: 206,
-                                        text: localization.process.contract.rejectbuttontext,
+                                        text: localization.process.rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
                                             ConfirmationWithEmail.popup({
-                                            title: localization.process.contract.signatorycancelmodaltitle,
+                                            title: localization.process.signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
@@ -252,7 +252,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "blue",
                             width: BrowserInfo.isSmallScreen() ?  404 : 206,
-                            text: localization.process.contract.signbuttontext,
+                            text: localization.process.signbuttontext,
                             icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
 

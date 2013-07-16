@@ -323,11 +323,11 @@
             }
             var content = $("<span/>");
             if (document.authorIsOnlySignatory())
-                content = $(localization.process.contract.signatorysignmodalcontentauthoronly);
+                content = $(localization.process.signatorysignmodalcontentauthoronly);
             else if (signatory.elegAuthentication())
-                content = $(localization.process.contract.signatorysignmodalcontentdesignvieweleg);
+                content = $(localization.process.signatorysignmodalcontentdesignvieweleg);
             else
-                content = $(localization.process.contract.signatorysignmodalcontent);
+                content = $(localization.process.signatorysignmodalcontent);
 
             DocumentDataFiller.fill(document, content);
             if (signatory.elegAuthentication()) {
@@ -349,19 +349,19 @@
             var document = model.document();
             var signatory = document.currentSignatory();
             var box = $('<div />');
-            var content = $("<p/>").append($("<span/>").append(localization.process.contract.confirmsendtext));
+            var content = $("<p/>").append($("<span/>").append(localization.process.confirmsendtext));
             if (!document.authorIsOnlySignatory())
                     content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
             content.append($("<span>?</span>"));
             box.append(DocumentDataFiller.fill(document,content));
 
             Confirmation.popup({
-                title : localization.process.contract.confirmsendtitle,
+                title : localization.process.confirmsendtitle,
                 acceptButton : new Button({
                     size: "tiny",
                     color : "green",
                     shape : "rounded",
-                    text : localization.process.contract.sendbuttontext,
+                    text : localization.process.sendbuttontext,
                     onClick : function() {
                         if (alreadyClicked(this))
                             return;
