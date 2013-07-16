@@ -10,11 +10,6 @@ Description:
 Cabal-version: >= 1.6.0.0
 Build-type: Simple
 
-Flag pdfseal
-  Description: Build pdfseal
-  Manual: True
-  Default: True
-
 Flag cron
   Description: Build executable that run various jobs periodically
   Manual: True
@@ -152,7 +147,7 @@ Executable kontrakcja-server
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc src pdfseal/inc mailer/inc docconv/src messenger/src messenger/inc
+  Hs-source-dirs: inc misc src mailer/inc docconv/src messenger/src messenger/inc pdftools
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults -fcontext-stack=34
   if !flag(allow-warnings)
@@ -266,39 +261,13 @@ Executable kontrakcja-server
               TypeSynonymInstances,
               UndecidableInstances
 
-Executable pdfseal
-  if flag(pdfseal)
-    Buildable: True
-  else
-    Buildable: False
-
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
-  Hs-source-dirs: pdfseal/src pdfseal/inc
-  Main-is: SealMain.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              RankNTypes,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances
-
 Executable cron
   if flag(cron)
     Buildable: True
   else
     Buildable: False
 
-  Hs-source-dirs: inc misc src cron mailer/inc docconv/src pdfseal/inc messenger/inc
+  Hs-source-dirs: inc misc src cron mailer/inc docconv/src messenger/inc pdftools
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
   if !flag(allow-warnings)
@@ -473,7 +442,7 @@ Executable kontrakcja-test
 
   ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
-  Hs-source-dirs: inc misc test/src src pdfseal/inc mailer/inc docconv/src docconv/test/src messenger/src messenger/inc
+  Hs-source-dirs: inc misc test/src src mailer/inc docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults -fcontext-stack=34
   if flag(test-coverage)

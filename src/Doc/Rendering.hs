@@ -45,7 +45,6 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Log
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
-import qualified SealSpec as Seal
 import Redirect
 import File.Storage
 import Data.Char
@@ -169,46 +168,15 @@ preCheckPDFHelper content tmppath =
       checkSize
       checkHeader
       checkNormalize
-      checkSealing
       readOutput
   where
     sourcepath = tmppath ++ "/source.pdf"
     normalizedpath = tmppath ++ "/normalized.pdf"
-    sealedpath = tmppath ++ "/sealed.pdf"
 
     sizeLimit = 10 * 1000 * 1000
     contentLength = BS.length content
 
     headerPattern = BS.pack "%PDF-1."
-
-    sealSpec = Seal.SealSpec
-               { Seal.input          = normalizedpath
-               , Seal.output         = sealedpath
-               , Seal.documentNumber = "An example text"
-               , Seal.persons        = []
-               , Seal.secretaries    = []
-               , Seal.history        = []
-               , Seal.initials       = "An example text"
-               , Seal.hostpart       = "An example text"
-               , Seal.staticTexts    = sealingTexts
-               , Seal.attachments    = []
-               , Seal.filesList      = []
-               }
-
-    sealingTexts = Seal.SealingTexts
-                   { Seal.verificationTitle  = "An example text"
-                   , Seal.docPrefix          = "An example text"
-                   , Seal.signedText         = "An example text"
-                   , Seal.partnerText        = "An example text"
-                   , Seal.secretaryText      = "An example text"
-                   , Seal.documentText       = "An example text"
-                   , Seal.orgNumberText      = "An example text"
-                   , Seal.personalNumberText = "An example text"
-                   , Seal.eventsText         = "An example text"
-                   , Seal.dateText           = "An example text"
-                   , Seal.historyText        = "An example text"
-                   , Seal.verificationFooter = "An example text"
-                   }
 
     checkSize = do
       when (contentLength > sizeLimit) $
@@ -254,18 +222,6 @@ preCheckPDFHelper content tmppath =
 
       when (any (BSL.pack "is greater than numGlyphs" `BSL.isPrefixOf`) (BSL.tails stderr1)) $ do
          liftIO $ BS.writeFile normalizedpath content
-
-    checkSealing = do
-      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal"
-                                   [] (BSL.pack (show sealSpec))
-      when (exitcode /= ExitSuccess ) $ do
-        liftIO $ do
-          systmp <- getTemporaryDirectory
-          (_path,handle) <- openTempFile systmp ("pre-sealing-failed-.pdf")
-          BS.hPutStr handle content
-          hClose handle
-
-        throwError (FileSealingError stderr1)
 
     readOutput = liftIO $ BS.readFile normalizedpath
 

@@ -143,12 +143,16 @@ sampleSealingTexts = SealingTexts
       , personalNumberText = "ID-nr. żółw ŻÓŁW ÄÅÖäåö"
     }
 
+addBarackObamaToFirstPerson :: SealSpec -> IO SealSpec
+addBarackObamaToFirstPerson ss = do
+  obama <- addBarackObamaField
+  let addObama person = person { fields = obama : fields person }
+  return $ ss { persons = addObama (head (persons ss)) : tail (persons ss) }
+
 processFile :: String -> IO ()
 processFile filename = do
   let ss1 = sealspec filename
-  obama <- addBarackObamaField
-  let addObama person = person { fields = obama : fields person }
-  let ss = ss1 { persons = addObama (head (persons ss1)) : tail (persons ss1) }
+  ss <- addBarackObamaToFirstPerson ss1
   let pss = PreSealSpec { pssInput = input ss
                         , pssOutput = input ss ++ "-presealed.pdf"
                         , pssFields = concatMap fields (persons ss ++ secretaries ss)
