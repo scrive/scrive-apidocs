@@ -153,3 +153,4 @@ removeEmailDomainFromCompany =
   , mgrDo = do
       kRunRaw "ALTER TABLE companies DROP COLUMN email_domain"
   }
+

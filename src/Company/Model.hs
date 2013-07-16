@@ -39,6 +39,7 @@ data CompanyInfo = CompanyInfo {
   , companycity    :: String
   , companycountry :: String
   , companyipaddressmasklist :: [IPAddressWithMask]
+  , companysmsoriginator :: String
   } deriving (Eq, Ord, Show)
 
 data CompanyUI = CompanyUI {
@@ -160,6 +161,7 @@ instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
       sqlSet "ip_address_mask_list" $ case companyipaddressmasklist of
                                         [] -> Nothing
                                         x -> Just (show x)
+      sqlSet "sms_originator" companysmsoriginator
       sqlWhereEq "id" cid
 
 data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
@@ -198,6 +200,7 @@ selectCompaniesSelectors = do
   sqlResult "companies.city"
   sqlResult "companies.country"
   sqlResult "companies.ip_address_mask_list"
+  sqlResult "companies.sms_originator"
   sqlResult "companies.email_font"
   sqlResult "companies.email_bordercolour"
   sqlResult "companies.email_buttoncolour"
@@ -222,7 +225,7 @@ fetchCompanies :: MonadDB m => m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid name number address zip' city country
-      ip_address_mask_list email_font
+      ip_address_mask_list sms_originator email_font
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
       signview_textfont signview_barscolour signview_barstextcolour
@@ -237,6 +240,7 @@ fetchCompanies = kFold decoder []
         , companycity = city
         , companycountry = country
         , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
+        , companysmsoriginator = sms_originator
         }
       , companyui = CompanyUI {
           companyemailfont = email_font

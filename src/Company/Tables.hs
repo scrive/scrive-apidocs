@@ -33,6 +33,8 @@ tableCompanies = tblTable {
     , tblColumn { colName = "custom_barstextcolour", colType = TextT }
     , tblColumn { colName = "custom_barssecondarycolour", colType = TextT }
     , tblColumn { colName = "custom_backgroundcolour", colType = TextT }
+    , tblColumn { colName = "sms_originator", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+
     ]
   , tblPrimaryKey = ["id"]
   }

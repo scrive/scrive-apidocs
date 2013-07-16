@@ -905,7 +905,8 @@ javascriptLocalisation =
               , changeEmailMailSent1 : "$_flashMessageChangeEmailMailSent1()$"
               , changeEmailMailSent2 : "$_flashMessageChangeEmailMailSent2()$"
               , companyCreated : "$_flashMessageCompanyCreated()$"
-
+              , smsOriginator : "$_smsOriginator()$"
+              , smsOriginatorDescription : "$_smsOriginatorDescription()$"
             }
           , apiSettings : {
                 name : "$_apiSettings()$"

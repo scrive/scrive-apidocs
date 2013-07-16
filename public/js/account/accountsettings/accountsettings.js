@@ -111,6 +111,12 @@ var AccountSettingsModel = Backbone.Model.extend({
   setCompanycountry : function(v) {
      this.set({"companycountry" : v});
   },
+  companysmsoriginator: function() {
+     return this.get("companysmsoriginator");
+  },
+  setCompanysmsoriginator : function(v) {
+     this.set({"companysmsoriginator" : v});
+  },
   lang : function() {
     return this.get("lang");
   },
@@ -135,6 +141,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       , companyzip :      this.user().hasCompany() ? this.company().zip()  : undefined
       , companycity :     this.user().hasCompany() ? this.company().city()  : undefined
       , companycountry :  this.user().hasCompany() ? this.company().country()  : undefined
+      , companysmsoriginator : this.user().hasCompany() ? this.company().smsoriginator()  : undefined
     }, {silent : true});
     this.trigger("reset");
   },
@@ -188,7 +195,8 @@ var AccountSettingsModel = Backbone.Model.extend({
       companyaddress :  this.companyaddress(),
       companyzip :      this.companyzip(),
       companycity :     this.companycity(),
-      companycountry :  this.companycountry()
+      companycountry :  this.companycountry(),
+      companysmsoriginator : this.companysmsoriginator()
     }).send();
   },
   valid: function() {
@@ -384,6 +392,14 @@ var AccountSettingsView = Backbone.View.extend({
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companycountry))).append($("<td/>").append(companycountryinput)));
 
+            var companysmsoriginatorinput = $("<input type='text' maxlength=11/>").val(model.companysmsoriginator());
+            if (!model.companyAdmin()) companysmsoriginatorinput.attr("disabled","disabled");
+            companysmsoriginatorinput.change(function() {
+              model.setCompanysmsoriginator(companysmsoriginatorinput.val());
+            });
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.smsOriginator))).append($("<td/>").append(companysmsoriginatorinput)));
+            table.append($("<tr/>").append($("<td/>")).append($("<td/>").append($("<div style='font-size:10px;line-height: 10px;color:#999999;margin:0px 10px 0px 3px;font-style:italic'/>").text(localization.account.accountDetails.smsOriginatorDescription))));
+
 
             body.append(table);
 
@@ -516,6 +532,11 @@ var AccountSettingsView = Backbone.View.extend({
             });
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycountry)).append($("<td/>").append(companycountryinput)));
 
+            var companysmsoriginatorinput = $("<input type='text'/>").val(model.companysmsoriginator());
+            companysmsoriginatorinput.change(function() {
+              model.setCompanysmsoriginator(companysmsoriginatorinput.val());
+            });
+            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.smsOriginator)).append($("<td/>").append(companysmsoriginatorinput)));
 
             body.append(table);
 
