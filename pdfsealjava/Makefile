@@ -5,7 +5,7 @@ CLASSPATH=.:itextpdf-5.4.2.jar:itext-asian.jar:snakeyaml-1.12.jar
 all : output.pdf
 
 
-../test/pdfs/simple.pdf-javasealed.pdf :  pdfseal.jar example_spec.json ../test/pdfs/simple.pdf
+output.pdf :  pdfseal.jar example_spec.json
 	java -jar $< example_spec.json
 
 %.class : %.java
@@ -13,7 +13,7 @@ all : output.pdf
 
 PDFSeal.class : PDFSeal.java
 
-open : ../test/pdfs/simple.pdf-javasealed.pdf
+open : output.pdf
 	open $+
 
 jar : pdfseal.jar
