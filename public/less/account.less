@@ -6,7 +6,7 @@
 
 .account input.emailinput[type="text"],
 .account input.newpassword[type="text"] {
-    width: 140px;
+    width: 125px;
     margin-right: 10px;
     border-color: transparent;
     background: transparent;
@@ -15,8 +15,8 @@
 .account input[type="text"],
 .account input[type="password"] {
     width: 220px;
-    height: 22px;
-
+    height: 26px;
+    font-weight: 300;
 }
 .account input[type="checkbox"]{
     margin-right : 6px;
@@ -25,10 +25,11 @@
 
 .account-body table td {
    padding: 5px;
-   text-align: right;
+   text-align: left;
+   font-weight: 300;
 
    &:first-child {
-    width: 120px;
+    width: 108px;
    }  
 }
 
@@ -41,7 +42,7 @@
 .account > .col,
 .noprovider > .col {
      float: left;
-     width: 410px;
+     width: 430px;
 }
 
 .account > .col.float-right {
@@ -49,7 +50,7 @@
 }
 
 .account-header {
-   width: 450px;
+   width: 472px;
    min-height: 32px;
    margin: 20px 18px 5px 18px;
    padding-bottom: 15px;
@@ -57,10 +58,11 @@
    color: #333333;
    display: block;
    text-align: left;
-   border-bottom: 1px solid #DEE4ED;
+   border-bottom: 1px solid #ddd;
    font-family: Source Sans Pro,Helvetica Neue,sans-serif;
    font-size: 1.5em;
    line-height: 25px;
+   font-weight: 300;
 }
 
 
@@ -94,6 +96,7 @@
 
 .account-body label {
     font-size: 15px;
+    font-weight: 300;
     color: @text-very-dark;
 }
 

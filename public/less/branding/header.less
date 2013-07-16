@@ -41,7 +41,6 @@ header.site {
          &.active {
           color: #C2000A;
           cursor: default;
-          font-weight: bold;
           }
         }
         &.session-login {
@@ -57,7 +56,6 @@ header.site {
             padding-left:10px;
             padding-right:10px;
             float : left;
-            font-weight: 400;
             transform : translateZ(0);
             #page-login{
               margin-left: 0px;
@@ -66,13 +64,13 @@ header.site {
         }
         &.session-create {
           padding-right : 10px;
-          min-width : 200px;
           .clearfix;
+          &.fromtemplate {
+            padding-right: 50px;
+          }
           a.button {
-            min-width: 200px;
             margin-top : -14px;
             font-size: @regular-font-size;
-            font-weight: 400;
             margin-right : 0px;
             padding: 14px 20px;
             float : left;
