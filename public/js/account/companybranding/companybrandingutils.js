@@ -478,7 +478,7 @@ var CompanyBrandingLogoView = Backbone.View.extend({
     });
     var checkboxlabel = $("<label />").append(model.label());
 
-    this.upload = UploadButton.init({color: 'blue',
+    this.upload = new UploadButton({color: 'blue',
                                      size: 'tiny',
                                      text: localization.companyBranding.selectImageLabel,
                                      width: 150,
@@ -494,7 +494,7 @@ var CompanyBrandingLogoView = Backbone.View.extend({
                                     });
 
     this.customdiv = $("<div />");
-    this.customdiv.append($("<div class='logocustomise' />").append(this.upload.input()));
+    this.customdiv.append($("<div class='logocustomise' />").append(this.upload.el()));
 
     var container = $("<div/>");
     container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));

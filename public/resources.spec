@@ -172,7 +172,6 @@ set systemPage
  js   js/admin/admin.js
  js   js/admin/companyadmin.js
  js   js/admin/documentadmin.js
- js   js/admin/createuser.js
  js   js/admin/useradminsales.js
  js   js/account/company.js
  js   js/account/user.js

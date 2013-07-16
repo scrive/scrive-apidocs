@@ -139,7 +139,7 @@ var OAuthConfirationView = Backbone.View.extend({
     acceptButton : function() {
         var box = $("<div class='button-box'>");
         var model = this.model;
-        var button = Button.init({
+        var button = new Button({
           color: "green",
           size: "big",
           cssClass : "float-right",
@@ -148,7 +148,7 @@ var OAuthConfirationView = Backbone.View.extend({
               model.accept();
               return false;
           }
-        }).input();
+        }).el();
         return box.append(button);
     },
     loginBox : function() {
@@ -177,7 +177,7 @@ var OAuthConfirationView = Backbone.View.extend({
       passwordinput.el().attr("autocomplete","false");
       box.append(passwordinput.el());
 
-      var button = Button.init({
+      var button = new Button({
                   size  : "small",
                   color : "green",
                   cssClass : "login-button",
@@ -185,7 +185,7 @@ var OAuthConfirationView = Backbone.View.extend({
                   onClick : function() {
                         model.login(emailinput.value(),passwordinput.value());
                     }
-                }).input();
+                }).el();
       box.append(button);
       return box;
     },
@@ -201,7 +201,7 @@ var OAuthConfirationView = Backbone.View.extend({
               name : "email"
       });
       box.append(emailinput.el());
-      var button = Button.init({
+      var button = new Button({
                   size  : "small",
                   color : "green",
                   cssClass : "create-account-button",
@@ -212,7 +212,7 @@ var OAuthConfirationView = Backbone.View.extend({
                         else
                           new FlashMessage({color: "red", content: localization.loginModal.invalidEmail});
                     }
-                }).input();
+                }).el();
       box.append(button);
       return box;
     },

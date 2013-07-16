@@ -640,7 +640,7 @@
             };
             var loadingicon = $('<img src="/libs/recurly/images/submitting.gif" class="loading-icon" style="display:none" />');
             // replace button with our own
-            var button = Button.init({color:'green',
+            var button = new Button({color:'green',
                                       //size:'big',
                                       cssClass:'s-subscribe',
                                       text:localization.payments.subscribe,
@@ -672,7 +672,7 @@
                                               loadingicon.hide();
                                           });
                                       }});
-            div.find('button').replaceWith(button.input());
+            div.find('button').replaceWith(button.el());
 
             var expires = form.find('.field.expires');
             form.find('.field.cvv').insertAfter(expires);
@@ -1076,7 +1076,7 @@
                  beforeInject: function(el) {
                      el = $(el);
                      var work = true;
-                     var button = Button.init({color:'green',
+                     var button = new Button({color:'green',
                                                size:'small',
                                                text:localization.payments.savechanges,
                                                onClick: function() {
@@ -1089,7 +1089,7 @@
                                                    }
                                                }
                                               });
-                     el.find('button').replaceWith(button.input());
+                     el.find('button').replaceWith(button.el());
                      el.find('div.field').each(function(i, f) {
                          f = $(f);
                          var p = f.find('.placeholder').text();
@@ -1121,7 +1121,7 @@
             var view = this;
             var model = view.model;
 
-            var button = Button.init({color:'red',
+            var button = new Button({color:'red',
                                       size: 'small',
                                       cssClass: 'cancel-button',
                                       text: localization.payments.cancelsubscription,
@@ -1155,7 +1155,7 @@
                                           return false;
                                       }
                                      });
-            return button.input();
+            return button.el();
         }
     });
 
@@ -1195,7 +1195,7 @@
 
             var price = model.quantity() * 299 + "kr";
 
-            var button = Button.init({color:'green',
+            var button = new Button({color:'green',
                                       size: 'small',
                                       cssClass: 'renew-button',
                                       text: localization.payments.renewSubscription,
@@ -1229,7 +1229,7 @@
                                           return false;
                                       }
                                      });
-            return button.input();
+            return button.el();
         }
     });
 

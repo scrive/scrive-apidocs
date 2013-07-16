@@ -61,7 +61,7 @@ window.TemplatesListDefinition = function(archive) { return {
                 name : localization.archive.templates.createnew,
                 avaible : function() {return true;},
                 acceptEmpty : true,
-                button: Button.init({
+                button: new Button({
                             size: "tiny",
                             color : "black",
                             width : "144",

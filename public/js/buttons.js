@@ -1,6 +1,6 @@
 /* Basic buttons
  * Usage
- *  var button =  Button.init({
+ *  var button =  new Button({
  *                   color: "red | green | blue | black",
  *                   size: "tiny | small | big",
  *                   text: "Text that will be put inside of button"
@@ -9,7 +9,7 @@
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
  *
- * button.input()
+ * button.el()
 */
 
 (function(window){
@@ -22,7 +22,9 @@ var ButtonModel = Backbone.Model.extend({
       onClick : function() {return false;},
       icon : jQuery(""),
       labelstyle : undefined,
-      width: undefined
+      width: undefined,
+      cssClass : "",
+      style : ""
   },
   color : function(){
        return this.get("color");
@@ -53,6 +55,12 @@ var ButtonModel = Backbone.Model.extend({
   },
   isRounded : function() {
     return this.shape() == "rounded";
+  },
+  style: function() {
+    return this.get("style");
+  },
+  cssClass : function() {
+    return this.get("cssClass");
   }
 });
 
@@ -69,7 +77,23 @@ var ButtonView = Backbone.View.extend({
     updateText : function() {
       $(".label", $(this.el)).text(this.model.text());
     },
+    borderWidth : function(size){
+        if (size == "tiny" || size == "small")
+            return 1;
+        else if (size == "big")
+            return 2;
+        return 0;
+    },
+    labelPadding: function(size) {
+        if (size == "tiny" || size == "small")
+            return 16;
+        else if (size == "big")
+            return 30;
+        return 0;
+    },
     render: function () {
+        $(this.el).css("style",this.model.style());
+        $(this.el).addClass(this.model.cssClass());
         $(this.el).addClass(this.model.color());
 
         $(this.el).addClass("button");
@@ -97,7 +121,7 @@ var ButtonView = Backbone.View.extend({
         if (this.model.labelstyle() != undefined)
             $(this.el).attr("style",this.model.labelstyle());
         if (this.model.width() != undefined)
-            $(this.el).css("width",this.model.width() - (2*Button.borderWidth(this.model.size())) - (2* Button.labelPadding(this.model.size()))+ "px");
+            $(this.el).css("width",this.model.width() - (2*this.borderWidth(this.model.size())) - (2* this.labelPadding(this.model.size()))+ "px");
         label.append(this.model.icon());
         $(this.el).append(label);
         return this;
@@ -109,43 +133,11 @@ var ButtonView = Backbone.View.extend({
 });
 
 
-window.Button = {
-    init: function (args) {
-          var model = new ButtonModel({
-                       color : args.color,
-                       size  : args.size,
-                       text  : args.text,
-                       onClick : args.onClick,
-                       icon : args.icon,
-                       labelstyle : args.labelstyle,
-                       width: args.width,
-                       shape : args.shape
-                    });
-          var input = $("<a/>");
-          if (args.cssClass != undefined)
-              input.addClass(args.cssClass);
-          if (args.style != undefined)
-              input.attr("style",args.style);
-          var view = new ButtonView({model : model, el : input});
-          return new Object({
-              input : function() {return input;},
-              setText : function(text) { model.setText(text);}
-            });
-        },
-    borderWidth : function(size){
-        if (size == "tiny" || size == "small")
-            return 1;
-        else if (size == "big")
-            return 2;
-        return 0;
-    },
-    labelPadding: function(size) {
-        if (size == "tiny" || size == "small")
-            return 16;
-        else if (size == "big")
-            return 30;
-        return 0;
-    }
+window.Button = function (args) {
+   var model = new ButtonModel(args);
+   var view = new ButtonView({model : model, el : $("<a/>")});
+   this.el = function() {return $(view.el);};
+   this.setText = function(text) { model.setText(text);};
 };
 
 })(window);

@@ -260,7 +260,7 @@
                   }
             });
 
-            var button = Button.init({color: "black",
+            var button = new Button({color: "black",
                                       size: "tiny",
                                       text: localization.searchBoxButtonText,
                                       cssClass: "float-right search-button",
@@ -271,7 +271,7 @@
                                           filtering.searchText(searchBox.value());
                                       }
                                      });
-            $(this.el).append(button.input()).append(searchBox.el());
+            $(this.el).append(button.el()).append(searchBox.el());
         }
     });
 

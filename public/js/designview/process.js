@@ -259,7 +259,7 @@
             var div = $("<div class='design-view-action-process-left-column-attachments'/>");
             var label = $("<div class='design-view-action-process-left-column-attachments-label'/>").text(localization.attachments + ':');
 
-            var authorAttachmentButton = Button.init({
+            var authorAttachmentButton = new Button({
                 color: 'blue',
                 size: 'tiny',
                 text: localization.designview.addRemove,
@@ -271,7 +271,7 @@
                 }
             });
 
-            var sigAttachmentButton = Button.init({
+            var sigAttachmentButton = new Button({
                 color: 'blue',
                 size: 'tiny',
                 text: localization.designview.request,
@@ -284,8 +284,8 @@
             });
 
             //div.append(label);
-            div.append(authorAttachmentButton.input());
-            div.append(sigAttachmentButton.input());
+            div.append(authorAttachmentButton.el());
+            div.append(sigAttachmentButton.el());
             if (this.attachmentList != undefined)
             {
               this.attachmentList.destroy();

@@ -505,7 +505,7 @@ admincompanyusers=
   </div>
   <script>
 
-    var newUserInCompanyButton = Button.init({
+    var newUserInCompanyButton = new Button({
         color: "green",
         text : "Add new user",
         size : "tiny",
@@ -603,9 +603,9 @@ admincompanyusers=
                 acceptText : "Create",
                 content  : body
               });
-    } }).input();
+    } }).el();
 
-    var inviteExistingUserToCompany = Button.init({
+    var inviteExistingUserToCompany = new Button({
       color: "green",
       text : "Invite existing user",
       size : "tiny",
@@ -656,7 +656,7 @@ admincompanyusers=
                 acceptText : "Add",
                 content  : body
               });
-      }}).input();
+      }}).el();
 
 
     jQuery(function() {

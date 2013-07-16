@@ -237,7 +237,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         var field = this.model;
         var signatory = field.signatory();
         var document = signatory.document();
-        return Button.init({
+        return new Button({
                     color : 'green',
                     size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                     text: localization.signature.confirmSignature,
@@ -246,11 +246,11 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                         view.onClose();
                         return false;
                     }
-            }).input();
+            }).el();
     },
     clearButton : function() {
         var view = this;
-        return Button.init({
+        return new Button({
                 color : 'red',
                 size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
                 text: localization.pad.cleanImage,
@@ -258,7 +258,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                     view.drawer.clear();
                     return false;
                 }
-        }).input();
+        }).el();
     },
     footer : function() {
            var signatory = this.model.signatory();

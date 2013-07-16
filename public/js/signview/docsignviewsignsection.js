@@ -49,7 +49,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   createSignButtonElems: function() {
     var document = this.document();
     var guardModel = this.guardModel;
-    return Button.init({
+    return new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "blue",
       text: document.process().processLocalization().signbuttontext,
@@ -69,7 +69,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         };
         document.takeSigningScreenshot(function() { document.sign(errorCallback).send(); });
       }
-    }).input().css('margin-top', '-10px')
+    }).el().css('margin-top', '-10px')
               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
   },
   createPreambleElems: function() {
@@ -215,7 +215,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                              withReload: true});
          }
        };
-       this.rejectButton = Button.init({
+       this.rejectButton = new Button({
                                         size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                                         color: "red",
                                         shape : "rounded",
@@ -247,7 +247,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             });
                                         }
                                 });
-       this.signButton = Button.init({
+       this.signButton = new Button({
                             size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
                             shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "blue",
@@ -268,7 +268,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                 }
                             });
 
-      var signButton = this.signButton.input();
+      var signButton = this.signButton.el();
       if (BrowserInfo.isSmallScreen()) {
         signButton.css({
           'padding-left': '33%',
@@ -283,7 +283,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
       }
 
       if (model.hasRejectOption() && !BrowserInfo.isSmallScreen()) {
-        box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
+        box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.el()));
         box.append($("<div class='signwrapper sign'>").append(signButton));
       }
       else {

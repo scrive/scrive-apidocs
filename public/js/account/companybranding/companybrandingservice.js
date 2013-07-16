@@ -83,10 +83,10 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header1.append(this.logowrapper.append(this.logo));
 
     this.header2 = $('<div style="float: right; margin: 23px 8px;"/>');
-    this.header2.append(Button.init({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input());
+    this.header2.append(new Button({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).el());
 
     this.header3 = $('<div style="float: right; margin: 23px 8px;"/>');
-    this.header3.append(Button.init({size: 'tiny', color: 'blue', text: 'Start from templat', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).input());
+    this.header3.append(new Button({size: 'tiny', color: 'blue', text: 'Start from templat', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).el());
 
     this.header4 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;border-right:1px solid white"/>');
     this.header4content = $("<a class='hoverable'>Archive</a>");

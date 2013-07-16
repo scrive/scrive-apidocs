@@ -159,7 +159,7 @@ var ConfirmationView = Backbone.View.extend({
         footer.append(model.extraOption());
 
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
-            Button.init({color:model.acceptColor(),
+            new Button({         color:model.acceptColor(),
                                  size: BrowserInfo.isSmallScreen() ? "small" : "tiny",
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  shape: "rounded",
@@ -170,7 +170,7 @@ var ConfirmationView = Backbone.View.extend({
                                          view.clear();
                                      return false;
                                 }
-            }).input();
+            }).el();
        if (BrowserInfo.isSmallScreen()) {
          this.acceptButton.css({
            'padding-left': '35px',
@@ -182,7 +182,7 @@ var ConfirmationView = Backbone.View.extend({
        footer.append( this.acceptButton);
        container.append(header);
        container.append(body);
-       if (model.footerVisible()) 
+       if (model.footerVisible())
          container.append(footer);
        $(this.el).append(container);
        return this;

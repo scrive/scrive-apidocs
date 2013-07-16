@@ -228,7 +228,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        if (!BrowserInfo.isSmallScreen()) // We skip editing message on small screens
          footer.append(this.editOption);
 
-       var accept = Button.init({color:model.acceptColor(),
+       var accept = new Button({color:model.acceptColor(),
                                  size: BrowserInfo.isSmallScreen() ? "small" : "tiny",
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  cssClass: "float-right",
@@ -241,7 +241,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 
 								}
         });
-       footer.append(accept.input());
+       footer.append(accept.el());
        container.append(header);
        container.append(body);
        container.append(footer);

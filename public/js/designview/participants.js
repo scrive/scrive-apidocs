@@ -24,7 +24,7 @@
             var view = this;
             var sig = view.model;
 
-            var button = Button.init({
+            var button = new Button({
                 color: 'black',
                 size: 'tiny',
                 text: '+ ' + localization.designview.addField,
@@ -34,7 +34,7 @@
                 }
             });
 
-            return button.input();
+            return button.el();
         },
         addOne: function() {
 
@@ -292,7 +292,7 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-new-single');
 
-            var button = Button.init({
+            var button = new Button({
                 color: 'green',
                 size: 'tiny',
                 text: '+ ' + localization.designview.addParty,
@@ -312,7 +312,7 @@
                 }
             });
 
-            div.append(button.input());
+            div.append(button.el());
 
             return div;
         },
@@ -322,7 +322,7 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-new-multi');
 
-            var button = Button.init({
+            var button = new Button({
                 color: 'black',
                 size: 'tiny',
                 text: '+ ' + localization.designview.addMultisend,
@@ -336,7 +336,7 @@
                 }
             });
 
-            div.append(button.input());
+            div.append(button.el());
 
             return div;
         },
@@ -346,7 +346,7 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-done');
 
-            var button = Button.init({
+            var button = new Button({
                 color: 'green',
                 size: 'tiny',
                 text: localization.save,
@@ -356,7 +356,7 @@
                 }
             });
 
-            div.append(button.input());
+            div.append(button.el());
 
             return div;
         }
@@ -721,7 +721,7 @@
             });
 
             if(sig.isCsv()) {
-                var csvButton = Button.init({
+                var csvButton = new Button({
                     color: 'blue',
                     text: localization.designview.viewCSV,
                     size: 'tiny',
@@ -733,7 +733,7 @@
                     }
                 });
                 var wrapperdiv = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
-                wrapperdiv.append(csvButton.input());
+                wrapperdiv.append(csvButton.el());
                 div.append(wrapperdiv);
             }
             div.append(view.newFieldSelector.el);
@@ -786,7 +786,7 @@
             else
                 $(input.el()).removeClass('redborder');
 
-            var button = Button.init({
+            var button = new Button({
                 color: 'black',
                 size: 'tiny',
                 text: localization.ok,
@@ -796,7 +796,7 @@
 
 
             div.append(input.el());
-            div.append(button.input());
+            div.append(button.el());
 
             return div;
 

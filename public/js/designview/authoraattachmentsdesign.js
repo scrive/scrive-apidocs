@@ -77,7 +77,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var box = $("<div class='option-box'>");
         var header = $("<div class='header'/>").text(localization.selectFileToUpload);
         var subheader = $("<div class='sheader'/>").text(localization.onlyPDF);
-        this.uploadButton = UploadButton.init({
+        this.uploadButton = new UploadButton({
                 color : "green",
                 size: "small",
                 text: localization.authorattachments.selectFile,
@@ -96,7 +96,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
             });
         box.append(header);
         box.append(subheader);
-        box.append($("<div class='buttonbox'/>").append(this.uploadButton.input()));
+        box.append($("<div class='buttonbox'/>").append(this.uploadButton.el()));
         return box;
     },
     selectFromTemplateButtonBox : function() {
@@ -105,7 +105,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var box = $("<div class='option-box'>");
         var header = $("<div class='header'/>").text(localization.authorattachments.selectAttachment);
         var subheader = $("<div class='sheader'/>").text(localization.authorattachments.storedInScrive);
-        var selectAttachmentButton = Button.init({
+        var selectAttachmentButton = new Button({
             color : "green",
             size: "small",
             text: localization.authorattachments.selectAttachment,
@@ -118,7 +118,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
           });
         box.append(header);
         box.append(subheader);
-        box.append($("<div class='buttonbox'/>").append(selectAttachmentButton.input()));
+        box.append($("<div class='buttonbox'/>").append(selectAttachmentButton.el()));
         return box;
     },
     avaibleAttachmentsList : function() {

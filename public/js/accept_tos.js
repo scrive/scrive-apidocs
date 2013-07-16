@@ -63,7 +63,7 @@
           tosAccept.css("border-width","0px");
         }
       });
-      var acceptButton = Button.init({
+      var acceptButton = new Button({
           size: 'small',
           color: 'green',
           text: localization.send,
@@ -73,7 +73,7 @@
           }
         });
 
-      body.append($("<div class='position' style='text-align:center'/>").append(acceptButton.input()));
+      body.append($("<div class='position' style='text-align:center'/>").append(acceptButton.el()));
 
     }
   });
