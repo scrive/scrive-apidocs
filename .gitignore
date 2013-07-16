@@ -16,3 +16,11 @@ kontrakcja-test.tix
 jslint.txt
 .hpc/
 *.less.css
+
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+.\#*

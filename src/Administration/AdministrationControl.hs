@@ -265,7 +265,7 @@ jsonUsersList = onlySalesOrAdmin $ do
                     value "companyposition" $ usercompanyposition $ userinfo user
                     value "company"  $ getCompanyName (user,mcompany)
                     value "phone"    $ userphone $ userinfo user
-                    value "tos"      $ maybe "-" show (userhasacceptedtermsofservice user)
+                    value "tos"      $ formatMinutesTimeRealISO <$> (userhasacceptedtermsofservice user)
                     value "viral_invites" $ itype == Viral
                     value "admin_invites" $ itype == Admin
                 value "link" $ show $ LinkUserAdmin $ Just $ userid user

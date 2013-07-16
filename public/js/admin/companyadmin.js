@@ -2,6 +2,7 @@
 
 (function(window){
 window.CompanyAdminListDefinition = function() { return {
+    loadOnInit: false,
     name : "CompaniesTable",
     schema: new Schema({
         url: "/adminonly/companies",

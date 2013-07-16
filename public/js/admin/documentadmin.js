@@ -70,6 +70,7 @@ window.DocumentAdminListDefinition = function(isAdmin, userid) {
     }
 
     var list = {
+	loadOnInit: false,
         name : "Documents Table",
         schema: new Schema({
             url: "/adminonly/documentslist" + (userid != undefined && userid != ""  ? "?userid=" + userid : ""),

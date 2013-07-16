@@ -37,6 +37,8 @@
             return this.get("special") != undefined && this.get("special") == "bool";
 
         },
+	// Can be used in the same way as the inbuilt Backbone.Model.parse
+	// since the parse function isnt called for some reason.
         rendering: function(value, mainrow, model) {
             return this.get("rendering")(value, mainrow, model);
         },

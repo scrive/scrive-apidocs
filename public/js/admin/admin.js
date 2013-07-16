@@ -12,11 +12,6 @@ var AdminModel = Backbone.Model.extend({
         this.set({ "companyadmin" : new KontraList(CompanyAdminListDefinition(this)) });
         return this.companyadmin();
   },
-  useradmin: function() {
-        if (this.get("useradmin") != undefined) return this.get("useradmin");
-        this.set({ "useradmin" : new KontraList(UserAdminListDefinition(this)) });
-        return this.useradmin();
-  },
   useradminforsales: function() {
         if (this.get("useradminforsales") != undefined) return this.get("useradminforsales");
         this.set({ "useradminforsales" : new KontraList(UserAdminSalesListDefinition(this)) });
@@ -26,20 +21,6 @@ var AdminModel = Backbone.Model.extend({
         if (this.get("documents") != undefined) return this.get("documents");
         this.set({ "documents" : new KontraList(DocumentAdminListDefinition(this.isAdmin(), undefined)) });
         return this.documents();
-  },
-  csvstats: function() {
-    if (this.get("csvstats") != undefined) return this.get("csvstats");
-    this.set({ "csvstats" : new CSVStats() });
-    return this.csvstats();
-  },
-
-  statsAsCSVTab : function() {
-                    var admin = this;
-                    return new Tab({
-                        name: "CSV Statistics",
-                        elems: [$(admin.csvstats().el())],
-                        pagehash : "csvstats"
-                    });
   },
   salesUserAdminTab : function() {
                     var admin = this;
@@ -74,17 +55,6 @@ var AdminModel = Backbone.Model.extend({
                         }
                     });
   },
-  userAdminTab : function() {
-                    var admin = this;
-                    return new Tab({
-                        name: "User Admin",
-                        elems: [function() { return $(admin.useradmin().el()); }],
-                        pagehash : "useradmin",
-                        onActivate : function() {
-                            admin.useradmin().recall();
-                        }
-                    });
-  }
 });
 
 var AdminView = Backbone.View.extend({
@@ -100,11 +70,9 @@ var AdminView = Backbone.View.extend({
        var view = this;
        var tabs = new KontraTabs({
         tabs: [
-           admin.statsAsCSVTab(),
            admin.salesUserAdminTab(),
-           admin.documentsTab(),
-           admin.userAdminTab(),
-           admin.companyAdminTab()]
+           admin.companyAdminTab(),
+            admin.documentsTab()]
        });
        container.append(tabs.el());
        return this;
