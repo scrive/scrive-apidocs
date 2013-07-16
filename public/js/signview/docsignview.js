@@ -266,7 +266,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 isComplete: function() {
                                     return !model.document().currentSignatoryCanSign();
                                 },
-                                el:  model.signsection().signButton.input(),
+                                el:  model.signsection().signButton.el(),
                                 onActivate   : function() {
                                     mixpanel.track('Begin signature task');
                                     $(model.signsection().el).addClass("highlight");

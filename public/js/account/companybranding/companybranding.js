@@ -166,7 +166,7 @@ window.CompanyBrandingView = Backbone.View.extend({
   },
   saveButton: function() {
     var model = this.model;
-    return Button.init({
+    return new Button({
       color: "blue",
       shape: "rounded",
       size: "small",
@@ -175,7 +175,7 @@ window.CompanyBrandingView = Backbone.View.extend({
           mixpanel.track('Click save branding button');
           model.save();
       }
-    }).input();
+    }).el();
   },
   clean : function() {
     $(this.el).children().detach();

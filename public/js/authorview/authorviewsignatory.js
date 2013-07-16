@@ -196,7 +196,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   changeEmailOption : function() {
     var signatory = this.model.signatory();
     var container = $("<div class='change-email-box'/>");
-    var fstbutton = Button.init({
+    var fstbutton = new Button({
                             size: "tiny",
                             color: "blue",
                             text: localization.changeEmail,
@@ -205,7 +205,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                {'Signatory index':signatory.signIndex()});
                                 var input = $("<input type='text'/>");
                                 input.val(signatory.email());
-                                var sndbutton = Button.init({
+                                var sndbutton = new Button({
                                     size: "tiny",
                                     color: "blue",
                                     text: localization.send,
@@ -218,17 +218,17 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                      });
                                     }
                                     });
-                                container.empty().append(input).append(sndbutton.input());
+                                container.empty().append(input).append(sndbutton.el());
                                 return false;
                              }
                           });
-    container.append(fstbutton.input());
+    container.append(fstbutton.el());
     return container;
   },
   changePhoneOption : function() {
     var signatory = this.model.signatory();
     var container = $("<div class='change-email-box'/>");
-    var fstbutton = Button.init({
+    var fstbutton = new Button({
                             size: "tiny",
                             color: "blue",
                             text: localization.changePhone,
@@ -237,7 +237,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                {'Signatory index':signatory.signIndex()});
                                 var input = $("<input type='text'/>");
                                 input.val(signatory.mobile());
-                                var sndbutton = Button.init({
+                                var sndbutton = new Button({
                                     size: "tiny",
                                     color: "blue",
                                     text: localization.send,
@@ -250,11 +250,11 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                      });
                                     }
                                     });
-                                container.empty().append(input).append(sndbutton.input());
+                                container.empty().append(input).append(sndbutton.el());
                                 return false;
                              }
                           });
-    container.append(fstbutton.input());
+    container.append(fstbutton.el());
     return container;
   },
   giveForSigningOnThisDeviceOption : function() {

@@ -1,7 +1,7 @@
 /* File input that after upload will show information if file is signed by GuardTime
- *    
+ *
  */
-  
+
 
 (function( window){
 var FileVerifierModel = Backbone.Model.extend({});
@@ -12,7 +12,7 @@ var FileVerifierView = Backbone.View.extend({
         this.render();
     },
     showResultDialog : function(res) {
-          var dialog = $("<div class='overlay verificationModal'></div>"); 
+          var dialog = $("<div class='overlay verificationModal'></div>");
           var container = $("<div class='modal-container'></div>");
           var close = $("<div class='modal-close close'></div>");
           var body = $("<div class='modal-body' style='padding:10px;text-align: center'>");
@@ -25,7 +25,7 @@ var FileVerifierView = Backbone.View.extend({
               bright.append($("<div/>").text(localization.verification.time + ": " + res.time));
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.gateway + ": " + res.gateway));
-          }    
+          }
           else if (res.error)  {
               bleft.append("<div class='verificationErrorIcon' style='margin-top: 25px;'>");
               title = localization.verification.error;
@@ -33,19 +33,19 @@ var FileVerifierView = Backbone.View.extend({
               bright.append($("<div/>").text(localization.verification.errorMessage));
               dialog.addClass("failed");
           }
-          else  {              
+          else  {
               bleft.append("<div class='verificationFailedIcon' style='margin-top: 25px;'>");
               title = localization.verification.failed;
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.failedMessage));
               dialog.addClass("failed");
-          }                                  
+          }
           Confirmation.popup({title: title, content : $("<div style='height:100px;width: 300px;margin: auto;'/>").append(bleft).append(bright)});
-        
+
     },
     uploadButton : function() {
         var view = this;
-        return  UploadButton.init({
+        return  new UploadButton({
             name: "file",
             width: 380,
             size: "big",
@@ -75,7 +75,7 @@ var FileVerifierView = Backbone.View.extend({
     },
     render: function () {
         var box = $(this.el);
-        box.html(this.uploadButton().input());
+        box.html(this.uploadButton().el());
         return box;
     }
 });
@@ -91,4 +91,4 @@ window.FileVerifier = {
         }
 };
 
-})(window); 
+})(window);

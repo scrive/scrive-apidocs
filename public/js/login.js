@@ -200,7 +200,7 @@ var LoginView = Backbone.View.extend({
           });
       }
 
-      var loginButton = Button.init({
+      var loginButton = new Button({
                   size  : "small",
                   color : "blue",
                   text  : localization.loginModal.login + " ›",
@@ -208,7 +208,7 @@ var LoginView = Backbone.View.extend({
                   onClick : loginFunction
                 });
 
-      body.append($("<div class='position'/>").append(loginButton.input()));
+      body.append($("<div class='position'/>").append(loginButton.el()));
 
 
       if (!model.pad()) {
@@ -245,7 +245,7 @@ var LoginView = Backbone.View.extend({
 
       });
 
-     var remindButton = Button.init({
+     var remindButton = new Button({
                   size  : "small",
                   color : "blue",
                   text  : localization.loginModal.sendNewPassword + " ›",
@@ -254,7 +254,7 @@ var LoginView = Backbone.View.extend({
                         model.sendPasswordReminder();
                     }
                 });
-      body.append($("<div class='position first'/>").append(emailinput.el()).append(remindButton.input()));
+      body.append($("<div class='position first'/>").append(emailinput.el()).append(remindButton.el()));
 
       return content;
 
@@ -348,7 +348,7 @@ var LoginBrandedView = Backbone.View.extend({
       var button_position = $("<div class='position' style='text-align:center'/>");
       body.append(button_position);
 
-      var loginButton = Button.init({
+      var loginButton = new Button({
                   size  : "tiny",
                   color : model.buttoncolorclass(),
                   text  : localization.loginModal.login + " ›",
@@ -356,7 +356,7 @@ var LoginBrandedView = Backbone.View.extend({
                   onClick : loginFunction
                 });
 
-      button_position.append(loginButton.input());
+      button_position.append(loginButton.el());
 
 
 
@@ -399,7 +399,7 @@ var LoginBrandedView = Backbone.View.extend({
 
       });
 
-     var remindButton = Button.init({
+     var remindButton = new Button({
                   size  : "tiny",
                   color : model.buttoncolorclass(),
                   text  : localization.loginModal.sendNewPassword + " ›",
@@ -411,7 +411,7 @@ var LoginBrandedView = Backbone.View.extend({
                 });
 
       body.append($("<div class='position'/>").append(emailinput.el()));
-      body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(remindButton.input()));
+      body.append($("<div class='position' style='text-align:center;margin-top:10px;'/>").append(remindButton.el()));
 
       return content;
 

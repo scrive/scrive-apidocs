@@ -391,7 +391,7 @@ var AccountSettingsView = Backbone.View.extend({
     },
     changePasswordButton : function() {
       var model = this.model;
-      return Button.init({
+      return new Button({
         color: "blue",
         size: "tiny",
         text: localization.account.accountDetails.changeEmailButton,
@@ -399,11 +399,11 @@ var AccountSettingsView = Backbone.View.extend({
         onClick: function() {
             new ChangePasswordPopup();
           }
-      }).input();
+      }).el();
     },
     changeEmailButton : function() {
       var model = this.model;
-      return Button.init({
+      return new Button({
         color: "blue",
         size: "tiny",
         text: localization.account.accountDetails.changeEmailButton,
@@ -463,11 +463,11 @@ var AccountSettingsView = Backbone.View.extend({
             });
             return false;
           }
-      }).input();
+      }).el();
     },
     createCompanyButton : function() {
       var model = this.model;
-      return Button.init({
+      return new Button({
         color: "blue",
         size: "small",
         shape: "rounded",
@@ -543,11 +543,11 @@ var AccountSettingsView = Backbone.View.extend({
             });
             return false;
           }
-        }).input();
+        }).el();
     },
     saveButton : function() {
       var model = this.model;
-      var button = Button.init({
+      var button = new Button({
         shape: "rounded",
         color : "blue",
         size: "small",
@@ -559,7 +559,7 @@ var AccountSettingsView = Backbone.View.extend({
           return false;
         }
       });
-      return button.input();
+      return button.el();
     },
     render: function () {
        console.log("Rendering main view");

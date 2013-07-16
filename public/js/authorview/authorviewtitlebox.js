@@ -75,7 +75,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
   restartButton : function() {
     var model = this.model;
     var document = this.model.document();
-    return Button.init({
+    return new Button({
       color: "red",
       size: "small",
       text: document.process().processLocalization().restartbuttontext,
@@ -85,12 +85,12 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           mixpanel.track('Click restart button');
         model.restart();
       }
-    }).input();
+    }).el();
   },
   prolongButton : function() {
     var model = this.model;
     var document = this.model.document();
-    return Button.init({
+    return new Button({
       color: "green",
       size: "small",
       text: document.process().processLocalization().prolongbuttontext,
@@ -100,12 +100,12 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           mixpanel.track('Click prolong button');
         model.prolong();
       }
-    }).input();
+    }).el();
   },
   withdrawnButton : function() {
     var model = this.model;
     var document = this.model.document();
-    return Button.init({
+    return new Button({
       color: "red",
       size: "small",
       text: document.process().processLocalization().cancelbuttontext,
@@ -141,12 +141,12 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             }
           });
         }
-    }).input();
+    }).el();
   },
   goToSignViewButton : function() {
     var model = this.model;
     var document = this.model.document();
-    return Button.init({
+    return new Button({
       color: "green",
       size: "small",
       text: localization.authorview.goToSignView,
@@ -154,7 +154,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           mixpanel.track('Click go to sign view');
          model.goToSignView();
         }
-    }).input();
+    }).el();
   },
   giveToNextSignatoryPadButton : function() {
     var self = this;
@@ -162,7 +162,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var document = this.model.document();
     var sig = document.signatoriesThatCanSignNow()[0];
     if (sig == undefined) return; // Should never happend
-    return Button.init({
+    return new Button({
       color: "green",
       size: "small",
       text: localization.authorview.goToSignView,
@@ -204,7 +204,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           });
           return false;
         }
-    }).input();
+    }).el();
   } ,
   render: function() {
     var document = this.model.document();

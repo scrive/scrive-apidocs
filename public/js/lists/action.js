@@ -66,21 +66,21 @@
             else
               model.onSelect();
             return false;
-              
+
         },
         render: function() {
             var self = this;
             var model = self.model;
             var button = model.button();
             if (button == undefined)
-                button = Button.init({
+                button = new Button({
                                       color : model.color(),
                                       size : "tiny",
                                       text  : model.name(),
                                       width : model.width(),
                                       onClick : function() { return self.onSelect();}
                 });
-            $(this.el).append(button.input());
+            $(this.el).append(button.el());
         }
     });
 })(window);

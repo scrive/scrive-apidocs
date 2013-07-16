@@ -98,21 +98,21 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var document = $("<div/>").css("margin","auto").css("text-align","center");
     document.append(documentpic);
     var rejectbuttoncontainer = $('<div style="float: left;padding:10px;"/>');
-    var rejectbutton = Button.init({size: 'tiny',
+    var rejectbutton = new Button({size: 'tiny',
                                     color: 'red',
                                     shape: "rounded",
                                     width: 150,
                                     text: 'Reject document',
                                     onClick: function() {}});
-    rejectbuttoncontainer.append(rejectbutton.input());
+    rejectbuttoncontainer.append(rejectbutton.el());
     var signbuttoncontainer = $('<div style="float: right;padding:10px;"/>');
-    var signbutton = Button.init({size: 'tiny',
+    var signbutton = new Button({size: 'tiny',
                                   color: 'blue',
                                   shape: "rounded",
                                   width: 150,
                                   text: 'Sign document',
                                   onClick: function() {}});
-    signbuttoncontainer.append(signbutton.input());
+    signbuttoncontainer.append(signbutton.el());
     var buttonsdiv = $('<div style="height: 56px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;margin: 0 10px; background:#ffffff;box-shadow: 1px 1px 5px #505050;"/>');
     buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
     var contentcontent = $('<div/>').css("width","500px").css("margin","auto")

@@ -28,7 +28,7 @@ window.AttachmentsListDefinition = function(archive) {
                 name :  localization.archive.attachments.createnew.action,
                 avaible : function(){return true;},
                 acceptEmpty : true,
-                button: UploadButton.init({
+                button: new UploadButton({
                             size: "tiny",
                             width : 144,
                             color : "black",

@@ -34,10 +34,10 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
     //var label = $("<div class='label' />").append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
     //container.append(label);
     if (attachment.hasFile()) {
-        var button = Button.init({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', onClick: function() {
+        var button = new Button({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', onClick: function() {
                         window.open(attachment.file().downloadLink(), '_blank');
                         }});
-        container.append(button.input());
+        container.append(button.el());
     }
     return container;
   },
@@ -55,7 +55,7 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
     table.append(tbody);
     _.each(this.model.document().signatoryattachments(), function(attachment) {
       var tr = $("<tr/>");
-      
+
       tr.append($("<td class='desc'>").append(self.attachmentDescription(attachment)));
       tr.append($("<td class='file'>").append(self.attachmentFile(attachment)));
       tbody.append(tr);

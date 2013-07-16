@@ -196,12 +196,13 @@
                             document.recall();
                         }
              });
-            var input = UploadButton.init({    color: 'green',
+            return new UploadButton({    color: 'green',
                                      size: 'big',
                                      text: localization.uploadButton,
                                      width: 245,
                                      name: 'file',
                                      maxlength: 2,
+                                     cssClass : 'design-view-document-buttons-upload-button',
                                      onAppend: function(input, title, multifile) {
                                        document.markAsNotReady();
                                        submit.addInputs(input);
@@ -211,9 +212,7 @@
                                            submit.sendAjax();
                                         });
                                      }
-                       }).input();
-            input.addClass('design-view-document-buttons-upload-button');
-            return input;
+                       }).el();
         },
         afterInsert: function() {
             $(window).resize();

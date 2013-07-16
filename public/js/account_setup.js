@@ -313,7 +313,7 @@
 
       body.append(tosAccept);
 
-      var acceptButton = Button.init({
+      var acceptButton = new Button({
           size: 'small',
           color: this.model.buttoncolorclass(),
           text: localization.signupModal.modalAccountSetupFooter,
@@ -323,7 +323,7 @@
           }
         });
 
-      body.append($('<div class="position"/>').append(acceptButton.input()));
+      body.append($('<div class="position"/>').append(acceptButton.el()));
     }
   });
 

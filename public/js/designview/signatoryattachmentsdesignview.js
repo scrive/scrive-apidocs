@@ -81,7 +81,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
     },
     addAttachmentButton : function() {
         var attachments = this.model;
-        return Button.init({
+        return new Button({
             size: 'tiny',
             color: 'blue',
             text: localization.signatoryAttachments.addAttachment,
@@ -90,7 +90,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
             attachments.addNewAttachment();
             return false;
             }
-        }).input();
+        }).el();
     },
     attachmentRow : function(attachment) {
         var attachments = this.model;
