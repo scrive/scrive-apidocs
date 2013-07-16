@@ -392,12 +392,13 @@ var AccountSettingsView = Backbone.View.extend({
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companycountry))).append($("<td/>").append(companycountryinput)));
 
-            var companysmsoriginatorinput = $("<input type='text'/>").val(model.companysmsoriginator());
+            var companysmsoriginatorinput = $("<input type='text' maxlength=11/>").val(model.companysmsoriginator());
             if (!model.companyAdmin()) companysmsoriginatorinput.attr("disabled","disabled");
             companysmsoriginatorinput.change(function() {
               model.setCompanysmsoriginator(companysmsoriginatorinput.val());
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.smsOriginator))).append($("<td/>").append(companysmsoriginatorinput)));
+            table.append($("<tr/>").append($("<td/>")).append($("<td/>").append($("<div style='font-size:10px;line-height: 10px;color:#999999;margin:0px 10px 0px 3px;font-style:italic'/>").text(localization.account.accountDetails.smsOriginatorDescription))));
 
 
             body.append(table);

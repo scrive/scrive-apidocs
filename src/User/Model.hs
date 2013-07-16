@@ -601,8 +601,8 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.zip"
   <> ", c.city"
   <> ", c.country"
-  <> ", ip_address_mask_list"
-  <> ", sms_originator"
+  <> ", c.ip_address_mask_list"
+  <> ", c.sms_originator"
   -- InviteInfo:
   <> ", user_invite_infos.inviter_id"
   <> ", user_invite_infos.invite_time"
@@ -659,7 +659,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companycity = fromJust city
                 , companycountry = fromJust country
                 , companyipaddressmasklist = maybe [] read ip_address_mask
-                , companysmsoriginator = sms_originator
+                , companysmsoriginator = fromJust sms_originator
                 }
               , companyui = CompanyUI {
                   companyemailfont = Nothing
@@ -692,8 +692,7 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
   [(User, Maybe Company, Maybe InviteInfo)] where
   query (GetUsersAndStatsAndInviteInfo filters sorting (offset,limit)) = do
     _ <- kRun $ mconcat
-         [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
-         , selectUsersAndCompaniesAndInviteInfoSQL
+         [ selectUsersAndCompaniesAndInviteInfoSQL
          , if null filters
              then SQL "" []
              else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
@@ -702,10 +701,5 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
            else SQL " ORDER BY " [] <> sqlConcatComma (map userOrderByAscDescToSQL sorting)
          , " OFFSET" <?> offset <+> "LIMIT" <?> limit
          ]
+    fetchUsersAndCompaniesAndInviteInfo
 
-    _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
-    usersWithCompaniesAndInviteInfo <- fetchUsersAndCompaniesAndInviteInfo
-
-    _ <- kRunRaw "DROP TABLE users_and_companies_temp"
-
-    return $ usersWithCompaniesAndInviteInfo

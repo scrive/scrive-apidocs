@@ -1018,3 +1018,5 @@
 "_welcomeTitle","Ditt dokument har sparats i ditt e-arkiv!","Your document has been saved in your e-archive!"
 "_welcomeSubtitle","För att komma till ditt dokument,","To view your document,"
 "_welcomeSubtitleLink","klicka här!","click here!"
+"_smsOriginator","SMS-namn","SMS label"
+"_smsOriginatorDescription","Namnet som visas för mottagaren när SMS används som leveransmetod. Maximalt 11 bokstäver/siffror. Inga åäö.","The name that is displayed to the recipient when receiving a document via SMS. Maximum 11 alpha-numeric characters."
