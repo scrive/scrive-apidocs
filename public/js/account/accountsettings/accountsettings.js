@@ -465,9 +465,8 @@ var AccountSettingsView = Backbone.View.extend({
     },
     saveButton : function() {
       var model = this.model;
-      var button = new Button({
-        shape: "rounded",
-        color : "blue",
+      var button = Button.init({
+        color : "green",
         size: "small",
         cssClass : "save",
         text : localization.account.accountDetails.save,
@@ -494,6 +493,8 @@ var AccountSettingsView = Backbone.View.extend({
        var footerbox = $("<div class='account-footer'/>");
        box.append(footerbox);
        footerbox.append(this.saveButton());
+       if (!model.user().hasCompany())
+        footerbox.append(this.createCompanyButton().css("margin-left", "5px"));
        box.append("<div class='clearfix'></div>");
        return this;
     }
