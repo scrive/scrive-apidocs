@@ -333,7 +333,10 @@ public class PDFSeal {
 
                         if( field.keyColor!=null ) {
                             jpeg.setTransparency(new int[] { field.keyColor.get(0),
+                                                             field.keyColor.get(0),
                                                              field.keyColor.get(1),
+                                                             field.keyColor.get(1),
+                                                             field.keyColor.get(2),
                                                              field.keyColor.get(2)} );
                         }
                         canvas.addImage(jpeg);
@@ -486,8 +489,12 @@ public class PDFSeal {
                         Jpeg jpeg = new Jpeg(jpegdata);
 
                         if( field.keyColor!=null ) {
+                            System.out.println("Key color!");
                             jpeg.setTransparency(new int[] { field.keyColor.get(0),
+                                                             field.keyColor.get(0),
                                                              field.keyColor.get(1),
+                                                             field.keyColor.get(1),
+                                                             field.keyColor.get(2),
                                                              field.keyColor.get(2)} );
                         }
                         jpeg.scaleAbsoluteWidth(150);
