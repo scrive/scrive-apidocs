@@ -35,7 +35,7 @@ window.TemplatesListDefinition = function(archive) { return {
                              res.text(localization.email);
                          return res;
                   }}),
-        new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"})
         ],
     actions : [
        new ListAction({
