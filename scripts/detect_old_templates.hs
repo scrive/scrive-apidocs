@@ -200,18 +200,6 @@ elogEvents = do
 
   return $ S.fromList $ map eventCtor eventCtorDecls
 
--- parse template names from DocProcessInfo records
-docProcessInfos :: IO (S.Set String)
-docProcessInfos = do
-  ParseOk (Module _ _ _ _ _ _ decls) <- parseFile "src/Doc/DocProcess.hs"
-  let docProcessInfoFields (PatBind _ (PVar (Ident _)) Nothing (UnGuardedRhs (RecConstr (UnQual (Ident "DocProcessInfo")) fields)) _) = Just fields
-      docProcessInfoFields _ = Nothing
-      interestingFields = concat $ catMaybes $ map docProcessInfoFields decls
-
-      templateFromField (FieldUpdate _ (Lit (String template))) = Just template
-      templateFromField _ = Nothing
-
-  return $ S.fromList $ catMaybes $ map templateFromField interestingFields
 --------------------------------------------------
 -- returns template name from expression of certain forms
 -- e.g. renderTemplate "foo" returns Just "foo"
@@ -282,8 +270,7 @@ main = do
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents
   let elogTemplates = S.map (++"Text") events `S.union` S.map ("simpliefiedText"++) events
-  docProcessInfoTemplates <- docProcessInfos
-  let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, docProcessInfoTemplates, whiteList]
+  let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, whiteList]
   translationsLines <- tail <$> basicCSVParser "texts/everything.csv"
   let translations = map (\fields -> (fields !! 0, fields !! 1)) translationsLines
   templatesFilesPath <- find (return True) (extension ==? ".st") "templates"

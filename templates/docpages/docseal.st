@@ -15,38 +15,6 @@ SealingTexts
       , verificationFooter="$_verificationFooter()$"
     }
 #####
-offersealingtexts=
-SealingTexts
-    {   verificationTitle="$_offersealingtextsverificationTitle()$"
-      , docPrefix="$_sealingtextsdocPrefix()$"
-      , signedText="$_offersealingtextssignedText()$"
-      , partnerText="$_offersealingtextspartnerText()$"
-      , secretaryText="$_offersealingtextssecretaryText()$"
-      , documentText="$_documentText()$"
-      , orgNumberText="$_offersealingtextsorgNumberText()$"
-      , personalNumberText="$_personalNumberText()$"
-      , eventsText="$_offersealingtextseventsText()$"
-      , dateText="$_offersealingtextsdateText()$"
-      , historyText="$_offersealingtextshistoryText()$"
-      , verificationFooter="$_verificationFooter()$"
-    }
-#####
-ordersealingtexts=
-SealingTexts
-    {   verificationTitle="$_ordersealingtextsverificationTitle()$"
-      , docPrefix="$_sealingtextsdocPrefix()$"
-      , signedText="$_ordersealingtextssignedText()$"
-      , partnerText="$_ordersealingtextspartnerText()$"
-      , secretaryText="$_ordersealingtextssecretaryText()$"
-      , documentText="$_documentText()$"
-      , orgNumberText="$_ordersealingtextsorgNumberText()$"
-      , personalNumberText="$_personalNumberText()$"
-      , eventsText="$_ordersealingtextseventsText()$"
-      , dateText="$_ordersealingtextsdateText()$"
-      , historyText="$_ordersealingtextshistoryText()$"
-      , verificationFooter="$_verificationFooter()$"
-    }
-#####
 signMethod=
         $if(!provider)$
           $if(email)$

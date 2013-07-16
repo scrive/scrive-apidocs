@@ -20,15 +20,7 @@ flashMessagePasswordsDontMatch=
 ###
 flashMessageContractRestarted=$_flashMessageContractRestarted()$
 ###
-flashMessageOfferRestarted=$_flashMessageOfferRestarted()$
-###
-flashMessageOrderRestarted=$_flashMessageOrderRestarted()$
-###
 flashMessageContractProlonged=$_flashMessageContractProlonged()$
-###
-flashMessageOfferProlonged=$_flashMessageOfferProlonged()$
-###
-flashMessageOrderProlonged=$_flashMessageOrderProlonged()$
 ###
 flashMessageUserPasswordChanged=
 	$_flashMessageUserPasswordChanged()$
@@ -50,8 +42,6 @@ flashMessageUserActivated=	$_flashMessageUserActivated()$
 flashMessageNewActivationLinkSend=
 	$_flashMessageNewActivationLinkSend()$
 
-###
-flashAuthorSigned=	$_flashAuthorSigned()$
 ###
 flashMessageLoginPageRedirectReason=
 $if(notlogged)$
@@ -110,24 +100,6 @@ flashMessageInvalidPrintableCharsInInput=	$_flashMessageInvalidPrintableCharsInI
 flashMessageInputLessThanMinLength=	$_flashMessageInputLessThanMinLength()$
 ###
 flashMessageInputExceedsMaxLength=	$_flashMessageInputExceedsMaxLength()$
-###
-flashMessageFailedToParseCSV=	$_flashMessageFailedToParseCSV()$
-###
-flashMessageCSVHasTooManyRows=	$_flashMessageCSVHasTooManyRows()$
-###
-flashMessageNoDataInCSV=	$_flashMessageNoDataInCSV()$
-###
-flashMessageNoDataInCSVApartFromHeader=	$_flashMessageNoDataInCSVApartFromHeader()$
-###
-flashMessageRowLessThanMinColCount=	$_flashMessageRowLessThanMinColCount()$
-###
-flashMessageRowGreaterThanMaxColCount=	$_flashMessageRowGreaterThanMaxColCount()$
-###
-flashMessageValueNotValid = $_flashMessageValueNotValid()$
-###
-flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$
-###
-flashMessageCSVSent=	$_flashMessageCSVSent()$
 ###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###
