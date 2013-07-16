@@ -90,7 +90,7 @@
           value: model.email(),
           onChange: function(v) {self.clearValidationMessages(); model.setEmail(v);},
           onEnter: function() {
-              signupButton.input().click();
+              signupButton.el().click();
           },
           cssClass : "big-input",
           inputtype: 'text',
@@ -158,7 +158,7 @@
           value: model.email(),
           onChange: function(v) {self.clearValidationMessages(); model.setEmail(v);},
           onEnter: function() {
-              signupButton.input().click();
+              signupButton.el().click();
           },
           inputtype: 'text',
           name: 'email'
