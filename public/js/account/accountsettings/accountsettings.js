@@ -482,9 +482,8 @@ var AccountSettingsView = Backbone.View.extend({
     createCompanyButton : function() {
       var model = this.model;
       return new Button({
-        color: "blue",
+        color: "green",
         size: "small",
-        shape: "rounded",
         text: localization.account.accountDetails.createCompany,
         onClick: function() {
             mixpanel.track('Click create company button');
@@ -566,9 +565,14 @@ var AccountSettingsView = Backbone.View.extend({
     },
     saveButton : function() {
       var model = this.model;
+<<<<<<< HEAD
       var button = new Button({
         shape: "rounded",
         color : "blue",
+=======
+      var button = Button.init({
+        color : "green",
+>>>>>>> Make the account save buttons look green and not rounded.
         size: "small",
         cssClass : "save",
         text : localization.account.accountDetails.save,
@@ -595,9 +599,9 @@ var AccountSettingsView = Backbone.View.extend({
        box.append("<div class='clearfix'></div>");
        var footerbox = $("<div class='account-footer'/>");
        box.append(footerbox);
-       if (!model.user().hasCompany())
-        footerbox.append(this.createCompanyButton().css("margin-right", "5px"));
        footerbox.append(this.saveButton());
+       if (!model.user().hasCompany())
+        footerbox.append(this.createCompanyButton().css("margin-left", "5px"));
        box.append("<div class='clearfix'></div>");
        return this;
     }
