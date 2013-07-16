@@ -344,7 +344,7 @@ $endif$
       <li class="page-first float-right" >
           <a class="s-archive page"  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
       </li>
-      <li class="session-create float-right">
+      <li class="session-create float-right fromtemplate">
           <a class="button button fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
