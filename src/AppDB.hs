@@ -140,6 +140,7 @@ kontraMigrations = [
   , removeEmailDomainFromCompany
   , asyncEventQueueChangePrimaryKeyToBigSerial
   , removeProcessFromDocuments
+  , moveCompanyUIsToSeparateTable
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -178,4 +179,5 @@ kontraTables = [
   , tableAsyncEventQueue
   , tableHostClock
   , tableUsersCallbackScheme
+  , tableCompanyUIs
   ] ++ mailerTables

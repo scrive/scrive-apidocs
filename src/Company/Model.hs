@@ -42,25 +42,25 @@ data CompanyInfo = CompanyInfo {
   , companysmsoriginator :: String
   } deriving (Eq, Ord, Show)
 
-data CompanyUI = CompanyUI {
-    companyemailbordercolour :: Maybe String
-  , companyemailfont :: Maybe String
-  , companyemailbuttoncolour :: Maybe String
+data CompanyUI = CompanyUI
+  { companyemailbordercolour          :: Maybe String
+  , companyemailfont                  :: Maybe String
+  , companyemailbuttoncolour          :: Maybe String
   , companyemailemailbackgroundcolour :: Maybe String
-  , companyemailbackgroundcolour :: Maybe String
-  , companyemailtextcolour :: Maybe String
-  , companyemaillogo :: Maybe Binary
-  , companysignviewlogo :: Maybe Binary
-  , companysignviewtextcolour :: Maybe String
-  , companysignviewtextfont :: Maybe String
-  , companysignviewbarscolour :: Maybe String
-  , companysignviewbarstextcolour :: Maybe String
-  , companysignviewbackgroundcolour :: Maybe String
-  , companycustomlogo  :: Maybe Binary
-  , companycustombarscolour :: Maybe String
-  , companycustombarstextcolour :: Maybe String
-  , companycustombarssecondarycolour :: Maybe String
-  , companycustombackgroundcolour :: Maybe String
+  , companyemailbackgroundcolour      :: Maybe String
+  , companyemailtextcolour            :: Maybe String
+  , companyemaillogo                  :: Maybe Binary
+  , companysignviewlogo               :: Maybe Binary
+  , companysignviewtextcolour         :: Maybe String
+  , companysignviewtextfont           :: Maybe String
+  , companysignviewbarscolour         :: Maybe String
+  , companysignviewbarstextcolour     :: Maybe String
+  , companysignviewbackgroundcolour   :: Maybe String
+  , companycustomlogo                 :: Maybe Binary
+  , companycustombarscolour           :: Maybe String
+  , companycustombarstextcolour       :: Maybe String
+  , companycustombarssecondarycolour  :: Maybe String
+  , companycustombackgroundcolour     :: Maybe String
 } deriving (Eq, Ord, Show)
 
 data CompanyFilter
