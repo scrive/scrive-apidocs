@@ -71,7 +71,7 @@ handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
       else
         return $ companyui company
   Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show cui)
-  _ <- dbUpdate $ UpdateCompanyUI (companyid company) cui
+  _ <- dbUpdate $ SetCompanyUI (companyid company) cui
   return $ LinkAccountCompany mcid
 
 companyUiFromJSON :: Kontrakcja m => JSValue ->  m CompanyUI

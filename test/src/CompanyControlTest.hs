@@ -118,7 +118,7 @@ test_handleCompanyLogo = do
 addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
 addNewAdminUserAndCompany fstname sndname email = do
   company <- addNewCompany
-  _ <- dbUpdate $ UpdateCompanyUI (companyid company) (companyui company){companyemailbackgroundcolour = Just "#abcdef"}
+  _ <- dbUpdate $ SetCompanyUI (companyid company) (companyui company){companyemailbackgroundcolour = Just "#abcdef"}
   Just user <- addNewCompanyUser fstname sndname email (companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   Just updateduser <- dbQuery $ GetUserByID (userid user)

@@ -68,7 +68,9 @@ test_updateCompanyUI = do
   , companysignviewbarstextcolour = Nothing
   , companysignviewbackgroundcolour = Nothing
   }
-  res <- dbUpdate $ UpdateCompanyUI cid cui
+  res <- dbUpdate $ SetCompanyUI cid cui
   assertBool "CompanyUI updated correctly" res
   Just Company{companyui = newcui} <- dbQuery $ GetCompany cid
   assertEqual "Returned CompanyUI is correct" cui newcui
+  newcui2 <- dbQuery $ GetCompanyUI cid
+  assertEqual "Returned CompanyUI is correct" cui newcui2

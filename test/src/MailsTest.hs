@@ -65,7 +65,7 @@ testBrandedDocumentMails mailTo = do
       , companycustombarssecondarycolour = Nothing
       , companycustombackgroundcolour = Nothing
       }
-  _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
+  _ <- dbUpdate $ SetCompanyUI (companyid company') cui
   sendDocumentMails mailTo author
 
 testDocumentMails :: Maybe String -> TestEnv ()

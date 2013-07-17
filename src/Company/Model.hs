@@ -9,7 +9,8 @@ module Company.Model (
   , GetCompanyByUserID(..)
   , CreateCompany(..)
   , SetCompanyInfo(..)
-  , UpdateCompanyUI(..)
+  , SetCompanyUI(..)
+  , GetCompanyUI(..)
   , SetCompanyIPAddressMaskList(..)
 
   , CompanyFilter(..)
@@ -61,7 +62,7 @@ data CompanyUI = CompanyUI
   , companycustombarstextcolour       :: Maybe String
   , companycustombarssecondarycolour  :: Maybe String
   , companycustombackgroundcolour     :: Maybe String
-} deriving (Eq, Ord, Show)
+} deriving (Eq, Ord, Show, Typeable)
 
 data CompanyFilter
   = CompanyFilterByString String             -- ^ Contains the string anywhere
@@ -175,9 +176,17 @@ instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
       sqlSet "sms_originator" companysmsoriginator
       sqlWhereEq "id" cid
 
-data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
-instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
-  update (UpdateCompanyUI cid cui) = do
+data GetCompanyUI = GetCompanyUI CompanyID
+instance MonadDB m => DBQuery m GetCompanyUI CompanyUI where
+  query (GetCompanyUI cid) = do
+    kRun_ $ sqlSelect "company_uis" $ do
+      sqlWhereEq "company_id" cid
+      selectCompanyUIsSelectors
+    fetchCompanyUIs >>= exactlyOneObjectReturnedGuard
+
+data SetCompanyUI = SetCompanyUI CompanyID CompanyUI
+instance MonadDB m => DBUpdate m SetCompanyUI Bool where
+  update (SetCompanyUI cid cui) = do
     kRun01 $ sqlUpdate "company_uis" $ do
       sqlSet "email_bordercolour" $ companyemailbordercolour cui
       sqlSet "email_font" $ companyemailfont cui
@@ -212,6 +221,10 @@ selectCompaniesSelectors = do
   sqlResult "companies.country"
   sqlResult "companies.ip_address_mask_list"
   sqlResult "companies.sms_originator"
+  selectCompanyUIsSelectors
+
+selectCompanyUIsSelectors :: (SqlResult command) => State command ()
+selectCompanyUIsSelectors = do
   sqlResult "company_uis.email_font"
   sqlResult "company_uis.email_bordercolour"
   sqlResult "company_uis.email_buttoncolour"
@@ -274,3 +287,32 @@ fetchCompanies = kFold decoder []
         , companycustombackgroundcolour = custom_backgroundcolour
         }
       } : acc
+
+fetchCompanyUIs :: MonadDB m => m [CompanyUI]
+fetchCompanyUIs = kFold decoder []
+  where
+    decoder acc email_font
+      email_bordercolour email_buttoncolour email_emailbackgroundcolour
+      email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
+      signview_textfont signview_barscolour signview_barstextcolour
+      signview_backgroundcolour custom_logo custom_barscolour custom_barstextcolour
+      custom_barssecondarycolour custom_backgroundcolour = CompanyUI {
+          companyemailfont = email_font
+        , companyemailbordercolour = email_bordercolour
+        , companyemailbuttoncolour = email_buttoncolour
+        , companyemailemailbackgroundcolour = email_emailbackgroundcolour
+        , companyemailbackgroundcolour = email_backgroundcolour
+        , companyemailtextcolour = email_textcolour
+        , companyemaillogo = email_logo
+        , companysignviewlogo = signview_logo
+        , companysignviewtextcolour = signview_textcolour
+        , companysignviewtextfont = signview_textfont
+        , companysignviewbarscolour = signview_barscolour
+        , companysignviewbarstextcolour = signview_barstextcolour
+        , companysignviewbackgroundcolour = signview_backgroundcolour
+        , companycustomlogo  = custom_logo
+        , companycustombarscolour = custom_barscolour
+        , companycustombarstextcolour = custom_barstextcolour
+        , companycustombarssecondarycolour = custom_barssecondarycolour
+        , companycustombackgroundcolour = custom_backgroundcolour
+        } : acc
