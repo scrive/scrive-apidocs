@@ -135,7 +135,6 @@
             this.sendButton = Button.init({
                 text: localization.designview.startSigning,
                 color: 'green',
-                size: 'big',
                 cssClass: 'sendButton'
             }).input();
             this.updateSaveButton();
