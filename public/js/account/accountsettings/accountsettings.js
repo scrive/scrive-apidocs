@@ -565,14 +565,8 @@ var AccountSettingsView = Backbone.View.extend({
     },
     saveButton : function() {
       var model = this.model;
-<<<<<<< HEAD
       var button = new Button({
-        shape: "rounded",
-        color : "blue",
-=======
-      var button = Button.init({
         color : "green",
->>>>>>> Make the account save buttons look green and not rounded.
         size: "small",
         cssClass : "save",
         text : localization.account.accountDetails.save,

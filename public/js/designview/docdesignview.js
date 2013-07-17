@@ -92,8 +92,8 @@
         saveAsDraft: function() {
             var view = this;
             var model = view.model;
-7
-            var saveAsDraftButton = Button.init({
+
+            var saveAsDraftButton = new Button({
                 text: localization.saveAsDraft,
                 color: 'blue',
                 onClick: function() {
@@ -111,13 +111,13 @@
                 }
             });
 
-            return saveAsDraftButton.input();
+            return saveAsDraftButton.el();
         },
         saveAsTemplate: function() {
             var view = this;
             var model = view.model;
 
-            var saveAsTemplateButton = Button.init({
+            var saveAsTemplateButton = new Button({
                 text: localization.saveAsTemplate,
                 color: 'blue',
                 onClick: function() {
@@ -127,16 +127,16 @@
                 }
             });
 
-            return saveAsTemplateButton.input()
+            return saveAsTemplateButton.el()
         },
         send: function() {
             var view = this;
 
-            this.sendButton = Button.init({
+            this.sendButton = new Button({
                 text: localization.designview.startSigning,
                 color: 'green',
                 cssClass: 'sendButton'
-            }).input();
+            }).el();
             this.updateSaveButton();
             return this.sendButton;
         },
@@ -156,7 +156,7 @@
             var model = view.model;
             var doc = model.document();
 
-            var removeDocumentButton = Button.init({
+            var removeDocumentButton = new Button({
                 text: localization.designview.removeThisDocument,
                 color: 'blue',
                 onClick: function() {
@@ -183,7 +183,7 @@
                 }
             });
 
-            return removeDocumentButton.input();
+            return removeDocumentButton.el();
         },
         finalClick: function() {
             var view = this;
