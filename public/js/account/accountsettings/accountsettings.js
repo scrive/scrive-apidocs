@@ -465,7 +465,7 @@ var AccountSettingsView = Backbone.View.extend({
     },
     saveButton : function() {
       var model = this.model;
-      var button = Button.init({
+      var button = new Button({
         color : "green",
         size: "small",
         cssClass : "save",
