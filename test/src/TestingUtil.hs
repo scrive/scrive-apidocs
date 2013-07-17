@@ -84,29 +84,7 @@ instance Arbitrary Company where
     d <- arbitrary
     return $ Company { companyid  = a
                      , companyinfo = d
-                     , companyui = emptyCompanyUI
                      }
-    where
-      emptyCompanyUI = CompanyUI {
-          companyemailfont = Nothing
-        , companyemailbordercolour = Nothing
-        , companyemailbuttoncolour = Nothing
-        , companyemailemailbackgroundcolour = Nothing
-        , companyemailbackgroundcolour = Nothing
-        , companyemailtextcolour = Nothing
-        , companyemaillogo = Nothing
-        , companysignviewlogo = Nothing
-        , companysignviewtextcolour = Nothing
-        , companysignviewtextfont = Nothing
-        , companysignviewbarscolour = Nothing
-        , companysignviewbarstextcolour = Nothing
-        , companysignviewbackgroundcolour = Nothing
-        , companycustomlogo  = Nothing
-        , companycustombarscolour = Nothing
-        , companycustombarstextcolour = Nothing
-        , companycustombarssecondarycolour = Nothing
-        , companycustombackgroundcolour = Nothing
-      }
 
 instance Arbitrary CompanyID where
   arbitrary = unsafeCompanyID . abs <$> arbitrary

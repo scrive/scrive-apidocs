@@ -98,7 +98,12 @@ apiCallGetUserProfile =  api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
   mcompany <- getCompanyForUser user
-  Ok <$> userJSON ctx user mcompany (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
+  mcompanyui <- case mcompany of
+                  Just comp -> do
+                    ui <- dbQuery $ GetCompanyUI (companyid comp)
+                    return (Just (comp,ui))
+                  _ -> return Nothing
+  Ok <$> userJSON ctx user mcompanyui (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
 
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response

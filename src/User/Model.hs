@@ -661,26 +661,6 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companyipaddressmasklist = maybe [] read ip_address_mask
                 , companysmsoriginator = fromJust sms_originator
                 }
-              , companyui = CompanyUI {
-                  companyemailfont = Nothing
-                , companyemailbordercolour = Nothing
-                , companyemailbuttoncolour = Nothing
-                , companyemailemailbackgroundcolour = Nothing
-                , companyemailbackgroundcolour = Nothing
-                , companyemailtextcolour = Nothing
-                , companyemaillogo = Nothing
-                , companysignviewlogo = Nothing
-                , companysignviewtextcolour = Nothing
-                , companysignviewtextfont = Nothing
-                , companysignviewbarscolour = Nothing
-                , companysignviewbarstextcolour = Nothing
-                , companysignviewbackgroundcolour = Nothing
-                , companycustomlogo = Nothing
-                , companycustombarscolour = Nothing
-                , companycustombarstextcolour = Nothing
-                , companycustombarssecondarycolour = Nothing
-                , companycustombackgroundcolour = Nothing
-                }
               }
             _ -> Nothing
         , InviteInfo <$> inviter_id <*> invite_time <*> invite_type

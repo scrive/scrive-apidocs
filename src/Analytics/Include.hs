@@ -37,6 +37,7 @@ import Doc.Model
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
+                                   , aCompanyUI      :: Maybe CompanyUI
                                    , aToken          :: String
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
@@ -49,6 +50,9 @@ getAnalyticsData = do
   mcompany <- case muser of
     Just User{usercompany = Just cid} -> dbQuery $ GetCompany cid
     _ -> return Nothing
+  mcompanyui <- case mcompany of
+    Just comp -> Just <$> (dbQuery $ GetCompanyUI (companyid comp))
+    Nothing -> return Nothing
   token <- ctxmixpaneltoken <$> getContext
   mplan <- case muser of
     Just User{usercompany = Just cid } -> dbQuery $ GetPaymentPlan (Right cid)
@@ -61,6 +65,7 @@ getAnalyticsData = do
 
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
+                         , aCompanyUI    = mcompanyui
                          , aToken        = token
                          , aPaymentPlan  = mplan
                          , aLanguage     = lang
@@ -99,7 +104,7 @@ instance ToJSValue AnalyticsData where
 
     mnop (J.value "Company Status") $ escapeString <$> companyStatus <$> aUser
     mnop (J.value "Company Name") $ maybeS $ escapeString <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
-    mnop (J.value "Company Branding") $ isJust <$> companysignviewlogo <$> companyui <$> aCompany
+    mnop (J.value "Company Branding") $ isJust <$> companysignviewlogo <$> aCompanyUI
 
     mnop (J.value "Signup Method") $ maybeS $ escapeString <$> show <$> usersignupmethod <$> aUser
 

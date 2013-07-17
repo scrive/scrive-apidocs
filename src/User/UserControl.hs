@@ -288,6 +288,11 @@ handleAccountSetupGetWithMethod uid token sm = do
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
       mcompany <-  getCompanyForUser user
+      mcompanyui <- case mcompany of
+                      Just comp -> do
+                        companyui <- dbQuery $ GetCompanyUI (companyid comp)
+                        return (Just (companyid comp,companyui))
+                      _ -> return Nothing
       mbd <- return $ currentBrandedDomain ctx
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
@@ -295,7 +300,7 @@ handleAccountSetupGetWithMethod uid token sm = do
                                             F.value "userid"  $ show uid
                                             F.value "company" $ companyname <$> companyinfo <$> mcompany
                                             F.value "signupmethod" $ show sm
-                                            brandingFields mbd mcompany
+                                            brandingFields mbd mcompanyui
                                             ))
     (Just _user, Just _) -> do
       -- this case looks impossible since we delete the account request upon signing up

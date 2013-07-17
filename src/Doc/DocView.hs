@@ -17,7 +17,7 @@ module Doc.DocView (
   , gtVerificationPage
   ) where
 
-import AppView (kontrakcja, standardPageFields, brandingFields, companyForPage)
+import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage)
 import Company.Model
 import Doc.DocStateData
 import Doc.DocUtils
@@ -83,6 +83,7 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     let mdb = currentBrandedDomain ctx
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
     mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
+    mcompanyui <- maybe (return Nothing) (\x -> Just <$> (dbQuery . GetCompanyUI $ (companyid x))) mcompany
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
@@ -129,14 +130,14 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "process" $ "Contract"
       J.value "isviewedbyauthor" $ isSigLinkFor mviewer (getAuthorSigLink doc)
       when (not $ forapi) $ do
-        J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
+        J.value "signviewlogo" $ if ((isJust $ companysignviewlogo =<< mcompanyui))
                                     then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
                                     else (bdlogolink <$> mdb)
-        J.value "signviewtextcolour" $ companysignviewtextcolour . companyui =<< mcompany
-        J.value "signviewtextfont" $ companysignviewtextfont . companyui =<< mcompany
-        J.value "signviewbarscolour" $ (companysignviewbarscolour . companyui =<<  mcompany) `mplus` (bdbarscolour <$> mdb)
-        J.value "signviewbarstextcolour" $ (companysignviewbarstextcolour . companyui  =<< mcompany) `mplus` (bdbarstextcolour <$> mdb)
-        J.value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour . companyui  =<< mcompany) `mplus` (bdbackgroundcolour <$> mdb)
+        J.value "signviewtextcolour" $ companysignviewtextcolour =<< mcompanyui
+        J.value "signviewtextfont" $ companysignviewtextfont  =<< mcompanyui
+        J.value "signviewbarscolour" $ (companysignviewbarscolour  =<<  mcompanyui) `mplus` (bdbarscolour <$> mdb)
+        J.value "signviewbarstextcolour" $ (companysignviewbarstextcolour =<< mcompanyui) `mplus` (bdbarstextcolour <$> mdb)
+        J.value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour =<< mcompanyui) `mplus` (bdbackgroundcolour <$> mdb)
         J.value "author" $ authorJSON mauthor mcompany
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
@@ -306,7 +307,7 @@ pageDocumentSignView :: Kontrakcja m
                     -> m String
 pageDocumentSignView ctx document siglink ad = do
   let  mbd = currentBrandedDomain ctx
-  mcompany <- companyForPage
+  mcompany <- companyUIForPage
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink

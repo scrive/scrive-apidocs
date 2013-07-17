@@ -263,15 +263,17 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
   al <- newUserAccountRequestLink (ctxlang ctx) (userid user) CompanyInvitation
-  mail <- mailNewCompanyUserInvite ctx user inviter company al
+  mail <- mailNewCompanyUserInvite ctx user inviter company companyui al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
 
 sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverPrivateUserMail inviter company user = do
   ctx <- getContext
-  mail <- mailTakeoverPrivateUserInvite ctx user inviter company (LinkCompanyTakeover (companyid company))
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  mail <- mailTakeoverPrivateUserInvite ctx user inviter company companyui (LinkCompanyTakeover (companyid company))
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()

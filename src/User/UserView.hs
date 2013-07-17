@@ -60,7 +60,7 @@ showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "noCompany" $ isNothing mcompany
 
-userJSON :: Monad m => Context -> User -> Maybe Company -> Bool -> m JSValue
+userJSON :: Monad m => Context -> User -> Maybe (Company,CompanyUI) -> Bool -> m JSValue
 userJSON ctx user mcompany companyuieditable = runJSONGenT $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
@@ -70,33 +70,33 @@ userJSON ctx user mcompany companyuieditable = runJSONGenT $ do
     value "phone" $ userphone $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "usercompanyname" $ getCompanyName (user,mcompany)
-    value "usercompanynumber" $ getCompanyNumber (user,mcompany)
+    value "usercompanyname" $ getCompanyName (user,fst <$> mcompany)
+    value "usercompanynumber" $ getCompanyNumber (user,fst <$> mcompany)
     value "lang"   $ codeFromLang $ getLang user
     valueM "company" $ case (mcompany) of
                             Nothing -> return JSNull
-                            Just company -> companyJSON ctx company companyuieditable
+                            Just (company,companyui) -> companyJSON ctx company companyui companyuieditable
 
-companyUIJson :: Monad m => Context -> Company -> Bool -> m JSValue
-companyUIJson ctx company editable = runJSONGenT $ do
-    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui $ company)
-    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui $ company)
-    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui $ company
-    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui $ company
-    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui $ company
-    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui $ company
-    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui $ company
-    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui $ company
-    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui $ company
-    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui $ company
-    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui $ company
-    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui $ company
-    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui $ company
-    value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui $ company)
-    value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui company
-    value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui company
-    value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui company
-    value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui company
+companyUIJson :: Monad m => Context -> CompanyUI -> Bool -> m JSValue
+companyUIJson ctx companyui editable = runJSONGenT $ do
+    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui)
+    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
+    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
+    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui
+    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui
+    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui
+    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui
+    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui
+    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
+    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
+    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
+    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
+    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
+    value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
+    value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui
+    value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
+    value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
+    value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
     value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
     value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
     value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
@@ -109,8 +109,8 @@ companyUIJson ctx company editable = runJSONGenT $ do
     value "editable" editable
 
 
-companyJSON :: Monad m => Context -> Company -> Bool -> m JSValue
-companyJSON ctx company editable = runJSONGenT $ do
+companyJSON :: Monad m => Context -> Company -> CompanyUI -> Bool -> m JSValue
+companyJSON ctx company companyui editable = runJSONGenT $ do
     value "companyid" $ show $ companyid company
     value "address" $ companyaddress $ companyinfo company
     value "city" $ companycity $ companyinfo company
@@ -119,7 +119,7 @@ companyJSON ctx company editable = runJSONGenT $ do
     value "companyname" $ getCompanyName company
     value "companynumber" $ getCompanyNumber company
     value "smsoriginator" $ companysmsoriginator $ companyinfo company
-    valueM "companyui" $ companyUIJson ctx company editable
+    valueM "companyui" $ companyUIJson ctx companyui editable
 
 
 userStatsToJSON :: (MinutesTime -> String) -> [UserUsageStats] -> [JSValue]
@@ -176,7 +176,7 @@ accessNewAccountMail ctx user setpasslink = do
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
 
 resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
@@ -185,7 +185,7 @@ resetPasswordMail ctx user setpasslink = do
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
 
 newUserMail :: TemplatesMonad m => Context -> String -> String -> KontraLink -> m Mail
 newUserMail ctx emailaddress personname activatelink = do
@@ -194,7 +194,7 @@ newUserMail ctx emailaddress personname activatelink = do
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
 
 
 mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
@@ -206,7 +206,7 @@ mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     F.value "ctxhostpart"   $ ctxhostpart ctx
     F.value "custommessage"   custommessage
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
 
 
 mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => Context -> a -> Email -> KontraLink -> m Mail
@@ -216,7 +216,7 @@ mailEmailChangeRequest ctx user newemail link = do
     F.value "newemail" $ unEmail newemail
     F.value "ctxhostpart" $ ctxhostpart ctx
     F.value "link" $ show link
-    brandingMailFields (currentBrandedDomain ctx) Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
 
 -------------------------------------------------------------------------------
 
