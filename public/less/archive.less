@@ -1,11 +1,33 @@
 @import 'designview/util.less';
+@import 'branding/colors.less';
 
 body.archive {
     .list-container {
-        border: 1px solid #8a8a89;
+        border: none;
         width: 1018px;
         margin: auto;
         background: #fff;
+
+        .table {
+            border: none;
+        }
+    }
+
+    .option-top-box {
+        background: @grey-background;
+        border-bottom: none;
+        // align to menu and the list.
+        .col.float-left, .col.float-right {
+            margin: 0;
+        }
+        .subbox {
+            padding-left: 0px;
+            padding-right: 0px;
+
+            .options-box .select {
+                margin-right: 0px;
+            }
+        }
     }
 }
 

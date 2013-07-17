@@ -82,7 +82,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
 window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
             new SelectFiltering({
                              name: "status",
-                             textWidth : "155px",
+                             textWidth : "135px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
@@ -93,7 +93,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
             archive.forCompanyAdmin() ?
               [new SelectAjaxFiltering({
                              name: "sender",
-                             textWidth : "155px",
+                             textWidth : "135px",
                              text : "sender",
                              optionsURL : "/companyaccounts",
                              defaultName : localization.filterByAuthor.showAnyAuthor,
@@ -113,7 +113,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                  })] : [],
             new IntervalDoubleSelectFiltering({
                              name: "time",
-                             textWidth : "90px",
+                             textWidth : "80px",
                              selectedBottomPrefix : localization.filterByTime.filterForm,
                              selectedTopPrefix :    localization.filterByTime.filterTo ,
                              options: function() {
