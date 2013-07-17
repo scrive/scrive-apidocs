@@ -104,6 +104,7 @@ data GetCompanies = GetCompanies [CompanyFilter] [AscDesc CompanyOrderBy] Intege
 instance MonadDB m => DBQuery m GetCompanies [Company] where
   query (GetCompanies filters sorting offset limit) = do
     kRun_ $ sqlSelect "companies" $ do
+       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
        selectCompaniesSelectors
        mapM_ companyFilterToWhereClause filters
        let ascdesc (Asc x) = companyOrderByToOrderBySQL x
@@ -118,6 +119,7 @@ data GetCompany = GetCompany CompanyID
 instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
   query (GetCompany cid) = do
     kRun_ $ sqlSelect "companies" $ do
+      sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "id" cid
     fetchCompanies >>= oneObjectReturnedGuard
@@ -127,6 +129,7 @@ instance MonadDB m => DBQuery m GetCompanyByUserID (Maybe Company) where
   query (GetCompanyByUserID uid) = do
     kRun_ $ sqlSelect "companies" $ do
       sqlJoinOn "users" "users.company_id = companies.id"
+      sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "users.id" uid
     fetchCompanies >>= oneObjectReturnedGuard
@@ -136,7 +139,15 @@ instance MonadDB m => DBUpdate m CreateCompany Company where
   update (CreateCompany) = do
     kRun_ $ sqlInsert "companies" $ do
       sqlSetCmd "id" "DEFAULT"
+      sqlResult "id"
+    (companyidx :: CompanyID) <- kFold (flip (:)) [] >>= exactlyOneObjectReturnedGuard
+    kRun_ $ sqlInsert "company_uis" $ do
+      sqlSet "company_id" companyidx
+
+    kRun_ $ sqlSelect "companies" $ do
+      sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
+      sqlWhereEq "companies.id" companyidx
     fetchCompanies >>= exactlyOneObjectReturnedGuard
 
 data SetCompanyIPAddressMaskList = SetCompanyIPAddressMaskList CompanyID [IPAddress]
@@ -167,7 +178,7 @@ instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
 data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
 instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
   update (UpdateCompanyUI cid cui) = do
-    kRun01 $ sqlUpdate "companies" $ do
+    kRun01 $ sqlUpdate "company_uis" $ do
       sqlSet "email_bordercolour" $ companyemailbordercolour cui
       sqlSet "email_font" $ companyemailfont cui
       sqlSet "email_buttoncolour" $ companyemailbuttoncolour cui
@@ -186,7 +197,7 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
       sqlSet "custom_barstextcolour" $ companycustombarstextcolour cui
       sqlSet "custom_barssecondarycolour" $ companycustombarssecondarycolour cui
       sqlSet "custom_backgroundcolour" $ companycustombackgroundcolour cui
-      sqlWhereEq "id" cid
+      sqlWhereEq "company_id" cid
 
 -- helpers
 
@@ -201,24 +212,24 @@ selectCompaniesSelectors = do
   sqlResult "companies.country"
   sqlResult "companies.ip_address_mask_list"
   sqlResult "companies.sms_originator"
-  sqlResult "companies.email_font"
-  sqlResult "companies.email_bordercolour"
-  sqlResult "companies.email_buttoncolour"
-  sqlResult "companies.email_emailbackgroundcolour"
-  sqlResult "companies.email_backgroundcolour"
-  sqlResult "companies.email_textcolour"
-  sqlResult "companies.email_logo"
-  sqlResult "companies.signview_logo"
-  sqlResult "companies.signview_textcolour"
-  sqlResult "companies.signview_textfont"
-  sqlResult "companies.signview_barscolour"
-  sqlResult "companies.signview_barstextcolour"
-  sqlResult "companies.signview_backgroundcolour"
-  sqlResult "companies.custom_logo"
-  sqlResult "companies.custom_barscolour"
-  sqlResult "companies.custom_barstextcolour"
-  sqlResult "companies.custom_barssecondarycolour"
-  sqlResult "companies.custom_backgroundcolour"
+  sqlResult "company_uis.email_font"
+  sqlResult "company_uis.email_bordercolour"
+  sqlResult "company_uis.email_buttoncolour"
+  sqlResult "company_uis.email_emailbackgroundcolour"
+  sqlResult "company_uis.email_backgroundcolour"
+  sqlResult "company_uis.email_textcolour"
+  sqlResult "company_uis.email_logo"
+  sqlResult "company_uis.signview_logo"
+  sqlResult "company_uis.signview_textcolour"
+  sqlResult "company_uis.signview_textfont"
+  sqlResult "company_uis.signview_barscolour"
+  sqlResult "company_uis.signview_barstextcolour"
+  sqlResult "company_uis.signview_backgroundcolour"
+  sqlResult "company_uis.custom_logo"
+  sqlResult "company_uis.custom_barscolour"
+  sqlResult "company_uis.custom_barstextcolour"
+  sqlResult "company_uis.custom_barssecondarycolour"
+  sqlResult "company_uis.custom_backgroundcolour"
 
 
 fetchCompanies :: MonadDB m => m [Company]
