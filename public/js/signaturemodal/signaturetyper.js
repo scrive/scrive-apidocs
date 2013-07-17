@@ -4,6 +4,9 @@
 
 (function(window){
 
+var signaturePictureScale = 4; // Number used to generate bigger final images. Quality thing
+
+
 var SignatureTyperModel = Backbone.Model.extend({
   defaults: {
         text: false,
@@ -70,7 +73,7 @@ var SignatureTyperView = Backbone.View.extend({
       return "/text_to_image?width="+this.imageWidth()+"&height="+this.imageHeight()+"&font="+this.model.font()+"&text="+ encodeURIComponent(this.model.text());
     },
     imageBase64Url : function() {
-      return "/text_to_image?base64=true&width="+(4*this.model.width())+"&height="+(4*this.model.height())+"&font="+this.model.font()+"&text="+ encodeURIComponent(this.model.text());
+      return "/text_to_image?base64=true&width="+(signaturePictureScale*this.model.width())+"&height="+(signaturePictureScale*this.model.height())+"&font="+this.model.font()+"&text="+ encodeURIComponent(this.model.text());
     },
     imageHeight: function() {
       return Math.floor(820 * this.model.height() / this.model.width());

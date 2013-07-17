@@ -4,6 +4,8 @@
 
 (function(window){
 
+var signaturePictureScale = 4; // Number used to generate bigger final images. Quality thing
+
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: {
         text: true
@@ -198,11 +200,11 @@ var SignatureDrawerView = Backbone.View.extend({
           img.src = image;
           img.onload = function() {
                var canvas = $("<canvas class='signatureCanvas' />");
-               canvas.attr("width",4* self.model.width());
-               canvas.attr("height",4* self.model.height());
+               canvas.attr("width",signaturePictureScale* self.model.width());
+               canvas.attr("height",signaturePictureScale* self.model.height());
                canvas[0].getContext('2d').fillStyle = "#ffffff";
-               canvas[0].getContext('2d').fillRect (0,0,4*self.model.width(),4*self.model.height());
-               canvas[0].getContext('2d').drawImage(img,0,0,4*self.model.width(),4*self.model.height());
+               canvas[0].getContext('2d').fillRect (0,0,signaturePictureScale*self.model.width(),signaturePictureScale*self.model.height());
+               canvas[0].getContext('2d').drawImage(img,0,0,signaturePictureScale*self.model.width(),signaturePictureScale*self.model.height());
 
 
                field.setValue(canvas[0].toDataURL("image/jpeg",1.0));
