@@ -209,10 +209,11 @@ var SignatureDrawerView = Backbone.View.extend({
 
                field.setValue(canvas[0].toDataURL("image/jpeg",1.0));
                var tmp = field.valueTMP();
-               if (tmp != undefined)
-                  tmp.img = image
-               else
-                  tmp = {img: image}
+               if (tmp != undefined) {
+                  tmp.img = image;
+               } else {
+                  tmp = {img: image};
+               }
                field.setValueTMP(tmp);
                if (callback != undefined) callback();
          };

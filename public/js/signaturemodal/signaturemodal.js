@@ -55,7 +55,7 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
      return this.get("width");
   },
   typerOrDrawer : function() {
-     var tod = this.get('typerOrDrawer')
+     var tod = this.get('typerOrDrawer');
      if (tod == undefined || (tod.isTyper() != this.typingMode()))
      {
        if (this.drawingMode()) {
@@ -79,7 +79,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     header: function() {
         var self = this;
-        var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 15px 40px;'/>")
+        var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 15px 40px;'/>");
         header.append($("<div style='font-size:20px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
