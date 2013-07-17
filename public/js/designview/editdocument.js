@@ -31,17 +31,15 @@
         help1: function() {
             var div = $("<div class='design-view-action-document-draggables-help'/>");
             div.append($("<div class='wrapper'>")
-              .append($("<span class='number'/>").text("1."))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp1))
-              .append($("<img src='/img/place-fields-help1.png'/>")));
+              .append($("<img src='/img/place-fields-help1.png'/>"))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp1)));
             return div;
         },
         help2: function() {
             var div = $("<div class='design-view-action-document-draggables-help' style='margin-right:80px'/>");
             div.append($("<div class='wrapper'>")
-              .append($("<span class='number'/>").text("2."))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp2))
-              .append($("<img src='/img/place-fields-help2.png'/>")));
+              .append($("<img src='/img/place-fields-help2.png'/>"))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp2)));
 
 
             return div;
