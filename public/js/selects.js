@@ -186,7 +186,6 @@ var SelectView = Backbone.View.extend({
     },
     //Close if we are expanded, we are not hovered and some time has passed since mouse left.
     closeIfNeeded : function() {
-        return;
         if ( this.dead != true
             && this.model.expanded()
             && new Date().getTime() - this.enterdate > 50
