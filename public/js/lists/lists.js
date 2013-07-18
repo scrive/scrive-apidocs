@@ -480,7 +480,6 @@
 
 
             var body = this.tbody;
-            var odd = true;
             var schema = this.schema;
             var elems = this.model.first(this.schema.paging().showLimit());
 
@@ -504,13 +503,6 @@
                     });
                 else
                   $(trs[i]).replaceWith(e.view.el);
-                if (odd) {
-                     $(e.view.el).addClass("odd");
-                }
-                else {
-                     $(e.view.el).removeClass("odd");
-                 }
-                 odd = !odd;
             }
 
             return this;
