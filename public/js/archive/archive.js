@@ -93,18 +93,6 @@ var ArchiveView = Backbone.View.extend({
         this.model.view = this;
         var view = this;
         this.render();
-        $(window).scroll(function() {view.updateScroll();});
-    },
-    updateScroll : function() {
-        var limit = 213;
-        if ($('.blocking-info').size() > 0) limit += $('.blocking-info').outerHeight();
-        if ($(window).scrollTop() >= limit && $("body").height() >= 1200)
-        {
-            $(this.el).addClass("scrolled");
-        } else if ( $(this.el).hasClass("scrolled") && $(window).scrollTop() <= limit){
-            $(this.el).removeClass("scrolled");
-        }
-
     },
     render: function () {
        var container = $(this.el);
