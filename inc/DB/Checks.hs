@@ -45,6 +45,9 @@ performDBChecks logger tables migrations = do
   checkDBTimeZone logger
   checkNeededExtensions logger
   checkDBConsistency logger (tableVersions : tables) migrations
+  -- have an option to put a break just after checking constraints
+  kRunRaw "SET CONSTRAINTS ALL IMMEDIATE"
+
   -- everything is OK, commit changes
   kCommit
   return ()
