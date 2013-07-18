@@ -102,6 +102,7 @@ window.AuthorViewView = Backbone.View.extend({
        subcontainer.append(model.signatoryattachments().el());
     if (this.model.hasAuthorAttachmentsSection())
        subcontainer.append(model.authorattachments().el());
+    debugger;
     if (this.model.hasEvidenceAttachmentsSection())
        subcontainer.append(model.evidenceattachments().el());
     return this;
