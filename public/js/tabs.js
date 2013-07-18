@@ -266,11 +266,6 @@ var TabsView = Backbone.View.extend({
             tabsrow.append(li);
 
         });
-        /*
-         * FIXME remove or keep?
-        if (!hasRight && model.tabsTail() == undefined)
-            tabsrow.append("<li class='float-right empty'/>");
-        */
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
         if (model.tabsTail() != undefined)

@@ -76,7 +76,7 @@ window.CompanyBrandingModel = Backbone.Model.extend({
                   })
                 ],
             inner: true,
-            innerText: 'Customize'
+            innerText: localization.companyBranding.customize
         });
       this.set({ "emailBranding" : emailBranding ,
                  "signviewBranding" : signviewBranding,

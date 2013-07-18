@@ -79,8 +79,7 @@
             return div;
         },
         refreshMargins : function() {
-          console.log(this.wrapperDiv);
-          // TODO get rid of the arbitrary numbers, where does these constants come from?
+          // where do these constants come from?
           if (this.wrapperDiv != undefined)
             this.wrapperDiv.css("height", ($(window).height() - 216) + "px");
           if (this.wrapperDiv != undefined)
