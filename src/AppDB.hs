@@ -142,6 +142,7 @@ kontraMigrations = [
   , removeProcessFromDocuments
   , moveCompanyUIsToSeparateTable
   , removeIsFree
+  , setProperOwnerOnFilesIDSequence
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

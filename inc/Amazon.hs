@@ -114,7 +114,7 @@ class AmazonMonad m where
 instance Monad m => AmazonMonad (AmazonMonadT m) where
     getAmazonConfig = AmazonMonadT $ ReaderT return
 
-uploadFilesToAmazon :: (Monad m, AmazonMonad m, MonadIO m, MonadDB m) => m ()
+uploadFilesToAmazon :: (Monad m, AmazonMonad m, MonadIO m, MonadDB m, Applicative m, CryptoRNG m) => m ()
 uploadFilesToAmazon = do
   mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
   case mfile of
@@ -145,12 +145,15 @@ urlFromFile File{filename, fileid} =
 --
 -- - upload a file to Amazon storage
 -- - do nothing and keep it in memory database
-exportFile :: (MonadIO m, MonadDB m) => S3Action -> File -> m Bool
-exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content _} = do
+exportFile :: (MonadIO m, MonadDB m, Applicative m, CryptoRNG m) => S3Action -> File -> m Bool
+exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
+           file@File{fileid, filestorage = FileStorageMemory plainContent} = do
+  Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
+  let encryptedContent = aesEncrypt aes plainContent
   let action = ctxs3action {
         AWS.s3object = url
       , AWS.s3operation = HTTP.PUT
-      , AWS.s3body = BSL.fromChunks [content]
+      , AWS.s3body = BSL.fromChunks [encryptedContent]
       , AWS.s3metadata = []
       }
       url = urlFromFile file
@@ -159,7 +162,7 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, file
   case result of
     Right _ -> do
       Log.debug $ "AWS uploaded " ++ bucket </> url
-      _ <- dbUpdate $ FileMovedToAWS fileid bucket url
+      _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
       return True
     Left err -> do -- FIXME: do much better error handling
       Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
@@ -183,7 +186,7 @@ getFileContents s3action File{..} = do
           return Nothing
         else return $ Just content
   where
-    getContent (FileStorageMemory content aes) = return . Just $ aesDecrypt aes content
+    getContent (FileStorageMemory content) = return . Just $ content
     getContent (FileStorageAWS bucket url aes) = do
       result <- AWS.runAction $ s3action {
           AWS.s3object = url
