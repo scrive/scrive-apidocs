@@ -956,3 +956,25 @@ removeProcessFromDocuments =
   , mgrFrom = 25
   , mgrDo = kRunRaw "ALTER TABLE documents DROP COLUMN process"
   }
+
+moveBinaryDataForSignatoryScreenshotsToFilesTable :: MonadDB m => Migration m
+moveBinaryDataForSignatoryScreenshotsToFilesTable =
+  Migration
+  { mgrTable = tableSignatoryScreenshots
+  , mgrFrom = 1
+  , mgrDo = do
+      kRunRaw "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
+      filesInserted <- kRun $ sqlInsertSelect "files" "signatory_screenshots" $ do
+          sqlSetCmd "content" "signatory_screenshots.image"
+          sqlSetCmd "name" "signatory_screenshots.type || '_screenshot.jpeg'"
+          sqlSetCmd "size" "octet_length(signatory_screenshots.image)"
+          sqlSetCmd "checksum" "digest(signatory_screenshots.image,'sha1')"
+          -- grouping by all columns effectivelly makes them DISTINCT
+          sqlGroupBy "1,2,3,4"
+      screenshotsUpdated <- kRun $ sqlUpdate "signatory_screenshots" $ do
+
+        sqlSetCmd "file_id" "(SELECT id FROM files WHERE content = signatory_screenshots.image AND name=signatory_screenshots.type || '_screenshot.jpeg' LIMIT 1)"
+
+      kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN image"
+      Log.debug $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
+  }

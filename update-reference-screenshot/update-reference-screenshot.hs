@@ -13,7 +13,7 @@ The database configuration will be picked from "kontrakcja.conf".
 
 -}
 
-import AppConf (dbConfig)
+import AppConf (dbConfig, amazonConfig)
 import Configuration (readConfig)
 import Control.Monad.Trans (liftIO, MonadIO)
 import DB (dbQuery, MonadDB)
@@ -28,6 +28,9 @@ import MinutesTime (MinutesTime, toSeconds)
 import System.Environment (getProgName, getArgs)
 import Util.SignatoryLinkUtils (isAuthor, hasSigned)
 import Utils.Read (maybeRead)
+import qualified Amazon
+import qualified MemCache
+import qualified Data.ByteString as BS
 
 usage :: MonadIO m => m a
 usage = do
@@ -40,10 +43,12 @@ main = do
     appname <- getProgName
     args <- getArgs
     readConfig putStrLn appname args "kontrakcja.conf"
-  withPostgreSQL (dbConfig appConf) $ updateReference
+  fileCache <- MemCache.new BS.length 50000000
+  let amazoncfg = Amazon.AmazonConfig (amazonConfig appConf) fileCache
+  withPostgreSQL (dbConfig appConf) $ Amazon.runAmazonMonadT amazoncfg $ updateReference
 
 
-updateReference :: (MonadIO m, MonadDB m) => m ()
+updateReference :: (MonadIO m, MonadDB m, Amazon.AmazonMonad m) => m ()
 updateReference = do
   args <- liftIO getArgs
   case args of

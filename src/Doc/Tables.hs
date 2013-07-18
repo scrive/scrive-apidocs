@@ -172,20 +172,21 @@ tableSignatoryLinkFields = tblTable {
 tableSignatoryScreenshots :: Table
 tableSignatoryScreenshots = tblTable {
     tblName = "signatory_screenshots"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
-      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
-    , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "type", colType = TextT, colNullable = False }
-    , tblColumn { colName = "time", colType = TimestampWithZoneT, colNullable = False }
-    , tblColumn { colName = "mimetype", colType = TextT, colNullable = False }
-    , tblColumn { colName = "image", colType = BinaryT, colNullable = False }
+      tblColumn { colName = "id",                colType = BigSerialT,         colNullable = False }
+    , tblColumn { colName = "signatory_link_id", colType = BigIntT,            colNullable = False }
+    , tblColumn { colName = "type",              colType = TextT,              colNullable = False }
+    , tblColumn { colName = "time",              colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "mimetype",          colType = TextT,              colNullable = False }
+    , tblColumn { colName = "file_id",           colType = BigIntT,            colNullable = False }
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
       (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
         fkOnDelete = ForeignKeyCascade
-      }
+      },
+      (tblForeignKeyColumn "file_id" "files" "id")
     ]
   , tblIndexes = [tblIndexOnColumn "signatory_link_id"]
   }
