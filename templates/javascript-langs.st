@@ -858,6 +858,7 @@ javascriptLocalisation =
               , createNewModalTitle:"$_modalAddCompanyAccountTitle()$"
               , createNewModalAcceptButton: "$_modalAddCompanyAccountInviteButtonText()$"
               , search : "$_SearchCompanyAccount()$"
+              , list : "$_list()$"
               , roleAdmin : "$_admin()$"
               , roleStandard : "$_standard()$"
               , rolePending : "$_pendingcompanyaccount()$"

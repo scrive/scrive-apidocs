@@ -26,7 +26,6 @@
 
             var button = new Button({
                 color: 'black',
-                size: 'tiny',
                 text: '+ ' + localization.designview.addField,
                 onClick: function() {
                     mixpanel.track('Click add field');
@@ -346,7 +345,6 @@
 
             var button = new Button({
                 color: 'green',
-                size: 'tiny',
                 text: localization.save,
                 onClick: function() {
                     mixpanel.track('Close participant');
