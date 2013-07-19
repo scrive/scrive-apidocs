@@ -41,6 +41,7 @@ import Data.Maybe
 import Text.JSON
 import Data.List (sortBy, nub)
 import File.Model
+import File.File
 import DB
 import PadQueue.Model
 import Text.JSON.Gen hiding (value)

@@ -11,6 +11,7 @@ import qualified Data.ByteString as BS
 import DB
 import qualified MemCache
 import User.Model
+import File.File
 import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData

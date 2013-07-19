@@ -30,6 +30,7 @@ import Doc.DocumentID
 import SMS.SMS (scheduleSMS)
 import InputValidation
 import File.Model
+import File.File
 import Kontra
 import KontraLink
 import Mails.SendMail

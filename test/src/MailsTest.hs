@@ -19,6 +19,7 @@ import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import Mails.SendMail
 import Company.Model
 import Test.QuickCheck
+import File.File
 import Control.Monad
 import MinutesTime
 import Util.SignatoryLinkUtils

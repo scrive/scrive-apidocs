@@ -23,6 +23,7 @@ import qualified Test.HUnit as T
 import Control.Monad.Reader.Class
 
 import File.FileID
+import File.File
 import Crypto.RNG
 import DB
 import DB.SQL2

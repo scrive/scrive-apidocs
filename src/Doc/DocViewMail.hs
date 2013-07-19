@@ -22,6 +22,7 @@ import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData
 import Doc.DocUtils
 import File.FileID
+import File.File
 import Kontra
 import KontraLink
 import Mails.SendMail

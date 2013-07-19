@@ -58,6 +58,7 @@ import Control.Monad
 import Data.List hiding (insert)
 import Data.Maybe
 import File.Model
+import File.File
 import Control.Applicative
 
 {- |

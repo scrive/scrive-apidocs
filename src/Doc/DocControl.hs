@@ -74,6 +74,7 @@ import Doc.DocInfo
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Util.MonadUtils
 import User.Utils
+import File.File
 import Control.Applicative
 import Control.Concurrent
 import qualified Control.Exception.Lifted as E

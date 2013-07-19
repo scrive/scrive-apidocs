@@ -28,6 +28,7 @@ import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
 import File.Storage
+import File.File
 import Doc.DocView
 import Doc.DocUtils
 import GuardTime (GuardTimeConf)

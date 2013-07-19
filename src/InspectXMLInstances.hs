@@ -27,6 +27,7 @@ import File.FileID
 import IPAddress
 import Text.JSON
 import Utils.String
+import File.File
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"

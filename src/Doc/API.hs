@@ -21,6 +21,7 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
 import Doc.SignatoryLinkID
+import File.File
 import Text.JSON.Pretty
 import Doc.DocumentID
 import Doc.Tokens.Model

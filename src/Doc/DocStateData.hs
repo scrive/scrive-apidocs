@@ -9,7 +9,6 @@ module Doc.DocStateData (
   , DocumentTag(..)
   , DocumentType(..)
   , FieldPlacement(..)
-  , File(..)
   , AuthenticationMethod(..)
   , DeliveryMethod(..)
   , MailsDeliveryStatus(..)
@@ -38,7 +37,6 @@ import MinutesTime
 import User.UserID
 import User.Lang
 import File.FileID
-import File.File
 import Doc.SealStatus (SealStatus)
 import Doc.DocumentID
 import Doc.SignatoryLinkID
