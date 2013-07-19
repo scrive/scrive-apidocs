@@ -10,7 +10,6 @@ module Doc.DocStateData (
   , DocumentType(..)
   , FieldPlacement(..)
   , File(..)
-  , FileStorage(..)
   , AuthenticationMethod(..)
   , DeliveryMethod(..)
   , MailsDeliveryStatus(..)
