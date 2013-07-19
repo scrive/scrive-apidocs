@@ -50,6 +50,8 @@ main = Log.withLogger $ do
     args <- getArgs
     readConfig Log.cron appname args "kontrakcja.conf"
 
+  checkExecutables
+
   withPostgreSQL (dbConfig appConf) $ do
     performDBChecks Log.cron kontraTables kontraMigrations
     defineMany kontraFunctions

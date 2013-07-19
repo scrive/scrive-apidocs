@@ -31,6 +31,8 @@ import qualified Version
 import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
 
+
+
 main :: IO ()
 main = Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
@@ -43,6 +45,8 @@ main = Log.withLogger $ do
     appname <- getProgName
     args <- getArgs
     readConfig Log.server appname args "kontrakcja.conf"
+
+  checkExecutables
 
   -- Generating static resources (JS and CSS). For development this does nothing. For production it generates joins.
   staticResources' <- SR.getResourceSetsForImport (SR.Production <| production appConf |> SR.Development) (srConfig appConf) ""
