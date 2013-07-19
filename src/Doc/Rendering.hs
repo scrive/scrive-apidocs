@@ -22,7 +22,7 @@ import Control.Monad
 import Control.Monad.Error
 import Data.Typeable
 import DB
-import Doc.DocStateData
+import Doc.JpegPages
 import File.Model
 import ForkAction
 import Kontra

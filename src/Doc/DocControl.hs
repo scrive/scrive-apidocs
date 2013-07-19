@@ -48,6 +48,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.SignatoryLinkID
 import Doc.DocumentID
+import Doc.JpegPages
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import Doc.Tokens.Model
 import Attachment.Model

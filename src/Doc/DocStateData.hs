@@ -13,7 +13,6 @@ module Doc.DocStateData (
   , FileStorage(..)
   , AuthenticationMethod(..)
   , DeliveryMethod(..)
-  , JpegPages(..)
   , MailsDeliveryStatus(..)
   , SignatureProvider(..)
   , SignInfo(..)
@@ -43,7 +42,6 @@ import File.FileID
 import File.File
 import Doc.SealStatus (SealStatus)
 import Doc.DocumentID
-import Doc.JpegPages
 import Doc.SignatoryLinkID
 import Database.HDBC
 import Data.List
