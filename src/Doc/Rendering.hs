@@ -18,7 +18,6 @@ module Doc.Rendering
     ) where
 
 import Control.Applicative
-import Control.Exception (catch, SomeException)
 import Control.Monad
 import Control.Monad.Error
 import Data.Typeable
@@ -36,8 +35,6 @@ import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
-import qualified Codec.Picture.Png as Pic
-import qualified Codec.Picture.Types as Pic
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
@@ -68,28 +65,16 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
     fcontent <- BS.readFile fpath
     return fcontent
 
-
-pngGeometry :: BS.ByteString -> Maybe (Int, Int)
-pngGeometry s = case Pic.decodePng s of
-  Right (Pic.ImageY8 i) -> geometry i
-  Right (Pic.ImageYA8 i) -> geometry i
-  Right (Pic.ImageRGB8 i) -> geometry i
-  Right (Pic.ImageRGBA8 i) -> geometry i
-  Right (Pic.ImageYCbCr8 i) -> geometry i
-  Left _ -> Nothing
-  where geometry i = Just (Pic.imageWidth i, Pic.imageHeight i)
-
-  
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: (KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
+convertPdfToJpgPages :: forall m . (KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
                      => FileID
                      -> Int
                      -> m JpegPages
 convertPdfToJpgPages fid widthInPixels = do
   content <- getFileIDContents fid
-  liftIO $ withSystemTempDirectory "pdf2png" $ \tmppath -> do
+  liftIO $ withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
 
     BS.writeFile sourcepath content
@@ -103,24 +88,32 @@ convertPdfToJpgPages fid widthInPixels = do
                ] BSL.empty
 
     let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
-    let readPagesFrom n = (do
-                       contentx <- BS.readFile (pathOfPage n)
-                       followingPages <- readPagesFrom (n+1 :: Int)
-                       let (w, h) = fromMaybe (widthInPixels, widthInPixels * 842 `div` 595) $ pngGeometry contentx
-                       return $ (contentx, w, h) : followingPages)
-             `catch` \(_ :: SomeException) -> return []
+
+    -- readPagesFrom opens a file. If the file does not exists then it
+    -- stops, if open is successful the file is prepended to a list of
+    -- files and a file with number larger by 1 is tried
+    let readPagesFrom :: Int -> IO [BS.ByteString]
+        readPagesFrom n = do
+          econtentx <- E.try (BS.readFile (pathOfPage n))
+          case econtentx of
+            Right contentx -> do
+               followingPages <- readPagesFrom (n+1 :: Int)
+               return $ (contentx : followingPages)
+            Left (_ :: IOError) -> do
+               -- we could not open this file, it means it does not exists
+               return []
 
     result <- case exitcode of
       ExitFailure _ -> do
         systmp <- getTemporaryDirectory
-        (path,handle) <- openTempFile systmp ("pdf2png-failed-" ++ show fid ++ "-.pdf")
-        Log.error $ "Cannot pdf2png of file #" ++ show fid ++ ": " ++ path
+        (path,handle) <- openTempFile systmp ("mudraw-failed-" ++ show fid ++ "-.pdf")
+        Log.error $ "Cannot mudraw of file #" ++ show fid ++ ": " ++ path
         BS.hPutStr handle content
         hClose handle
 
         return $ JpegPagesError (concatChunks errcontent `BS.append` concatChunks outcontent)
       ExitSuccess -> do
-        pages <- readPagesFrom 1
+        pages <- liftIO $ readPagesFrom 1
         return (JpegPages pages)
     return result
 

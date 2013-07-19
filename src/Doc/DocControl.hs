@@ -301,9 +301,25 @@ handleFilePages fid = do
       rsp <- simpleJsonResponse $ runJSONGen $ J.value "error" "Rendering failed"
       return (rsp { rsCode = 500 })
     JpegPages pages  -> do
-      simpleJsonResponse $ runJSONGen $ J.objects "pages" $ for pages $ \(_,width,height) -> do
-        J.value "width"  width
-        J.value "height" height
+      -- This communicates to JavaScript how many pages there
+      -- are. This should be totally changed to the following
+      -- mechanism:
+      --
+      -- 1. JavaScript should ask for the first page
+      -- 2. Server should serve first page
+      -- 3. JavaScript should ask for next page
+      -- 4. Server should respond with Enhance Your Calm (or just wait a little before returning response).
+      -- 5. JavaScript should retry if Enhance Your Calm is the code
+      -- 6. If the page returned 200 with content, then proceed with next page
+      -- 7. If server returned 404 it means there are no more pages
+      -- 8. JavaScript should fire 'full document loaded' event (and place fields on all pages).
+      --
+      -- Such architecture would allow incremental rendering of pages
+      -- on the server side also, thus improving user experience a
+      -- lot.
+      simpleJsonResponse $ runJSONGen $ J.objects "pages" $ for pages $ \_ -> do
+        J.value "width"  (1::Int)
+        J.value "height" (1::Int)
 
 {- |
    Get some html to display the images of the files
@@ -350,7 +366,7 @@ preview fid value
         jpages <- MemCache.get fid ctxnormalizeddocuments
         case jpages of
             Just (JpegPages pages) -> do
-                let (contents,_,_) =  pages !! 0
+                let contents =  pages !! 0
                 scaledContent <- liftIO $ scaleForPreview contents
                 let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [scaledContent]) Nothing
                 return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
@@ -366,7 +382,7 @@ showPage' fileid pageno = do
   jpages <- MemCache.get fileid ctxnormalizeddocuments
   case jpages of
     Just (JpegPages pages) -> do
-      let (contents,_,_) =  pages !! (pageno - 1)
+      let contents = pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       Log.debug $ "JPEG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
       return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
