@@ -104,8 +104,8 @@
             var div = $('<div />');
             div.addClass('design-view-action-participant-details-participation-fields');
             div.append(view.detailsParticipationFieldsSignOrder());
-            div.append(view.detailsParticipationFieldsRole());
             div.append(view.detailsParticipationFieldsDelivery());
+            div.append(view.detailsParticipationFieldsRole());
             div.append(view.detailsParticipationFieldsAuth());
             return div;
         },
@@ -1233,8 +1233,8 @@
             div.append(view.company());
             div.append(view.email());
             div.append(view.orderIcon.el);
-            div.append(view.roleIcon.el);
             div.append(view.deviceIcon.el);
+            div.append(view.roleIcon.el);
             div.append(view.authIcon.el);
             div.click(function() {
                 if(viewmodel.participantDetail() === sig) {
