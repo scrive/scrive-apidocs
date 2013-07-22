@@ -356,12 +356,12 @@ documentMail haslang ctx doc mailname otherfields = do
         F.value "ctxlang" (codeFromLang $ mctxlang mctx)
         F.value "documenttitle" $ documenttitle doc
         F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-        brandingMailFields (mctxcurrentBrandedDomain mctx) (companyid <$> mcompany) mcompanyui
+        brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
         otherfields
     kontramaillocal haslang mailname allfields
 
-brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyID -> Maybe CompanyUI -> Fields m ()
-brandingMailFields mbd mcompanyid companyui = do
+brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
+brandingMailFields mbd companyui = do
     F.value "background"  $ companyemailbackgroundcolour <$> companyui
     F.value "textcolor" $ (join $ companyemailtextcolour <$> companyui) `mplus`(bdmailstextcolor <$> mbd)
     F.value "font"  $ companyemailfont <$> companyui
@@ -369,8 +369,8 @@ brandingMailFields mbd mcompanyid companyui = do
     F.value "buttoncolour"  $ (join $ companyemailbuttoncolour <$> companyui) `mplus` (bdmailsbuttoncolor <$> mbd)
     F.value "skipbuttonborder" $ isNothing (join $ companyemailbuttoncolour <$> companyui) && isJust (bdmailsbuttoncolor <$> mbd)
     F.value "emailbackgroundcolour"  $ (join $ companyemailemailbackgroundcolour <$> companyui) `mplus` (bdmailsbackgroundcolor <$> mbd)
-    when (isJust mcompanyid || isJust mbd) $ do
+    when (isJust companyui || isJust mbd) $ do
       F.value "logo" $ (isJust $ join $ companyemaillogo <$> companyui) || (isJust $ mbd)
       F.value "logoLink" $ if (isJust $ join $ companyemaillogo <$> companyui)
-                              then (show <$> LinkCompanyEmailLogo <$> mcompanyid)
+                              then (show <$> LinkCompanyEmailLogo <$> companyuicompanyid <$> companyui)
                               else (bdlogolink <$> mbd)

@@ -13,7 +13,8 @@ import Control.Monad.State
 import OurPrelude
 
 data CompanyUI = CompanyUI
-  { companyemailbordercolour          :: Maybe String
+  { companyuicompanyid                :: CompanyID
+  , companyemailbordercolour          :: Maybe String
   , companyemailfont                  :: Maybe String
   , companyemailbuttoncolour          :: Maybe String
   , companyemailemailbackgroundcolour :: Maybe String
@@ -68,6 +69,7 @@ instance MonadDB m => DBUpdate m SetCompanyUI Bool where
 
 selectCompanyUIsSelectors :: (SqlResult command) => State command ()
 selectCompanyUIsSelectors = do
+  sqlResult "company_uis.company_id"
   sqlResult "company_uis.email_font"
   sqlResult "company_uis.email_bordercolour"
   sqlResult "company_uis.email_buttoncolour"
@@ -91,13 +93,16 @@ selectCompanyUIsSelectors = do
 fetchCompanyUIs :: MonadDB m => m [CompanyUI]
 fetchCompanyUIs = kFold decoder []
   where
-    decoder acc email_font
+    decoder acc
+      company_id
+      email_font
       email_bordercolour email_buttoncolour email_emailbackgroundcolour
       email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
       signview_textfont signview_barscolour signview_barstextcolour
       signview_backgroundcolour custom_logo custom_barscolour custom_barstextcolour
-      custom_barssecondarycolour custom_backgroundcolour = CompanyUI {
-          companyemailfont = email_font
+      custom_barssecondarycolour custom_backgroundcolour = CompanyUI
+        { companyuicompanyid = company_id
+        , companyemailfont = email_font
         , companyemailbordercolour = email_bordercolour
         , companyemailbuttoncolour = email_buttoncolour
         , companyemailemailbackgroundcolour = email_emailbackgroundcolour

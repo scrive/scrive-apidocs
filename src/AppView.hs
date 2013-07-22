@@ -115,20 +115,20 @@ companyForPage = do
               Nothing -> return Nothing
               Just company -> return $ Just $ company
 
-companyUIForPage  :: Kontrakcja m => m (Maybe (CompanyID,CompanyUI))
+companyUIForPage  :: Kontrakcja m => m (Maybe CompanyUI)
 companyUIForPage = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
        Just User{usercompany = Just cid} -> do
          companyui <- dbQuery $ GetCompanyUI cid
-         return (Just (cid,companyui))
+         return (Just companyui)
        _ -> return Nothing
 
-brandingFields ::  Kontrakcja m => Maybe BrandedDomain -> Maybe (CompanyID,CompanyUI) -> Fields m ()
+brandingFields ::  Kontrakcja m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
 brandingFields mbd mcompanyui = do
-  F.value "customlogo" $ (isJust mbd) || (isJust $ (join $ companycustomlogo <$> snd <$> mcompanyui))
-  F.value "customlogolink" $ if (isJust $ (join $ companycustomlogo <$> snd <$> mcompanyui))
-                                then show <$> LinkCompanyCustomLogo <$> fst <$> mcompanyui
+  F.value "customlogo" $ (isJust mbd) || (isJust $ (join $ companycustomlogo <$> mcompanyui))
+  F.value "customlogolink" $ if (isJust $ (join $ companycustomlogo <$> mcompanyui))
+                                then show <$> LinkCompanyCustomLogo <$> companyuicompanyid <$> mcompanyui
                                 else bdlogolink <$> mbd
   F.value "custombarscolour" $ mcolour bdbarscolour companycustombarscolour
   F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
@@ -139,7 +139,7 @@ brandingFields mbd mcompanyui = do
   F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd
   F.value "hasbrandeddomain" $ isJust mbd
  where
-   mcolour df cuf =  (join $ cuf <$> snd <$> mcompanyui) `mplus` (df <$> mbd)
+   mcolour df cuf =  (join $ cuf <$> mcompanyui) `mplus` (df <$> mbd)
 
 
 notFoundPage :: Kontrakcja m => m Response

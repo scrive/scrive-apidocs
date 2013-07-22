@@ -177,7 +177,7 @@ accessNewAccountMail ctx user setpasslink = do
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
 resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
@@ -186,7 +186,7 @@ resetPasswordMail ctx user setpasslink = do
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
 newUserMail :: TemplatesMonad m => Context -> String -> String -> KontraLink -> m Mail
 newUserMail ctx emailaddress personname activatelink = do
@@ -195,7 +195,7 @@ newUserMail ctx emailaddress personname activatelink = do
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ ctxhostpart ctx
-    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
 
 mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
@@ -207,7 +207,7 @@ mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     F.value "ctxhostpart"   $ ctxhostpart ctx
     F.value "custommessage"   custommessage
-    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
 
 mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => Context -> a -> Email -> KontraLink -> m Mail
@@ -217,7 +217,7 @@ mailEmailChangeRequest ctx user newemail link = do
     F.value "newemail" $ unEmail newemail
     F.value "ctxhostpart" $ ctxhostpart ctx
     F.value "link" $ show link
-    brandingMailFields (currentBrandedDomain ctx) Nothing Nothing
+    brandingMailFields (currentBrandedDomain ctx) Nothing
 
 -------------------------------------------------------------------------------
 

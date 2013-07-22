@@ -94,7 +94,8 @@ companyUiFromJSON jsv = withJSValue jsv $ do
 
 
   return $ CompanyUI {
-    companyemailfont = maybeS jsoncompanyemailfont
+    companyuicompanyid = unsafeCompanyID 0
+  , companyemailfont = maybeS jsoncompanyemailfont
   , companyemailbordercolour = maybeS jsoncompanyemailbordercolour
   , companyemailbuttoncolour = maybeS jsoncompanyemailbuttoncolour
   , companyemailemailbackgroundcolour = maybeS jsoncompanyemailemailbackgroundcolour

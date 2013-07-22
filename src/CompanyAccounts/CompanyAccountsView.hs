@@ -33,7 +33,7 @@ mailNewCompanyUserInvite ctx invited inviter company companyui link =
   kontramail "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
-    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just (companyid company)) (Just companyui)
+    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just companyui)
     F.value "creatorname" $ getSmartName inviter
 
 
@@ -44,7 +44,7 @@ mailTakeoverPrivateUserInvite ctx invited inviter company companyui link =
   kontramaillocal invited  "mailTakeoverPrivateUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
-    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just (companyid company)) (Just companyui)
+    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just companyui)
 
 basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()
 basicCompanyInviteFields invited inviter company = do
