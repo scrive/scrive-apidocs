@@ -19,6 +19,7 @@ module Doc.DocView (
 
 import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage)
 import Company.Model
+import Company.CompanyUI
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail

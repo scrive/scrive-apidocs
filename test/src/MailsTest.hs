@@ -18,6 +18,7 @@ import Doc.DocStateData
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import Mails.SendMail
 import Company.Model
+import Company.CompanyUI
 import Test.QuickCheck
 import File.File
 import Control.Monad

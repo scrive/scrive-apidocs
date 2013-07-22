@@ -18,6 +18,7 @@ import Mails.SendMail(Mail, kontramail, kontramaillocal)
 import Text.StringTemplates.Templates
 import User.Model
 import Company.Model
+import Company.CompanyUI
 import Doc.DocViewMail
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

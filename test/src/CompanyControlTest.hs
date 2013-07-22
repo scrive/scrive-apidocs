@@ -11,6 +11,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import Company.CompanyControl
 import Company.Model
+import Company.CompanyUI
 import CompanyAccounts.Model
 import Context
 import DB

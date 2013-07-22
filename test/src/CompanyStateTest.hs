@@ -4,6 +4,7 @@ import Control.Monad
 import Test.Framework
 
 import Company.Model
+import Company.CompanyUI
 import DB
 import TestingUtil
 import TestKontra

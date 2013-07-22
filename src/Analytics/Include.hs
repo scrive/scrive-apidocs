@@ -20,6 +20,7 @@ import Kontra
 import User.Model
 
 import Company.Model
+import Company.CompanyUI
 
 import Control.Monad
 import Control.Applicative

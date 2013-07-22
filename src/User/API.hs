@@ -36,6 +36,7 @@ import User.History.Model
 import User.UserControl
 import Payments.Action
 import Company.Model
+import Company.CompanyUI
 import Mails.SendMail
 import ActionQueue.EmailChangeRequest
 import Util.HasSomeUserInfo

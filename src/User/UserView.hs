@@ -35,6 +35,7 @@ module User.UserView (
 import Control.Applicative ((<$>))
 import Data.Maybe
 import Company.Model
+import Company.CompanyUI
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, kontramail, kontramaillocal)

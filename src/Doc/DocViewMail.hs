@@ -17,6 +17,7 @@ module Doc.DocViewMail
     ) where
 
 import Company.Model
+import Company.CompanyUI
 import Control.Logic
 import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData

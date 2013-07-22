@@ -24,6 +24,7 @@ import qualified Data.Map as Map
 import DB
 import Administration.AdministrationView (adminCompanyBrandingPage)
 import Company.Model
+import Company.CompanyUI
 import Kontra
 import KontraLink
 import Happstack.Fields

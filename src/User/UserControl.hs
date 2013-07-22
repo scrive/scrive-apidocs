@@ -40,6 +40,7 @@ import ActionQueue.UserAccountRequest
 import AppView
 import DB hiding (update, query)
 import Company.Model
+import Company.CompanyUI
 import InputValidation
 import Kontra
 import KontraLink
