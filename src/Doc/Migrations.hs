@@ -965,13 +965,13 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
   , mgrDo = do
       kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
       kRunRaw "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
+      Log.debug $ "This is a long running migration with O(n^2) complexity. Please wait!"
       filesInserted <- kRun $ sqlInsertSelect "files" "signatory_screenshots" $ do
           sqlSetCmd "content" "signatory_screenshots.image"
           sqlSetCmd "name" "signatory_screenshots.type || '_screenshot.jpeg'"
           sqlSetCmd "size" "octet_length(signatory_screenshots.image)"
           sqlSetCmd "checksum" "digest(signatory_screenshots.image,'sha1')"
-          -- grouping by all columns effectivelly makes them DISTINCT
-          sqlGroupBy "1,2,3,4"
+          sqlDistinct
       screenshotsUpdated <- kRun $ sqlUpdate "signatory_screenshots" $ do
 
         sqlSetCmd "file_id" "(SELECT id FROM files WHERE content = signatory_screenshots.image AND name=signatory_screenshots.type || '_screenshot.jpeg' LIMIT 1)"
