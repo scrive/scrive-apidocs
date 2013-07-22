@@ -151,7 +151,7 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, file
         AWS.s3object = url
       , AWS.s3operation = HTTP.PUT
       , AWS.s3body = BSL.fromChunks [content]
-      , AWS.s3metadata = [("Content-Type","application/pdf")]
+      , AWS.s3metadata = []
       }
       url = urlFromFile file
       bucket = AWS.s3bucket ctxs3action
