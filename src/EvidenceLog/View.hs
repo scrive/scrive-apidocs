@@ -23,7 +23,6 @@ import Utils.Prelude
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified Data.ByteString.UTF8 as BS
 import Data.Decimal (realFracToDecimal)
 import Data.Maybe
 import Data.List
@@ -216,7 +215,7 @@ evidenceOfIntentHTML title l = do
     let values Nothing = return ()
         values (Just (t,s)) = do
           F.value "time" $ formatMinutesTimeUTC t ++ " UTC"
-          F.value "image" $ RFC2397.encode (BS.fromString (Screenshot.mimetype s))
+          F.value "image" $ RFC2397.encode "image/jpeg"
                                            (unBinary (Screenshot.image s))
     F.objects "entries" $ for l $ \(sl, entry) -> do
       F.value "signatory"  $ getSmartName sl

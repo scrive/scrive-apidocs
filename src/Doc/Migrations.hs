@@ -963,6 +963,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
   { mgrTable = tableSignatoryScreenshots
   , mgrFrom = 1
   , mgrDo = do
+      kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
       kRunRaw "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
       filesInserted <- kRun $ sqlInsertSelect "files" "signatory_screenshots" $ do
           sqlSetCmd "content" "signatory_screenshots.image"

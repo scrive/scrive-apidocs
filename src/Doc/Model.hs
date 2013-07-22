@@ -85,6 +85,7 @@ import Crypto.RNG
 import Doc.Conditions
 import File.FileID
 import File.Model
+import File.File
 import File.Storage
 import qualified Amazon
 import qualified Control.Monad.State.Lazy as State
@@ -952,7 +953,6 @@ insertSignatoryScreenshots l = do
            sqlSetList "signatory_link_id" $ slids
            sqlSetList "type"              $ (types :: [String])
            sqlSetList "time"              $ times
-           sqlSetList "mimetype"          $ map Screenshot.mimetype ss
            sqlSetList "file_id"           $ (map fileid files)
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
@@ -965,23 +965,22 @@ instance (MonadDB m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryS
                 sqlResult "signatory_link_id"
                 sqlResult "type"
                 sqlResult "time"
-                sqlResult "mimetype"
                 sqlResult "file_id"
-    let folder1 a slid ty time mt fid = (slid :: SignatoryLinkID, ty :: String, time :: MinutesTime, mt :: String, fid :: FileID) : a
+    let folder1 a slid ty time fid = (slid :: SignatoryLinkID, ty :: String, time :: MinutesTime, fid :: FileID) : a
     screenshotsWithoutBinaryData <- flip kFold [] folder1
-    let getBinaries (slid, ty, time, mt, fid) = do
+    let getBinaries (slid, ty, time, fid) = do
            bin <- getFileIDContents fid
-           return (slid, ty, time, mt, Binary bin)
+           return (slid, ty, time, Binary bin)
     screenshotsWithBinaryData <- mapM getBinaries screenshotsWithoutBinaryData
 
-    let folder ((slid', s):a) (slid, ty, time, mt, i) | slid' == slid = (slid, mkss ty time mt i s):a
-        folder a (slid, ty, time, mt, i) = (slid, mkss ty time mt i emptySignatoryScreenshots) : a
+    let folder ((slid', s):a) (slid, ty, time, i) | slid' == slid = (slid, mkss ty time i s):a
+        folder a (slid, ty, time, i) = (slid, mkss ty time i emptySignatoryScreenshots) : a
 
-        mkss :: String -> MinutesTime -> String -> Binary -> SignatoryScreenshots -> SignatoryScreenshots
-        mkss "first"     time mt i s = s{ first = Just (time, Screenshot mt i) }
-        mkss "signing"   time mt i s = s{ signing = Just (time, Screenshot mt i) }
-        mkss "reference" time mt i s = s{ reference = (time, Screenshot mt i) }
-        mkss t           _    _  _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
+        mkss :: String -> MinutesTime -> Binary -> SignatoryScreenshots -> SignatoryScreenshots
+        mkss "first"     time i s = s{ first = Just (time, Screenshot i) }
+        mkss "signing"   time i s = s{ signing = Just (time, Screenshot i) }
+        mkss "reference" time i s = s{ reference = (time, Screenshot i) }
+        mkss t           _    _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
     return $ foldl' folder [] screenshotsWithBinaryData
 
 

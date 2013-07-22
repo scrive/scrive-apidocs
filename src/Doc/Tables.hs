@@ -178,7 +178,6 @@ tableSignatoryScreenshots = tblTable {
     , tblColumn { colName = "signatory_link_id", colType = BigIntT,            colNullable = False }
     , tblColumn { colName = "type",              colType = TextT,              colNullable = False }
     , tblColumn { colName = "time",              colType = TimestampWithZoneT, colNullable = False }
-    , tblColumn { colName = "mimetype",          colType = TextT,              colNullable = False }
     , tblColumn { colName = "file_id",           colType = BigIntT,            colNullable = False }
     ]
   , tblPrimaryKey = ["id"]
