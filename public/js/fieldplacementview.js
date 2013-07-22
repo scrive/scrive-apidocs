@@ -77,8 +77,15 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             if( dragHandler.hasClass("placedfield")) {
                 dragHandler.hide();
             }
-            if (field.signatory().document().mainfile() != undefined)
-                field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper,verticaloffset);
+            if (field.signatory().document().mainfile() != undefined) {
+                var xAxisOffset = 0;
+                var yAxisOffset = 0;
+                if (field.isText() || field.isFake()) {
+                  xAxisOffset = textPlacementLeftMargin;
+                  yAxisOffset = textPlacementTopMargin;
+                }
+                field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper,verticaloffset, xAxisOffset, yAxisOffset);
+            }
         },
         stop: function() {
             if( placement!=undefined && !droppedInside ) {
@@ -104,8 +111,16 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             initFP();
         },
         drag: function(event, ui) {
-            if (field.signatory().document().mainfile() != undefined)
-                field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset);
+            if (field.signatory().document().mainfile() != undefined) {
+                var xAxisOffset = 0;
+                var yAxisOffset = 0;
+                if (field.isText() || field.isFake()) {
+                  xAxisOffset = textPlacementLeftMargin;
+                  yAxisOffset = textPlacementTopMargin;
+                }
+                field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper, verticaloffset, xAxisOffset, yAxisOffset);
+                field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper, verticaloffset, xAxisOffset, yAxisOffset);
+            }
         },
         onDrop: function(page, x, y, w, h) {
             if (field.isText() || field.isFake() ) {
