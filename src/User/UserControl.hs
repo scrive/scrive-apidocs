@@ -290,9 +290,7 @@ handleAccountSetupGetWithMethod uid token sm = do
     (Just user, Nothing) -> do
       mcompany <-  getCompanyForUser user
       mcompanyui <- case mcompany of
-                      Just comp -> do
-                        companyui <- dbQuery $ GetCompanyUI (companyid comp)
-                        return (Just companyui)
+                      Just comp -> Just <$> (dbQuery $ GetCompanyUI (companyid comp))
                       _ -> return Nothing
       mbd <- return $ currentBrandedDomain ctx
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do

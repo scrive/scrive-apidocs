@@ -33,7 +33,6 @@ import Routing (hGet, hPost, toK0, toK1)
 import User.Utils
 import Util.MonadUtils
 import Utils.String
-import qualified Log
 import Text.JSON.Gen
 import BrandedDomains
 
@@ -65,8 +64,6 @@ handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
     rawcompanyjson <- guardJustM $ getField "company"
     companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
     jsoncui <- companyUiFromJSON companyjson
-    Log.debug $ "using json " ++ (show $ jsoncui)
-    Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show jsoncui)
     _ <- dbUpdate $ SetCompanyUI (companyid company) jsoncui
     return ()
   return $ LinkAccountCompany mcid

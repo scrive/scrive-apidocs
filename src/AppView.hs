@@ -119,9 +119,7 @@ companyUIForPage  :: Kontrakcja m => m (Maybe CompanyUI)
 companyUIForPage = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
-       Just User{usercompany = Just cid} -> do
-         companyui <- dbQuery $ GetCompanyUI cid
-         return (Just companyui)
+       Just User{usercompany = Just cid} -> Just <$> (dbQuery $ GetCompanyUI cid)
        _ -> return Nothing
 
 brandingFields ::  Kontrakcja m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
