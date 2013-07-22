@@ -12,6 +12,9 @@ import System.Posix.Terminal (queryTerminal)
 import System.Process
 import qualified Control.Exception as C
 import qualified Data.ByteString.Lazy as BSL
+import Data.List (sort)
+import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
+import qualified Log
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()
@@ -89,3 +92,27 @@ readCurl :: MonadIO m
          -> BSL.ByteString           -- ^ standard input
          -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
 readCurl args input = readProcessWithExitCode' curl_exe (["--max-time", "20", "-s", "-S"] ++ args) input
+
+checkPathToExecutable :: FilePath -> IO FilePath
+checkPathToExecutable filepath = do
+    (_code',stdout',_stderr') <- readProcessWithExitCode' "which" [filepath] (BSL.empty)
+    return $ BSL.toString stdout'
+
+importantExecutables :: [FilePath]
+importantExecutables =
+  [ "java"
+  , "curl"
+  , "mutool"
+  , "mudraw"
+  ]
+
+checkExecutables :: IO ()
+checkExecutables = do
+  Log.debug "Checking paths to executables:"
+  mapM_ check (sort importantExecutables)
+  where
+    check filepath = do
+      realpath <- checkPathToExecutable filepath
+      if null realpath
+         then Log.debug $ "    " ++ filepath ++ ": *** not found ***"
+         else Log.debug $ "    " ++ filepath ++ ": " ++ head (lines realpath)
