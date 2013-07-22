@@ -161,7 +161,8 @@ moveCompanyUIsToSeparateTable =
     mgrTable = tableCompanies
   , mgrFrom = 13
   , mgrDo = do
-      let columnsToMove = [ "email_bordercolour"
+      let columnsToMove :: [RawSQL]
+          columnsToMove = [ "email_bordercolour"
                           , "email_font"
                           , "email_buttoncolour"
                           , "email_emailbackgroundcolour"
@@ -182,7 +183,7 @@ moveCompanyUIsToSeparateTable =
                           ]
       kRun_ $ sqlInsertSelect "company_uis" "companies" $ do
           sqlSetCmd "company_id" "companies.id"
-          mapM_ (\column -> sqlSet column column) columnsToMove
+          mapM_ (\column -> sqlSetCmd column ("companies." <> raw column)) columnsToMove
 
       kRun_ $ "ALTER TABLE companies" <+> sqlConcatComma (map (\column -> "DROP COLUMN" <+> raw column) columnsToMove)
   }
