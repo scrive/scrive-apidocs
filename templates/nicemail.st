@@ -31,40 +31,7 @@ nicemail=
 
           <tr>
             <td align="center" valign="top">
-              <!-- // Begin Template Body Top \\ -->
-
-              <table border="0" cellpadding="40" cellspacing="0"width="600" id="templateTop" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid;">
-                <tr>
-                  <td valign="top" class="topContent">
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%" $if(ispreview)$style="border-collapse: separate; border-spacing: $borderspacing()$"$endif$>
-                      <tr>
-                        <td valign="top">
-                          <div>
-                            <table>
-                              <tr>
-                                <td>
-                                  <span class="h1" style="color: $if(!textcolor)$#364963$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">
-                                    $if(mailheader)$ $mailheader$ $endif$
-                                  </span>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <a style="text-decoration: none;" href="$ctxhostpart$">
-                                    <span class="h3" style="color: $if(!textcolor)$#7a94b8$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">
-                                      $_poweredByScrive()$
-                                    </span>
-                                  </a>
-                                </td>
-                              </tr>
-                            </table>
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table><!-- // Begin Template Body \\ -->
+              <!-- // Begin Template Body \\ -->
 
               <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid; $if(ispreview)$border-collapse: separate; border-spacing: $borderspacing()$$endif$">
                 <tr>
@@ -152,6 +119,11 @@ nicemail=
             </td>
           </tr>
           $endif$
+            <tr style="border: none;">
+              <td>
+                $poweredByScrive()$
+              </td>
+            </tr>
         </table>
         <br />
       </td>
@@ -211,4 +183,11 @@ nicebutton=
 </table>
 ####
 buttonborder=$if(skipbuttonborder)$$buttoncolour$$else$#CCCCCC$endif$
+####
+poweredByScrive=
+<a style="text-decoration: none;" href="$ctxhostpart$">
+  <span class="h3" style="color: $if(!textcolor)$#7a94b8$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left; margin-left: 10px;">
+    $_poweredByScrive()$
+  </span>
+</a>
 ####
