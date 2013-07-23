@@ -164,7 +164,8 @@ handleCompanyGetProfile:: Kontrakcja m => CompanyID -> m JSValue
 handleCompanyGetProfile cid = onlySalesOrAdmin $ do
   ctx <- getContext
   company <- guardJustM $ dbQuery $ GetCompany cid
-  companyJSON ctx company
+  companyui <- dbQuery $ GetCompanyUI cid
+  companyJSON ctx company companyui
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage companyid
