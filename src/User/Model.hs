@@ -20,7 +20,7 @@ module User.Model (
   , GetCompanyAccounts(..)
   , GetCompanyAdmins(..)
   , GetInviteInfo(..)
-  , GetUserUsageStats(..)
+  , GetUsageStats(..)
   , SetUserCompany(..)
   , DeleteUser(..)
   , RemoveInactiveUser(..)
@@ -34,8 +34,6 @@ module User.Model (
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
   , UserFilter(..)
-  , SetUserIsFree(..)
-
   , IsUserDeletable(..)
   , composeFullName
   , userFilterToSQL
@@ -107,7 +105,6 @@ data User = User {
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
   , usercompany                   :: Maybe CompanyID
-  , userisfree                    :: Bool
   , userassociateddomain          :: Maybe String
   } deriving (Eq, Ord, Show)
 
@@ -291,7 +288,6 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
             sqlSet "deleted" False
-            sqlSet "is_free" False
             sqlSet "associated_domain" mad
             mapM_ (sqlResult . raw) selectUsersSelectorsList
         fetchUsers >>= oneObjectReturnedGuard
@@ -429,9 +425,9 @@ fetchUserUsageStats = kFold decoder []
               , uusSignaturesClosed = signatures_closed
               } : acc
 
-data GetUserUsageStats = forall tm . (Convertible tm SqlValue) => GetUserUsageStats (Maybe UserID) (Maybe CompanyID) [(tm,tm)]
-instance MonadDB m => DBQuery m GetUserUsageStats [UserUsageStats] where
-  query (GetUserUsageStats uid cid timespans) = do
+data GetUsageStats = forall tm . (Convertible tm SqlValue) => GetUsageStats (Either UserID CompanyID) [(tm,tm)]
+instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
+  query (GetUsageStats euc timespans) = do
    let (timespans2 :: SQL) = sqlConcatComma $ map (\(beg,end) -> "(" <?> beg <> "::TIMESTAMPTZ, " <?> end <> ":: TIMESTAMPTZ)") timespans
    kRun_ $ sqlSelect "companies FULL JOIN users ON companies.id = users.company_id" $ do
      sqlFrom $ ", (VALUES" <+> timespans2 <+> ") AS time_spans(b,e)"
@@ -480,21 +476,11 @@ instance MonadDB m => DBQuery m GetUserUsageStats [UserUsageStats] where
              <+> "                           AND signatory_links.document_id = documents.id) BETWEEN time_spans.b AND time_spans.e)"
              <+> ") AS \"Sigs closed\""
 
-     case cid of
-       Nothing -> return ()
-       Just ccid -> sqlWhereEq "companies.id" ccid
-     case uid of
-       Nothing -> return ()
-       Just uuid -> sqlWhereEq "users.id" uuid
-
+     case euc of
+       Left  uid -> sqlWhereEq "users.id" uid
+       Right cid -> sqlWhereEq "companies.id" cid
      sqlOrderBy "1, 3, 4"
    fetchUserUsageStats
-
-data SetUserIsFree = SetUserIsFree UserID Bool
-instance MonadDB m => DBUpdate m SetUserIsFree Bool where
-  update (SetUserIsFree uid isfree) = do
-    kRun01 $ SQL "UPDATE users SET is_free = ? WHERE id = ? AND deleted = FALSE"
-      [toSql isfree, toSql uid]
 
 -- helpers
 
@@ -529,7 +515,6 @@ selectUsersSelectorsList =
   , "lang"
   , "company_name"
   , "company_number"
-  , "is_free"
   , "associated_domain"
   ]
 
@@ -544,7 +529,7 @@ fetchUsers = kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method company_id
       first_name last_name personal_number company_position phone
-      email lang company_name company_number is_free associated_domain = User {
+      email lang company_name company_number associated_domain = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -565,7 +550,6 @@ fetchUsers = kFold decoder []
             lang = lang
           }
         , usercompany = company_id
-        , userisfree = is_free
         , userassociateddomain = associated_domain
         } : acc
 
@@ -590,7 +574,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", users.lang"
   <> ", users.company_name"
   <> ", users.company_number"
-  <> ", users.is_free"
   <> ", users.associated_domain"
 
   -- Company:
@@ -620,7 +603,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone
-     email lang company_name company_number is_free associated_domain cid
+     email lang company_name company_number associated_domain cid
      name number address zip' city country ip_address_mask sms_originator inviter_id
      invite_time invite_type
      = (
@@ -645,7 +628,6 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
              lang = lang
            }
          , usercompany = company_id
-         , userisfree = is_free
          , userassociateddomain = associated_domain
          }
         , case cid of

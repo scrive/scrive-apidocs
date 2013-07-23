@@ -5,7 +5,7 @@
 var AccountSettingsModel = Backbone.Model.extend({
   initialize : function() {
     var self = this;
-    var user = new User();
+    var user = new User({});
     this.set({"user" : user});
     user.bind("change",function() {
       console.log('User changed ready');

@@ -137,3 +137,12 @@ dropMobileFromUsers = Migration {
   , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN mobile"
 
 }
+removeIsFree :: MonadDB m => Migration m
+removeIsFree =
+  Migration {
+      mgrTable = tableUsers
+    , mgrFrom = 14
+    , mgrDo = do
+      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN is_free"
+      return ()
+    }

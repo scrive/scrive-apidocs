@@ -23,6 +23,8 @@ module User.UserControl(
   , handlePasswordReminderPost
   , handleContactUs
   , getUsersAndStatsInv
+  , getDaysStats   -- Exported for admin section
+  , getMonthsStats -- Exported for admin section
 ) where
 
 import Control.Monad.State
@@ -194,37 +196,52 @@ getCompanyInfoUpdate = do
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
-  Context{ctxtime, ctxmaybeuser} <- getContext
-  totalS <- renderTemplate_ "statsOrgTotal"
-  user <- guardJust ctxmaybeuser
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  withCompany <- isFieldSet "withCompany"
+  if ((isJust $ usercompany user) && useriscompanyadmin user && withCompany)
+    then getDaysStats (Right $ fromJust $ usercompany user)
+    else getDaysStats (Left $ userid user)
+
+
+handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
+handleUsageStatsJSONForUserMonths = do
+  user  <- guardJustM $ ctxmaybeuser <$> getContext
+  withCompany <- isFieldSet "withCompany"
+  if ((isJust $ usercompany user) && useriscompanyadmin user && withCompany)
+    then getMonthsStats (Right $ fromJust $ usercompany user)
+    else getMonthsStats (Left $ userid user)
+
+getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
+getDaysStats euc = do
+  ctxtime <- ctxtime <$> getContext
   let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
                      | daysBack <- [0 .. 30]
                      , t <- [daysBefore daysBack ctxtime]
                     ]
-  if useriscompanyadmin user && isJust (usercompany user)
-    then do
-      stats <- dbQuery $ GetUserUsageStats Nothing (usercompany user) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m-%d") totalS stats
-    else do
-      stats <- dbQuery $ GetUserUsageStats (Just $ userid user) Nothing timespans
-      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m-%d") stats
+  case euc of
+    Left uid -> do
+      stats <- dbQuery $ GetUsageStats (Left uid) timespans
+      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m") stats
+    Right cid -> do
+      totalS <- renderTemplate_ "statsOrgTotal"
+      stats <- dbQuery $ GetUsageStats (Right cid) timespans
+      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
 
-handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
-handleUsageStatsJSONForUserMonths = do
-  Context{ctxtime, ctxmaybeuser} <- getContext
-  totalS <- renderTemplate_ "statsOrgTotal"
-  user <- guardJust ctxmaybeuser
+getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
+getMonthsStats euc = do
+  ctxtime <- ctxtime <$> getContext
   let timespans = [ (formatMinutesTime "%Y-%m-01" t, formatMinutesTime "%Y-%m-01" (monthsBefore (-1) t))
                      | monthsBack <- [0 .. 6]
                      , t <- [monthsBefore monthsBack ctxtime]
                     ]
-  if useriscompanyadmin user && isJust (usercompany user)
-    then do
-      stats <- dbQuery $ GetUserUsageStats Nothing (usercompany user) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
-    else do
-      stats <- dbQuery $ GetUserUsageStats (Just $ userid user) Nothing timespans
+  case euc of
+    Left uid -> do
+      stats <- dbQuery $ GetUsageStats (Left uid) timespans
       return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m") stats
+    Right cid -> do
+      totalS <- renderTemplate_ "statsOrgTotal"
+      stats <- dbQuery $ GetUsageStats (Right cid) timespans
+      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
 
 {- |
     Checks for live documents owned by the user.

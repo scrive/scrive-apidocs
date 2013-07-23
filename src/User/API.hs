@@ -104,7 +104,7 @@ apiCallGetUserProfile =  api $ do
                     ui <- dbQuery $ GetCompanyUI (companyid comp)
                     return (Just (comp,ui))
                   _ -> return Nothing
-  Ok <$> userJSON ctx user mcompanyui (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
+  Ok <$> userJSON ctx user mcompanyui
 
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response

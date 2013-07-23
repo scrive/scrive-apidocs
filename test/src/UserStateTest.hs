@@ -150,7 +150,7 @@ test_getCompanyAccounts = do
 test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
-  res <- dbQuery $ GetUserUsageStats (Just (userid user)) Nothing [("2012-12-01"::String,"2012-12-02"),
+  res <- dbQuery $ GetUsageStats (Left (userid user)) [("2012-12-01"::String,"2012-12-02"),
                                                                    ("2012-12-02","2012-12-03"),
                                                                    ("2012-12-04","2012-12-05"),
                                                                    ("2012-12-06","2012-12-07")]
@@ -163,7 +163,7 @@ test_userUsageStatisticsByCompany = do
   Company{companyid = cid} <- dbUpdate $ CreateCompany
   Just _user1 <- addNewCompanyUser "Emily" "Green" "emily@green.com" cid
   Just _user2 <- addNewCompanyUser "Emily" "Green" "emil2y@green.com" cid
-  res <- dbQuery $ GetUserUsageStats Nothing (Just cid) [("2012-12-01"::String,"2012-12-02"),
+  res <- dbQuery $ GetUsageStats (Right cid) [("2012-12-01"::String,"2012-12-02"),
                                                          ("2012-12-02","2012-12-03"),
                                                          ("2012-12-04","2012-12-05"),
                                                          ("2012-12-06","2012-12-07")]

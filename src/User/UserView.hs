@@ -2,6 +2,7 @@
 module User.UserView (
     -- pages
     userJSON,
+    companyJSON,
     showAccount,
     pageAcceptTOS,
     pageDoYouWantToChangeEmail,
@@ -61,8 +62,8 @@ showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "noCompany" $ isNothing mcompany
 
-userJSON :: Monad m => Context -> User -> Maybe (Company,CompanyUI) -> Bool -> m JSValue
-userJSON ctx user mcompany companyuieditable = runJSONGenT $ do
+userJSON :: Monad m => Context -> User -> Maybe (Company,CompanyUI) ->  m JSValue
+userJSON ctx user mcompany = runJSONGenT $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -76,10 +77,10 @@ userJSON ctx user mcompany companyuieditable = runJSONGenT $ do
     value "lang"   $ codeFromLang $ getLang user
     valueM "company" $ case (mcompany) of
                             Nothing -> return JSNull
-                            Just (company,companyui) -> companyJSON ctx company companyui companyuieditable
+                            Just (company,companyui) -> companyJSON ctx company companyui
 
-companyUIJson :: Monad m => Context -> CompanyUI -> Bool -> m JSValue
-companyUIJson ctx companyui editable = runJSONGenT $ do
+companyUIJson :: Monad m => Context -> CompanyUI -> m JSValue
+companyUIJson ctx companyui = runJSONGenT $ do
     value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui)
     value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
     value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
@@ -107,11 +108,10 @@ companyUIJson ctx companyui editable = runJSONGenT $ do
     value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
     value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
     value "servicelinkcolour" $ fromMaybe "" $ bdservicelinkcolour <$> currentBrandedDomain ctx
-    value "editable" editable
 
 
-companyJSON :: Monad m => Context -> Company -> CompanyUI -> Bool -> m JSValue
-companyJSON ctx company companyui editable = runJSONGenT $ do
+companyJSON :: Monad m => Context -> Company -> CompanyUI -> m JSValue
+companyJSON ctx company companyui = runJSONGenT $ do
     value "companyid" $ show $ companyid company
     value "address" $ companyaddress $ companyinfo company
     value "city" $ companycity $ companyinfo company
@@ -120,8 +120,8 @@ companyJSON ctx company companyui editable = runJSONGenT $ do
     value "companyname" $ getCompanyName company
     value "companynumber" $ getCompanyNumber company
     value "smsoriginator" $ companysmsoriginator $ companyinfo company
-    valueM "companyui" $ companyUIJson ctx companyui editable
-
+    value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
+    valueM "companyui" $ companyUIJson ctx companyui
 
 userStatsToJSON :: (MinutesTime -> String) -> [UserUsageStats] -> [JSValue]
 userStatsToJSON formatTime uuss = map tojson uuss

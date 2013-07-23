@@ -457,7 +457,6 @@ blankUser = User { userid                        = unsafeUserID 0
                                        }
                  , usersettings  = UserSettings { lang = defaultValue }
                  , usercompany = Nothing
-                 , userisfree  = False
                  , userassociateddomain = Nothing
                  }
 

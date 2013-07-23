@@ -49,12 +49,8 @@ data KontraLink
     | LinkCompanyAccounts
     | LinkCompanyTakeover CompanyID
     | LinkAcceptTOS
-    | LinkAdminOnly
-    | LinkUserAdmin (Maybe UserID)
-    | LinkCompanyAdmin (Maybe CompanyID)
-    | LinkCompanyUserAdmin CompanyID
-    | LinkAdminStatsByDay
-    | LinkAdminStatsByMonth
+    | LinkUserAdmin UserID
+    | LinkCompanyAdmin CompanyID
     | LinkPasswordReminder UserID MagicHash
     | LinkAccessNewAccount UserID MagicHash
     | LinkAccountCreated Lang UserID MagicHash SignupMethod -- email
@@ -66,8 +62,6 @@ data KontraLink
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
-    | LinkCompanyAdminPayments CompanyID
-    | LinkUserAdminPayments UserID
     | LinkExternal String
     | LinkDesignView
     deriving (Eq)
@@ -105,14 +99,8 @@ instance Show KontraLink where
                  "/"++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
-    showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
-    showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/#useradmin"
-    showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
-    showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/#companyadmin"
-    showsPrec _ (LinkCompanyAdmin (Just companyid)) = (++) $ "/adminonly/companyadmin/" ++ show companyid
-    showsPrec _ (LinkCompanyUserAdmin companyid) = (++) $ "/adminonly/companyadmin/users/" ++ show companyid
-    showsPrec _ (LinkAdminStatsByDay) = (++) $ "/adminonly/statsbyday"
-    showsPrec _ (LinkAdminStatsByMonth) = (++) $ "/adminonly/statsbymonth"
+    showsPrec _ (LinkUserAdmin userId) = (++) $ "/adminonly/useradmin/"++show userId
+    showsPrec _ (LinkCompanyAdmin companyid) = (++) $ "/adminonly/companyadmin/" ++ show companyid
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccessNewAccount aid hash) = (++) $ "/mynewaccount/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated lang uid hash sm) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash ++ "/" ++ show sm
@@ -132,10 +120,6 @@ instance Show KontraLink where
     showsPrec _ (LinkOAuthCallback url token Nothing) =
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
     showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
-    showsPrec _ (LinkCompanyAdminPayments cid) =
-      (++) ("/adminonly/companyadmin/payments/" ++ show cid)
-    showsPrec _ (LinkUserAdminPayments uid) =
-      (++) ("/adminonly/useradmin/payments/" ++ show uid)
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
     showsPrec _ (LinkExternal s) = (++) s
 

@@ -148,6 +148,7 @@ data DocumentFilter
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
+  | DocumentFilterByAuthorCompany CompanyID   -- ^ Onl documents where author is in given company
   | DocumentFilterByCanSign UserID            -- ^ Only if given person can sign right now given document
   | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
   | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
@@ -393,6 +394,12 @@ documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhere "signatory_links.is_author"
   sqlWhereEq "signatory_links.user_id" userid
+
+documentFilterToSQL (DocumentFilterByAuthorCompany companyid) = do
+  sqlWhere "signatory_links.is_author"
+  sqlWhere "signatory_links.user_id = users.id"
+  sqlWhereEq "users.company_id" companyid
+
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhere "signatory_links.is_partner"

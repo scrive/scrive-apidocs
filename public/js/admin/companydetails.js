@@ -1,0 +1,212 @@
+/* Main admin only site definition. Its a tab based set of different lists.
+ * This is the entry point for /adminonly/. */
+
+(function(window){
+
+var AdminCompanyDetailsModel = Backbone.Model.extend({
+  initialize : function(args) {
+    var self = this;
+    var company = new Company({companyid : args.companyid, forAdmin : true});
+    this.set({"company" : company});
+    company.bind("change",function() {
+      self.reset();
+    });
+    this.company().set({"ready" : false}, {silent: true});
+    company.fetch({cache: false, processData: true});
+    this.reset();
+  },
+  company : function() {
+     return this.get("company");
+  },
+  ready : function() {
+     return this.company().ready();
+  },
+  companyid : function() {
+     return this.get("companyid");
+  },
+  companyname  : function() {
+     return this.get("companyname");
+  },
+  setCompanyname : function(v) {
+     this.set({"companyname" : v});
+  },
+  companynumber  : function() {
+     return this.get("companynumber");
+  },
+  setCompanynumber : function(v) {
+     this.set({"companynumber" : v});
+  },
+  companyaddress  : function() {
+     return this.get("companyaddress");
+  },
+  setCompanyaddress : function(v) {
+     this.set({"companyaddress" : v});
+  },
+  companyzip  : function() {
+     return this.get("companyzip");
+  },
+  setCompanyzip : function(v) {
+     this.set({"companyzip" : v});
+  },
+  companycity  : function() {
+     return this.get("companycity");
+  },
+  setCompanycity : function(v) {
+     this.set({"companycity" : v});
+  },
+  companycountry  : function() {
+     return this.get("companycountry");
+  },
+  setCompanycountry : function(v) {
+     this.set({"companycountry" : v});
+  },
+  companysmsoriginator: function() {
+     return this.get("companysmsoriginator");
+  },
+  setCompanysmsoriginator : function(v) {
+     this.set({"companysmsoriginator" : v});
+  },
+  companyipaddressmasklist: function() {
+     return this.get("companyipaddressmasklist");
+  },
+  setCompanyipaddressmasklist : function(v) {
+     this.set({"companyipaddressmasklist" : v});
+  },
+  reset : function() {
+    if (!this.ready()) return;
+    this.set({
+        companyname :     this.company().companyname()
+      , companynumber :   this.company().companynumber()
+      , companyaddress :  this.company().address()
+      , companyzip :      this.company().zip()
+      , companycity :     this.company().city()
+      , companycountry :  this.company().country()
+      , companyipaddressmasklist : this.company().ipaddressmasklist()
+      , companysmsoriginator : this.company().smsoriginator()
+    }, {silent : true});
+    this.trigger("reset");
+  },
+  saveDetails : function() {
+    return new Submit({
+        url : "/adminonly/companyadmin/" + this.company().companyid(),
+        method : "POST",
+        companyname : this.companyname(),
+        companynumber : this.companynumber(),
+        companyaddress : this.companyaddress(),
+        companyzip : this.companyzip(),
+        companycity : this.companycity(),
+        companycountry : this.companycountry(),
+        companyipaddressmasklist : this.companyipaddressmasklist(),
+        companysmsoriginator : this.companysmsoriginator()
+    });
+  },
+  refresh : function() {
+    this.company().set({"ready" : false}, {silent: true});
+    this.company().fetch({cache: false, processData: true});
+    this.reset();
+
+  }
+});
+
+var AdminCompanyDetailsView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render');
+        this.model.bind('reset', this.render);
+        this.render();
+    },
+    accountDetails: function() {
+      var self = this;
+      var model = this.model;
+      var box = $("<di/>");
+      var table = $("<table style='border-collapse: separate; border-spacing: 10px;'/>");
+      box.append(table);
+
+      var companynameinput = $("<input type='text'/>").val(model.companyname());
+      companynameinput.change(function() {
+              model.setCompanyname(companynameinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Name"))).append($("<td/>").append(companynameinput)));
+
+      var companynumberinput = $("<input type='text'/>").val(model.companynumber());
+      companynumberinput.change(function() {
+              model.setCompanynumber(companynumberinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Number"))).append($("<td/>").append(companynumberinput)));
+
+      var companyaddressinput = $("<input type='text'/>").val(model.companyaddress());
+      companyaddressinput.change(function() {
+              model.setCompanyaddress(companyaddressinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Adress"))).append($("<td/>").append(companyaddressinput)));
+
+      var companyzipinput = $("<input type='text'/>").val(model.companyzip());
+      companyzipinput.change(function() {
+              model.setCompanyzip(companyzipinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Zip"))).append($("<td/>").append(companyzipinput)));
+
+      var companycityinput = $("<input type='text'/>").val(model.companycity());
+      companycityinput.change(function() {
+              model.setCompanycity(companycityinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("City"))).append($("<td/>").append(companycityinput)));
+
+      var companycountryinput = $("<input type='text'/>").val(model.companycountry());
+      companycountryinput.change(function() {
+              model.setCompanycountry(companycountryinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Country"))).append($("<td/>").append(companycountryinput)));
+
+      var companyipaddressmasklistinput = $("<input type='text'/>").val(model.companyipaddressmasklist());
+      companyipaddressmasklistinput.change(function() {
+              model.setCompanyipaddressmasklist(companyipaddressmasklistinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("IP adress mask"))).append($("<td/>").append(companyipaddressmasklistinput)));
+
+      var companysmsoriginatorinput = $("<input type='text' maxlength=11/>").val(model.companysmsoriginator());
+      companysmsoriginatorinput.change(function() {
+              model.setCompanysmsoriginator(companysmsoriginatorinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS originator"))).append($("<td/>").append(companysmsoriginatorinput)));
+
+      return box;
+    },
+    buttonsRow: function() {
+      var model = this.model;
+      var buttonRow = $("<div style='width:300px;height:50px;margin-top:30px;'/>");
+
+      var saveButton = new Button({
+                text: "Change details"
+              , color: "green"
+              , size: "tiny"
+              , cssClass: "float-left"
+              , onClick : function() {
+                  model.saveDetails().sendAjax(function() {
+                      new FlashMessage({color: "green", content : "Saved"});
+                      model.refresh();
+                  });
+                }
+          });
+      return buttonRow.append(saveButton.el());
+    },
+    render: function () {
+       var self = this;
+       var model = this.model;
+       var container = $(this.el);
+       if (!model.ready()) return;
+       container.empty();
+       container.append(this.accountDetails()).append(this.buttonsRow());
+    }
+});
+
+
+window.AdminCompanyDetails = function(args) {
+          var model = new AdminCompanyDetailsModel(args);
+          var view =  new AdminCompanyDetailsView({model : model, el : $("<div class='tab-container account'/>")});
+          this.el = function() {return $(view.el);};
+          this.refresh = function() {
+              model.refresh();
+          };
+};
+
+})(window);

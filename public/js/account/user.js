@@ -18,12 +18,15 @@ window.User = Backbone.Model.extend({
       ready : false
   },
   initialize: function(args) {
+      if (args.forAdmin && args.id != undefined)
+        this.url = "/adminonly/useradmin/details/"+ args.id;
+      else
         this.url = "/api/frontend/getprofile";
   },
   ready : function() {
      return this.get("ready");
   },
-  id : function() {
+  userid : function() {
      return this.get("id");
   },
   fstname : function() {
@@ -62,6 +65,9 @@ window.User = Backbone.Model.extend({
   hasCompany : function() {
      return this.company() != undefined;
   },
+  companyadmin : function() {
+     return this.get("companyadmin");
+  },
   parse: function(args) {
      console.log("Parsing user " + this.get("ready"));
      return {
@@ -75,6 +81,7 @@ window.User = Backbone.Model.extend({
       usercompanyname : args.usercompanyname,
       usercompanynumber : args.usercompanynumber,
       lang : args.lang,
+      companyadmin : args.companyadmin,
       company   : args.company != undefined ? new Company(args.company) : undefined,
       ready : true
     };

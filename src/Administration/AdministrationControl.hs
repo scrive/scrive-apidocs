@@ -69,6 +69,7 @@ import Control.Logic
 import Doc.DocInfo
 import EvidenceLog.Model
 import Routing
+import Company.CompanyUI
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import Happstack.StaticRouting(Route, choice, dir)
@@ -80,30 +81,42 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import File.Model
 import File.Storage
 
-import AppView
-
 adminonlyRoutes :: Route (KontraPlus Response)
 adminonlyRoutes =
   fmap onlySalesOrAdmin $ choice $ [
           hGet $ toK0 $ showAdminMainPage
         , dir "createuser" $ hPost $ toK0 $ handleCreateUser
         , dir "userslist" $ hGet $ toK0 $ jsonUsersList
+
         , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
-        , dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ showAdminUserUsageStats
+        , dir "useradmin" $ dir "details" $ hGet $ toK1 $ handleUserGetProfile
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
+
+
+        , dir "useradmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminUserUsageStatsDays
+        , dir "useradmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminUserUsageStatsMonths
+
         , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
-        , dir "useradmin" $ dir "payments" $ hGet $ toK1 $ showAdminUserPayments
-        , dir "useradmin" $ dir "payments" $ hPost $ toK1 $ handleUserPaymentsChange
-        , dir "useradmin" $ dir "documents" $ hGet $ toK1 $ showAdminUserDocuments
+        , dir "useradmin" $ dir "payments" $ hGet $ toK1 $ userPaymentsJSON
+        , dir "useradmin" $ dir "payments" $ dir "change" $ hPost $ toK1 $ handleUserPaymentsChange
+        , dir "useradmin" $ dir "payments" $ dir "migrate" $ hPost $ toK1 $ handleUserPaymentsMigrate
+        , dir "useradmin" $ dir "payments" $ dir "delete" $ hPost $ toK1 $ handleUserPaymentsDelete
+
         , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
-        , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
-        , dir "companyadmin" $ dir "users" $ hGet $ toK1 $ showAdminCompanyUsers
-        , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
-        , dir "companyadmin" $ dir "payments" $ hGet $ toK1 $ showAdminCompanyPayments
-        , dir "companyadmin" $ dir "payments" $ hPost $ toK1 $ handleCompanyPaymentsChange
-        , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
-        , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ showAdminCompanyUsageStats
+        , dir "companyadmin" $ dir "details" $ hGet $ toK1 $ handleCompanyGetProfile
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
+
+        , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
+        , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
+
+        , dir "companyadmin" $ dir "payments" $ hGet $ toK1 $ companyPaymentsJSON
+        , dir "companyadmin" $ dir "payments" $ dir "change" $ hPost $ toK1 $ handleCompanyPaymentsChange
+        , dir "companyadmin" $ dir "payments" $ dir "migrate" $ hPost $ toK1 $ handleCompanyPaymentsMigrate
+        , dir "companyadmin" $ dir "payments" $ dir "delete" $ hPost $ toK1 $ handleCompanyPaymentsDelete
+
+        , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
+        , dir "companyadmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminCompanyUsageStatsDays
+        , dir "companyadmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminCompanyUsageStatsMonths
 
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
 
@@ -132,33 +145,76 @@ showAdminMainPage = onlySalesOrAdmin $ do
 
 {- | Process view for finding a user in basic administration -}
 showAdminUsers :: Kontrakcja m => UserID -> m String
-showAdminUsers userId = onlySalesOrAdmin $ do
-  user <- guardJustM $ dbQuery $ GetUserByID userId
-  adminUserPage user =<< getCompanyForUser user
+showAdminUsers uid = onlySalesOrAdmin $ adminUserPage uid
+
+handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
+handleUserGetProfile uid = onlySalesOrAdmin $ do
+  ctx <- getContext
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  mcompany <- getCompanyForUser user
+  mcompanyui <- case mcompany of
+                  Just comp -> do
+                    ui <- dbQuery $ GetCompanyUI (companyid comp)
+                    return (Just (comp,ui))
+                  _ -> return Nothing
+  userJSON ctx user mcompanyui
+
+
+handleCompanyGetProfile:: Kontrakcja m => CompanyID -> m JSValue
+handleCompanyGetProfile cid = onlySalesOrAdmin $ do
+  ctx <- getContext
+  company <- guardJustM $ dbQuery $ GetCompany cid
+  companyJSON ctx company
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = onlySalesOrAdmin $ do
-  company  <- guardJustM . dbQuery $ GetCompany companyid
-  adminCompanyPage company
+showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage companyid
 
-showAdminCompanyPayments :: Kontrakcja m => CompanyID -> m String
-showAdminCompanyPayments companyid = onlySalesOrAdmin $ do
+companyPaymentsJSON :: Kontrakcja m => CompanyID -> m JSValue
+companyPaymentsJSON cid = onlySalesOrAdmin $ do
   RecurlyConfig {..} <- ctxrecurlyconfig <$> getContext
-  mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
-  quantity <- dbQuery $ GetCompanyQuantity companyid
-  adminCompanyPaymentPage mpaymentplan quantity companyid recurlySubdomain
+  mpaymentplan <- dbQuery $ GetPaymentPlan (Right cid)
+  quantity <- dbQuery $ GetCompanyQuantity cid
+  paymentPlanJSON mpaymentplan (Just (cid,quantity)) recurlySubdomain
 
-showAdminUserPayments :: Kontrakcja m => UserID -> m String
-showAdminUserPayments userid = onlySalesOrAdmin $ do
+userPaymentsJSON :: Kontrakcja m => UserID -> m JSValue
+userPaymentsJSON userid = onlySalesOrAdmin $ do
   RecurlyConfig {..} <- ctxrecurlyconfig <$> getContext
-  mpaymentplan <- dbQuery $ GetPaymentPlan (Left userid)
   user <- guardJustM $ dbQuery $ GetUserByID userid
-  adminUserPaymentPage userid mpaymentplan (usercompany user) recurlySubdomain
+  mpaymentplan <- dbQuery $ GetPaymentPlan (Left userid)
+  mci <- case usercompany user of
+              Just cid -> do
+                quantity <- dbQuery $ GetCompanyQuantity cid
+                return $ Just (cid,quantity)
+              Nothing -> return Nothing
+  paymentPlanJSON mpaymentplan mci recurlySubdomain
 
-showAdminUserDocuments :: Kontrakcja m =>  UserID -> m String
-showAdminUserDocuments userId = onlySalesOrAdmin $ do
-  ctx <- getContext
-  adminUserDocumentsPage userId ctx
+
+paymentPlanJSON :: (Monad m) => Maybe PaymentPlan -> Maybe (CompanyID,Int) -> String -> m JSValue
+paymentPlanJSON mpaymentplan mci recurlysubdomain =  runJSONGenT $ do
+    value "recurlysubdomain" recurlysubdomain
+    value "companyid" $ show .fst <$> mci
+    value "quantity"  $ snd <$> mci
+
+    case mpaymentplan of
+      Nothing -> do
+        value "haspaymentplan" False
+        value "priceplan" ("free" :: String)
+        value "status" ("active" :: String)
+      Just paymentplan -> do
+        value "haspaymentplan" True
+        value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider
+        value "accountcode" $ show $ ppAccountCode paymentplan
+        value "priceplan" $ case ppPricePlan paymentplan of
+          FreePricePlan       -> ("free"       :: String)
+          TeamPricePlan       -> ("team"       :: String)
+          FormPricePlan       -> ("form"       :: String)
+          EnterprisePricePlan -> ("enterprise" :: String)
+          TrialTeamPricePlan  -> ("trial"      :: String)
+        value "status" $ case ppStatus paymentplan of
+          ActiveStatus        -> ("active"     :: String)
+          OverdueStatus       -> ("overdue"    :: String)
+          CanceledStatus      -> ("canceled"   :: String)
+          DeactivatedStatus   -> ("deactivated":: String)
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -186,7 +242,7 @@ jsonCompanies = onlySalesOrAdmin $ do
                     value "companycity"    $ companycity . companyinfo $ company
                     value "companycountry" $ companycountry . companyinfo $ company
                     value "companysmsoriginator" $ companysmsoriginator . companyinfo $ company
-                value "link" $ show $ LinkCompanyAdmin $ Just $ companyid $ company
+                value "link" $ show $ LinkCompanyAdmin $ companyid $ company
             value "paging" $ pagingParamsJSON companies
 
 companySearchingFromParams :: ListParams -> [CompanyFilter]
@@ -215,11 +271,6 @@ companySortingFromParams params =
 
 companyPaginationFromParams :: Int -> ListParams -> (Integer,Integer)
 companyPaginationFromParams pageSize params = (fromIntegral (listParamsOffset params), fromIntegral pageSize)
-
-
-showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m String
-showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
-
 
 userSearchingFromParams :: ListParams -> [UserFilter]
 userSearchingFromParams params =
@@ -268,14 +319,13 @@ jsonUsersList = onlySalesOrAdmin $ do
                     value "tos"      $ formatMinutesTimeRealISO <$> (userhasacceptedtermsofservice user)
                     value "viral_invites" $ itype == Viral
                     value "admin_invites" $ itype == Admin
-                value "link" $ show $ LinkUserAdmin $ Just $ userid user
+                value "link" $ show $ LinkUserAdmin $ userid user
             value "paging" $ pagingParamsJSON users
 
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
-  _ <- getAsString "change"
   museraccounttype <- getField "useraccounttype"
   olduser <- guardJustM $ dbQuery $ GetUserByID uid
   user <- case (museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
@@ -369,102 +419,68 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                        (userid <$> ctxmaybeuser ctx)
   settingsChange <- getUserSettingsChange
   _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
-  isfree <- isFieldSet "freeuser"
-  _ <- dbUpdate $ SetUserIsFree uid isfree
-  return $ LinkUserAdmin $ Just uid
+  return $ LinkUserAdmin $ uid
 
 {- | Handling company details change. It reads user info change -}
-handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
+handleCompanyChange :: Kontrakcja m => CompanyID -> m ()
 handleCompanyChange companyid = onlySalesOrAdmin $ do
-  _ <- getAsString "change"
   company <- guardJustM $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
   _ <- dbUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
-  return $ LinkCompanyAdmin $ Just companyid
+  return $ ()
 
-handleCompanyPaymentsChange :: Kontrakcja m => CompanyID -> m KontraLink
+
+handleCompanyPaymentsChange :: Kontrakcja m => CompanyID -> m ()
 handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
-  mplan <- readField "priceplan"
-  mstatus <- readField "status"
-  let status = fromMaybe ActiveStatus mstatus
-  migratep <- isFieldSet "migrate"
-  deletep <- isFieldSet "delete"
-  case (migratep, deletep, mplan) of
-    (True, _, _) -> migrateCompanyPlan companyid
-    (False, True, _) -> deleteCompanyPlan companyid
-    (_, _, Just plan) -> addCompanyPlanManual companyid plan status
-    _ -> return ()
-  return $ LinkCompanyAdminPayments companyid
+  plan <- guardJustM $ readField "priceplan"
+  status <- guardJustM $ readField "status"
+  addCompanyPlanManual companyid plan status
 
-migrateCompanyPlan :: Kontrakcja m => CompanyID -> m ()
-migrateCompanyPlan companyid = do
-  migratetype <- getField' "migratetype"
-  case migratetype of
-    "userid" -> do
-      muserid <- readField "id"
-      case muserid of
-        Just dest -> do
-          _ <- changePaymentPlanOwner (Right companyid) (Left dest)
-          return ()
-        _ -> return ()
+handleCompanyPaymentsMigrate :: Kontrakcja m => CompanyID -> m ()
+handleCompanyPaymentsMigrate companyid = onlySalesOrAdmin $ migratePlan (Right companyid)
 
-    "companyid" -> do
-      mcompanyid <- readField "id"
-      case mcompanyid of
-        Just dest -> do
-          _ <- changePaymentPlanOwner (Right companyid) (Right dest)
-          return ()
-        _ -> return ()
-    _ -> return ()
+handleCompanyPaymentsDelete :: Kontrakcja m => CompanyID -> m ()
+handleCompanyPaymentsDelete companyid = onlySalesOrAdmin $ dbUpdate $ DeletePaymentPlan (Right companyid)
 
-deleteCompanyPlan :: Kontrakcja m => CompanyID -> m ()
-deleteCompanyPlan companyid = do
-  dbUpdate $ DeletePaymentPlan (Right companyid)
-
-handleUserPaymentsChange :: Kontrakcja m => UserID -> m KontraLink
+handleUserPaymentsChange :: Kontrakcja m => UserID -> m ()
 handleUserPaymentsChange userid = onlySalesOrAdmin $ do
-  mplan <- readField "priceplan"
-  mstatus <- readField "status"
-  let status = fromMaybe ActiveStatus mstatus
-  migratep <- isFieldSet "migrate"
-  deletep <- isFieldSet "delete"
-  case (migratep, deletep, mplan) of
-    (True, _, _) -> migratePlan userid
-    (False, True, _) -> deletePlan userid
-    (_, _, Just plan) -> addManualPricePlan userid plan status
-    _ -> return ()
-  return $ LinkUserAdminPayments userid
+  plan <- guardJustM $ readField "priceplan"
+  status <- guardJustM $ readField "status"
+  addManualPricePlan userid plan status
 
-migratePlan :: Kontrakcja m => UserID -> m ()
-migratePlan userid = do
+handleUserPaymentsMigrate :: Kontrakcja m => UserID -> m ()
+handleUserPaymentsMigrate userid = onlySalesOrAdmin $ migratePlan (Left userid)
+
+handleUserPaymentsDelete :: Kontrakcja m => UserID -> m ()
+handleUserPaymentsDelete userid = onlySalesOrAdmin $ dbUpdate $ DeletePaymentPlan (Left userid)
+
+
+migratePlan :: Kontrakcja m => Either UserID CompanyID -> m ()
+migratePlan oid = do
   migratetype <- getField' "migratetype"
   case migratetype of
     "userid" -> do
       muserid <- readField "id"
       case muserid of
         Just dest -> do
-          _ <- changePaymentPlanOwner (Left userid) (Left dest)
-          return ()
-        _ -> return ()
+          migrated <- changePaymentPlanOwner oid (Left dest)
+          when (not migrated) internalError
+        _ -> internalError
 
     "companyid" -> do
       mcompanyid <- readField "id"
       case mcompanyid of
         Just dest -> do
-          _ <- changePaymentPlanOwner (Left userid) (Right dest)
-          return ()
-        _ -> return ()
-    _ -> return ()
-
-deletePlan :: Kontrakcja m => UserID -> m ()
-deletePlan userid = do
-  dbUpdate $ DeletePaymentPlan (Left userid)
+          migrated <- changePaymentPlanOwner oid (Right dest)
+          when (not migrated) internalError
+        _ -> internalError
+    _ -> internalError
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
-    email <- map toLower <$> getAsString "email"
-    fstname <- getAsString "fstname"
-    sndname <- getAsString "sndname"
+    email <- map toLower <$> (guardJustM $ getField "email")
+    fstname <- guardJustM $ getField "fstname"
+    sndname <- guardJustM $ getField "sndname"
     custommessage <- getField "custommessage"
     lang <- guardJustM $ readField "lang"
     muser <- createNewUserByAdmin email (fstname, sndname) custommessage Nothing lang
@@ -479,7 +495,7 @@ handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
   if privateinvite
     then handlePrivateUserCompanyInvite companyid
     else handleCreateCompanyUser companyid
-  return $ LinkCompanyUserAdmin companyid
+  return $ LoopBack
 
 
 handlePrivateUserCompanyInvite :: Kontrakcja m => CompanyID -> m ()
@@ -563,94 +579,18 @@ getUserInfoChange = do
       , usercompanynumber   = fromMaybe usercompanynumber musercompanynumber
     }
 
-{-
-Sales leads stats:
-
-User name
-User email
-Total finalized docs (total signatures)
-Sales rep (editable, free text)
-Status (1-5) (editable, free text)
-Subaccounts
-User company
-User title
-User phone
-Date TOS accepted
-Subacc (y/n)/Superaccount
--}
-
-{-
-Billing stats:
-
-Superuser Company name
-Superuser email
-Payment plan
-Next billing date
-Last billing date
-Last billing total fee
-Current plan price
-Current per signature price
-Current TW storage price
--}
-
-{-
-
-Nr of Users
-Total nr of signatures	*
-Total nr of signatures of finished docs (these are the ones we charge for)	*
-Nr of docs with cross status	*
-Nr of docs with blue status	*
-Nr of docs with green status	*
-Nr of docs yellow status	*
-Nr of docs with orange status	*
-Nr of docs with red status	*
-Nr of docs with red exclamation mark status	*
-Nr of friend invites	*
-Nr of SkrivaPå staff invites *
-Nr of Signups after finalized offer	TODO
-Nr of Signups after finalized contract  TODO
--}
-
-{-
-Total nr of signatures
-Total nr of signatures of finished docs (these are the ones we charge for)
-Nr of docs with cross status
-Nr of docs with blue status
-Nr of docs with green status
-Nr of docs with yellow status
-Nr of docs with orange status
-Nr of docs with red status
-Nr of docs with red exclamation mark status
-Nr of friend invites
--}
-
-
-{-
-User list:
-
-Email
-Name
-Title
-Company
-Phone
-Sales rep
-Used signatures total
-Used signatures last 1 month
-Used signatures last 2 months
-Used signatures last 3 months
-Used signatures last 6 months
-Used signatures last 12 months
--}
-
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
 
   params <- getListParams
   muserid <- readField "userid"
+  mcompanyid <- readField "companyid"
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = ((listParamsOffset params),(listParamsLimit params))
-      filters    = []
+      filters    =  case mcompanyid of
+                     Nothing -> []
+                     Just companyid ->   [DocumentFilterByAuthorCompany companyid]
       domain     = case muserid of
                      Nothing -> [DocumentsOfWholeUniverse]
                      Just userid ->   [DocumentsVisibleToUser userid]
@@ -828,36 +768,28 @@ daveFile fileid' _title = onlyAdmin $ do
           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
           return res2
 
+handleAdminUserUsageStatsDays :: Kontrakcja m => UserID -> m JSValue
+handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  withCompany <- isFieldSet "withCompany"
+  if ((isJust $ usercompany user) && useriscompanyadmin user && withCompany)
+    then getDaysStats (Right $ fromJust $ usercompany user)
+    else getDaysStats (Left $ userid user)
 
 
-showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
-showAdminUserUsageStats userid = onlySalesOrAdmin $ do
+handleAdminUserUsageStatsMonths :: Kontrakcja m => UserID -> m JSValue
+handleAdminUserUsageStatsMonths uid = onlySalesOrAdmin $ do
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  withCompany <- isFieldSet "withCompany"
+  if ((isJust $ usercompany user) && useriscompanyadmin user && withCompany)
+    then getMonthsStats (Right $ fromJust $ usercompany user)
+    else getMonthsStats (Left $ userid user)
 
-  Context{ctxtime} <- getContext
-  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
-                     | daysBack <- [0 .. 180]
-                     , t <- [daysBefore daysBack ctxtime]
-                    ]
-  stats <- dbQuery $ GetUserUsageStats (Just userid) Nothing timespans
-  Just user <- dbQuery $ GetUserByID userid
-  mcompany <- getCompanyForUser user
+handleAdminCompanyUsageStatsDays :: Kontrakcja m => CompanyID -> m JSValue
+handleAdminCompanyUsageStatsDays cid = onlySalesOrAdmin $ do
+  getDaysStats (Right $ cid)
 
-  content <- adminUserUsageStatsPage user mcompany $ do
-    F.objects "statistics" $ statisticsFields (formatMinutesTime "%Y-%m-%d") stats
-  renderFromBody kontrakcja content
+handleAdminCompanyUsageStatsMonths :: Kontrakcja m => CompanyID -> m JSValue
+handleAdminCompanyUsageStatsMonths cid = onlySalesOrAdmin $ do
+  getMonthsStats (Right $ cid)
 
-
-
-showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
-
-  Context{ctxtime} <- getContext
-  let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
-                     | daysBack <- [0 .. 180]
-                     , t <- [daysBefore daysBack ctxtime]
-                    ]
-  stats <- dbQuery $ GetUserUsageStats Nothing (Just companyid) timespans
-
-  content <- adminCompanyUsageStatsPage companyid $ do
-    F.objects "statistics" $ statisticsCompanyFields (formatMinutesTime "%Y-%m-%d") stats
-  renderFromBody kontrakcja content

@@ -10,12 +10,12 @@ window.CompanyAccountsAndStatsModel = Backbone.Model.extend({
     },
     stats : function() {
         if (this.get("stats") != undefined) return this.get("stats");
-        this.set({ "stats" : new Stats(this.args) });
+        this.set({ "stats" : new Stats({withCompany : true}) });
         return this.stats();
     },
     companyAccounts : function() {
         if (this.get("companyAccounts") != undefined) return this.get("companyAccounts");
-        this.set({ "companyAccounts" : new CompanyAccounts(this.args) });
+        this.set({ "companyAccounts" : new CompanyAccounts({}) });
         return this.companyAccounts();
     },
     tabs : function() {

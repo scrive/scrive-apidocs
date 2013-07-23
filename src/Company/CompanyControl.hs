@@ -22,7 +22,6 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.Map as Map
 
 import DB
-import Administration.AdministrationView (adminCompanyBrandingPage)
 import Company.Model
 import Company.CompanyUI
 import Kontra
@@ -47,15 +46,9 @@ routes = choice
 
 adminRoutes :: Route (KontraPlus Response)
 adminRoutes = choice
-  [ hGet $ toK1 $ handleAdminGetCompany
-  , hPost $ toK1 $ handlePostCompany . Just
+  [ hPost $ toK1 $ handlePostCompany . Just
   , dir "json" $ hGet $ toK1 $ handleGetCompanyJSON . Just
   ]
-
-handleAdminGetCompany :: Kontrakcja m => CompanyID -> m String
-handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $
-  const $ adminCompanyBrandingPage cid
-
 
 handlePostCompany :: Kontrakcja m => Maybe CompanyID -> m KontraLink
 handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do

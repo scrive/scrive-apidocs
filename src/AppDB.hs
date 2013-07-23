@@ -141,6 +141,7 @@ kontraMigrations = [
   , asyncEventQueueChangePrimaryKeyToBigSerial
   , removeProcessFromDocuments
   , moveCompanyUIsToSeparateTable
+  , removeIsFree
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

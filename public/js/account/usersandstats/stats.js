@@ -1,10 +1,24 @@
 /* Main archive definition. Its a tab based set of different documents lists. */
 
 (function(window){
- 
+
 var StatsModel = Backbone.Model.extend({
-  companyAdmin : function() {
-     return this.get("companyAdmin");
+  withCompany : function() {
+     return this.get("withCompany");
+  },
+  userid : function() {
+    return this.get("userid");
+  },
+  companyid : function() {
+    return this.get("companyid");
+  },
+  dayTableUrl : function() {
+     if (this.userid())
+       return "/adminonly/useradmin/usagestats/days/"+this.userid();
+     else if (this.companyid())
+       return "/adminonly/companyadmin/usagestats/days/"+this.companyid();
+     else
+       return  "/account/usagestats/days/json" ;
   },
   dayTable : function() {
         if (this.get("dayTable") != undefined) return this.get("dayTable");
@@ -12,17 +26,26 @@ var StatsModel = Backbone.Model.extend({
               name : "Past Month Table",
               loadOnInit : false,
               schema: new Schema({
-                url: "/account/usagestats/days/json",
+                extraParams : (this.withCompany() ? {withCompany : "true"} : {}),
+                url:this.dayTableUrl(),
                 cells : _.flatten([
                     [new Cell({name: localization.account.stats.columnDate,   width:"100px", field:"date"})],
-                    (this.companyAdmin() ? [new Cell({name:  localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
+                    (this.withCompany() ? [new Cell({name:  localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
                     [new Cell({name:  localization.account.stats.columnClosedDocuments,  width:"70px",  field:"closed", tdclass: 'num'})],
                     [new Cell({name:  localization.account.stats.columnSendDocuments,    width:"70px",  field:"sent", tdclass: 'num'})],
                     [new Cell({name:  localization.account.stats.columnClosedSignatures, width:"70px",  field:"signatures", tdclass: 'num'})]
                 ])})
-          })          
+          })
         });
         return this.dayTable();
+  },
+  monthTableUrl : function() {
+     if (this.userid())
+       return "/adminonly/useradmin/usagestats/months/"+this.userid();
+     else if (this.companyid())
+       return "/adminonly/companyadmin/usagestats/months/"+this.companyid();
+     else
+       return  "/account/usagestats/months/json" ;
   },
   monthTable : function() {
         if (this.get("monthTable") != undefined) return this.get("monthTable");
@@ -30,14 +53,15 @@ var StatsModel = Backbone.Model.extend({
               name : "Past 6 Month Table",
               loadOnInit : false,
               schema: new Schema({
-              url: "/account/usagestats/months/json",
-              cells : _.flatten([
-                  [new Cell({name: localization.account.stats.columnMonth,   width:"100px", field:"date"})],
-                  (this.companyAdmin() ? [new Cell({name: localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
-                  [new Cell({name: localization.account.stats.columnClosedDocuments,  width:"70px",  field:"closed", tdclass: 'num'})],
-                  [new Cell({name: localization.account.stats.columnSendDocuments,    width:"70px",  field:"sent", tdclass: 'num'})],
-                  [new Cell({name: localization.account.stats.columnClosedSignatures, width:"70px",  field:"signatures", tdclass: 'num'})]
-              ])})
+                extraParams : (this.withCompany() ? {withCompany : "true"} : {}),
+                url: this.monthTableUrl(),
+                cells : _.flatten([
+                    [new Cell({name: localization.account.stats.columnMonth,   width:"100px", field:"date"})],
+                    (this.withCompany() ? [new Cell({name: localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
+                    [new Cell({name: localization.account.stats.columnClosedDocuments,  width:"70px",  field:"closed", tdclass: 'num'})],
+                    [new Cell({name: localization.account.stats.columnSendDocuments,    width:"70px",  field:"sent", tdclass: 'num'})],
+                    [new Cell({name: localization.account.stats.columnClosedSignatures, width:"70px",  field:"signatures", tdclass: 'num'})]
+                ])})
           })
         });
         return this.monthTable();

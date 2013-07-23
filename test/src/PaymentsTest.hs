@@ -26,16 +26,15 @@ import Recurly
 paymentsTests  :: TestEnvSt -> Test
 paymentsTests env = testGroup "Payments" [
     testThat "Company with no users has 0 quantity" env testNewCompanyNoUserZeroQuantity
-  , testThat "Company quantity works with free user" env testCompanyQuantity
   , testThat "SavePaymentPlan can be read in" env testSavePaymentPlan
   , testThat "PaymentPlansRequiringSync conditions are correct" env testPaymentPlansRequiringSync
-  , testThat "PaymentPlansRequiringSyncNoProvider conditions are correct" env testPaymentPlansNoProviderRequiringSync    
+  , testThat "PaymentPlansRequiringSyncNoProvider conditions are correct" env testPaymentPlansNoProviderRequiringSync
   , testThat "PaymentPlansExpiredDunning conditions are correct" env testPaymentPlansExpiredDunning
   , testThat "GetPaymentPlanInactiveUser works for inactive users" env testPaymentPlanInactiveUser
   , testThat "GetPaymentPlanInactiveUser does not work for active users" env testPaymentPlanInactiveUserActive
   , testGroup "Recurly" [
       testThat "Recurly saves account properly" env testRecurlySavesAccount
-     ,testThat "Recurly changes account properly" env testRecurlyChangeAccount     
+     ,testThat "Recurly changes account properly" env testRecurlyChangeAccount
      ,testThat "Recurly changes account properly on defer" env testRecurlyChangeAccountDefer
      ,testThat "Recurly cancels and reactivates properly" env testRecurlyCancelReactivate
     ]
@@ -47,19 +46,8 @@ testNewCompanyNoUserZeroQuantity = do
   company <- addNewCompany
   q <- dbQuery $ GetCompanyQuantity (companyid company)
   assert $ q == 0
-  
-testCompanyQuantity :: TestEnv ()
-testCompanyQuantity = do
-  company <- addNewCompany
-  u1 <- addNewRandomUser
-  u2 <- addNewRandomUser
-  u3 <- addNewRandomUser
-  u4 <- addNewRandomUser
-  forM_ [u1,u2,u3,u4] $ \u -> dbUpdate $ SetUserCompany (userid u) (Just (companyid company))
-  _ <- dbUpdate $ SetUserIsFree (userid u4) True
-  q <- dbQuery $ GetCompanyQuantity (companyid company)
-  assert $ q == 3
-  
+
+
 testSavePaymentPlan :: TestEnv ()
 testSavePaymentPlan = do
   user <- addNewRandomUser
@@ -102,7 +90,7 @@ testPaymentPlansRequiringSync = do
     forM_ [q, 2, 10] $ \pq ->
     forM_ [now, past] $ \sync->
     forM_ [NoProvider, RecurlyProvider] $ \prov ->
-      if c 
+      if c
         then do
         company <- addNewCompany
         forM_ [0..q] $ \_-> do
@@ -186,7 +174,7 @@ testPaymentPlansNoProviderRequiringSync = do
   handleSyncNoProvider now
   rs' <- dbQuery $ PaymentPlansRequiringSync NoProvider now
   assert $ length rs' == 0
-  
+
 testPaymentPlansExpiredDunning :: TestEnv ()
 testPaymentPlansExpiredDunning = do
   now <- getMinutesTime
@@ -212,7 +200,7 @@ testPaymentPlansExpiredDunning = do
       return ()
   rs <- dbQuery $ PaymentPlansExpiredDunning now
   assert $ length rs == 1
-  
+
 testPaymentPlanInactiveUser :: TestEnv ()
 testPaymentPlanInactiveUser = do
   user <- addNewRandomUser
@@ -236,7 +224,7 @@ testPaymentPlanInactiveUser = do
   assert b
   mpp <- dbQuery $ GetPaymentPlanInactiveUser (userid user)
   assert $ Just pp == mpp
-  
+
 testPaymentPlanInactiveUserActive :: TestEnv ()
 testPaymentPlanInactiveUserActive = do
   user <- addNewRandomUser
@@ -325,7 +313,7 @@ testRecurlyChangeAccount = do
         _ -> assertBool "Should have some invoices" False
 
     _ -> assertBool "should have 1 subscription" False
-  
+
 testRecurlyChangeAccountDefer :: TestEnv ()
 testRecurlyChangeAccountDefer = do
   t <- getMinutesTime
@@ -368,13 +356,13 @@ testRecurlyChangeAccountDefer = do
         _ -> assertBool "Should have some invoices" False
 
     _ -> assertBool "should have 1 subscription" False
-  
+
 testRecurlyCancelReactivate :: TestEnv ()
 testRecurlyCancelReactivate = do
   t <- getMinutesTime
   let ac = show $ toSeconds t -- generate a random account code to avoid collisions
       email = "eric+" ++ ac ++ "@scrive.com"
-  
+
   cs <- liftIO $ createSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
   assertRight cs
 
@@ -392,7 +380,7 @@ testRecurlyCancelReactivate = do
   let Right [sub2] = gs2
 
   assertBool ("Should be 'canceled', was '" ++ subState sub2 ++ "'") $ subState sub2 == "canceled"
-  
+
   react <- liftIO $ reactivateSubscription "curl" "e9760e8fcfc24ffeab761e791ad5f58b" (subID sub)
   assertRight react
 
@@ -403,4 +391,3 @@ testRecurlyCancelReactivate = do
 
   assertBool ("Should be 'active', was '" ++ subState sub3 ++ "'") $ subState sub3 == "active"
 
-  

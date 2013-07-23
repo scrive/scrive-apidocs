@@ -102,9 +102,9 @@ handleCompanyAccountsInternal cid = do
   let companypage = companyAccountsSortSearchPage params companyaccounts
   runJSONGenT $ do
     objects "list" $ for (take companyAccountsPageSize $ list companypage) $ \f -> do
-           value "link" $ show $ LinkUserAdmin $ camaybeuserid f            -- Used in admins only
+           value "link" $ show <$> LinkUserAdmin <$> camaybeuserid f            -- Used in admins only
            object "fields" $ do
-                value "id" $ maybe "0" show $ camaybeuserid f
+                value "id" $ show <$> camaybeuserid f
                 value "fullname" $ cafullname f
                 value "email" $ caemail f
                 value "role" $ show $ carole f

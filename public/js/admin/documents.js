@@ -1,6 +1,6 @@
 /* Definition of document list seen by admins/sales */
 (function(window){
-window.DocumentAdminListDefinition = function(isAdmin, userid) {
+window.DocumentAdminListDefinition = function(isAdmin, userid, companyid) {
     var cells = [
         new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
                     rendering: function(_, _, doc) {
@@ -65,7 +65,7 @@ window.DocumentAdminListDefinition = function(isAdmin, userid) {
 	loadOnInit: false,
         name : "Documents Table",
         schema: new Schema({
-            url: "/adminonly/documentslist" + (userid != undefined && userid != ""  ? "?userid=" + userid : ""),
+            url: "/adminonly/documentslist" + (userid != undefined && userid != ""  ? "?userid=" + userid :  (companyid != undefined && companyid != ""  ? "?companyid=" + companyid : "")),
             sorting: new Sorting({
                 fields: [
                       "ctime"

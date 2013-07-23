@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 14
+  , tblVersion = 15
     , tblColumns = [
       tblColumn { colName = "id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "password", colType = BinaryT }
@@ -25,7 +25,6 @@ tableUsers = tblTable {
     , tblColumn { colName = "deleted", colType = BoolT, colNullable = False }
     , tblColumn { colName = "company_name", colType = TextT, colNullable = False }
     , tblColumn { colName = "company_number", colType = TextT, colNullable = False }
-    , tblColumn { colName = "is_free", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "associated_domain", colType = TextT }
     ]
   , tblPrimaryKey = ["id"]
