@@ -104,6 +104,7 @@ importantExecutables =
   , "curl"
   , "mutool"
   , "mudraw"
+  , "convert"
   ]
 
 checkExecutables :: IO ()

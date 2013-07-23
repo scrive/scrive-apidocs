@@ -32,12 +32,20 @@ fetch doc = do
 extract :: BS.ByteString -> [Attachment]
 extract c = fromMaybe [] $ do
   pd <- P.parse c
+  {-
   P.Array [t] <- listToMaybe (P.documentBodies pd)
              >>= lookup "Root" . P.bodyTrailer
              >>= P.lookupRef pd "Names"
              >>= P.lookupRef pd "EmbeddedFiles"
              >>= P.lookupRef pd "Kids"
   P.Array files <- P.lookupRef pd "Names" t
+  -}
+  P.Array files <- listToMaybe (P.documentBodies pd)
+             >>= lookup "Root" . P.bodyTrailer
+             >>= P.lookupRef pd "Names"
+             >>= P.lookupRef pd "EmbeddedFiles"
+             >>= P.lookupRef pd "Names"
+
   let mkAttachment (P.String False s:r:l) = do
         P.Ref fref <- P.lookupRef pd "EF" r >>= P.lookupRef pd "F"
         P.Indir (P.Dict fd) (Just co) <- P.lookup fref pd
