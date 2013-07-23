@@ -15,6 +15,7 @@ module Doc.Model
   , AttachFile(..)
   , DetachFile(..)
   , AttachSealedFile(..)
+  , AttachExtendedSealedFile(..)
   , CancelDocument(..)
   , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
@@ -1126,6 +1127,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
         actor
     updateMTimeAndObjectVersion did (actorTime actor)
     return ()
+
+data AttachExtendedSealedFile = AttachExtendedSealedFile DocumentID FileID SealStatus
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachExtendedSealedFile () where
+  update (AttachExtendedSealedFile did fid status) = do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      sqlSet "sealed_file_id" fid
+      sqlSet "seal_status" status
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentStatusIs Closed
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
