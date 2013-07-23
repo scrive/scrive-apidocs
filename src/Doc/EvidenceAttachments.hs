@@ -15,6 +15,7 @@ import Kontra (KontraMonad)
 import Control.Monad.IO.Class
 import qualified PdfModel as P
 import qualified Amazon as AWS
+import Control.Monad
 
 data Attachment = Attachment
   { name     :: BS.ByteString
@@ -32,17 +33,19 @@ fetch doc = do
 extract :: BS.ByteString -> [Attachment]
 extract c = fromMaybe [] $ do
   pd <- P.parse c
-  P.Array [t] <- listToMaybe (P.documentBodies pd)
-             >>= lookup "Root" . P.bodyTrailer
-             >>= P.lookupRef pd "Names"
-             >>= P.lookupRef pd "EmbeddedFiles"
-             >>= P.lookupRef pd "Kids"
-  P.Array files1 <- P.lookupRef pd "Names" t
-  P.Array files2 <- listToMaybe (P.documentBodies pd)
-             >>= lookup "Root" . P.bodyTrailer
-             >>= P.lookupRef pd "Names"
-             >>= P.lookupRef pd "EmbeddedFiles"
-             >>= P.lookupRef pd "Names"
+  P.Array files <- (do
+     P.Array [t] <- listToMaybe (P.documentBodies pd)
+                    >>= lookup "Root" . P.bodyTrailer
+                    >>= P.lookupRef pd "Names"
+                    >>= P.lookupRef pd "EmbeddedFiles"
+                    >>= P.lookupRef pd "Kids"
+     P.lookupRef pd "Names" t)
+     `mplus` (do
+             listToMaybe (P.documentBodies pd)
+                    >>= lookup "Root" . P.bodyTrailer
+                    >>= P.lookupRef pd "Names"
+                    >>= P.lookupRef pd "EmbeddedFiles"
+                    >>= P.lookupRef pd "Names")
 
   let mkAttachment (P.String False s:r:l) = do
         P.Ref fref <- P.lookupRef pd "EF" r >>= P.lookupRef pd "F"
@@ -54,4 +57,4 @@ extract c = fromMaybe [] $ do
         (a:) <$> mkAttachment l
       mkAttachment [] = return []
       mkAttachment _  = Nothing
-  mkAttachment (files1 ++ files2)
+  mkAttachment files
