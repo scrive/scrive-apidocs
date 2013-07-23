@@ -101,14 +101,14 @@ instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
     fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByUserID = GetCompanyByUserID UserID
-instance MonadDB m => DBQuery m GetCompanyByUserID (Maybe Company) where
+instance MonadDB m => DBQuery m GetCompanyByUserID Company where
   query (GetCompanyByUserID uid) = do
     kRun_ $ sqlSelect "companies" $ do
       sqlJoinOn "users" "users.company_id = companies.id"
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "users.id" uid
-    fetchCompanies >>= oneObjectReturnedGuard
+    fetchCompanies >>= exactlyOneObjectReturnedGuard
 
 data CreateCompany = CreateCompany
 instance MonadDB m => DBUpdate m CreateCompany Company where

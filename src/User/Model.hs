@@ -104,7 +104,7 @@ data User = User {
   , usersignupmethod              :: SignupMethod
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
-  , usercompany                   :: Maybe CompanyID
+  , usercompany                   :: CompanyID
   , userassociateddomain          :: Maybe String
   } deriving (Eq, Ord, Show)
 
@@ -115,8 +115,6 @@ data UserInfo = UserInfo {
   , usercompanyposition :: String
   , userphone           :: String
   , useremail           :: Email
-  , usercompanyname     :: String
-  , usercompanynumber   :: String
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
@@ -152,14 +150,12 @@ userFilterToSQL (UserFilterByString string) =
 
 data UserOrderBy
   = UserOrderByName
-  | UserOrderByCompanyName
   | UserOrderByEmail
   | UserOrderByAccountCreationDate
 
 -- | Convert UserOrderBy enumeration into proper SQL order by statement
 userOrderByToSQL :: UserOrderBy -> SQL
 userOrderByToSQL UserOrderByName                = SQL "(users.first_name || ' ' || users.last_name)" []
-userOrderByToSQL UserOrderByCompanyName         = SQL "users.company_name" []
 userOrderByToSQL UserOrderByEmail               = SQL "users.email" []
 userOrderByToSQL UserOrderByAccountCreationDate = SQL "users.has_accepted_terms_of_service" []
 
@@ -263,9 +259,9 @@ instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
     kRun_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = signatory_links.user_id AND users.has_accepted_terms_of_service IS NULL)"
     kRun01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Lang (Maybe String)
+data AddUser = AddUser (String, String) String (Maybe Password) CompanyID Lang (Maybe String)
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd mcid l mad) = do
+  update (AddUser (fname, lname) email mpwd cid l mad) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -277,13 +273,11 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "account_suspended" False
             sqlSet "has_accepted_terms_of_service" SqlNull
             sqlSet "signup_method" AccountRequest
-            sqlSet "company_id" mcid
+            sqlSet "company_id" cid
             sqlSet "first_name" fname
             sqlSet "last_name" lname
             sqlSet "personal_number" ("" :: String)
             sqlSet "company_position" ("" :: String)
-            sqlSet "company_name" ("" :: String)
-            sqlSet "company_number" ("" :: String)
             sqlSet "phone" ("" :: String)
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
@@ -356,8 +350,6 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
                   <> ", company_position = ?"
                   <> ", phone = ?"
                   <> ", email = ?"
-                  <> ", company_name = ?"
-                  <> ", company_number = ?"
                   <> "  WHERE id = ? AND deleted = FALSE")
              [ toSql $ userfstname info
              , toSql $ usersndname info
@@ -365,8 +357,6 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
              , toSql $ usercompanyposition info
              , toSql $ userphone info
              , toSql $ map toLower $ unEmail $ useremail info
-             , toSql $ usercompanyname info
-             , toSql $ usercompanynumber info
              , toSql uid
              ]
 
@@ -529,7 +519,7 @@ fetchUsers = kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method company_id
       first_name last_name personal_number company_position phone
-      email lang company_name company_number associated_domain = User {
+      email lang associated_domain = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -543,8 +533,6 @@ fetchUsers = kFold decoder []
           , usercompanyposition = company_position
           , userphone = phone
           , useremail = email
-          , usercompanyname  = company_name
-          , usercompanynumber = company_number
           }
         , usersettings = UserSettings {
             lang = lang
@@ -572,8 +560,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", users.phone"
   <> ", users.email"
   <> ", users.lang"
-  <> ", users.company_name"
-  <> ", users.company_number"
   <> ", users.associated_domain"
 
   -- Company:
@@ -597,13 +583,13 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   []
 
 
-fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => m [(User, Maybe Company, Maybe InviteInfo)]
+fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => m [(User, Company, Maybe InviteInfo)]
 fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone
-     email lang company_name company_number associated_domain cid
+     email lang associated_domain cid
      name number address zip' city country ip_address_mask sms_originator inviter_id
      invite_time invite_type
      = (
@@ -621,8 +607,6 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
            , usercompanyposition = company_position
            , userphone = phone
            , useremail = email
-           , usercompanyname = company_name
-           , usercompanynumber = company_number
            }
          , usersettings = UserSettings {
              lang = lang
@@ -630,8 +614,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
          , usercompany = company_id
          , userassociateddomain = associated_domain
          }
-        , case cid of
-            (Just _) -> Just Company {
+        , Company {
                 companyid = fromJust cid
               , companyinfo = CompanyInfo {
                   companyname = fromJust name
@@ -644,14 +627,13 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companysmsoriginator = fromJust sms_originator
                 }
               }
-            _ -> Nothing
         , InviteInfo <$> inviter_id <*> invite_time <*> invite_type
         ) : acc
 
 
 data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
-  [(User, Maybe Company, Maybe InviteInfo)] where
+  [(User, Company, Maybe InviteInfo)] where
   query (GetUsersAndStatsAndInviteInfo filters sorting (offset,limit)) = do
     _ <- kRun $ mconcat
          [ selectUsersAndCompaniesAndInviteInfoSQL

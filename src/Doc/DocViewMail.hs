@@ -347,7 +347,7 @@ documentMailWithDocLang ctx doc mailname otherfields = documentMail doc ctx doc 
 documentMail :: (HasLang a, HasMailContext c, MonadDB m, TemplatesMonad m) =>  a -> c -> Document -> String -> Fields m () -> m Mail
 documentMail haslang ctx doc mailname otherfields = do
     let mctx = mailContext ctx
-    mcompany <- liftMM (dbQuery . GetCompanyByUserID) (return $ getAuthorSigLink doc >>= maybesignatory)
+    mcompany <- fromMaybe (return Nothing) (dbQuery <$> GetCompanyByUserID <$> maybesignatory <$> getAuthorSigLink doc)
     mcompanyui <- case mcompany of
                     Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
                     Nothing -> return Nothing

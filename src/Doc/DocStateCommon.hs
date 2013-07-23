@@ -110,17 +110,17 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
 -}
 replaceSignatoryUser :: SignatoryLink
                      -> User
-                     -> Maybe Company
+                     -> Company
                      -> SignatoryLink
-replaceSignatoryUser siglink user mcompany=
+replaceSignatoryUser siglink user company=
   let newsl = replaceSignatoryData
                        siglink
                        (getFirstName      user)
                        (getLastName       user)
                        (getEmail          user)
                        (getMobile         user)
-                       (getCompanyName    (user,mcompany))
+                       (getCompanyName    company)
                        (getPersonalNumber user)
-                       (getCompanyNumber  (user,mcompany))
+                       (getCompanyNumber  company)
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user }

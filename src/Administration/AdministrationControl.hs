@@ -287,8 +287,6 @@ userSortingFromParams params =
     x "usernameREV" = [Desc UserOrderByName]
     x "email"       = [Asc UserOrderByEmail]
     x "emailREV"    = [Desc UserOrderByEmail]
-    x "company"     = [Asc UserOrderByCompanyName]
-    x "companyREV"  = [Desc UserOrderByCompanyName]
     x "tos"         = [Asc UserOrderByAccountCreationDate]
     x "tosREV"      = [Desc UserOrderByAccountCreationDate]
     x _             = [Asc UserOrderByName]
@@ -350,7 +348,6 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                              [("company_id", "null", show $ companyid company)]
                                              (userid <$> ctxmaybeuser ctx)
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
-        _ <- switchPlanToCompany uid (companyid company) -- migrate payment plan to company
         _ <- dbUpdate
                   $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
                                              [("is_company_admin", "false", "true")]

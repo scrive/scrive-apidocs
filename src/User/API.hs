@@ -194,7 +194,6 @@ apiCallCreateCompany =  api $  do
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   -- payment plan needs to migrate to company
-  _ <- lift $ switchPlanToCompany (userid user) (companyid company)
 
   _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                               [("is_company_admin", "false", "true")]

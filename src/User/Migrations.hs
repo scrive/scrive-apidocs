@@ -146,3 +146,16 @@ removeIsFree =
       _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN is_free"
       return ()
     }
+
+removeUserCompanyNameAndCompanyPosition :: MonadDB m => Migration m
+removeUserCompanyNameAndCompanyPosition =
+  Migration {
+      mgrTable = tableUsers
+    , mgrFrom = 15
+    , mgrDo = do
+      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_name"
+      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_number"
+
+      return ()
+    }
+

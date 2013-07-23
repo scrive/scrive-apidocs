@@ -13,10 +13,6 @@ module Util.HasSomeCompanyInfo (
   , HasSomeCompanyInfo
   ) where
 
-import Data.Maybe
-
-import Control.Logic
-import User.Model
 import Doc.DocStateData
 import Company.Model
 import Util.SignatoryLinkUtils
@@ -45,15 +41,3 @@ instance HasSomeCompanyInfo SignatoryLink where
 instance HasSomeCompanyInfo Document where
   getCompanyName   doc = maybe "" getCompanyName   $ getAuthorSigLink doc
   getCompanyNumber doc = maybe "" getCompanyNumber $ getAuthorSigLink doc
-
-instance HasSomeCompanyInfo UserInfo where
-  getCompanyName   = usercompanyname
-  getCompanyNumber = usercompanynumber
-
-instance HasSomeCompanyInfo User where
-  getCompanyName   user = "" <| (isJust $ usercompany user) |> getCompanyName   (userinfo user)
-  getCompanyNumber user = "" <| (isJust $ usercompany user) |> getCompanyNumber (userinfo user)
-
-instance HasSomeCompanyInfo (User, Maybe Company) where
-  getCompanyName   (u, mc) = maybe (getCompanyName   u) getCompanyName   mc
-  getCompanyNumber (u, mc) = maybe (getCompanyNumber u) getCompanyNumber mc
