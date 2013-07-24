@@ -23,6 +23,7 @@ import Utils.Prelude
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified Data.ByteString.Char8 as BS
 import Data.Decimal (realFracToDecimal)
 import Data.Maybe
 import Data.List
@@ -207,6 +208,14 @@ filterTags ('<':rest) = ' ' : (filterTags (drop 1 $ dropWhile (\c -> c /= '>') r
 filterTags (a:rest) = a : (filterTags rest)
 filterTags [] = []
 
+-- | Detect one of 'png' or 'jpeg' based on magic numbers in binary content.
+detectImageMimeType :: BS.ByteString -> BS.ByteString
+detectImageMimeType bs =
+  case () of
+    _ | BS.take 4 bs == BS.pack "\xff\xd8\xff\xe0"  -> BS.pack "image/jpeg"
+    _ | BS.take 4 bs == BS.pack "\x89\x50\x4e\x47"  -> BS.pack "image/png"
+    _ -> "application/octet-stream"
+
 -- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
 evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.SignatoryScreenshots)] -> m String
 evidenceOfIntentHTML title l = do
@@ -215,7 +224,7 @@ evidenceOfIntentHTML title l = do
     let values Nothing = return ()
         values (Just (t,s)) = do
           F.value "time" $ formatMinutesTimeUTC t ++ " UTC"
-          F.value "image" $ RFC2397.encode "image/jpeg"
+          F.value "image" $ RFC2397.encode (detectImageMimeType (unBinary (Screenshot.image s)))
                                            (unBinary (Screenshot.image s))
     F.objects "entries" $ for l $ \(sl, entry) -> do
       F.value "signatory"  $ getSmartName sl
