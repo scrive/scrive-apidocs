@@ -320,9 +320,8 @@ getScreenshots = do
   now <- getMinutesTime
   first_ <- liftIO $ BS.readFile "test/screenshots/s1.jpg"
   signing <- liftIO $ BS.readFile "test/screenshots/s2.jpg"
-  let mkss i = Just (now, Screenshot.Screenshot{ Screenshot.mimetype = "image/jpeg"
-                                      , Screenshot.image = Binary i
-                                      })
+  let mkss i = Just (now, Screenshot.Screenshot{  Screenshot.image = Binary i
+                                               })
   return $ SignatoryScreenshots.emptySignatoryScreenshots{ SignatoryScreenshots.first = mkss first_
                                      , SignatoryScreenshots.signing = mkss signing
                                      }

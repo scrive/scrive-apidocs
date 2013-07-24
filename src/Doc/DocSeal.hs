@@ -282,7 +282,7 @@ findOutAttachmentDesc document = do
                  , fileAttachedBy = attachedByText
                  }
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m) => String -> [SignatoryLink] -> m Seal.SealAttachment
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
@@ -318,7 +318,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content inputpath outp
   evidenceDoc <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/evidenceDocumentation.html"
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
