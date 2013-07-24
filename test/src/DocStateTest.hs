@@ -192,9 +192,8 @@ docStateTests env = testGroup "DocState" [
   testThat "ArchiveDocument succeeds if the archiving user is a company admin" env testArchiveDocumentCompanyAdminRight,
   testThat "RestoreArchivedDocument succeeds if the restoring user is the author" env testRestoreArchivedDocumentAuthorRight,
   testThat "RestoreArchivedDocument succeeds if the restoring user is the company admin" env testRestoreArchiveDocumentCompanyAdminRight,
-  testThat "ReallyDeleteDocument succeeds if deleted by the author who is a private user" env testReallyDeleteDocumentPrivateAuthorRight,
   testThat "ReallyDeleteDocument succeeds if deleted by a company admin user" env testReallyDeleteDocumentCompanyAdminRight,
--- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
+  -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 
   testThat "ArchiveDocument fails if the archiving user is an unrelated user" env testArchiveDocumentUnrelatedUserLeft,
   testThat "ArchiveDocument fails if the archiving user is just another standard company user" env testArchiveDocumentCompanyStandardLeft,
@@ -654,19 +653,6 @@ testRestoreArchiveDocumentCompanyAdminRight = doTimes 10 $ do
 
   assertNoArchivedSigLink ndoc
 
-testReallyDeleteDocumentPrivateAuthorRight :: TestEnv ()
-testReallyDeleteDocumentPrivateAuthorRight = doTimes 10 $ do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  assertOneArchivedSigLink ndoc
-  success2 <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
-  Just ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-
-  assert success2
-  assertOneReallyDeletedSigLink ndoc2
-
 testReallyDeleteDocumentCompanyAdminRight :: TestEnv ()
 testReallyDeleteDocumentCompanyAdminRight = doTimes 10 $ do
   company <- addNewCompany
@@ -957,15 +943,15 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   company2 <- addNewCompany
   user1' <- addNewRandomUser
   user2' <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany (userid user1') (Just (companyid company1))
+  _ <- dbUpdate $ SetUserCompany (userid user1') (companyid company1)
   Just user1 <- dbQuery $ GetUserByID (userid user1')
-  _ <- dbUpdate $ SetUserCompany (userid user2') (Just (companyid company1))
+  _ <- dbUpdate $ SetUserCompany (userid user2') (companyid company1)
   Just user2 <- dbQuery $ GetUserByID (userid user2')
   user3' <- addNewRandomUser
   user4' <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany (userid user3') (Just (companyid company2))
+  _ <- dbUpdate $ SetUserCompany (userid user3') (companyid company2)
   Just user3 <- dbQuery $ GetUserByID (userid user3')
-  _ <- dbUpdate $ SetUserCompany (userid user4') (Just (companyid company2))
+  _ <- dbUpdate $ SetUserCompany (userid user4') (companyid company2)
   Just user4 <- dbQuery $ GetUserByID (userid user4')
   user5 <- addNewRandomUser
   user6 <- addNewRandomUser
@@ -1103,7 +1089,7 @@ testCreateFromTemplateCompanyField :: TestEnv ()
 testCreateFromTemplateCompanyField = doTimes 10 $ do
   user <- addNewRandomUser
   company <- addNewCompany
-  _ <- dbUpdate $ SetUserCompany (userid user) (Just (companyid company))
+  _ <- dbUpdate $ SetUserCompany (userid user)  (companyid company)
   docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (\doc -> isPreparation doc)
   tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
   mt <- rand 10 arbitrary
@@ -1592,7 +1578,7 @@ testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
   time <- getMinutesTime
@@ -1608,7 +1594,7 @@ testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (0,maxBound)
@@ -1621,7 +1607,7 @@ testSetDocumentUnsavedDraft :: TestEnv ()
 testSetDocumentUnsavedDraft = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
   doc <- fromJust <$> (dbQuery $ GetDocumentByDocumentID did)
@@ -1648,7 +1634,7 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
   time <- getMinutesTime
@@ -1671,7 +1657,7 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
     author <- addNewRandomUser
     time <- getMinutesTime
     let actor = systemActor time
-    _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+    _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
     Just author' <- dbQuery $ GetUserByID (userid author)
     did <- addRandomDocumentWithAuthor author'
 

@@ -199,10 +199,10 @@ test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Company{companyid} <- dbUpdate $ CreateCompany
-  res <- dbUpdate $ SetUserCompany userid (Just $ companyid)
+  res <- dbUpdate $ SetUserCompany userid companyid
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID userid
-  assertBool "Returned user has proper companyid" $ usercompany user == Just companyid
+  assertBool "Returned user has proper companyid" $ usercompany user == companyid
 
 test_deleteUser :: TestEnv ()
 test_deleteUser = do

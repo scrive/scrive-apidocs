@@ -37,10 +37,8 @@ companyAccountsTests env = testGroup "CompanyAccounts" [
       ]
   , testGroup "Control" [
         testThat "Admin user can add a new user to their company" env test_addingANewCompanyAccount
-      , testThat "Admin user can invite a private user to their company" env test_addingExistingPrivateUserAsCompanyAccount
       , testThat "Admin user can invite a company user to their company" env test_addingExistingCompanyUserAsCompanyAccount
       , testThat "Admin user can resend invite to a new user" env test_resendingInviteToNewCompanyAccount
-      , testThat "Admin user can resend invite to an existing private user" env test_resendingInviteToPrivateUser
       , testThat "Admin user can switch a standard user to admin" env test_switchingStandardToAdminUser
       , testThat "Admin user can switch an admin user to standard" env test_switchingAdminToStandardUser
       , testThat "Admin user can remove a company account invite" env test_removingCompanyAccountInvite
@@ -100,7 +98,7 @@ test_addingANewCompanyAccount = do
 
 
   Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  assertEqual "New user is in company" (Just $ companyid company) (usercompany newuser)
+  assertEqual "New user is in company" (companyid company) (usercompany newuser)
   assertEqual "New user is standard user" False (useriscompanyadmin newuser)
   assertEqual "New user has the invited name" "Bob Blue" (getFullName newuser)
 
@@ -108,31 +106,6 @@ test_addingANewCompanyAccount = do
 
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
-
-  emails <- dbQuery GetEmails
-  assertEqual "An email was sent" 1 (length emails)
-
-test_addingExistingPrivateUserAsCompanyAccount :: TestEnv ()
-test_addingExistingPrivateUserAsCompanyAccount = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
-
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  req <- mkRequest POST [ ("add", inText "True")
-                        , ("email", inText "bob@blue.com")
-                        , ("fstname", inText "Bob")
-                        , ("sndname", inText "Blue")
-                        ]
-  (res, _) <- runTestKontra req ctx $ handleAddCompanyAccount
-
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
-
-  Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
-  assertEqual "Invited user still has no company" (usercompany updatedexistinguser) Nothing
-
-  assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
@@ -156,7 +129,7 @@ test_addingExistingCompanyUserAsCompanyAccount = do
 
   Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
   assertEqual "Invited user's company stays the same" (usercompany updatedexistinguser)
-                                                      (Just $ companyid existingcompany)
+                                                      (companyid existingcompany)
 
   assertCompanyInvitesAre company []
 
@@ -188,29 +161,6 @@ test_resendingInviteToNewCompanyAccount = do
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToPrivateUser :: TestEnv ()
-test_resendingInviteToPrivateUser = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just _existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
-
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  req <- mkRequest POST [ ("resend", inText "True")
-                        , ("resendid", inText "0")
-                        , ("resendemail", inText "bob@blue.com")
-                        , ("sndname", inText "Blue")
-                        ]
-  (res, _ ) <- runTestKontra req ctx $ handleResendToCompanyAccount
-
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "resent" True)
-
-
-  emails <- dbQuery GetEmails
-  assertEqual "An email was sent" 1 (length emails)
-
-
 test_switchingStandardToAdminUser :: TestEnv ()
 test_switchingStandardToAdminUser = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
@@ -230,7 +180,7 @@ test_switchingStandardToAdminUser = do
   Just updateduser <- dbQuery $ GetUserByID (userid standarduser)
   assertBool "User is now an admin" (useriscompanyadmin updateduser)
   assertEqual "User belongs to the same company" (usercompany updateduser)
-                                                 (Just $ companyid company)
+                                                 (companyid company)
 
 test_switchingAdminToStandardUser :: TestEnv ()
 test_switchingAdminToStandardUser = do
@@ -253,7 +203,7 @@ test_switchingAdminToStandardUser = do
   Just updateduser <- dbQuery $ GetUserByID (userid adminuser)
   assertBool "User is now standard" (not $ useriscompanyadmin updateduser)
   assertEqual "User belongs to the same company" (usercompany updateduser)
-                                                 (Just $ companyid company)
+                                                 (companyid company)
 
 test_removingCompanyAccountInvite :: TestEnv ()
 test_removingCompanyAccountInvite = do
@@ -326,7 +276,7 @@ test_privateUserTakoverWorks = do
   assertBool "Flash message is of type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   assertEqual "User belongs to the company" (usercompany updateduser)
-                                            (Just $ companyid company)
+                                            (companyid company)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
 
   companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (0,maxBound)
@@ -352,7 +302,7 @@ test_mustBeInvitedForTakeoverToWork = do
       `E.catch` (\(_::KontraError) -> return True)
   assertEqual "Exception thrown" True l
   Just updateduser <- dbQuery $ GetUserByID (userid user)
-  assertEqual "User is still not in company" Nothing (usercompany updateduser)
+  assertBool "User is still not in the other company" ((usercompany user) == (usercompany updateduser))
 
 assertCompanyInvitesAre :: Company -> [CompanyInvite] -> TestEnv ()
 assertCompanyInvitesAre company expectedinvites = do

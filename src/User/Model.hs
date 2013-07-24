@@ -214,13 +214,9 @@ instance MonadDB m => DBQuery m GetInviteInfo (Maybe InviteInfo) where
         , invitetype = invite_type
         } : acc
 
-data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
+data SetUserCompany = SetUserCompany UserID CompanyID
 instance MonadDB m => DBUpdate m SetUserCompany Bool where
-  update (SetUserCompany uid mcid) = case mcid of
-    Nothing -> do
-      kRun01 $ SQL "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
-               [toSql uid]
-    Just cid -> do
+  update (SetUserCompany uid cid) =
       kRun01 $ SQL "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
                [toSql cid, toSql uid]
 

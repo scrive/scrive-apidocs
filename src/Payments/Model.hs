@@ -10,7 +10,6 @@ import Control.Applicative
 import Data.Maybe
 
 import MinutesTime
-import User.Model
 import Company.Model
 import DB
 import DB.SQL2
@@ -112,28 +111,6 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
       sqlResult "dunning_date"
       sqlResult "billing_ends"
       sqlWhereEq "company_id" cid
-    listToMaybe <$> kFold fetchPaymentPlans []
-
--- tested
-data GetPaymentPlanInactiveUser = GetPaymentPlanInactiveUser UserID
-instance MonadDB m => DBQuery m GetPaymentPlanInactiveUser (Maybe PaymentPlan) where
-  query (GetPaymentPlanInactiveUser uid) = do
-    kRun_ $ sqlSelect "payment_plans" $ do
-      sqlResult "account_code"
-      sqlResult "payment_plans.company_id"
-      sqlResult "plan"
-      sqlResult "status"
-      sqlResult "quantity"
-      sqlResult "plan_pending"
-      sqlResult "status_pending"
-      sqlResult "quantity_pending"
-      sqlResult "provider"
-      sqlResult "dunning_step"
-      sqlResult "dunning_date"
-      sqlResult "billing_ends"
-      sqlJoinOn "users" "payment_plans.user_id = users.id"
-      sqlWhereEq "user_id" uid
-      sqlWhereIsNULL "users.has_accepted_terms_of_service"
     listToMaybe <$> kFold fetchPaymentPlans []
 
 -- tested

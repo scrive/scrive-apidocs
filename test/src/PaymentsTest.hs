@@ -30,8 +30,6 @@ paymentsTests env = testGroup "Payments" [
   , testThat "PaymentPlansRequiringSync conditions are correct" env testPaymentPlansRequiringSync
   , testThat "PaymentPlansRequiringSyncNoProvider conditions are correct" env testPaymentPlansNoProviderRequiringSync
   , testThat "PaymentPlansExpiredDunning conditions are correct" env testPaymentPlansExpiredDunning
-  , testThat "GetPaymentPlanInactiveUser works for inactive users" env testPaymentPlanInactiveUser
-  , testThat "GetPaymentPlanInactiveUser does not work for active users" env testPaymentPlanInactiveUserActive
   , testGroup "Recurly" [
       testThat "Recurly saves account properly" env testRecurlySavesAccount
      ,testThat "Recurly changes account properly" env testRecurlyChangeAccount
@@ -54,7 +52,7 @@ testSavePaymentPlan = do
   ac <- dbUpdate $ GetAccountCode
   time <- getMinutesTime
   let pp = PaymentPlan { ppAccountCode = ac
-                       , ppID = Left (userid user)
+                       , ppCompanyID = (usercompany user)
                        , ppPricePlan = TeamPricePlan
                        , ppPendingPricePlan = TeamPricePlan
                        , ppStatus = ActiveStatus
@@ -68,7 +66,7 @@ testSavePaymentPlan = do
                        }
   b <- dbUpdate $ SavePaymentPlan pp time
   assert b
-  mpp <- dbQuery $ GetPaymentPlan (Left $ userid user)
+  mpp <- dbQuery $ GetPaymentPlan (usercompany user)
   assert $ Just pp == mpp
   mpp' <- dbQuery $ GetPaymentPlanByAccountCode ac
   assert $ Just pp == mpp'
@@ -76,7 +74,7 @@ testSavePaymentPlan = do
   let pp' = pp { ppQuantity = 5 }
   b' <- dbUpdate $ SavePaymentPlan pp' time
   assert b'
-  mpp2 <- dbQuery $ GetPaymentPlan (Left $ userid user)
+  mpp2 <- dbQuery $ GetPaymentPlan (usercompany user)
   assert $ Just pp' == mpp2
   mpp2' <- dbQuery $ GetPaymentPlanByAccountCode ac
   assert $ Just pp' == mpp2'
@@ -95,10 +93,10 @@ testPaymentPlansRequiringSync = do
         company <- addNewCompany
         forM_ [0..q] $ \_-> do
           user <- addNewRandomUser
-          dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+          dbUpdate $ SetUserCompany (userid user) (companyid company)
         ac <- dbUpdate $ GetAccountCode
         let pp = PaymentPlan { ppAccountCode = ac
-                             , ppID = Right (companyid company)
+                             , ppCompanyID = companyid company
                              , ppPricePlan = TeamPricePlan
                              , ppPendingPricePlan = TeamPricePlan
                              , ppStatus = ActiveStatus
@@ -116,7 +114,7 @@ testPaymentPlansRequiringSync = do
         user <- addNewRandomUser
         ac <- dbUpdate $ GetAccountCode
         let pp = PaymentPlan { ppAccountCode = ac
-                             , ppID = Left (userid user)
+                             , ppCompanyID = (usercompany user)
                              , ppPricePlan = TeamPricePlan
                              , ppPendingPricePlan = TeamPricePlan
                              , ppStatus = ActiveStatus
@@ -139,7 +137,7 @@ testPaymentPlansNoProviderRequiringSync = do
   company <- addNewCompany
   forM_ [0..9] $ \(i::Int) -> do
     user <- addNewRandomUser
-    _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+    _ <- dbUpdate $ SetUserCompany (userid user) (companyid company)
     when (i < 5) $ do
       _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite {invitedemail = Email $ getEmail user
                                                        ,invitedfstname = getFirstName user
@@ -154,7 +152,7 @@ testPaymentPlansNoProviderRequiringSync = do
     return ()
   ac <- dbUpdate $ GetAccountCode
   let pp = PaymentPlan { ppAccountCode         = ac
-                       , ppID                  = Right (companyid company)
+                       , ppCompanyID                  = companyid company
                        , ppPricePlan           = TeamPricePlan
                        , ppPendingPricePlan    = TeamPricePlan
                        , ppStatus              = ActiveStatus
@@ -184,7 +182,7 @@ testPaymentPlansExpiredDunning = do
       user <- addNewRandomUser
       ac <- dbUpdate $ GetAccountCode
       let pp = PaymentPlan { ppAccountCode = ac
-                           , ppID = Left (userid user)
+                           , ppCompanyID = (usercompany user)
                            , ppPricePlan = TeamPricePlan
                            , ppPendingPricePlan = TeamPricePlan
                            , ppStatus = ActiveStatus
@@ -200,55 +198,6 @@ testPaymentPlansExpiredDunning = do
       return ()
   rs <- dbQuery $ PaymentPlansExpiredDunning now
   assert $ length rs == 1
-
-testPaymentPlanInactiveUser :: TestEnv ()
-testPaymentPlanInactiveUser = do
-  user <- addNewRandomUser
-  assertBool "User should not have accepted terms of service." (isNothing $ userhasacceptedtermsofservice user)
-  ac <- dbUpdate $ GetAccountCode
-  time <- getMinutesTime
-  let pp = PaymentPlan { ppAccountCode = ac
-                       , ppID = Left (userid user)
-                       , ppPricePlan = TeamPricePlan
-                       , ppPendingPricePlan = TeamPricePlan
-                       , ppStatus = ActiveStatus
-                       , ppPendingStatus = ActiveStatus
-                       , ppQuantity = 1
-                       , ppPendingQuantity = 1
-                       , ppPaymentPlanProvider = NoProvider
-                       , ppDunningStep = Nothing
-                       , ppDunningDate = Nothing
-                       , ppBillingEndDate = time
-                       }
-  b <- dbUpdate $ SavePaymentPlan pp time
-  assert b
-  mpp <- dbQuery $ GetPaymentPlanInactiveUser (userid user)
-  assert $ Just pp == mpp
-
-testPaymentPlanInactiveUserActive :: TestEnv ()
-testPaymentPlanInactiveUserActive = do
-  user <- addNewRandomUser
-  time <- getMinutesTime
-  _ <- dbUpdate $ AcceptTermsOfService (userid user) time
-  ac <- dbUpdate $ GetAccountCode
-
-  let pp = PaymentPlan { ppAccountCode = ac
-                       , ppID = Left (userid user)
-                       , ppPricePlan = TeamPricePlan
-                       , ppPendingPricePlan = TeamPricePlan
-                       , ppStatus = ActiveStatus
-                       , ppPendingStatus = ActiveStatus
-                       , ppQuantity = 1
-                       , ppPendingQuantity = 1
-                       , ppPaymentPlanProvider = NoProvider
-                       , ppDunningStep = Nothing
-                       , ppDunningDate = Nothing
-                       , ppBillingEndDate = time
-                       }
-  b <- dbUpdate $ SavePaymentPlan pp time
-  assert b
-  mpp <- dbQuery $ GetPaymentPlanInactiveUser (userid user)
-  assert $ mpp == Nothing
 
 testRecurlySavesAccount :: TestEnv ()
 testRecurlySavesAccount = do

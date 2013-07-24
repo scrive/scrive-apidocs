@@ -341,8 +341,6 @@ instance Arbitrary UserInfo where
                       , usercompanyposition = []
                       , userphone           = []
                       , useremail           = Email em
-                      , usercompanyname = []
-                      , usercompanynumber = []
                       }
 
 instance Arbitrary CollectResponse where
@@ -439,27 +437,6 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorylinkelegdatamismatchpersonalnumber = Nothing
                                       }
 
-blankUser :: User
-blankUser = User { userid                        = unsafeUserID 0
-                 , userpassword                  = Nothing
-                 , useriscompanyadmin            = False
-                 , useraccountsuspended          = False
-                 , userhasacceptedtermsofservice = Nothing
-                 , usersignupmethod              = AccountRequest
-                 , userinfo = UserInfo { userfstname = []
-                                       , usersndname = []
-                                       , userpersonalnumber = []
-                                       , usercompanyposition =  []
-                                       , userphone = []
-                                       , useremail = Email []
-                                       , usercompanyname = []
-                                       , usercompanynumber = []
-                                       }
-                 , usersettings  = UserSettings { lang = defaultValue }
-                 , usercompany = Nothing
-                 , userassociateddomain = Nothing
-                 }
-
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
 testThat s env = testCase s . runTestEnv env
 
@@ -496,12 +473,13 @@ addNewRandomFile = do
   addNewFile fn (BS.fromString cnt)
 
 addNewUser :: String -> String -> String -> TestEnv (Maybe User)
-addNewUser firstname secondname email =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing defaultValue Nothing
+addNewUser firstname secondname email = do
+  company <- dbUpdate $ CreateCompany
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company) defaultValue Nothing
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (Just cid) defaultValue Nothing
+  dbUpdate $ AddUser (firstname, secondname) email Nothing cid defaultValue Nothing
 
 addNewRandomUser :: TestEnv User
 addNewRandomUser = do
@@ -515,8 +493,6 @@ addNewRandomUser = do
       personal_number <- rand 10 $ arbString 3 30
       company_position <- rand 10 $ arbString 3 30
       phone <- rand 10 $ arbString 3 30
-      company_name <- rand 10 $ arbString 3 30
-      company_number <- rand 10 $ arbString 3 30
       let userinfo = UserInfo
                      { userfstname = fn
                      , usersndname = ln
@@ -524,8 +500,6 @@ addNewRandomUser = do
                      , usercompanyposition = company_position
                      , userphone = phone
                      , useremail = Email em
-                     , usercompanyname  = company_name
-                     , usercompanynumber = company_number
                      }
       _ <- dbUpdate $ SetUserInfo (userid user) userinfo
       return user
@@ -536,7 +510,7 @@ addNewRandomUser = do
 addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
 addNewRandomCompanyUser cid isadmin = do
   User{userid} <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany userid (Just cid)
+  _ <- dbUpdate $ SetUserCompany userid cid
   _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
   Just user <- dbQuery $ GetUserByID userid
   return user
@@ -613,9 +587,7 @@ addRandomDocumentWithFile file rda = do
   now <- getMinutesTime
   let user = randomDocumentAuthor rda
       p = randomDocumentCondition rda
-  mcompany <- case usercompany user of
-    Nothing  -> return Nothing
-    Just cid -> dbQuery $ GetCompany cid
+  mcompany <-  dbQuery $ GetCompany $ usercompany user
   --liftIO $ print $ "about to generate document"
   document <- worker now user p mcompany
   docid <- dbUpdate $ StoreDocumentForTesting document

@@ -1,7 +1,6 @@
 module AccountInfoTest (accountInfoTests) where
 
 import Control.Applicative
-import Data.Maybe
 import Happstack.Server
 import Test.Framework
 
@@ -20,15 +19,12 @@ import TestKontra as T
 import User.Lang()
 import User.Model
 import User.UserControl
-import User.Utils
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.API
 
 accountInfoTests :: TestEnvSt -> Test
 accountInfoTests env = testGroup "AccountInfo" [
-    testThat "lets private account upgrade to company account" env testPrivateToCompanyUpgrade
-  , testThat "lets users change their email addresses" env testChangeEmailAddress
+    testThat "lets users change their email addresses" env testChangeEmailAddress
   , testThat "need unique email to request email change" env testNeedEmailToBeUniqueToRequestChange
   , testThat "need the correct action id to complete email change" env testEmailChangeFailsIfActionIDIsWrong
   , testThat "need the correct hash to complete email change" env testEmailChangeFailsIfMagicHashIsWrong
@@ -37,46 +33,6 @@ accountInfoTests env = testGroup "AccountInfo" [
   , testThat "need the password to the correct to complete the email change" env testEmailChangeFailsIfPasswordWrong
   , testThat "need the password to be entered to complete the email change" env testEmailChangeFailsIfNoPassword
   ]
-
-testPrivateToCompanyUpgrade :: TestEnv ()
-testPrivateToCompanyUpgrade = do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let cname   = "Test Corp"
-      fstname =  "Andrzejj"
-      sndname = "Rybczakk"
-      position = "Tester"
-      phone =  "12345"
-
-  -- We create company with one call
-  ctx <- (\c -> c { ctxmaybeuser = Just user })   <$> mkContext defaultValue
-  req <- mkRequest POST []
-  (res, _) <- runTestKontra req ctx $ apiCallCreateCompany
-  assertEqual "Response code is 200" 200 (rsCode res)
-  Just user' <- dbQuery $ GetUserByID (userid user)
-
-  -- Now we update profile with other call
-  ctx' <- (\c -> c { ctxmaybeuser = Just user' })   <$> mkContext defaultValue
-  req' <- mkRequest POST [ ("createcompany", inText "true")
-                        , ("companyname", inText cname)
-                        , ("fstname", inText fstname)
-                        , ("sndname", inText sndname)
-                        , ("companyposition", inText position)
-                        , ("phone", inText phone)
-                        ]
-  (res', ctx'') <- runTestKontra req' ctx' $ apiCallUpdateUserProfile
-
-  -- And we check if user has company and if data was updaated
-  Just user'' <- dbQuery $ GetUserByID (userid user)
-  mcompany <- getCompanyForUser  user''
-  assertEqual "Response code is 200" 200 (rsCode res')
-  assertEqual "User is logged in" (Just $ userid  user'') (fmap userid $ ctxmaybeuser  ctx'')
-  assertBool "There is a company" $ isJust mcompany
-  assertBool "User is company admin" $ useriscompanyadmin  user''
-  assertEqual "Company name was saved on company" (Just cname) (getCompanyName <$> mcompany)
-  assertEqual "First name was saved on user" fstname (getFirstName  user'')
-  assertEqual "Last name was saved on user" sndname (getLastName  user'')
-  assertEqual "Company position was saved on user" position (usercompanyposition $ userinfo  user'')
-  assertEqual "Phone number was saved on user" phone (userphone $ userinfo  user'')
 
 testChangeEmailAddress :: TestEnv ()
 testChangeEmailAddress = do

@@ -342,7 +342,7 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- guardGoodForTakeover cid
   user <- guardJustM $ ctxmaybeuser <$> getContext
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
-  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid newcompany)
+  _ <- dbUpdate $ SetUserCompany (userid user) (companyid newcompany)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
