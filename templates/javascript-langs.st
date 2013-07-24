@@ -467,6 +467,7 @@ javascriptLocalisation =
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
            , vat: "$_paymentsVat()$"
+           , maxUsers: "$_paymentsMaxUsers()$"
            , vat25: "$_paymentsVat25()$"
            , expires: "$_paymentsExpires()$"
            , creditcardnumber: "$_paymentsCreditCardNumber()$"

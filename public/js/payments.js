@@ -903,6 +903,7 @@
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
+            div.append($('<div class="vat-box" />').text(localization.payments.maxUsers));
 
             view.$el.html(div.contents());
         }
