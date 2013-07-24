@@ -246,7 +246,11 @@ handleEvidenceAttachment docid file = do
   es <- EvidenceAttachments.fetch doc
   e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
   let mimetype = fromMaybe "text/html" (EvidenceAttachments.mimetype e)
-  return $ toResponseBS mimetype (EvidenceAttachments.content e)
+  -- Evidence attachments embedded in PDFs are already encoded using
+  -- FlateEncode method, which is same as HTTP 'deflate'.  Since
+  -- 'deflate' is required by standard, lets just pass content
+  -- unmodified.
+  return $ setHeaderBS "Content-encoding" "deflate" (toResponseBS mimetype (EvidenceAttachments.content e))
 
 {- |
    Handles the request to show a document to a logged in user.
