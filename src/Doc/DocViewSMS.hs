@@ -32,9 +32,7 @@ import Company.Model
 mkSMS :: (MonadDB m) => Document -> SignatoryLink -> MessageData -> String -> (m SMS)
 mkSMS doc sl msgData msgBody = do
   moriginator <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-       Just uid -> do
-         mcomp <- dbQuery $ GetCompanyByUserID uid
-         return (companysmsoriginator <$> companyinfo <$> mcomp)
+       Just uid -> fmap Just $ companysmsoriginator <$> companyinfo <$> (dbQuery $ GetCompanyByUserID uid)
        Nothing -> return Nothing
   return $ SMS (getMobile sl) msgData msgBody (fromMaybe "Scrive" moriginator)
 

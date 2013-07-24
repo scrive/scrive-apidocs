@@ -260,7 +260,7 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
       _ -> do
         r' <- kRun $ SQL ("INSERT INTO payment_plans (account_code, plan, status, plan_pending, status_pending, quantity, " <>
           "quantity_pending, provider, sync_date, dunning_step, dunning_date, billing_ends, company_id) " <>
-          "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " <>
+          "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " <>
           "WHERE ? NOT IN (SELECT account_code FROM payment_plans) ")
                          [toSql $ ppAccountCode pp
                          ,toSql $ ppPricePlan pp

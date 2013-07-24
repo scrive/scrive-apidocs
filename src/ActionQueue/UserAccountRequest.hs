@@ -70,7 +70,6 @@ userAccountRequest = Action {
               Left msg2 -> Log.debug $ "Cound not terminate subscription from Recurly with account code = " ++ (show $ ppAccountCode plan) ++ "; failed with message: " ++ msg2
               Right _ -> do -- afraid to delete user request until this point! -- Eric
                 Log.debug $ "Successfully terminated subscription from recurly with account code = " ++ (show $ ppAccountCode plan)
-                _ <- dbUpdate $ DeletePaymentPlan (Left uarUserID)
                 _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
                 success <- dbUpdate $ RemoveInactiveUser uarUserID
                 when success $
@@ -79,12 +78,11 @@ userAccountRequest = Action {
             Log.debug $ "Multiple subscriptions found from Recurly with account code = " ++ (show $ ppAccountCode plan) ++ "; failing."
       Just _ -> do
         -- No need to mess with recurly! -- Eric
-        _ <- dbUpdate $ DeletePaymentPlan (Left uarUserID)
         _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
         success <- dbUpdate $ RemoveInactiveUser uarUserID
         when success $
           Log.debug $ "Inactive user (no provider plan) with id = " ++ show uarUserID ++ " successfully removed from database"
-       
+
   }
   where
     decoder acc user_id expires token = UserAccountRequest {

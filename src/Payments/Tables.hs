@@ -27,10 +27,9 @@ tablePaymentPlans = tblTable {
     ]
   , tblPrimaryKey = ["account_code"]
   , tblChecks = []
-  , tblUniques = [["user_id"], ["company_id"]]
+  , tblUniques = [["company_id"]]
   , tblForeignKeys = [
-      tblForeignKeyColumn "user_id" "users" "id"
-    , tblForeignKeyColumn "company_id" "companies" "id"
+      tblForeignKeyColumn "company_id" "companies" "id"
     ]
   }
 
@@ -48,7 +47,5 @@ tablePaymentStats = tblTable {
     , tblColumn { colName = "account_code", colType = BigIntT, colNullable = False }
     ]
   , tblChecks = []
-  , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    ]
+  , tblForeignKeys = [  ]
   }

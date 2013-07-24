@@ -370,7 +370,6 @@ handlePricePageUserJSON user = do
     J.value "email" $ getEmail user
     J.value "quantity" quantity
     J.value "companyName" $ getCompanyName company
-    J.value "has_company" $ True
     J.value "is_admin" $ useriscompanyadmin user
     J.object "plans" $ do
       J.object "team" $ do
@@ -418,7 +417,6 @@ handleUserExists = do
     J.value "user_exists" $ isJust muser
     J.value "has_plan"    $ isJust mplan
     J.value "is_admin"    $ maybe False useriscompanyadmin muser
-    J.value "has_company" $ True
 
 handleSyncNewSubscriptionWithRecurlyOutside :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurlyOutside = do

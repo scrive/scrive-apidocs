@@ -39,7 +39,7 @@ data AddPaymentsStat = AddPaymentsStat { psTime        :: MinutesTime
 instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
   update AddPaymentsStat{..} = do
     kRun01 $ SQL ("INSERT INTO payment_stats (time, provider, action, quantity, plan, company_id, account_code) "
-      <> "      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? "
+      <> "      SELECT ?, ?, ?, ?, ?, ?, ?"
       <> "      WHERE EXISTS (SELECT 1 FROM companies     WHERE id = ?)"
       <> "        AND EXISTS  (SELECT 1 FROM payment_plans WHERE account_code = ?)")
                [toSql psTime

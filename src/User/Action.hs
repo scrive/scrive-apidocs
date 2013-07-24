@@ -35,6 +35,7 @@ import Administration.AddPaymentPlan
 import Crypto.RNG
 import MinutesTime
 import BrandedDomains
+import Company.Model
 
 handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign document signatorylink = do
@@ -46,7 +47,8 @@ handleAccountSetupFromSign document signatorylink = do
   user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (documentlang document))
                 return
                 muser
-  mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
+  company <- dbQuery $ GetCompanyByUserID (userid user)
+  mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
   case mactivateduser of
     Just activateduser -> do
       let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
@@ -55,8 +57,8 @@ handleAccountSetupFromSign document signatorylink = do
       return $ Just activateduser
     Nothing -> return Nothing
 
-handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> User -> SignupMethod -> m (Maybe User)
-handleActivate mfstname msndname actvuser signupmethod = do
+handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m (Maybe User)
+handleActivate mfstname msndname (actvuser,company) signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
   when (isJust $ userhasacceptedtermsofservice actvuser) internalError
   switchLang (getLang actvuser)
@@ -77,8 +79,10 @@ handleActivate mfstname msndname actvuser signupmethod = do
                   userfstname = fstname
                 , usersndname = sndname
                 , userphone = phone
-                , usercompanyname = companyname
                 , usercompanyposition = position
+              }
+              _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
+                  companyname = companyname
               }
               _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
                 (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
@@ -112,7 +116,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
               when (not stoplogin) $ do
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
-              when (promo) $ addManualPricePlan (userid actvuser) TrialTeamPricePlan ActiveStatus
+              when (promo) $ addCompanyPlanManual (companyid company) TrialTeamPricePlan ActiveStatus
               return $ Just tosuser
             else do
               Log.debug $ "No TOS accepted. We cant activate user."
@@ -137,7 +141,10 @@ createUser' :: (CryptoRNG m, HasMailContext c, MonadDB m, TemplatesMonad m) => c
 createUser' ctx email names mcompanyid lang = do
   let mctx = mailContext ctx
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid lang (bdurl <$> mctxcurrentBrandedDomain mctx)
+  companyid <- case mcompanyid of
+                    Nothing -> companyid <$> dbUpdate CreateCompany
+                    Just cid -> return cid
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyid lang (bdurl <$> mctxcurrentBrandedDomain mctx)
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (mctxipnumber mctx) (mctxtime mctx) email (userid <$> mctxmaybeuser mctx)

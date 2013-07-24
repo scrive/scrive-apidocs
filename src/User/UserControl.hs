@@ -72,10 +72,7 @@ handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
-         Just user -> do
-           mcompany <- getCompanyForUser user
-           content <- showAccount user mcompany
-           renderFromBody kontrakcja content
+         Just user -> renderFromBody kontrakcja =<< showAccount user
          Nothing -> sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
 
 -- please treat this function like a public query form, it's not secure
@@ -155,8 +152,6 @@ getUserInfoUpdate  = do
     mpersonalnumber   <- getField "personalnumber"
     mphone            <- getField "phone"
     mcompanyposition  <- getValidField asValidPosition "companyposition"
-    mcompanyname      <- getField "companyname"
-    mcompanynumber    <- getField "companynumber"
     return $ \ui ->
         ui {
             userfstname = fromMaybe (userfstname ui) mfstname
@@ -164,8 +159,6 @@ getUserInfoUpdate  = do
           , userpersonalnumber = fromMaybe (userpersonalnumber ui) mpersonalnumber
           , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
           , userphone  = fromMaybe (userphone ui) mphone
-          , usercompanyname = fromMaybe (usercompanyname ui) mcompanyname
-          , usercompanynumber = fromMaybe (usercompanynumber ui) mcompanynumber
         }
     where
         getValidField = getDefaultedField ""
@@ -198,8 +191,8 @@ handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
-  if ((isJust $ usercompany user) && useriscompanyadmin user && withCompany)
-    then getDaysStats (Right $ fromJust $ usercompany user)
+  if (useriscompanyadmin user && withCompany)
+    then getDaysStats (Right $ usercompany user)
     else getDaysStats (Left $ userid user)
 
 
@@ -207,8 +200,8 @@ handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
   user  <- guardJustM $ ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
-  if ((isJust $ usercompany user) && useriscompanyadmin user && withCompany)
-    then getMonthsStats (Right $ fromJust $ usercompany user)
+  if (useriscompanyadmin user && withCompany)
+    then getMonthsStats (Right $ usercompany user)
     else getMonthsStats (Left $ userid user)
 
 getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
@@ -305,18 +298,16 @@ handleAccountSetupGetWithMethod uid token sm = do
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
-      mcompany <-  getCompanyForUser user
-      mcompanyui <- case mcompany of
-                      Just comp -> Just <$> (dbQuery $ GetCompanyUI (companyid comp))
-                      _ -> return Nothing
+      company <-  getCompanyForUser user
+      companyui <- dbQuery $ GetCompanyUI (usercompany user)
       mbd <- return $ currentBrandedDomain ctx
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
                                             F.value "userid"  $ show uid
-                                            F.value "company" $ companyname <$> companyinfo <$> mcompany
+                                            F.value "company" $ companyname $ companyinfo $ company
                                             F.value "signupmethod" $ show sm
-                                            brandingFields mbd mcompanyui
+                                            brandingFields mbd (Just companyui)
                                             ))
     (Just _user, Just _) -> do
       -- this case looks impossible since we delete the account request upon signing up
@@ -328,6 +319,7 @@ handleAccountSetupGetWithMethod uid token sm = do
 handleAccountSetupPostWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPostWithMethod uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
+  company <-  getCompanyForUser user
   if isJust $ userhasacceptedtermsofservice user
     then runJSONGenT $ do
            value "ok" False
@@ -335,7 +327,7 @@ handleAccountSetupPostWithMethod uid token sm = do
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
-      mactivateduser <- handleActivate mfstname msndname user sm
+      mactivateduser <- handleActivate mfstname msndname (user,company) sm
       case mactivateduser of
         Nothing -> runJSONGenT $ do
                     value "ok" False
@@ -486,14 +478,14 @@ handleContactUs = do
   return $ LoopBack
 
 -- For User Admin tab in adminonly
-getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Maybe Company, InviteType)]
+getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Company, InviteType)]
 getUsersAndStatsInv filters sorting pagination = do
   list <- dbQuery $ GetUsersAndStatsAndInviteInfo filters sorting pagination
   return $ convert' list
   where
-    convert' list = map (\(u,mc,iv) ->
+    convert' list = map (\(u,c,iv) ->
                                    ( u
-                                   , mc
+                                   , c
                                    , case iv of
                                        Nothing                     -> Admin
                                        Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype

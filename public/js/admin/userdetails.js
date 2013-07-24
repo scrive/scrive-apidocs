@@ -109,9 +109,7 @@ var AdminUserDetailsModel = Backbone.Model.extend({
      this.set({"accountType" : v});
   },
   currentAccountType : function() {
-     if (this.user().company() == undefined)
-       return "privateaccount";
-     else if (this.user().companyadmin())
+     if (this.user().companyadmin())
        return "companyadminaccount";
      else
        return "companystandardaccount";
@@ -131,8 +129,6 @@ var AdminUserDetailsModel = Backbone.Model.extend({
       , email : this.user().email()
       , phone : this.user().phone()
       , lang :  this.user().lang() != "sv" ?  "en" : "sv"
-      , companyname :    !this.user().hasCompany() ? this.user().usercompanyname() : this.company().companyname()
-      , companynumber :  !this.user().hasCompany() ? this.user().usercompanynumber()   : this.company().companynumber()
       , companyposition : this.user().companyposition()
     }, {silent : true});
     this.trigger("reset");
@@ -146,8 +142,6 @@ var AdminUserDetailsModel = Backbone.Model.extend({
         userpersonalnumber : this.personnumber(),
         userphone : this.phone(),
         useremail : this.email(),
-        usercompanyname : this.companyname(),
-        usercompanynumber : this.companynumber(),
         usercompanyposition : this.companyposition(),
         userlang :this.user().lang() != "sv" ?  "LANG_EN" : "LANG_SV",
         useraccounttype : this.get("accountType")
@@ -188,9 +182,7 @@ var AdminUserDetailsView = Backbone.View.extend({
       return this.langselect;
     },
     accountTypeName : function(name) {
-      if (name == "privateaccount")
-        return "Private account";
-      else if (name == "companystandardaccount")
+      if (name == "companystandardaccount")
         return "Company account";
       else if (name == "companyadminaccount")
         return "Company admin";
@@ -207,8 +199,7 @@ var AdminUserDetailsView = Backbone.View.extend({
         },
         textWidth : "203px",
         optionsWidth : "230px",
-        options : [  {name : this.accountTypeName("privateaccount"), value : "privateaccount"}
-                   , {name : this.accountTypeName("companystandardaccount"), value : "companystandardaccount"}
+        options : [  {name : this.accountTypeName("companystandardaccount"), value : "companystandardaccount"}
                    , {name : this.accountTypeName("companyadminaccount"), value : "companyadminaccount"}
                   ]
       }).el();
@@ -253,22 +244,6 @@ var AdminUserDetailsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Phone"))).append($("<td/>").append(phoneinput)));
 
 
-      if (!model.user().hasCompany()) {
-
-          var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
-          companynameinput.change(function() {
-              model.setCompanyname(companynameinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company name"))).append($("<td/>").append(companynameinput)));
-
-          var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
-          companynumberinput.change(function() {
-              model.setCompanynumber(companynumberinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company number"))).append($("<td/>").append(companynumberinput)));
-
-      }
-
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
@@ -277,10 +252,8 @@ var AdminUserDetailsView = Backbone.View.extend({
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Language"))).append($("<td/>").append(this.langSelect().el())));
 
-      if (model.user().hasCompany()) {
-            table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company")))
-                                   .append($("<td/>").append($("<a>Link</a>").attr("href","/adminonly/companyadmin/" + this.model.user().company().companyid()))));
-      }
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company")))
+                                   .append($("<td/>").append($("<a>Link to company</a>").attr("href","/adminonly/companyadmin/" + this.model.user().company().companyid()))));
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Account type"))).append($("<td/>").append(this.accountTypeSelector())));
 

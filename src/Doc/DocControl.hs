@@ -273,7 +273,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
       isauthor = (userid <$> muser) == maybesignatory authorsiglink
   mauthoruser <- maybe (return Nothing) (dbQuery . GetUserByIDIncludeDeleted) (maybesignatory authorsiglink)
 
-  let isincompany = ((usercompany =<< muser) == (usercompany =<< mauthoruser))
+  let isincompany = isJust muser && ((usercompany <$> muser) == (usercompany <$> mauthoruser))
       isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
   ad <- getAnalyticsData

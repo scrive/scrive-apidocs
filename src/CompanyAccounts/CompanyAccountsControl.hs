@@ -37,14 +37,10 @@ import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import Utils.IO
 import User.Action
 import User.Utils
 import User.UserControl
 import User.History.Model
-import Payments.Model
-import Recurly
-import Payments.Config
 
 {- |
     Gets the ajax data for the company accounts list.
@@ -180,8 +176,9 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
   mexistinguser <- maybe (return Nothing) (dbQuery . GetUserByEmail . Email) memail
-  mexistingcompany <- maybe (return Nothing) getCompanyForUser mexistinguser
-
+  mexistingcompany <- case mexistinguser of
+                           Just u -> Just <$> getCompanyForUser u
+                           Nothing -> return Nothing
   minvitee <-
     case (memail, mexistinguser, mexistingcompany) of
       (Just email, Nothing, Nothing) -> do
@@ -235,7 +232,9 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   resendid <- getCriticalField asValidUserID "resendid"
   resendemail <- getCriticalField asValidEmail "resendemail"
   muserbyid <- dbQuery $ GetUserByID resendid
-  mcompanybyid <- maybe (return Nothing) getCompanyForUser muserbyid
+  mcompanybyid <- case muserbyid of
+                           Just u -> Just <$> getCompanyForUser u
+                           Nothing -> return Nothing
   minvite <- dbQuery $ GetCompanyInvite (companyid company) (Email resendemail)
   muserbyemail <- dbQuery $ GetUserByEmail (Email resendemail)
 
@@ -247,13 +246,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
           --this is an existing company user who just hasn't activated yet,
           _ <- sendNewCompanyUserMail user company userbyid
           return True
-      (Nothing, Nothing, Just _invite, Just userbyemail) |
-        isNothing (usercompany userbyemail) -> do
-          -- this is a private user who hasn't accepted the takeover yet
-          _ <- sendTakeoverPrivateUserMail user company userbyemail
-          return True
-      (Nothing, Nothing, Just _invite, Just userbyemail) |
-        isJust (usercompany userbyemail) -> do
+      (Nothing, Nothing, Just _invite, Just userbyemail)-> do
         -- this is a company user
           _ <- sendTakeoverCompanyInternalWarningMail user company userbyemail
           return False
@@ -301,8 +294,7 @@ handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   changeid <- getCriticalField asValidUserID "changeid"
   makeadmin <- getField "makeadmin"
   changeuser <- guardJustM $ dbQuery $ GetUserByID changeid
-  changecompanyid <- guardJust $ usercompany changeuser
-  unless (changecompanyid == companyid company) internalError --make sure user is in same company
+  unless (usercompany changeuser == companyid company) internalError --make sure user is in same company
   _ <- dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
   runJSONGenT $ value "changed" True
 
@@ -315,7 +307,9 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   removeid <- getCriticalField asValidUserID "removeid"
   removeemail <- getCriticalField asValidEmail "removeemail"
   mremoveuser <- dbQuery $ GetUserByID removeid
-  mremovecompany <- maybe (return Nothing) getCompanyForUser mremoveuser
+  mremovecompany <- case mremoveuser of
+                           Just u -> Just <$> getCompanyForUser u
+                           Nothing -> return Nothing
   isdeletable <- maybe (return False) isUserDeletable mremoveuser
 
   case (mremoveuser, mremovecompany) of
@@ -346,19 +340,11 @@ handleGetBecomeCompanyAccount companyid = withUserGet $ do
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- guardGoodForTakeover cid
-  Context{ctxmaybeuser = Just user,
-          ctxrecurlyconfig} <- getContext
+  user <- guardJustM $ ctxmaybeuser <$> getContext
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid newcompany)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
-  mplan <- dbQuery $ GetPaymentPlan (Left $ userid user)
-  case mplan of
-    Just pp -> do
-      _ <- liftIO $ deleteAccount curl_exe (recurlyAPIKey ctxrecurlyconfig) (show $ ppAccountCode pp)
-      _ <- dbUpdate $ DeletePaymentPlan (Left $ userid user)
-      return ()
-    Nothing -> return ()
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
   return $ LinkAccount
 
@@ -369,7 +355,6 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
 -}
 guardGoodForTakeover :: Kontrakcja m => CompanyID -> m ()
 guardGoodForTakeover companyid = do
-  Context{ctxmaybeuser = Just user} <- getContext
-  _ <- unless (isNothing (usercompany user)) internalError
+  user <- guardJustM $ ctxmaybeuser <$> getContext
   _ <- guardJustM $ dbQuery $ GetCompanyInvite companyid (Email $ getEmail user)
   return ()

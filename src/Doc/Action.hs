@@ -37,6 +37,7 @@ import Mails.SendMail
 import OurPrelude
 import User.Model
 import Util.HasSomeUserInfo
+import Util.HasSomeCompanyInfo
 import qualified Log
 import Text.StringTemplates.Templates
 import Util.Actor
@@ -45,7 +46,7 @@ import Util.MonadUtils
 import ThirdPartyStats.Core
 import ActionQueue.UserAccountRequest
 import User.Action
-
+import User.Utils
 import Control.Monad
 import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
@@ -56,6 +57,7 @@ import Doc.API.Callback.Model
 -- | Log a document event, adding some standard properties.
 logDocEvent :: Kontrakcja m => EventName -> Document -> User -> [EventProperty] -> m ()
 logDocEvent name doc user extraProps = do
+  comp <- getCompanyForUser user
   now <- getMinutesTime
   ip <- ctxipnumber <$> getContext
   let uid = userid user
@@ -69,7 +71,7 @@ logDocEvent name doc user extraProps = do
     MailProp   email,
     IPProp     ip,
     NameProp   fullname,
-    stringProp "Company Name" $ usercompanyname $ userinfo user,
+    stringProp "Company Name" $ getCompanyName $ comp,
     stringProp "Delivery Method" deliverymethod,
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),

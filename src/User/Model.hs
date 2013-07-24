@@ -503,8 +503,6 @@ selectUsersSelectorsList =
   , "phone"
   , "email"
   , "lang"
-  , "company_name"
-  , "company_number"
   , "associated_domain"
   ]
 

@@ -134,26 +134,16 @@ var AccountSettingsModel = Backbone.Model.extend({
       , newemailagain : ""
       , phone : this.user().phone()
       , lang :  this.user().lang() != "sv" ?  "en" : "sv"
-      , companyname :    !this.user().hasCompany() ? this.user().usercompanyname() : this.company().companyname()
-      , companynumber :  !this.user().hasCompany() ? this.user().usercompanynumber()   : this.company().companynumber()
+      , companyname :     this.company().companyname()
+      , companynumber :   this.company().companynumber()
       , companyposition : this.user().companyposition()
-      , companyaddress :  this.user().hasCompany() ? this.company().address()  : undefined
-      , companyzip :      this.user().hasCompany() ? this.company().zip()  : undefined
-      , companycity :     this.user().hasCompany() ? this.company().city()  : undefined
-      , companycountry :  this.user().hasCompany() ? this.company().country()  : undefined
-      , companysmsoriginator : this.user().hasCompany() ? this.company().smsoriginator()  : undefined
+      , companyaddress :  this.company().address()
+      , companyzip :      this.company().zip()
+      , companycity :     this.company().city()
+      , companycountry :   this.company().country()
+      , companysmsoriginator : this.company().smsoriginator()
     }, {silent : true});
     this.trigger("reset");
-  },
-  createCompany : function(callback) {
-     return new Submit({
-      method : "POST",
-      url : "/api/frontend/createcompany",
-      ajax : true,
-      ajaxsuccess : function(rs) {
-        if (callback!= undefined) callback();
-      }
-    }).send();
   },
   changeEmail :function(callback) {
      var self = this;
@@ -253,11 +243,8 @@ var AccountSettingsView = Backbone.View.extend({
       // Building frame
       var self = this;
       var model = this.model;
-      var box = $("<div class='blue-box'/>");
-      if (model.user().hasCompany())
-        box.addClass("col");
-      else
-        box.addClass("blue-box");
+      var box = $("<div class='blue-box col'/>");
+
       var header = $("<div class='account-header'/>").text(model.user().smartname());
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
@@ -300,21 +287,7 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.phone))).append($("<td/>").append(phoneinput)));
 
-      if (!model.user().hasCompany()) {
 
-          var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
-          companynameinput.change(function() {
-              model.setCompanyname(companynameinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname))).append($("<td/>").append(companynameinput)));
-
-          var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
-          companynumberinput.change(function() {
-              model.setCompanynumber(companynumberinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber))).append($("<td/>").append(companynumberinput)));
-
-      }
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
@@ -481,91 +454,6 @@ var AccountSettingsView = Backbone.View.extend({
           }
       }).el();
     },
-    createCompanyButton : function() {
-      var model = this.model;
-      return new Button({
-        color: "blue",
-        size: "small",
-        shape: "rounded",
-        text: localization.account.accountDetails.createCompany,
-        onClick: function() {
-            mixpanel.track('Click create company button');
-            var body = jQuery("<div class='account-body'>");
-            body.append($("<p/>").text(localization.account.accountDetails.createCompanyExplanation));
-            body.append($("<p/>").text(localization.account.accountDetails.createCompanyPreambule));
-
-            var table = jQuery("<table/>");
-
-            var companynameinput = $("<input type='text'/>").val(model.companyname());
-            companynameinput.change(function() {
-              model.setCompanyname(companynameinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyname)).append($("<td/>").append(companynameinput)));
-
-            var companynumberinput = $("<input type='text'/>").val(model.companynumber());
-            companynumberinput.change(function() {
-              model.setCompanynumber(companynumberinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companynumber)).append($("<td/>").append(companynumberinput)));
-
-            var companyaddressinput = $("<input type='text'/>").val(model.companyaddress());
-            companyaddressinput.change(function() {
-              model.setCompanyaddress(companyaddressinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyaddress)).append($("<td/>").append(companyaddressinput)));
-
-            var companyzipinput = $("<input type='text'/>").val(model.companyzip());
-            companyzipinput.change(function() {
-              model.setCompanyzip(companyzipinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyzip)).append($("<td/>").append(companyzipinput)));
-
-            var companycityinput = $("<input type='text'/>").val(model.companycity());
-            companynameinput.change(function() {
-              model.setCompanycity(companycityinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycity)).append($("<td/>").append(companycityinput)));
-
-            var companycountryinput = $("<input type='text'/>").val(model.companycountry());
-            companynameinput.change(function() {
-              model.setCompanycountry(companycountryinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycountry)).append($("<td/>").append(companycountryinput)));
-
-            var companysmsoriginatorinput = $("<input type='text'/>").val(model.companysmsoriginator());
-            companysmsoriginatorinput.change(function() {
-              model.setCompanysmsoriginator(companysmsoriginatorinput.val());
-            });
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.smsOriginator)).append($("<td/>").append(companysmsoriginatorinput)));
-
-            body.append(table);
-
-            var confirmation = Confirmation.popup({
-              onAccept: function() {
-                  trackTimeout('Accept',
-                               {'Accept' : 'create company'},
-                                function() {
-                                  model.createCompany(function() {
-                                       model.updateProfile(function() {
-                                         confirmation.close();
-                                         // We need to refrest the page, since other tabs will be added.
-                                         // Flash message has to be personstent
-                                         new FlashMessage({content: localization.account.accountDetails.companyCreated, color: "green", withReload : true});
-                                      });
-                                    });
-                                  });
-              },
-              onReject: function() {
-                window.location = window.location;
-              },
-              title: localization.account.accountDetails.createCompany,
-              acceptButtonText: localization.account.accountDetails.createCompany,
-              content: body
-            });
-            return false;
-          }
-        }).el();
-    },
     saveButton : function() {
       var model = this.model;
       var button = new Button({
@@ -592,12 +480,9 @@ var AccountSettingsView = Backbone.View.extend({
        container.append(box);
 
        box.append(this.accountSettings());
-       if (model.user().hasCompany())
-        box.append(this.companySettings());
+       box.append(this.companySettings());
        var footerbox = $("<div class='account-footer'/>");
        box.append(footerbox);
-       if (!model.user().hasCompany())
-        footerbox.append(this.createCompanyButton().css("margin-right", "5px"));
        footerbox.append(this.saveButton());
        box.append("<div class='clearfix'></div>");
        return this;

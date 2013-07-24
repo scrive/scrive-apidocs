@@ -5,7 +5,6 @@
 
 var AdminPaymentsModel = Backbone.Model.extend({
  defaults : {
-      userid      : undefined,
       companyid   : undefined,
       quantity    : undefined,
       recurlysubdomain   : "",
@@ -15,17 +14,10 @@ var AdminPaymentsModel = Backbone.Model.extend({
       priceplan : "",
       status : "",
       migrationid : "",
-      migrationtype : "userid",
       ready: false
   },
   initialize: function(args) {
-    if (args.userid != undefined)
-        this.url = "/adminonly/useradmin/payments/" + args.userid;
-    else if (args.companyid != undefined)
         this.url = "/adminonly/companyadmin/payments/" + args.companyid;
-  },
-  userid : function() {
-     return this.get("userid");
   },
   companyid : function() {
      return this.get("companyid");
@@ -63,52 +55,28 @@ var AdminPaymentsModel = Backbone.Model.extend({
   setMigrationid : function(v) {
      this.set({"migrationid" : v});
   },
-  migrationtype : function() {
-     return this.get("migrationtype");
-  },
-  setMigrationtype : function(v) {
-     this.set({"migrationtype" : v});
-  },
   ready : function() {
      return this.get("ready");
   },
-  changePricePlanUrl : function() {
-    if (this.userid())
-      return  "/adminonly/useradmin/payments/change/" + this.userid();
-    else if (this.companyid())
-      return  "/adminonly/companyadmin/payments/change/" + this.companyid();
-  },
   changePricePlan : function() {
      return new Submit({
-       url : this.changePricePlanUrl(),
+       url : "/adminonly/companyadmin/payments/change/" + this.companyid(),
        method : "POST",
        priceplan : this.priceplan(),
        status : this.status()
     });
   },
-  migrateRecurlyPricePlanUrl : function() {
-    if (this.userid())
-      return  "/adminonly/useradmin/payments/migrate/" + this.userid();
-    else if (this.companyid())
-      return  "/adminonly/companyadmin/payments/migrate/" + this.companyid();
-  },
   migrateRecurlyPricePlan : function() {
      return new Submit({
-       url : this.migrateRecurlyPricePlanUrl(),
+       url : "/adminonly/companyadmin/payments/migrate/" + this.companyid(),
        method : "POST",
-       migratetype : this.migrationtype(),
        id : this.migrationid()
     });
   },
-  deleteRecurlyPricePlanUrl : function() {
-    if (this.userid())
-      return  "/adminonly/useradmin/payments/delete/" + this.userid();
-    else if (this.companyid())
-      return  "/adminonly/companyadmin/payments/delete/" + this.companyid();
-  },
+
   deleteRecurlyPricePlan : function() {
      return new Submit({
-       url : this.deleteRecurlyPricePlanUrl(),
+       url : "/adminonly/companyadmin/payments/delete/" + this.companyid(),
        method : "POST"
     });
   },
@@ -166,13 +134,7 @@ var AdminPaymentsView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       this.migrationModalContent.empty();
-      this.migrationModalContent.append(new Select({
-                    name : this.model.migrationtype() == "userid" ? "User id" : "Company id",
-                    textWidth: "100px",
-                    cssClass : "float-left",
-                    onSelect : function(v) {model.setMigrationtype(v);self.refreshMigrationModalContent();return true;},
-                    options : [{name : "User id" , value : "userid"}, {name : "Company id", value : "companyid" }]
-      }).el());
+      this.migrationModalContent.append("<label> Please enter company id </label>");
       this.migrationModalContent.append(new InfoTextInput({
                     infotext : "ID",
                     value: model.migrationid(),
@@ -211,12 +173,7 @@ var AdminPaymentsView = Backbone.View.extend({
        if (!model.ready()) return;
        container.empty();
 
-       if (model.userid() != undefined && model.companyid()) {
-          container.append($("<div>This user is a part of company and uses company price plan. Please visit </div>")
-                            .append($("<a>company page for more details</a>").attr("href", "/adminonly/companyadmin/" + model.companyid()))
-                          );
-       }
-       else if (model.recurlyplan()) {
+       if (model.recurlyplan()) {
           var recurlyLinkRow = $("<div style='width:500px'>This user has a recurly price plan </div>");
           recurlyLinkRow.append($("<a style='width:200px;'> Link  </a>")
                                       .attr("href", "https://" + this.model.recurlysubdomain() + ".recurly.com/accounts/" + this.model.accountcode()));
