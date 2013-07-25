@@ -25,6 +25,7 @@ import User.Model
 import User.UserView
 import Util.FlashUtil
 import Util.HasSomeUserInfo
+import Util.HasSomeCompanyInfo
 import qualified Log
 import Util.MonadUtils
 import Util.Actor
@@ -42,11 +43,19 @@ handleAccountSetupFromSign document signatorylink = do
   ctx <- getContext
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
-  email <- getCriticalField asValidEmail "email"
+      cname = getCompanyName signatorylink
+      cnumber = getCompanyNumber signatorylink
+  email <- guardJustM $ getRequiredField asValidEmail "email"
   muser <- dbQuery $ GetUserByEmail (Email email)
-  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (documentlang document))
-                return
-                muser
+  user <- case muser of
+            Just u -> return u
+            Nothing -> do
+               company <- dbUpdate $ CreateCompany
+               _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
+                    companyname = cname
+                  , companynumber = cnumber
+                }
+               guardJustM $ createUser (Email email) (firstname, lastname) (Just $ companyid company) (documentlang document)
   company <- dbQuery $ GetCompanyByUserID (userid user)
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
   case mactivateduser of
@@ -141,10 +150,12 @@ createUser' :: (CryptoRNG m, HasMailContext c, MonadDB m, TemplatesMonad m) => c
 createUser' ctx email names mcompanyid lang = do
   let mctx = mailContext ctx
   passwd <- createPassword =<< randomPassword
-  companyid <- case mcompanyid of
-                    Nothing -> companyid <$> dbUpdate CreateCompany
-                    Just cid -> return cid
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyid lang (bdurl <$> mctxcurrentBrandedDomain mctx)
+  company <- case mcompanyid of
+                    Nothing -> do
+                      cid <- companyid <$> dbUpdate CreateCompany
+                      return (True,cid)
+                    Just cid -> return (False,cid)
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) company lang (bdurl <$> mctxcurrentBrandedDomain mctx)
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (mctxipnumber mctx) (mctxtime mctx) email (userid <$> mctxmaybeuser mctx)

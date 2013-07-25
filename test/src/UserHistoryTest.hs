@@ -242,7 +242,7 @@ createTestUser = do
     muser <- dbUpdate $ AddUser ("", "")
                                 "karol@skrivapa.se"
                                 (Just pwd)
-                                (companyid company)
+                                (True,companyid company)
                                 defaultValue
                                 Nothing
     case muser of

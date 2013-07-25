@@ -136,5 +136,5 @@ testUser :: TestEnv UserID
 testUser = do
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company) defaultValue Nothing
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (True,companyid company) defaultValue Nothing
   return $ userid user

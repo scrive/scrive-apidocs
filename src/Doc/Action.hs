@@ -53,6 +53,7 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import ForkAction
 import Doc.API.Callback.Model
+import Company.Model
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: Kontrakcja m => EventName -> Document -> User -> [EventProperty] -> m ()
@@ -421,7 +422,7 @@ sendClosedEmails ctx document sealFixed = do
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
       ml <- if (isGood $ asValidEmail $ getEmail sl)
-               then handlePostSignSignup ctx (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
+               then handlePostSignSignup ctx (Email $ getEmail sl) (getFirstName sl) (getLastName sl) (getCompanyName sl) (getCompanyNumber sl)
                else return $ Nothing
       let sendMail = do
             mail <- mailDocumentClosed ctx document ml sl sealFixed
@@ -487,8 +488,8 @@ sendAllReminderEmails ctx actor user docid = do
    Try to sign up a new user. Returns the confirmation link for the new user.
    Nothing means there is already an account or there was an error creating the user.
  -}
-handlePostSignSignup :: (CryptoRNG m, MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Email -> String -> String -> m (Maybe KontraLink)
-handlePostSignSignup ctx email fn ln = do
+handlePostSignSignup :: (CryptoRNG m, MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Email -> String -> String -> String -> String -> m (Maybe KontraLink)
+handlePostSignSignup ctx email fn ln cnm cnr = do
   let lang = mctxlang (mailContext ctx)
   muser <- dbQuery $ GetUserByEmail email
   case (muser, muser >>= userhasacceptedtermsofservice) of
@@ -500,7 +501,12 @@ handlePostSignSignup ctx email fn ln = do
     (Nothing, Nothing) -> do
       -- this email address is new to the system, so create the user
       -- and send an invite
-      mnewuser <- createUser' ctx email (fn, ln) Nothing lang
+      company <- dbUpdate $ CreateCompany
+      _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
+                    companyname = cnm
+                  , companynumber = cnr
+              }
+      mnewuser <- createUser' ctx email (fn, ln) (Just $ companyid company) lang
       case mnewuser of
         Nothing -> return Nothing
         Just newuser -> do

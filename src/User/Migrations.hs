@@ -5,7 +5,9 @@ import DB
 import DB.SQL2
 import User.Tables
 import User.Model (UserID)
+import Company.Model (CompanyID)
 import Control.Monad
+import qualified Log as Log
 default (SQL)
 
 addUserCustomFooter :: MonadDB m => Migration m
@@ -160,17 +162,24 @@ allUsersMustHaveCompany =
                   sqlWhere "company_id IS NULL"
        usersWithoutCompany <- kFold (\a u cn cnn -> (u,cn,cnn) : a) []
        forM_ usersWithoutCompany $ \(userid::UserID, companyname::String, companynumber::String) -> do
-            companyidx <- kRun $ sqlInsert "companies" $ do
-                            sqlSetCmd "id" "DEFAULT"
+            Log.debug "Creating company"
+            _ <- kRun $ sqlInsert "companies" $ do
                             sqlSet "name" companyname
                             sqlSet "number" companynumber
                             sqlResult "id"
+            (companyidx :: CompanyID) <- kFold (flip (:)) [] >>= exactlyOneObjectReturnedGuard
+
+            Log.debug $ "Creating company UI " ++ show companyidx
             kRun_ $ sqlInsert "company_uis" $ do
                 sqlSet "company_id" companyidx
+
+            Log.debug "Binding user to new company"
             kRun_ $ sqlUpdate "users" $ do
                 sqlSet "company_id" companyidx
                 sqlSet "is_company_admin" True
                 sqlWhereEq "id" userid
+       _ <- kRunRaw $ "SET CONSTRAINTS ALL IMMEDIATE"
+       _ <- kRunRaw $ "SET CONSTRAINTS ALL DEFERRED"
        _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_name"
        _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_number"
        return ()

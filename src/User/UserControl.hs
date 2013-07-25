@@ -306,6 +306,7 @@ handleAccountSetupGetWithMethod uid token sm = do
                                             F.value "sndname" $ getLastName user
                                             F.value "userid"  $ show uid
                                             F.value "company" $ companyname $ companyinfo $ company
+                                            F.value "companyAdmin" $ useriscompanyadmin user
                                             F.value "signupmethod" $ show sm
                                             brandingFields mbd (Just companyui)
                                             ))

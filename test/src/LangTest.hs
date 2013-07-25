@@ -110,5 +110,5 @@ createTestUser :: Lang -> TestEnv User
 createTestUser lang = do
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company) lang Nothing
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (True,companyid company) lang Nothing
     return user
