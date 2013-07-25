@@ -144,7 +144,9 @@ kontraMigrations = [
   , removeIsFree
   , setProperOwnerOnFilesIDSequence
   , moveBinaryDataForSignatoryScreenshotsToFilesTable
-  , removeUserCompanyNameAndCompanyPosition
+  , allUsersMustHaveCompany
+  , paymentsPlansOnlyForCompanies
+  , paymentsStatsOnlyForCompanies
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

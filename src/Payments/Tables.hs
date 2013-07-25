@@ -9,7 +9,7 @@ import DB
 tablePaymentPlans :: Table
 tablePaymentPlans = tblTable {
     tblName = "payment_plans"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
       tblColumn { colName = "account_code", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "company_id", colType = BigIntT, colNullable = False  }
@@ -36,7 +36,7 @@ tablePaymentPlans = tblTable {
 tablePaymentStats :: Table
 tablePaymentStats = tblTable {
     tblName = "payment_stats"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "time", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }

@@ -2,8 +2,10 @@
 module User.Migrations where
 
 import DB
+import DB.SQL2
 import User.Tables
-
+import User.Model (UserID)
+import Control.Monad
 default (SQL)
 
 addUserCustomFooter :: MonadDB m => Migration m
@@ -147,15 +149,29 @@ removeIsFree =
       return ()
     }
 
-removeUserCompanyNameAndCompanyPosition :: MonadDB m => Migration m
-removeUserCompanyNameAndCompanyPosition =
+allUsersMustHaveCompany :: MonadDB m => Migration m
+allUsersMustHaveCompany =
   Migration {
       mgrTable = tableUsers
     , mgrFrom = 15
     , mgrDo = do
-      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_name"
-      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_number"
-
-      return ()
+       kRun_ $ sqlSelect "users" $ do
+                  sqlResult "id, company_name, company_number"
+                  sqlWhere "company_id IS NULL"
+       usersWithoutCompany <- kFold (\a u cn cnn -> (u,cn,cnn) : a) []
+       forM_ usersWithoutCompany $ \(userid::UserID, companyname::String, companynumber::String) -> do
+            companyidx <- kRun $ sqlInsert "companies" $ do
+                            sqlSetCmd "id" "DEFAULT"
+                            sqlSet "name" companyname
+                            sqlSet "number" companynumber
+                            sqlResult "id"
+            kRun_ $ sqlInsert "company_uis" $ do
+                sqlSet "company_id" companyidx
+            kRun_ $ sqlUpdate "users" $ do
+                sqlSet "company_id" companyidx
+                sqlSet "is_company_admin" True
+                sqlWhereEq "id" userid
+       _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_name"
+       _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_number"
+       return ()
     }
-

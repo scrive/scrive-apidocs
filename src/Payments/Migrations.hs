@@ -24,3 +24,27 @@ attachUniqueContraintsToPaymentPlansColumns =
       kRunRaw "DROP INDEX idx_payment_plans_user_id;"
       kRunRaw "DROP INDEX idx_payment_plans_company_id;"
   }
+
+paymentsPlansOnlyForCompanies :: MonadDB m => Migration m
+paymentsPlansOnlyForCompanies =
+  Migration {
+    mgrTable = tablePaymentPlans
+  , mgrFrom = 3
+  , mgrDo = do
+      kRunRaw "UPDATE payment_plans SET company_id = (SELECT company_id FROM users WHERE user_id = users.id) WHERE company_id IS NULL;"
+      kRunRaw "ALTER TABLE payment_plans DROP COLUMN account_type"
+      kRunRaw "ALTER TABLE payment_plans DROP COLUMN user_id"
+  }
+
+paymentsStatsOnlyForCompanies :: MonadDB m => Migration m
+paymentsStatsOnlyForCompanies =
+  Migration {
+    mgrTable = tablePaymentStats
+  , mgrFrom = 1
+  , mgrDo = do
+      kRunRaw "UPDATE payment_stats SET company_id = (SELECT company_id FROM users WHERE user_id = users.id) WHERE company_id IS NULL;"
+      kRunRaw "ALTER TABLE payment_stats DROP COLUMN account_type"
+      kRunRaw "ALTER TABLE payment_stats DROP COLUMN user_id"
+  }
+
+
