@@ -225,13 +225,10 @@ var TabsView = Backbone.View.extend({
         var tabsrow = $("<ul class='tabs'/>");
         var model = this.model;
         var hasRight = false;
-        _.each(this.model.tabs(), function(tab, i)
+        _.each(this.model.tabs(), function(tab)
         {
             if (tab.disabled()) return;
             var li = $("<li/>");
-            if (i == self.model.tabs().length - 1) {
-              li.addClass('last-tab');
-            }
             if (tab.right()) {
                 li.addClass("float-right");
                 hasRight = true;
@@ -270,6 +267,7 @@ var TabsView = Backbone.View.extend({
            tabsrow.append(li);
         });
 
+        tabsrow.children().last().addClass('last-tab');
 
         var tabs = model.tabs();
         var visible = $();
