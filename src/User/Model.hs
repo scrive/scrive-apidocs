@@ -255,9 +255,9 @@ instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
     kRun_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = signatory_links.user_id AND users.has_accepted_terms_of_service IS NULL)"
     kRun01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (Bool,CompanyID) Lang (Maybe String)
+data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang (Maybe String)
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (admin,cid) l mad) = do
+  update (AddUser (fname, lname) email mpwd (cid,admin) l mad) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists

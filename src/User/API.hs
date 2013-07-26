@@ -202,7 +202,9 @@ apiCallSignup = api $ do
   muser <- dbQuery $ GetUserByEmail $ Email email
   muser' <- case muser of
                Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
-               Nothing ->     lift $ createUser (Email email) (firstname,lastname) Nothing lang
+               Nothing ->  do
+                 company <- dbUpdate $ CreateCompany
+                 lift $ createUser (Email email) (firstname,lastname) (companyid company,True) lang
   case muser' of
     Nothing -> runJSONGenT $ value "sent" $ False
     Just user -> do

@@ -101,6 +101,6 @@ initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   case maybeuser of
     Nothing -> do
       company <- dbUpdate $ CreateCompany
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (True,companyid company) defaultValue Nothing
+      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) defaultValue Nothing
       return ()
     Just _ -> return () -- user exist, do not add it

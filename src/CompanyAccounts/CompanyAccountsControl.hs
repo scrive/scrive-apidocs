@@ -183,7 +183,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
     case (memail, mexistinguser, mexistingcompany) of
       (Just email, Nothing, Nothing) -> do
         --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (Just $ companyid company) (ctxlang ctx)
+        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,True) (ctxlang ctx)
         _ <- dbUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
                             userfstname = fstname
                           , usersndname = sndname

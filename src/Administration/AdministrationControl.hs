@@ -375,7 +375,8 @@ handleCreateUser = onlySalesOrAdmin $ do
     sndname <- guardJustM $ getField "sndname"
     custommessage <- getField "custommessage"
     lang <- guardJustM $ readField "lang"
-    muser <- createNewUserByAdmin email (fstname, sndname) custommessage Nothing lang
+    company <- dbUpdate $ CreateCompany
+    muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid company, True) lang
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
@@ -414,7 +415,7 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   Log.debug $ "Custom message when creating an account " ++ show custommessage
   lang <- guardJustM $ readField "lang"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin email (fstname, sndname) custommessage (Just (companyid, admin)) lang
+  muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid, admin) lang
   when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
   return ()

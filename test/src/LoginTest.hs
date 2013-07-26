@@ -89,7 +89,7 @@ createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (True,companyid company) defaultValue Nothing
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue Nothing
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext defaultValue
   req <- mkRequest POST [("password", inText "password123")]
@@ -109,5 +109,5 @@ createTestUser :: TestEnv UserID
 createTestUser = do
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (True,companyid company) defaultValue Nothing
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue Nothing
     return userid

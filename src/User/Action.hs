@@ -55,7 +55,7 @@ handleAccountSetupFromSign document signatorylink = do
                     companyname = cname
                   , companynumber = cnumber
                 }
-               guardJustM $ createUser (Email email) (firstname, lastname) (Just $ companyid company) (documentlang document)
+               guardJustM $ createUser (Email email) (firstname, lastname) (companyid company,True) (documentlang document)
   company <- dbQuery $ GetCompanyByUserID (userid user)
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
   case mactivateduser of
@@ -77,8 +77,8 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
   stoplogin <- isFieldSet "stoplogin"
   promo <- isFieldSet "promo"
   haspassword <- isFieldSet "password"
-  phone <-  fromMaybe "" <$> getField "phone"
-  companyname <- fromMaybe "" <$> getField "company"
+  phone <-  fromMaybe (getMobile actvuser) <$> getField "phone"
+  companyname <- fromMaybe (getCompanyName company) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
   case (mtos, mfstname, msndname) of
     (Just tos, Just fstname, Just sndname) -> do
@@ -141,21 +141,16 @@ scheduleNewAccountMail ctx user = do
   mail <- accessNewAccountMail ctx user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
-createUser email names mcompanyid lang = do
+createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
+createUser email names companyandrole lang = do
   ctx <- getContext
-  createUser' ctx email names mcompanyid lang
+  createUser' ctx email names companyandrole lang
 
-createUser' :: (CryptoRNG m, HasMailContext c, MonadDB m, TemplatesMonad m) => c -> Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
-createUser' ctx email names mcompanyid lang = do
+createUser' :: (CryptoRNG m, HasMailContext c, MonadDB m, TemplatesMonad m) => c -> Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
+createUser' ctx email names companyandrole lang = do
   let mctx = mailContext ctx
   passwd <- createPassword =<< randomPassword
-  company <- case mcompanyid of
-                    Nothing -> do
-                      cid <- companyid <$> dbUpdate CreateCompany
-                      return (True,cid)
-                    Just cid -> return (False,cid)
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) company lang (bdurl <$> mctxcurrentBrandedDomain mctx)
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdurl <$> mctxcurrentBrandedDomain mctx)
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (mctxipnumber mctx) (mctxtime mctx) email (userid <$> mctxmaybeuser mctx)

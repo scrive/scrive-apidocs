@@ -475,11 +475,11 @@ addNewRandomFile = do
 addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email = do
   company <- dbUpdate $ CreateCompany
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (True,companyid company) defaultValue Nothing
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) defaultValue Nothing
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (False,cid) defaultValue Nothing
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue Nothing
 
 addNewRandomUser :: TestEnv User
 addNewRandomUser = do
