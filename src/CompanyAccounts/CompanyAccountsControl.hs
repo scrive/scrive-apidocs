@@ -183,7 +183,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
     case (memail, mexistinguser, mexistingcompany) of
       (Just email, Nothing, Nothing) -> do
         --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,True) (ctxlang ctx)
+        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,False) (ctxlang ctx)
         _ <- dbUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
                             userfstname = fstname
                           , usersndname = sndname
@@ -342,6 +342,7 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- guardGoodForTakeover cid
   user <- guardJustM $ ctxmaybeuser <$> getContext
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
   _ <- dbUpdate $ SetUserCompany (userid user) (companyid newcompany)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan

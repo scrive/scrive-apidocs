@@ -72,6 +72,12 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setCompanyipaddressmasklist : function(v) {
      this.set({"companyipaddressmasklist" : v});
   },
+  newcompanyid : function() {
+    return this.get("newcompanyid");
+  },
+  setNewcompanyid : function(v) {
+    this.set({"newcompanyid" : v});
+  },
   reset : function() {
     if (!this.ready()) return;
     this.set({
@@ -98,6 +104,13 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companycountry : this.companycountry(),
         companyipaddressmasklist : this.companyipaddressmasklist(),
         companysmsoriginator : this.companysmsoriginator()
+    });
+  },
+  mergeToDifferentCompany : function() {
+    return new Submit({
+       url : "/adminonly/companyadmin/merge/" + this.companyid(),
+       method : "POST",
+       companyid : this.newcompanyid()
     });
   },
   refresh : function() {
@@ -171,15 +184,71 @@ var AdminCompanyDetailsView = Backbone.View.extend({
 
       return box;
     },
-    buttonsRow: function() {
+    openMergeToDifferentCompanyModal : function() {
       var model = this.model;
-      var buttonRow = $("<div style='width:300px;height:50px;margin-top:30px;'/>");
+      var nameBox = $("<div style='color:#666666;margin-left:10px;font-size:10px;width:200px;display:inline'>");
+      var input = new InfoTextInput({
+                    infotext : "ID",
+                    value: model.newcompanyid(),
+                    onChange : function(v) {
+                      model.setNewcompanyid(v)
+                      if (new NumberValidation().validateData(v)) {
+                        new Submit({
+                          url: "/adminonly/companyadmin/details/"+ v,
+                          expectedType: "json",
+                          ajaxsuccess: function(resp) {
+                            nameBox.text("Company with name: " + resp.companyname);
+                          },
+                          ajaxerror : function() {
+                            nameBox.text("No company is matching given id");
+                          }
+                        }).sendAjax();
+                      }
+                      else
+                       nameBox.text("Company id must contains only numbers");
+                    }
+                  });
+      var label = $("<label> Company ID: <label>").append(input.el()).append(nameBox);
+      var popup = Confirmation.popup({
+        title : "Merge this company to different company",
+        acceptText: "Merge",
+        content : label,
+        onAccept : function() {
+          model.mergeToDifferentCompany().sendAjax(
+            function() {
+                new FlashMessage({color: "green", content : "Merged"});
+                window.location = "/adminonly/companyadmin/" + model.newcompanyid();
+                return false;
+            },
+            function() {
+              new FlashMessage({color: "red", content : "Failed"});
+              return false;
+            }
+         );
+        }
+      });
+    },
+    buttonsRow: function() {
+      var self = this;
+      var model = this.model;
+      var buttonRow = $("<div style='width:500px;height:50px;margin-top:30px;'/>");
+
+
+      var mergeButton = new Button({
+                text: "Merge to different company"
+              , color: "blue"
+              , size: "tiny"
+              , style: "margin-left:20px"
+              , onClick : function() {
+                  self.openMergeToDifferentCompanyModal();
+                }
+      });
 
       var saveButton = new Button({
                 text: "Change details"
               , color: "green"
               , size: "tiny"
-              , cssClass: "float-left"
+              , style: "margin-left:20px"
               , onClick : function() {
                   model.saveDetails().sendAjax(function() {
                       new FlashMessage({color: "green", content : "Saved"});
@@ -187,7 +256,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
                   });
                 }
           });
-      return buttonRow.append(saveButton.el());
+      return buttonRow.append(mergeButton.el()).append(saveButton.el());
     },
     render: function () {
        var self = this;

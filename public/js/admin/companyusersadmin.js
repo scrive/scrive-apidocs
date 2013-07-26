@@ -105,60 +105,6 @@ var newUserInCompanyButton = function(companyid) {
     } }).el();
 };
 
-var inviteExistingUserToCompany = function(companyid) {
-      return new Button({
-        color: "green",
-        text : "Invite existing user",
-        size : "tiny",
-        style: "float:left;margin-left:10px",
-        onClick : function() {
-        var body = jQuery("<div class='account-body' style='min-height:50px;'>");
-                body.append("<p>Create new user account in company</p>");
-                var table = jQuery("<table/>");
-
-                var tr = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
-                var email = jQuery("<input type='text' name='email' autocomplete='off' />");
-                tr.append(jQuery("<td/>").append(email));
-                table.append(tr);
-                body.append(table);
-
-
-                Confirmation.popup({
-                  onAccept : function() {
-                                var callback = function(t,e,v) {
-                                    e.css("background", "red");
-                                    jQuery(document.createElement('div'))
-                                        .attr("name", "validate-message")
-                                        .css({"font-size": 8, "font-weight": "bold", "color": "red"})
-                                        .append(v.message())
-                                        .appendTo(e.parent());
-                                };
-
-                                email.css("background", "white");
-
-
-                                //delete messages
-                                jQuery('[name=validate-message]').remove();
-
-                                var vresult = [
-                                    email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback})))
-                                    ];
-
-                                if (vresult.every(function(a) {return a;})) {
-                                    new Submit({
-                                        method: "POST",
-                                        url: "/adminonly/companyadmin/users/" + companyid,
-                                        email : email.val(),
-                                        privateinvite : "true"
-                                        }).send();
-                                }
-                            },
-                  title : "Add existing user to company",
-                  acceptText : "Add",
-                  content  : body
-                });
-        }}).el();
-};
 
 window.CompanyUsersListDefinition = function(args) {
     return {
@@ -188,7 +134,7 @@ window.CompanyUsersListDefinition = function(args) {
                       }})
           ]
         }),
-        headerExtras : newUserInCompanyButton(args.companyid).add(inviteExistingUserToCompany(args.companyid))
+        headerExtras : newUserInCompanyButton(args.companyid)
     };
 };
 

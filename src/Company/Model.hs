@@ -40,12 +40,14 @@ data CompanyInfo = CompanyInfo {
   } deriving (Eq, Ord, Show)
 
 data CompanyFilter
-  = CompanyFilterByString String             -- ^ Contains the string anywhere
+  =   CompanyFilterByString String             -- ^ Contains the string anywhere
+    | CompanyHasMoreThenOneUser             -- ^ Has more users then given number
+
 
 companyFilterToWhereClause :: (SqlWhere command) => CompanyFilter -> State command ()
 companyFilterToWhereClause (CompanyFilterByString text) = do
   -- ALL words from 'text' are in ANY of the fields
-  mapM_ (sqlWhere . findWord) (words text)
+  mapM_ (sqlWhere . parenthesize . findWord) (words text)
   where
       findWordInField word field = ("companies." <> field) <+> "ILIKE" <?> sqlwordpat word
       findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country"]
@@ -55,6 +57,10 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+
+companyFilterToWhereClause (CompanyHasMoreThenOneUser) = do
+    sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id) > 1)"
+
 
 data CompanyOrderBy
   = CompanyOrderByName    -- ^ Order by title, alphabetically, case insensitive

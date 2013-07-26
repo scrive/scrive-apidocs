@@ -4,6 +4,9 @@
 (function(window){
 
 var AdminUserDetailsModel = Backbone.Model.extend({
+  defaults : {
+    newcompanyid : ""
+  },
   initialize : function(args) {
     var self = this;
     var user = new User({id : args.userid, forAdmin : true});
@@ -120,6 +123,12 @@ var AdminUserDetailsModel = Backbone.Model.extend({
   setLang : function(v) {
     this.set({"lang" : v});
   },
+  newcompanyid : function() {
+    return this.get("newcompanyid");
+  },
+  setNewcompanyid : function(v) {
+    this.set({"newcompanyid" : v});
+  },
   reset : function() {
     if (!this.ready()) return;
     this.set({
@@ -152,6 +161,13 @@ var AdminUserDetailsModel = Backbone.Model.extend({
        url : "/adminonly/useradmin/sendinviteagain",
        method : "POST",
        userid : this.user().userid()
+    });
+  },
+  moveToDifferentCompany : function() {
+    return new Submit({
+       url : "/adminonly/useradmin/move/" + this.user().userid(),
+       method : "POST",
+       companyid : this.newcompanyid()
     });
   },
   refresh : function() {
@@ -253,21 +269,46 @@ var AdminUserDetailsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Language"))).append($("<td/>").append(this.langSelect().el())));
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company")))
-                                   .append($("<td/>").append($("<a>Link to company</a>").attr("href","/adminonly/companyadmin/" + this.model.user().company().companyid()))));
+                                   .append($("<td/>").append($("<a>Link to company </a>").append($("<span>").text(this.model.user().company().companyname()))
+                                                                .attr("href","/adminonly/companyadmin/" + this.model.user().company().companyid()))));
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Account type"))).append($("<td/>").append(this.accountTypeSelector())));
 
       return box;
     },
     buttonsRow: function() {
+      var self = this;
       var model = this.model;
-      var buttonRow = $("<div style='width:300px;height:50px;margin-top:30px;'/>");
+      var buttonRow = $("<div style='width:500px;height:50px;margin-top:30px;'/>");
+
+      var invitationButton = new Button({
+                text: "Resend invitation"
+              , color: "blue"
+              , size: "tiny"
+              , style: "margin-left:20px"
+              , onClick : function() {
+                  model.resendInvitation().sendAjax(function() {
+                      new FlashMessage({color: "green", content : "Invitation send"});
+                      model.refresh();
+                  });
+                }
+          });
+
+      var moveButton = new Button({
+                text: "Move to different company"
+              , color: "blue"
+              , size: "tiny"
+              , style: "margin-left:20px"
+              , onClick : function() {
+                  self.openMoveToDifferentCompanyModal();
+                }
+      });
 
       var saveButton = new Button({
                 text: "Change details"
               , color: "green"
               , size: "tiny"
-              , cssClass: "float-right"
+              , style: "margin-left:20px"
               , onClick : function() {
                   model.saveDetails().sendAjax(function() {
                       new FlashMessage({color: "green", content : "Saved"});
@@ -276,20 +317,53 @@ var AdminUserDetailsView = Backbone.View.extend({
                 }
           });
 
-      var invitationButton = new Button({
-                text: "Resend invitation"
-              , color: "blue"
-              , size: "tiny"
-              , cssClass: "float-left"
-              , onClick : function() {
-                  model.resendInvitation().sendAjax(function() {
-                      new FlashMessage({color: "green", content : "Invitation send"});
-                      model.refresh();
-                  });
-                }
-          });
-      return buttonRow.append(saveButton.el()).append(invitationButton.el());
+      return buttonRow.append(invitationButton.el()).append(moveButton.el()).append(saveButton.el());
 
+    },
+    openMoveToDifferentCompanyModal : function() {
+      var model = this.model;
+      var nameBox = $("<div style='color:#666666;margin-left:10px;font-size:10px;width:200px;display:inline'>");
+      var input = new InfoTextInput({
+                    infotext : "ID",
+                    value: model.newcompanyid(),
+                    onChange : function(v) {
+                      model.setNewcompanyid(v)
+                      if (new NumberValidation().validateData(v)) {
+                        new Submit({
+                          url: "/adminonly/companyadmin/details/"+ v,
+                          expectedType: "json",
+                          ajaxsuccess: function(resp) {
+                            nameBox.text("Company with name: " + resp.companyname);
+                          },
+                          ajaxerror : function() {
+                            nameBox.text("No company is matching given id");
+                          }
+                        }).sendAjax();
+                      }
+                      else
+                       nameBox.text("Company id must contains only numbers");
+                    }
+                  });
+      var label = $("<label> Company ID: <label>").append(input.el()).append(nameBox);
+      var popup = Confirmation.popup({
+        title : "Move user to different company",
+        acceptText: "Move",
+        content : label,
+        onAccept : function() {
+          model.moveToDifferentCompany().sendAjax(
+            function() {
+                new FlashMessage({color: "green", content : "Moved"});
+                model.refresh();
+                popup.close();
+                return false;
+            },
+            function() {
+              new FlashMessage({color: "red", content : "Failed"});
+              return false;
+            }
+         );
+        }
+      });
     },
     render: function () {
        var self = this;

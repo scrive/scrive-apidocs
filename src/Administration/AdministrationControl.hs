@@ -89,7 +89,7 @@ adminonlyRoutes =
         , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
         , dir "useradmin" $ dir "details" $ hGet $ toK1 $ handleUserGetProfile
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
-
+        , dir "useradmin" $ dir "move" $ hPost $ toK1 $ handleMoveUserToDifferentCompany
 
         , dir "useradmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminUserUsageStatsDays
         , dir "useradmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminUserUsageStatsMonths
@@ -99,6 +99,7 @@ adminonlyRoutes =
         , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
         , dir "companyadmin" $ dir "details" $ hGet $ toK1 $ handleCompanyGetProfile
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
+        , dir "companyadmin" $ dir "merge" $ hPost $ toK1 $ handleMergeToOtherCompany
 
         , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
         , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
@@ -202,7 +203,6 @@ jsonCompanies = onlySalesOrAdmin $ do
       sorting = companySortingFromParams params
       (offset, limit) = companyPaginationFromParams companiesPageSize params
       companiesPageSize = 100
-
     allCompanies <- dbQuery $ GetCompanies filters sorting offset limit
     let companies = PagedList { list       = allCompanies
                               , params     = params
@@ -225,9 +225,13 @@ jsonCompanies = onlySalesOrAdmin $ do
 
 companySearchingFromParams :: ListParams -> [CompanyFilter]
 companySearchingFromParams params =
-  case listParamsSearching params of
+  (case listParamsSearching params of
     "" -> []
-    x -> [CompanyFilterByString x]
+    x -> [CompanyFilterByString x])
+  ++
+  (case (listParamsFilters params) of
+    (("users","all"):_) -> []
+    _ -> [CompanyHasMoreThenOneUser])
 
 companySortingFromParams :: ListParams -> [AscDesc CompanyOrderBy]
 companySortingFromParams params =
@@ -335,6 +339,29 @@ handleUserChange uid = onlySalesOrAdmin $ do
   _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ uid
 
+
+handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
+handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
+  cid <- guardJustM $ readField "companyid"
+  _ <- dbUpdate $ SetUserCompany uid cid
+  return ()
+
+
+handleMergeToOtherCompany :: Kontrakcja m => CompanyID -> m ()
+handleMergeToOtherCompany scid = onlySalesOrAdmin $ do
+  tcid <- guardJustM $ readField "companyid"
+  users <- dbQuery $ GetCompanyAccounts scid
+  forM_ users $ \u -> do
+      _ <- dbUpdate $ SetUserCompany (userid u) tcid
+      return ()
+  invites <- dbQuery $ GetCompanyInvites scid
+  forM_ invites $ \i-> do
+      _ <- dbUpdate $ RemoveCompanyInvite scid (invitedemail i)
+      return ()
+
+
+
+
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m ()
 handleCompanyChange companyid = onlySalesOrAdmin $ do
@@ -384,27 +411,9 @@ handleCreateUser = onlySalesOrAdmin $ do
 
 handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
-  privateinvite <- isFieldSet "privateinvite"
-  if privateinvite
-    then handlePrivateUserCompanyInvite companyid
-    else handleCreateCompanyUser companyid
+  handleCreateCompanyUser companyid
   return $ LoopBack
 
-
-handlePrivateUserCompanyInvite :: Kontrakcja m => CompanyID -> m ()
-handlePrivateUserCompanyInvite companyid = onlySalesOrAdmin $ do
-  ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  email <- Email <$> getCriticalField asValidEmail "email"
-  existinguser <- guardJustM $ dbQuery $ GetUserByEmail email
-  _ <- dbUpdate $ AddCompanyInvite CompanyInvite{
-          invitedemail = email
-        , invitedfstname = getFirstName existinguser
-        , invitedsndname = getLastName existinguser
-        , invitingcompany = companyid
-        }
-  company <- guardJustM $ dbQuery $ GetCompany companyid
-  sendTakeoverPrivateUserMail user company existinguser
 
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
 handleCreateCompanyUser companyid = onlySalesOrAdmin $ do

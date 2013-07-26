@@ -956,6 +956,14 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   user5 <- addNewRandomUser
   user6 <- addNewRandomUser
 
+  -- | This test is good only for not admins
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user2) False
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user3) False
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user4) False
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user5) False
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user6) False
+
   doc1 <- addRandomDocumentWithAuthorAndCondition user1 (isTemplate)
   doc2 <- addRandomDocumentWithAuthorAndCondition user2 (isTemplate)
   doc3 <- addRandomDocumentWithAuthorAndCondition user3 (isTemplate)
