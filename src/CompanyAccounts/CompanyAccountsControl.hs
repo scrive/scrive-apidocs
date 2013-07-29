@@ -8,7 +8,7 @@ module CompanyAccounts.CompanyAccountsControl (
   , handlePostBecomeCompanyAccount
   -- this shares some handy stuff with the adminonly section
   , handleCompanyAccountsForAdminOnly
-  , sendTakeoverPrivateUserMail
+  , sendTakeoverSingleUserMail
   , sendNewCompanyUserMail
   ) where
 
@@ -34,7 +34,6 @@ import ListUtil
 import Mails.SendMail
 import Happstack.Fields
 import Util.FlashUtil
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import User.Action
@@ -172,16 +171,12 @@ companyAccountsPageSize = 100
 handleAddCompanyAccount :: Kontrakcja m => m JSValue
 handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   ctx <- getContext
-  memail <- getOptionalField asValidEmail "email"
+  email <-  guardJustM $ getOptionalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
-  mexistinguser <- maybe (return Nothing) (dbQuery . GetUserByEmail . Email) memail
-  mexistingcompany <- case mexistinguser of
-                           Just u -> Just <$> getCompanyForUser u
-                           Nothing -> return Nothing
-  minvitee <-
-    case (memail, mexistinguser, mexistingcompany) of
-      (Just email, Nothing, Nothing) -> do
+  mexistinguser <- dbQuery $ GetUserByEmail $ Email email
+  minvitee <- case (mexistinguser) of
+      (Nothing) -> do
         --create a new company user
         newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,False) (ctxlang ctx)
         _ <- dbUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
@@ -196,21 +191,18 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
         newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
         return $ Just newuser
-      (Just _email, Just existinguser, Nothing) -> do
-        --send a takeover invite to the existing user
-        _ <- sendTakeoverPrivateUserMail user company existinguser
-        return $ Just existinguser
-      (Just _email, Just existinguser, Just existingcompany) | existingcompany /= company -> do
-        --this is a corner case where someone is trying to takeover someone in another company
-        --we send emails to tell people, but we don't send any activation links
-        _ <- sendTakeoverCompanyInternalWarningMail user company existinguser
-        return $ Nothing
-      _ -> return Nothing
+      (Just existinguser) -> do
+        -- If user exists we allow takeover only if he is the only user in his company
+        users <- dbQuery $ GetCompanyAccounts $ usercompany existinguser
+        case users of
+         [_] -> do
+                  _ <- sendTakeoverSingleUserMail user company existinguser
+                  return $ Just existinguser
+         _ -> do  return $ Nothing
 
   -- record the invite and flash a message
   if (isJust minvitee)
     then do
-        email <- guardJust memail
         _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
                 invitedemail = Email email
               , invitedfstname = fstname
@@ -229,30 +221,13 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 -}
 handleResendToCompanyAccount :: Kontrakcja m => m JSValue
 handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
-  resendid <- getCriticalField asValidUserID "resendid"
   resendemail <- getCriticalField asValidEmail "resendemail"
-  muserbyid <- dbQuery $ GetUserByID resendid
-  mcompanybyid <- case muserbyid of
-                           Just u -> Just <$> getCompanyForUser u
-                           Nothing -> return Nothing
-  minvite <- dbQuery $ GetCompanyInvite (companyid company) (Email resendemail)
-  muserbyemail <- dbQuery $ GetUserByEmail (Email resendemail)
-
-  resent <-
-    case (muserbyid, mcompanybyid, minvite, muserbyemail) of
-      (Just userbyid, Just companybyid, Just _invite, Just _userbyemail) |
-        company == companybyid
-        && isNothing (userhasacceptedtermsofservice userbyid) -> do
-          --this is an existing company user who just hasn't activated yet,
-          _ <- sendNewCompanyUserMail user company userbyid
-          return True
-      (Nothing, Nothing, Just _invite, Just userbyemail)-> do
-        -- this is a company user
-          _ <- sendTakeoverCompanyInternalWarningMail user company userbyemail
-          return False
-      _ -> return False
-
-  runJSONGenT $ value "resent" resent
+  _ <- guardJustM $ dbQuery $ GetCompanyInvite (companyid company) (Email resendemail)
+  newuser <- guardJustM $ dbQuery $ GetUserByEmail (Email resendemail)
+  if (usercompany newuser /= companyid company)
+     then  sendTakeoverSingleUserMail user company newuser
+     else  sendNewCompanyUserMail user company newuser
+  runJSONGenT $ value "resent" True
 
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
@@ -263,27 +238,14 @@ sendNewCompanyUserMail inviter company user = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
 
-sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
-sendTakeoverPrivateUserMail inviter company user = do
+sendTakeoverSingleUserMail :: Kontrakcja m => User -> Company -> User -> m ()
+sendTakeoverSingleUserMail inviter company user = do
   ctx <- getContext
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  mail <- mailTakeoverPrivateUserInvite ctx user inviter company companyui (LinkCompanyTakeover (companyid company))
+  mail <- mailTakeoverSingleUserInvite ctx user inviter company companyui (LinkCompanyTakeover (companyid company))
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()
-sendTakeoverCompanyInternalWarningMail inviter company user = do
-  ctx <- getContext
-  let content = "Oh dear!  " ++ getFullName inviter
-                ++ " &lt;" ++ getEmail inviter ++ "&gt;"
-                ++ " in company " ++ getCompanyName company
-                ++ " has asked to takeover " ++ getFullName user
-                ++ " &lt;" ++ getEmail user ++ "&gt;"
-                ++ " who is already in a company."
-  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-        to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
-      , title = "Attempted Company Account Takeover"
-      , content = content
-  }
+
 
 {- |
     Handles a role change by switching a user from

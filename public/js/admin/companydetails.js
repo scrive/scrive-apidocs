@@ -134,6 +134,9 @@ var AdminCompanyDetailsView = Backbone.View.extend({
       var table = $("<table style='border-collapse: separate; border-spacing: 10px;'/>");
       box.append(table);
 
+      var idinput = $("<input type='text' readonly='' style='color:#666666'/>").val(model.company().companyid());
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company ID"))).append($("<td/>").append(idinput)));
+
       var companynameinput = $("<input type='text'/>").val(model.companyname());
       companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());

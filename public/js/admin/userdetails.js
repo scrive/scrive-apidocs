@@ -228,6 +228,9 @@ var AdminUserDetailsView = Backbone.View.extend({
       var table = $("<table style='border-collapse: separate; border-spacing: 10px;'/>");
       box.append(table);
 
+      var idinput = $("<input type='text' readonly='' style='color:#666666'/>").val(model.user().userid());
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("User ID"))).append($("<td/>").append(idinput)));
+
       var fstnameinput = $("<input type='text' name='fstname'/>").val(model.fstname());
       fstnameinput.change(function() {
           model.setFstname(fstnameinput.val());

@@ -867,6 +867,7 @@ javascriptLocalisation =
               , deleteModalTitle : "$_delete()$"
               , deleteFailedHasDocuments : "$_flashMessageUserHasLiveDocs()$"
               , companyInviteSent : "$_flashCompanyAccountInviteSent()$"
+              , companyInviteNotSent : "$_flashCompanyAccountInviteNotSent()$"
               , companyInviteResent : "$_flashCompanyAccountInviteResent()$"
               , companyAccountDeleted : "$_flashMessageCompanyAccountDeleted()$"
               , columnName :  "$_name()$"

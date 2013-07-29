@@ -77,6 +77,8 @@ var CompanyAccountsModel = Backbone.Model.extend({
                           self.userList().recall();
                           if (JSON.parse(resp).added)
                              new FlashMessage({color: "green", content : localization.account.companyAccounts.companyInviteSent});
+                          else
+                             new FlashMessage({color: "red", content : localization.account.companyAccounts.companyInviteNotSent});
                           popup.close();
                         },
                         mixpanel : {name : 'Accept',  props : {'Accept' : 'new account'}}

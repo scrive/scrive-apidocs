@@ -58,7 +58,6 @@ import ListUtil
 import Text.JSON
 import Mails.Model
 import Util.HasSomeCompanyInfo
-import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import User.History.Model
