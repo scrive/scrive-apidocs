@@ -101,7 +101,7 @@ main = Log.withLogger $ do
          runScheduler SMS.Events.processEvents
      , forkCron_ True "DocumentAPICallback" 10 $ do
          runScheduler $ actionQueue documentAPICallback
-     , forkCron_ True "RecurlySync" (60 * 60) . inDB $ do
+     , forkCron_ True "RecurlySync" (55 * 60) . inDB $ do
          mtime <- getMinutesTime
          ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
          temps <- snd `liftM` liftIO (readMVar templates)

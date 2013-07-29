@@ -40,6 +40,7 @@ import User.Action
 import User.Utils
 import User.UserControl
 import User.History.Model
+import Payments.Model
 
 {- |
     Gets the ajax data for the company accounts list.
@@ -194,8 +195,9 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
       (Just existinguser) -> do
         -- If user exists we allow takeover only if he is the only user in his company
         users <- dbQuery $ GetCompanyAccounts $ usercompany existinguser
-        case users of
-         [_] -> do
+        mpaymentplan <- dbQuery $ GetPaymentPlan $ usercompany existinguser
+        case (users,fromMaybe NoProvider (ppPaymentPlanProvider <$> mpaymentplan)) of
+         ([_],NoProvider) -> do
                   _ <- sendTakeoverSingleUserMail user company existinguser
                   return $ Just existinguser
          _ -> do  return $ Nothing

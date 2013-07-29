@@ -186,8 +186,8 @@ instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
              "              ON (ccount.company_id = payment_plans.company_id)" <>
              "  WHERE provider = ? " <>
              "    AND (sync_date < ? " <> -- stuff older than 7 days needs sync
-             "     OR  (q > quantity " <> -- current # of users > cache
-             "     OR   q <> quantity_pending)) ") -- current # of users <> pending cache
+             "     OR (CASE WHEN q IS NULL THEN 0 ELSE q END) <> quantity " <> -- current # of users > cache
+             "     OR (CASE WHEN q IS NULL THEN 0 ELSE q END) <> quantity_pending) ") -- current # of users <> pending cache
             [toSql prov, toSql past]
     kFold fetchPaymentPlans []
 

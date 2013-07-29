@@ -121,6 +121,7 @@ handleChangePlan = do
            liftIO $ cancelSubscription curl_exe recurlyAPIKey $ subID subscription
       _ <- cachePlan time Stats.CancelAction ac subscription { subState = "canceled" } is (usercompany user) (ppDunningStep plan) (ppDunningDate plan)
       return ()
+    RTerminate -> return ()
 
 cachePlan :: (MonadDB m) => MinutesTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> CompanyID -> Maybe Int -> Maybe MinutesTime -> m Bool
 cachePlan time pa ac subscription invoicestatus cid mds mdd = do
@@ -187,9 +188,11 @@ handleSyncWithRecurly hostpart mailsconfig templates recurlyapikey time = do
                   ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity False
                   when_ (isRight ms) $
                     cachePlan time Stats.ChangeAction ac (fromRight ms) is cid (ppDunningStep plan) (ppDunningDate plan)
-                _ -> do
-                  _ <- cachePlan time Stats.SyncAction ac subscription is cid (ppDunningStep plan) (ppDunningDate plan)
-                  return ()
+                RTerminate ->  do -- If we will find empty company while doing synch, we whole recurly connection
+                  ms <- liftIO $ terminateSubscription curl_exe recurlyapikey (subID subscription) NoRefund
+                  when_ (isRight ms) $
+                     dbUpdate $ DeletePaymentPlan cid
+                _ -> return ()
         _ -> Log.payments $ "Could not parse subscription from Recurly."
   dunnings <- dbQuery $ PaymentPlansExpiredDunning time
   Log.payments $ "Found " ++ show (length dunnings) ++ " plans requiring dunning email."
