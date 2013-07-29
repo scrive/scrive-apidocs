@@ -207,6 +207,11 @@ var SelectView = Backbone.View.extend({
                      );
         button.append("<div class='select-button-right' />");
 
+        button.click(function(){
+          model.toggleExpand();
+          return false;
+        });
+
         if (this.model.hasRemoveOption())
             button.append($("<div class='closer'/>").click(function() { model.onRemove(); model.set({"expanded" : false}); }));
 
@@ -219,7 +224,6 @@ var SelectView = Backbone.View.extend({
         //If we are rerendering we remove expanded part.
         if (this.expButton != undefined) $(this.expButton).remove();
 
-
         if (!model.expanded()) {
           // We are rerendering button if it is not expanded. We start with cleaning old buttons
           $(this.el).empty()
@@ -227,12 +231,7 @@ var SelectView = Backbone.View.extend({
                     .attr("style",this.model.style())
                     .css('color',this.model.color())
                     .css("border", this.model.border())
-                    .append(this.button().click(
-                        function(){
-                            model.toggleExpand();
-                            return false;
-                        })
-                    );
+                    .append(this.button());
         }
         else
             {
