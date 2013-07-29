@@ -475,6 +475,11 @@ public class PDFSeal {
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
+            if( person.email!=null && person.email!="" ) {
+                para = createParagraph(person.email, 10, person.emailverified ? Font.ITALIC : Font.NORMAL, lightTextColor);
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
+            }
             for( Field field : person.fields ) {
                 if( field.valueBase64!=null &&
                     field.valueBase64!="" &&
