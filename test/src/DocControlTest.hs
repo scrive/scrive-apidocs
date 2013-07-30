@@ -278,7 +278,7 @@ testDocumentDeleteInBulk = do
 
     ctx <- (\c -> c { ctxmaybeuser = Just author})
       <$> mkContext defaultValue
-    req <- mkRequest POST (map (\doc -> ("doccheck", inText (show $ documentid doc))) docs)
+    req <- mkRequest POST [("documentids",  inText $ (show $ documentid <$> docs))]
 
     _ <- runTestKontra req ctx $ handleDelete
     docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
