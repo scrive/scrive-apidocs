@@ -127,7 +127,7 @@ handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
 handlePostChangeEmail uid hash = withUserPost $ do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   Context{ctxmaybeuser = Just user, ctxipnumber, ctxtime} <- getContext
-  mpassword <- getRequiredField asDirtyPassword "password"
+  mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return ()
     Just password | verifyPassword (userpassword user) password -> do
@@ -333,8 +333,8 @@ handleAccountSetupPostWithMethod uid token sm = do
            value "ok" False
            value "error" ("already_active" :: String)
     else do
-      mfstname <- getRequiredField asValidName "fstname"
-      msndname <- getRequiredField asValidName "sndname"
+      mfstname <- getOptionalField asValidName "fstname"
+      msndname <- getOptionalField asValidName "sndname"
       mactivateduser <- handleActivate mfstname msndname user sm
       case mactivateduser of
         Nothing -> runJSONGenT $ do
@@ -393,20 +393,17 @@ handleAccessNewAccountPost uid token = do
     Just user -> do
       switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
-      mpassword <- getRequiredField Good "password"
-      case mpassword of
-        Just password -> do
-          _ <- dbUpdate $ DeleteAction accessNewAccount uid
-          passwordhash <- createPassword password
-          _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-          _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
-          addFlashM flashMessageUserPasswordChanged
+      password <- guardJustM $ getField "password"
+      _ <- dbUpdate $ DeleteAction accessNewAccount uid
+      passwordhash <- createPassword password
+      _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+      _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+      addFlashM flashMessageUserPasswordChanged
 
-          logUserToContext $ Just user
-          runJSONGenT $ do
-            value "logged" True
-            value "location" $ show LinkArchive
-        Nothing -> internalError
+      logUserToContext $ Just user
+      runJSONGenT $ do
+          value "logged" True
+          value "location" $ show LinkArchive
     Nothing -> runJSONGenT $ value "logged" False
 
 {- |
@@ -448,20 +445,17 @@ handlePasswordReminderPost uid token = do
     Just user -> do
       switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
-      mpassword <- getRequiredField Good "password"
-      case mpassword of
-        Just password -> do
-          _ <- dbUpdate $ DeleteAction passwordReminder uid
-          passwordhash <- createPassword password
-          _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-          _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
-          addFlashM flashMessageUserPasswordChanged
+      password <- guardJustM $ getField "password"
+      _ <- dbUpdate $ DeleteAction passwordReminder uid
+      passwordhash <- createPassword password
+      _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+      _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+      addFlashM flashMessageUserPasswordChanged
 
-          logUserToContext $ Just user
-          runJSONGenT $ do
-            value "logged" True
-            value "location" $ show LinkDesignView
-        Nothing -> internalError
+      logUserToContext $ Just user
+      runJSONGenT $ do
+          value "logged" True
+          value "location" $ show LinkDesignView
     Nothing -> runJSONGenT $ value "logged" False
 
 -- please treat this function like a public query form, it's not secure

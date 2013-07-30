@@ -166,7 +166,7 @@ apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
-  mnewemail <- lift $ getRequiredField asValidEmail "newemail"
+  mnewemail <- lift $ getOptionalField asValidEmail "newemail"
   case (Email <$> mnewemail) of
     (Just newemail) -> do
        mexistinguser <- dbQuery $ GetUserByEmail newemail

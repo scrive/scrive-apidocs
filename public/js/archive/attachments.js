@@ -62,7 +62,7 @@ window.AttachmentsListDefinition = function(archive) {
                                     new Submit({
                                                 url: "/a/share",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                attachmentids: "["+ _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.attachments.share.successMessage});
                                                     archive.attachments().recall();
@@ -96,7 +96,7 @@ window.AttachmentsListDefinition = function(archive) {
                                     var confirmationPopup = new Submit({
                                                 url: "/a/delete",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                attachmentids: "["+ _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.attachments.remove.successMessage});
                                                     archive.attachments().recall();

@@ -41,7 +41,7 @@ handleAccountSetupFromSign document signatorylink = do
   ctx <- getContext
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
-  email <- guardJustM $ getRequiredField asValidEmail "email"
+  email <- getCriticalField asValidEmail "email"
   muser <- dbQuery $ GetUserByEmail (Email email)
   user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (documentlang document))
                 return
@@ -96,7 +96,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 dbUpdate $ SaveDocumentForUser d actvuser s actor
 
               when (haspassword) $ do
-                mpassword <- getRequiredField asValidPassword "password"
+                mpassword <- getOptionalField asValidPassword "password"
                 _ <- case (mpassword) of
                     Just password -> do
                         passwordhash <- createPassword password
