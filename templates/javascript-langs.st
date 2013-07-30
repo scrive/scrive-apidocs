@@ -481,13 +481,13 @@ javascriptLocalisation =
                       team         : {
                       name : "$_paymentPlanTeam()$",
                       tag :"$_paymentPlanTeamTag()$",
-                      price : "$_paymentsTeamPrice()$<span class='aster'>*</span>",
+                      price : "$_paymentsTeamPrice()$",
                       price3 : "$_paymentPlanPerUserPerMonth()$"
                     }
                     , form : {
                       name : "$_paymentPlanForm()$",
                       tag : "$_paymentPlanFormTag()$",
-                      price : "$_paymentPlanFormPrice()$<span class='aster'>*</span>",
+                      price : "$_paymentPlanFormPrice()$",
                       price3 : "$_paymentPlanPerMonthPerDoc()$"
                     }
                     , enterprise : {
