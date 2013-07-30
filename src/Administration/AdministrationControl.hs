@@ -675,7 +675,7 @@ resealFile docid = onlyAdmin $ do
   doc <- do
     doc' <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
     when_ (isDocumentError doc') $ do
-       guardTrueM $ dbUpdate $ FixClosedErroredDocument docid actor
+       dbUpdate $ FixClosedErroredDocument docid actor
     guardJustM  $ dbQuery $ GetDocumentByDocumentID docid
   res <- sealDocument doc
   case res of

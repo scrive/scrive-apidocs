@@ -15,13 +15,6 @@ import qualified Log
 
 import KontraError
 
-guardTrue :: MonadBase IO m => Bool -> m ()
-guardTrue True  = return ()
-guardTrue False = internalError
-
-guardTrueM :: MonadBase IO m => m Bool -> m ()
-guardTrueM action = guardTrue =<< action
-
 {- |
    Get the value from a Just or fail if it is Nothing
  -}
@@ -51,7 +44,7 @@ guardJustM404 action = guardJust404 =<< action
  -}
 guardRight' :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => Either msg a -> m a
 guardRight' (Right val) = return val
-guardRight' (Left  msg) = do 
+guardRight' (Left  msg) = do
   Log.debug (show msg)
   internalError
 

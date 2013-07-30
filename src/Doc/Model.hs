@@ -1128,9 +1128,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
     return ()
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument () where
   update (FixClosedErroredDocument did _actor) = do
-    kRun01 $ sqlUpdate "documents" $ do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
         sqlSet "status" Closed
         sqlWhereEq "id" did
         sqlWhereEq "status" $ DocumentError undefined
