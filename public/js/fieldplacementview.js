@@ -914,6 +914,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             place.append(this.fieldSelector());
         } else if(field.noName()) {
             place.append(this.fieldNamer());
+            place.find('input').focus();
         } else if(view.hasTypeSetter() && !field.isCsvField()) {
             var editor = this.editor();
             place.append(editor.el());
