@@ -125,13 +125,13 @@ test_addingExistingCompanyUserAsCompanyAccount = do
                         ]
   (res, _) <- runTestKontra req ctx $ handleAddCompanyAccount
 
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" False)
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
 
   Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
   assertEqual "Invited user's company stays the same" (usercompany updatedexistinguser)
                                                       (companyid existingcompany)
 
-  assertCompanyInvitesAre company []
+  assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
