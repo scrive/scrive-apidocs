@@ -152,9 +152,10 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
 
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case sfType sf of
-       SignatureFT _ -> case (sfPlacements sf) of
-                           [] -> maybeToList $ fieldJPEGFromSignatureField (sfValue sf)
-                           plsms -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
+       SignatureFT _ -> case (sfPlacements sf,drop 1 $ dropWhile (\e -> e /= ',') $ sfValue sf) of
+                           (_,"") -> []  -- We skip signature that don't have a drawing
+                           ([],v) -> maybeToList $ fieldJPEGFromSignatureField v
+                           (plsms,v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) plsms
        CheckboxFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
        _ -> for (sfPlacements sf) $ \p -> case (addEmpty, sfValue sf, sfType sf) of
                                                 (True,"",CustomFT n _) -> fieldFromPlacement True n p
@@ -185,7 +186,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  }
     fieldJPEGFromPlacement v placement =
           Just $ Seal.FieldJPG
-                 { valueBase64           = drop 1 $ dropWhile (\e -> e /= ',') v
+                 { valueBase64           = v
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
@@ -197,7 +198,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  }
     fieldJPEGFromSignatureField v =
           Just $ Seal.FieldJPG
-                 { valueBase64           = drop 1 $ dropWhile (\e -> e /= ',') v
+                 { valueBase64           = v
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
