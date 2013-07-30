@@ -107,9 +107,12 @@ window.FieldPlacement = Backbone.Model.extend({
        this.off();
     },
     fixWHRel : function(w,h) {
+      console.log("Fixing sizes " + w + "  " + h)
       var page =  this.field().signatory().document().mainfile().page(this.get("page"));
-      if (page != undefined && page.width() != undefined && page.height() != undefined)
+      if (page != undefined && page.width() != undefined && page.height() != undefined) {
+          console.log("Fixing sizes " + w + "  " + h + " " + page.width() + " " + page.height())
           this.set({ wrel : (w / page.width()) , hrel : (h / page.height()) },    {silent : true});
+      }
     },
     draftData : function() {
       var document = this.field().signatory().document();

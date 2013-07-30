@@ -59,7 +59,6 @@ import KontraLink
 import MagicHash
 import Happstack.Fields
 import Utils.Monad
-import Utils.Prelude
 import Utils.Read
 import Utils.String
 import Redirect
@@ -323,9 +322,7 @@ handleFilePages fid = do
       -- Such architecture would allow incremental rendering of pages
       -- on the server side also, thus improving user experience a
       -- lot.
-      simpleJsonResponse $ runJSONGen $ J.objects "pages" $ for pages $ \_ -> do
-        J.value "width"  (1::Int)
-        J.value "height" (1::Int)
+      simpleJsonResponse $ runJSONGen $ J.value "pages" $ length pages
 
 {- |
    Get some html to display the images of the files
