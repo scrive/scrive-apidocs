@@ -43,7 +43,6 @@ import LoginTest
 import SignupTest
 import AccountInfoTest
 import MailModelTest
-import RedirectTest
 import UserStateTest
 import UserHistoryTest
 import CSVUtilTest
@@ -79,7 +78,6 @@ allTests = tail tests
       , ("login", const loginTests)
       , ("signup", const signupTests)
       , ("accountinfo", const accountInfoTests)
-      , ("redirect", const redirectTests)
       , ("userstate", const userStateTests)
       , ("userhistory", const userHistoryTests)
       , ("csvutil", const $ const csvUtilTests)

@@ -27,7 +27,6 @@ import Company.CompanyUI
 import Kontra
 import KontraLink
 import Happstack.Fields
-import Redirect
 import Routing (hGet, hPost, toK0, toK1)
 import User.Utils
 import Util.MonadUtils

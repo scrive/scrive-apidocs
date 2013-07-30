@@ -390,7 +390,7 @@ handleSignWithEleg documentid signatorylinkid magichash fields screenshots provi
   case esigninfo of
     BankID.Problem msg -> return $ Left msg
     BankID.Mismatch msg sfn sln spn -> do
-      document <- guardRightM' $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
       handleMismatch document signatorylinkid msg sfn sln spn
       return $ Left msg
     BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots

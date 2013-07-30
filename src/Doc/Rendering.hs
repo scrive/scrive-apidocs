@@ -42,16 +42,9 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Log
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
-import Redirect
 import File.Storage
 import Data.Char
 import Data.Maybe
-
-instance GuardRight FileError where
-  guardRight (Right b)            = return b
-  guardRight (Left fe)            = do
-                                     Log.error $ show fe
-                                     internalError
 
 scaleForPreview :: BS.ByteString -> IO BS.ByteString
 scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do

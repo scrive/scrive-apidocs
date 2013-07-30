@@ -27,29 +27,18 @@ guardJust = maybe internalError return
 guardJustM :: MonadBase IO m => m (Maybe b) -> m b
 guardJustM action = guardJust =<< action
 
-{- |
-   Get the value from a Just or fail if it is Nothing
- -}
-guardJust404 :: MonadBase IO m => Maybe a -> m a
-guardJust404 = maybe respond404 return
-
-{- |
-   Get the value from a Just or fail if it is Nothing
- -}
-guardJustM404 :: MonadBase IO m => m (Maybe b) -> m b
-guardJustM404 action = guardJust404 =<< action
 
 {- |
    Get the value from a Right or log an error and fail if it is Left
  -}
-guardRight' :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => Either msg a -> m a
-guardRight' (Right val) = return val
-guardRight' (Left  msg) = do
+guardRight :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => Either msg a -> m a
+guardRight (Right val) = return val
+guardRight (Left  msg) = do
   Log.debug (show msg)
   internalError
 
 {- |
    Get the value from a Right or log an error and fail if it is a left
  -}
-guardRightM' :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => m (Either msg b) -> m b
-guardRightM' action = guardRight' =<< action
+guardRightM :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => m (Either msg b) -> m b
+guardRightM action = guardRight =<< action

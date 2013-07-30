@@ -233,6 +233,7 @@ handleSignShow documentid
  -}
 handleIssueAuthorGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueAuthorGoToSignview docid = do
+  guardLoggedIn
   doc <- guardRightM $ getDocByDocIDForAuthor docid
   user <- guardJustM $ ctxmaybeuser <$> getContext
   case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
@@ -241,6 +242,7 @@ handleIssueAuthorGoToSignview docid = do
 
 handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m Response
 handleEvidenceAttachment docid file = do
+  guardLoggedIn
   doc <- guardRightM $ getDocByDocID docid
   es <- EvidenceAttachments.fetch doc
   e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
@@ -338,6 +340,7 @@ showPage fileid pageno = do
 -- | Preview when authorized user is logged in (without magic hash)
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = do
+   guardLoggedIn
    _ <- guardRightM $ getDocByDocID docid
    if (fileid == (unsafeFileID 0))
     then do
@@ -504,14 +507,13 @@ checkFileAccessWith fid msid mmh mdid mattid =
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
        when (not $ fileInDocument doc fid) $ internalError
     (_,_,Just did,_) -> do
+       guardLoggedIn
        doc <- guardRightM $ getDocByDocID did
        when (not $ fileInDocument doc fid) $ internalError
     (_,_,_,Just attid) -> do
-       ctx <- getContext
-       case ctxmaybeuser ctx of
-         Nothing -> internalError
-         Just user -> do
-           atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+       guardLoggedIn
+       user <- guardJustM $ ctxmaybeuser <$> getContext
+       atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
                                             ]
@@ -520,7 +522,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
                                             ]
                                             []
                                             (0,1)
-           when (length atts /= 1) $
+       when (length atts /= 1) $
                 internalError
     _ -> internalError
 
@@ -582,6 +584,7 @@ prepareEmailPreview docid slid = do
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m JSValue
 handleSetAttachments did = do
+    guardLoggedIn
     doc <- guardRightM $ getDocByDocIDForAuthor did
     attachments <- getAttachments doc 0
     Log.debug $ "Setting attachments to " ++ show attachments
@@ -681,6 +684,7 @@ handleVerify = do
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do
+  guardLoggedIn
   doc <- guardRightM $ getDocByDocID docid
   when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
   runJSONGenT $ return ()

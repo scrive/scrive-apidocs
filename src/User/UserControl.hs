@@ -327,7 +327,7 @@ handleAccountSetupGetWithMethod uid token sm = do
 
 handleAccountSetupPostWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPostWithMethod uid token sm = do
-  user <- guardJustM404 $ getUserAccountRequestUser uid token
+  user <- guardJustM $ getUserAccountRequestUser uid token
   if isJust $ userhasacceptedtermsofservice user
     then runJSONGenT $ do
            value "ok" False

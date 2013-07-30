@@ -60,7 +60,7 @@ handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
-    docs <- guardRightM' $ getDocsByDocIDs docids
+    docs <- guardRightM $ getDocsByDocIDs docids
     forM_ docs $ \doc -> do
               let usl = getSigLinkFor doc user
                   csl = (getAuthorSigLink $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
@@ -72,11 +72,11 @@ handleDelete = do
                   Pending -> if (isAuthor msl)
                                 then do
                                    dbUpdate $ CancelDocument (documentid doc) actor
-                                   doc' <- guardRightM' $ getDocByDocID (documentid doc)
+                                   doc' <- guardRightM $ getDocByDocID (documentid doc)
                                    postDocumentCanceledChange doc'
                                 else do
                                    dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
-                                   doc' <- guardRightM' $ getDocByDocID (documentid doc)
+                                   doc' <- guardRightM $ getDocByDocID (documentid doc)
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl)
                   _ -> return ()
               dbUpdate $ ArchiveDocument (userid user) (documentid doc) actor
@@ -105,12 +105,12 @@ handleCancel :: Kontrakcja m =>  m JSValue
 handleCancel = do
   docids <- getCriticalFieldList asValidDocID "doccheck"
   forM_ docids $ \docid -> do
-      doc <- guardRightM' $ getDocByDocID docid
+      doc <- guardRightM $ getDocByDocID docid
       actor <- guardJustM $ mkAuthorActor <$> getContext
       if (documentstatus doc == Pending)
         then do
            dbUpdate $ CancelDocument (documentid doc) actor
-           doc' <- guardRightM' $ getDocByDocID $ docid
+           doc' <- guardRightM $ getDocByDocID $ docid
            postDocumentCanceledChange doc'
         else internalError
   J.runJSONGenT $ return ()
@@ -153,7 +153,7 @@ handleZip = do
   docids <- take 100 <$> getCriticalFieldList asValidDocID "doccheck"
   mentries <- forM docids $ \did -> do
                 Log.debug "Getting file for zip download"
-                doc <- guardRightM' $ getDocByDocID did
+                doc <- guardRightM $ getDocByDocID did
                 docToEntry doc
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
 {- |
