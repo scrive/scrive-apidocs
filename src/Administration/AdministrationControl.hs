@@ -230,7 +230,7 @@ companySearchingFromParams params =
   ++
   (case (listParamsFilters params) of
     (("users","all"):_) -> []
-    _ -> [CompanyHasMoreThenOneUser])
+    _ -> [CompanyManyUsers])
 
 companySortingFromParams :: ListParams -> [AscDesc CompanyOrderBy]
 companySortingFromParams params =

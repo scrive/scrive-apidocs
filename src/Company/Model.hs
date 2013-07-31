@@ -41,7 +41,7 @@ data CompanyInfo = CompanyInfo {
 
 data CompanyFilter
   =   CompanyFilterByString String             -- ^ Contains the string anywhere
-    | CompanyHasMoreThenOneUser             -- ^ Has more users then given number
+    | CompanyManyUsers             -- ^ Has more users then given number
 
 
 companyFilterToWhereClause :: (SqlWhere command) => CompanyFilter -> State command ()
@@ -58,8 +58,10 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
       escape '_' = "\\_"
       escape c = [c]
 
-companyFilterToWhereClause (CompanyHasMoreThenOneUser) = do
+companyFilterToWhereClause (CompanyManyUsers) = do
+  sqlWhereAny $ do
     sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id) > 1)"
+    sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
 
 
 data CompanyOrderBy

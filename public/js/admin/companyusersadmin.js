@@ -121,7 +121,7 @@ window.CompanyUsersListDefinition = function(args) {
           textfiltering: new TextFiltering({ text: "", infotext: "Company Accounts" }),
           cells: [
             new Cell({name: "Name", width: "100px", field:"fullname", special : "link"}),
-            new Cell({name: "Email", width: "100px", field:"email"}),
+            new Cell({name: "Email", width: "100px", field:"email", special : "link"}),
             new Cell({name: "Role", width: "100px", field:"role", special: "rendered",
                       rendering: function(value, idx, user) {
                         if (user.field("role")=="RoleAdmin") {
@@ -131,7 +131,15 @@ window.CompanyUsersListDefinition = function(args) {
                         } else {
                           return jQuery("<span>Pending</span>");
                         }
-                      }})
+                      }}),
+            new Cell({name: "TOS date", width:"100px", field:"tos", special:"rendered",
+                                    rendering: function(time, idx, doc) {
+                                            if (time != undefined && time != "")
+                                              return $("<small/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                                            else return $("<small/>");
+                                    }
+                       })
+
           ]
         }),
         headerExtras : newUserInCompanyButton(args.companyid)

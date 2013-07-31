@@ -41,6 +41,7 @@ import User.Utils
 import User.UserControl
 import User.History.Model
 import Payments.Model
+import MinutesTime
 {- |
     Gets the ajax data for the company accounts list.
 -}
@@ -106,6 +107,8 @@ handleCompanyAccountsInternal cid = do
                 value "deletable" $ cadeletable f
                 value "activated" $ caactivated f
                 value "isctxuser" $ Just (userid user) == camaybeuserid f
+                value "tos"       $ formatMinutesTimeRealISO <$> (userhasacceptedtermsofservice user)
+
     value "paging" $ pagingParamsJSON companypage
 
 {- |
