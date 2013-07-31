@@ -8,6 +8,7 @@ nicemail=
           <tr>
             <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
               <!-- // Begin Module: Standard Header Image \\ -->
+              $if(logo)$
               <table>
                 <tr>
                   <td style="padding-top: 48px; padding-bottom: 24px;">
@@ -15,6 +16,7 @@ nicemail=
                   </td>
                 </tr>
               </table>
+              $endif$
               <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
@@ -67,6 +69,11 @@ nicemail=
                                     $nicemailparagraph(p=mailp4;l=mailp5;spacing=mailspacing4)$
                                     $nicemailparagraph(p=mailp5;l=mailp6;spacing=mailspacing5)$
                                     $nicemailparagraph(p=mailp6;l=false)$
+                                    $if(footer)$
+                                    <div style="color: $if(!textcolor)$#999999$else$$textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 16px; text-align: justify; padding-top: 20px; padding-bottom: 20px;">
+                                      $footer:noescape()$
+                                    </div>
+                                    $endif$
                                   </td>
                                 </tr>
                               </table>
@@ -89,7 +96,6 @@ nicemail=
             </td>
           </tr>
 
-          $if(footer)$
           <tr>
             <td>
               <!-- // Begin Template Footer \\ -->
@@ -97,33 +103,16 @@ nicemail=
               <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateFooter" style="background-color: $nicemailbgcolour()$; border-top: 0;">
                 <tr>
                   <td valign="top" class="footerContent">
-                    <!-- // Begin Module: Standard Footer \\ -->
-
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-
-                        <td colspan="2" valign="top">
-                          <br />
-                          <div style="color: $if(!textcolor)$#999999$else$$textcolor$$endif$; font-family: $nicemailfont()$; font-style: italic; font-size: 13px; line-height: 16px; text-align: justify; padding: 0 40px; padding-top: 20px; padding-bottom: 20px;">
-                            $footer:noescape()$
-                          </div>
-
-                          <br />
-                        </td>
-                      </tr>
-                    </table>
-                    <!-- // End Module: Standard Footer \\ -->
                   </td>
                 </tr>
               </table><!-- // End Template Footer \\ -->
             </td>
           </tr>
-          $endif$
-            <tr style="border: none;">
-              <td>
-                $poweredByScrive()$
-              </td>
-            </tr>
+          <tr style="border: none;">
+            <td>
+              $poweredByScrive()$
+            </td>
+          </tr>
         </table>
         <br />
       </td>
@@ -137,7 +126,7 @@ nicemailbgcolour=$if(!background)$#FFFFFF$else$$background$$endif$
 #####
 nicemailfgcolour=$if(!textcolor)$#333333$else$$textcolor$$endif$
 #####
-nicemaillogo=$if(!logo)$$ctxhostpart$/img/logo_email.png$else$$ctxhostpart$$logoLink$$endif$
+nicemaillogo=$ctxhostpart$$logoLink$
 #####
 nicemailbordercolour=$if(!bordercolour)$#dee4ed$else$$bordercolour$$endif$
 #####
@@ -186,7 +175,7 @@ buttonborder=$if(skipbuttonborder)$$buttoncolour$$else$#CCCCCC$endif$
 ####
 poweredByScrive=
 <a style="text-decoration: none;" href="$ctxhostpart$">
-  <span class="h3" style="color: $if(!textcolor)$#7a94b8$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left; margin-left: 10px;">
+  <span class="h3" style="color: $if(!textcolor)$#7a94b8$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left; margin-left: 150px;">
     $_poweredByScrive()$
   </span>
 </a>
