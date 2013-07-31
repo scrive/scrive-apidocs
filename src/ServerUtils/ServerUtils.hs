@@ -1,6 +1,7 @@
 module ServerUtils.ServerUtils (
      handleSerializeImage
    , handleTextToImage
+   , handleUnsupportedBrowser
   ) where
 
 --import Happstack.Server hiding (dir, simpleHTTP)
@@ -23,11 +24,18 @@ import Log as Log
 import Numeric
 import Data.Maybe
 import Utils.String
+import AppView (simpleHtmlResponse)
+import Text.StringTemplates.Templates (renderTemplate)
 
 handleSerializeImage :: Kontrakcja m => m JSValue
 handleSerializeImage = do
   logo <- guardJustM $ getFileField "logo"
   runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
+
+handleUnsupportedBrowser :: Kontrakcja m => m Response
+handleUnsupportedBrowser = do
+  res <- renderTemplate "unsupportedBrowser" $ return ()
+  simpleHtmlResponse res
 
 handleTextToImage :: Kontrakcja m =>  m Response
 handleTextToImage = do
