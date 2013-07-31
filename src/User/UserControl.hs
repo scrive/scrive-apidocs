@@ -214,11 +214,11 @@ getDaysStats euc = do
   case euc of
     Left uid -> do
       stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m") stats
+      return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m-%d") stats
     Right cid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
       stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
+      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m-%d") totalS stats
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getMonthsStats euc = do
