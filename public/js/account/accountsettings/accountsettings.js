@@ -323,21 +323,21 @@ var AccountSettingsView = Backbone.View.extend({
       // Data table
             var table = jQuery("<table/>");
 
-            var companynameinput = $("<input type='text'/>").val(model.companyname());
+            var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
             if (!model.companyAdmin()) companynameinput.attr("disabled","disabled");
             companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname))).append($("<td/>").append(companynameinput)));
 
-            var companynumberinput = $("<input type='text'/>").val(model.companynumber());
+            var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
             if (!model.companyAdmin()) companynumberinput.attr("disabled","disabled");
             companynumberinput.change(function() {
               model.setCompanynumber(companynumberinput.val());
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber))).append($("<td/>").append(companynumberinput)));
 
-            var companyaddressinput = $("<input type='text'/>").val(model.companyaddress());
+            var companyaddressinput = $("<input type='text' />").val(model.companyaddress());
             if (!model.companyAdmin()) companyaddressinput.attr("disabled","disabled");
             companyaddressinput.change(function() {
               model.setCompanyaddress(companyaddressinput.val());
