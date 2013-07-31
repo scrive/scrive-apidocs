@@ -41,7 +41,6 @@ import User.Utils
 import User.UserControl
 import User.History.Model
 import Payments.Model
-import qualified Log as Log
 {- |
     Gets the ajax data for the company accounts list.
 -}
