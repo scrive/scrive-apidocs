@@ -76,7 +76,7 @@ sendSMS2 (user, password) originator msisdn body ref = do
       , md5s . Str $ latin_user ++ ":" ++ latin_password
       ]
     url = concat [
-        "http://mcm.globalmouth.com:8080/api/mcm?"
+        "https://gw3.mcm.globalmouth.com:8443/api/mcm?"
       , "username=", urlEncode latin_user, "&"
       , "body=", urlEncode latin_body, "&"
       , "msisdn=", urlEncode latin_msisdn, "&"
