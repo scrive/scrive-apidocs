@@ -31,7 +31,7 @@ paymentsPlansOnlyForCompanies =
     mgrTable = tablePaymentPlans
   , mgrFrom = 3
   , mgrDo = do
-      kRunRaw "ALTER TABLE payment_stats DROP CONSTRAINT check_payment_plans_type_id"
+      kRunRaw "ALTER TABLE payment_plans DROP CONSTRAINT IF EXISTS check_payment_plans_type_id"
       kRunRaw "UPDATE payment_plans SET company_id = (SELECT company_id FROM users WHERE user_id = users.id) WHERE company_id IS NULL;"
       kRunRaw "ALTER TABLE payment_plans DROP COLUMN account_type"
       kRunRaw "ALTER TABLE payment_plans DROP COLUMN user_id"

@@ -47,5 +47,7 @@ tablePaymentStats = tblTable {
     , tblColumn { colName = "account_code", colType = BigIntT, colNullable = False }
     ]
   , tblChecks = []
-  , tblForeignKeys = [  ]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
   }
