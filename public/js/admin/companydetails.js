@@ -194,7 +194,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
                     infotext : "ID",
                     value: model.newcompanyid(),
                     onChange : function(v) {
-                      model.setNewcompanyid(v)
+                      model.setNewcompanyid(v);
                       if (new NumberValidation().validateData(v)) {
                         new Submit({
                           url: "/adminonly/companyadmin/details/"+ v,
