@@ -907,3 +907,8 @@
 "_padFont1","Typsnitt 1","Font style 1"
 "_padFont2","Typsnitt 2","Font style 2"
 "_padFont3","Typsnitt 3","Font style 3"
+"_unsupportedBrowserSorry","oops.","sorry."
+"_unsupportedBrowserHeader","Tyvärr stöder vi inte versionen av din webbläsare:","We don't support the version of the browser you are using:"
+"_unsupportedBrowserInstructionsHeader","För att fortsätta, vänligen utför ett av följande alternativ:","To continue, please do one of the following:"
+"_unsupportedBrowserInstruction1","Uppdatera din webbläsare till en nyare version av Internet Explorer.","Update your browser to a newer version of Internet Explorer."
+"_unsupportedBrowserInstruction2","Öppna länken i en annan webbläsare (t ex Chrome eller Firefox)","Open the link in a different browser (i.e. Chrome or Firefox)."

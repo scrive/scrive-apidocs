@@ -175,7 +175,7 @@ staticRoutes = choice
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes
 
-     , dir "unsupported_browser" $ hGet $ toK0 $ ServerUtils.handleUnsupportedBrowser
+     , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ ServerUtils.handleUnsupportedBrowser
 
      , documentAPI
      , userAPI

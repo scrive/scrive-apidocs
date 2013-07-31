@@ -16,7 +16,7 @@ unsupportedBrowser=
 
     <div style="width: 100%; min-height: 95px; border-top: 1px solid #dee4ed; border-bottom: 1px solid #dee4ed; margin-top: 3px; background-color: #FFFFFF;">
       <div style="width: 960px; margin: 0 auto; vertical-align: middle; min-height: 99px;">
-        <a href="http://127.0.0.1:8000/en/">
+        <a href="/">
           <img src="/img/logo-white-bg.png" width="120" height="22" style="margin: 27px 0 26px; padding-top: 10px; padding-bottom: 10px; border: 0;" />
         </a>
       </div>
@@ -24,10 +24,10 @@ unsupportedBrowser=
 
     <div style="margin: 0 auto; width: 550px; margin-top: 112px;">
       <div style="text-align: center; margin-bottom: 26px; font-size: 72pt; letter-spacing: -20; color: #D9D9D9;">
-        sorry.
+        $_unsupportedBrowserSorry()$
       </div>
       <div style="text-align: center; font-size: 14.5pt; letter-spacing: -20; color: #4D4D4D;">
-        We don't support the version of the browser you are using:
+        $_unsupportedBrowserHeader()$
       </div>
       <div style="text-align: center; font-size: 18pt; letter-spacing: -20; color: #4D4D4D; margin-bottom: 14px;">
         Internet Explorer 6
@@ -38,11 +38,11 @@ unsupportedBrowser=
         </center>
       </div>
       <div style="margin-bottom: 18px; font-size: 14.5pt; letter-spacing: -20; color: #4D4D4D;">
-        To continue, please do one of the following:
+        $_unsupportedBrowserInstructionsHeader()$
       </div>
       <div style="font-size: 14.5pt; letter-spacing: -20; color: #4D4D4D;">
-        <div>1. Update your browser to a newer version of Internet Explorer.</div>
-        <div>2. Open the link in a different browser (i.e. Chrome or Firefox).</div>
+        <div>1. $_unsupportedBrowserInstruction1()$</div>
+        <div>2. $_unsupportedBrowserInstruction2()$</div>
       </div>
     </div>
 
