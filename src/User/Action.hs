@@ -45,7 +45,7 @@ handleAccountSetupFromSign document signatorylink = do
       lastname = getLastName signatorylink
       cname = getCompanyName signatorylink
       cnumber = getCompanyNumber signatorylink
-  email <- guardJustM $ getRequiredField asValidEmail "email"
+  email <- guardJustM $ getOptionalField asValidEmail "email"
   muser <- dbQuery $ GetUserByEmail (Email email)
   user <- case muser of
             Just u -> return u

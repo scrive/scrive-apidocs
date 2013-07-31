@@ -41,7 +41,7 @@ import User.Utils
 import User.UserControl
 import User.History.Model
 import Payments.Model
-
+import qualified Log as Log
 {- |
     Gets the ajax data for the company accounts list.
 -}
@@ -176,14 +176,10 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
   mexistinguser <- dbQuery $ GetUserByEmail $ Email email
-  minvitee <- case (mexistinguser) of
+  case (mexistinguser) of
       (Nothing) -> do
         --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,False) (ctxlang ctx)
-        _ <- dbUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
-                            userfstname = fstname
-                          , usersndname = sndname
-                          }
+        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,True) (ctxlang ctx)
         _ <- dbUpdate $
              LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx)
                                        (userinfo newuser')
@@ -191,20 +187,6 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
                                        (userid <$> ctxmaybeuser ctx)
         newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
-        return $ Just newuser
-      (Just existinguser) -> do
-        -- If user exists we allow takeover only if he is the only user in his company
-        users <- dbQuery $ GetCompanyAccounts $ usercompany existinguser
-        mpaymentplan <- dbQuery $ GetPaymentPlan $ usercompany existinguser
-        case (users,fromMaybe NoProvider (ppPaymentPlanProvider <$> mpaymentplan)) of
-         ([_],NoProvider) -> do
-                  _ <- sendTakeoverSingleUserMail user company existinguser
-                  return $ Just existinguser
-         _ -> do  return $ Nothing
-
-  -- record the invite and flash a message
-  if (isJust minvitee)
-    then do
         _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
                 invitedemail = Email email
               , invitedfstname = fstname
@@ -212,10 +194,24 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
               , invitingcompany = companyid company
               }
         runJSONGenT $ value "added" True
-    else
-        runJSONGenT $ value "added" False
-
-
+      (Just existinguser) ->
+        if (usercompany existinguser == companyid company)
+           then runJSONGenT $ value "added" False >> value "samecompany" True
+           else do
+            -- If user exists we allow takeover only if he is the only user in his company
+            users <- dbQuery $ GetCompanyAccounts $ usercompany existinguser
+            mpaymentplan <- dbQuery $ GetPaymentPlan $ usercompany existinguser
+            case (users,fromMaybe NoProvider (ppPaymentPlanProvider <$> mpaymentplan)) of
+              ([_],NoProvider) -> do
+                        _ <- sendTakeoverSingleUserMail user company existinguser
+                        _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
+                            invitedemail = Email email
+                          , invitedfstname = fstname
+                          , invitedsndname = sndname
+                          , invitingcompany = companyid company
+                          }
+                        runJSONGenT $ value "added" True
+              _ -> runJSONGenT $ value "added" False
 
 {- |
     Handles a resend by checking for the user and invite
@@ -268,14 +264,12 @@ handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
 -}
 handleRemoveCompanyAccount :: Kontrakcja m => m JSValue
 handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
-  removeid <- getCriticalField asValidUserID "removeid"
   removeemail <- getCriticalField asValidEmail "removeemail"
-  mremoveuser <- dbQuery $ GetUserByID removeid
+  mremoveuser <- dbQuery $ GetUserByEmail $ Email removeemail
   mremovecompany <- case mremoveuser of
                            Just u -> Just <$> getCompanyForUser u
                            Nothing -> return Nothing
   isdeletable <- maybe (return False) isUserDeletable mremoveuser
-
   case (mremoveuser, mremovecompany) of
     (Just removeuser, Just removecompany) | company == removecompany ->
          --there's an actual user to delete
