@@ -45,8 +45,6 @@ performDBChecks logger tables migrations = do
   checkDBTimeZone logger
   checkNeededExtensions logger
   checkDBConsistency logger (tableVersions : tables) migrations
-  -- have an option to put a break just after checking constraints
-  kRunRaw "SET CONSTRAINTS ALL IMMEDIATE"
 
   -- everything is OK, commit changes
   kCommit
@@ -87,16 +85,7 @@ setByteaOutput logger = do
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
 checkDBConsistency logger tables migrations = do
-  --
-  -- While doing migrations we do not set contraints on things, this
-  -- is done at the very late hour. So postpone contraint checking
-  -- when everything is in place.
-  --
-  -- Sadly this does not apply to NOT NULL and CHECK constraints.
-  -- Therefore your migrations should DROP NOT NULL or DROP CHECK
-  -- constraints should they wish to violate any.
-  --
-  kRunRaw "SET CONSTRAINTS ALL DEFERRED"
+
   (created, to_migration) <- checkTables
   when (not $ null to_migration) $ do
     logger "Running migrations..."
