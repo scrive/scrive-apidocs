@@ -4,7 +4,7 @@
 
 (function(window){
 
-var signaturePictureScale = 4; // Number used to generate bigger final images. Quality thing
+var signaturePictureScale = 2; // Number used to generate bigger final images. Quality thing
 
 
 var SignatureTyperModel = Backbone.Model.extend({

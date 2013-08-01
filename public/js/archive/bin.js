@@ -9,7 +9,7 @@ window.BinListDefinition = function(archive) { return {
     schema: new Schema({
     url: "/api/frontend/list",
     extraParams : { documentType : "Rubbish" },
-    sorting: new Sorting({ fields: ["title", "time", "type"]}),
+    sorting: new Sorting({ fields: ["title", "time"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.bin.search}),
     selectfiltering : new DocumentSelectsDefinition(archive),

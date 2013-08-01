@@ -96,7 +96,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
           var textInput = new InfoTextInput({
                                infotext : "Please type your name",
                                cssClass : "float-left",
-                               style: "margin-right:10px;border: 1px solid #7A94B8;",
+                               style: "margin-right:10px;border: 1px solid #7A94B8;width:170px;",
                                value : self.model.typerOrDrawer().text(),
                                onChange: function(val) {
                                  self.model.typerOrDrawer().setText(val);
@@ -115,7 +115,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
           var fontSelect = new Select({
                                 name : "",
                                 cssClass : "float-left",
-                                style : "background-position: 10px -10px;height:30px;" + fontBackground(self.model.typerOrDrawer().font()),
+                                style : "background-position: 10px -10px;width:200px;height:30px;" + fontBackground(self.model.typerOrDrawer().font()),
                                 options: [
                                   {  name : ""
                                    , disabled : (self.model.typerOrDrawer().font() == "JenniferLynne")
@@ -136,7 +136,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
           var row2 = $("<div style='margin:4px 0px;height:32px'>");
           header.append(row2);
           row2.append(textInput.el())
-              .append(fontSelect.el())
+              .append($("<div style='width:200px;float:left;'/>").append(fontSelect.el()))
               .append($("<label class='clickable' style='float:right'/>").text(localization.pad.cleanImage).click(
                   function() {
                       textInput.setValue("");

@@ -75,7 +75,6 @@ window.DocumentAdminListDefinition = function(isAdmin, userid, companyid) {
                     , "title"
                     , "service"
                     , "status"
-                    , "type"
                     , "signs"
                     ]}),
             paging: new Paging({}),
