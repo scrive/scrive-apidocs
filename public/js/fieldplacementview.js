@@ -1570,7 +1570,7 @@ var SignaturePlacementView = Backbone.View.extend({
         return box;
     },
     updateColor : function() {
-      $(this.el).css('border', '2px solid ' + (this.model.field().signatory().color() || '#999'));
+        $(this.el).css('border', '2px solid ' + (this.model.field().value() == "" ? (this.model.field().signatory().color() || '#999') : "transparent" ));
     },
     render: function() {
             var placement = this.model;
