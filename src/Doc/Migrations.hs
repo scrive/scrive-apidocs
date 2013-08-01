@@ -966,6 +966,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
       kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
       kRunRaw "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
       Log.debug $ "This is a long running migration with O(n^2) complexity. Please wait!"
+      kRunRaw "CREATE INDEX ON signatory_screenshots((digest(image,'sha1')))"
       filesInserted <- kRun $ sqlInsertSelect "files" "signatory_screenshots" $ do
           sqlSetCmd "content" "signatory_screenshots.image"
           sqlSetCmd "name" "signatory_screenshots.type || '_screenshot.jpeg'"

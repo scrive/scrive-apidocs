@@ -174,8 +174,6 @@ allUsersMustHaveCompany =
                 sqlSet "company_id" companyidx
                 sqlSet "is_company_admin" True
                 sqlWhereEq "id" userid
-       _ <- kRunRaw $ "SET CONSTRAINTS ALL IMMEDIATE"
-       _ <- kRunRaw $ "SET CONSTRAINTS ALL DEFERRED"
        _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_name"
        _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_number"
        return ()
