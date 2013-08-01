@@ -396,7 +396,7 @@
 "_flashCompanyAccountInviteSent","En inbjudan har skickats.","An invitation has been sent."
 "_flashCompanyAccountInviteNotSent","Du kan inte bjuda in denna användare eftersom den redan är registerad på ett annat företag. Vänligen kontakta Scrive om du vill slå ihop konton för två företag.","Sorry, you are not able to send an invite to this user because they are registered to a different company. Please contact Scrive if you want to merge the accounts of two companies."
 "_flashCompanyAccountInviteResent","Din inbjudan har skickats igen.","The invitation has been sent again."
-"_flashCompanyInviteNotSentSameCompany","This user is already your company","This user is already your company"
+"_flashCompanyInviteNotSentSameCompany","Användaren finns redan i ditt företag.","This user is already in your company."
 "_role","Role","Role"
 "_admin","Admin","Admin"
 "_standard","Standard","Standard"
