@@ -154,7 +154,7 @@ var InfoTextInputView = Backbone.View.extend({
                           .attr("style",model.inputStyle())
                           .attr("readonly",model.readonly() ? "true" : undefined);
         if (!BrowserInfo.isIE9orLower())
-          this.input.attr("placeholder",model.infotext())
+          this.input.attr("placeholder",model.infotext());
 
 
         //Wrapper with extra styles
