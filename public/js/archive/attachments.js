@@ -8,7 +8,7 @@ window.AttachmentsListDefinition = function(archive) {
     loadOnInit : false,
     schema: new Schema({
     url: "/a",
-    sorting: new Sorting({ fields: ["title", "time", "type"]}),
+    sorting: new Sorting({ fields: ["title", "time"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.attachments.search}),
     cells : [

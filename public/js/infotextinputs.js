@@ -150,10 +150,12 @@ var InfoTextInputView = Backbone.View.extend({
         this.input = $("<input/>")
                           .attr("name",model.name())
                           .attr("type",model.inputtype())
-                          .attr("placeholder",model.infotext())
                           .attr("autocomplete",model.autocompleate ? "on" : "off")
                           .attr("style",model.inputStyle())
                           .attr("readonly",model.readonly() ? "true" : undefined);
+        if (!BrowserInfo.isIE9orLower())
+          this.input.attr("placeholder",model.infotext())
+
 
         //Wrapper with extra styles
         $(this.el).attr("style", model.style())
