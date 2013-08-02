@@ -8,6 +8,7 @@ import SMS.Model
 import qualified Log
 import MessageData
 import Data.Char
+import Data.String.Utils
 
 data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
@@ -40,8 +41,11 @@ fixPhoneNumber = filter goodChars
 
 
 fixOriginator :: String -> String
-fixOriginator s = map fixChars $ take 11 s
+fixOriginator s = notEmpty $ map fixChars $ take 11 s
   where
    fixChars c = if (isAlphaNum c ||isSpace c)
                  then c
                  else ' '
+   notEmpty s' = case (strip s') of
+                   "" -> "Scrive"
+                   v  -> v
