@@ -48,7 +48,10 @@ handleAccountSetupFromSign document signatorylink = do
   email <- guardJustM $ getOptionalField asValidEmail "email"
   muser <- dbQuery $ GetUserByEmail (Email email)
   user <- case muser of
-            Just u -> return u
+            Just u -> do
+              when (isJust $ userhasacceptedtermsofservice user) $ do -- Don't remove - else people will be able to hijack accounts
+                internalError
+              return u
             Nothing -> do
                company <- dbUpdate $ CreateCompany
                _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
@@ -69,7 +72,8 @@ handleAccountSetupFromSign document signatorylink = do
 handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m (Maybe User)
 handleActivate mfstname msndname (actvuser,company) signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
-  when (isJust $ userhasacceptedtermsofservice actvuser) internalError
+  when (isJust $ userhasacceptedtermsofservice actvuser) $ do  -- Don't remove - else people will be able to hijack accounts
+    internalError
   switchLang (getLang actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"

@@ -9,7 +9,7 @@ window.TemplatesListDefinition = function(archive) { return {
     loadOnInit : false,
     schema: new Schema({
     url: "/api/frontend/list",
-    extraParams : { documentType : "Template" },
+    extraParams : { documentType : "MyTemplate" },
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),

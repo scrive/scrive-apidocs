@@ -4,7 +4,7 @@
 
 (function(window){
 
-var signaturePictureScale = 2; // Number used to generate bigger final images. Quality thing
+var signaturePictureScale = 2; // Number used to generate bigger final images. Quality thing. Scale has to be small. IE8 has 32k limit.
 
 
 var SignatureTyperModel = Backbone.Model.extend({

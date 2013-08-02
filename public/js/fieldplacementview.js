@@ -55,6 +55,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             verticaloffset = 1;
 
     dragHandler.draggable({
+        appendTo : ".design-view-frame",
         cursorAt : cursorNormalize ? { top :7 , left :7} : undefined,
         helper: function(event) {
             helper = createFieldPlacementView({
