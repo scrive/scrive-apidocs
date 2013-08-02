@@ -49,7 +49,7 @@ handleAccountSetupFromSign document signatorylink = do
   muser <- dbQuery $ GetUserByEmail (Email email)
   user <- case muser of
             Just u -> do
-              when (isJust $ userhasacceptedtermsofservice user) $ do -- Don't remove - else people will be able to hijack accounts
+              when (isJust $ userhasacceptedtermsofservice u) $ do -- Don't remove - else people will be able to hijack accounts
                 internalError
               return u
             Nothing -> do
