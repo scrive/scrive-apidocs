@@ -176,6 +176,8 @@ jsonDocumentsList = do
                                                  ,[DocumentFilterDeleted False False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
                           "Template"          -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
+                          "MyTemplate"        -> ([DocumentsVisibleToUser uid] -- Sometimes we want to show only templates that user can change
+                                                 ,[DocumentFilterByAuthor uid, DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted True False, DocumentFilterUnsavedDraft False])
                           "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])

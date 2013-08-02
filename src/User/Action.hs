@@ -46,6 +46,9 @@ handleAccountSetupFromSign document signatorylink = do
   user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (documentlang document))
                 return
                 muser
+  when (isJust $ userhasacceptedtermsofservice user) $ do -- Don't remove - else people will be able to hijack accounts
+    internalError
+
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
   case mactivateduser of
     Just activateduser -> do
@@ -58,7 +61,8 @@ handleAccountSetupFromSign document signatorylink = do
 handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> User -> SignupMethod -> m (Maybe User)
 handleActivate mfstname msndname actvuser signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
-  when (isJust $ userhasacceptedtermsofservice actvuser) internalError
+  when (isJust $ userhasacceptedtermsofservice actvuser) $ do  -- Don't remove - else people will be able to hijack accounts
+    internalError
   switchLang (getLang actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"

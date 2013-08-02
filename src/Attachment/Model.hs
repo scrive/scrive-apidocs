@@ -154,7 +154,7 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
     domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
       "attachments.user_id =" <?> uid <+> "AND attachments.deleted =" <?> del
     domainToSQLCommand (AttachmentsSharedInUsersCompany uid) =
-      "attachments.deleted = FALSE AND EXISTS (SELECT 1 FROM users, users AS users_2"
+      "attachments.deleted = FALSE AND attachments.shared AND EXISTS (SELECT 1 FROM users, users AS users_2"
                                           <+> "WHERE attachments.user_id = users.id"
                                             <+> "AND users.company_id = users_2.company_id AND users_2.id =" <?> uid <+>")"
     orderToSQLCommand (Asc AttachmentOrderByTitle)  = "attachments.title ASC"

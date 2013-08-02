@@ -43,6 +43,7 @@ import File.Storage
 import File.Model
 import qualified Data.Map as Map
 import qualified Data.ByteString.UTF8 as BS
+import Happstack.Fields
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -127,8 +128,11 @@ jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonAttachmentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   params <- getListParams
+  domainParam <- getField "domain"
 
-  let (domain,filters) = ([AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid],[])
+  let (domain,filters) = case domainParam of
+                           (Just "All") ->  ([AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid],[])
+                           _ ->  ([AttachmentsOfAuthorDeleteValue uid False],[])
 
   let sorting    = attachmentSortingFromParams params
       searching  = attachmentSearchingFromParams params
