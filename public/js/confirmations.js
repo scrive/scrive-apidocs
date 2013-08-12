@@ -123,7 +123,7 @@ var ConfirmationView = Backbone.View.extend({
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
        container.width(model.width());
-       var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
+       var header = $("<div class='modal-header'></div>");
        var title = $("<span class='modal-title'/>");
        if (BrowserInfo.isSmallScreen()) {
          title.css('font-size', '42px');
