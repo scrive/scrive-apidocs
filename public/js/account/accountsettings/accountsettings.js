@@ -493,8 +493,11 @@ var AccountSettingsView = Backbone.View.extend({
        var footerbox = $("<div class='account-footer'/>");
        box.append(footerbox);
        footerbox.append(this.saveButton());
-       if (!model.user().hasCompany())
-        footerbox.append(this.createCompanyButton().css("margin-left", "5px"));
+       if (!model.user().hasCompany()) {
+         footerbox.append(this.createCompanyButton().css("margin-left", "5px"));
+       } else {
+         footerbox.addClass('has-company');
+       }
        box.append("<div class='clearfix'></div>");
        return this;
     }
