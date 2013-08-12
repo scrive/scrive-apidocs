@@ -3,7 +3,7 @@ unsupportedBrowser=
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Your browser is not supported</title>
+    <title>$_unsupportedBrowserTitle()$</title>
     <meta http-equiv="content-language" content="en" />
     <style media="screen" type="text/css">
       @font-face {
