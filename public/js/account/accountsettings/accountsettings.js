@@ -256,8 +256,6 @@ var AccountSettingsView = Backbone.View.extend({
       var box = $("<div class='blue-box'/>");
       if (model.user().hasCompany())
         box.addClass("col");
-      else
-        box.addClass("blue-box");
       var header = $("<div class='account-header'/>").text(model.user().smartname());
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
@@ -344,7 +342,7 @@ var AccountSettingsView = Backbone.View.extend({
       // Building frame
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").text(model.company().companyname());
+      var header = $("<div class='account-header company'/>").text(model.company().companyname());
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
       // Data table
