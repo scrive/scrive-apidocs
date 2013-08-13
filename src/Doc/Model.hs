@@ -1128,9 +1128,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
     return ()
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument () where
   update (FixClosedErroredDocument did _actor) = do
-    kRun01 $ sqlUpdate "documents" $ do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
         sqlSet "status" Closed
         sqlWhereEq "id" did
         sqlWhereEq "status" $ DocumentError undefined
@@ -2052,9 +2052,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
   update (CloneDocumentWithUpdatedAuthor user docid actor) = do
-          mcompany <- maybe (return Nothing) (query . GetCompany) (usercompany user)
+          company <- query $ GetCompanyByUserID (userid user)
           let replaceAuthorSigLink sl
-                | isAuthor sl = replaceSignatoryUser sl user mcompany
+                | isAuthor sl = replaceSignatoryUser sl user company
                 | otherwise = sl
           let time = actorTime actor
           res <- (flip newFromDocumentID) docid $ \doc ->

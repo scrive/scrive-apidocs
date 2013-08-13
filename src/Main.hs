@@ -24,6 +24,7 @@ import Utils.Network
 import RoutingTable
 import Templates
 import User.Model
+import Company.Model
 import Control.Logic
 import qualified Log
 import qualified MemCache
@@ -99,6 +100,7 @@ initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   maybeuser <- dbQuery $ GetUserByEmail email
   case maybeuser of
     Nothing -> do
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) Nothing defaultValue Nothing
+      company <- dbUpdate $ CreateCompany
+      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) defaultValue Nothing
       return ()
     Just _ -> return () -- user exist, do not add it

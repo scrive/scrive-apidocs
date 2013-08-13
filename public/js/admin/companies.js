@@ -12,10 +12,17 @@ window.CompanyAdminListDefinition = function() { return {
             "companyaddress",
             "companyzip",
             "companycity",
-            "companycountry"  
+            "companycountry"
         ] }),
         paging: new Paging({}),
         textfiltering: new TextFiltering({ text: "", infotext: "Search companies" }),
+        selectfiltering : [ new SelectFiltering({
+                             name: "users",
+                             textWidth : "173px",
+                             options:  [ {name: "With more then one user", value: ""},
+                                         {name: "All", value: "all"}
+                                       ]
+                            })],
         cells : [
             new Cell({name: "Name",   width:"120px", field:"companyname"   , special:"link"}),
             new Cell({name: "Number", width:"100px", field:"companynumber" , special:"link"}),

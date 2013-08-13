@@ -29,7 +29,7 @@ window.BinListDefinition = function(archive) { return {
                                   new Submit({
                                                 url: "/d/restore",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.bin.restore.successMessage});
                                                     archive.bin().recall();
@@ -55,7 +55,7 @@ window.BinListDefinition = function(archive) { return {
                                   new Submit({
                                                 url: "/d/reallydelete",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.bin.remove.successMessage});
                                                     archive.bin().recall();

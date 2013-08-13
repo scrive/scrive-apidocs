@@ -83,7 +83,7 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m NewAttachment (Ei
     _ -> return (Left $ "NewAttachment of file " ++ title ++ " failed")
 
 data DeleteAttachments = DeleteAttachments UserID [AttachmentID] Actor
-instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments (Either String ()) where
+instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments () where
   update (DeleteAttachments uid attids actor) = do
   let atime = actorTime actor
   kRun_ $ sqlUpdate "attachments" $ do
@@ -92,17 +92,15 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments
     sqlWhereIn "id" attids
     sqlWhereEq "user_id" uid
     sqlWhereEq "deleted" False
-  return $ Right ()
 
 data SetAttachmentTitle = SetAttachmentTitle AttachmentID String Actor
-instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m SetAttachmentTitle (Either String ()) where
+instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m SetAttachmentTitle () where
   update (SetAttachmentTitle attid title actor) = do
   let atime = actorTime actor
   kRun_ $ sqlUpdate "attachments" $ do
     sqlSet "mtime" atime
     sqlSet "title" title
     sqlWhereEq "id" attid
-  return $ Right ()
 
 data AttachmentFilter
   = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
@@ -166,10 +164,9 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
 
 
 data SetAttachmentsSharing = SetAttachmentsSharing UserID [AttachmentID] Bool
-instance (MonadDB m) => DBUpdate m SetAttachmentsSharing (Either String Bool) where
+instance (MonadDB m) => DBUpdate m SetAttachmentsSharing () where
   update (SetAttachmentsSharing uid atts flag) = do
     kRun_ $ sqlUpdate "attachments" $ do
           sqlSet "shared" flag
           sqlWhereIn "id" atts
           sqlWhereEq "user_id" uid
-    return (Right True)

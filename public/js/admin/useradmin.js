@@ -12,11 +12,6 @@ var UserAdminModel = Backbone.Model.extend({
         this.set({ "userdetails" : new AdminUserDetails({ userid: this.userid() })});
         return this.userdetails();
   },
-  userpayments: function() {
-        if (this.get("userpayments") != undefined) return this.get("userpayments");
-        this.set({ "userpayments" : new AdminPayments({ userid: this.userid() }) });
-        return this.userpayments();
-  },
   userstatistics: function() {
         if (this.get("userstatistics") != undefined) return this.get("userstatistics");
         this.set({ "userstatistics" : new Stats({ userid: this.userid(), withCompany : false})});
@@ -41,17 +36,6 @@ var UserAdminModel = Backbone.Model.extend({
                         pagehash : "details",
                         onActivate : function() {
                             self.userdetails().refresh();
-                        }
-                    });
-  },
-  userpaymentsTab : function() {
-                    var self = this;
-                    return new Tab({
-                        name: "Payments",
-                        elems: [function() { return $(self.userpayments().el()); }],
-                        pagehash : "payments",
-                        onActivate : function() {
-                            self.userpayments().refresh();
                         }
                     });
   },
@@ -94,7 +78,6 @@ var UserAdminView = Backbone.View.extend({
         tabs: [
            admin.backToAdminTab(),
            admin.userdetailsTab(),
-           admin.userpaymentsTab(),
            admin.userstatisticsTab(),
            admin.userdocumentsTab()]
        });

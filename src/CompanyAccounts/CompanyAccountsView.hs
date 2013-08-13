@@ -1,7 +1,7 @@
 module CompanyAccounts.CompanyAccountsView (
     -- mails
     mailNewCompanyUserInvite,
-    mailTakeoverPrivateUserInvite,
+    mailTakeoverSingleUserInvite,
 
     -- pages
     pageDoYouWantToBeCompanyAccount,
@@ -37,11 +37,11 @@ mailNewCompanyUserInvite ctx invited inviter company companyui link =
     F.value "creatorname" $ getSmartName inviter
 
 
-mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
+mailTakeoverSingleUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
-mailTakeoverPrivateUserInvite ctx invited inviter company companyui link =
+mailTakeoverSingleUserInvite ctx invited inviter company companyui link =
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal invited  "mailTakeoverPrivateUserInvite" $ do
+  kontramaillocal invited  "mailTakeoverSingleUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
     F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just companyui)

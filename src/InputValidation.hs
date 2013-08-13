@@ -6,21 +6,9 @@ module InputValidation
     , isGood
     , isBad
     , isEmpty
-    , checkIfEmpty
     , getOptionalField
-    , getOptionalFieldList
     , getDefaultedField
-    , getDefaultedFieldList
-    , getRequiredField
     , getCriticalField
-    , getCriticalFieldList
-    , getValidateAndHandle
-    , getValidateAndHandleList
-    , getAndValidate
-    , getAndValidateList
-    , withDefault
-    , withRequiredFlash
-    , withFailure
     , asValidEmail
     , asDirtyEmail
     , asValidPassword
@@ -36,17 +24,17 @@ module InputValidation
     , asValidID
     , asValidNumber
     , asValidDocID
+    , asValidDocIDList
     , asValidAttachmentID
+    , asValidAttachmentIDList
     , asValidUserID
     , asValidFieldValue
     , asValidInviteText
     , asValidIPAddressWithMaskList
 ) where
 
-import Control.Applicative
 import Control.Monad()
 import Control.Monad.Error
-import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Data.Char
 import Text.Regex.TDFA ((=~))
 import Text.XML.HaXml.Parse (xmlParse')
@@ -114,10 +102,6 @@ getOptionalField :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a
 getOptionalField validate =
     getValidateAndHandle validate optionalFieldHandler
 
-getOptionalFieldList :: Kontrakcja m => (String -> Result a) -> String -> m [Maybe a]
-getOptionalFieldList validate =
-    getValidateAndHandleList validate optionalFieldHandler
-
 optionalFieldHandler :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 optionalFieldHandler result =
     logIfBad result
@@ -130,28 +114,10 @@ getDefaultedField :: Kontrakcja m => a -> (String -> Result a) -> String -> m (M
 getDefaultedField d validate =
     getValidateAndHandle validate (defaultedFieldHandler d)
 
-getDefaultedFieldList :: Kontrakcja m => a -> (String -> Result a) -> String -> m [Maybe a]
-getDefaultedFieldList d validate =
-    getValidateAndHandleList validate (defaultedFieldHandler d)
-
 defaultedFieldHandler :: Kontrakcja m => a -> (Input, Result a) -> m (Maybe a)
 defaultedFieldHandler d result =
     logIfBad result
     >>= withDefault d
-    >>= asMaybe
-
-{- |
-    Use this to get a field that requires input from the user.
-    If there is not input then it will display a flash message warning them.
--}
-getRequiredField :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a)
-getRequiredField validate =
-    getValidateAndHandle validate requiredFieldHandler
-
-requiredFieldHandler :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
-requiredFieldHandler result =
-    withRequiredFlash result
-    >>= logIfBad
     >>= asMaybe
 
 {- |
@@ -162,10 +128,6 @@ requiredFieldHandler result =
 getCriticalField :: Kontrakcja m => (String -> Result a) -> String -> m a
 getCriticalField validate =
     getValidateAndHandle validate criticalFieldHandler
-
-getCriticalFieldList :: Kontrakcja m => (String -> Result a) -> String -> m [a]
-getCriticalFieldList validate =
-    getValidateAndHandleList validate criticalFieldHandler
 
 criticalFieldHandler :: Kontrakcja m => (Input, Result a) -> m a
 criticalFieldHandler result =
@@ -181,11 +143,6 @@ getValidateAndHandle validate handle fieldname = do
   result <- getAndValidate validate fieldname
   handle result
 
-getValidateAndHandleList :: Kontrakcja m => (String -> Result a) -> ((Input, Result a) -> m b) -> String -> m [b]
-getValidateAndHandleList validate handle fieldname = do
-  results <- getAndValidateList validate fieldname
-  mapM handle results
-
 {- |
     Gets a named field and validates it.  It will return a pair of the input,
     and output.
@@ -196,12 +153,6 @@ getAndValidate validate fieldname = do
   case mrawvalue of
     Nothing -> return $ (Nothing, Empty)
     (Just rawvalue) -> return $ (Just rawvalue, validate rawvalue)
-
-getAndValidateList :: Kontrakcja m => (String -> Result a) -> String -> m [(Input, Result a)]
-getAndValidateList validate fieldname = do
-  rawvalues <- map BSL.toString <$> getDataFnM (lookInputList fieldname)
-  return $ zip (map Just rawvalues) (map validate rawvalues)
-
 
 {- |
     Puts any validation problem in the security log.
@@ -475,6 +426,15 @@ asValidDocID input =
               (val,[]):[] -> return val
               _ -> Bad
 
+asValidDocIDList :: String -> Result [DocumentID]
+asValidDocIDList input =
+    checkIfEmpty input
+    >>= parseList
+    where
+          parseList xs =
+            case reads xs of
+              (val,[]):[] -> return val
+              _ -> Bad
 {- |
     Gets a cleaned up doc id. Useful for validating
     you're not getting fed complete garbage from hidden fields,
@@ -486,6 +446,16 @@ asValidAttachmentID input =
     >>= parseAsAttachmentID
     where
           parseAsAttachmentID xs =
+            case reads xs of
+              (val,[]):[] -> return val
+              _ -> Bad
+
+asValidAttachmentIDList :: String -> Result [AttachmentID]
+asValidAttachmentIDList input =
+    checkIfEmpty input
+    >>= parseList
+    where
+          parseList xs =
             case reads xs of
               (val,[]):[] -> return val
               _ -> Bad

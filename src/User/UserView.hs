@@ -57,13 +57,12 @@ import DB
 import BrandedDomains
 import Doc.DocViewMail
 
-showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
-showAccount user mcompany = renderTemplate "showAccount" $ do
+showAccount :: TemplatesMonad m => User -> m String
+showAccount user = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
-    F.value "noCompany" $ isNothing mcompany
 
-userJSON :: Monad m => Context -> User -> Maybe (Company,CompanyUI) ->  m JSValue
-userJSON ctx user mcompany = runJSONGenT $ do
+userJSON :: Monad m => Context -> User -> (Company,CompanyUI) ->  m JSValue
+userJSON ctx user (company,companyui) = runJSONGenT $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -72,12 +71,8 @@ userJSON ctx user mcompany = runJSONGenT $ do
     value "phone" $ userphone $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "usercompanyname" $ getCompanyName (user,fst <$> mcompany)
-    value "usercompanynumber" $ getCompanyNumber (user,fst <$> mcompany)
     value "lang"   $ codeFromLang $ getLang user
-    valueM "company" $ case (mcompany) of
-                            Nothing -> return JSNull
-                            Just (company,companyui) -> companyJSON ctx company companyui
+    valueM "company" $ companyJSON ctx company companyui
 
 companyUIJson :: Monad m => Context -> CompanyUI -> m JSValue
 companyUIJson ctx companyui = runJSONGenT $ do

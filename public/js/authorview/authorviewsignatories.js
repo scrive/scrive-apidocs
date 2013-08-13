@@ -54,7 +54,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var sigdiv     = $("<div class='sig' />");
           if(index === 0)
               sigdiv.addClass('first');
-          var name       = $("<div class='name' />").text(sigview.nameOrEmail());
+          var name       = $("<div class='name' />").text(sigview.nameOrEmailOrMobile());
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle' style='width: 20px; vertical-align: top;' />");
           var middle2    = $("<div class='middle' />");

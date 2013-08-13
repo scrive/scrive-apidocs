@@ -40,12 +40,14 @@ data CompanyInfo = CompanyInfo {
   } deriving (Eq, Ord, Show)
 
 data CompanyFilter
-  = CompanyFilterByString String             -- ^ Contains the string anywhere
+  =   CompanyFilterByString String             -- ^ Contains the string anywhere
+    | CompanyManyUsers             -- ^ Has more users then given number
+
 
 companyFilterToWhereClause :: (SqlWhere command) => CompanyFilter -> State command ()
 companyFilterToWhereClause (CompanyFilterByString text) = do
   -- ALL words from 'text' are in ANY of the fields
-  mapM_ (sqlWhere . findWord) (words text)
+  mapM_ (sqlWhere . parenthesize . findWord) (words text)
   where
       findWordInField word field = ("companies." <> field) <+> "ILIKE" <?> sqlwordpat word
       findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country"]
@@ -55,6 +57,12 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+
+companyFilterToWhereClause (CompanyManyUsers) = do
+  sqlWhereAny $ do
+    sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id) > 1)"
+    sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
+
 
 data CompanyOrderBy
   = CompanyOrderByName    -- ^ Order by title, alphabetically, case insensitive
@@ -101,14 +109,14 @@ instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
     fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByUserID = GetCompanyByUserID UserID
-instance MonadDB m => DBQuery m GetCompanyByUserID (Maybe Company) where
+instance MonadDB m => DBQuery m GetCompanyByUserID Company where
   query (GetCompanyByUserID uid) = do
     kRun_ $ sqlSelect "companies" $ do
       sqlJoinOn "users" "users.company_id = companies.id"
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "users.id" uid
-    fetchCompanies >>= oneObjectReturnedGuard
+    fetchCompanies >>= exactlyOneObjectReturnedGuard
 
 data CreateCompany = CreateCompany
 instance MonadDB m => DBUpdate m CreateCompany Company where

@@ -185,7 +185,7 @@ apiCallCreateFromTemplate did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission = (userid auser == userid user) ||
-                          ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared template)
+                      (usercompany auser == usercompany user &&  isDocumentShared template)
   mnewdoc <- if (isTemplate template && haspermission)
                     then do
                       mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
@@ -390,7 +390,7 @@ handleSignWithEleg documentid signatorylinkid magichash fields screenshots provi
   case esigninfo of
     BankID.Problem msg -> return $ Left msg
     BankID.Mismatch msg sfn sln spn -> do
-      document <- guardRightM' $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
       handleMismatch document signatorylinkid msg sfn sln spn
       return $ Left msg
     BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
@@ -436,7 +436,7 @@ apiCallDelete did =  api $ do
                        _ -> return Nothing
   let msl = getSigLinkFor doc user
   let haspermission = (isJust msl)
-                   || (isJust mauser && isJust (usercompany user) && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                   || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
   when (not haspermission) $ do
          throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
   dbUpdate $ ArchiveDocument (userid user) did actor

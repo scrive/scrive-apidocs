@@ -351,7 +351,7 @@ $_mailMismatchAuthorContentBodySecond()$
 $_mailMismatchAuthorContentBodyThird()$
 ####
 ####
-mailTakeoverPrivateUserInvite=
+mailTakeoverSingleUserInvite=
   $_mailTakeoverPrivateUserInviteTitle()$
   $nicemail(
       mailheader=_mailTakeoverPrivateUserInviteTitle();

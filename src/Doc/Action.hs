@@ -37,6 +37,7 @@ import Mails.SendMail
 import OurPrelude
 import User.Model
 import Util.HasSomeUserInfo
+import Util.HasSomeCompanyInfo
 import qualified Log
 import Text.StringTemplates.Templates
 import Util.Actor
@@ -45,17 +46,19 @@ import Util.MonadUtils
 import ThirdPartyStats.Core
 import ActionQueue.UserAccountRequest
 import User.Action
-
+import User.Utils
 import Control.Monad
 import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import ForkAction
 import Doc.API.Callback.Model
+import Company.Model
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: Kontrakcja m => EventName -> Document -> User -> [EventProperty] -> m ()
 logDocEvent name doc user extraProps = do
+  comp <- getCompanyForUser user
   now <- getMinutesTime
   ip <- ctxipnumber <$> getContext
   let uid = userid user
@@ -69,7 +72,7 @@ logDocEvent name doc user extraProps = do
     MailProp   email,
     IPProp     ip,
     NameProp   fullname,
-    stringProp "Company Name" $ usercompanyname $ userinfo user,
+    stringProp "Company Name" $ getCompanyName $ comp,
     stringProp "Delivery Method" deliverymethod,
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),
@@ -419,7 +422,7 @@ sendClosedEmails ctx document sealFixed = do
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
       ml <- if (isGood $ asValidEmail $ getEmail sl)
-               then handlePostSignSignup ctx (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
+               then handlePostSignSignup ctx (Email $ getEmail sl) (getFirstName sl) (getLastName sl) (getCompanyName sl) (getCompanyNumber sl)
                else return $ Nothing
       let sendMail = do
             mail <- mailDocumentClosed ctx document ml sl sealFixed
@@ -485,8 +488,8 @@ sendAllReminderEmails ctx actor user docid = do
    Try to sign up a new user. Returns the confirmation link for the new user.
    Nothing means there is already an account or there was an error creating the user.
  -}
-handlePostSignSignup :: (CryptoRNG m, MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Email -> String -> String -> m (Maybe KontraLink)
-handlePostSignSignup ctx email fn ln = do
+handlePostSignSignup :: (CryptoRNG m, MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Email -> String -> String -> String -> String -> m (Maybe KontraLink)
+handlePostSignSignup ctx email fn ln cnm cnr = do
   let lang = mctxlang (mailContext ctx)
   muser <- dbQuery $ GetUserByEmail email
   case (muser, muser >>= userhasacceptedtermsofservice) of
@@ -498,7 +501,13 @@ handlePostSignSignup ctx email fn ln = do
     (Nothing, Nothing) -> do
       -- this email address is new to the system, so create the user
       -- and send an invite
-      mnewuser <- createUser' ctx email (fn, ln) Nothing lang
+      company <- dbUpdate $ CreateCompany
+      Log.debug $ "Creaging company " ++ cnm ++ " " ++ cnr
+      _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
+                    companyname = cnm
+                  , companynumber = cnr
+              }
+      mnewuser <- createUser' ctx email (fn, ln) (companyid company,True) lang
       case mnewuser of
         Nothing -> return Nothing
         Just newuser -> do

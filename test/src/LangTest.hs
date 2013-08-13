@@ -18,6 +18,7 @@ import User.Lang
 import User.Model
 import Utils.Default
 import User.API
+import Company.Model
 
 langTests :: TestEnvSt -> Test
 langTests env = testGroup "Lang" [
@@ -108,5 +109,6 @@ createTestElegDoc user _ctxtime = do
 createTestUser :: Lang -> TestEnv User
 createTestUser lang = do
     pwd <- createPassword "admin"
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing lang Nothing
+    company <- dbUpdate $ CreateCompany
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang Nothing
     return user

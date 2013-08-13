@@ -83,7 +83,9 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     let mdb = currentBrandedDomain ctx
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
-    mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
+    mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
+                   Nothing -> return Nothing
     mcompanyui <- maybe (return Nothing) (\x -> Just <$> (dbQuery . GetCompanyUI $ (companyid x))) mcompany
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
@@ -275,7 +277,7 @@ authorJSON :: Maybe User -> Maybe Company -> JSValue
 authorJSON mauthor mcompany = runJSONGen $ do
     J.value "fullname" $ getFullName <$> mauthor
     J.value "email" $ getEmail <$> mauthor
-    J.value "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor
+    J.value "company" $ getCompanyName <$> mcompany
     J.value "phone" $ userphone <$> userinfo <$> mauthor
     J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
 

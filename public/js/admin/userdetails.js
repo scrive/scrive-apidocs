@@ -4,6 +4,9 @@
 (function(window){
 
 var AdminUserDetailsModel = Backbone.Model.extend({
+  defaults : {
+    newcompanyid : ""
+  },
   initialize : function(args) {
     var self = this;
     var user = new User({id : args.userid, forAdmin : true});
@@ -109,9 +112,7 @@ var AdminUserDetailsModel = Backbone.Model.extend({
      this.set({"accountType" : v});
   },
   currentAccountType : function() {
-     if (this.user().company() == undefined)
-       return "privateaccount";
-     else if (this.user().companyadmin())
+     if (this.user().companyadmin())
        return "companyadminaccount";
      else
        return "companystandardaccount";
@@ -122,6 +123,12 @@ var AdminUserDetailsModel = Backbone.Model.extend({
   setLang : function(v) {
     this.set({"lang" : v});
   },
+  newcompanyid : function() {
+    return this.get("newcompanyid");
+  },
+  setNewcompanyid : function(v) {
+    this.set({"newcompanyid" : v});
+  },
   reset : function() {
     if (!this.ready()) return;
     this.set({
@@ -131,8 +138,6 @@ var AdminUserDetailsModel = Backbone.Model.extend({
       , email : this.user().email()
       , phone : this.user().phone()
       , lang :  this.user().lang() != "sv" ?  "en" : "sv"
-      , companyname :    !this.user().hasCompany() ? this.user().usercompanyname() : this.company().companyname()
-      , companynumber :  !this.user().hasCompany() ? this.user().usercompanynumber()   : this.company().companynumber()
       , companyposition : this.user().companyposition()
     }, {silent : true});
     this.trigger("reset");
@@ -146,8 +151,6 @@ var AdminUserDetailsModel = Backbone.Model.extend({
         userpersonalnumber : this.personnumber(),
         userphone : this.phone(),
         useremail : this.email(),
-        usercompanyname : this.companyname(),
-        usercompanynumber : this.companynumber(),
         usercompanyposition : this.companyposition(),
         userlang :this.user().lang() != "sv" ?  "LANG_EN" : "LANG_SV",
         useraccounttype : this.get("accountType")
@@ -158,6 +161,13 @@ var AdminUserDetailsModel = Backbone.Model.extend({
        url : "/adminonly/useradmin/sendinviteagain",
        method : "POST",
        userid : this.user().userid()
+    });
+  },
+  moveToDifferentCompany : function() {
+    return new Submit({
+       url : "/adminonly/useradmin/move/" + this.user().userid(),
+       method : "POST",
+       companyid : this.newcompanyid()
     });
   },
   refresh : function() {
@@ -188,9 +198,7 @@ var AdminUserDetailsView = Backbone.View.extend({
       return this.langselect;
     },
     accountTypeName : function(name) {
-      if (name == "privateaccount")
-        return "Private account";
-      else if (name == "companystandardaccount")
+      if (name == "companystandardaccount")
         return "Company account";
       else if (name == "companyadminaccount")
         return "Company admin";
@@ -207,8 +215,7 @@ var AdminUserDetailsView = Backbone.View.extend({
         },
         textWidth : "203px",
         optionsWidth : "230px",
-        options : [  {name : this.accountTypeName("privateaccount"), value : "privateaccount"}
-                   , {name : this.accountTypeName("companystandardaccount"), value : "companystandardaccount"}
+        options : [  {name : this.accountTypeName("companystandardaccount"), value : "companystandardaccount"}
                    , {name : this.accountTypeName("companyadminaccount"), value : "companyadminaccount"}
                   ]
       }).el();
@@ -220,6 +227,9 @@ var AdminUserDetailsView = Backbone.View.extend({
       var box = $("<di/>");
       var table = $("<table style='border-collapse: separate; border-spacing: 10px;'/>");
       box.append(table);
+
+      var idinput = $("<input type='text' readonly='' style='color:#666666'/>").val(model.user().userid());
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("User ID"))).append($("<td/>").append(idinput)));
 
       var fstnameinput = $("<input type='text' name='fstname'/>").val(model.fstname());
       fstnameinput.change(function() {
@@ -253,22 +263,6 @@ var AdminUserDetailsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Phone"))).append($("<td/>").append(phoneinput)));
 
 
-      if (!model.user().hasCompany()) {
-
-          var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
-          companynameinput.change(function() {
-              model.setCompanyname(companynameinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company name"))).append($("<td/>").append(companynameinput)));
-
-          var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
-          companynumberinput.change(function() {
-              model.setCompanynumber(companynumberinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company number"))).append($("<td/>").append(companynumberinput)));
-
-      }
-
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
@@ -277,24 +271,47 @@ var AdminUserDetailsView = Backbone.View.extend({
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Language"))).append($("<td/>").append(this.langSelect().el())));
 
-      if (model.user().hasCompany()) {
-            table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company")))
-                                   .append($("<td/>").append($("<a>Link</a>").attr("href","/adminonly/companyadmin/" + this.model.user().company().companyid()))));
-      }
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Company")))
+                                   .append($("<td/>").append($("<a>Link to company </a>").append($("<span>").text(this.model.user().company().companyname()))
+                                                                .attr("href","/adminonly/companyadmin/" + this.model.user().company().companyid()))));
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Account type"))).append($("<td/>").append(this.accountTypeSelector())));
 
       return box;
     },
     buttonsRow: function() {
+      var self = this;
       var model = this.model;
-      var buttonRow = $("<div style='width:300px;height:50px;margin-top:30px;'/>");
+      var buttonRow = $("<div style='width:500px;height:50px;margin-top:30px;'/>");
+
+      var invitationButton = new Button({
+                text: "Resend invitation"
+              , color: "blue"
+              , size: "tiny"
+              , style: "margin-left:20px"
+              , onClick : function() {
+                  model.resendInvitation().sendAjax(function() {
+                      new FlashMessage({color: "green", content : "Invitation send"});
+                      model.refresh();
+                  });
+                }
+          });
+
+      var moveButton = new Button({
+                text: "Move to different company"
+              , color: "blue"
+              , size: "tiny"
+              , style: "margin-left:20px"
+              , onClick : function() {
+                  self.openMoveToDifferentCompanyModal();
+                }
+      });
 
       var saveButton = new Button({
                 text: "Change details"
               , color: "green"
               , size: "tiny"
-              , cssClass: "float-right"
+              , style: "margin-left:20px"
               , onClick : function() {
                   model.saveDetails().sendAjax(function() {
                       new FlashMessage({color: "green", content : "Saved"});
@@ -303,20 +320,53 @@ var AdminUserDetailsView = Backbone.View.extend({
                 }
           });
 
-      var invitationButton = new Button({
-                text: "Resend invitation"
-              , color: "blue"
-              , size: "tiny"
-              , cssClass: "float-left"
-              , onClick : function() {
-                  model.resendInvitation().sendAjax(function() {
-                      new FlashMessage({color: "green", content : "Invitation send"});
-                      model.refresh();
-                  });
-                }
-          });
-      return buttonRow.append(saveButton.el()).append(invitationButton.el());
+      return buttonRow.append(invitationButton.el()).append(moveButton.el()).append(saveButton.el());
 
+    },
+    openMoveToDifferentCompanyModal : function() {
+      var model = this.model;
+      var nameBox = $("<div style='color:#666666;margin-left:10px;font-size:10px;width:200px;display:inline'>");
+      var input = new InfoTextInput({
+                    infotext : "ID",
+                    value: model.newcompanyid(),
+                    onChange : function(v) {
+                      model.setNewcompanyid(v);
+                      if (new NumberValidation().validateData(v)) {
+                        new Submit({
+                          url: "/adminonly/companyadmin/details/"+ v,
+                          expectedType: "json",
+                          ajaxsuccess: function(resp) {
+                            nameBox.text("Company with name: " + resp.companyname);
+                          },
+                          ajaxerror : function() {
+                            nameBox.text("No company is matching given id");
+                          }
+                        }).sendAjax();
+                      }
+                      else
+                       nameBox.text("Company id must contains only numbers");
+                    }
+                  });
+      var label = $("<label> Company ID: <label>").append(input.el()).append(nameBox);
+      var popup = Confirmation.popup({
+        title : "Move user to different company",
+        acceptText: "Move",
+        content : label,
+        onAccept : function() {
+          model.moveToDifferentCompany().sendAjax(
+            function() {
+                new FlashMessage({color: "green", content : "Moved"});
+                model.refresh();
+                popup.close();
+                return false;
+            },
+            function() {
+              new FlashMessage({color: "red", content : "Failed"});
+              return false;
+            }
+         );
+        }
+      });
     },
     render: function () {
        var self = this;

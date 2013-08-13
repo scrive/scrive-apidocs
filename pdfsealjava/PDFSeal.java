@@ -451,12 +451,12 @@ public class PDFSeal {
             cell.setPaddingBottom(12);
             cell.setBorderWidth(1f);
 
-            if( person.fullname!=null && person.fullname!="" ) {
+            if( person.fullname!=null && !person.fullname.equals("") ) {
                 para = createParagraph(person.fullname, 10, Font.BOLD, lightTextColor );
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
-            if( person.company!=null && person.company!="" ) {
+            if( person.company!=null && !person.company.equals("") ) {
                 para = createParagraph(person.company, 10, Font.NORMAL, lightTextColor);
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
@@ -465,17 +465,17 @@ public class PDFSeal {
              * Spacing.
              */
             cell.addElement(new Paragraph(""));
-            if( person.personalnumber!=null && person.personalnumber!="" ) {
+            if( person.personalnumber!=null && !person.personalnumber.equals("") ) {
                 para = createParagraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, 10, Font.NORMAL, lightTextColor );
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
-            if( person.companynumber!=null && person.companynumber!="" ) {
+            if( person.companynumber!=null && !person.companynumber.equals("") ) {
                 para = createParagraph(spec.staticTexts.orgNumberText + " " + person.companynumber, 10, Font.NORMAL, lightTextColor);
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
-            if( person.email!=null && person.email!="" ) {
+            if( person.email!=null && !person.email.equals("") ) {
                 para = createParagraph(person.email, 10, person.emailverified ? Font.ITALIC : Font.NORMAL, lightTextColor);
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);

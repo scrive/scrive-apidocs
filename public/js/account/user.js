@@ -62,9 +62,6 @@ window.User = Backbone.Model.extend({
   company : function() {
      return this.get("company");
   },
-  hasCompany : function() {
-     return this.company() != undefined;
-  },
   companyadmin : function() {
      return this.get("companyadmin");
   },

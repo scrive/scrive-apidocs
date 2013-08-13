@@ -105,60 +105,6 @@ var newUserInCompanyButton = function(companyid) {
     } }).el();
 };
 
-var inviteExistingUserToCompany = function(companyid) {
-      return new Button({
-        color: "green",
-        text : "Invite existing user",
-        size : "tiny",
-        style: "float:left;margin-left:10px",
-        onClick : function() {
-        var body = jQuery("<div class='account-body' style='min-height:50px;'>");
-                body.append("<p>Create new user account in company</p>");
-                var table = jQuery("<table/>");
-
-                var tr = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
-                var email = jQuery("<input type='text' name='email' autocomplete='off' />");
-                tr.append(jQuery("<td/>").append(email));
-                table.append(tr);
-                body.append(table);
-
-
-                Confirmation.popup({
-                  onAccept : function() {
-                                var callback = function(t,e,v) {
-                                    e.css("background", "red");
-                                    jQuery(document.createElement('div'))
-                                        .attr("name", "validate-message")
-                                        .css({"font-size": 8, "font-weight": "bold", "color": "red"})
-                                        .append(v.message())
-                                        .appendTo(e.parent());
-                                };
-
-                                email.css("background", "white");
-
-
-                                //delete messages
-                                jQuery('[name=validate-message]').remove();
-
-                                var vresult = [
-                                    email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback})))
-                                    ];
-
-                                if (vresult.every(function(a) {return a;})) {
-                                    new Submit({
-                                        method: "POST",
-                                        url: "/adminonly/companyadmin/users/" + companyid,
-                                        email : email.val(),
-                                        privateinvite : "true"
-                                        }).send();
-                                }
-                            },
-                  title : "Add existing user to company",
-                  acceptText : "Add",
-                  content  : body
-                });
-        }}).el();
-};
 
 window.CompanyUsersListDefinition = function(args) {
     return {
@@ -175,7 +121,7 @@ window.CompanyUsersListDefinition = function(args) {
           textfiltering: new TextFiltering({ text: "", infotext: "Company Accounts" }),
           cells: [
             new Cell({name: "Name", width: "100px", field:"fullname", special : "link"}),
-            new Cell({name: "Email", width: "100px", field:"email"}),
+            new Cell({name: "Email", width: "100px", field:"email", special : "link"}),
             new Cell({name: "Role", width: "100px", field:"role", special: "rendered",
                       rendering: function(value, idx, user) {
                         if (user.field("role")=="RoleAdmin") {
@@ -185,10 +131,18 @@ window.CompanyUsersListDefinition = function(args) {
                         } else {
                           return jQuery("<span>Pending</span>");
                         }
-                      }})
+                      }}),
+            new Cell({name: "TOS date", width:"100px", field:"tos", special:"rendered",
+                                    rendering: function(time, idx, doc) {
+                                            if (time != undefined && time != "")
+                                              return $("<small/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                                            else return $("<small/>");
+                                    }
+                       })
+
           ]
         }),
-        headerExtras : newUserInCompanyButton(args.companyid).add(inviteExistingUserToCompany(args.companyid))
+        headerExtras : newUserInCompanyButton(args.companyid)
     };
 };
 

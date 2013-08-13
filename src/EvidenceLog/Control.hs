@@ -22,7 +22,7 @@ import EvidenceLog.Model
 
 jsonDocumentEvidenceLog ::  Kontrakcja m => DocumentID -> m JSValue
 jsonDocumentEvidenceLog did = do
-  doc <- guardRightM' $ getDocByDocID did
+  doc <- guardRightM $ getDocByDocID did
   evidenceLog <- dbQuery $ GetEvidenceLog $ documentid doc
   events <- eventsJSListFromEvidenceLog  doc (reverse evidenceLog)
   runJSONGenT $ do

@@ -28,7 +28,6 @@ import Kontra
 import KontraLink
 import Mails.SendMail
 import MinutesTime (formatMinutesTime)
-import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
 import Text.StringTemplates.Templates
@@ -347,7 +346,9 @@ documentMailWithDocLang ctx doc mailname otherfields = documentMail doc ctx doc 
 documentMail :: (HasLang a, HasMailContext c, MonadDB m, TemplatesMonad m) =>  a -> c -> Document -> String -> Fields m () -> m Mail
 documentMail haslang ctx doc mailname otherfields = do
     let mctx = mailContext ctx
-    mcompany <- liftMM (dbQuery . GetCompanyByUserID) (return $ getAuthorSigLink doc >>= maybesignatory)
+    mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
+                   Nothing -> return Nothing
     mcompanyui <- case mcompany of
                     Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
                     Nothing -> return Nothing
