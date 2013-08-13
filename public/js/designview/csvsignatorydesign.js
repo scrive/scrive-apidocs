@@ -186,15 +186,13 @@ var CsvSignatoryDesignView = Backbone.View.extend({
     },
     firstUploadBox : function(){
          var model = this.model;
-         var box = $("<div class='option-box middle-box'>");
-         var header = $("<div class='header'/>").text(localization.csv.selectFileHeader);
-         var subheader = $("<div class='sheader'/>").text(localization.csv.selectFileSubheader);
          var uploadButton = new UploadButton({
                     name: "csv",
-                    color : "green",
-                    size: "small",
+                    color : "black",
+                    shape: 'rounded',
+                    width: 300,
+                    size: "big",
                     text: localization.csv.selectFile,
-                    width: 200,
                     type: "application/csv",
                     onAppend : function(input) {
                         setTimeout(function() {model.upload($(input));},100);
@@ -202,10 +200,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     },
                     onError : function() {}
             });
-         box.append(header);
-         box.append(subheader);
-         box.append($("<div class='buttonbox'/>").append(uploadButton.el()));
-         return box;
+         return $("<div class='buttonbox'/>").append(uploadButton.el());
     },
     nextUploadButton : function(){
          var model = this.model;
@@ -222,7 +217,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     },
                     onError : function() {}
             });
-         return uploadButton();
+         return uploadButton.el();
     },
     render: function () {
         var view = this;
@@ -259,10 +254,13 @@ window.CsvSignatoryDesignPopup =  function(args) {
          var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")});
          var popup = Confirmation.popup({
               content  : $(view.el),
+              icon: '/img/modal-icons/multisend.png',
+              subtitle: "Select a file to upload (.csv files only)",
               title  : localization.csv.title,
               acceptText: localization.save,
-              width: 960,
+              width: 533,
               acceptVisible : model.ready(),
+              footerVisible: false,
               onAccept : function() {
                   if (csvSignatory == undefined) {
                     var fields = [];

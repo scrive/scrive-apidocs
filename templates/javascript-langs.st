@@ -192,6 +192,7 @@ javascriptLocalisation =
                 , selectAttachmentsDescription: "$_updateAttachmentsDialogChooseAttachment()$"
                 , storedInScrive: "$_updateAttachmentsDialogUpLoadSaved()$"
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
+                , selectFromScrive : "$_updateAttachmentsDialogChooseFromScrive()$"
                 , selectedAttachments : "$_selectedAttachments()$"
                 , invalidAttachments : "$_invalidAttachments()$"
             }
@@ -209,8 +210,6 @@ javascriptLocalisation =
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
-              , selectFileHeader : "$_dialogCsvupload1ChooseFileToUpLoad()$"
-              , selectFileSubheader : "$_dialogCsvupload1CSVOnly()$"
               , selectFile :  "$_dialogCsvupload2CSVMultiChooseFile()$"
               , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }

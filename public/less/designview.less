@@ -1,3 +1,6 @@
+@import 'branding/colors.less';
+
+
 /* Stuff specyfic to design view
  * Durring backbone refactoring we changed structure and we want to get rid of bad css stuff also
  */
@@ -356,9 +359,6 @@ input.daystosign {
 
 .option-box
 {
-    border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
-    border-width: 1px;
-    border-style: solid;
     height: 130px;
     margin: 15px;
     padding: 10px;
@@ -366,16 +366,23 @@ input.daystosign {
     width: 250px;
 }
 
+
+.designSignatoryAttachmentsPopupContent {
+    padding-bottom: 30px;
+}
+
 .selectAuthorAttachmentPopupContent {
     width: 610px;
     margin:auto;
-}
-.selectAuthorAttachmentPopupContent .description{
-    text-align: center;
-}
-.selectAuthorAttachmentPopupContent .option-box
-{
-    margin: 15px;
+
+    .option-box {
+        margin: 15px;
+        width: 240px;
+
+        .label {
+            font-size: 17px;
+        }
+    }
 }
 
 .selectAuthorAttachmentPopupContent  .option-top-box {
@@ -388,15 +395,17 @@ input.daystosign {
 }
 
 .designCSVSignatoryPopupContent {
-    width: 840px;
     overflow-x: auto;
+    width: 290px;
+    margin: auto;
+    padding-top: 30px;
+    padding-bottom: 30px;
 }
 
 .selectAuthorAttachmentPopupContent .header,
 .designCSVSignatoryPopupContent .header{
-    color: black;
+    color: @text-dark;
     font-size: 16px;
-    font-weight: bold;
     margin: 5px;
     height: 30px;
 }
@@ -406,14 +415,6 @@ input.daystosign {
     margin: 5px;
     height: 35px;
 }
-.selectAuthorAttachmentPopupContent .buttonbox,
-.designCSVSignatoryPopupContent .buttonbox
-{
-    width: 210px;
-    padding-left: 25px;
-    padding-right: 25px;
-
-}
 .selectAuthorAttachmentPopupContent .table {
     background: none;
     border-radius: 0 0 0 0;
@@ -421,29 +422,24 @@ input.daystosign {
     padding:0px;
 }
 .selectAuthorAttachmentPopupContent .attachmentsList{
-    margin-top: 5px;
-    margin-left: 5px;
-    margin-right: 5px;
+    width: 560px;
+    margin: auto;
     padding : 8px;
-    border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
-    border-width: 1px;
-    border-style: solid;
+    border-top: 1px #ddd solid;
+    border-bottom: 1px #ddd solid;
+    color: @text-medium;
 }
 
 .selectAuthorAttachmentPopupContent .attachmentsList .attachmentBox{
    margin-top: 5px;
 }
 
-.selectAuthorAttachmentPopupContent .attachmentsList .header{
-   color: black;
-   font-decoration: bold;
-}
 .selectAuthorAttachmentPopupContent .attachmentsList .removeLink{
     margin-left: 10px;
     text-decoration: none;
     cursor: pointer;
-    color: #35A4D6;
-
+    float: right;
+    font-size: 17px;
 }
 .selectAuthorAttachmentPopupContent .back{
     background: url("../img/back.png") no-repeat scroll 0 0 transparent;
@@ -463,10 +459,23 @@ input.daystosign {
 }
 
 .editSignatoryAttachmentTable {
-   margin-top : 5px;
-   margin-bottom: 5px;
-   border: 1px solid #DDDDDD;
-   }
+    margin-top : 5px;
+    margin-bottom: 5px;
+
+    border-collapse: separate;
+    border-spacing: 20px 1px;
+
+    th, td {
+        text-align: left;
+        vertical-align: top;
+        padding: 5px;
+    }
+
+    th {
+        font-weight: 300;
+        border-bottom: 1px solid #999;
+    }
+}
 .editSignatoryAttachmentName{
     width: 130px;
     margin-right: 20px;
@@ -480,12 +489,6 @@ input.daystosign {
     margin-right: 20px;
 }
 
-.editSignatoryAttachmentTable th, .editSignatoryAttachmentTable td {
-   text-align: left;
-   vertical-align:top;
-   padding: 5px;
-   border: 1px solid #EEEEEE;
-}
 .editSignatoryAttachmentTDName{
     width: 150px;
 }
@@ -495,8 +498,9 @@ input.daystosign {
 .editSignatoryAttachmentTDSelect{
     width: 150px;
 }
-.editSignatoryAttachmentTDRemove{
+th.editSignatoryAttachmentTDRemove{
     width: 30px;
+    border-bottom: none;
 }
 
 .setRoleBox .option .radio {

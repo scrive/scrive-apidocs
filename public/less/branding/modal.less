@@ -72,22 +72,39 @@
 
 .modal-header {
   padding: 25px 20px;
-  height: 25px;
-  background: repeat scroll 0 0 #F5F5F5;
+  height: 222px;
+  background: repeat scroll 0 0 @green;
   border-bottom: 1px solid @blue-border;
+  color: @text-very-light;
 }
+.modal-header-inner {
+  margin: auto;
+  width: 300px;
+  text-align: center;
+}
+
 .modal-title {
   font-family: @source;
-  font-size: 1.5em;
+  font-size: 24px;
   line-height: 25px;
   display: block;
-  color: @text-dark;
-  width: 500px;
-  float: left;
+  padding-top: 28px;
+}
+
+.modal-subtitle {
+  padding-top: 5px;
 }
 
 .modal-container.small-screen .modal-title {
   font-size: 32px;
+}
+
+.modal-icon {
+    padding-top: 39px;
+    height: 82px;
+    width: 82px;
+    display: block;
+    margin: auto;
 }
 
 .modal-close {
@@ -107,9 +124,8 @@
 }
 
 .modal-content {
-  border-bottom: 1px solid @blue-border;
  .body {
-    padding: 20px 83px;
+    padding: 20px 35px;
     p {
       margin: 10px 0;
     }
@@ -126,8 +142,10 @@
 
 .modal-footer {
   height: 32px;
-  padding: 20px 25px;
-  background: none repeat scroll 0 0 #F5F5F5;
+  padding: 35px 0px;
+  margin-left: 35px;
+  margin-right: 35px;
+  border-top: 1px solid @blue-border;
 }
 .modal-footer .button {
   min-width: 80px;
@@ -136,9 +154,9 @@
   cursor: pointer;
   line-height: 32px;
   &.close {
-    color: @red;
+    color: @text-medium;
     &:hover {
-      color: @hover;
+      color: @text-very-dark;
     }
   }
 }

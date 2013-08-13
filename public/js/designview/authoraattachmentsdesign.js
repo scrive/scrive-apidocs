@@ -76,12 +76,12 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var attachmentsList = this.model;
         var box = $("<div class='option-box'>");
         var header = $("<div class='header'/>").text(localization.selectFileToUpload);
-        var subheader = $("<div class='sheader'/>").text(localization.onlyPDF);
         this.uploadButton = new UploadButton({
-                color : "green",
-                size: "small",
+                color : "black",
+                size: 'big',
+                shape: 'rounded',
                 text: localization.authorattachments.selectFile,
-                width: 200,
+                width: 256,
                 maxlength: 2,
                 onAppend : function(input,title,multifile) {
                     mixpanel.track('Upload attachment');
@@ -95,7 +95,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                 onError : function() {}
             });
         box.append(header);
-        box.append(subheader);
         box.append($("<div class='buttonbox'/>").append(this.uploadButton.el()));
         return box;
     },
@@ -103,13 +102,13 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var view = this;
         var attachmentsList = this.model;
         var box = $("<div class='option-box'>");
-        var header = $("<div class='header'/>").text(localization.authorattachments.selectAttachment);
-        var subheader = $("<div class='sheader'/>").text(localization.authorattachments.storedInScrive);
+        var header = $("<div class='header'/>").text(localization.authorattachments.selectFromScrive);
         var selectAttachmentButton = new Button({
-            color : "green",
-            size: "small",
+            color : "black",
+            shape: 'rounded',
+            size: 'big',
             text: localization.authorattachments.selectAttachment,
-            width: 200,
+            width: 256,
             onClick : function() {
                 mixpanel.track('Click select attachment');
                 view.showAvaibleAttachmentsList = true;
@@ -117,7 +116,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
             }
           });
         box.append(header);
-        box.append(subheader);
         box.append($("<div class='buttonbox'/>").append(selectAttachmentButton.el()));
         return box;
     },
@@ -169,11 +167,10 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var attachmentsList = this.model;
         if (attachmentsList.isEmpty()) return box;
         box.addClass("attachmentsList");
-        box.append($("<div class='header'/>").text(localization.authorattachments.selectedAttachments));
         _.each(attachmentsList.attachments(),function(attachment){
             var attachmentBox = $("<div class='attachmentBox'>");
             attachmentBox.append($("<span/>").text(attachment.name()));
-            var removeLink = $("<span class='removeLink'>x</span>");
+            var removeLink = $("<span class='removeLink'>X</span>");
             removeLink.click(function() {attachmentsList.removeAttachment(attachment); return false;});
             attachmentBox.append(removeLink);
             box.append(attachmentBox);
@@ -189,9 +186,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.container.addClass("selectAuthorAttachmentPopupContent");
         this.container.empty();
         if (!this.showAvaibleAttachmentsList) {
-            var header = $("<div class='description'/>").text(localization.authorattachments.selectAttachmentsDescription);
-            this.container.append(header);
-
             var c1  = $("<td/>");
             c1.append(this.uploadButtonBox());
 
@@ -200,7 +194,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
 
             var table = $("<table/>").append($("<tbody/>").append($("<tr>").append(c1).append(c2)));
             this.container.append(table);
-       }
+        }
         else
         {
             this.container.append(this.avaibleAttachmentsList());
@@ -221,8 +215,10 @@ window.DesignAuthorAttachmentsPopup = {
          var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.authorattachments.selectAttachments,
+              subtitle : 'Select the files you would like to upload',
+              icon : '/img/modal-icons/attachments.png',
               acceptText: localization.save,
-              width: 800,
+              width: 740,
               onAccept : function() {
                   mixpanel.track('Save attachments', {documentid:document.documentid()});
                   document.afterSave( function() {

@@ -82,8 +82,9 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
     addAttachmentButton : function() {
         var attachments = this.model;
         return new Button({
-            size: 'tiny',
-            color: 'blue',
+            size: 'big',
+            color: 'black',
+            shape: 'rounded',
             text: localization.signatoryAttachments.addAttachment,
             onClick: function() {
                 mixpanel.track('Click add sig attachment (popup)');
@@ -184,6 +185,8 @@ window.DesignSignatoryAttachmentsPopup = {
          var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
+              subtitle  : 'Select the files you would like to upload',
+              icon : '/img/modal-icons/attachments.png',
               acceptText: localization.save,
               width: 800,
               onAccept : function() {
