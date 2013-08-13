@@ -3,6 +3,8 @@ $(function(){
 var ConfirmationModel = Backbone.Model.extend({
   defaults : {
       title  : "",
+      subtitle: "",
+      icon: undefined,
       acceptText: "Ok",
       rejectText: localization.cancel,
       acceptColor : "green",
@@ -17,6 +19,12 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   title : function(){
        return this.get("title");
+  },
+  subtitle : function(){
+       return this.get("subtitle");
+  },
+  icon : function(){
+       return this.get("icon");
   },
   content : function(){
        return this.get("content");
@@ -116,6 +124,7 @@ var ConfirmationView = Backbone.View.extend({
        var container = $("<div class='modal-container'/>");
        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
        container.css("top",$(window).scrollTop());
+       // TODO comment why this is as it is
        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
        container.css("left","0px");
        var left = Math.floor(($(window).width() - model.width()) / 2);
@@ -124,7 +133,12 @@ var ConfirmationView = Backbone.View.extend({
             $(this.el).addClass(model.extraClass());
        container.width(model.width());
        var header = $("<div class='modal-header'></div>");
-       var title = $("<span class='modal-title'/>");
+       var inner = $("<div class='modal-header-inner'></div>");
+       var title = $("<div class='modal-title'/>");
+       var subtitle = $("<div class='modal-subtitle'/>");
+       var icon = $("<img class='modal-icon'/>");
+       icon.attr('src', model.icon());
+       subtitle.append(this.model.subtitle());
        if (BrowserInfo.isSmallScreen()) {
          title.css('font-size', '42px');
          title.css('font-style', 'bold');
@@ -135,9 +149,12 @@ var ConfirmationView = Backbone.View.extend({
        if (model.textfont())
          title.css("font-family",model.textfont());
 
-       header.append(title);
+       inner.append(icon);
+       inner.append(title);
+       inner.append(subtitle);
        if (model.canCancel())
         header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
+       header.append(inner);
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
        if (model.textcolor())
@@ -160,7 +177,6 @@ var ConfirmationView = Backbone.View.extend({
 
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             new Button({         color:model.acceptColor(),
-                                 size: BrowserInfo.isSmallScreen() ? "small" : "tiny",
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  shape: "rounded",
                                  cssClass: "float-right",
