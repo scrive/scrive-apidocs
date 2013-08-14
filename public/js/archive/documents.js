@@ -169,6 +169,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.sendreminder.action,
+                                icon: '/img/modal-icons/remind.png',
                                 content: content,
                                 onAccept : function() {
                                     mixpanel.track('Send reminder');
@@ -208,6 +209,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.cancel.action,
+                                icon: '/img/modal-icons/sign.png',
                                 content: jQuery("<p/>").text(localization.archive.documents.cancel.body),
                                 onAccept : function() {
                                     mixpanel.track('Cancel document');
@@ -248,6 +250,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.remove.action,
+                                icon: '/img/modal-icons/sign.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     mixpanel.track('Delete document');
