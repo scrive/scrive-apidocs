@@ -56,6 +56,7 @@ window.AttachmentsListDefinition = function(archive) {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.share.head,
+                                icon: '/img/modal-icons/multisend.png',
                                 content: jQuery("<p/>").text(localization.archive.attachments.share.body),
                                 onAccept : function() {
                                     new Submit({
@@ -90,6 +91,7 @@ window.AttachmentsListDefinition = function(archive) {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.remove.action,
+                                icon: '/img/modal-icons/sign.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     var confirmationPopup = new Submit({

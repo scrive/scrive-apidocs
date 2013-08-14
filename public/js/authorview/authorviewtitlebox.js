@@ -125,6 +125,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
         Confirmation.popup({
           title: localization.process.cancelmodaltitle,
           content: modalcontent,
+          icon: '/img/modal-icons/withdraw.png',
           acceptText: localization.process.cancelbuttontext,
           rejectText: localization.cancel,
           acceptColor: "red",

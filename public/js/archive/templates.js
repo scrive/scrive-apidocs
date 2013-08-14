@@ -77,6 +77,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.share.head,
+                                icon: '/img/modal-icons/multisend.png',
                                 content: jQuery("<p/>").text(localization.archive.templates.share.body),
                                 onAccept : function() {
                                     new Submit({
@@ -112,6 +113,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.remove.action,
+                                icon: '/img/modal-icons/sign.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     new Submit({
