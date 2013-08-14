@@ -260,7 +260,6 @@ window.CsvSignatoryDesignPopup =  function(args) {
               acceptText: localization.save,
               width: 533,
               acceptVisible : model.ready(),
-              footerVisible: false,
               onAccept : function() {
                   if (csvSignatory == undefined) {
                     var fields = [];
