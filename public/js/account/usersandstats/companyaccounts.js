@@ -28,7 +28,6 @@ var CompanyAccountsModel = Backbone.Model.extend({
         onClick: function() {
             mixpanel.track('Click new account');
             var body = jQuery("<div class='account-body'>");
-            body.append($("<p></p>").text(localization.account.companyAccounts.createNewModalBody));
             var table = jQuery("<table/>");
 
             var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.fstname + ":"));
@@ -89,6 +88,9 @@ var CompanyAccountsModel = Backbone.Model.extend({
                  }
               },
               title : localization.account.companyAccounts.createNewModalTitle,
+              subtitle: localization.account.companyAccounts.createNewModalBody,
+              width: 533,
+              icon: '/img/modal-icons/newaccount.png',
               acceptButtonText : localization.account.companyAccounts.createNewModalAcceptButton,
               content  : body
             });
