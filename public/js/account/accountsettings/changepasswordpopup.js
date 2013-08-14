@@ -1,4 +1,6 @@
-/* Main archive definition. Its a tab based set of different documents lists. */
+/* 
+ * Defines the model and view for the change password popup.
+ */
 
 (function(window){
 

@@ -170,6 +170,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                   acceptText: localization.account.companyAccounts.resendModalAccept,
                                   rejectText: localization.cancel,
                                   title: localization.account.companyAccounts.resendModalTitle,
+                                  icon: '/img/modal-icons/remind.png',
                                   content: $("<p/>").text(localization.account.companyAccounts.resendModalBody + self.userFullName(user) + "?")
                                 });
                               };
@@ -212,6 +213,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                       acceptText: localization.ok,
                                       rejectText: localization.cancel,
                                       title: localization.account.companyAccounts.deleteModalTitle,
+                                      icon: '/img/modal-icons/removeaccount.png',
                                       content: content
                                     });
                                     return false;
