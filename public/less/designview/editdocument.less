@@ -3,152 +3,161 @@
 
 /// @DRAGGABLES ///
 
+@draggables-border:2px dashed #e4e4e4;
+
 // TODO: remove some overlap with the process box.
 .design-view-action-document-draggables {
     .box-sizing(border-box);
     width: 1018px;
     margin: auto;
     height: 96px;
-    text-align: right;
     background-color: @grey-background;
     border-bottom: 4px solid #fff;
     border-left: 4px solid #fff;
     border-right: 4px solid #fff;
     border-bottom-left-radius: 15px;
     border-bottom-right-radius: 15px;
+    padding-top:16px;
     .box-shadow(0 4px 0 rgba(0,0,0,0.05));
 }
 
 .design-view-action-document-draggables-help {
     .box-sizing(border-box);
-    height: 100%;
-    width: 200px;
     display: inline-block;
     position: relative;
-    margin: 0 8px 0 0;
+    text-align:center;
+
+    .icon {
+	height: 35px;
+	width: 32px;
+	background-image:url("../../img/Add-field-help-sprite.png");
+	display: inline-block;
+	position: relative;
+	top: 3px;
+    }
+
+    &.help1 {
+	margin-left:35px;
+	width:196px;
+	.icon {
+	    background-position:0px 0px;
+	}
+	.text {
+	    width: 140px;
+	    margin-left: 5px;
+	}
+    }
+    &.help2 {
+	margin-left:12px;
+	width:156px;
+	margin-right: 94px;
+	.icon {
+	    background-position:32px 0px;
+	}
+	.text {
+	    width:104px;
+	}
+    }
     .wrapper {
-        border: 1px dashed #e4e4e4;
-        border-radius: 4px 4px 4px 4px;
-        padding: 5px;
-        .box-sizing(border-box);
-        .center-vh(100%, 44px);
+	border:@draggables-border;
+        border-radius: 2px;
+        padding: 6px 0px 6px 5px;
+	height:42px;
+	
         .text {
           display : inline-block;
-          width: 140px;
           line-height: 16px;
-          vertical-align: top;
-          margin-right: 10px;
           text-align : left;
         }
     }
 }
 
-@draggable-width: 133px;
 @draggable-background: #FAFAFA;
 
-
-
-.design-view-action-document-draggables-checkbox {
-    .box-sizing(border-box);
-    height: 100%;
-    width: @draggable-width;
-    display: inline-block;
-    position: relative;
-    margin: 0 16px 0 0;
-    text-align: center;
-}
-
-.design-view-action-document-draggables-checkbox-wrapper {
-    .box-sizing(border-box);
-    .center-vh(100%, 56px);
-    border: 4px solid #FFFFFF;
-    border-radius: 4px 4px 4px 4px;
-    background-color: @draggable-background;
-}
-
-.design-view-action-document-draggables-checkbox-text {
-    .box-sizing(border-box);
-    .center-vh(100%, 38px);
-    cursor: default;
-}
-
-.design-view-action-document-draggables-checkbox-icon {
-    vertical-align: middle;
-    margin-right: 8px;
-    background-image: url(../../img/place-fields-sprite.png);
-    background-position: -0*38px 0px;
-    width: 38px;
-    height: 38px;
-    display: inline-block;
-}
-
-.design-view-action-document-draggables-signature {
+.design-view-action-document-draggable {
     .box-sizing(border-box);
     height: 100%;
     display: inline-block;
     position: relative;
-    width: 160px;
-    margin: 0 16px 0 5px;
-    text-align: center;
-}
+    margin-right:12px;
+    vertical-align:top;
+ 
+    &.design-view-action-document-draggable-textbox {
+	.design-view-action-document-draggable-inner-wrapper {
+	    width:142px;
+	}
+	.design-view-action-document-draggable-icon {
+	    background-position: 0px 0px;
+	}
+	.design-view-action-document-draggable-text {
+	    width:104px;
+	}
+    }
 
-.design-view-action-document-draggables-signature-wrapper {
-    .box-sizing(border-box);
-    .center-vh(100%, 56px);
-    border: 4px solid #FFFFFF;
-    border-radius: 4px 4px 4px 4px;
-    background-color: @draggable-background;
-}
+    &.design-view-action-document-draggable-signature {
+	.design-view-action-document-draggable-inner-wrapper {
+	    width:148px;
+	}
+	.design-view-action-document-draggable-icon {
+	    background-position: 44px 0px;
+	}
+	.design-view-action-document-draggable-text {
+	    width:110px;
+	}
+    }
+   
 
-.design-view-action-document-draggables-signature-text {
-    .box-sizing(border-box);
-    .center-vh(100%, 38px);
-    cursor: default;
-}
-
-.design-view-action-document-draggables-signature-icon {
-    vertical-align: middle;
-    margin-right: 8px;
-    background-image: url(../../img/place-fields-sprite.png);
-    background-position: -1*38px 0px;
-    width: 38px;
-    height: 38px;
-    display: inline-block;
-}
-
-
-.design-view-action-document-draggables-textbox {
-    .box-sizing(border-box);
-    height: 100%;
-    display: inline-block;
-    position: relative;
-    width: 158px;
-    margin: 0 20px 0 5px;
-    text-align: center;
-}
-
-.design-view-action-document-draggables-textbox-wrapper {
-    .box-sizing(border-box);
-    .center-vh(100%, 56px);
-    border: 4px solid #FFFFFF;
-    border-radius: 4px 4px 4px 4px;
-    background-color: @draggable-background;
-}
-
-.design-view-action-document-draggables-textbox-text {
-    .box-sizing(border-box);
-    .center-vh(100%, 38px);
-    cursor: default;
-}
-
-.design-view-action-document-draggables-textbox-icon {
-    vertical-align: middle;
-    margin-right: 8px;
-    background-image: url(../../img/place-fields-sprite.png);
-    background-position: -2*38px 0px;
-    width: 38px;
-    height: 38px;
-    display: inline-block;
+    &.design-view-action-document-draggable-checkbox {
+	.design-view-action-document-draggable-inner-wrapper {
+	    width:126px;
+	}
+	.design-view-action-document-draggable-icon {
+	    background-position: 21px 0px;
+	}
+	.design-view-action-document-draggable-text {
+	    width:88px;
+	}
+    }
+   
+    .design-view-action-document-draggable-wrapper {
+	border: @draggables-border;
+	border-radius: 2px;
+	padding:5px;
+    }
+    
+    .design-view-action-document-draggable-inner-wrapper {
+	background-color:@green-secondary;
+	height:44px;
+	border-radius:2px;
+    }
+    
+    .design-view-action-document-draggable-icon-wrapper {
+	border-radius: 2px 0px 0px 2px;
+	display:inline-block;
+	background-color: @green;
+	box-sizing: border-box;
+	height:100%;
+	padding-top:10px;
+	width:38px;
+	text-align:center;
+    }
+    
+    .design-view-action-document-draggable-text {
+	cursor: default;
+	display:inline-block;
+	text-align:center;
+	span {
+	    color:white;
+	}
+    }
+    
+    .design-view-action-document-draggable-icon {
+	vertical-align: middle;
+	background-image: url(../../img/place-fields-sprite.png);
+	width: 21px;
+	height: 20px;
+	display: inline-block;
+    }
 }
 
 .typesetter-obligatory-option {
