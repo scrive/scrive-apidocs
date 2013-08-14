@@ -2,15 +2,23 @@
 @blueS: 30%;
 @blueL: 30%;
 
-@blue-dark: hsl(@blueH,@blueS,@blueL);
+// TODO: Don't forget to rename @blue-darker -> @blue-dark, when this is removed
+@blue-dark: hsl(@blueH,@blueS,@blueL); 
 @blue-medium: hsl(@blueH,@blueS,60%);
 @blue-light: hsl(@blueH,@blueS,70%);
 @blue-border: hsl(@blueH,@blueS,90%);
 
 @gray-border: #ddd;
 
-@green: #53b68b;
-@blue: #3b434c;
+@green: #53B688;
+@green-dark: darken(@green, 25%);
+@green-secondary: #80C4A1;
+
+@blue: #323B45;
+// TODO: This should be renamed to @blue-dark, when the old @blue-dark is removed
+@blue-darker: darken(@blue, 25%); 
+@blue-secondary: #3D464F;
+
 @grey: #ededed;
 @light-blue: #0768a9;
 
@@ -20,12 +28,9 @@
 
 @light-border: #f1f1f1;
 
-@redH: 357;
-@redS: 100%;
-@redL: 38%;
-
-@red: hsl(@redH,@redS,@redL);
-@hover: hsl(@redH,@redS,50%);
+@red: #B9322F;
+@red-dark: darken(@red, 25%);
+@red-secondary: #8A2525;
 
 @text-very-dark: #262626;
 @text-dark: #333;

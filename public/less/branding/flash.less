@@ -1,63 +1,33 @@
-.flash {
-  position: fixed;
-  z-index: 100001;
-  top: -96px;
-  left: 0;
-  width: 100%;
-  padding: 1em 0;
-  background: rgba(255,255,255,.75);
-  .transition(.25s,ease-in-out);
-  &.active {
-    top: 0;
-  }
-  &.success {
-    .flash-content {
-      border-color: @blue-dark;
-      color: @blue-dark;
-    }
-    .flash-icon {
-      background: @blue-dark;
-    }
-  }
-  &.error {
-    .flash-content {
-      border-color: @red;
-      color: @red;
-    }
-    .flash-icon {
-      background: @red;
-    }
-  }
-  &.warning {
-    .flash-content {
-      border-color: orange;
-      color: orange;
-    }
-    .flash-icon {
-      background: orange;
-    }
-  }
-}
-.flash-content {
-  width: 1018px - 4px;
-  height: 64px - 4px;
+.flash-content-wrapper {
+  width: 1018px;
   margin: 0 auto;
   position: relative;
-  border: 2px solid #ddd;
-  background: #fff;
+  border: 6px solid rgba(255, 255, 255, 0.05);
+  xbackground: transparent;
   overflow: hidden;
+  border-radius: 3px;
+}
+
+.flash-content {
+    height: 64px - 4px;
+    border-radius: 3px;
+    color:white;
+}
+
+.flash-icon-wrapper {
+  width: 84px;
+  height: 60px;
+  float: left;
+  border-radius: 3px 0px 0px 3px;
 }
 
 .flash-icon {
-  width: 60px;
-  height: 60px;
-  background: #ddd;
-  float: left;
-  img {
-    margin: 18px;
-    opacity: .75;
-  }
+    width:60px;
+    height:40px;
+    margin: 10px auto;
+    background-image: url("../../img/notification-sprite.png");
 }
+
 .flash-body {
   float: left;
   padding-left: 16px;
@@ -72,6 +42,7 @@
     padding-bottom: 8px;
   }
 }
+
 .flash-close {
   position: absolute;
   top: 0;
@@ -93,3 +64,52 @@
 header.thin ~ .flash .flash-content {
   width: 960px - 4px;
 }
+
+.flash {
+  position: fixed;
+  z-index: 100001;
+  top: -96px;
+  left: 0;
+  width: 100%;
+  padding: 4px 0;
+  background: transparent;
+  .transition(.25s,ease-in-out);
+  &.active {
+    top: 0;
+  }
+  &.success {
+    .flash-content {
+      background-color:@green-secondary;
+    }
+    .flash-icon {
+	background-position: 3px;
+    }
+    .flash-icon-wrapper {
+	background-color:@green;
+    }
+
+  }
+  &.error {
+    .flash-content {
+      background-color:@red;
+    }
+    .flash-icon {
+	background-position: 58px;
+    }
+    .flash-icon-wrapper {
+	background-color:@red-secondary;
+    }
+  }
+  &.warning {
+    .flash-content {
+      background-color:@blue-secondary;
+    }
+    .flash-icon {
+	background-position: 112px;
+    }
+    .flash-icon-wrapper {
+	background-color:@blue;
+    }
+  }
+}
+

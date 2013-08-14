@@ -41,10 +41,10 @@ var FlashMessageView = Backbone.View.extend({
           self.clear();
           return false;
         });
-        $(this.el).append($("<div class='flash-content'> </div>")
-                    .append("<div class='flash-icon'><img width='24' height='24' alt='Icon' src='/img/ux.png'></div>")
+        $(this.el).append($("<div class='flash-content-wrapper'> </div>").append($("<div class='flash-content'> </div>")
+                    .append("<div class='flash-icon-wrapper'><div class='flash-icon'></div></div>")
                     .append($("<div class='flash-body'></div>").append(this.model.get("content")))
-                    .append($("<div class='flash-close'></div>").append(close))
+                    .append($("<div class='flash-close'></div>").append(close)))
                    );
         return this;
     },
