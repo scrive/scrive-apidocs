@@ -13,7 +13,7 @@ if [ "$#" != "2" ] && [ "$#" != 3 ]; then
     echo "   upgradeEnvironment.sh <deployment archive> <environment name>"
     echo "   upgradeEnvironment.sh <deployment archive> <environment name> skip_pg_dump"
     echo
-    echo "Currently this script is only supported for prod and staging"
+    echo "Currently this script is only supported for prod, staging and api-testbed"
     exit 3
 fi
 
@@ -23,8 +23,8 @@ if [ ! -d kontrakcja ] ; then
 fi
 
 # Check we have passed a supported environment name
-if [ "$2" != "prod" ] && [ "$2" != "staging" ] ; then
-    echo "This script is only supported for prod and staging environments."
+if [ "$2" != "prod" ] && [ "$2" != "staging" ] && [ "$2" != "api-testbed" ]; then
+    echo "This script is only supported for prod, staging and api-testbed environments."
     exit 3
 fi
 
@@ -38,7 +38,7 @@ chmod og-rwx "${HOME}/.pgpass"
 
 DATE=`date +%Y-%m-%d-%H-%M-%S`
 
-echo "Starting upgrade process for the $2 environment, date = $DATE"
+echo "Starting upgrade process for the '$2' environment, date = '$DATE'"
 echo "Stopping services...."
 
 supervisorctl stop ${2} ${2}-mailer ${2}-cron ${2}-messenger
@@ -55,16 +55,16 @@ if [ "$3" != "skip_pg_dump" ] ; then
     pg_dump ${2} -f ${HOME}/db-backup/${2}-${DATE}.bin -F custom -Z 9 -v
 fi
 
-echo "Moving kontrakcja to kontrakcja-$DATE"
+echo "Moving 'kontrakcja' directory to 'kontrakcja-$DATE'"
 
 mv kontrakcja kontrakcja-$DATE
 
-echo "Extracting deployment archive $1"
+echo "Extracting deployment archive '$1'"
 mkdir kontrakcja
 tar -C kontrakcja -xzf $1
 
 echo "Copying config files"
-cp kontrakcja-$DATE/*.conf kontrakcja
+cp -v kontrakcja-$DATE/*.conf kontrakcja
 
 echo "Moving logs"
 mv kontrakcja-$DATE/log kontrakcja
