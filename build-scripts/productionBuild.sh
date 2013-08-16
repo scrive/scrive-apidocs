@@ -3,6 +3,7 @@
 # This script assumes the existence of BUILD_NUMBER from TeamCity
 # This script assumes TMP which is the directory as a temporary workspace
 # This script assumes SRV which is the name of the server (ie, production, staging)
+# This script assumes SRV2 which is the name of the secondary server (api-testbed)
 # This script assumes AMZN which is a boolean whether to upload to Amazon
 
 if [ -z "$1" ]; then
@@ -89,5 +90,13 @@ echo "Verifying and unzipping deployment file"
 ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && tar -zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP && mkdir kontrakcja && tar -C kontrakcja -zxf $ZIP ; exit \$?"
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
+
+if [ -z "$SRV2" ]; then
+   # there is no secondary server, skip it
+else
+   echo "Copying deployment file to /tmp on $SRV2 server"
+   ssh builds@prod.scrive.lan "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
+   scp "$TMP/$finalfile" "api-testbed@vm-dev.scrive.com:/tmp/"$SRV2"_deployment/."
+fi
 
 exit 0
