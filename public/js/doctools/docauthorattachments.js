@@ -44,7 +44,8 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
   },
   authorAttachmentFile: function(attachment, labelCss) {
     var container = $("<div class='item' />");
-    var button = new Button({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', onClick: function() {
+    var buttonSize = BrowserInfo.isSmallScreen() ? 'small' : 'tiny';
+    var button = new Button({color: "black", text: localization.reviewPDF, cssClass: 'float-right', size: buttonSize, onClick: function() {
                         window.open(attachment.downloadLink(), '_blank');
                         }});
     container.append(button.el());
@@ -60,6 +61,10 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='authorattachments' />");
+
+    if (BrowserInfo.isSmallScreen()) {
+        container.addClass('small-screen');
+    }
 
     var document = this.model.document();
     var labelCss = {};
