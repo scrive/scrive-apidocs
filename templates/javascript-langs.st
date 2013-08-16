@@ -230,6 +230,7 @@ javascriptLocalisation =
            }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
+	      editInvitationMessage: "$_editInvitationMessage()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
               selectField: "$_selectField()$",
               validation : {
