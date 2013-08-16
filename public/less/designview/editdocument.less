@@ -29,7 +29,7 @@
 
     .icon {
 	height: 35px;
-	width: 32px;
+	width: 38px;
 	background-image:url("../../img/Add-field-help-sprite.png");
 	display: inline-block;
 	position: relative;
@@ -43,19 +43,21 @@
 	    background-position:0px 0px;
 	}
 	.text {
-	    width: 140px;
-	    margin-left: 5px;
+	    width: 123px;
+	    margin-left: 10px;
 	}
     }
     &.help2 {
 	margin-left:12px;
 	width:156px;
-	margin-right: 94px;
+	margin-right: 61px;
 	.icon {
-	    background-position:32px 0px;
+	    background-position:38px 0px;
 	}
 	.text {
-	    width:104px;
+	    width: 83px;
+	    margin-left: 4px;
+	    margin-right: 14px;
 	}
     }
     .wrapper {
@@ -83,39 +85,30 @@
     vertical-align:top;
  
     &.design-view-action-document-draggable-textbox {
-	.design-view-action-document-draggable-inner-wrapper {
-	    width:142px;
-	}
 	.design-view-action-document-draggable-icon {
 	    background-position: 0px 0px;
-	}
-	.design-view-action-document-draggable-text {
-	    width:104px;
-	}
-    }
-
-    &.design-view-action-document-draggable-signature {
-	.design-view-action-document-draggable-inner-wrapper {
-	    width:148px;
-	}
-	.design-view-action-document-draggable-icon {
-	    background-position: 44px 0px;
 	}
 	.design-view-action-document-draggable-text {
 	    width:110px;
 	}
     }
+
+    &.design-view-action-document-draggable-signature {
+	.design-view-action-document-draggable-icon {
+	    background-position: 44px 0px;
+	}
+	.design-view-action-document-draggable-text {
+	    width:116px;
+	}
+    }
    
 
     &.design-view-action-document-draggable-checkbox {
-	.design-view-action-document-draggable-inner-wrapper {
-	    width:126px;
-	}
 	.design-view-action-document-draggable-icon {
 	    background-position: 21px 0px;
 	}
 	.design-view-action-document-draggable-text {
-	    width:88px;
+	    width:94px;
 	}
     }
    
@@ -135,10 +128,8 @@
 	border-radius: 2px 0px 0px 2px;
 	display:inline-block;
 	background-color: @green;
-	box-sizing: border-box;
 	height:100%;
-	padding-top:10px;
-	width:38px;
+	width:44px;
 	text-align:center;
     }
     
@@ -146,17 +137,22 @@
 	cursor: default;
 	display:inline-block;
 	text-align:center;
+	position: relative;
+	top: -7px;
 	span {
 	    color:white;
+	    position: relative;
+	    top: 2px;
 	}
     }
     
     .design-view-action-document-draggable-icon {
-	vertical-align: middle;
 	background-image: url(../../img/place-fields-sprite.png);
 	width: 21px;
 	height: 20px;
 	display: inline-block;
+	margin-top:11px;
+	margin-left:3px;
     }
 }
 
