@@ -41,7 +41,7 @@ DATE=`date +%Y-%m-%d-%H-%M-%S`
 echo "Starting upgrade process for the $2 environment, date = $DATE"
 echo "Stopping services...."
 
-supervisorctl stop ${2} ${2}-mailer ${2}-cron
+supervisorctl stop ${2} ${2}-mailer ${2}-cron ${2}-messenger
 
 
 if [ "$3" != "skip_pg_dump" ] ; then
@@ -72,4 +72,4 @@ mv kontrakcja-$DATE/supervisor-log kontrakcja
 
 echo "Deployed. Please check out everything and then manually do:"
 echo ""
-echo "    supervisorctl start $2 $2-mailer $2-cron"
+echo "    supervisorctl start $2 $2-mailer $2-cron $2-messenger"
