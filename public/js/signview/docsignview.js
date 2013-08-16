@@ -8,7 +8,6 @@
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
-    justsaved: false,
     ignoredoclang : false,
     usebranding : true
   },
@@ -36,13 +35,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   usebranding : function() {
        return this.get("usebranding");
   },
-  justSaved: function() {
-    return this.get('justsaved');
-  },
-  setJustSaved: function() {
-    this.set({justsaved: true});
-    this.document().trigger('change');
-  },
   isReady : function() {
       return this.document().ready() && this.document().mainfile() != undefined;
   },
@@ -53,21 +45,18 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return !this.document().currentSignatory().padDelivery();
   },
   hasMainFileSection : function() {
-      return   !this.justSaved()
-            && this.document().ready() && this.document().mainfile() != undefined;
+      return this.document().ready() && this.document().mainfile() != undefined;
   },
   hasSignSection : function() {
       return this.document().currentSignatoryCanSign() && this.hasArrows();
   },
   hasSignatoriesSection : function() {
-      return    !this.justSaved()
-             && !this.document().closed()
+      return    !this.document().closed()
              && !BrowserInfo.isSmallScreen()
              && _.filter(this.document().signatories(),function(sig) {return sig.signs();}).length > 1;
   },
   hasAuthorAttachmentsSection : function() {
-      return    !this.justSaved()
-             && this.document().authorattachments().length > 0;
+      return this.document().authorattachments().length > 0;
   },
   hasExtraDetailsSection : function() {
     if (!this.document().currentSignatoryCanSign()) return false;
@@ -93,17 +82,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
     return res;
   },
   hasSignatoriesAttachmentsSection : function() {
-      return    !this.justSaved()
-             && this.document().currentSignatory().attachments().length > 0;
+      return this.document().currentSignatory().attachments().length > 0;
   },
   hasArrows : function() {
       return this.document().ready() && this.document().currentSignatoryCanSign() && this.mainfile() != undefined && this.mainfile().view.ready();
-  },
-  hasPromoteScriveSection : function() {
-      return    this.document().currentSignatory() != undefined
-             && this.document().currentSignatory().hasSigned()
-             && this.justSaved()
-             && window.PromoteScriveView != undefined;
   },
   hasCreateAccountSection : function() {
       return    this.document().currentSignatory() != undefined
@@ -130,16 +112,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
                 })
             }, {silent : true});
         return this.get('createaccountsection');
-  },
-  promotescrivesection : function() {
-        if (this.get("promotescrivesection") == undefined)
-            this.set({'promotescrivesection' :
-                new PromoteScriveView({
-                    model: this,
-                    el: $("<div />")
-                })
-            }, {silent : true});
-        return this.get('promotescrivesection');
   },
   signsection : function() {
         if (this.get("signsection") == undefined)
@@ -444,9 +416,6 @@ var DocumentSignViewView = Backbone.View.extend({
 
      if (this.model.hasCreateAccountSection())
          this.container.append(this.model.createaccountsection().el);
-
-     if (this.model.hasPromoteScriveSection())
-         this.container.append(this.model.promotescrivesection().el);
 
      if (   this.model.hasMainFileSection()
          || this.model.hasAuthorAttachmentsSection()

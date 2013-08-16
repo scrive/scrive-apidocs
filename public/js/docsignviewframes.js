@@ -39,7 +39,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     }
   },
   useStandardBranding : function() {
-    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
+    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned();
   },
   prerender : function() {
         var maindiv = $(this.el);
@@ -200,7 +200,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       }
   },
   useStandardBranding : function() {
-    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
+    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned();
   },
   prerender : function() {
         var maindiv = $(this.el);

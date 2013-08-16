@@ -74,7 +74,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   render: function() {
     var document = this.model.document();
     $(this.el).empty();
-    if(this.model.justSaved())  return this;
 
     var container = $("<div class='instructions' />");
     if (BrowserInfo.isSmallScreen()) {
