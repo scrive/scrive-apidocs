@@ -95,6 +95,7 @@ if [ ! -z "$SRV2" ]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
    ssh api-testbed@vm-dev.scrive.com "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
    scp "$TMP/$finalfile" "api-testbed@vm-dev.scrive.com:/tmp/"$SRV2"_deployment/."
+   ssh api-testbed@vm-dev.scrive.com "cd /tmp/"$SRV2"_deployment && tar -zxf $finalfile && mkdir kontrakcja && tar -C kontrakcja -zxf $ZIP ; exit \$?"
 fi
 
 exit 0
