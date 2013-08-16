@@ -91,9 +91,7 @@ ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && tar -zxf $finalfile && 
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
 
-if [ -z "$SRV2" ]; then
-   # there is no secondary server, skip it
-else
+if [ ! -z "$SRV2" ]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
    ssh builds@prod.scrive.lan "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
    scp "$TMP/$finalfile" "api-testbed@vm-dev.scrive.com:/tmp/"$SRV2"_deployment/."
