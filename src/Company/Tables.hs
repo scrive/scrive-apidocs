@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 13
+  , tblVersion = 14
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -15,26 +15,41 @@ tableCompanies = tblTable {
     , tblColumn { colName = "city", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "country", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
-    , tblColumn { colName = "email_bordercolour", colType = TextT }
-    , tblColumn { colName = "email_font", colType = TextT }
-    , tblColumn { colName = "email_buttoncolour", colType = TextT }
-    , tblColumn { colName = "email_emailbackgroundcolour", colType = TextT }
-    , tblColumn { colName = "email_backgroundcolour", colType = TextT }
-    , tblColumn { colName = "email_textcolour", colType = TextT }
-    , tblColumn { colName = "email_logo", colType = BinaryT }
-    , tblColumn { colName = "signview_logo", colType = BinaryT }
-    , tblColumn { colName = "signview_textcolour", colType = TextT }
-    , tblColumn { colName = "signview_textfont", colType = TextT }
-    , tblColumn { colName = "signview_barscolour", colType = TextT }
-    , tblColumn { colName = "signview_barstextcolour", colType = TextT }
-    , tblColumn { colName = "signview_backgroundcolour", colType = TextT }
-    , tblColumn { colName = "custom_logo", colType = BinaryT }
-    , tblColumn { colName = "custom_barscolour", colType = TextT }
-    , tblColumn { colName = "custom_barstextcolour", colType = TextT }
-    , tblColumn { colName = "custom_barssecondarycolour", colType = TextT }
-    , tblColumn { colName = "custom_backgroundcolour", colType = TextT }
     , tblColumn { colName = "sms_originator", colType = TextT, colNullable = False, colDefault = Just "''::text" }
 
     ]
   , tblPrimaryKey = ["id"]
+  }
+
+tableCompanyUIs :: Table
+tableCompanyUIs = tblTable {
+    tblName = "company_uis"
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "company_id",                  colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "email_bordercolour",          colType = TextT }
+    , tblColumn { colName = "email_font",                  colType = TextT }
+    , tblColumn { colName = "email_buttoncolour",          colType = TextT }
+    , tblColumn { colName = "email_emailbackgroundcolour", colType = TextT }
+    , tblColumn { colName = "email_backgroundcolour",      colType = TextT }
+    , tblColumn { colName = "email_textcolour",            colType = TextT }
+    , tblColumn { colName = "email_logo",                  colType = BinaryT }
+    , tblColumn { colName = "signview_logo",               colType = BinaryT }
+    , tblColumn { colName = "signview_textcolour",         colType = TextT }
+    , tblColumn { colName = "signview_textfont",           colType = TextT }
+    , tblColumn { colName = "signview_barscolour",         colType = TextT }
+    , tblColumn { colName = "signview_barstextcolour",     colType = TextT }
+    , tblColumn { colName = "signview_backgroundcolour",   colType = TextT }
+    , tblColumn { colName = "custom_logo",                 colType = BinaryT }
+    , tblColumn { colName = "custom_barscolour",           colType = TextT }
+    , tblColumn { colName = "custom_barstextcolour",       colType = TextT }
+    , tblColumn { colName = "custom_barssecondarycolour",  colType = TextT }
+    , tblColumn { colName = "custom_backgroundcolour",     colType = TextT }
+    ]
+  , tblPrimaryKey = ["company_id"]
+  , tblForeignKeys = [
+      (tblForeignKeyColumn "company_id" "companies" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    ]
   }

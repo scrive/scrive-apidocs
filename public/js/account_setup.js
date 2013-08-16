@@ -39,14 +39,14 @@
       return this.get('company');
     },
     setCompany: function(company) {
-      if (!this.companyFilled())
+      if (this.companyAdmin())
         this.set('company', company);
     },
     userid : function() {
         return this.get('userid');
     },
-    companyFilled : function() { // if this is set company should not be altered
-      return this.get('companyFilled') == true;
+    companyAdmin : function() {
+      return this.get('companyAdmin') == true;
     },
     phone: function() {
       return this.get('phone');
@@ -212,7 +212,7 @@
         inputtype: 'text',
         name: 'company',
         cssClass : "med-input med-input-left",
-        readonly : this.model.companyFilled()
+        readonly : !this.model.companyAdmin()
        });
 
       var companyrow = $("<div class='position'/>").append(companyInput.el());

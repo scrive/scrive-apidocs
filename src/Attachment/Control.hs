@@ -43,29 +43,30 @@ import File.Storage
 import File.Model
 import qualified Data.Map as Map
 import qualified Data.ByteString.UTF8 as BS
+import Happstack.Fields
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
   _ <- guardJustM $ ctxmaybeuser <$> getContext
   title <- getCriticalField return "docname"
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  _ <- guardRightM $ dbUpdate $ SetAttachmentTitle attid title actor
+  dbUpdate $ SetAttachmentTitle attid title actor
   J.runJSONGenT $ return ()
 
 
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do
     user <- guardJustM $ ctxmaybeuser <$> getContext
-    ids <- getCriticalFieldList asValidAttachmentID "doccheck"
-    _ <- dbUpdate $ SetAttachmentsSharing (userid user) ids True
+    ids <- getCriticalField asValidAttachmentIDList "attachmentids"
+    dbUpdate $ SetAttachmentsSharing (userid user) ids True
     J.runJSONGenT $ return ()
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
-    attids <- getCriticalFieldList asValidAttachmentID "doccheck"
+    ids <- getCriticalField asValidAttachmentIDList "attachmentids"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
-    _ <- guardRightM' $ dbUpdate $ DeleteAttachments (userid user) attids actor
+    dbUpdate $ DeleteAttachments (userid user) ids actor
     J.runJSONGenT $ return ()
 
 -- | This handler downloads a file by file id. As specified in
@@ -127,8 +128,11 @@ jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonAttachmentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   params <- getListParams
+  domainParam <- getField "domain"
 
-  let (domain,filters) = ([AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid],[])
+  let (domain,filters) = case domainParam of
+                           (Just "All") ->  ([AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid],[])
+                           _ ->  ([AttachmentsOfAuthorDeleteValue uid False],[])
 
   let sorting    = attachmentSortingFromParams params
       searching  = attachmentSearchingFromParams params

@@ -8,7 +8,7 @@ window.AttachmentsListDefinition = function(archive) {
     loadOnInit : false,
     schema: new Schema({
     url: "/a",
-    sorting: new Sorting({ fields: ["title", "time", "type"]}),
+    sorting: new Sorting({ fields: ["title", "time"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.attachments.search}),
     cells : [
@@ -62,7 +62,7 @@ window.AttachmentsListDefinition = function(archive) {
                                     new Submit({
                                                 url: "/a/share",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                attachmentids: "["+ _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.attachments.share.successMessage});
                                                     archive.attachments().recall();
@@ -97,7 +97,7 @@ window.AttachmentsListDefinition = function(archive) {
                                     var confirmationPopup = new Submit({
                                                 url: "/a/delete",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                attachmentids: "["+ _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.attachments.remove.successMessage});
                                                     archive.attachments().recall();

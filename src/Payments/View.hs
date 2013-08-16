@@ -17,11 +17,11 @@ import qualified Recurly as Recurly
 import qualified Text.StringTemplates.Fields as F
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
-
+import Control.Monad
 import Control.Applicative
 
-mailSignup :: (TemplatesMonad m) => String -> User -> Maybe Company -> Recurly.Subscription -> m Mail
-mailSignup hp user mcompany subscription = do
+mailSignup :: (TemplatesMonad m) => String -> User -> Company -> Recurly.Subscription -> m Mail
+mailSignup hp user company subscription = do
   kontramail "paymentsSignupEmail" $ do
     F.value "ctxhostpart" hp
     F.value "fullname" $ getFullName user
@@ -29,27 +29,25 @@ mailSignup hp user mcompany subscription = do
     F.value "enddate" $ showDate $ Recurly.subCurrentBillingEnds subscription
     F.value "planname" $ Recurly.subName subscription
     F.value "quantity" $ show $ Recurly.subQuantity subscription
-    F.value "total" $ showTotal (Recurly.subQuantity subscription) 
+    F.value "total" $ showTotal (Recurly.subQuantity subscription)
             (Recurly.subUnitAmountInCents subscription)
     F.value "currency" $ Recurly.subCurrency subscription
-    if null $ getCompanyName (user, mcompany)
-      then return ()
-      else  F.value "companyname" $ getCompanyName (user, mcompany)
+    when (not $ null $ getCompanyName company) $ do
+      F.value "companyname" $ getCompanyName company
     F.value "email" $ getEmail user
-    
-mailFailed :: (TemplatesMonad m) => String -> User -> Maybe Company -> Recurly.Invoice -> m Mail
-mailFailed hp user mcompany invoice = do
+
+mailFailed :: (TemplatesMonad m) => String -> User -> Company -> Recurly.Invoice -> m Mail
+mailFailed hp user company invoice = do
   kontramail "paymentsDeclinedEmail" $ do
     F.value "ctxhostpart" hp
     F.value "fullname" $ getFullName user
-    if null $ getCompanyName (user, mcompany)
-      then return ()
-      else  F.value "companyname" $ getCompanyName (user, mcompany)
+    when (not $ null $ getCompanyName company) $ do
+      F.value "companyname" $ getCompanyName company
     F.value "email" $ getEmail user
     F.value "date" $ showDate $ Recurly.inDate invoice
     F.value "total" $ showTotal 1 $ Recurly.inTotalInCents invoice
     F.value "currency" $ Recurly.inCurrency invoice
-    
+
 mailExpired :: TemplatesMonad m => String -> m Mail
 mailExpired hp = do
   kontramail "paymentsExpiredEmail" $ do

@@ -49,7 +49,7 @@ flashMessageAttachmentArchiveDone =
 
 pageArchive :: TemplatesMonad m => User -> MinutesTime -> m String
 pageArchive user mt = renderTemplate "pageDocumentsList" $ do
-                    F.value "isadmin" $ useriscompanyadmin user && isJust (usercompany user)
+                    F.value "isadmin" $ useriscompanyadmin user
                     F.value "month" $ mtMonth mt
                     F.value "year" $ mtYear mt
 

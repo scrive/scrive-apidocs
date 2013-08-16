@@ -1,7 +1,7 @@
 module CompanyAccounts.CompanyAccountsView (
     -- mails
     mailNewCompanyUserInvite,
-    mailTakeoverPrivateUserInvite,
+    mailTakeoverSingleUserInvite,
 
     -- pages
     pageDoYouWantToBeCompanyAccount,
@@ -18,6 +18,7 @@ import Mails.SendMail(Mail, kontramail, kontramaillocal)
 import Text.StringTemplates.Templates
 import User.Model
 import Company.Model
+import Company.CompanyUI
 import Doc.DocViewMail
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -27,23 +28,23 @@ import Context
 ----------------------------------------------------------------------------
 
 mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
-                               Context -> a -> b -> Company -> KontraLink -> m Mail
-mailNewCompanyUserInvite ctx invited inviter company link =
+                               Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
+mailNewCompanyUserInvite ctx invited inviter company companyui link =
   kontramail "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
-    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just company)
+    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just companyui)
     F.value "creatorname" $ getSmartName inviter
 
 
-mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
-                               Context -> a -> b -> Company -> KontraLink -> m Mail
-mailTakeoverPrivateUserInvite ctx invited inviter company link =
+mailTakeoverSingleUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
+                               Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
+mailTakeoverSingleUserInvite ctx invited inviter company companyui link =
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal invited  "mailTakeoverPrivateUserInvite" $ do
+  kontramaillocal invited  "mailTakeoverSingleUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
-    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just company)
+    F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just companyui)
 
 basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()
 basicCompanyInviteFields invited inviter company = do

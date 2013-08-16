@@ -23,6 +23,8 @@ module User.UserControl(
   , handlePasswordReminderPost
   , handleContactUs
   , getUsersAndStatsInv
+  , getDaysStats   -- Exported for admin section
+  , getMonthsStats -- Exported for admin section
 ) where
 
 import Control.Monad.State
@@ -40,6 +42,7 @@ import ActionQueue.UserAccountRequest
 import AppView
 import DB hiding (update, query)
 import Company.Model
+import Company.CompanyUI
 import InputValidation
 import Kontra
 import KontraLink
@@ -69,10 +72,7 @@ handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
-         Just user -> do
-           mcompany <- getCompanyForUser user
-           content <- showAccount user mcompany
-           renderFromBody kontrakcja content
+         Just user -> renderFromBody kontrakcja =<< showAccount user
          Nothing -> sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
 
 -- please treat this function like a public query form, it's not secure
@@ -124,7 +124,7 @@ handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
 handlePostChangeEmail uid hash = withUserPost $ do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   Context{ctxmaybeuser = Just user, ctxipnumber, ctxtime} <- getContext
-  mpassword <- getRequiredField asDirtyPassword "password"
+  mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return ()
     Just password | verifyPassword (userpassword user) password -> do
@@ -152,8 +152,6 @@ getUserInfoUpdate  = do
     mpersonalnumber   <- getField "personalnumber"
     mphone            <- getField "phone"
     mcompanyposition  <- getValidField asValidPosition "companyposition"
-    mcompanyname      <- getField "companyname"
-    mcompanynumber    <- getField "companynumber"
     return $ \ui ->
         ui {
             userfstname = fromMaybe (userfstname ui) mfstname
@@ -161,8 +159,6 @@ getUserInfoUpdate  = do
           , userpersonalnumber = fromMaybe (userpersonalnumber ui) mpersonalnumber
           , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
           , userphone  = fromMaybe (userphone ui) mphone
-          , usercompanyname = fromMaybe (usercompanyname ui) mcompanyname
-          , usercompanynumber = fromMaybe (usercompanynumber ui) mcompanynumber
         }
     where
         getValidField = getDefaultedField ""
@@ -193,37 +189,52 @@ getCompanyInfoUpdate = do
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
-  Context{ctxtime, ctxmaybeuser} <- getContext
-  totalS <- renderTemplate_ "statsOrgTotal"
-  user <- guardJust ctxmaybeuser
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  withCompany <- isFieldSet "withCompany"
+  if (useriscompanyadmin user && withCompany)
+    then getDaysStats (Right $ usercompany user)
+    else getDaysStats (Left $ userid user)
+
+
+handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
+handleUsageStatsJSONForUserMonths = do
+  user  <- guardJustM $ ctxmaybeuser <$> getContext
+  withCompany <- isFieldSet "withCompany"
+  if (useriscompanyadmin user && withCompany)
+    then getMonthsStats (Right $ usercompany user)
+    else getMonthsStats (Left $ userid user)
+
+getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
+getDaysStats euc = do
+  ctxtime <- ctxtime <$> getContext
   let timespans = [ (formatMinutesTime "%Y-%m-%d" t, formatMinutesTime "%Y-%m-%d" (daysAfter 1 t))
                      | daysBack <- [0 .. 30]
                      , t <- [daysBefore daysBack ctxtime]
                     ]
-  if useriscompanyadmin user && isJust (usercompany user)
-    then do
-      stats <- dbQuery $ GetUserUsageStats Nothing (usercompany user) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m-%d") totalS stats
-    else do
-      stats <- dbQuery $ GetUserUsageStats (Just $ userid user) Nothing timespans
+  case euc of
+    Left uid -> do
+      stats <- dbQuery $ GetUsageStats (Left uid) timespans
       return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m-%d") stats
+    Right cid -> do
+      totalS <- renderTemplate_ "statsOrgTotal"
+      stats <- dbQuery $ GetUsageStats (Right cid) timespans
+      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m-%d") totalS stats
 
-handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
-handleUsageStatsJSONForUserMonths = do
-  Context{ctxtime, ctxmaybeuser} <- getContext
-  totalS <- renderTemplate_ "statsOrgTotal"
-  user <- guardJust ctxmaybeuser
+getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
+getMonthsStats euc = do
+  ctxtime <- ctxtime <$> getContext
   let timespans = [ (formatMinutesTime "%Y-%m-01" t, formatMinutesTime "%Y-%m-01" (monthsBefore (-1) t))
                      | monthsBack <- [0 .. 6]
                      , t <- [monthsBefore monthsBack ctxtime]
                     ]
-  if useriscompanyadmin user && isJust (usercompany user)
-    then do
-      stats <- dbQuery $ GetUserUsageStats Nothing (usercompany user) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
-    else do
-      stats <- dbQuery $ GetUserUsageStats (Just $ userid user) Nothing timespans
+  case euc of
+    Left uid -> do
+      stats <- dbQuery $ GetUsageStats (Left uid) timespans
       return $ singlePageListToJSON $ userStatsToJSON (formatMinutesTime "%Y-%m") stats
+    Right cid -> do
+      totalS <- renderTemplate_ "statsOrgTotal"
+      stats <- dbQuery $ GetUsageStats (Right cid) timespans
+      return $ singlePageListToJSON $ companyStatsToJSON (formatMinutesTime "%Y-%m") totalS stats
 
 {- |
     Checks for live documents owned by the user.
@@ -243,17 +254,12 @@ sendNewUserMail user = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> Maybe String -> Maybe (CompanyID, Bool) -> Lang -> m (Maybe User)
-createNewUserByAdmin email names custommessage mcompanydata lang = do
+createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> Maybe String -> (CompanyID, Bool) -> Lang -> m (Maybe User)
+createNewUserByAdmin email names custommessage companyandrole lang = do
     ctx <- getContext
-    muser <- createUser (Email email) names (fst <$> mcompanydata) lang
+    muser <- createUser (Email email) names companyandrole lang
     case muser of
          Just user -> do
-             case mcompanydata of
-               Just (_, admin) -> do
-                 _ <- dbUpdate $ SetUserCompanyAdmin (userid user) admin
-                 return ()
-               Nothing -> return ()
              let fullname = composeFullName names
              now <- getMinutesTime
              _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
@@ -287,15 +293,17 @@ handleAccountSetupGetWithMethod uid token sm = do
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
-      mcompany <-  getCompanyForUser user
+      company <-  getCompanyForUser user
+      companyui <- dbQuery $ GetCompanyUI (usercompany user)
       mbd <- return $ currentBrandedDomain ctx
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
                                             F.value "userid"  $ show uid
-                                            F.value "company" $ companyname <$> companyinfo <$> mcompany
+                                            F.value "company" $ companyname $ companyinfo $ company
+                                            F.value "companyAdmin" $ useriscompanyadmin user
                                             F.value "signupmethod" $ show sm
-                                            brandingFields mbd mcompany
+                                            brandingFields mbd (Just companyui)
                                             ))
     (Just _user, Just _) -> do
       -- this case looks impossible since we delete the account request upon signing up
@@ -306,15 +314,16 @@ handleAccountSetupGetWithMethod uid token sm = do
 
 handleAccountSetupPostWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPostWithMethod uid token sm = do
-  user <- guardJustM404 $ getUserAccountRequestUser uid token
+  user <- guardJustM $ getUserAccountRequestUser uid token
+  company <-  getCompanyForUser user
   if isJust $ userhasacceptedtermsofservice user
     then runJSONGenT $ do
            value "ok" False
            value "error" ("already_active" :: String)
     else do
-      mfstname <- getRequiredField asValidName "fstname"
-      msndname <- getRequiredField asValidName "sndname"
-      mactivateduser <- handleActivate mfstname msndname user sm
+      mfstname <- getOptionalField asValidName "fstname"
+      msndname <- getOptionalField asValidName "sndname"
+      mactivateduser <- handleActivate mfstname msndname (user,company) sm
       case mactivateduser of
         Nothing -> runJSONGenT $ do
                     value "ok" False
@@ -372,20 +381,17 @@ handleAccessNewAccountPost uid token = do
     Just user -> do
       switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
-      mpassword <- getRequiredField Good "password"
-      case mpassword of
-        Just password -> do
-          _ <- dbUpdate $ DeleteAction accessNewAccount uid
-          passwordhash <- createPassword password
-          _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-          _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
-          addFlashM flashMessageUserPasswordChanged
+      password <- guardJustM $ getField "password"
+      _ <- dbUpdate $ DeleteAction accessNewAccount uid
+      passwordhash <- createPassword password
+      _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+      _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+      addFlashM flashMessageUserPasswordChanged
 
-          logUserToContext $ Just user
-          runJSONGenT $ do
-            value "logged" True
-            value "location" $ show LinkArchive
-        Nothing -> internalError
+      logUserToContext $ Just user
+      runJSONGenT $ do
+          value "logged" True
+          value "location" $ show LinkArchive
     Nothing -> runJSONGenT $ value "logged" False
 
 {- |
@@ -427,20 +433,17 @@ handlePasswordReminderPost uid token = do
     Just user -> do
       switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
-      mpassword <- getRequiredField Good "password"
-      case mpassword of
-        Just password -> do
-          _ <- dbUpdate $ DeleteAction passwordReminder uid
-          passwordhash <- createPassword password
-          _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-          _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
-          addFlashM flashMessageUserPasswordChanged
+      password <- guardJustM $ getField "password"
+      _ <- dbUpdate $ DeleteAction passwordReminder uid
+      passwordhash <- createPassword password
+      _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+      _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+      addFlashM flashMessageUserPasswordChanged
 
-          logUserToContext $ Just user
-          runJSONGenT $ do
-            value "logged" True
-            value "location" $ show LinkDesignView
-        Nothing -> internalError
+      logUserToContext $ Just user
+      runJSONGenT $ do
+          value "logged" True
+          value "location" $ show LinkDesignView
     Nothing -> runJSONGenT $ value "logged" False
 
 -- please treat this function like a public query form, it's not secure
@@ -471,14 +474,14 @@ handleContactUs = do
   return $ LoopBack
 
 -- For User Admin tab in adminonly
-getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Maybe Company, InviteType)]
+getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Company, InviteType)]
 getUsersAndStatsInv filters sorting pagination = do
   list <- dbQuery $ GetUsersAndStatsAndInviteInfo filters sorting pagination
   return $ convert' list
   where
-    convert' list = map (\(u,mc,iv) ->
+    convert' list = map (\(u,c,iv) ->
                                    ( u
-                                   , mc
+                                   , c
                                    , case iv of
                                        Nothing                     -> Admin
                                        Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype

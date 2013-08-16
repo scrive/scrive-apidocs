@@ -172,9 +172,15 @@ set systemPage
  js   js/archive/bin.js
  js   js/archive/archive.js
  js   js/admin/admin.js
+ js   js/admin/useradmin.js
  js   js/admin/companyadmin.js
- js   js/admin/documentadmin.js
- js   js/admin/useradminsales.js
+ js   js/admin/companies.js
+ js   js/admin/companyusersadmin.js
+ js   js/admin/companydetails.js
+ js   js/admin/documents.js
+ js   js/admin/payments.js
+ js   js/admin/users.js
+ js   js/admin/userdetails.js
  js   js/account/company.js
  js   js/account/user.js
  js   js/account/accountsettings/accountsettings.js

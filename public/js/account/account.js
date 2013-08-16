@@ -35,7 +35,7 @@ var AccountModel = Backbone.Model.extend({
   },
   stats : function() {
         if (this.get("stats") != undefined) return this.get("stats");
-        this.set({ "stats" : new Stats({companyAdmin : this.companyAdmin() }) });
+        this.set({ "stats" : new Stats({withCompany : this.companyAdmin() }) });
         return this.stats();
 
   },

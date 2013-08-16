@@ -8,7 +8,6 @@ import MagicHash
 
 import Crypto.RNG
 import Data.Int
-import Data.List
 import Network.URI
 import Data.Maybe
 
@@ -216,23 +215,22 @@ instance MonadDB m => DBUpdate m DenyCredentials (Maybe URI) where
 data GetRequestedPrivileges = GetRequestedPrivileges APIToken MinutesTime
 instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
   query (GetRequestedPrivileges token time) = do
-    kRun_ $ SQL ( "SELECT com.name, u.company_name, u.first_name, u.last_name, u.email, p.privilege "
+    kRun_ $ SQL ( "SELECT com.name, u.first_name, u.last_name, u.email, p.privilege "
               <> "FROM oauth_temp_privileges p "
               <> "JOIN oauth_temp_credential c  ON p.temp_token_id =   c.id "
               <> "JOIN oauth_api_token t        ON c.api_token_id  =   t.id "
               <> "JOIN users u                  ON t.user_id       =   u.id "
-              <> "LEFT OUTER JOIN companies com ON u.company_id    = com.id " -- 0..1 relationship
+              <> "JOIN companies com            ON u.company_id    = com.id "
               <> "WHERE c.temp_token = ? AND c.id = ? AND expires > ? AND c.user_id IS NULL")
               [ toSql $ atToken token, toSql $ atID token, toSql time ]
     kFold f Nothing
     -- get name of company from companies table, or if that does not exist, the users.company_name
-    where f :: Maybe (String, [APIPrivilege]) -> Maybe String -> String -> String -> String -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
-          f Nothing c n fn ln e pr       = Just (getname c n fn ln e, [pr])
-          f (Just (n, acc)) _ _ _ _ _ pr = Just (n, pr:acc)
-          getname (Just cname) _ _ _ _   = cname
-          getname Nothing "" "" "" email = email
-          getname Nothing "" fn ln _     = intercalate " " [fn, ln]
-          getname Nothing cname _ _ _    = cname
+    where f :: Maybe (String, [APIPrivilege]) -> String -> String -> String -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
+          f Nothing c fn ln e pr       = Just (getname c fn ln e, [pr])
+          f (Just (n, acc)) _ _ _ _ pr = Just (n, pr:acc)
+          getname "" "" "" email = email
+          getname "" fn ln _     = fn ++ " " ++ ln
+          getname cname _ _ _   = cname
 
 -- third part of flow
 
@@ -312,12 +310,12 @@ data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
                                     APIPrivilege
 instance MonadDB m => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, String)) where
   query (GetUserIDForAPIWithPrivilege token secret atoken asecret priv) = do
-    kRun_ $ SQL("SELECT a.user_id, u.email, u.first_name, u.last_name, u.company_name, c.name "
+    kRun_ $ SQL("SELECT a.user_id, u.email, u.first_name, u.last_name,c.name "
              <> "FROM oauth_access_token a "
              <> "JOIN oauth_privilege p      ON p.access_token_id = a.id "
              <> "JOIN oauth_api_token t      ON a.api_token_id    = t.id "
              <> "JOIN users u                ON t.user_id         = u.id "
-             <> "LEFT OUTER JOIN companies c ON u.company_id      = c.id " -- 0..1 relationship
+             <> "JOIN companies c            ON u.company_id      = c.id "
              <> "WHERE t.id = ? AND t.api_token = ? AND t.api_secret = ? AND a.id = ? AND a.access_token = ? AND a.access_secret = ? AND (p.privilege = ? OR p.privilege = ?)")
                   [ toSql $ atID token
                   , toSql $ atToken token
@@ -329,10 +327,9 @@ instance MonadDB m => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, Str
                   , toSql APIPersonal]
     mr <- kFold f []
     oneObjectReturnedGuard mr
-      where f acc uid _ _ _ _ (Just s) = (uid, s):acc               -- company name from company table
-            f acc uid e "" "" "" _     = (uid, e):acc               -- just email
-            f acc uid _ fn ln "" _     = (uid, fn ++ " " ++ ln):acc -- user's first + last
-            f acc uid _ _  _  cn _     = (uid, cn):acc              -- user's company name
+   where    f acc uid e "" "" ""      = (uid, e):acc               -- just email
+            f acc uid _ fn ln ""      = (uid, fn ++ " " ++ ln):acc -- user's first + last
+            f acc uid _ _  _  cn      = (uid, cn):acc              -- user's company name
 
 -- stuff for the dashboard
 
@@ -344,12 +341,12 @@ instance MonadDB m => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, Str
 data GetGrantedPrivileges = GetGrantedPrivileges UserID
 instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivilege])] where
   query (GetGrantedPrivileges userid) = do
-    kRun_ $ SQL("SELECT a.id, u.email, u.first_name, u.last_name, u.company_name, c.name, p.privilege "
+    kRun_ $ SQL("SELECT a.id, u.email, u.first_name, u.last_name, c.name, p.privilege "
              <> "FROM oauth_access_token a "
              <> "JOIN oauth_api_token t on a.api_token_id = t.id "
              <> "JOIN users u on u.id = t.user_id "
              <> "JOIN oauth_privilege p on p.access_token_id = a.id "
-             <> "LEFT OUTER JOIN companies c ON u.company_id = c.id " -- 0..1 relationship
+             <> "JOIN companies c ON u.company_id = c.id "
              <> "WHERE a.user_id = ? AND "
              -- exclude personal tokens
              <> "      t.id NOT IN (SELECT api_token_id FROM oauth_access_token "
@@ -358,11 +355,10 @@ instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivil
              <> "ORDER BY a.id ")
             [toSql userid, toSql APIPersonal]
     kFold f []
-      where f ((tid,n,ps):as) tid' _ _ _ _ _ p | tid == tid' = (tid, n, p:ps): as -- already have the id
-            f acc tid _ _ _ _ (Just s) p = (tid, s, [p]):acc                      -- company name
-            f acc tid e "" "" "" _     p = (tid, e, [p]):acc                      -- just email
-            f acc tid _ fn ln "" _     p = (tid, fn ++ " " ++ ln, [p]):acc        -- user's first + last
-            f acc tid _ _  _  cn _     p = (tid, cn, [p]):acc                     -- user's company name
+      where f ((tid,n,ps):as) tid' _ _ _ _ p | tid == tid' = (tid, n, p:ps): as -- already have the id
+            f acc tid e "" "" ""     p = (tid, e, [p]):acc                      -- just email
+            f acc tid _ fn ln ""     p = (tid, fn ++ " " ++ ln, [p]):acc        -- user's first + last
+            f acc tid _ _  _  cn     p = (tid, cn, [p]):acc                     -- user's company name
 {- |
    Delete all privileges for a given token id.
    The user does not have to know the whole token.

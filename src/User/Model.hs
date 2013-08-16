@@ -20,7 +20,7 @@ module User.Model (
   , GetCompanyAccounts(..)
   , GetCompanyAdmins(..)
   , GetInviteInfo(..)
-  , GetUserUsageStats(..)
+  , GetUsageStats(..)
   , SetUserCompany(..)
   , DeleteUser(..)
   , RemoveInactiveUser(..)
@@ -34,8 +34,6 @@ module User.Model (
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
   , UserFilter(..)
-  , SetUserIsFree(..)
-
   , IsUserDeletable(..)
   , composeFullName
   , userFilterToSQL
@@ -106,8 +104,7 @@ data User = User {
   , usersignupmethod              :: SignupMethod
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
-  , usercompany                   :: Maybe CompanyID
-  , userisfree                    :: Bool
+  , usercompany                   :: CompanyID
   , userassociateddomain          :: Maybe String
   } deriving (Eq, Ord, Show)
 
@@ -118,8 +115,6 @@ data UserInfo = UserInfo {
   , usercompanyposition :: String
   , userphone           :: String
   , useremail           :: Email
-  , usercompanyname     :: String
-  , usercompanynumber   :: String
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
@@ -155,14 +150,12 @@ userFilterToSQL (UserFilterByString string) =
 
 data UserOrderBy
   = UserOrderByName
-  | UserOrderByCompanyName
   | UserOrderByEmail
   | UserOrderByAccountCreationDate
 
 -- | Convert UserOrderBy enumeration into proper SQL order by statement
 userOrderByToSQL :: UserOrderBy -> SQL
 userOrderByToSQL UserOrderByName                = SQL "(users.first_name || ' ' || users.last_name)" []
-userOrderByToSQL UserOrderByCompanyName         = SQL "users.company_name" []
 userOrderByToSQL UserOrderByEmail               = SQL "users.email" []
 userOrderByToSQL UserOrderByAccountCreationDate = SQL "users.has_accepted_terms_of_service" []
 
@@ -221,13 +214,9 @@ instance MonadDB m => DBQuery m GetInviteInfo (Maybe InviteInfo) where
         , invitetype = invite_type
         } : acc
 
-data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
+data SetUserCompany = SetUserCompany UserID CompanyID
 instance MonadDB m => DBUpdate m SetUserCompany Bool where
-  update (SetUserCompany uid mcid) = case mcid of
-    Nothing -> do
-      kRun01 $ SQL "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
-               [toSql uid]
-    Just cid -> do
+  update (SetUserCompany uid cid) =
       kRun01 $ SQL "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
                [toSql cid, toSql uid]
 
@@ -266,9 +255,9 @@ instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
     kRun_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = signatory_links.user_id AND users.has_accepted_terms_of_service IS NULL)"
     kRun01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Lang (Maybe String)
+data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang (Maybe String)
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd mcid l mad) = do
+  update (AddUser (fname, lname) email mpwd (cid,admin) l mad) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -276,22 +265,19 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
         kRun_ $ sqlInsert "users" $ do
             sqlSet "password" $ pwdHash <$> mpwd
             sqlSet "salt" $ pwdSalt <$> mpwd
-            sqlSet "is_company_admin" False
+            sqlSet "is_company_admin" admin
             sqlSet "account_suspended" False
             sqlSet "has_accepted_terms_of_service" SqlNull
             sqlSet "signup_method" AccountRequest
-            sqlSet "company_id" mcid
+            sqlSet "company_id" cid
             sqlSet "first_name" fname
             sqlSet "last_name" lname
             sqlSet "personal_number" ("" :: String)
             sqlSet "company_position" ("" :: String)
-            sqlSet "company_name" ("" :: String)
-            sqlSet "company_number" ("" :: String)
             sqlSet "phone" ("" :: String)
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
             sqlSet "deleted" False
-            sqlSet "is_free" False
             sqlSet "associated_domain" mad
             mapM_ (sqlResult . raw) selectUsersSelectorsList
         fetchUsers >>= oneObjectReturnedGuard
@@ -360,8 +346,6 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
                   <> ", company_position = ?"
                   <> ", phone = ?"
                   <> ", email = ?"
-                  <> ", company_name = ?"
-                  <> ", company_number = ?"
                   <> "  WHERE id = ? AND deleted = FALSE")
              [ toSql $ userfstname info
              , toSql $ usersndname info
@@ -369,8 +353,6 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
              , toSql $ usercompanyposition info
              , toSql $ userphone info
              , toSql $ map toLower $ unEmail $ useremail info
-             , toSql $ usercompanyname info
-             , toSql $ usercompanynumber info
              , toSql uid
              ]
 
@@ -429,9 +411,9 @@ fetchUserUsageStats = kFold decoder []
               , uusSignaturesClosed = signatures_closed
               } : acc
 
-data GetUserUsageStats = forall tm . (Convertible tm SqlValue) => GetUserUsageStats (Maybe UserID) (Maybe CompanyID) [(tm,tm)]
-instance MonadDB m => DBQuery m GetUserUsageStats [UserUsageStats] where
-  query (GetUserUsageStats uid cid timespans) = do
+data GetUsageStats = forall tm . (Convertible tm SqlValue) => GetUsageStats (Either UserID CompanyID) [(tm,tm)]
+instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
+  query (GetUsageStats euc timespans) = do
    let (timespans2 :: SQL) = sqlConcatComma $ map (\(beg,end) -> "(" <?> beg <> "::TIMESTAMPTZ, " <?> end <> ":: TIMESTAMPTZ)") timespans
    kRun_ $ sqlSelect "companies FULL JOIN users ON companies.id = users.company_id" $ do
      sqlFrom $ ", (VALUES" <+> timespans2 <+> ") AS time_spans(b,e)"
@@ -480,21 +462,11 @@ instance MonadDB m => DBQuery m GetUserUsageStats [UserUsageStats] where
              <+> "                           AND signatory_links.document_id = documents.id) BETWEEN time_spans.b AND time_spans.e)"
              <+> ") AS \"Sigs closed\""
 
-     case cid of
-       Nothing -> return ()
-       Just ccid -> sqlWhereEq "companies.id" ccid
-     case uid of
-       Nothing -> return ()
-       Just uuid -> sqlWhereEq "users.id" uuid
-
+     case euc of
+       Left  uid -> sqlWhereEq "users.id" uid
+       Right cid -> sqlWhereEq "companies.id" cid
      sqlOrderBy "1, 3, 4"
    fetchUserUsageStats
-
-data SetUserIsFree = SetUserIsFree UserID Bool
-instance MonadDB m => DBUpdate m SetUserIsFree Bool where
-  update (SetUserIsFree uid isfree) = do
-    kRun01 $ SQL "UPDATE users SET is_free = ? WHERE id = ? AND deleted = FALSE"
-      [toSql isfree, toSql uid]
 
 -- helpers
 
@@ -527,9 +499,6 @@ selectUsersSelectorsList =
   , "phone"
   , "email"
   , "lang"
-  , "company_name"
-  , "company_number"
-  , "is_free"
   , "associated_domain"
   ]
 
@@ -544,7 +513,7 @@ fetchUsers = kFold decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method company_id
       first_name last_name personal_number company_position phone
-      email lang company_name company_number is_free associated_domain = User {
+      email lang associated_domain = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -558,14 +527,11 @@ fetchUsers = kFold decoder []
           , usercompanyposition = company_position
           , userphone = phone
           , useremail = email
-          , usercompanyname  = company_name
-          , usercompanynumber = company_number
           }
         , usersettings = UserSettings {
             lang = lang
           }
         , usercompany = company_id
-        , userisfree = is_free
         , userassociateddomain = associated_domain
         } : acc
 
@@ -588,9 +554,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", users.phone"
   <> ", users.email"
   <> ", users.lang"
-  <> ", users.company_name"
-  <> ", users.company_number"
-  <> ", users.is_free"
   <> ", users.associated_domain"
 
   -- Company:
@@ -614,13 +577,13 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   []
 
 
-fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => m [(User, Maybe Company, Maybe InviteInfo)]
+fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => m [(User, Company, Maybe InviteInfo)]
 fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone
-     email lang company_name company_number is_free associated_domain cid
+     email lang associated_domain cid
      name number address zip' city country ip_address_mask sms_originator inviter_id
      invite_time invite_type
      = (
@@ -638,18 +601,14 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
            , usercompanyposition = company_position
            , userphone = phone
            , useremail = email
-           , usercompanyname = company_name
-           , usercompanynumber = company_number
            }
          , usersettings = UserSettings {
              lang = lang
            }
          , usercompany = company_id
-         , userisfree = is_free
          , userassociateddomain = associated_domain
          }
-        , case cid of
-            (Just _) -> Just Company {
+        , Company {
                 companyid = fromJust cid
               , companyinfo = CompanyInfo {
                   companyname = fromJust name
@@ -661,35 +620,14 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companyipaddressmasklist = maybe [] read ip_address_mask
                 , companysmsoriginator = fromJust sms_originator
                 }
-              , companyui = CompanyUI {
-                  companyemailfont = Nothing
-                , companyemailbordercolour = Nothing
-                , companyemailbuttoncolour = Nothing
-                , companyemailemailbackgroundcolour = Nothing
-                , companyemailbackgroundcolour = Nothing
-                , companyemailtextcolour = Nothing
-                , companyemaillogo = Nothing
-                , companysignviewlogo = Nothing
-                , companysignviewtextcolour = Nothing
-                , companysignviewtextfont = Nothing
-                , companysignviewbarscolour = Nothing
-                , companysignviewbarstextcolour = Nothing
-                , companysignviewbackgroundcolour = Nothing
-                , companycustomlogo = Nothing
-                , companycustombarscolour = Nothing
-                , companycustombarstextcolour = Nothing
-                , companycustombarssecondarycolour = Nothing
-                , companycustombackgroundcolour = Nothing
-                }
               }
-            _ -> Nothing
         , InviteInfo <$> inviter_id <*> invite_time <*> invite_type
         ) : acc
 
 
 data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
-  [(User, Maybe Company, Maybe InviteInfo)] where
+  [(User, Company, Maybe InviteInfo)] where
   query (GetUsersAndStatsAndInviteInfo filters sorting (offset,limit)) = do
     _ <- kRun $ mconcat
          [ selectUsersAndCompaniesAndInviteInfoSQL

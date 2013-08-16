@@ -3,13 +3,11 @@ module Company.Model (
     module Company.CompanyID
   , Company(..)
   , CompanyInfo(..)
-  , CompanyUI(..)
   , GetCompanies(..)
   , GetCompany(..)
   , GetCompanyByUserID(..)
   , CreateCompany(..)
   , SetCompanyInfo(..)
-  , UpdateCompanyUI(..)
   , SetCompanyIPAddressMaskList(..)
 
   , CompanyFilter(..)
@@ -28,7 +26,6 @@ import OurPrelude
 data Company = Company {
     companyid         :: CompanyID
   , companyinfo       :: CompanyInfo
-  , companyui         :: CompanyUI
   } deriving (Eq, Ord, Show, Typeable)
 
 data CompanyInfo = CompanyInfo {
@@ -42,34 +39,15 @@ data CompanyInfo = CompanyInfo {
   , companysmsoriginator :: String
   } deriving (Eq, Ord, Show)
 
-data CompanyUI = CompanyUI {
-    companyemailbordercolour :: Maybe String
-  , companyemailfont :: Maybe String
-  , companyemailbuttoncolour :: Maybe String
-  , companyemailemailbackgroundcolour :: Maybe String
-  , companyemailbackgroundcolour :: Maybe String
-  , companyemailtextcolour :: Maybe String
-  , companyemaillogo :: Maybe Binary
-  , companysignviewlogo :: Maybe Binary
-  , companysignviewtextcolour :: Maybe String
-  , companysignviewtextfont :: Maybe String
-  , companysignviewbarscolour :: Maybe String
-  , companysignviewbarstextcolour :: Maybe String
-  , companysignviewbackgroundcolour :: Maybe String
-  , companycustomlogo  :: Maybe Binary
-  , companycustombarscolour :: Maybe String
-  , companycustombarstextcolour :: Maybe String
-  , companycustombarssecondarycolour :: Maybe String
-  , companycustombackgroundcolour :: Maybe String
-} deriving (Eq, Ord, Show)
-
 data CompanyFilter
-  = CompanyFilterByString String             -- ^ Contains the string anywhere
+  =   CompanyFilterByString String             -- ^ Contains the string anywhere
+    | CompanyManyUsers             -- ^ Has more users then given number
+
 
 companyFilterToWhereClause :: (SqlWhere command) => CompanyFilter -> State command ()
 companyFilterToWhereClause (CompanyFilterByString text) = do
   -- ALL words from 'text' are in ANY of the fields
-  mapM_ (sqlWhere . findWord) (words text)
+  mapM_ (sqlWhere . parenthesize . findWord) (words text)
   where
       findWordInField word field = ("companies." <> field) <+> "ILIKE" <?> sqlwordpat word
       findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country"]
@@ -79,6 +57,12 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+
+companyFilterToWhereClause (CompanyManyUsers) = do
+  sqlWhereAny $ do
+    sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id) > 1)"
+    sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
+
 
 data CompanyOrderBy
   = CompanyOrderByName    -- ^ Order by title, alphabetically, case insensitive
@@ -104,6 +88,7 @@ data GetCompanies = GetCompanies [CompanyFilter] [AscDesc CompanyOrderBy] Intege
 instance MonadDB m => DBQuery m GetCompanies [Company] where
   query (GetCompanies filters sorting offset limit) = do
     kRun_ $ sqlSelect "companies" $ do
+       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
        selectCompaniesSelectors
        mapM_ companyFilterToWhereClause filters
        let ascdesc (Asc x) = companyOrderByToOrderBySQL x
@@ -118,25 +103,35 @@ data GetCompany = GetCompany CompanyID
 instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
   query (GetCompany cid) = do
     kRun_ $ sqlSelect "companies" $ do
+      sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "id" cid
     fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByUserID = GetCompanyByUserID UserID
-instance MonadDB m => DBQuery m GetCompanyByUserID (Maybe Company) where
+instance MonadDB m => DBQuery m GetCompanyByUserID Company where
   query (GetCompanyByUserID uid) = do
     kRun_ $ sqlSelect "companies" $ do
       sqlJoinOn "users" "users.company_id = companies.id"
+      sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
       sqlWhereEq "users.id" uid
-    fetchCompanies >>= oneObjectReturnedGuard
+    fetchCompanies >>= exactlyOneObjectReturnedGuard
 
 data CreateCompany = CreateCompany
 instance MonadDB m => DBUpdate m CreateCompany Company where
   update (CreateCompany) = do
     kRun_ $ sqlInsert "companies" $ do
       sqlSetCmd "id" "DEFAULT"
+      sqlResult "id"
+    (companyidx :: CompanyID) <- kFold (flip (:)) [] >>= exactlyOneObjectReturnedGuard
+    kRun_ $ sqlInsert "company_uis" $ do
+      sqlSet "company_id" companyidx
+
+    kRun_ $ sqlSelect "companies" $ do
+      sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
+      sqlWhereEq "companies.id" companyidx
     fetchCompanies >>= exactlyOneObjectReturnedGuard
 
 data SetCompanyIPAddressMaskList = SetCompanyIPAddressMaskList CompanyID [IPAddress]
@@ -164,30 +159,6 @@ instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
       sqlSet "sms_originator" companysmsoriginator
       sqlWhereEq "id" cid
 
-data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
-instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
-  update (UpdateCompanyUI cid cui) = do
-    kRun01 $ sqlUpdate "companies" $ do
-      sqlSet "email_bordercolour" $ companyemailbordercolour cui
-      sqlSet "email_font" $ companyemailfont cui
-      sqlSet "email_buttoncolour" $ companyemailbuttoncolour cui
-      sqlSet "email_emailbackgroundcolour" $ companyemailemailbackgroundcolour cui
-      sqlSet "email_backgroundcolour" $ companyemailbackgroundcolour cui
-      sqlSet "email_textcolour" $ companyemailtextcolour cui
-      sqlSet "email_logo" $ companyemaillogo cui
-      sqlSet "signview_logo" $ companysignviewlogo cui
-      sqlSet "signview_textcolour" $ companysignviewtextcolour cui
-      sqlSet "signview_textfont" $ companysignviewtextfont cui
-      sqlSet "signview_barscolour" $ companysignviewbarscolour cui
-      sqlSet "signview_barstextcolour" $ companysignviewbarstextcolour cui
-      sqlSet "signview_backgroundcolour" $ companysignviewbackgroundcolour cui
-      sqlSet "custom_logo" $ companycustomlogo cui
-      sqlSet "custom_barscolour" $ companycustombarscolour cui
-      sqlSet "custom_barstextcolour" $ companycustombarstextcolour cui
-      sqlSet "custom_barssecondarycolour" $ companycustombarssecondarycolour cui
-      sqlSet "custom_backgroundcolour" $ companycustombackgroundcolour cui
-      sqlWhereEq "id" cid
-
 -- helpers
 
 selectCompaniesSelectors :: (SqlResult command) => State command ()
@@ -201,36 +172,13 @@ selectCompaniesSelectors = do
   sqlResult "companies.country"
   sqlResult "companies.ip_address_mask_list"
   sqlResult "companies.sms_originator"
-  sqlResult "companies.email_font"
-  sqlResult "companies.email_bordercolour"
-  sqlResult "companies.email_buttoncolour"
-  sqlResult "companies.email_emailbackgroundcolour"
-  sqlResult "companies.email_backgroundcolour"
-  sqlResult "companies.email_textcolour"
-  sqlResult "companies.email_logo"
-  sqlResult "companies.signview_logo"
-  sqlResult "companies.signview_textcolour"
-  sqlResult "companies.signview_textfont"
-  sqlResult "companies.signview_barscolour"
-  sqlResult "companies.signview_barstextcolour"
-  sqlResult "companies.signview_backgroundcolour"
-  sqlResult "companies.custom_logo"
-  sqlResult "companies.custom_barscolour"
-  sqlResult "companies.custom_barstextcolour"
-  sqlResult "companies.custom_barssecondarycolour"
-  sqlResult "companies.custom_backgroundcolour"
 
 
 fetchCompanies :: MonadDB m => m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid name number address zip' city country
-      ip_address_mask_list sms_originator email_font
-      email_bordercolour email_buttoncolour email_emailbackgroundcolour
-      email_backgroundcolour email_textcolour email_logo signview_logo signview_textcolour
-      signview_textfont signview_barscolour signview_barstextcolour
-      signview_backgroundcolour custom_logo custom_barscolour custom_barstextcolour
-      custom_barssecondarycolour custom_backgroundcolour  = Company {
+      ip_address_mask_list sms_originator = Company {
         companyid = cid
       , companyinfo = CompanyInfo {
           companyname = name
@@ -241,25 +189,5 @@ fetchCompanies = kFold decoder []
         , companycountry = country
         , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
         , companysmsoriginator = sms_originator
-        }
-      , companyui = CompanyUI {
-          companyemailfont = email_font
-        , companyemailbordercolour = email_bordercolour
-        , companyemailbuttoncolour = email_buttoncolour
-        , companyemailemailbackgroundcolour = email_emailbackgroundcolour
-        , companyemailbackgroundcolour = email_backgroundcolour
-        , companyemailtextcolour = email_textcolour
-        , companyemaillogo = email_logo
-        , companysignviewlogo = signview_logo
-        , companysignviewtextcolour = signview_textcolour
-        , companysignviewtextfont = signview_textfont
-        , companysignviewbarscolour = signview_barscolour
-        , companysignviewbarstextcolour = signview_barstextcolour
-        , companysignviewbackgroundcolour = signview_backgroundcolour
-        , companycustomlogo  = custom_logo
-        , companycustombarscolour = custom_barscolour
-        , companycustombarstextcolour = custom_barstextcolour
-        , companycustombarssecondarycolour = custom_barssecondarycolour
-        , companycustombackgroundcolour = custom_backgroundcolour
         }
       } : acc

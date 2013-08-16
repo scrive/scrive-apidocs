@@ -89,14 +89,10 @@ handleLoginPost = do
             -- check the user things here
             maybeuser <- dbQuery $ GetUserByEmail (Email email)
             ipIsOK <- case maybeuser of
-                        Just x -> do
-                             mcompany <- dbQuery $ GetCompanyByUserID (userid x)
-                             case mcompany of
-                               Just company -> do
-                                 Log.debug $ "Company " ++ show (companyid company) ++ "(" ++ show (usercompany <$> maybeuser) ++ ") allows access from " ++ show ((companyinfo company))
-                                 return $ null (companyipaddressmasklist (companyinfo company)) ||
+                        Just u -> do
+                             (company :: Company) <- dbQuery $ GetCompanyByUserID (userid u)
+                             return $ null (companyipaddressmasklist (companyinfo company)) ||
                                                (any (ipAddressIsInNetwork (ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
-                               Nothing -> return True
                         Nothing -> return True
             case maybeuser of
                 Just user@User{userpassword}
@@ -142,10 +138,8 @@ handleLoginPost = do
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
 
-                        mcompany <- dbQuery $ GetCompanyByUserID (userid u)
-                        admins <- case mcompany of
-                                    Just company -> dbQuery $ GetCompanyAdmins (companyid company)
-                                    _ -> return []
+                        company <- dbQuery $ GetCompanyByUserID (userid u)
+                        admins <-  dbQuery $ GetCompanyAdmins (companyid company)
                         case admins of
                           (admin:_) -> runJSONGenT $ do
                                          value "logged" False

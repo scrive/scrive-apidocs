@@ -22,17 +22,15 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.Map as Map
 
 import DB
-import Administration.AdministrationView (adminCompanyBrandingPage)
 import Company.Model
+import Company.CompanyUI
 import Kontra
 import KontraLink
 import Happstack.Fields
-import Redirect
 import Routing (hGet, hPost, toK0, toK1)
 import User.Utils
 import Util.MonadUtils
 import Utils.String
-import qualified Log
 import Text.JSON.Gen
 import BrandedDomains
 
@@ -47,31 +45,19 @@ routes = choice
 
 adminRoutes :: Route (KontraPlus Response)
 adminRoutes = choice
-  [ hGet $ toK1 $ handleAdminGetCompany
-  , hPost $ toK1 $ handlePostCompany . Just
+  [ hPost $ toK1 $ handlePostCompany . Just
   , dir "json" $ hGet $ toK1 $ handleGetCompanyJSON . Just
   ]
-
-handleAdminGetCompany :: Kontrakcja m => CompanyID -> m String
-handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $
-  const $ adminCompanyBrandingPage cid
-
 
 handlePostCompany :: Kontrakcja m => Maybe CompanyID -> m KontraLink
 handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   iscompanyjson <- isFieldSet "company"
-  cui <-
-    if iscompanyjson
-      then do
-        rawcompanyjson <- guardJustM $ getField "company"
-        companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
-        jsoncui <- companyUiFromJSON companyjson
-        Log.debug $ "using json " ++ (show $ jsoncui)
-        return jsoncui
-      else
-        return $ companyui company
-  Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show cui)
-  _ <- dbUpdate $ UpdateCompanyUI (companyid company) cui
+  when iscompanyjson $ do
+    rawcompanyjson <- guardJustM $ getField "company"
+    companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
+    jsoncui <- companyUiFromJSON companyjson
+    _ <- dbUpdate $ SetCompanyUI (companyid company) jsoncui
+    return ()
   return $ LinkAccountCompany mcid
 
 companyUiFromJSON :: Kontrakcja m => JSValue ->  m CompanyUI
@@ -97,7 +83,8 @@ companyUiFromJSON jsv = withJSValue jsv $ do
 
 
   return $ CompanyUI {
-    companyemailfont = maybeS jsoncompanyemailfont
+    companyuicompanyid = unsafeCompanyID 0
+  , companyemailfont = maybeS jsoncompanyemailfont
   , companyemailbordercolour = maybeS jsoncompanyemailbordercolour
   , companyemailbuttoncolour = maybeS jsoncompanyemailbuttoncolour
   , companyemailemailbackgroundcolour = maybeS jsoncompanyemailemailbackgroundcolour
@@ -119,7 +106,7 @@ companyUiFromJSON jsv = withJSValue jsv $ do
 
 handleCompanyLogo :: Kontrakcja m => (CompanyUI -> Maybe Binary) -> CompanyID -> m Response
 handleCompanyLogo field cid = do
-  mimg <- join <$> fmap (field . companyui) <$> (dbQuery $ GetCompany cid)
+  mimg <- field <$> (dbQuery $ GetCompanyUI cid)
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
     Response 200 Map.empty nullRsFlags (BSL.fromChunks $ map unBinary $ maybeToList mimg) Nothing
 
@@ -135,25 +122,27 @@ handleCompanyEmailLogo = handleCompanyLogo companyemaillogo
 handleGetCompanyJSON :: Kontrakcja m => Maybe CompanyID -> m JSValue
 handleGetCompanyJSON mcid = do
   ctx <- getContext
-  withCompanyUserOrAdminOnly mcid $ \(editable, company) -> runJSONGenT $ do
-    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui company
-    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui company
-    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui company
-    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui company
-    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui company
-    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui company
-    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui $ company)
-    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui $ company)
-    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui company
-    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui company
-    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui company
-    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui company
-    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui company
-    value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui $ company)
-    value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui company
-    value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui company
-    value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui company
-    value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui company
+  withCompanyUserOrAdminOnly mcid $ \(editable, company) -> do
+    companyui <- dbQuery $ GetCompanyUI (companyid company)
+    runJSONGenT $ do
+    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
+    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui
+    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui
+    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui
+    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui
+    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui
+    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui)
+    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
+    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
+    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
+    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
+    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
+    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
+    value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
+    value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui
+    value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
+    value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
+    value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
     value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
     value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
     value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx

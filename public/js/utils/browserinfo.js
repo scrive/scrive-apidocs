@@ -18,6 +18,9 @@ window.BrowserInfo = {
     isAndroid : function(){
         return navigator.userAgent.match(/Android/i) != null;
     },
+    isIE : function() {
+      return $.browser.msie;
+    },
     isIE9orLower : function() {
       return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "9.0");
     },

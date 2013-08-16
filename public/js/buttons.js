@@ -92,7 +92,7 @@ var ButtonView = Backbone.View.extend({
         return 0;
     },
     render: function () {
-        $(this.el).css("style",this.model.style());
+        $(this.el).attr("style",this.model.style());
         $(this.el).addClass(this.model.cssClass());
         $(this.el).addClass(this.model.color());
 

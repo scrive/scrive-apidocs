@@ -27,6 +27,7 @@ main :: IO ()
 main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.messengerServer appname [] "messenger_server.conf"
+  checkExecutables
   rng <- newCryptoRNGState
   withPostgreSQL (mscDBConfig conf) $
     performDBChecks Log.messengerServer messengerTables messengerMigrations

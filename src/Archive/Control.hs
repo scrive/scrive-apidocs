@@ -58,9 +58,9 @@ import MinutesTime
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
-    docids <- getCriticalFieldList asValidDocID "doccheck"
+    docids <- getCriticalField asValidDocIDList "documentids"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
-    docs <- guardRightM' $ getDocsByDocIDs docids
+    docs <- guardRightM $ getDocsByDocIDs docids
     forM_ docs $ \doc -> do
               let usl = getSigLinkFor doc user
                   csl = (getAuthorSigLink $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
@@ -72,11 +72,11 @@ handleDelete = do
                   Pending -> if (isAuthor msl)
                                 then do
                                    dbUpdate $ CancelDocument (documentid doc) actor
-                                   doc' <- guardRightM' $ getDocByDocID (documentid doc)
+                                   doc' <- guardRightM $ getDocByDocID (documentid doc)
                                    postDocumentCanceledChange doc'
                                 else do
                                    dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
-                                   doc' <- guardRightM' $ getDocByDocID (documentid doc)
+                                   doc' <- guardRightM $ getDocByDocID (documentid doc)
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl)
                   _ -> return ()
               dbUpdate $ ArchiveDocument (userid user) (documentid doc) actor
@@ -94,7 +94,7 @@ handleDelete = do
 handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders = do
     ctx@Context{ctxmaybeuser = Just user } <- getContext
-    ids <- getCriticalFieldList asValidDocID "doccheck"
+    ids <- getCriticalField asValidDocIDList "documentids"
     actor <- guardJustM $ fmap mkAuthorActor getContext
     remindedsiglinks <- fmap concat . sequence . map (\docid -> sendAllReminderEmails ctx actor user docid) $ ids
     case (length remindedsiglinks) of
@@ -103,14 +103,14 @@ handleSendReminders = do
 
 handleCancel :: Kontrakcja m =>  m JSValue
 handleCancel = do
-  docids <- getCriticalFieldList asValidDocID "doccheck"
+  docids <- getCriticalField asValidDocIDList "documentids"
   forM_ docids $ \docid -> do
-      doc <- guardRightM' $ getDocByDocID docid
+      doc <- guardRightM $ getDocByDocID docid
       actor <- guardJustM $ mkAuthorActor <$> getContext
       if (documentstatus doc == Pending)
         then do
            dbUpdate $ CancelDocument (documentid doc) actor
-           doc' <- guardRightM' $ getDocByDocID $ docid
+           doc' <- guardRightM $ getDocByDocID $ docid
            postDocumentCanceledChange doc'
         else internalError
   J.runJSONGenT $ return ()
@@ -119,7 +119,7 @@ handleRestore :: Kontrakcja m => m JSValue
 handleRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  docids <- getCriticalFieldList asValidDocID "doccheck"
+  docids <- getCriticalField asValidDocIDList "documentids"
   mapM_ (\did -> dbUpdate $ RestoreArchivedDocument user did actor) docids
   J.runJSONGenT $ return ()
 
@@ -127,7 +127,7 @@ handleReallyDelete :: Kontrakcja m => m JSValue
 handleReallyDelete = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  docids <- getCriticalFieldList asValidDocID "doccheck"
+  docids <- getCriticalField asValidDocIDList "documentids"
   mapM_ (\did -> do
             _ <- guardJustM . runMaybeT $ do
               True <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
@@ -141,7 +141,7 @@ handleReallyDelete = do
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do
     _ <- guardJustM $ ctxmaybeuser <$> getContext
-    ids <- getCriticalFieldList asValidDocID "doccheck"
+    ids <- getCriticalField asValidDocIDList "documentids"
     _ <- dbUpdate $ SetDocumentSharing ids True
     w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
     when_ (null $ catMaybes w) internalError
@@ -150,10 +150,10 @@ handleShare =  do
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do
   Log.debug $ "Downloading zip list"
-  docids <- take 100 <$> getCriticalFieldList asValidDocID "doccheck"
+  docids <- take 100 <$> getCriticalField asValidDocIDList "documentids"
   mentries <- forM docids $ \did -> do
                 Log.debug "Getting file for zip download"
-                doc <- guardRightM' $ getDocByDocID did
+                doc <- guardRightM $ getDocByDocID did
                 docToEntry doc
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
 {- |
@@ -176,6 +176,8 @@ jsonDocumentsList = do
                                                  ,[DocumentFilterDeleted False False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
                           "Template"          -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
+                          "MyTemplate"        -> ([DocumentsVisibleToUser uid] -- Sometimes we want to show only templates that user can change
+                                                 ,[DocumentFilterByAuthor uid, DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted True False, DocumentFilterUnsavedDraft False])
                           "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])

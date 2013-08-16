@@ -24,6 +24,7 @@ data RecurlyAction = RNoAction
                    | RReactivateNow
                    | RReactivateRenewal
                    | RCancel
+                   | RTerminate
                    deriving (Show, Eq, Read)
 
 subInfo :: Subscription -> Either String (Int, Int, PricePlan, PricePlan)
@@ -61,6 +62,8 @@ subInfo Subscription {..} = do
 
  -}
 syncAction :: (Int, PricePlan) -> (Int, Int, PricePlan, PricePlan) -> RecurlyAction
+-- we cancell if we have no users on this account
+syncAction (0, _) _ = RTerminate
 -- we take no action when it is not an upgrade and we will switch next month
 syncAction (quantity, plan) (sub_q, pend_q, sub_p, pend_p) | quantity == pend_q &&
                                                              quantity <= sub_q  &&
@@ -68,7 +71,7 @@ syncAction (quantity, plan) (sub_q, pend_q, sub_p, pend_p) | quantity == pend_q 
                                                              plan     <= sub_p     = RNoAction
 -- an upgrade from a canceled plan, we reactivate now
 syncAction (_, plan) (_, _, sub_p, FreePricePlan) | plan > sub_p = RReactivateNow
--- an upgrade happens now 
+-- an upgrade happens now
 syncAction (quantity, plan) (sub_q, _, sub_p, _) | quantity > sub_q ||
                                                    plan     > sub_p    = RUpdateNow
 -- we cancel if we switch to free plan

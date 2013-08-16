@@ -29,49 +29,54 @@ fileTests env = testGroup "Files" [
 
 testFileIDReadShow :: TestEnv ()
 testFileIDReadShow = doTimes 100 $  do
-   (fid :: FileID) <- rand 10 arbitrary 
-   assertBool "read . show == id" ( fid == (read . show)  fid ) 
+   (fid :: FileID) <- rand 10 arbitrary
+   assertEqual "read . show == id" fid  ((read . show) fid)
 
 testFileIDUriShow :: TestEnv ()
 testFileIDUriShow = doTimes 100 $  do
-   (fid :: FileID) <- rand 10 arbitrary 
-   assertBool "fromReqURI . show == id" ( Just fid == (fromReqURI . show)  fid )  
+   (fid :: FileID) <- rand 10 arbitrary
+   assertEqual "fromReqURI . show == id" (Just fid) ((fromReqURI . show) fid)
 
 testFileNewFile :: TestEnv ()
 testFileNewFile  = doTimes 100 $ do
-  (name, content) <- fileData 
-  File { fileid = fileid , filename = fname1 , filestorage = FileStorageMemory fcontent1 aes1 } <- dbUpdate $  NewFile name $ Binary content
-  assertBool ("File content doesn't change " ++ show content ++ " vs "++ show fcontent1) (content == aesDecrypt aes1 fcontent1)
-  assertBool ("File name doesn't change " ++ show name ++ " vs "++ show fname1) (name == fname1)
-  Just (File { filename = fname2 , filestorage = FileStorageMemory fcontent2 aes2}) <- dbQuery $ GetFileByFileID fileid
-  assertBool "File data doesn't change after storing" ( name == fname2 && content == aesDecrypt aes2 fcontent2)
+  (name, content) <- fileData
+  File { fileid = fileid , filename = fname1 , filestorage = FileStorageMemory fcontent1 } <- dbUpdate $  NewFile name $ Binary content
+  assertEqual "File content doesn't change" content fcontent1
+  assertEqual "File name doesn't change" name fname1
+  Just (File { filename = fname2 , filestorage = FileStorageMemory fcontent2}) <- dbQuery $ GetFileByFileID fileid
+  assertEqual "File name doesn't change after storing" name fname2
+  assertEqual "File content doesn't change after storing" content fcontent2
 
 testFileMovedToAWS :: TestEnv ()
 testFileMovedToAWS  = doTimes 100 $ do
   (name,content) <- fileData
   bucket <- viewableS
-  url <- viewableS 
+  url <- viewableS
   file <- dbUpdate $ NewFile name $ Binary content
-  dbUpdate $ FileMovedToAWS (fileid file) bucket url
-  Just (File { filename = fname , filestorage = FileStorageAWS fbucket furl _ }) <- dbQuery $ GetFileByFileID (fileid file)
-  assertBool "File data name does not change" ( name == fname ) 
-  assertBool "Bucket and url are persistent" ( bucket == fbucket && url == furl ) 
-   
+  let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
+
+  dbUpdate $ FileMovedToAWS (fileid file) bucket url aes
+  Just (File { filename = fname , filestorage = FileStorageAWS fbucket furl aes2 }) <- dbQuery $ GetFileByFileID (fileid file)
+  assertEqual "File data name does not change" name fname
+  assertEqual "Bucket and url are persistent" (bucket,url) (fbucket,furl)
+  assertEqual "AES key is persistent" aes aes2
+
 testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do
   (name,content) <- fileData
   file <- dbUpdate $ NewFile name $ Binary content
   checker file
  where
-  checker file = do   
+  checker file = do
    mf <- dbQuery $ GetFileThatShouldBeMovedToAmazon
-   case mf of 
+   case mf of
        Just f -> if (f == file)
                     then return ()
                     else do
-                        dbUpdate $ FileMovedToAWS (fileid f) "" ""
+                        let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
+                        dbUpdate $ FileMovedToAWS (fileid f) "" "" aes
                         checker file
-       Nothing ->  assertFailure  "Newly created file will not" 
+       Nothing ->  assertFailure  "Newly created file will not"
 
 viewableS :: TestEnv String
 viewableS = rand 10 $ arbString 10 100

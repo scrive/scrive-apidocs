@@ -45,7 +45,7 @@ import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.Phrase;
-import com.itextpdf.text.Jpeg;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.CMYKColor;
 import com.itextpdf.text.pdf.PdfPTableEvent;
@@ -83,8 +83,6 @@ class Field
     public int page;
     public float image_w;
     public float image_h;
-    public int internal_image_w;
-    public int internal_image_h;
     public Boolean includeInSummary;
     public Boolean onlyForSummary;
     public float fontSize;
@@ -321,25 +319,25 @@ public class PDFSeal {
                         float realx = field.x * cropBox.getWidth() + cropBox.getLeft();
                         float realy = (1 - field.y - field.image_h) * cropBox.getHeight() + cropBox.getBottom();
 
-                        byte jpegdata[] = Base64.decode(field.valueBase64);
-                        if( jpegdata==null ) {
+                        byte rawdata[] = Base64.decode(field.valueBase64);
+                        if( rawdata==null ) {
                             throw new Base64DecodeException();
                         }
-                        Jpeg jpeg = new Jpeg(jpegdata);
+                        Image image = Image.getInstance(rawdata);
 
-                        jpeg.setAbsolutePosition(realx, realy);
-                        jpeg.scaleAbsoluteWidth(field.image_w * cropBox.getWidth());
-                        jpeg.scaleAbsoluteHeight(field.image_h * cropBox.getHeight());
+                        image.setAbsolutePosition(realx, realy);
+                        image.scaleAbsoluteWidth(field.image_w * cropBox.getWidth());
+                        image.scaleAbsoluteHeight(field.image_h * cropBox.getHeight());
 
                         if( field.keyColor!=null ) {
-                            jpeg.setTransparency(new int[] { field.keyColor.get(0),
-                                                             field.keyColor.get(0),
-                                                             field.keyColor.get(1),
-                                                             field.keyColor.get(1),
-                                                             field.keyColor.get(2),
-                                                             field.keyColor.get(2)} );
+                            image.setTransparency(new int[] { field.keyColor.get(0),
+                                                              field.keyColor.get(0),
+                                                              field.keyColor.get(1),
+                                                              field.keyColor.get(1),
+                                                              field.keyColor.get(2),
+                                                              field.keyColor.get(2)} );
                         }
-                        canvas.addImage(jpeg);
+                        canvas.addImage(image);
                     }
                 }
             }
@@ -453,12 +451,12 @@ public class PDFSeal {
             cell.setPaddingBottom(12);
             cell.setBorderWidth(1f);
 
-            if( person.fullname!=null && person.fullname!="" ) {
+            if( person.fullname!=null && !person.fullname.equals("") ) {
                 para = createParagraph(person.fullname, 10, Font.BOLD, lightTextColor );
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
-            if( person.company!=null && person.company!="" ) {
+            if( person.company!=null && !person.company.equals("") ) {
                 para = createParagraph(person.company, 10, Font.NORMAL, lightTextColor);
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
@@ -467,13 +465,18 @@ public class PDFSeal {
              * Spacing.
              */
             cell.addElement(new Paragraph(""));
-            if( person.personalnumber!=null && person.personalnumber!="" ) {
+            if( person.personalnumber!=null && !person.personalnumber.equals("") ) {
                 para = createParagraph(spec.staticTexts.personalNumberText + " " + person.personalnumber, 10, Font.NORMAL, lightTextColor );
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
-            if( person.companynumber!=null && person.companynumber!="" ) {
+            if( person.companynumber!=null && !person.companynumber.equals("") ) {
                 para = createParagraph(spec.staticTexts.orgNumberText + " " + person.companynumber, 10, Font.NORMAL, lightTextColor);
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
+            }
+            if( person.email!=null && !person.email.equals("") ) {
+                para = createParagraph(person.email, 10, person.emailverified ? Font.ITALIC : Font.NORMAL, lightTextColor);
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
@@ -481,27 +484,26 @@ public class PDFSeal {
                 if( field.valueBase64!=null &&
                     field.valueBase64!="" &&
                     field.includeInSummary ) {
-                        byte jpegdata[] = Base64.decode(field.valueBase64);
-                        if( jpegdata==null ) {
+                        byte rawdata[] = Base64.decode(field.valueBase64);
+                        if( rawdata==null ) {
                             throw new Base64DecodeException();
                         }
 
-                        Jpeg jpeg = new Jpeg(jpegdata);
+                        Image image = Image.getInstance(rawdata);
 
                         if( field.keyColor!=null ) {
-                            System.out.println("Key color!");
-                            jpeg.setTransparency(new int[] { field.keyColor.get(0),
-                                                             field.keyColor.get(0),
-                                                             field.keyColor.get(1),
-                                                             field.keyColor.get(1),
-                                                             field.keyColor.get(2),
-                                                             field.keyColor.get(2)} );
+                            image.setTransparency(new int[] { field.keyColor.get(0),
+                                                              field.keyColor.get(0),
+                                                              field.keyColor.get(1),
+                                                              field.keyColor.get(1),
+                                                              field.keyColor.get(2),
+                                                              field.keyColor.get(2)} );
                         }
-                        jpeg.scaleAbsoluteWidth(150);
-                        jpeg.setBorder(Rectangle.BOTTOM);
-                        jpeg.setBorderWidth(1f);
-                        jpeg.setBorderColor(lightTextColor);
-                        cell.addElement(jpeg);
+                        image.scaleAbsoluteWidth(150);
+                        image.setBorder(Rectangle.BOTTOM);
+                        image.setBorderWidth(1f);
+                        image.setBorderColor(lightTextColor);
+                        cell.addElement(image);
                 }
             }
             table.addCell(cell);

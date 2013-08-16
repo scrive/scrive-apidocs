@@ -243,7 +243,7 @@ var OAuthView = Backbone.View.extend({
             var model = this.model;
             var box = $("<div class='section'>");
             box.append("<div class='header'>Shortcut: Enter personal access credentials."+
-                       "<BR/><small><small>Bypass OAuth handshake by providing personal access credentials obtained at <a href='"+Scrive.serverUrl()+"/oauth/dashboard'>"+Scrive.serverUrl()+"/oauth/dashboard</a> </small></small></div>");
+                       "<BR/><small><small>Bypass OAuth handshake by providing personal access credentials obtained at <a href='"+Scrive.serverUrl()+"/account#api-dashboard'>"+Scrive.serverUrl()+"/account#api-dashboard</a> </small></small></div>");
 
             var consumer_key_input = $("<input type='text'>").val(model.consumer_key());
             consumer_key_input.change(function() {model.set_consumer_key(consumer_key_input.val()); return false;});
@@ -271,7 +271,7 @@ var OAuthView = Backbone.View.extend({
             var model = this.model;
             var box = $("<div class='section'>");
             box.append("<div class='header'>Step 1. Obtain temporary credentials from Scrive."+
-                        "<BR/> <small><small> You can generate client credentials at <a href='"+Scrive.serverUrl()+"/oauth/dashboard'>"+Scrive.serverUrl()+"/oauth/dashboard</a> </small></small></div>");
+                        "<BR/> <small><small> You can generate client credentials at <a href='"+Scrive.serverUrl()+"/account#api-dashboard'>"+Scrive.serverUrl()+"/account#api-dashboard</a> </small></small></div>");
 
             var consumer_key_input = $("<input type='text'>").val(model.consumer_key());
             box.append($("<div><div class='label'>Client credentials identifier (<span class='code'>oauth_consumer_key</span>): </div></div>").append(consumer_key_input))

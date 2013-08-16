@@ -31,6 +31,7 @@ main :: IO ()
 main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
+  checkExecutables
   fcache <- MemCache.new BS.length 52428800
   let amazonconf = AWS.AmazonConfig (mscAmazonConfig conf) fcache
   rng <- newCryptoRNGState

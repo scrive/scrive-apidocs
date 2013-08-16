@@ -58,6 +58,7 @@ import Control.Monad
 import Data.List hiding (insert)
 import Data.Maybe
 import File.Model
+import File.File
 import Control.Applicative
 
 {- |
@@ -212,20 +213,20 @@ documentcurrentsignorder doc =
  -}
 signatoryDetailsFromUser :: (MonadDB m) => User -> (Bool, Bool) -> m SignatoryDetails
 signatoryDetailsFromUser user (is_author, is_partner) = do
-  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) (usercompany user)
+  company <- dbQuery $ GetCompanyByUserID (userid user)
   return $ SignatoryDetails
     { signatorysignorder = SignOrder 1
     , signatoryfields =
         [ SignatoryField FirstNameFT (getFirstName user) True True []
         , SignatoryField LastNameFT (getLastName user) True True []
         , SignatoryField EmailFT (getEmail user) True True []
-        , SignatoryField CompanyFT (getCompanyName (user, mcompany)) False False []
+        , SignatoryField CompanyFT (getCompanyName company) False False []
         ] ++
         (if (not $ null $ getPersonalNumber user) then [SignatoryField PersonalNumberFT (getPersonalNumber user) False False []] else [])
           ++
         (if (not $ null $ getMobile user) then [SignatoryField MobileFT (getMobile user) False False []] else [])
           ++
-        (if (not $ null $ getCompanyNumber (user, mcompany)) then [SignatoryField CompanyNumberFT (getCompanyNumber (user, mcompany)) False False []] else [])
+        (if (not $ null $ getCompanyNumber company) then [SignatoryField CompanyNumberFT (getCompanyNumber company) False False []] else [])
     , signatoryispartner = is_partner
     , signatoryisauthor = is_author
     }

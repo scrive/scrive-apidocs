@@ -17,6 +17,7 @@ module AppView( kontrakcja
               , localizationScript
               , brandingFields
               , companyForPage
+              , companyUIForPage
               ) where
 
 import FlashMessage
@@ -41,6 +42,7 @@ import Utils.HTTP
 import Analytics.Include
 import DB
 import Company.Model
+import Company.CompanyUI
 import User.Model
 import Control.Monad
 import BrandedDomains
@@ -93,31 +95,34 @@ pageFromBody :: Kontrakcja m
              -> String
              -> m String
 pageFromBody thin ctx ad title bodytext = do
-  mcompany <- companyForPage
+  mcompanyui <- companyUIForPage
   mbd <- return $ currentBrandedDomain ctx
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
     standardPageFields ctx title ad
     F.valueM "httplink" $ getHttpHostpart
-    brandingFields mbd mcompany
+    brandingFields mbd mcompanyui
 
 companyForPage  :: Kontrakcja m => m (Maybe Company)
 companyForPage = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
        Nothing -> return Nothing
-       Just user -> do
-         mcompany <- dbQuery $ GetCompanyByUserID (userid user)
-         case mcompany of
-              Nothing -> return Nothing
-              Just company -> return $ Just $ company
+       Just user -> fmap Just $ dbQuery $ GetCompanyByUserID (userid user)
 
-brandingFields ::  Kontrakcja m => Maybe BrandedDomain -> Maybe Company -> Fields m ()
-brandingFields mbd mcompany = do
-  F.value "customlogo" $ (isJust mbd) || (isJust $ (join $ companycustomlogo <$> companyui <$> mcompany))
-  F.value "customlogolink" $ if (isJust $ (join $ companycustomlogo <$> companyui <$> mcompany))
-                                then show <$> LinkCompanyCustomLogo <$> companyid <$> mcompany
+companyUIForPage  :: Kontrakcja m => m (Maybe CompanyUI)
+companyUIForPage = do
+  ctx <- getContext
+  case (ctxmaybeuser ctx) of
+       Just User{usercompany = cid} -> Just <$> (dbQuery $ GetCompanyUI cid)
+       _ -> return Nothing
+
+brandingFields ::  Kontrakcja m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
+brandingFields mbd mcompanyui = do
+  F.value "customlogo" $ (isJust mbd) || (isJust $ (join $ companycustomlogo <$> mcompanyui))
+  F.value "customlogolink" $ if (isJust $ (join $ companycustomlogo <$> mcompanyui))
+                                then show <$> LinkCompanyCustomLogo <$> companyuicompanyid <$> mcompanyui
                                 else bdlogolink <$> mbd
   F.value "custombarscolour" $ mcolour bdbarscolour companycustombarscolour
   F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
@@ -128,7 +133,7 @@ brandingFields mbd mcompany = do
   F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd
   F.value "hasbrandeddomain" $ isJust mbd
  where
-   mcolour df cuf =  (join $ cuf <$> companyui <$> mcompany) `mplus` (df <$> mbd)
+   mcolour df cuf =  (join $ cuf <$> mcompanyui) `mplus` (df <$> mbd)
 
 
 notFoundPage :: Kontrakcja m => m Response

@@ -69,7 +69,7 @@ var AuthorViewModel = Backbone.Model.extend({
   }
 });
 
-  
+
 
 window.AuthorViewView = Backbone.View.extend({
   initialize: function(args) {

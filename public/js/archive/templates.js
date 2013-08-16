@@ -9,7 +9,7 @@ window.TemplatesListDefinition = function(archive) { return {
     loadOnInit : false,
     schema: new Schema({
     url: "/api/frontend/list",
-    extraParams : { documentType : "Template" },
+    extraParams : { documentType : "MyTemplate" },
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
@@ -83,7 +83,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                     new Submit({
                                                 url: "/d/share",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.templates.share.successMessage});
                                                     archive.templates().recall();
@@ -119,7 +119,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                     new Submit({
                                                 url: "/d/delete",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.templates.remove.successMessage});
                                                     archive.templates().recall();

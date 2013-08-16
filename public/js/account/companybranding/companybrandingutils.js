@@ -9,7 +9,6 @@ var CompanyBrandingColourModel = Backbone.Model.extend({
     customised: false,
     defaultcolour: "white",
     label: "",
-    editable: false,
     colour : ""
   },
   customised: function() {
@@ -30,9 +29,6 @@ var CompanyBrandingColourModel = Backbone.Model.extend({
   },
   label: function() {
     return this.get("label");
-  },
-  editable: function() {
-    return this.get("editable");
   }
 });
 
@@ -229,7 +225,6 @@ var CompanyBrandingFontModel = Backbone.Model.extend({
     customised: false,
     defaultfont: 'Helvetica Neue, Arial, sans-serif',
     label: '',
-    editable: false,
     font : ""
   },
   customised: function() {
@@ -250,9 +245,6 @@ var CompanyBrandingFontModel = Backbone.Model.extend({
   },
   label: function() {
     return this.get('label');
-  },
-  editable: function() {
-    return this.get('editable');
   }
 });
 
@@ -375,7 +367,6 @@ var CompanyBrandingLogoModel = Backbone.Model.extend({
     logo: localization.companyBranding.customiseLogo,
     logoChanged: false,
     label: "",
-    editable: false,
     loading: false
   },
   initialize: function(args) {
@@ -416,9 +407,6 @@ var CompanyBrandingLogoModel = Backbone.Model.extend({
   },
   label: function() {
     return this.get("label");
-  },
-  editable: function() {
-    return this.get("editable");
   },
   parse: function(args) {
     return {

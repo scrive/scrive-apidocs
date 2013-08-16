@@ -286,7 +286,6 @@ withTestDB m = E.finally m $ do
 
 clearTables :: TestEnv ()
 clearTables = do
-  kRunRaw "UPDATE users SET company_id = NULL"
   kRunRaw "DELETE FROM evidence_log"
   kRunRaw "DELETE FROM companyinvites"
   kRunRaw "DELETE FROM payment_plans"
@@ -302,8 +301,8 @@ clearTables = do
   kRunRaw "DELETE FROM signatory_links"
   kRunRaw "DELETE FROM documents"
 
-  kRunRaw "DELETE FROM companies"
   kRunRaw "DELETE FROM users"
+  kRunRaw "DELETE FROM companies"
   kRunRaw "DELETE FROM files"
 
   kRunRaw "DELETE FROM sessions"

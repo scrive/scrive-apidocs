@@ -57,8 +57,6 @@ data Field
     , page             :: Int    -- ^ on which page should the field be placed
     , image_w          :: Double -- ^ image width in (0,0)-(1,1)
     , image_h          :: Double -- ^ image height in (0,0)-(1,1)
-    , internal_image_w :: Int    -- ^ pixels horizontal of image in pixels
-    , internal_image_h :: Int    -- ^ pixels vertical of image in pixels
     , includeInSummary :: Bool   -- ^ add this field to report at the very end of document
     , onlyForSummary   :: Bool   -- ^ if image is supposed to be included only in summary x,y, page will be inored
     , keyColor         :: Maybe (Int,Int,Int) -- ^ transparent color in the form of RGB tripple (0-255)
@@ -81,8 +79,6 @@ instance J.ToJSValue Field where
     J.value "page" page
     J.value "image_w" image_w
     J.value "image_h" image_h
-    J.value "internal_image_w" internal_image_w
-    J.value "internal_image_h" internal_image_h
     J.value "includeInSummary" includeInSummary
     J.value "onlyForSummary" onlyForSummary
     J.value "keyColor" $ case keyColor of

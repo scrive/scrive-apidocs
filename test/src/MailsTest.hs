@@ -18,7 +18,9 @@ import Doc.DocStateData
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import Mails.SendMail
 import Company.Model
+import Company.CompanyUI
 import Test.QuickCheck
+import File.File
 import Control.Monad
 import MinutesTime
 import Util.SignatoryLinkUtils
@@ -45,7 +47,8 @@ testBrandedDocumentMails mailTo = do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
-        companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
+        companyuicompanyid = companyid company'
+      , companyemailfont = Just "Helvetica Neue, Arial, sans-serif"
       , companyemailbordercolour = Just "#dee4ed"
       , companyemailbuttoncolour = Just "215"
       , companyemailemailbackgroundcolour = Just "#0f0"
@@ -64,7 +67,7 @@ testBrandedDocumentMails mailTo = do
       , companycustombarssecondarycolour = Nothing
       , companycustombackgroundcolour = Nothing
       }
-  _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
+  _ <- dbUpdate $ SetCompanyUI (companyid company') cui
   sendDocumentMails mailTo author
 
 testDocumentMails :: Maybe String -> TestEnv ()

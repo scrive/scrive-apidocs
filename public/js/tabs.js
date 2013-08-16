@@ -17,6 +17,7 @@ window.Tab = Backbone.Model.extend({
     available : true,
     clickable : true,
     iconClass : undefined,
+    url       : undefined,
     onActivate : function() {},
     onShow : function() {},
     onHide : function() {}
@@ -98,6 +99,12 @@ window.Tab = Backbone.Model.extend({
   },
   setAvailable : function(b) {
      this.set({'available' : b});
+  },
+  url : function() {
+     return this.get("url");
+  },
+  isRedirect : function() {
+     return this.get("url") != undefined;
   }
 });
 
@@ -112,7 +119,7 @@ var Tabs = Backbone.Model.extend({
     },
    initialize : function(args){
        if (!this.canHaveNoActiveTab() && _.all(args.tabs,function(t) {return !t.active(); }))
-          this.activate(args.tabs[0]);
+          this.activate(_.filter(args.tabs,function(tab) {return !tab.isRedirect();})[0]);
    },
    activate: function(newtab)
    {
@@ -193,7 +200,9 @@ var TabsView = Backbone.View.extend({
          li.removeClass('inactive');
          li.click(function() {
            if (tab.clickable()) {
-             if (!tab.active())
+             if (tab.isRedirect())
+                window.location = tab.url();
+             else if (!tab.active())
                model.activate(tab);
              else if (!model.canHaveNoActiveTab())
                tab.onActivate(); // Manual trigger of activate
@@ -274,6 +283,7 @@ var TabsView = Backbone.View.extend({
            tabsrow.append(li);
         });
 
+        tabsrow.children().last().addClass('last-tab');
 
         var tabs = model.tabs();
         var visible = $();

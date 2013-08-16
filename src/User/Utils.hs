@@ -22,8 +22,8 @@ import Util.MonadUtils
     This looks up the company for the given user, if the user doesn't
     have a company then it returns Nothing.
 -}
-getCompanyForUser :: MonadDB m => User -> m (Maybe Company)
-getCompanyForUser = maybe (return Nothing) (dbQuery . GetCompany) . usercompany
+getCompanyForUser :: MonadDB m => User -> m Company
+getCompanyForUser user = dbQuery $ GetCompanyByUserID $ userid user
 
 {- |
    Guard against a POST with no logged in user.
@@ -68,7 +68,7 @@ withCompanyUser :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withCompanyUser action = do
   Context{ ctxmaybeuser } <- getContext
   user <- guardJust ctxmaybeuser
-  company <- guardJustM $ getCompanyForUser user
+  company <- getCompanyForUser user
   action (user, company)
 
 {- |

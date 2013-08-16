@@ -5,7 +5,6 @@ module User.API (
     apiCallChangeUserLanguage,
     apiCallUpdateUserProfile,
     apiCallChangeEmail,
-    apiCallCreateCompany,
     apiCallSignup
   ) where
 
@@ -36,6 +35,7 @@ import User.History.Model
 import User.UserControl
 import Payments.Action
 import Company.Model
+import Company.CompanyUI
 import Mails.SendMail
 import ActionQueue.EmailChangeRequest
 import Util.HasSomeUserInfo
@@ -67,7 +67,6 @@ versionedAPI _version = choice [
   dir "changepassword"  $ hPost $ toK0 $ apiCallChangeUserPassword,
   dir "changelanguage"  $ hPost $ toK0 $ apiCallChangeUserLanguage,
   dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
-  dir "createcompany"   $ hPost $ toK0 $ apiCallCreateCompany,
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
   dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
   dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo
@@ -97,8 +96,9 @@ apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
-  mcompany <- getCompanyForUser user
-  Ok <$> userJSON ctx user mcompany (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
+  company <- getCompanyForUser user
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  Ok <$> userJSON ctx user (company,companyui)
 
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
@@ -148,19 +148,19 @@ apiCallUpdateUserProfile = api $ do
   _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                                (userinfo user) (infoUpdate $ userinfo user)
                                                (userid <$> ctxmaybeuser ctx)
-  mcompany <- getCompanyForUser user
-  case (useriscompanyadmin user, mcompany) of
-    (True, Just company) -> do
+  if (useriscompanyadmin user)
+    then do
+      company <- getCompanyForUser user
       companyinfoupdate <- lift $ getCompanyInfoUpdate
       _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
       Ok <$> (runJSONGenT $ value "changed" True)
-    _ ->   Ok <$> (runJSONGenT $ value "changed" True)
+    else  Ok <$> (runJSONGenT $ value "changed" True)
 
 apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
-  mnewemail <- lift $ getRequiredField asValidEmail "newemail"
+  mnewemail <- lift $ getOptionalField asValidEmail "newemail"
   case (Email <$> mnewemail) of
     (Just newemail) -> do
        mexistinguser <- dbQuery $ GetUserByEmail newemail
@@ -179,21 +179,6 @@ apiCallChangeEmail = api $ do
     Nothing -> Ok <$> (runJSONGenT $ value "send" False)
 
 
-
-apiCallCreateCompany :: Kontrakcja m => m Response
-apiCallCreateCompany =  api $  do
-  ctx <- getContext
-  (user, _ , _) <- getAPIUser APIPersonal
-  company <- dbUpdate $ CreateCompany
-  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
-  -- payment plan needs to migrate to company
-  _ <- lift $ switchPlanToCompany (userid user) (companyid company)
-
-  _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                                              [("is_company_admin", "false", "true")]
-                                              (Just $ userid user)
-  Ok <$> (runJSONGenT $ value "created" True)
 
   {- |
    Handles submission of the signup form.
@@ -217,7 +202,9 @@ apiCallSignup = api $ do
   muser <- dbQuery $ GetUserByEmail $ Email email
   muser' <- case muser of
                Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
-               Nothing ->     lift $ createUser (Email email) (firstname,lastname) Nothing lang
+               Nothing ->  do
+                 company <- dbUpdate $ CreateCompany
+                 lift $ createUser (Email email) (firstname,lastname) (companyid company,True) lang
   case muser' of
     Nothing -> runJSONGenT $ value "sent" $ False
     Just user -> do
@@ -287,10 +274,8 @@ apiCallPaymentInfo = api $ do
   time <- ctxtime <$> getContext
 
   docsusedthismonth <- lift $ dbQuery $ GetDocsSentBetween (userid user) (beginingOfMonth time) time
-  mpaymentplan <- lift $ dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
-  quantity <- case usercompany user of
-                Nothing -> return 1
-                Just cid -> dbQuery $ GetCompanyQuantity cid
+  mpaymentplan <- lift $ dbQuery $ GetPaymentPlan $ (usercompany user)
+  quantity <- dbQuery $ GetCompanyQuantity (usercompany user)
 
   let paymentplan = maybe "free" (getNonTrialPlanName . ppPricePlan) mpaymentplan
       status      = maybe "active" (show . ppStatus) mpaymentplan

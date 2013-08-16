@@ -2,6 +2,9 @@
 (function(window){
 
 window.CompanyUI = Backbone.Model.extend({
+  defaults : {
+    ready : false
+  },
   initialize: function(args) {
     if (args.companyid) {
       this.url = args.url;
@@ -115,8 +118,8 @@ window.CompanyUI = Backbone.Model.extend({
   domainmailstextcolor: function() {
     return this.get('domainmailstextcolor');
   },
-  editable: function() {
-    return this.get('editable');
+  ready : function() {
+    return this.get("ready");
   },
   parse: function(args) {
     return {
@@ -143,7 +146,6 @@ window.CompanyUI = Backbone.Model.extend({
       domainbarstextcolour: args.domainbarstextcolour,
       domainbarssecondarycolour : args.domainbarssecondarycolour,
       domainbackgroundcolour: args.domainbackgroundcolour,
-      editable: args.editable,
       ready: true
     };
   }
@@ -159,10 +161,15 @@ window.Company = Backbone.Model.extend({
       city      : "",
       country    : "",
       smsoriginator : "",
-      companyui : undefined
+      ipaddressmasklist : "",
+      companyui : undefined,
+      ready : false
   },
   initialize : function(args) {
-    if (args.companyui != undefined) this.set({"companyui" : new CompanyUI(args.companyui)});
+    if (args.companyui != undefined)
+        this.set({"companyui" : new CompanyUI(args.companyui)});
+    if (args.forAdmin && args.companyid != undefined)
+        this.url = "/adminonly/companyadmin/details/"+ args.companyid;
   },
   companyid : function() {
      return this.get("companyid");
@@ -185,13 +192,34 @@ window.Company = Backbone.Model.extend({
   country : function() {
      return this.get("country");
   },
+  ipaddressmasklist: function() {
+     return this.get("ipaddressmasklist");
+  },
   smsoriginator : function() {
      return this.get("smsoriginator");
   },
   companyui : function() {
      return this.get("companyui");
-  }
+  },
+  ready : function() {
+     return this.get("ready");
 
+  },
+  parse: function(args) {
+     return {
+      companyid        : args.companyid,
+      companyname      : args.companyname,
+      companynumber    : args.companynumber,
+      address    : args.address,
+      zip       : args.zip,
+      city      : args.city,
+      country    : args.country,
+      ipaddressmasklist : args.ipaddressmasklist,
+      smsoriginator : args.smsoriginator,
+      companyui   : args.companyui != undefined ? new CompanyUI(args.companyui) : undefined,
+      ready : true
+    };
+  }
 });
 
 })(window);

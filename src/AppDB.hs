@@ -140,6 +140,13 @@ kontraMigrations = [
   , removeEmailDomainFromCompany
   , asyncEventQueueChangePrimaryKeyToBigSerial
   , removeProcessFromDocuments
+  , moveCompanyUIsToSeparateTable
+  , removeIsFree
+  , setProperOwnerOnFilesIDSequence
+  , moveBinaryDataForSignatoryScreenshotsToFilesTable
+  , allUsersMustHaveCompany
+  , paymentsPlansOnlyForCompanies
+  , paymentsStatsOnlyForCompanies
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -178,4 +185,5 @@ kontraTables = [
   , tableAsyncEventQueue
   , tableHostClock
   , tableUsersCallbackScheme
+  , tableCompanyUIs
   ] ++ mailerTables

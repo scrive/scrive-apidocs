@@ -5,7 +5,7 @@
 var AccountSettingsModel = Backbone.Model.extend({
   initialize : function() {
     var self = this;
-    var user = new User();
+    var user = new User({});
     this.set({"user" : user});
     user.bind("change",function() {
       console.log('User changed ready');
@@ -134,26 +134,16 @@ var AccountSettingsModel = Backbone.Model.extend({
       , newemailagain : ""
       , phone : this.user().phone()
       , lang :  this.user().lang() != "sv" ?  "en" : "sv"
-      , companyname :    !this.user().hasCompany() ? this.user().usercompanyname() : this.company().companyname()
-      , companynumber :  !this.user().hasCompany() ? this.user().usercompanynumber()   : this.company().companynumber()
+      , companyname :     this.company().companyname()
+      , companynumber :   this.company().companynumber()
       , companyposition : this.user().companyposition()
-      , companyaddress :  this.user().hasCompany() ? this.company().address()  : undefined
-      , companyzip :      this.user().hasCompany() ? this.company().zip()  : undefined
-      , companycity :     this.user().hasCompany() ? this.company().city()  : undefined
-      , companycountry :  this.user().hasCompany() ? this.company().country()  : undefined
-      , companysmsoriginator : this.user().hasCompany() ? this.company().smsoriginator()  : undefined
+      , companyaddress :  this.company().address()
+      , companyzip :      this.company().zip()
+      , companycity :     this.company().city()
+      , companycountry :   this.company().country()
+      , companysmsoriginator : this.company().smsoriginator()
     }, {silent : true});
     this.trigger("reset");
-  },
-  createCompany : function(callback) {
-     return new Submit({
-      method : "POST",
-      url : "/api/frontend/createcompany",
-      ajax : true,
-      ajaxsuccess : function(rs) {
-        if (callback!= undefined) callback();
-      }
-    }).send();
   },
   changeEmail :function(callback) {
      var self = this;
@@ -253,9 +243,11 @@ var AccountSettingsView = Backbone.View.extend({
       // Building frame
       var self = this;
       var model = this.model;
+
       var box = $("<div class='blue-box'/>");
       if (model.user().hasCompany())
         box.addClass("col");
+
       var header = $("<div class='account-header'/>").text(model.user().smartname());
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
@@ -298,21 +290,19 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.phone + ':'))).append($("<td/>").append(phoneinput)));
 
-      if (!model.user().hasCompany()) {
 
-          var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
-          companynameinput.change(function() {
-              model.setCompanyname(companynameinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname + ':'))).append($("<td/>").append(companynameinput)));
+      var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
+      companynameinput.change(function() {
+          model.setCompanyname(companynameinput.val());
+        });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname + ':'))).append($("<td/>").append(companynameinput)));
 
-          var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
-          companynumberinput.change(function() {
-              model.setCompanynumber(companynumberinput.val());
-            });
-          table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber + ':'))).append($("<td/>").append(companynumberinput)));
+      var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
+      companynumberinput.change(function() {
+          model.setCompanynumber(companynumberinput.val());
+        });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber + ':'))).append($("<td/>").append(companynumberinput)));
 
-      }
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
@@ -348,21 +338,21 @@ var AccountSettingsView = Backbone.View.extend({
       // Data table
             var table = jQuery("<table/>");
 
-            var companynameinput = $("<input type='text'/>").val(model.companyname());
+            var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
             if (!model.companyAdmin()) companynameinput.attr("disabled","disabled");
             companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname + ':'))).append($("<td/>").append(companynameinput)));
 
-            var companynumberinput = $("<input type='text'/>").val(model.companynumber());
+            var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
             if (!model.companyAdmin()) companynumberinput.attr("disabled","disabled");
             companynumberinput.change(function() {
               model.setCompanynumber(companynumberinput.val());
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber + ':'))).append($("<td/>").append(companynumberinput)));
 
-            var companyaddressinput = $("<input type='text'/>").val(model.companyaddress());
+            var companyaddressinput = $("<input type='text' />").val(model.companyaddress());
             if (!model.companyAdmin()) companyaddressinput.attr("disabled","disabled");
             companyaddressinput.change(function() {
               model.setCompanyaddress(companyaddressinput.val());
@@ -477,6 +467,7 @@ var AccountSettingsView = Backbone.View.extend({
           }
       }).el();
     },
+<<<<<<< HEAD
     createCompanyButton : function() {
       var model = this.model;
       return new Button({
@@ -561,6 +552,8 @@ var AccountSettingsView = Backbone.View.extend({
           }
         }).el();
     },
+=======
+>>>>>>> master
     saveButton : function() {
       var model = this.model;
       var button = new Button({
@@ -586,9 +579,13 @@ var AccountSettingsView = Backbone.View.extend({
        container.append(box);
 
        box.append(this.accountSettings());
+<<<<<<< HEAD
        if (model.user().hasCompany())
         box.append(this.companySettings());
        box.append("<div class='clearfix'></div>");
+=======
+       box.append(this.companySettings());
+>>>>>>> master
        var footerbox = $("<div class='account-footer'/>");
        box.append(footerbox);
        footerbox.append(this.saveButton());
