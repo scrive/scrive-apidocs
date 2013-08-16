@@ -93,7 +93,7 @@ echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has bee
 
 if [ ! -z "$SRV2" ]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
-   ssh builds@prod.scrive.lan "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
+   ssh api-testbed@vm-dev.scrive.com "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
    scp "$TMP/$finalfile" "api-testbed@vm-dev.scrive.com:/tmp/"$SRV2"_deployment/."
 fi
 
