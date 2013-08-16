@@ -2,6 +2,14 @@
 
     &.small-screen {
 
+        > h2 {
+            // !important because otherwise we can't override
+            // the previous rule from in here, as we're so deep already.
+            font-size: x-large !important;
+            font-weight: bold !important;
+        }
+
+
         .list .desc {
             width: 500px;
 
