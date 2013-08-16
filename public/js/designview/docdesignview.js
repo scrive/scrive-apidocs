@@ -102,7 +102,7 @@
                       new Submit({
                         ajax : 'true',
                         method : 'POST',
-                        url : '/d/save/' + viewmodel.document().documentid(),
+                        url : '/d/save/' + view.model.document().documentid(),
                         ajaxsuccess : function() {
                           new FlashMessage({color: "green", content : localization.designview.saved});
                         }

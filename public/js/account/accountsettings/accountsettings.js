@@ -386,7 +386,7 @@ var AccountSettingsView = Backbone.View.extend({
               model.setCompanysmsoriginator(companysmsoriginatorinput.val());
             });
             table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.smsOriginator))).append($("<td/>").append(companysmsoriginatorinput)));
-            table.append($("<tr/>").append($("<td/>")).append($("<td/>").append($("<div style='font-size:10px;line-height: 10px;color:#999999;margin:0px 10px 0px 3px;font-style:italic'/>").text(localization.account.accountDetails.smsOriginatorDescription))));
+            table.append($("<tr/>").append($("<td/>")).append($("<td/>").append($("<div style='font-size:10px;line-height: 10px;color:#999999;margin:-5px 10px 0px 0px;width:234px;font-style:italic'/>").text(localization.account.accountDetails.smsOriginatorDescription))));
 
 
             body.append(table);

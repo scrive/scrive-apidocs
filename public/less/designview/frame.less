@@ -34,7 +34,6 @@ body.designview .mainContainer {
 .design-view-tab-container {
     .box-sizing(border-box);
     height: 60px;
-    border-bottom: 1px solid #ccc;
     font-size:16px;
     cursor: pointer;
     width: 1018px;
@@ -56,12 +55,12 @@ body.designview .mainContainer {
 .designview {
   .tab-viewer {
     width: 100%;
-    background: none repeat scroll 0 0 white;
     .tab-viewer-header {
         .box-sizing(border-box);
-        border-bottom: 1px solid #9e9e9e;
-        .box-shadow(0 4px 0 rgba(128, 128, 128, 0.3));
-        margin-bottom: 4px;
+        .box-shadow(0 4px 0 rgba(0, 0, 0, 0.05));
+        margin-bottom: 0px;
+	z-index:999;
+	position:relative;
     }
     .tabs {
         margin: auto;
@@ -94,7 +93,8 @@ body.designview .mainContainer {
               display: inline-block;
               width: 290px;
               height: 100%;
-              font-size: 20px;
+              font-size: 18px;
+	      color:#262626;
               position: relative;
               text-align : center;
               &.grayed {
