@@ -165,8 +165,8 @@ window.CompanyBrandingView = Backbone.View.extend({
   saveButton: function() {
     var model = this.model;
     return new Button({
-      color: "blue",
-      shape: "rounded",
+      color: "green",
+      cssClass: "button-green save",
       size: "small",
       text: localization.companyBranding.saveBranding,
       onClick: function() {
@@ -189,7 +189,7 @@ window.CompanyBrandingView = Backbone.View.extend({
     $(this.el).append(container);
     container.append(model.tabs().el());
 
-    container.append($("<div class='float-left save'/>").append(this.saveButton()));
+    container.append($("<div class='float-right save'/>").append(this.saveButton()));
     $(this.el).append("<div class='clearfix'></div>");
     return this;
   }

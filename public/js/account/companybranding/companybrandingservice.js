@@ -215,7 +215,7 @@ window.CompanyBrandingServiceViewView = Backbone.View.extend({
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.custombackgroundcolour().el()));
 
-    var sample = $("<div style='width: 600px; margin:20px; display: inline-block;'/>");
+    var sample = $("<div class='branding-container'/>");
     container.append(sample.append(new CompanyBrandingServiceViewSampleView({model : this.model, el : $("<div/>")}).el));
 
     $(this.el).append("<div class='clearfix'></div>");
