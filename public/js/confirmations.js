@@ -150,7 +150,7 @@ var ConfirmationView = Backbone.View.extend({
          title.css("font-family",model.textfont());
 
        if (model.icon() == null) {
-         inner.addClass('no-icon');
+         header.addClass('no-icon');
          inner.append(title);
        } else {
          inner.append(icon);
