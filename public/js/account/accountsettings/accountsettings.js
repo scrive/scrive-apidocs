@@ -484,7 +484,7 @@ var AccountSettingsView = Backbone.View.extend({
        console.log("Rendering main view");
        var model = this.model;
        if (!model.ready()) return;
-       console.log("Rendering main view - now we are ready");
+
        var container = $(this.el).empty();
        var box = $("<div class='tab-content account'/>");
        container.append(box);
@@ -493,10 +493,10 @@ var AccountSettingsView = Backbone.View.extend({
        box.append(this.companySettings());
 
        var footerbox = $("<div class='account-footer'/>");
+       box.append("<div class='clearfix'></div>");
        box.append(footerbox);
        footerbox.append(this.saveButton());
 
-       box.append("<div class='clearfix'></div>");
        return this;
     }
 });
