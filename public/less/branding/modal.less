@@ -82,6 +82,15 @@
   background: repeat scroll 0 0 @green;
   border-bottom: 1px solid @blue-border;
   color: @text-very-light;
+
+  &.no-icon {
+    height: auto;
+    text-align: center;
+
+    .modal-title {
+        padding-top: 0px;
+    }
+  }
 }
 .modal-header-inner {
   margin: auto;
@@ -121,8 +130,9 @@
     display: block;
     height: 24px;
     width: 24px;
-    position:relative;
-    float:right;
+    position: relative;
+    top: -37px;
+    float: right;
     &:hover {
       background-position: 0 -24px;
     }
