@@ -20,6 +20,7 @@ import Kontra
 import User.Model
 
 import Company.Model
+import Company.CompanyUI
 
 import Control.Monad
 import Control.Applicative
@@ -37,6 +38,7 @@ import Doc.Model
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
+                                   , aCompanyUI      :: Maybe CompanyUI
                                    , aToken          :: String
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
@@ -47,12 +49,14 @@ getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
   muser <- ctxmaybeuser <$> getContext
   mcompany <- case muser of
-    Just User{usercompany = Just cid} -> dbQuery $ GetCompany cid
+    Just user -> dbQuery $ GetCompany $ usercompany user
     _ -> return Nothing
+  mcompanyui <- case mcompany of
+    Just comp -> Just <$> (dbQuery $ GetCompanyUI (companyid comp))
+    Nothing -> return Nothing
   token <- ctxmixpaneltoken <$> getContext
   mplan <- case muser of
-    Just User{usercompany = Just cid } -> dbQuery $ GetPaymentPlan (Right cid)
-    Just User{userid} -> dbQuery $ GetPaymentPlan (Left userid)
+    Just user -> dbQuery $ GetPaymentPlan (usercompany user)
     Nothing -> return Nothing
   lang <- ctxlang <$> getContext
   docssent <- case muser of
@@ -61,6 +65,7 @@ getAnalyticsData = do
 
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
+                         , aCompanyUI    = mcompanyui
                          , aToken        = token
                          , aPaymentPlan  = mplan
                          , aLanguage     = lang
@@ -75,12 +80,6 @@ analyticsTemplates ad = do
   mnop (F.value "userid" . show . userid) $ aUser ad
   F.value "token" $ aToken ad
   F.value "properties" $ encode $ toJSValue ad
-
-companyStatus :: User -> String
-companyStatus u = case (useriscompanyadmin u, usercompany u) of
-  (True, _)        -> "admin"
-  (False, Nothing) -> "solo"
-  (False, Just _ ) -> "sub"
 
 instance ToJSValue AnalyticsData where
   toJSValue AnalyticsData{..} = runJSONGen $ do
@@ -97,9 +96,9 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Phone") $ maybeS $ escapeString <$> (userphone . userinfo) <$> aUser
     mnop (J.value "Position") $ maybeS $ escapeString <$> usercompanyposition <$> userinfo  <$> aUser
 
-    mnop (J.value "Company Status") $ escapeString <$> companyStatus <$> aUser
-    mnop (J.value "Company Name") $ maybeS $ escapeString <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
-    mnop (J.value "Company Branding") $ isJust <$> companysignviewlogo <$> companyui <$> aCompany
+    mnop (J.value "Company Status") $ escapeString <$> (\u -> if (useriscompanyadmin u) then "admin" else "sub") <$> aUser
+    mnop (J.value "Company Name") $ maybeS $ escapeString <$> getCompanyName  <$> aCompany
+    mnop (J.value "Company Branding") $ isJust <$> companysignviewlogo <$> aCompanyUI
 
     mnop (J.value "Signup Method") $ maybeS $ escapeString <$> show <$> usersignupmethod <$> aUser
 

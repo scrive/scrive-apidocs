@@ -77,7 +77,7 @@ window.ScreenBlockingDialog = {
        var dialog = $('.screenblockingdialog');
        if (dialog.size() > 0 ) {
          dialog.removeClass("active");
-         if (BrowserInfo.isIE9orLower())
+         if (BrowserInfo.isIE())
            dialog.css('display','none');
       }
     }

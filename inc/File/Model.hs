@@ -6,7 +6,6 @@ module File.Model (
     , NewFile(..)
     , GetFileWithNoChecksum(..)
     , SetChecksum(..)
-    , SetContentToMemoryAndEncryptIt(..)
     ) where
 
 import Control.Applicative
@@ -31,24 +30,23 @@ instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
 data NewFile = NewFile String Binary
 instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile File where
   update (NewFile filename content) = do
-    Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
     kRun_ $ sqlInsert "files" $ do
         sqlSet "name" filename
-        sqlSet "content" $ aesEncrypt aes `binApp` content
+        sqlSet "content" $ content
         sqlSet "checksum" $ SHA1.hash `binApp` content
         sqlSet "size" $ BS.length $ unBinary content
-        sqlSet "aes_key" $ aesKey aes
-        sqlSet "aes_iv" $ aesIV aes
         mapM_ (sqlResult . raw) filesSelectors
     fetchFiles >>= exactlyOneObjectReturnedGuard
 
-data FileMovedToAWS = FileMovedToAWS FileID String String
+data FileMovedToAWS = FileMovedToAWS FileID String String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
-  update (FileMovedToAWS fid bucket url) =
+  update (FileMovedToAWS fid bucket url aes) =
     kRun_ $ sqlUpdate "files" $ do
         sqlSet "content" SqlNull
         sqlSet "amazon_bucket" bucket
         sqlSet "amazon_url" url
+        sqlSet "aes_key" $ aesKey aes
+        sqlSet "aes_iv" $ aesIV aes
         sqlWhereEq "id" fid
 
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
@@ -72,18 +70,6 @@ instance MonadDB m => DBUpdate m SetChecksum Bool where
       sqlSet "checksum" checksum
       sqlWhereEq "id" fid
 
--- | Needed for encrypting/calculating checksum for old files. To be removed after 15.08.2012.
-data SetContentToMemoryAndEncryptIt = SetContentToMemoryAndEncryptIt FileID Binary
-instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m SetContentToMemoryAndEncryptIt Bool where
-  update (SetContentToMemoryAndEncryptIt fid content) = do
-    Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
-    kRun01 $ sqlUpdate "files" $ do
-        sqlSet "content" $ aesEncrypt aes `binApp` content
-        sqlSet "size" $ BS.length $ unBinary content
-        sqlSet "aes_key" $ aesKey aes
-        sqlSet "aes_iv" $ aesIV aes
-        sqlSet "id" fid
-
 selectFilesSQL :: SQL
 selectFilesSQL = "SELECT" <+> sqlConcatComma (map raw filesSelectors) <+> "FROM files "
 
@@ -103,21 +89,37 @@ fetchFiles :: MonadDB m => m [File]
 fetchFiles = kFold decoder []
   where
     decoder acc fid fname content amazon_bucket
-      amazon_url checksum aes_key aes_iv = File {
+      amazon_url checksum maes_key maes_iv = File {
         fileid = fid
       , filename = fname
       , filestorage =
+        -- Here we need to support the following cases:
+        --
+        -- * plain data in the database: just return content
+        -- * encrypted data in the database (backward compatibility only):
+        --      decrypt and return content
+        -- * encrypted data in Amazon S3: return (bucket, url, aes)
+        -- * invalid AES key: error out at this place
+        --
+        -- Binary data in database is temporary: next cron run should
+        -- move it to Amazon.  Encrypted data in database is backward
+        -- compatibility only: we are not going to put entrypted data
+        -- anymore, but we need to handle some leftovers that may be
+        -- lingering there.
         case content of
           Just (Binary mem) -> case eaes of
-            Right aes -> FileStorageMemory mem aes
-            Left msg  -> err msg
+            Nothing          -> FileStorageMemory mem
+            Just (Right aes) -> FileStorageMemory (aesDecrypt aes mem)
+            Just (Left msg)  -> err msg
           Nothing -> case (amazon_bucket, amazon_url, eaes) of
-            (Just bucket, Just url, Right aes) -> FileStorageAWS bucket url aes
-            (Just _,      Just _,   Left msg)  -> err msg
+            (Just bucket, Just url, Just (Right aes)) -> FileStorageAWS bucket url aes
+            (Just _,      Just _,   Just (Left msg))  -> err msg
             d                                  -> error $ "Invalid AWS data for file with id = " ++ show fid ++ ": " ++ show d
       , filechecksum = unBinary `fmap` checksum
     } : acc
       where
         err :: String -> FileStorage
         err msg = error $ "File with id = " ++ show fid ++ " has invalid aes/iv pair: " ++ msg
-        eaes = mkAESConf (unBinary aes_key) (unBinary aes_iv)
+        eaes = case (maes_key, maes_iv) of
+                 (Just aes_key, Just aes_iv) -> Just $ mkAESConf (unBinary aes_key) (unBinary aes_iv)
+                 _ -> Nothing

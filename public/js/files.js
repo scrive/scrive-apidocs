@@ -124,9 +124,9 @@ window.File = Backbone.Model.extend({
         else
         {
             var file = this;
-            var pages = _.map(response.pages, function(page,i) {
-                return new FilePage({number : i + 1, file: file, width: page.width, height: page.height});
-            });
+            var pages = [];
+            for(var i=0;i<response.pages;i++)
+              pages[i] = new FilePage({number : i + 1, file: file});
             this.set({pages: pages});
         }
     }
@@ -160,6 +160,9 @@ var FilePage = Backbone.Model.extend({
     },
     height: function(){
         return this.get("height");
+    },
+    setSize : function(w,h) {
+        this.set({width:w,height:h});
     },
     addPlacement : function(placement){
         var newplacements = this.placements();
@@ -238,7 +241,10 @@ var FilePageView = Backbone.View.extend({
         });
     },
     ready : function() {
-        return this.pagejpg != undefined && this.pagejpg[0].complete;
+        var ready = this.pagejpg != undefined && this.pagejpg[0].complete;
+        if (ready)
+          this.model.setSize(this.pagejpg.width(),this.pagejpg.height());
+        return ready;
     },
     render: function () {
         var page = this.model;

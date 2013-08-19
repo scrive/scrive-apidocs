@@ -16,7 +16,6 @@ module ELegitimation.Control
     where
 
 import DB
-import Redirect
 import qualified Log
 import Control.Logic
 import Control.Monad.State
@@ -169,9 +168,9 @@ verifySignatureAndGetSignInfo ::  Kontrakcja m =>
                                    -> String
                                    -> m VerifySignatureResult
 verifySignatureAndGetSignInfo docid signid magic fields provider signature transactionid = do
-    ELegTransaction{..} <- guardJustM404  $ dbQuery $ GetELegTransaction transactionid
+    ELegTransaction{..} <- guardJustM  $ dbQuery $ GetELegTransaction transactionid
     document            <- guardRightM    $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
-    siglink             <- guardJust404   $ getSigLinkFor document signid
+    siglink             <- guardJust   $ getSigLinkFor document signid
     logicaconf          <-               ctxlogicaconf <$> getContext
 
     -- valid transaction?

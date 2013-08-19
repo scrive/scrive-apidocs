@@ -121,8 +121,8 @@
                     new Cell({name: "Company", width:"100px", field:"company", special:"link"}),
                     new Cell({name: "Position", width:"100px", field:"companyposition", special:"link"}),
                     new Cell({name: "Phone", width:"100px", field:"phone", special:"link"}),
-                    new Cell({name: "TOS date", width:"100px", field:"tos", special:"link",
-                                    rendering: function(time, idx, doc) {
+                    new Cell({name: "TOS date", width:"100px", field:"tos", special:"rendering",
+                                    rendering: function(time) {
                                             if (time != undefined && time != "")
                                               return $("<small/>").text(new Date(Date.parse(time)).toTimeAbrev());
                                             else return $("<small/>");

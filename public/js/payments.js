@@ -257,15 +257,8 @@
         isAdmin : function() {
             return this.get('is_admin');
         },
-        hasCompany : function() {
-            return this.get('has_company');
-        },
         canPurchase : function() {
-            if(!this.hasCompany())
-                return true;
-            if(this.isAdmin())
-                return true;
-            return false;
+            return this.isAdmin();
         },
         url: function() {
             return "/payments/pricepageinfo";
@@ -605,7 +598,7 @@
                                             });
                         work = true;
                     }
-                } else if(data.user_exists && !data.has_plan && data.has_company && !data.is_admin) {
+                } else if(data.user_exists && !data.has_plan && !data.is_admin) {
                     loadingicon.hide();
                     //LoadingDialog.close();
                     var popup = Confirmation.popup({
@@ -615,7 +608,7 @@
                             popup.view.clear();
                         }
                     });
-                } else if(data.user_exists && !data.has_plan && ((data.has_company && data.is_admin) || !data.has_company)) {
+                } else if(data.user_exists && !data.has_plan &&  data.is_admin) {
                     //LoadingDialog.close();
                     //loadingicon.hide();
                     if(work) {
@@ -654,14 +647,12 @@
                                                   handlechargeaccount({
                                                       'user_exists' : true,
                                                       'has_plan' : false,
-                                                      'has_company' : model.hasCompany(),
                                                       'is_admin' : model.isAdmin()
                                                   });
                                               } else if(model.type() === 'plan' || model.type() == 'plannone') {
                                                   handlechargeaccount({
                                                       'user_exists' : true,
                                                       'has_plan' : true,
-                                                      'has_company' : model.hasCompany(),
                                                       'is_admin' : model.isAdmin()
                                                   });
                                               } else { // not logged in, so we have to check

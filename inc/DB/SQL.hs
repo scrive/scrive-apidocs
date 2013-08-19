@@ -47,9 +47,6 @@ instance IsString RawSQL where
 unsafeFromString :: String -> RawSQL
 unsafeFromString = fromString
 
-instance Convertible RawSQL SqlValue where
-  safeConvert = safeConvert . unRawSQL
-
 -- | Parameterized SQL fragments and statements
 data SQL = SQL RawSQL [SqlValue]
   deriving (Eq)

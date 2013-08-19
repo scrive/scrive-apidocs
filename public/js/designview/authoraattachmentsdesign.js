@@ -137,6 +137,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                 name : "Attachments table",
                 schema: new Schema({
                     url: "/a",
+                    extraParams : { domain : "All" },
                     cells : [
                         new Cell({name: localization.authorattachments.selectAttachment,
                                   width:"400px",

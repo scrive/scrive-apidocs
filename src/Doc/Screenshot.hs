@@ -9,15 +9,11 @@ import Text.JSON.FromJSValue
 import Control.Applicative
 
 data Screenshot = Screenshot {
-    mimetype :: String
-  , image :: Binary
+    image :: Binary
   }
   deriving (Show, Eq, Ord)
 
 instance FromJSValue Screenshot where
   fromJSValue s = do
-    (mt, i) <- RFC2397.decode =<< BS.fromString <$> fromJSValue s
-    if (mt `elem` ["image/jpeg", "image/png"])
-      then Just $ Screenshot (BS.toString mt) (Binary i)
-      else Nothing
-
+    (_mimetype, i) <- RFC2397.decode =<< BS.fromString <$> fromJSValue s
+    return $ Screenshot (Binary i)

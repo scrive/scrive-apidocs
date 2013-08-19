@@ -6,6 +6,17 @@ import DB
 import File.Tables
 import qualified Log
 
+setProperOwnerOnFilesIDSequence :: MonadDB m => Migration m
+setProperOwnerOnFilesIDSequence = Migration {
+    mgrTable = tableFiles
+  , mgrFrom = 4
+  , mgrDo = do
+    kRunRaw "ALTER SEQUENCE files_id_seq OWNED BY files.id"
+    kRunRaw "ALTER TABLE files ALTER aes_key DROP NOT NULL"
+    kRunRaw "ALTER TABLE files ALTER aes_iv DROP NOT NULL"
+}
+
+
 removeDiskPathAndMakeNewColumnsNotNull :: MonadDB m => Migration m
 removeDiskPathAndMakeNewColumnsNotNull = Migration {
     mgrTable = tableFiles

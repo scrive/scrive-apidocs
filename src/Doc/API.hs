@@ -21,6 +21,7 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
 import Doc.SignatoryLinkID
+import File.File
 import Text.JSON.Pretty
 import Doc.DocumentID
 import Doc.Tokens.Model
@@ -32,7 +33,6 @@ import Utils.String
 import Utils.Monad
 import System.FilePath
 import Data.Maybe
-import qualified Data.String.Utils as String
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified ELegitimation.Control as BankID
 import qualified Data.ByteString as BS
@@ -119,9 +119,13 @@ versionedAPI _version = choice [
   dir "document" $ hDeleteAllowHttp  $ toK6 $ documentDeleteSignatoryAttachment
   ]
 
--- | Clean a filename from a path (could be windows \) to a base name
-cleanFileName :: FilePath -> String
-cleanFileName = takeBaseName . String.replace "\\" "/"
+-- | Windows Explorer set the full path of a file, for example:
+--
+--    c:\My Documents\Things\Untitle Document.doc
+--
+-- We drop all up to and including last backslash here.
+dropFilePathFromWindows :: FilePath -> FilePath
+dropFilePathFromWindows = reverse . takeWhile (/='\\') . reverse
 
 {- New API calls-}
 apiCallCreateFromFile :: Kontrakcja m => m Response
@@ -136,20 +140,24 @@ apiCallCreateFromFile = api $ do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
       return (Nothing,  replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx))
     Just (Input _ Nothing _) -> throwIO . SomeKontraException $ badInput "Missing file"
-    Just (Input contentspec (Just filename') _contentType) -> do
-      let filename = takeBaseName filename'
+    Just (Input contentspec (Just filename'') _contentType) -> do
+      let filename' = dropFilePathFromWindows filename''
       let mformat = getFileFormatForConversion filename'
       content' <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
-      content'' <- case mformat of
-        Nothing -> return content'
+      (content'', filename) <- case mformat of
+        Nothing -> return (content', filename')
         Just format -> do
           eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
           case eres of
             Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
             Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ serverError s
-            Right res -> return $ BSL.fromChunks [res]
+            Right res -> do
+              -- change extension from .doc, .docx and others to .pdf
+              let filename = takeBaseName filename' ++ ".pdf"
+              return $ (BSL.fromChunks [res], filename)
+
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
                      cres <- preCheckPDF (concatChunks content'')
                      case cres of
@@ -158,7 +166,7 @@ apiCallCreateFromFile = api $ do
                                       Right dcontent -> preCheckPDF dcontent
                                       Left _ -> return (Left m)
       file <- dbUpdate $ NewFile filename pdfcontent
-      return (Just file, filename)
+      return (Just file, takeBaseName filename)
   Just doc <- dbUpdate $ NewDocument user title doctype 0 actor
   when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
   case mfile of
@@ -177,7 +185,7 @@ apiCallCreateFromTemplate did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission = (userid auser == userid user) ||
-                          ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared template)
+                      (usercompany auser == usercompany user &&  isDocumentShared template)
   mnewdoc <- if (isTemplate template && haspermission)
                     then do
                       mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
@@ -382,7 +390,7 @@ handleSignWithEleg documentid signatorylinkid magichash fields screenshots provi
   case esigninfo of
     BankID.Problem msg -> return $ Left msg
     BankID.Mismatch msg sfn sln spn -> do
-      document <- guardRightM' $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
       handleMismatch document signatorylinkid msg sfn sln spn
       return $ Left msg
     BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
@@ -428,7 +436,7 @@ apiCallDelete did =  api $ do
                        _ -> return Nothing
   let msl = getSigLinkFor doc user
   let haspermission = (isJust msl)
-                   || (isJust mauser && isJust (usercompany user) && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                   || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
   when (not haspermission) $ do
          throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
   dbUpdate $ ArchiveDocument (userid user) did actor
@@ -485,7 +493,9 @@ apiCallGet did = api $ do
         let haspermission = (isJust msiglink)
                          || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)
-          then Ok <$> documentJSON (Just $ userid user) includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
+          then do
+            Log.debug $ "******************************" ++ show includeEvidenceAttachments
+            Ok <$> documentJSON (Just $ userid user) includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
           else throwIO . SomeKontraException $ serverError "You do not have right to access document"
 
 apiCallList :: Kontrakcja m => m Response
@@ -680,7 +690,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
 
-  file <- dbUpdate $ NewFile (cleanFileName filename) content
+  file <- dbUpdate $ NewFile (dropFilePathFromWindows filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor

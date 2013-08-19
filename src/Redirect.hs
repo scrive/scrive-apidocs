@@ -1,10 +1,7 @@
 module Redirect
   ( sendRedirect
   , sendSecureLoopBack
-  , redirectKontraResponse
-  , guardRightM
   , guardLoggedIn
-  , GuardRight(..)
   ) where
 
 
@@ -18,11 +15,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 
 import Kontra
 import KontraLink
-import qualified Log
 import Happstack.Fields
 import Util.FlashUtil
 import Utils.HTTP
-import DBError
 import User.UserView
 import Util.FinishWith
 
@@ -56,35 +51,6 @@ sendSecureLoopBack = do
   seeOther link =<< setRsCode 303 (seeOtherXML link)
   where
     getSecureLink = (++) "https://" <$> currentLinkBody
-
-redirectKontraResponse :: KontraLink -> Kontra Response
-redirectKontraResponse link = do
-  let linkstr = show link
-  seeOther linkstr =<< setRsCode 303 (seeOtherXML linkstr)
-
--- moved here because of dependency problems
-
-class GuardRight a where
-  guardRight :: (Kontrakcja m) => Either a b -> m b
-
-instance GuardRight String where
-  guardRight (Right b) = return b
-  guardRight (Left  a) = do
-    Log.debug a
-    internalError
-
-instance GuardRight DBError where
-  guardRight (Right b)            = return b
-  guardRight (Left DBNotLoggedIn) = do
-    ctx <- getContext
-    finishWith $ sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
-  guardRight _                    = internalError
-
-{- |
-   Get the value from a Right or log an error and fail if it is a left
- -}
-guardRightM :: (Kontrakcja m, GuardRight msg) => m (Either msg b) -> m b
-guardRightM action = guardRight =<< action
 
 guardLoggedIn :: (Kontrakcja m) => m ()
 guardLoggedIn = do

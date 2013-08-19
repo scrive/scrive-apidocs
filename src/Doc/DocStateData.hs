@@ -9,11 +9,8 @@ module Doc.DocStateData (
   , DocumentTag(..)
   , DocumentType(..)
   , FieldPlacement(..)
-  , File(..)
-  , FileStorage(..)
   , AuthenticationMethod(..)
   , DeliveryMethod(..)
-  , JpegPages(..)
   , MailsDeliveryStatus(..)
   , SignatureProvider(..)
   , SignInfo(..)
@@ -40,10 +37,8 @@ import MinutesTime
 import User.UserID
 import User.Lang
 import File.FileID
-import File.File
 import Doc.SealStatus (SealStatus)
 import Doc.DocumentID
-import Doc.JpegPages
 import Doc.SignatoryLinkID
 import Database.HDBC
 import Data.List

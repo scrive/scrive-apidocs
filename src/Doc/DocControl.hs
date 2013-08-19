@@ -48,6 +48,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.SignatoryLinkID
 import Doc.DocumentID
+import Doc.JpegPages
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import Doc.Tokens.Model
 import Attachment.Model
@@ -58,7 +59,6 @@ import KontraLink
 import MagicHash
 import Happstack.Fields
 import Utils.Monad
-import Utils.Prelude
 import Utils.Read
 import Utils.String
 import Redirect
@@ -73,6 +73,7 @@ import Doc.DocInfo
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Util.MonadUtils
 import User.Utils
+import File.File
 import Control.Applicative
 import Control.Concurrent
 import qualified Control.Exception.Lifted as E
@@ -232,6 +233,7 @@ handleSignShow documentid
  -}
 handleIssueAuthorGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueAuthorGoToSignview docid = do
+  guardLoggedIn
   doc <- guardRightM $ getDocByDocIDForAuthor docid
   user <- guardJustM $ ctxmaybeuser <$> getContext
   case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
@@ -240,11 +242,16 @@ handleIssueAuthorGoToSignview docid = do
 
 handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m Response
 handleEvidenceAttachment docid file = do
+  guardLoggedIn
   doc <- guardRightM $ getDocByDocID docid
   es <- EvidenceAttachments.fetch doc
   e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
   let mimetype = fromMaybe "text/html" (EvidenceAttachments.mimetype e)
-  return $ toResponseBS mimetype (EvidenceAttachments.content e)
+  -- Evidence attachments embedded in PDFs are already encoded using
+  -- FlateEncode method, which is same as HTTP 'deflate'.  Since
+  -- 'deflate' is required by standard, lets just pass content
+  -- unmodified.
+  return $ setHeaderBS "Content-encoding" "deflate" (toResponseBS mimetype (EvidenceAttachments.content e))
 
 {- |
    Handles the request to show a document to a logged in user.
@@ -266,7 +273,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
       isauthor = (userid <$> muser) == maybesignatory authorsiglink
   mauthoruser <- maybe (return Nothing) (dbQuery . GetUserByIDIncludeDeleted) (maybesignatory authorsiglink)
 
-  let isincompany = ((usercompany =<< muser) == (usercompany =<< mauthoruser))
+  let isincompany = isJust muser && ((usercompany <$> muser) == (usercompany <$> mauthoruser))
       isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
   ad <- getAnalyticsData
@@ -301,9 +308,23 @@ handleFilePages fid = do
       rsp <- simpleJsonResponse $ runJSONGen $ J.value "error" "Rendering failed"
       return (rsp { rsCode = 500 })
     JpegPages pages  -> do
-      simpleJsonResponse $ runJSONGen $ J.objects "pages" $ for pages $ \(_,width,height) -> do
-        J.value "width"  width
-        J.value "height" height
+      -- This communicates to JavaScript how many pages there
+      -- are. This should be totally changed to the following
+      -- mechanism:
+      --
+      -- 1. JavaScript should ask for the first page
+      -- 2. Server should serve first page
+      -- 3. JavaScript should ask for next page
+      -- 4. Server should respond with Enhance Your Calm (or just wait a little before returning response).
+      -- 5. JavaScript should retry if Enhance Your Calm is the code
+      -- 6. If the page returned 200 with content, then proceed with next page
+      -- 7. If server returned 404 it means there are no more pages
+      -- 8. JavaScript should fire 'full document loaded' event (and place fields on all pages).
+      --
+      -- Such architecture would allow incremental rendering of pages
+      -- on the server side also, thus improving user experience a
+      -- lot.
+      simpleJsonResponse $ runJSONGen $ J.value "pages" $ length pages
 
 {- |
    Get some html to display the images of the files
@@ -319,6 +340,7 @@ showPage fileid pageno = do
 -- | Preview when authorized user is logged in (without magic hash)
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = do
+   guardLoggedIn
    _ <- guardRightM $ getDocByDocID docid
    if (fileid == (unsafeFileID 0))
     then do
@@ -350,7 +372,7 @@ preview fid value
         jpages <- MemCache.get fid ctxnormalizeddocuments
         case jpages of
             Just (JpegPages pages) -> do
-                let (contents,_,_) =  pages !! 0
+                let contents =  pages !! 0
                 scaledContent <- liftIO $ scaleForPreview contents
                 let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [scaledContent]) Nothing
                 return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
@@ -366,7 +388,7 @@ showPage' fileid pageno = do
   jpages <- MemCache.get fileid ctxnormalizeddocuments
   case jpages of
     Just (JpegPages pages) -> do
-      let (contents,_,_) =  pages !! (pageno - 1)
+      let contents = pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       Log.debug $ "JPEG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
       return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
@@ -485,14 +507,13 @@ checkFileAccessWith fid msid mmh mdid mattid =
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
        when (not $ fileInDocument doc fid) $ internalError
     (_,_,Just did,_) -> do
+       guardLoggedIn
        doc <- guardRightM $ getDocByDocID did
        when (not $ fileInDocument doc fid) $ internalError
     (_,_,_,Just attid) -> do
-       ctx <- getContext
-       case ctxmaybeuser ctx of
-         Nothing -> internalError
-         Just user -> do
-           atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+       guardLoggedIn
+       user <- guardJustM $ ctxmaybeuser <$> getContext
+       atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
                                             ]
@@ -501,7 +522,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
                                             ]
                                             []
                                             (0,1)
-           when (length atts /= 1) $
+       when (length atts /= 1) $
                 internalError
     _ -> internalError
 
@@ -563,6 +584,7 @@ prepareEmailPreview docid slid = do
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m JSValue
 handleSetAttachments did = do
+    guardLoggedIn
     doc <- guardRightM $ getDocByDocIDForAuthor did
     attachments <- getAttachments doc 0
     Log.debug $ "Setting attachments to " ++ show attachments
@@ -662,6 +684,7 @@ handleVerify = do
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do
+  guardLoggedIn
   doc <- guardRightM $ getDocByDocID docid
   when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
   runJSONGenT $ return ()

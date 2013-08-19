@@ -5,40 +5,22 @@ import Data.Functor
 import Company.Model
 import DB hiding (update, query)
 import Kontra
-import User.Model
-import Utils.Either
 
 import Payments.Model
 import qualified Payments.Stats as Stats
 
-switchPlanToCompany :: Kontrakcja m => UserID -> CompanyID -> m Bool
-switchPlanToCompany uid cid = do
+changePaymentPlanOwner :: Kontrakcja m => CompanyID -> CompanyID -> m Bool
+changePaymentPlanOwner sourceCID destinationCID = do
   time <- ctxtime <$> getContext
-  mplan <- dbQuery $ GetPaymentPlan (Left uid)
-  case mplan of
-    Just pp | isLeft $ ppID pp -> do
-      let pp' = pp { ppID = Right cid }
-      b <- dbUpdate $ SavePaymentPlan pp' time
-      _ <- Stats.record time Stats.CompanySwitchAction RecurlyProvider (ppQuantity pp') (ppPricePlan pp') (Right cid) (ppAccountCode pp)
-      return b
-    _ -> return False
-
-changePaymentPlanOwner :: Kontrakcja m => Either UserID CompanyID -> Either UserID CompanyID -> m Bool
-changePaymentPlanOwner source destination = do
-  time <- ctxtime <$> getContext
-  mplan <- dbQuery $ GetPaymentPlan source
-  exists <- case destination of
-    Left uid -> do
-      muser <- dbQuery $ GetUserByID uid
-      return $ maybe False (const True) muser
-    Right cid -> do
-      mcmpy <- dbQuery $ GetCompany cid
+  mplan <- dbQuery $ GetPaymentPlan sourceCID
+  exists <- do
+      mcmpy <- dbQuery $ GetCompany destinationCID
       return $ maybe False (const True) mcmpy
   case (exists, mplan) of
     (True, Just pp) -> do
-      let pp' = pp { ppID = destination }
+      let pp' = pp { ppCompanyID = destinationCID }
       b <- dbUpdate $ SavePaymentPlan pp' time
-      _ <- Stats.record time Stats.OwnerSwitchAction RecurlyProvider (ppQuantity pp') (ppPricePlan pp') destination (ppAccountCode pp)
+      _ <- Stats.record time Stats.OwnerSwitchAction RecurlyProvider (ppQuantity pp') (ppPricePlan pp') destinationCID (ppAccountCode pp)
       return b
     _ -> return False
 

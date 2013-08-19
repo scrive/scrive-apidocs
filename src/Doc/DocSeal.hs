@@ -28,6 +28,7 @@ import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
 import File.Storage
+import File.File
 import Doc.DocView
 import Doc.DocUtils
 import GuardTime (GuardTimeConf)
@@ -73,10 +74,6 @@ import Control.Monad.Trans.Maybe
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Utils.Prelude
-import qualified Codec.Picture.Png as PNG
-import qualified Codec.Picture.Jpg as JPG
-import qualified Codec.Picture.Saving as JPG
-import qualified Codec.Picture.Types as Image
 import qualified Amazon as AWS
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
@@ -155,9 +152,10 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
 
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case sfType sf of
-       SignatureFT _ -> case (sfPlacements sf) of
-                           [] -> maybeToList $ fieldJPEGFromSignatureField (sfValue sf)
-                           plsms -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
+       SignatureFT _ -> case (sfPlacements sf,drop 1 $ dropWhile (\e -> e /= ',') $ sfValue sf) of
+                           (_,"") -> []  -- We skip signature that don't have a drawing
+                           ([],v) -> maybeToList $ fieldJPEGFromSignatureField v
+                           (plsms,v) -> concatMap (maybeToList . (fieldJPEGFromPlacement v)) plsms
        CheckboxFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
        _ -> for (sfPlacements sf) $ \p -> case (addEmpty, sfValue sf, sfType sf) of
                                                 (True,"",CustomFT n _) -> fieldFromPlacement True n p
@@ -182,66 +180,34 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.page             = placementpage placement
                  , Seal.image_w          = placementwrel placement
                  , Seal.image_h          = placementhrel placement
-                 , Seal.internal_image_w = 24
-                 , Seal.internal_image_h = 24
                  , Seal.includeInSummary = False
                  , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Nothing
                  }
     fieldJPEGFromPlacement v placement =
-          case (imageB64WithSizeFromValue v) of
-              Just (d,iw,ih)  -> Just $ Seal.FieldJPG
-                          { valueBase64           = d
-                          , Seal.x                = placementxrel placement
-                          , Seal.y                = placementyrel placement
-                          , Seal.page             = placementpage placement
-                          , Seal.image_w          = placementwrel placement
-                          , Seal.image_h          = placementhrel placement
-                          , Seal.internal_image_w = iw
-                          , Seal.internal_image_h = ih
-                          , Seal.includeInSummary = True
-                          , Seal.onlyForSummary   = False
-                          , Seal.keyColor         = Just (255,255,255) -- white is transparent
-                          }
-              _ -> Nothing
+          Just $ Seal.FieldJPG
+                 { valueBase64           = v
+                 , Seal.x                = placementxrel placement
+                 , Seal.y                = placementyrel placement
+                 , Seal.page             = placementpage placement
+                 , Seal.image_w          = placementwrel placement
+                 , Seal.image_h          = placementhrel placement
+                 , Seal.includeInSummary = True
+                 , Seal.onlyForSummary   = False
+                 , Seal.keyColor         = Just (255,255,255) -- white is transparent
+                 }
     fieldJPEGFromSignatureField v =
-          case (imageB64WithSizeFromValue v) of
-              Just (d,iw,ih)  -> Just $ Seal.FieldJPG
-                 { valueBase64           = d
+          Just $ Seal.FieldJPG
+                 { valueBase64           = v
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
-                 , Seal.image_w          = (fromRational $ toRational iw) / (fromRational $ toRational $ 4 * 943)
-                 , Seal.image_h          = (fromRational $ toRational ih) / (fromRational $ toRational $ 4 * 1335)
-                 , Seal.internal_image_w = iw
-                 , Seal.internal_image_h = ih
+                 , Seal.image_w          = 0
+                 , Seal.image_h          = 0
                  , Seal.includeInSummary = True
                  , Seal.onlyForSummary   = True
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
-              _ -> Nothing
-    imageB64WithSizeFromValue v =
-        let content = drop 1 $ dropWhile (\e -> e /= ',') v
-            imageData img = BS.toString $ B64.encode  $ JPG.imageToJpg 100 img
-            dataWithSize img = case (img) of
-                                (Image.ImageY8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
-                                (Image.ImageYA8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
-                                (Image.ImageRGB8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
-                                (Image.ImageRGBA8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
-                                (Image.ImageYCbCr8 image) ->  (imageData img,Image.imageWidth image,Image.imageHeight image)
-            mjpegContent =  case (B64.decode $ BS.fromString content) of
-                              Right content' -> if ("image/png" `isInfixOf` take 20 v)
-                                                  then case (PNG.decodePng $ content') of
-                                                            Right img -> Just $ JPG.imageToJpg 100 img
-                                                            Left _ -> Nothing
-                                                  else Just $ content'
-                              Left _ -> Nothing
-        in case mjpegContent of
-             Just content' -> case (JPG.decodeJpeg $ content') of
-                                 Right jpg -> Just $ dataWithSize jpg
-                                 Left _ -> Nothing
-             Nothing -> Nothing
-
 
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]
 listAttachmentsFromDocument document =
@@ -317,7 +283,7 @@ findOutAttachmentDesc document = do
                  , fileAttachedBy = attachedByText
                  }
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m) => String -> [SignatoryLink] -> m Seal.SealAttachment
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
@@ -353,7 +319,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content inputpath outp
   evidenceDoc <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/evidenceDocumentation.html"
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document

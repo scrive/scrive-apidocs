@@ -9,7 +9,7 @@ window.BinListDefinition = function(archive) { return {
     schema: new Schema({
     url: "/api/frontend/list",
     extraParams : { documentType : "Rubbish" },
-    sorting: new Sorting({ fields: ["title", "time", "type"]}),
+    sorting: new Sorting({ fields: ["title", "time"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.bin.search}),
     selectfiltering : new DocumentSelectsDefinition(archive),
@@ -24,12 +24,13 @@ window.BinListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.restore.head,
+                                icon: '/img/modal-icons/restore.png',
                                 content: jQuery("<p/>").text(localization.archive.bin.restore.body),
                                 onAccept : function() {
                                   new Submit({
                                                 url: "/d/restore",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.bin.restore.successMessage});
                                                     archive.bin().recall();
@@ -50,12 +51,13 @@ window.BinListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.remove.head,
+                                icon: '/img/modal-icons/sign.png',
                                 content: jQuery("<p/>").text(localization.archive.bin.remove.body),
                                 onAccept : function() {
                                   new Submit({
                                                 url: "/d/reallydelete",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.bin.remove.successMessage});
                                                     archive.bin().recall();

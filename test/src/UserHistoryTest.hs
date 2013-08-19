@@ -7,6 +7,7 @@ import IPAddress
 import Utils.Default
 import DB
 import User.Model
+import Company.Model
 import User.UserControl
 import User.API
 import User.History.Model
@@ -237,10 +238,11 @@ compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSA
 createTestUser :: TestEnv User
 createTestUser = do
     pwd <- createPassword "test_password"
+    company <- dbUpdate $ CreateCompany
     muser <- dbUpdate $ AddUser ("", "")
                                 "karol@skrivapa.se"
                                 (Just pwd)
-                                Nothing
+                                (companyid company,True)
                                 defaultValue
                                 Nothing
     case muser of

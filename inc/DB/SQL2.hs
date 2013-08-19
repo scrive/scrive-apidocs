@@ -144,6 +144,7 @@ module DB.SQL2
   , sqlHaving
   , sqlOffset
   , sqlLimit
+  , sqlDistinct
   , sqlWith
 
   , SqlTurnIntoSelect
@@ -174,6 +175,7 @@ module DB.SQL2
   , SqlOrderBy
   , SqlGroupByHaving
   , SqlOffsetLimit
+  , SqlDistinct
 
 
   , SqlCondition(..)
@@ -237,6 +239,7 @@ instance IsSQL SqlCondition where
 
 data SqlSelect = SqlSelect
   { sqlSelectFrom    :: SQL
+  , sqlSelectDistinct :: Bool
   , sqlSelectResult  :: [SQL]
   , sqlSelectWhere   :: [SqlCondition]
   , sqlSelectOrderBy :: [SQL]
@@ -265,6 +268,7 @@ data SqlInsert = SqlInsert
 
 data SqlInsertSelect = SqlInsertSelect
   { sqlInsertSelectWhat    :: RawSQL
+  , sqlInsertSelectDistinct :: Bool
   , sqlInsertSelectSet     :: [(RawSQL,SQL)]
   , sqlInsertSelectResult  :: [SQL]
   , sqlInsertSelectFrom    :: SQL
@@ -331,7 +335,8 @@ emitClausesSepComma name sqls = raw name <+> sqlConcatComma (filter (/="") sqls)
 instance IsSQL SqlSelect where
   toSQLCommand cmd =
         emitClausesSepComma "WITH" (map (\(name,command) -> raw name <+> "AS" <+> parenthesize command) (sqlSelectWith cmd)) <+>
-        "SELECT" <+> sqlConcatComma (sqlSelectResult cmd) <+>
+        "SELECT" <+> (if sqlSelectDistinct cmd then "DISTINCT" else mempty) <+>
+        sqlConcatComma (sqlSelectResult cmd) <+>
         emitClause "FROM" (sqlSelectFrom cmd) <+>
         emitClausesSep "WHERE" "AND" (map toSQLCommand $ sqlSelectWhere cmd) <+>
         emitClausesSepComma "GROUP BY" (sqlSelectGroupBy cmd) <+>
@@ -365,6 +370,7 @@ instance IsSQL SqlInsertSelect where
     "INSERT INTO" <+> raw (sqlInsertSelectWhat cmd) <+>
     parenthesize (sqlConcatComma (map (raw . fst) (sqlInsertSelectSet cmd))) <+>
     parenthesize (toSQLCommand (SqlSelect { sqlSelectFrom    = sqlInsertSelectFrom cmd
+                                          , sqlSelectDistinct = sqlInsertSelectDistinct cmd
                                           , sqlSelectResult  = fmap snd $ sqlInsertSelectSet cmd
                                           , sqlSelectWhere   = sqlInsertSelectWhere cmd
                                           , sqlSelectOrderBy = sqlInsertSelectOrderBy cmd
@@ -406,7 +412,7 @@ instance IsSQL SqlAll where
 
 sqlSelect :: RawSQL -> State SqlSelect () -> SqlSelect
 sqlSelect table refine =
-  execState refine (SqlSelect (SQL table []) [] [] [] [] [] 0 (-1) [])
+  execState refine (SqlSelect (SQL table []) False [] [] [] [] [] 0 (-1) [])
 
 sqlInsert :: RawSQL -> State SqlInsert () -> SqlInsert
 sqlInsert table refine =
@@ -416,6 +422,7 @@ sqlInsertSelect :: RawSQL -> SQL -> State SqlInsertSelect () -> SqlInsertSelect
 sqlInsertSelect table from refine =
   execState refine (SqlInsertSelect
                     { sqlInsertSelectWhat    = table
+                    , sqlInsertSelectDistinct = False
                     , sqlInsertSelectSet     = []
                     , sqlInsertSelectResult  = []
                     , sqlInsertSelectFrom    = from
@@ -739,6 +746,18 @@ sqlOffset val = modify (\cmd -> sqlOffset1 cmd val)
 sqlLimit :: (MonadState v m, SqlOffsetLimit v) => Integer -> m ()
 sqlLimit val = modify (\cmd -> sqlLimit1 cmd val)
 
+class SqlDistinct a where
+  sqlDistinct1 :: a -> a
+
+instance SqlDistinct SqlSelect where
+  sqlDistinct1 cmd = cmd { sqlSelectDistinct = True }
+
+instance SqlDistinct SqlInsertSelect where
+  sqlDistinct1 cmd = cmd { sqlInsertSelectDistinct = True }
+
+sqlDistinct :: (MonadState v m, SqlDistinct v) => m ()
+sqlDistinct = modify (\cmd -> sqlDistinct1 cmd)
+
 
 class (SqlWhere a, IsSQL a) => SqlTurnIntoSelect a where
   sqlTurnIntoSelect :: a -> SqlSelect
@@ -890,6 +909,7 @@ instance SqlTurnIntoSelect SqlUpdate where
                                              if sqlUpdateFrom s == SQL "" []
                                              then ""
                                              else "," <+> sqlUpdateFrom s
+                        , sqlSelectDistinct = False
                         , sqlSelectResult  = if null (sqlUpdateResult s)
                                              then ["TRUE"]
                                              else sqlUpdateResult s
@@ -908,6 +928,7 @@ instance SqlTurnIntoSelect SqlDelete where
                                              if sqlDeleteUsing s == SQL "" []
                                              then ""
                                              else "," <+> sqlDeleteUsing s
+                        , sqlSelectDistinct = False
                         , sqlSelectResult  = if null (sqlDeleteResult s)
                                              then ["TRUE"]
                                              else sqlDeleteResult s
@@ -923,6 +944,7 @@ instance SqlTurnIntoSelect SqlDelete where
 instance SqlTurnIntoSelect SqlInsertSelect where
   sqlTurnIntoSelect s = SqlSelect
                         { sqlSelectFrom    = sqlInsertSelectFrom s
+                        , sqlSelectDistinct = False
                         , sqlSelectResult  = sqlInsertSelectResult s
                         , sqlSelectWhere   = sqlInsertSelectWhere s
                         , sqlSelectOrderBy = sqlInsertSelectOrderBy s

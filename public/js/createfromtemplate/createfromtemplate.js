@@ -17,7 +17,7 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
               cells : [
                   new Cell({name: localization.archive.templates.columns.shared, width:"52px", field:"shared", special: "rendered",
                             rendering: function(shared) {
-                                  return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
+                                  return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
                             }}),
 
                   new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time", special: "rendered",

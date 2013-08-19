@@ -43,7 +43,9 @@ performDBChecks logger tables migrations = do
     kCommit
     error $ "Bytea_output was changed to 'hex'. Restart application so the change is visible."
   checkDBTimeZone logger
+  checkNeededExtensions logger
   checkDBConsistency logger (tableVersions : tables) migrations
+
   -- everything is OK, commit changes
   kCommit
   return ()
@@ -53,6 +55,13 @@ currentCatalog :: MonadDB m => m RawSQL
 currentCatalog = do
   Just dbname <- getOne "SELECT current_catalog"
   return $ unsafeFromString $ "\"" ++ dbname ++ "\""
+
+
+checkNeededExtensions :: MonadDB m => (String -> m ()) -> m ()
+checkNeededExtensions logger = do
+  logger $ "Enabling needed extensions"
+  kRunRaw $ "CREATE EXTENSION IF NOT EXISTS pgcrypto"
+  return ()
 
 -- |  Checks whether database returns timestamps in UTC
 checkDBTimeZone :: MonadDB m => (String -> m ()) -> m ()
@@ -76,6 +85,7 @@ setByteaOutput logger = do
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
 checkDBConsistency logger tables migrations = do
+
   (created, to_migration) <- checkTables
   when (not $ null to_migration) $ do
     logger "Running migrations..."
@@ -105,7 +115,7 @@ checkDBConsistency logger tables migrations = do
           logger $ "Creating table '" ++ tblNameString table ++ "' at version " ++ show tblVersion ++ "..."
           kRun_ (createStatement table)
           kRun_ . sqlInsert "table_versions" $ do
-            sqlSet "name" tblName
+            sqlSet "name" (tblNameString table)
             sqlSet "version" tblVersion
           _ <- checkTable table
           return $ Left table
@@ -352,7 +362,7 @@ checkDBConsistency logger tables migrations = do
             sqlWhere "pg_catalog.pg_table_is_visible(c.oid)"
       case doesExist of
         Just (_::Bool) -> do
-          mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblName table]
+          mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
           case mver of
             Just ver -> return ver
             Nothing  -> return (-1)
@@ -367,7 +377,7 @@ checkDBConsistency logger tables migrations = do
              error $ "Migrations are in wrong order in migrations list."
            mgrDo m
            kRun_ $ SQL "UPDATE table_versions SET version = ? WHERE name = ?"
-                   [toSql $ succ $ mgrFrom m, toSql $ tblName t]
+                   [toSql $ succ $ mgrFrom m, toSql $ tblNameString t]
            return ()
          else return ()
 
@@ -397,7 +407,7 @@ checkDBConsistency logger tables migrations = do
         sqlJoinOn "pg_attribute" "pg_table_class.oid = pg_attribute.attrelid AND pg_attribute.attnum = pg_index1.indkey[pg_index1.indkey1]"
         sqlWhereNotExists $ sqlSelect "pg_constraint" $ do
           sqlWhere "pg_constraint.conindid = pg_index1.indexrelid"
-        sqlWhereEq "pg_table_class.relname" (tblName table)
+        sqlWhereEq "pg_table_class.relname" (tblNameString table)
         sqlOrderBy "pg_index_class.relname"
         sqlOrderBy "pg_index1.indkey1"
 
@@ -476,7 +486,7 @@ checkDBConsistency logger tables migrations = do
         sqlJoinOn "pg_attribute" "pg_class.oid = pg_attribute.attrelid AND pg_attribute.attnum = pg_constraint.conkey[pg_constraint.idx]"
         sqlJoinOn "pg_attribute AS pg_fattribute" "pg_fclass.oid = pg_fattribute.attrelid AND pg_fattribute.attnum = pg_constraint.confkey[pg_constraint.idx]"
         sqlWhereEq "pg_constraint.contype" ("f" :: String)
-        sqlWhereEq "pg_class.relname" (tblName table)
+        sqlWhereEq "pg_class.relname" (tblNameString table)
         sqlOrderBy "pg_constraint.conname"
         sqlOrderBy "pg_constraint.idx"
 

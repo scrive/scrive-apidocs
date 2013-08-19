@@ -13,7 +13,6 @@ module Kontra
     , onlyAdmin
     , onlySalesOrAdmin
     , onlyBackdoorOpen
-    , getAsString
     , getDataFnM
     , switchLang       -- set language
     )
@@ -142,11 +141,6 @@ switchLang lang =
          ctxlang       = lang,
          ctxtemplates  = localizedVersion lang (ctxglobaltemplates ctx)
      }
-
--- data fetchers specific to Kontra
-
-getAsString :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m) => String -> m String
-getAsString = getDataFnM . look
 
 -- | Extract data from GET or POST request. Fail with 'internalError' if param
 -- variable not present or when it cannot be read.

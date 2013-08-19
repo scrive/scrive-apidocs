@@ -2,6 +2,7 @@
 module Company.Migrations where
 
 import DB
+import DB.SQL2
 import Company.Tables
 
 default (SQL)
@@ -154,3 +155,35 @@ removeEmailDomainFromCompany =
       kRunRaw "ALTER TABLE companies DROP COLUMN email_domain"
   }
 
+moveCompanyUIsToSeparateTable:: MonadDB m => Migration m
+moveCompanyUIsToSeparateTable =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 13
+  , mgrDo = do
+      let columnsToMove :: [RawSQL]
+          columnsToMove = [ "email_bordercolour"
+                          , "email_font"
+                          , "email_buttoncolour"
+                          , "email_emailbackgroundcolour"
+                          , "email_backgroundcolour"
+                          , "email_textcolour"
+                          , "email_logo"
+                          , "signview_logo"
+                          , "signview_textcolour"
+                          , "signview_textfont"
+                          , "signview_barscolour"
+                          , "signview_barstextcolour"
+                          , "signview_backgroundcolour"
+                          , "custom_logo"
+                          , "custom_barscolour"
+                          , "custom_barstextcolour"
+                          , "custom_barssecondarycolour"
+                          , "custom_backgroundcolour"
+                          ]
+      kRun_ $ sqlInsertSelect "company_uis" "companies" $ do
+          sqlSetCmd "company_id" "companies.id"
+          mapM_ (\column -> sqlSetCmd column ("companies." <> raw column)) columnsToMove
+
+      kRun_ $ "ALTER TABLE companies" <+> sqlConcatComma (map (\column -> "DROP COLUMN" <+> raw column) columnsToMove)
+  }

@@ -184,6 +184,15 @@ window.DigitsLettersValidation = Validation.extend({
     }
 });
 
+window.NumberValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+           return /^[0-9]{1,}$/i.test(t);
+        },
+        message: "The field must contain only digitas"
+    }
+});
+
 window.PasswordValidation = Validation.extend({
     defaults: {
         validates: function(t) { return t.length >= 8; },

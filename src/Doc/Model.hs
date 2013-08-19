@@ -85,6 +85,9 @@ import Crypto.RNG
 import Doc.Conditions
 import File.FileID
 import File.Model
+import File.File
+import File.Storage
+import qualified Amazon
 import qualified Control.Monad.State.Lazy as State
 import Doc.SealStatus (SealStatus)
 import Doc.DocUtils
@@ -148,6 +151,7 @@ data DocumentFilter
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
+  | DocumentFilterByAuthorCompany CompanyID   -- ^ Onl documents where author is in given company
   | DocumentFilterByCanSign UserID            -- ^ Only if given person can sign right now given document
   | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
   | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
@@ -393,6 +397,12 @@ documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhere "signatory_links.is_author"
   sqlWhereEq "signatory_links.user_id" userid
+
+documentFilterToSQL (DocumentFilterByAuthorCompany companyid) = do
+  sqlWhere "signatory_links.is_author"
+  sqlWhere "signatory_links.user_id = users.id"
+  sqlWhereEq "users.company_id" companyid
+
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhere "signatory_links.is_partner"
@@ -931,41 +941,47 @@ insertSignatoryLinkFieldsAsAre fields = do
   fetchSignatoryLinkFields
 
 
-insertSignatoryScreenshots :: MonadDB m
+insertSignatoryScreenshots :: (MonadDB m, Applicative m, CryptoRNG m)
                            => [(SignatoryLinkID, SignatoryScreenshots)] -> m Integer
 insertSignatoryScreenshots l = do
   let (slids, types, times, ss) = unzip4 $ [ (slid, "first",     t, s) | (slid, Just (t, s)) <- map (second first) l ]
                                         <> [ (slid, "signing",   t, s) | (slid, Just (t, s)) <- map (second signing) l ]
                                         <> [ (slid, "reference", t, s) | (slid,      (t, s)) <- map (second reference) l ]
+  (files :: [File]) <- mapM (\(t,s) -> dbUpdate $ NewFile (t ++ "_screenshot.jpeg") (Screenshot.image s)) (zip types ss)
   if null slids then return 0 else
     kRun $ sqlInsert "signatory_screenshots" $ do
            sqlSetList "signatory_link_id" $ slids
            sqlSetList "type"              $ (types :: [String])
            sqlSetList "time"              $ times
-           sqlSetList "mimetype"          $ map Screenshot.mimetype ss
-           sqlSetList "image"             $ map Screenshot.image ss
+           sqlSetList "file_id"           $ (map fileid files)
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
-instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
+instance (MonadDB m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
-    _ <- kRun $ sqlSelect "signatory_screenshots" $ do
+    kRun_ $ sqlSelect "signatory_screenshots" $ do
                 sqlWhereIn "signatory_link_id" l
                 sqlOrderBy "signatory_link_id"
 
                 sqlResult "signatory_link_id"
                 sqlResult "type"
                 sqlResult "time"
-                sqlResult "mimetype"
-                sqlResult "image"
-    let folder ((slid', s):a) slid ty time mt i | slid' == slid = (slid, mkss ty time mt i s):a
-        folder a slid ty time mt i = (slid, mkss ty time mt i emptySignatoryScreenshots) : a
+                sqlResult "file_id"
+    let folder1 a slid ty time fid = (slid :: SignatoryLinkID, ty :: String, time :: MinutesTime, fid :: FileID) : a
+    screenshotsWithoutBinaryData <- flip kFold [] folder1
+    let getBinaries (slid, ty, time, fid) = do
+           bin <- getFileIDContents fid
+           return (slid, ty, time, Binary bin)
+    screenshotsWithBinaryData <- mapM getBinaries screenshotsWithoutBinaryData
 
-        mkss :: String -> MinutesTime -> String -> Binary -> SignatoryScreenshots -> SignatoryScreenshots
-        mkss "first"     time mt i s = s{ first = Just (time, Screenshot mt i) }
-        mkss "signing"   time mt i s = s{ signing = Just (time, Screenshot mt i) }
-        mkss "reference" time mt i s = s{ reference = (time, Screenshot mt i) }
-        mkss t           _    _  _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
-    flip kFold [] folder
+    let folder ((slid', s):a) (slid, ty, time, i) | slid' == slid = (slid, mkss ty time i s):a
+        folder a (slid, ty, time, i) = (slid, mkss ty time i emptySignatoryScreenshots) : a
+
+        mkss :: String -> MinutesTime -> Binary -> SignatoryScreenshots -> SignatoryScreenshots
+        mkss "first"     time i s = s{ first = Just (time, Screenshot i) }
+        mkss "signing"   time i s = s{ signing = Just (time, Screenshot i) }
+        mkss "reference" time i s = s{ reference = (time, Screenshot i) }
+        mkss t           _    _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
+    return $ foldl' folder [] screenshotsWithBinaryData
 
 
 insertDocumentAsIs :: MonadDB m => Document -> m (Maybe Document)
@@ -1112,9 +1128,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
     return ()
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument () where
   update (FixClosedErroredDocument did _actor) = do
-    kRun01 $ sqlUpdate "documents" $ do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
         sqlSet "status" Closed
         sqlWhereEq "id" did
         sqlWhereEq "status" $ DocumentError undefined
@@ -1921,7 +1937,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUnsavedDraft Boo
     return (result>0)
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) SignatoryScreenshots Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
+instance (MonadDB m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m SignDocument () where
   update (SignDocument docid slid mh msiginfo screenshots actor) = do
             let ipnumber = fromMaybe noIP $ actorIP actor
                 time     = actorTime actor
@@ -2036,9 +2052,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
   update (CloneDocumentWithUpdatedAuthor user docid actor) = do
-          mcompany <- maybe (return Nothing) (query . GetCompany) (usercompany user)
+          company <- query $ GetCompanyByUserID (userid user)
           let replaceAuthorSigLink sl
-                | isAuthor sl = replaceSignatoryUser sl user mcompany
+                | isAuthor sl = replaceSignatoryUser sl user company
                 | otherwise = sl
           let time = actorTime actor
           res <- (flip newFromDocumentID) docid $ \doc ->

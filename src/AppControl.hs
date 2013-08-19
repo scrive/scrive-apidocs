@@ -17,7 +17,6 @@ import AppView as V
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Doc.DocStateData
 import IPAddress
 import Kontra
 import Utils.Either
@@ -49,6 +48,7 @@ import System.Time
 import Data.Time.Clock
 
 import qualified Control.Exception.Lifted as E
+import Doc.JpegPages
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS

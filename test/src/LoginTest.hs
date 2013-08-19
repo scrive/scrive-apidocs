@@ -11,6 +11,7 @@ import Login
 import TestingUtil
 import TestKontra as T
 import User.Model
+import Company.Model
 import User.UserControl
 import User.API
 import Utils.Default
@@ -87,7 +88,8 @@ assertResettingPasswordRecordsALoginEvent = do
 createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   pwd <- createPassword "admin"
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing defaultValue Nothing
+  company <- dbUpdate $ CreateCompany
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue Nothing
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext defaultValue
   req <- mkRequest POST [("password", inText "password123")]
@@ -106,5 +108,6 @@ loginFailureChecks res ctx = do
 createTestUser :: TestEnv UserID
 createTestUser = do
     pwd <- createPassword "admin"
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing defaultValue Nothing
+    company <- dbUpdate $ CreateCompany
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) defaultValue Nothing
     return userid

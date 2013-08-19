@@ -23,6 +23,9 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
   nameOrEmail : function() {
     return this.signatory().nameOrEmail();
   },
+  nameOrEmailOrMobile : function() {
+    return this.signatory().nameOrEmailOrMobile();
+  },
   status : function() {
     return this.signatory().status();
   },
@@ -376,12 +379,19 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                             + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
         .attr('title', signatory.personalnumber());
       var contactspace = $('<div class="spacing contactspace" />');
-      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
 
       numspace.append(orgnum);
       numspace.append(persnum);
 
-      numspace.append(email);
+      if (signatory.email() != '') {
+        var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+        numspace.append(email);
+      }
+
+      if (signatory.mobile() != '') {
+        var mobile   = $('<div class="mobile field" />').text(signatory.mobile()).attr('title', signatory.mobile());
+        numspace.append(mobile);
+      }
 
       inner.append(face);
 
@@ -402,6 +412,7 @@ window.AuthorViewSignatory = function(args) {
           this.signatorySummary = function() {return model.signatorySummary();};
           this.signatoryViewerySummary = function() {return model.signatoryViewerySummary();};
           this.nameOrEmail = function() {return model.nameOrEmail();};
+          this.nameOrEmailOrMobile = function() {return model.nameOrEmailOrMobile();};
           this.status = function() {return model.status();};
 };
 

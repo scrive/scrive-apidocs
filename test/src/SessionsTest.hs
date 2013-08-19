@@ -22,6 +22,7 @@ import Doc.DocInfo
 import Doc.Tokens.Model
 import Session.Data
 import Session.Model
+import Company.Model
 
 sessionsTests :: TestEnvSt -> Test
 sessionsTests env = testGroup "Sessions" [
@@ -134,5 +135,6 @@ addElegTransaction = do
 testUser :: TestEnv UserID
 testUser = do
   pwd <- createPassword "admin"
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) Nothing defaultValue Nothing
+  company <- dbUpdate $ CreateCompany
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) defaultValue Nothing
   return $ userid user

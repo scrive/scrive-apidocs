@@ -11,7 +11,7 @@ window.CompanyBrandingModel = Backbone.Model.extend({
         this.submiturl = "/account/company";
         this.url = "/account/company/json";
         this._companyui = null;
-        var user = new User();
+        var user = new User({});
         this.set({"user" : user});
         user.bind("change:ready",function() {
           self.reset();
@@ -30,7 +30,7 @@ window.CompanyBrandingModel = Backbone.Model.extend({
       }
     },
     ready : function() {
-        return (this.user() != undefined && this.user().ready()) || this._companyui != undefined;
+        return (this.user() != undefined && this.user().ready()) || (this._companyui != undefined && this._companyui.ready());
     },
     refresh : function() {
       if (this.user() != undefined) {
@@ -38,7 +38,7 @@ window.CompanyBrandingModel = Backbone.Model.extend({
           this.user().fetch({cache: false});
       }
       else if (this._companyui != undefined) {
-          this.user().set({"ready" : false});
+          this._companyui.set({"ready" : false});
           this._companyui.fetch({cache: false});
       }
       this.reset();
@@ -81,9 +81,8 @@ window.CompanyBrandingModel = Backbone.Model.extend({
       this.set({ "emailBranding" : emailBranding ,
                  "signviewBranding" : signviewBranding,
                  "serviceBranding" : serviceBranding,
-                 "tabs" : tabs,
-                 "editable" : companyui.editable()
-               }, {silent: true});
+                 "tabs" : tabs
+              }, {silent: true});
       this.trigger("reset");
     },
     tabs : function() {
@@ -97,9 +96,6 @@ window.CompanyBrandingModel = Backbone.Model.extend({
     },
     serviceBranding: function() {
       return this.get("serviceBranding");
-    },
-    editable: function() {
-      return this.get("editable");
     },
     changedInnerBranding : function() {
           if (this.companyui().customlogo() != this.serviceBranding().customlogo().logo() && !(this.companyui().customlogo() == '' &&  !this.serviceBranding().customlogo().customised()))

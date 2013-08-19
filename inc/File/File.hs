@@ -10,7 +10,7 @@ import Crypto
 import File.FileID
 
 data FileStorage =
-    FileStorageMemory BS.ByteString AESConf
+    FileStorageMemory BS.ByteString
   | FileStorageAWS String String AESConf -- ^ bucket, url inside bucket, aes key/iv
     deriving (Eq, Ord, Show, Typeable)
 

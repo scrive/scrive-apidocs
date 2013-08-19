@@ -135,7 +135,7 @@ window.Document = Backbone.Model.extend({
         return this.get("authorattachments");
     },
     removeattachment : function(a) {
-        this.set({"authorattachments": _.without(this.authorattachments(),[a]) });
+        this.set({"authorattachments": _.without(this.authorattachments(), a) });
     },
     evidenceattachments: function() {
         return this.get("evidenceattachments");
@@ -194,7 +194,7 @@ window.Document = Backbone.Model.extend({
     cancel: function() {
           return new Submit({
               url: "/d/cancel",
-              doccheck : this.documentid(),
+              documentids : "[" + this.documentid() + "]",
               method: "POST"
           });
     },

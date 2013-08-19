@@ -169,13 +169,14 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.sendreminder.action,
+                                icon: '/img/modal-icons/remind.png',
                                 content: content,
                                 onAccept : function() {
                                     mixpanel.track('Send reminder');
                                     new Submit({
                                                 url: "/d/remind",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.documents.sendreminder.successMessage});
                                                     archive.documents().recall();
@@ -208,13 +209,14 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.cancel.action,
+                                icon: '/img/modal-icons/sign.png',
                                 content: jQuery("<p/>").text(localization.archive.documents.cancel.body),
                                 onAccept : function() {
                                     mixpanel.track('Cancel document');
                                     new Submit({
                                                 url: "/d/cancel",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.documents.cancel.successMessage});
                                                     archive.documents().recall();
@@ -248,13 +250,14 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.remove.action,
+                                icon: '/img/modal-icons/sign.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     mixpanel.track('Delete document');
                                     new Submit({
                                                 url: "/d/delete",
                                                 method: "POST",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.documents.remove.successMessage});
                                                     archive.documents().recall();
@@ -293,7 +296,7 @@ window.DocumentsListDefinition = function(archive) { return {
                           return true;
                         } else {
                           var url =  "/d/zip?";
-                          _.each(docs,function(doc){url+=("doccheck="+doc.field("id")+"&")});
+                          url += "documentids=[" + _.map(docs,function(doc){return doc.field("id")}) + "]";
                           window.open(url);
                           return true;
                         }

@@ -17,8 +17,9 @@ module Doc.DocView (
   , gtVerificationPage
   ) where
 
-import AppView (kontrakcja, standardPageFields, brandingFields, companyForPage)
+import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage)
 import Company.Model
+import Company.CompanyUI
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -41,6 +42,7 @@ import Data.Maybe
 import Text.JSON
 import Data.List (sortBy, nub)
 import File.Model
+import File.File
 import DB
 import PadQueue.Model
 import Text.JSON.Gen hiding (value)
@@ -81,7 +83,10 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     let mdb = currentBrandedDomain ctx
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
-    mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
+    mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
+                   Nothing -> return Nothing
+    mcompanyui <- maybe (return Nothing) (\x -> Just <$> (dbQuery . GetCompanyUI $ (companyid x))) mcompany
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
@@ -128,14 +133,14 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "process" $ "Contract"
       J.value "isviewedbyauthor" $ isSigLinkFor mviewer (getAuthorSigLink doc)
       when (not $ forapi) $ do
-        J.value "signviewlogo" $ if ((isJust $ companysignviewlogo . companyui =<<  mcompany))
+        J.value "signviewlogo" $ if ((isJust $ companysignviewlogo =<< mcompanyui))
                                     then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
                                     else (bdlogolink <$> mdb)
-        J.value "signviewtextcolour" $ companysignviewtextcolour . companyui =<< mcompany
-        J.value "signviewtextfont" $ companysignviewtextfont . companyui =<< mcompany
-        J.value "signviewbarscolour" $ (companysignviewbarscolour . companyui =<<  mcompany) `mplus` (bdbarscolour <$> mdb)
-        J.value "signviewbarstextcolour" $ (companysignviewbarstextcolour . companyui  =<< mcompany) `mplus` (bdbarstextcolour <$> mdb)
-        J.value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour . companyui  =<< mcompany) `mplus` (bdbackgroundcolour <$> mdb)
+        J.value "signviewtextcolour" $ companysignviewtextcolour =<< mcompanyui
+        J.value "signviewtextfont" $ companysignviewtextfont  =<< mcompanyui
+        J.value "signviewbarscolour" $ (companysignviewbarscolour  =<<  mcompanyui) `mplus` (bdbarscolour <$> mdb)
+        J.value "signviewbarstextcolour" $ (companysignviewbarstextcolour =<< mcompanyui) `mplus` (bdbarstextcolour <$> mdb)
+        J.value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour =<< mcompanyui) `mplus` (bdbackgroundcolour <$> mdb)
         J.value "author" $ authorJSON mauthor mcompany
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
@@ -272,7 +277,7 @@ authorJSON :: Maybe User -> Maybe Company -> JSValue
 authorJSON mauthor mcompany = runJSONGen $ do
     J.value "fullname" $ getFullName <$> mauthor
     J.value "email" $ getEmail <$> mauthor
-    J.value "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor
+    J.value "company" $ getCompanyName <$> mcompany
     J.value "phone" $ userphone <$> userinfo <$> mauthor
     J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
 
@@ -305,7 +310,7 @@ pageDocumentSignView :: Kontrakcja m
                     -> m String
 pageDocumentSignView ctx document siglink ad = do
   let  mbd = currentBrandedDomain ctx
-  mcompany <- companyForPage
+  mcompany <- companyUIForPage
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
