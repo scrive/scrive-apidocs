@@ -218,6 +218,11 @@ var CsvSignatoryDesignView = Backbone.View.extend({
             scrollable.append(this.dataTable());
             this.container.append(scrollable);
             this.container.append(this.uploadButton());
+
+            // Make a slightly ugly thing here...
+            var participants = model.rows().length;
+            // TODO rework this so languages that don't have the number in the beginning of the sentence can be translated.
+            $('.modal-subtitle').text(participants + ' ' + localization.designview.participantsInFile);
         }
         return this;
     }
@@ -243,8 +248,8 @@ window.CsvSignatoryDesignPopup =  function(args) {
               icon: '/img/modal-icons/multisend.png',
               subtitle: "Select a file to upload (.csv files only)",
               title  : localization.csv.title,
-              acceptText: localization.save,
-              width: 533,
+              acceptText: localization.done,
+              width: 1018,
               acceptVisible : model.ready(),
               onAccept : function() {
                   if (csvSignatory == undefined) {

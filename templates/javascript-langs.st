@@ -284,6 +284,7 @@ javascriptLocalisation =
              , addParty: "$_designViewAddParty()$"
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
+             , participantsInFile: "$_participantsIncludedInFile()$"
              , fullName: "$_designViewFullName()$"
              , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
              , mandatoryForSender: "$_designViewMandatoryForSender()$"
