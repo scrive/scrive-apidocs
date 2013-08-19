@@ -720,7 +720,6 @@
                 var csvButton = new Button({
                     color: 'blue',
                     text: localization.designview.viewCSV,
-                    size: 'tiny',
                     onClick: function() {
                         mixpanel.track('Open CSV Popup');
                         new CsvSignatoryDesignPopup({

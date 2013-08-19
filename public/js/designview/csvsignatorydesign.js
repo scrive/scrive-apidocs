@@ -212,9 +212,11 @@ var CsvSignatoryDesignView = Backbone.View.extend({
             this.container.append(this.uploadButton());
         }
         else {
+            var scrollable = $('<div class="designCSVSignatoryPopupScroll" />');
             this.container.addClass('file-uploaded');
-            this.container.append(this.generalProblemsList());
-            this.container.append(this.dataTable());
+            scrollable.append(this.generalProblemsList());
+            scrollable.append(this.dataTable());
+            this.container.append(scrollable);
             this.container.append(this.uploadButton());
         }
         return this;
