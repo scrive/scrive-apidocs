@@ -783,7 +783,6 @@
 
             var button = new Button({
                 color: 'black',
-                size: 'tiny',
                 text: localization.ok,
                 width: 64,
                 onClick: setter

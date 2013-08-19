@@ -292,8 +292,7 @@
                 acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
             } else {
                 acceptButton = new Button({
-                    size: "tiny",
-                    color : "blue",
+                    color : "green",
                     shape : "rounded",
                     text : localization.designview.sign,
                     onClick : function() {
@@ -327,6 +326,7 @@
             }
             this.confirmationpopup = Confirmation.popup({
                 title : localization.signByAuthor.modalTitle,
+                icon : '/img/modal-icons/sign.png',
                 acceptButton : acceptButton,
                 rejectText: localization.cancel,
                 content  : content

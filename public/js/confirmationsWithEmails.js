@@ -191,7 +191,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        container.css("margin-left",left > 20 ? left : 20);
 
 	   //Modal header
-       var header = $("<div class='modal-header'></div>");
+       var header = $("<div class='modal-header no-icon'></div>");
        var title = $("<span class='modal-title'/>");
        if (model.textcolor())
          title.css("color",model.textcolor());

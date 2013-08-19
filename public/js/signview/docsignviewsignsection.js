@@ -125,6 +125,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     Confirmation.popup({
       title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
+      icon: '/img/modal-icons/sign.png',
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
       textcolor : this.model.usebranding() ? document.signviewtextcolour() : undefined,
@@ -226,6 +227,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             ConfirmationWithEmail.popup({
                                             title: localization.process.signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
+                                            icon: null,
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
                                             rejectText: localization.cancel,

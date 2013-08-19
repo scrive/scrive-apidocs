@@ -149,9 +149,14 @@ var ConfirmationView = Backbone.View.extend({
        if (model.textfont())
          title.css("font-family",model.textfont());
 
-       inner.append(icon);
-       inner.append(title);
-       inner.append(subtitle);
+       if (model.icon() == null) {
+         inner.addClass('no-icon');
+         inner.append(title);
+       } else {
+         inner.append(icon);
+         inner.append(title);
+         inner.append(subtitle);
+       }
        if (model.canCancel())
         header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
        header.append(inner);
