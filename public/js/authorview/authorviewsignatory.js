@@ -263,53 +263,51 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   },
   giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model.signatory();
-                 var button = $("<label  class='clickable giveForSigning'/>");
-                 var icon = $("<div class='giveForSigningIcon'/>");
-                 var text = localization.pad.signingOnSameDevice;
-                 var textbox = $("<span/>").text(text);
-                 button.append(icon).append(textbox);
-                 button.click(function() {
-                     mixpanel.track('Click give for signing',
-                                    {'Signatory index':signatory.signIndex()});
-                         Confirmation.popup({
-                                title : localization.pad.signingOnSameDeviceConfirmHeader,
-                                content : localization.pad.signingOnSameDeviceConfirmText,
-                                acceptText : localization.pad.signingOnSameDevice ,
-                                rejectText : localization.cancel,
-                                onAccept : function()
-                             {
-                                 mixpanel.track('Accept',
-                                                {'Signatory index':signatory.signIndex(),
-                                                 'Accept' : 'give for signing'});
-                                           signatory.addtoPadQueue(function(resp) {
-                                               if (resp.error == undefined)
-                                                   window.location = signatory.padSigningURL();
-                                               else
-                                                   new FlashMessage({
-                                                       content: localization.pad.addToPadQueueNotAdded,
-                                                       color: "red"
-                                                   });
-                                            }).send();
-                                           return true;
-                                        }
-                        });
+                 var button = new Button({
+                            size: "tiny",
+                            color: "blue",
+                            text: localization.changePhone,
+                            onClick: function() {
+                                 mixpanel.track('Click give for signing',
+                                                {'Signatory index':signatory.signIndex()});
+                                     Confirmation.popup({
+                                            title : localization.pad.signingOnSameDeviceConfirmHeader,
+                                            content : localization.pad.signingOnSameDeviceConfirmText,
+                                            acceptText : localization.pad.signingOnSameDevice ,
+                                            rejectText : localization.cancel,
+                                            onAccept : function() {
+                                             mixpanel.track('Accept',
+                                                            {'Signatory index':signatory.signIndex(),
+                                                             'Accept' : 'give for signing'});
+                                                       signatory.addtoPadQueue(function(resp) {
+                                                           if (resp.error == undefined)
+                                                               window.location = signatory.padSigningURL();
+                                                           else
+                                                               new FlashMessage({
+                                                                   content: localization.pad.addToPadQueueNotAdded,
+                                                                   color: "red"
+                                                               });
+                                                        }).send();
+                                                       return true;
+                                                    }
+                                        });
+                                }
                  });
-                 return button;
+                 return button.el();
     },
     removeFromPadQueueOption :  function() {
         var signatory = this.model.signatory();
-        var button = $("<label class='clickable removeFromPad'/>");
-        var icon = $("<div class='removeFromPadIcon'/>");
-        var text = localization.pad.removeFromPadQueue;
-        var textbox = $("<span/>").text(text);
-        button.append(icon).append(textbox);
-        button.click(function() {
-            mixpanel.track('Click remove from pad queue',
-                           {'Signatory index':signatory.signIndex()});
-            signatory.removeFromPadQueue().sendAjax( function() { window.location = window.location;});
+        var button = new Button({
+                    size: "tiny",
+                    color: "blue",
+                    text: localization.pad.removeFromPadQueue,
+                    onClick: function() {
+                        mixpanel.track('Click remove from pad queue',
+                               {'Signatory index':signatory.signIndex()});
+                        signatory.removeFromPadQueue().sendAjax( function() { window.location = window.location;});
+                    }
         });
-        return button;
-
+        return button.el();
     },
     addToPadQueueOption : function() {
                  var signatory = this.model.signatory();
@@ -317,28 +315,32 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                  var icon = $("<div class='addToPadIcon'/>");
                  var text = localization.pad.addToPadQueue;
                  var textbox = $("<span/>").text(text);
-                 button.append(icon).append(textbox);
-                 button.click(function() {
-                     mixpanel.track('Click add to pad queue',
-                                    {'Signatory index':signatory.signIndex()});
-                         Confirmation.popup({
-                                title : localization.pad.addToPadQueueConfirmHeader,
-                                content : localization.pad.addToPadQueueConfirmText,
-                                acceptText : localization.pad.addToPadQueue ,
-                                rejectText : localization.cancel,
-                                onAccept : function()
-                                        {
-                                            mixpanel.track('Accept',
-                                                           {'Accept' : 'add to pad queue',
-                                                            'Signatory index':signatory.signIndex()});
-                                           signatory.addtoPadQueue(function(resp) {window.location = window.location;}).sendAjax();
-                                           return true;
+                 var button = new Button({
+                    size: "tiny",
+                    color: "blue",
+                    text: localization.pad.addToPadQueue,
+                    onClick: function() {
+                         mixpanel.track('Click add to pad queue',
+                                        {'Signatory index':signatory.signIndex()});
+                             Confirmation.popup({
+                                    title : localization.pad.addToPadQueueConfirmHeader,
+                                    content : localization.pad.addToPadQueueConfirmText,
+                                    acceptText : localization.pad.addToPadQueue ,
+                                    rejectText : localization.cancel,
+                                    onAccept : function()
+                                            {
+                                                mixpanel.track('Accept',
+                                                               {'Accept' : 'add to pad queue',
+                                                                'Signatory index':signatory.signIndex()});
+                                               signatory.addtoPadQueue(function(resp) {window.location = window.location;}).sendAjax();
+                                               return true;
 
-                                        }
-                        });
-                        return false;
+                                            }
+                            });
+                            return false;
+                    }
                  });
-                 return button;
+                 return button.el();
     },
   authorOptions : function() {
     var signatory = this.model.signatory();
