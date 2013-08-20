@@ -186,6 +186,7 @@ module DB.SQL2
   , kWhyNot1
   , DBExceptionCouldNotParseValues(..)
   , kRun1OrThrowWhyNot
+  , kRun1OrThrowWhyNotAllowBaseLine
   , kRunManyOrThrowWhyNot
   , kRunAndFetch1OrThrowWhyNot
 
@@ -217,11 +218,22 @@ import Control.Monad.Trans.Control
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)
 
-
-data SqlCondition = SqlPlainCondition SQL (Maybe SqlWhyNot)
+-- | 'SqlCondition' are clauses that are in SQL statements in the
+-- WHERE block. Each statement has a list of conditions, all of them
+-- must be fullfilled.  Sometimes we need to inspect internal
+-- structure of a condition. For now it seems that the only
+-- interesting case is EXISTS (SELECT ...) because that internal
+-- SELECT can have explainable clauses.
+data SqlCondition = SqlPlainCondition SQL SqlWhyNot
                   | SqlExistsCondition SqlSelect
                     deriving (Typeable, Show)
 
+-- | 'SqlWhyNot' contains recepie how to query the database for
+-- current values in there and construct proper exception object using
+-- that information. For @SqlWhyNot mkException queries@ the
+-- @mkException@ should take as input same lenth list as there are
+-- queries. Each query will be run in a JOIN context with all
+-- referenced tables, so it can extract values from there.
 data SqlWhyNot = forall e. (KontraException e) => SqlWhyNot ([SqlValue] -> Either ConvertError e) [SQL]
 
 instance Eq SqlCondition where
@@ -498,28 +510,28 @@ instance SqlWhere SqlAll where
   sqlGetWhereConditions = sqlAllWhere
 
 sqlWhere :: (MonadState v m, SqlWhere v) => SQL -> m ()
-sqlWhere sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql Nothing))
+sqlWhere sql = sqlWhereE (DBBaseLineConditionIsFalse sql) sql
 
 sqlWhereE :: (MonadState v m, SqlWhere v, KontraException e) => e -> SQL -> m ()
-sqlWhereE exc sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 []))))
+sqlWhereE exc sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [])))
   where
     exc2 [] = return exc
     exc2 vs = error $ "sqlWhereE.exc2  should be given 0 values, got " ++ show vs
 
 sqlWhereEV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a) => (a -> e,SQL) -> SQL -> m ()
-sqlWhereEV (exc,vsql) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 [vsql]))))
+sqlWhereEV (exc,vsql) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [vsql])))
   where
     exc2 [v1] = exc <$> safeFromSql v1
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 1 values, got " ++ show vs
 
 sqlWhereEVV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a, Convertible SqlValue b) => (a -> b -> e,SQL,SQL) -> SQL -> m ()
-sqlWhereEVV (exc,vsql1,vsql2) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 [vsql1,vsql2]))))
+sqlWhereEVV (exc,vsql1,vsql2) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [vsql1,vsql2])))
   where
     exc2 [v1,v2] = exc <$> safeFromSql v1 <*> safeFromSql v2
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 2 values, got " ++ show vs
 
 sqlWhereEVVV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a, Convertible SqlValue b, Convertible SqlValue c) => (a -> b -> c -> e,SQL,SQL,SQL) -> SQL -> m ()
-sqlWhereEVVV (exc,vsql1,vsql2,vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 [vsql1, vsql2, vsql3]))))
+sqlWhereEVVV (exc,vsql1,vsql2,vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [vsql1, vsql2, vsql3])))
   where
     exc2 [v1,v2,v3] = exc <$> safeFromSql v1 <*> safeFromSql v2 <*> safeFromSql v3
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 3 values, got " ++ show vs
@@ -839,14 +851,16 @@ sqlTurnIntoWhyNotSelect sel = sqlSelect "" $ do
           c = countExplainableConditions sel2
           maybeCommaAppend sql1 sql2 | sql2 == "" = sql1
           maybeCommaAppend sql1 sql2 = sql1 <> "," <> sql2
-          -- c is index of condition that is currently in focus (starting with 1)
-          -- that means this condition itselft will be removed and whole statement
-          -- will be converted into EXISTS clause or value clause
+          -- c is index of condition that is currently in focus
+          -- (starting with 1) that means this condition itselft will
+          -- be removed and whole statement will be converted into
+          -- EXISTS clause or value clause
           pivotAroundCondition cx =
             case runState (run cx sel2) (0,(Nothing :: Maybe (SQL,SQL))) of
               (s, (_,Nothing)) -> if null (sqlSelectWhere s)
                                   then
-                                    -- we treat SELECT without WHERE as always having results
+                                    -- we treat SELECT without WHERE
+                                    -- as always having results
                                     "TRUE"
                                   else "EXISTS (" <> (toSQLCommand $ s { sqlSelectResult = [ "TRUE" ]}) <> ")"
               (s, (_,Just (f,e))) -> "(" <> (toSQLCommand $ s { sqlSelectFrom = maybeCommaAppend (sqlSelectFrom s) f
@@ -857,12 +871,13 @@ sqlTurnIntoWhyNotSelect sel = sqlSelect "" $ do
             new <- mapM (around cx) (sqlSelectWhere selx)
             return (selx { sqlSelectWhere = concat new })
 
-          around cx a@(SqlPlainCondition _ (Just (SqlWhyNot _ e))) = do
+          around cx a@(SqlPlainCondition _ (SqlWhyNot _ e)) = do
             idx <- fmap (+1) $ gets fst
             modify (\(cidx,b) -> (cidx+1+length e,b))
             case True of
               _ | cx > idx + length e -> do
-                -- we passed past this particular condition and its explanations, treat it as mandatory one
+                -- we passed past this particular condition and its
+                -- explanations, treat it as mandatory one
                 return [a]
               _ | cx == idx -> do
                 return [a]
@@ -875,8 +890,6 @@ sqlTurnIntoWhyNotSelect sel = sqlSelect "" $ do
               _ | otherwise -> do
                 -- we haven't come to this part yet
                 return []
-          around _ a@(SqlPlainCondition _ Nothing) = do
-            return [a]
           around cx (SqlExistsCondition subSelect) = do
             m <- get
             subSelect' <- run cx subSelect
@@ -898,8 +911,7 @@ countExplainableConditions sel = execState (myRun sel) 0
   where
     myRun select = do
       mapM_ worker (sqlSelectWhere select)
-    worker (SqlPlainCondition _ (Just (SqlWhyNot _ x))) = modify (\w -> w+1+length x)
-    worker (SqlPlainCondition _ Nothing) = return ()
+    worker (SqlPlainCondition _ (SqlWhyNot _ x)) = modify (\w -> w+1+length x)
     worker (SqlExistsCondition select) = myRun select
 
 
@@ -1063,8 +1075,7 @@ kWhyNot1 cmd = do
 enumerateWhyNotExceptions :: [SqlCondition] -> [SqlWhyNot]
 enumerateWhyNotExceptions conds = concatMap worker conds
   where
-    worker (SqlPlainCondition _ Nothing) = []
-    worker (SqlPlainCondition _ (Just x)) = [x]
+    worker (SqlPlainCondition _ x) = [x]
     worker (SqlExistsCondition s) = enumerateWhyNotExceptions (sqlGetWhereConditions s)
 
 matchUpExceptionWithValues :: [SqlWhyNot] -> [SqlValue] -> [SomeKontraException]
@@ -1114,6 +1125,25 @@ kRun1OrThrowWhyNot sqlcommand = do
         -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
         -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
         kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+      (ex:_) -> do
+        -- Lets throw first exception on the list. It should be the
+        -- most generic one.
+        kThrow ex
+
+kRun1OrThrowWhyNotAllowBaseLine :: (SqlTurnIntoSelect s, MonadDB m)
+                   => s -> m ()
+kRun1OrThrowWhyNotAllowBaseLine sqlcommand = do
+  success <- kRun01 sqlcommand
+  when (not success) $ do
+    listOfExceptions <- kWhyNot1 sqlcommand
+
+    let filterOutBaseline = filter (not . isBaseline)
+        isBaseline x = case cast x of
+                         Just (DBBaseLineConditionIsFalse{}) -> True
+                         _ -> False
+    case filterOutBaseline listOfExceptions of
+      [] -> do
+        return ()
       (ex:_) -> do
         -- Lets throw first exception on the list. It should be the
         -- most generic one.
