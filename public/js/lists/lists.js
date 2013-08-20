@@ -550,6 +550,7 @@
               });
             };
             this.silentFetch = function() {
+                return;
                 model.fetch({ data: schema.getSchemaUrlParams(),
                                 processData: true,
                                 cache: false,

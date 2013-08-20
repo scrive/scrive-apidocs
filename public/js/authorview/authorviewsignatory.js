@@ -134,66 +134,67 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   },
   remiderOption: function() {
          var signatory = this.model.signatory();
-         var button = $("<label class='clickable prepareToSendReminderMail'/>");
-         var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
          var text = signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.send;
-         var textbox = $("<span/>").text(text);
-         button.append(icon).append(textbox);
-         button.click(function() {
-             mixpanel.track('Click send reminder',
-                            {'Signatory index':signatory.signIndex()});
-             if( signatory.emailDelivery()) {
-                 ConfirmationWithEmail.popup({
-                     title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
-                     mail: signatory.remindMail(),
-                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-                     editText: localization.reminder.formOwnMessage,
-                     rejectText: localization.cancel,
-                     onAccept: function(customtext) {
-                         trackTimeout('Accept',
-                                      {'Accept' : 'send reminder',
-                                       'Signatory index' : signatory.signIndex(),
-                                       'Delivery method' : 'Email'},
-                                      function() {
-                                          signatory.remind(customtext).send();
-                                      });
-                     }
-                 });
-             } else if( signatory.mobileDelivery()) {
-                 Confirmation.popup({
-                     title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
-                     content: $("<div>").text(localization.reminder.mobileQuestion),
-                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-                     rejectText: localization.cancel,
-                     onAccept: function(customtext) {
-                         trackTimeout('Accept',
-                                      {'Accept' : 'send reminder',
-                                       'Signatory index' : signatory.signIndex(),
-                                       'Delivery method' : 'Mobile'},
-                                      function() {
-                                          signatory.remind().send();
-                                      });
-                     }
-                 });
-             } else if( signatory.emailMobileDelivery()) {
-                 Confirmation.popup({
-                     title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
-                     content: $("<div>").text(localization.reminder.emailMobileQuestion),
-                     acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-                     rejectText: localization.cancel,
-                     onAccept: function(customtext) {
-                         trackTimeout('Accept',
-                                      {'Accept' : 'send reminder',
-                                       'Signatory index' : signatory.signIndex(),
-                                       'Delivery method' : 'Email and Mobile'},
-                                      function() {
-                                          signatory.remind().send();
-                                      });
-                     }
-                 });
-             }
+         var button = new Button({
+                            color: "black",
+                            text: text,
+                            onClick: function() {
+                                 mixpanel.track('Click send reminder',
+                                                {'Signatory index':signatory.signIndex()});
+                                 if( signatory.emailDelivery()) {
+                                     ConfirmationWithEmail.popup({
+                                         title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
+                                         mail: signatory.remindMail(),
+                                         acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                                         editText: localization.reminder.formOwnMessage,
+                                         rejectText: localization.cancel,
+                                         onAccept: function(customtext) {
+                                             trackTimeout('Accept',
+                                                          {'Accept' : 'send reminder',
+                                                           'Signatory index' : signatory.signIndex(),
+                                                           'Delivery method' : 'Email'},
+                                                          function() {
+                                                              signatory.remind(customtext).send();
+                                                          });
+                                         }
+                                     });
+                                 } else if( signatory.mobileDelivery()) {
+                                     Confirmation.popup({
+                                         title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
+                                         content: $("<div>").text(localization.reminder.mobileQuestion),
+                                         acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                                         rejectText: localization.cancel,
+                                         onAccept: function(customtext) {
+                                             trackTimeout('Accept',
+                                                          {'Accept' : 'send reminder',
+                                                           'Signatory index' : signatory.signIndex(),
+                                                           'Delivery method' : 'Mobile'},
+                                                          function() {
+                                                              signatory.remind().send();
+                                                          });
+                                         }
+                                     });
+                                 } else if( signatory.emailMobileDelivery()) {
+                                     Confirmation.popup({
+                                         title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
+                                         content: $("<div>").text(localization.reminder.emailMobileQuestion),
+                                         acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                                         rejectText: localization.cancel,
+                                         onAccept: function(customtext) {
+                                             trackTimeout('Accept',
+                                                          {'Accept' : 'send reminder',
+                                                           'Signatory index' : signatory.signIndex(),
+                                                           'Delivery method' : 'Email and Mobile'},
+                                                          function() {
+                                                              signatory.remind().send();
+                                                          });
+                                         }
+                                     });
+                                 }
+                        }
          });
-         return button;
+
+         return button.el();
 
   },
   changeEmailOption : function() {
@@ -363,15 +364,13 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       var signatory = this.model.signatory();
       var titleinfo = $('<div class="titleinfo spacing" />');
       var name      = $('<div class="name" />').text(signatory.name());
-      var company   = $('<div class="company" />').text(signatory.company());
-      titleinfo.append(name).append(company);
+      titleinfo.append(name);
       box.append(titleinfo);
 
       var inner   = $('<div class="inner spacing" />');
 
-      var face    = $('<div class="face" />');
-
       var numspace = $('<div class="details" />');
+      var company   = $('<div class="company" />').text(signatory.company());
       var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": "
                                                            + (signatory.companynumber().trim() || localization.docsignview.notEntered))
           .attr('title', signatory.companynumber());
@@ -380,11 +379,10 @@ var AuthorViewSignatoryView = Backbone.View.extend({
         .attr('title', signatory.personalnumber());
       var contactspace = $('<div class="spacing contactspace" />');
 
-      numspace.append(orgnum);
-      numspace.append(persnum);
+      numspace.append(company);
 
       if (signatory.email() != '') {
-        var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+        var email   = $('<div class="email field" />').text(localization.email + ':' + signatory.email()).attr('title', signatory.email());
         numspace.append(email);
       }
 
@@ -393,7 +391,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
         numspace.append(mobile);
       }
 
-      inner.append(face);
+      numspace.append(orgnum);
+      numspace.append(persnum);
 
       inner.append(numspace);
       inner.append(contactspace);

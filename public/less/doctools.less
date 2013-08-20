@@ -44,9 +44,9 @@
 .document-history-container {
     margin-top: 10px;
     background-color : #ffffff;
-    width: 928px;
-    border : 1px solid #AAAAAA;
-    margin : 10px auto;
+    width: 1018px;
+    border : 1px solid #868686;
+    margin : 0 auto 25px;
     min-height: 120px;
 
     .tab-container {
@@ -54,12 +54,30 @@
     }
 
     .list-container .table {
-        border-color: transparent;
+        border: none;
         background-color: #FFFFFF;
+
+        thead {
+            background-color: #f3f3f3;
+            tr {
+                th {
+                    padding-bottom: 14px;
+                    span {
+                        font-size: 14px;
+                    }
+                }
+            }
+        }
+
+        tbody {
+            tr td.row {
+                line-height: 30px;
+            }
+        }
     }
 
     .list-container{
-        border-color: transparent;
+        border: none;
     }
 
     .document-history-footer{
