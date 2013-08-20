@@ -2,72 +2,64 @@
 
 .authorview {
 
-  .subcontainer {
-      background-color: #F0F0F0;
-      background-image: url("../img/horizontal-shading-bar.png");
-      background-repeat: no-repeat;
-      box-shadow: 1px 1px 5px #505050 inset;
-      padding-bottom: 23px;
-      padding-top: 10px;
+  background: #f8f8f8;
+
+  .signatories-box {
+    padding-right: 36px;
   }
 
   .history-box {
-      width : 960px;
-      background-color : #FFFFFF;
-      border: 1px solid #BABABC;
-      margin: 20px auto;
-      padding : 10px 29px;
+      width : 1018px;
+      margin: 0 auto;
       .headline {
-        text-transform: uppercase;
+        background-color: #f3f3f3;
+        border: 1px solid #868686;
         color: black;
         font-size: 16px;
-        margin: 20px;
+        margin: 15px 0px 20px;
+        padding: 22px;
         text-align : center;
       }
 
   }
 
   .titlebox {
-    background-color: white;
     padding-top: 40px;
     padding-bottom: 25px;
-    border: solid #bababc 1px;
     text-align: center;
-    font-weight: bold;
     margin-left: auto;
     margin-right: auto;
     .headline {
-      text-transform: uppercase;
       color: black;
-      font-size: x-large;
-      margin-bottom: 5px;
+      font-size: 18px;
+      font-weight: 400;
     }
     .subheadline {
       margin-left: auto;
       margin-right: auto;
-      margin-top: 12px;
-      margin-bottom : 15px;
+      margin-top: 11px;
     }
     .duedate {
-        margin-right: 40px;
-        display: inline;
         font-weight: normal;
+        display: block;
+        margin-bottom : 30px;
     }
 
     a.download {
         background: url(../img/senddoc.png) no-repeat;
         padding-left: 20px;
         font-weight: normal;
-        display: inline;
     }
     .buttonbox {
-      margin: 10px auto 0;
+      margin: 40px auto 0;
       text-align : center;
       .button {
         display : inline-block;
         min-width: 200px;
         margin-left: 10px;
-        margin-tight : 10px;
+        margin-right : 10px;
+        font-size: 18px;
+        height: 30px;
       }
     }
   }
@@ -76,33 +68,26 @@
       padding-top: 20px;
       margin-left: auto;
       margin-right: auto;
-
+      border: 1px solid #868686;
       clear: both;
       background-color: white;
-      background-repeat: no-repeat;
       overflow: hidden;
       margin-top: 17px;
-      width: 924px;
-      box-shadow: 1px 1px 5px #505050;
+      width: 1018px;
       h2 {
           float: left;
           width: 260px;
           margin-bottom: 20px;
-          text-transform: uppercase;
           color: black;
-          font-weight: normal;
           padding-left: 30px;
-          font-size: large;
+          font-size: 16px;
+          font-weight: 300;
         }
     }
 
   .column.spacing {
           margin-right: 20px;
-      }
-
-  .section.spacing {
-          padding: 15px;
-      }
+  }
 
   .subcontainer .signatories {
 
@@ -134,8 +119,9 @@
 
       padding-bottom: 35px;
       padding-top: 35px;
+
       td.signatory-box {
-          border: solid #bababc 1px;
+          border: solid #575756 1px;
           vertical-align : top;
       }
       td.signatory-box-separator {
@@ -154,25 +140,24 @@
           color: black;
           font-size: 16px;
           height: 19px;
+          padding-left: 10px;
+          padding-top: 6px;
       }
 
       .company {
-          color: black;
-          height: 14.5px;
-      }
-
-      .face {
-          background-image: url('../img/missing-portrait.png');
-          background-size: cover;
-          width: 60px;
-          height: 50px;
-          float: left;
+          font-size: 16px;
+          line-height: 35px;
       }
 
       .inner {
           margin-top: 10px;
-          min-height: 52px;
+          min-height: 75px;
           color : #505050;
+          border-top: 1px dashed;
+
+          &.spacing {
+            padding-top: 20px;
+          }
       }
       .inner .email:hover{
               overflow: visible;
@@ -181,14 +166,14 @@
       .details {
           float:left;
           padding: 0px;
-          margin-left: 12px;
-          margin-top: -2px;
+          font-size: 14px;
+          padding-left: 10px;
       }
 
       .field {
           height: 16px;
-          font-size: 14.5px;
-          line-height: 14.5px;
+          font-size: 14px;
+          line-height: 15px;
           width: 160px;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -197,19 +182,19 @@
       }
       .statustext {
           font-size: 13px;
+          font-style: italic;
       }
       .statusbox {
           border-top: 1px dashed;
-          text-align: center;
           font-size: 13px;
           vertical-align: middle;
           line-height: 13px;
-          margin-top: 20px;
+          margin-top: 40px;
       }
 
       .statusbox .spacing {
-          margin-left: auto;
-          margin-right: auto;
+          padding-left: 18px;
+          padding-top: 18px;
       }
 
       .statusbox .icon.status {
@@ -246,10 +231,11 @@
         }
       }
      .optionbox {
-        padding: 8px 0px 0px 0px;
-        text-align: center;
-        height : 18px;
-        color: @blueH;
+        padding: 8px 0px 0px 18px;
+        height : 40px;
+        border-top: 1px dashed;
+        margin-top: 16px;
+
         .change-email-box {
             display: inline-block;
             input {
