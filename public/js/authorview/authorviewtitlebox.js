@@ -77,7 +77,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var document = this.model.document();
     return new Button({
       color: "red",
-      size: "small",
+      size: "big",
+      shape: "rounded",
       text: localization.process.restartbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
@@ -92,7 +93,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var document = this.model.document();
     return new Button({
       color: "green",
-      size: "small",
+      size: "big",
+      shape: "rounded",
       text: localization.process.prolongbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
@@ -149,8 +151,9 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var model = this.model;
     var document = this.model.document();
     return new Button({
-      color: "green",
-      size: "small",
+      color: "black",
+      size: "big",
+      shape: "rounded",
       text: localization.authorview.goToSignView,
       onClick: function() {
           mixpanel.track('Click go to sign view');
@@ -166,7 +169,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     if (sig == undefined) return; // Should never happend
     return new Button({
       color: "green",
-      size: "small",
+      size: "big",
+      shape: "rounded",
       text: localization.authorview.goToSignView,
       onClick: function() {
           //Refactor this when we will get confirmation that this is what viktor needs.
