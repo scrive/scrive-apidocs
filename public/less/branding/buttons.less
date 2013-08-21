@@ -43,7 +43,7 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     background: @grey;
     border: none;
     &:hover {
-        background: darken(@grey, 25%);
+        background: darken(@grey, 5%);
     }
     &:active {
         background: @grey;
@@ -51,20 +51,15 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   }
 
   &.button-light-blue {
-    background : #0768A9;
-    font-weight: 300;
-    .box-shadow(inset  #0768A9 0 0 0 0px);
-    border-color:  #0768A9;
+    color: @text-very-dark !important;
+    font-weight: 400;
+    background: @blue-secondary:;
+    border: none;
     &:hover {
-      background : #53B7E9;
-      .box-shadow(inset #53B7E9 0 0 0 2px);
-      border-color: #53B7E9;
+        background: darken(@light-blue, 5%);
     }
     &:active {
-      background : #53B7E9;
-      .box-shadow(inset #53B7E9 0 0 0 2px);
-      border-color: #53B7E9;
-    }
+        background: @light-blue;
   }
 
   &.button-red {
@@ -133,7 +128,7 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   }
 
   &.button-round {
-    .border-radius(24px,24px,24px,24px);
+    .border-radius(25px,25px,25px,25px);
     border: @light-border 1px solid;
   }
   &.button-round.button-small {
