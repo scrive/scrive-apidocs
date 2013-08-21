@@ -205,7 +205,7 @@
 "_mailDocumentErrorContentBodySecond","Vänligen kontakta Scrives support på <a href=""mailto:support@scrive.com"">support@scrive.com</a> om du vill ha hjälp med att lösa problemet.","Please contact the Scrive support at <a href=""mailto:support@scrive.com"">support@scrive.com</a> if you have any comments or questions regarding this issue."
 "_mailDocumentErrorContentBodyThird","       ","We apologize for the inconvenience.<br/><br/>"
 "_mailDocumentErrorTitle","Problem med filformat","Problem with file format"
-"_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att signera dokumentet <strong>$documenttitle$</strong>.","<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> electronically through the Scrive e-signing system."
+"_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att signera dokumentet <strong>$documenttitle$</strong> elektroniskt genom tjänsten Scrive e-signering.","<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> electronically through the Scrive e-signing system."
 "_mailInvitationToSignTitleContract","Avtal att e-signera: $documenttitle$","Contract to e-sign: $documenttitle$"
 "_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.","<strong>$creatorname$</strong> has invited you to review the document <strong>$documenttitle$</strong>."
 "_mailInvitationToViewTitleContract","Avtal att granska: $documenttitle$","Contract to review: $documenttitle$"
