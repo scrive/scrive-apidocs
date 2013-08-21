@@ -2,7 +2,7 @@
 
 .authorview {
 
-  background: #f8f8f8;
+  background: @grey-background;
 
   .signatories-box {
     margin-right: 36px;
@@ -12,8 +12,8 @@
       width : 1018px;
       margin: 0 auto;
       .headline {
-        background-color: #f3f3f3;
-        border: 1px solid #868686;
+        background-color: @slightly-darker-grey-background;
+        border: 1px solid @dark-border;
         color: black;
         font-size: 16px;
         line-height: 18px;
@@ -22,6 +22,16 @@
         text-align : center;
       }
 
+      .document-history-container {
+        border: 1px solid @dark-border;
+      }
+
+      .table > table {
+        border: none;
+        thead > tr {
+          border-top: none;
+        }
+      }
   }
 
   .titlebox {
@@ -69,7 +79,7 @@
       padding-top: 20px;
       margin-left: auto;
       margin-right: auto;
-      border: 1px solid #868686;
+      border: 1px solid @dark-border;
       clear: both;
       background-color: white;
       overflow: hidden;
@@ -122,7 +132,8 @@
       padding-top: 35px;
 
       td.signatory-box {
-          border: solid #575756 1px;
+          border: solid @dark-border 1px;
+          background: @grey-background;
           vertical-align : top;
       }
       td.signatory-box-separator {
