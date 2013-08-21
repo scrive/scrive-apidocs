@@ -51,15 +51,15 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   }
 
   &.button-light-blue {
-    color: @text-very-dark !important;
     font-weight: 400;
-    background: @blue-secondary:;
+    background: @blue-secondary;
     border: none;
     &:hover {
-        background: darken(@light-blue, 5%);
+        background: darken(@blue-secondary, 5%);
     }
     &:active {
-        background: @light-blue;
+        background: @blue-secondary;
+    }
   }
 
   &.button-red {
@@ -112,12 +112,12 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   }
 
   &.button-large {
-    max-height: 31px;
-    font-size: 24px;
-    line-height: 31px;
+    max-height: 18px;
+    font-size: 18px;
+    line-height: 18px;
     font-family: @source;
     /* to fix Firefox bug, have to use padding instead of line height */
-    padding: 15px 20px 14px;
+    padding: 17px 25px 17px;
 
     .small-screen & {
         font-size: 42px;
