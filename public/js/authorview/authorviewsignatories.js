@@ -60,7 +60,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var middle2    = $("<div class='middle' />");
           var middle3    = $("<div class='middle float-right' style='white-space: nowrap;'/>");
           var statusicon = $("<div class='icon status' style='vertical-align: top; margin-top: 4px;' />").addClass(sigview.status());
-          var status     = $("<div class='statustext' style='margin-bottom: 7px; margin-top: 3px; line-height: 13px; height: 100%; vertial-align: top;' />").addClass(sigview.status()).html(sigview.signatoryViewerySummary());
+          var status     = $("<div class='statustext' style='margin-bottom: 7px; margin-top: 17px; line-height: 13px; height: 100%; vertial-align: top;' />").addClass(sigview.status()).html(sigview.signatoryViewerySummary());
           var details    = $('<a class="details clickable" href="#" />').text(localization.docsignview.showDetails);
           middle1.append(statusicon);
           middle2.append(status);
