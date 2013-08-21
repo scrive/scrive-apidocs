@@ -388,7 +388,7 @@
 "_createCompanyExplanation","När ett företag är skapat kommer du att bli en administratör och kommer kunna bjuda in dina kollegor till underkonton.","When a company is created you will be made an admin user and will be able to invite your colleagues to join you."
 "_createCompanyFormPreamble","För att skapa ett företag vänligen fyll i följande information:","To create a company please complete the following information:"
 "_modalUserSignupDoneHeader","Ditt konto har skapats!  Kolla din email för att gå vidare.","Your account has been created!  Please check your email to continue."
-"_modalAddCompanyAccountTitle","Nytt Konto","New Account"
+"_modalAddCompanyAccountTitle","Nytt konto","New account"
 "_modalAddCompanyAccountBody","Bjud in någon ny eller be en befintlig Scrive-användare att ansluta ditt företag.","Invite someone new or ask an existing Scrive user to join your company."
 "_modalAddCompanyAccountInviteButtonText","Bjud in","Invite"
 "_newCompanyAccountButtonText","Nytt konto","New account"
