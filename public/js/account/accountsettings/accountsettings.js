@@ -321,8 +321,8 @@ var AccountSettingsView = Backbone.View.extend({
                              onSelect : function(v) {model.setLang(v); self.langselect.el().replaceWith(self.langSelect().el()); return true;},
                              options:   model.lang() == "en" ? [{name: localization.account.accountSecurity.langSV, value: "sv"}] :
                                                                         [{name: localization.account.accountSecurity.langEN, value: "en"}],
-                             textWidth : "203px",
-                             optionsWidth : "230px"
+                             textWidth : "208px",
+                             optionsWidth : "235px"
                            });
       return this.langselect;
     },
