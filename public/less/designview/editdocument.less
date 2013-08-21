@@ -49,13 +49,14 @@
     }
     &.help2 {
 	margin-left:12px;
-	width:156px;
-	margin-right: 61px;
+	min-width: 156px;
+        max-width: 190px;
 	.icon {
 	    background-position:38px 0px;
 	}
 	.text {
-	    width: 83px;
+	    min-width: 83px;
+            max-width: 115px;
 	    margin-left: 4px;
 	    margin-right: 14px;
 	}
@@ -83,6 +84,7 @@
     position: relative;
     margin-right:12px;
     vertical-align:top;
+    float: right;
  
     &.design-view-action-document-draggable-textbox {
 	.design-view-action-document-draggable-icon {
