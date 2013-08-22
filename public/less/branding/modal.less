@@ -94,7 +94,7 @@
 }
 .modal-header-inner {
   margin: auto;
-  width: 300px;
+  width: 350px;
   text-align: center;
   font-weight: normal;
 }
@@ -146,6 +146,9 @@
     p {
       margin: 10px 0;
     }
+    table td {
+      color: @text-very-dark;
+    }
   }
 }
 
@@ -163,16 +166,18 @@
   margin-left: 35px;
   margin-right: 35px;
   border-top: 1px solid @blue-border;
-}
-.modal-footer .button {
-  min-width: 80px;
-}
-.modal-footer label {
-  cursor: pointer;
-  line-height: 32px;
-  &.close {
-    color: @text-medium;
-    &:hover {
+
+  .button {
+    min-width: 80px;
+  }
+
+  .left { float: left; }
+  .right { float: right; }
+
+  label {
+    cursor: pointer;
+    line-height: 32px;
+    &.close {
       color: @text-very-dark;
     }
   }
@@ -180,13 +185,4 @@
 
 .modal-container.small-screen .modal-footer label  {
    font-size: 22px;
-}
-
-
-
-.modal-footer .left {
-  float: left;
-}
-.modal-footer .right {
-  float: right;
 }
