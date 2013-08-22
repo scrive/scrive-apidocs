@@ -1,3 +1,5 @@
+@import 'branding/colors';
+
 .signview {
   width: 100%;
   min-width: 1018px;
@@ -43,15 +45,18 @@
 
 
   .instructions {
-    background-color: white;
     padding-top: 40px;
     padding-bottom: 25px;
     margin-top: 20px;
-    border: solid #bababc 1px;
     text-align: center;
     font-weight: bold;
     margin-left: auto;
     margin-right: auto;
+
+    .highlight-green {
+	text-transform: uppercase;
+	color:@green;
+    }
 
     &.small-screen {
       padding-bottom: 45px;
@@ -66,10 +71,10 @@
       }
     }
 
+
     .headline {
-      text-transform: uppercase;
-      color: black;
-      font-size: x-large;
+      font-size:22px;
+      color:#4A4A49;
       margin-bottom: 5px;
 
       .name {
@@ -94,23 +99,23 @@
       margin-left: auto;
       margin-right: auto;
       margin-top: 0px;
-      margin-bottom: 5px;
      .smaller-bits {
-        margin: 10px auto;
-        margin-top: 10px;
+        margin: 0px auto 10px auto;
+        margin-top: 0px;
         text-align : center;
         .duedate {
-          display: inline;
           margin-right:20px;
-          font-weight : normal;
+          font-weight:normal;
+	  margin-bottom:20px;
         }
         .download  {
           background: url(../img/senddoc.png) no-repeat;
-          padding-left: 20px;
-          margin-left:20px;
-          display: inline;
-          font-weight : normal;
-          display: inline-block;
+          padding-left:20px;
+          font-weight:normal;
+          display:inline-block;
+	  background-position:0px 2px;
+	  position:relative;
+	  left:-10px;
           .docname {
               text-align: left;
               text-decoration: underline;
@@ -380,12 +385,6 @@
   }
 
   .subcontainer {
-    background-color: #F0F0F0;
-    box-shadow: inset 1px 1px 5px #505050;
-    -moz-box-shadow: inset 1px 1px 5px #505050;
-    -webkit-box-shadow: inset 1px 1px 5px #505050;
-    background-image: url(../img/horizontal-shading-bar.png);
-    background-repeat: no-repeat;
     padding-bottom:23px;
     padding-top:10px;
   }

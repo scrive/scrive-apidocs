@@ -20,21 +20,22 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   // Big instruction or information about document state
   text: function() {
     var document = this.model.document();
+    var string = "";
     if (document.isSigning()) {
-      return localization.docsignview.followArrowToSign;
+      string = localization.docsignview.followArrowToSign;
     } else if (document.isReviewing()) {
-      return localization.docsignview.reviewDocument;
+      string = localization.docsignview.reviewDocument;
     } else if (document.isSignedAndClosed()) {
-      return localization.docsignview.signedAndClosed;
+      string = localization.docsignview.signedAndClosed;
     } else if (document.isSignedNotClosed()) {
-      return localization.docsignview.signedNotClosed;
+      string = localization.docsignview.signedNotClosed;
     } else if (document.isUnavailableForSign()) {
-      return localization.docsignview.unavailableForSign;
+      string = localization.docsignview.unavailableForSign;
     } else {
       console.error("Unsure what state we're in");
-      return localization.docsignview.unavailableForSign;
+      string = localization.docsignview.unavailableForSign;
     }
-
+    return $("<div>" + string + "</div>");
   },
   // Smaller text with more details on some states
   subtext: function() {
@@ -100,7 +101,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
 
     this.styleText(headline);
-    container.append(headline.text(this.text()));
+    container.append(headline.append(this.text()));
     var subheadline = $("<div class='subheadline' />");
     this.styleText(subheadline);
     container.append(subheadline.text(this.subtext()));
