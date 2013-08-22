@@ -1,4 +1,6 @@
-/* Main archive definition. Its a tab based set of different documents lists. */
+/*
+ * Defines the account settings page.
+ */
 
 (function(window){
 
@@ -8,7 +10,6 @@ var AccountSettingsModel = Backbone.Model.extend({
     var user = new User({});
     this.set({"user" : user});
     user.bind("change",function() {
-      console.log('User changed ready');
       self.reset();
     });
     this.user().set({"ready" : false}, {silent: true});
@@ -457,6 +458,7 @@ var AccountSettingsView = Backbone.View.extend({
               },
               title: localization.account.accountDetails.changeEmailTitle,
               acceptButtonText: localization.account.accountDetails.changeEmailAccept,
+              icon: '/img/modal-icons/change-email.png',
               content: body
             });
             return false;
