@@ -64,6 +64,7 @@ set systemPage
  less less/designview/documentview.less
  less less/designview/process.less
  less less/designview/welcomemodal.less
+ less less/designview/modals.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  jsx  tiny_mce/tinymce.min.js
