@@ -347,7 +347,6 @@
                 title : localization.process.confirmsendtitle,
                 icon: '/img/modal-icons/send.png',
                 acceptButton : new Button({
-                    size: "tiny",
                     color : "green",
                     shape : "rounded",
                     text : localization.process.sendbuttontext,

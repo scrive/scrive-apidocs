@@ -264,7 +264,6 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model.signatory();
                  var button = new Button({
-                            size: "tiny",
                             color: "blue",
                             text: localization.changePhone,
                             onClick: function() {
