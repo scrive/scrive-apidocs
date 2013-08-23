@@ -21,11 +21,11 @@ window.BinListDefinition = function(archive) { return {
                 avaible : function() {return true;},
                 onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
-                                acceptText: localization.ok,
+                                acceptText: localization.archive.bin.restore.head,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.restore.head,
                                 icon: '/img/modal-icons/restore.png',
-                                content: jQuery("<p/>").text(localization.archive.bin.restore.body),
+                                content: jQuery("<p class='center'/>").text(localization.archive.bin.restore.body),
                                 onAccept : function() {
                                   new Submit({
                                                 url: "/d/restore",
