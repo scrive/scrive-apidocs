@@ -214,10 +214,6 @@ var PageTasksArrowView = Backbone.View.extend({
               if (this.arrow != undefined)
                   $(this.el).append(this.arrow.view().el);
               this.trigger("change:arrow");
-              if (this.arrow != undefined) {
-                  view.arrow.fixWidth();
-                  setTimeout(function() {view.arrow.fixWidth();},100);
-              }
           }
      }
   },
