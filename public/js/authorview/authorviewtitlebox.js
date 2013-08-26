@@ -127,11 +127,12 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           var modalcontent = somebodysigned ? localization.process.cancelmodaltextwithsignatures : localization.process.cancelmodaltext;
         Confirmation.popup({
           title: localization.process.cancelmodaltitle,
-          content: modalcontent,
-          icon: '/img/modal-icons/sign.png',
+          content: $('<p class="center">' + modalcontent + '</p>'),
+          icon: '/img/modal-icons/withdraw.png',
+          width: 533,
           acceptText: localization.process.cancelbuttontext,
           rejectText: localization.cancel,
-          acceptColor: "red",
+          acceptColor: "green",
           extraClass : "s-withdraw-confirmation",
           onAccept: function() {
               if (alreadyClicked(this))
