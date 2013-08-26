@@ -124,8 +124,7 @@ var ConfirmationView = Backbone.View.extend({
        var container = $("<div class='modal-container'/>");
        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
        container.css("top",$(window).scrollTop());
-       // TODO comment why this is as it is
-       container.css("margin-top",$(window).height() > 700 ? 200 : 100);
+       container.css("margin-top","50px");
        container.css("left","0px");
        var left = Math.floor(($(window).width() - model.width()) / 2);
        container.css("margin-left",left > 20 ? left : 20);
