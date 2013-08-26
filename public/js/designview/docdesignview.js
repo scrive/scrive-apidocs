@@ -246,18 +246,19 @@
                 var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
                 var callback = function(params) {
                     document.afterSave(function(){
-                      document.verifyEleg().sendAjax(function(resp) {
+                      document.verifyEleg().addMany(params).sendAjax(function(resp) {
                         var resp = JSON.parse(resp);
                         if (resp.verified) {
-                          document.makeReadyForSigning().sendAjax(function(docdata) {
+                          document.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
                             var newdoc = new Document(new Document({}).parse(docdata));
+                            newdoc.set({"screenshots" : document.get("screenshots")}); // We need to propagate screenshots
                             newdoc.sign().addMany(params).sendAjax(function() {
                                 window.location.reload();
                             });
                           });
                         }
                         else {
-                          new FlashMessage({color: "red", content: "Elegitimation varification failed"});
+                          new FlashMessage({color: "red", content: "Elegitimation verification failed"});
                           if (view.confirmationpopup != undefined) view.confirmationpopup.close();
                         }
                       });
