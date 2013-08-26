@@ -2,26 +2,19 @@
 @import 'branding/typography';
 
 .list-container {
-   border-radius: 0 0 5px 5px;
-   border-top: 1px solid #808080;
-   border-left: 1px solid #808080;
-   border-right: 1px solid #808080;
-   border-bottom: 1px solid #808080;
-   -moz-border-radius: 0 0 5px 5px;
-   -webkit-border-radius: 0 0 5px 5px;
 
   .table {
       background: #f4f4f4;
       border-radius: 0 0 5px 5px;
       -moz-border-radius: 0 0 5px 5px;
       -webkit-border-radius: 0 0 5px 5px;
-      border: 4px solid #f4f4f4;
       table {
             background: #fff;
-            border: 1px solid #e0e0e0;
+            border: 1px solid @dark-border;
             width: 100%;
             table-layout: fixed;
             th {
+                  background-color: @slightly-darker-grey-background;
                   height: 33px;
                   padding-bottom: 10px;
                   padding-left: 15px;
@@ -45,8 +38,8 @@
            td {
                   color: #666;
                   height: 28px;
-                  line-height: 24px;
-                  font-size: 14px;
+                  line-height: 38px;
+                  font-size: 15px;
                   font-weight: 300;
                   margin-bottom: 1px;
                   padding-left: 15px;
@@ -113,12 +106,6 @@
   }
 
   /* Select boxes and search boxes for lists */
-
-  .option-top-box {
-        background: #fff;
-        border-bottom: 1px solid #cccccc;
-  }
-
   .list-search {
         margin-right: 8px;
   }
