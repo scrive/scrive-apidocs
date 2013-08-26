@@ -143,7 +143,7 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       box.addClass('sigbox');
       var signatory = this.model;
       var titleinfo = $('<div class="titleinfo spacing" />');
-      var name      = $('<div class="name" />').text(signatory.name());
+      var name      = $('<div class="name" />').text(signatory.nameOrEmailOrMobile());
       name.css(this.textstyle);
       var company   = $('<div class="company" />').text(signatory.company());
       company.css(this.textstyle);
@@ -168,7 +168,6 @@ var DocumentSignSignatoryView = Backbone.View.extend({
           persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": " + persnumtext)
               .attr('title', signatory.personalnumber());
       }
-      var contactspace = $('<div class="spacing contactspace" />');
 
       if( orgnum ) {
           numspace.append(orgnum);
@@ -191,7 +190,6 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       inner.append(face);
 
       inner.append(numspace);
-      inner.append(contactspace);
       box.append(inner);
 
       box.append(this.statusbox());
