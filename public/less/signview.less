@@ -4,6 +4,13 @@
   width: 100%;
   min-width: 1018px;
 
+  h2 {
+      font-weight:300;
+      color:#4A4A49;
+      font-size:20px;
+      margin-bottom:20px;
+  }
+
   .pageheader {
     min-width: 1018px;
     width: 100%;
@@ -410,27 +417,14 @@
   }
 
   .section.highlight {
-    border: 5px solid #83bc39;
+    border: 2px solid @green;
     padding: 15px;
     background-image: none;
     width: 916px;
     margin-left: auto;
     margin-right: auto;
+    box-shadow:none;
   }
-
-  .section h2 {
-    float: left;
-    width: 220px;
-    margin-bottom: 20px;
-    margin-right: 20px;
-    text-transform: uppercase;
-    color: black;
-    font-weight: normal;
-    padding-left: 30px;
-    padding-right: 10px;
-    font-size: large;
-  }
-
 
   .signatoryattachments .list {
     float: left;
@@ -773,6 +767,9 @@
   .signbuttons.section {
       padding-top: 35px;
       padding-bottom:35px;
+      h2 {
+	  margin-left:30px;
+      }
   }
 
   .section {
