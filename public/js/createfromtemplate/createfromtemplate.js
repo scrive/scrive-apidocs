@@ -15,27 +15,11 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
               paging: new Paging({}),
               textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
               cells : [
-                  new Cell({name: localization.archive.templates.columns.shared, width:"52px", field:"shared", special: "rendered",
-                            rendering: function(shared) {
-                                  return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
-                            }}),
-
-                  new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time", special: "rendered",
+                  new Cell({name: localization.archive.templates.columns.time, width:"100px", field:"time", special: "rendered",
                   rendering: function(time) {
                          return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
                   }}),
-                  new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
-                            rendering: function(value,_idx,model) {
-                                   var res= $("<div/>");
-                                    if (model.field("authentication") == "eleg")
-                                        res.text(localization.eleg);
-                                    else if (model.field("delivery") == "pad")
-                                        res.text(localization.pad.delivery);
-                                    else
-                                        res.text(localization.email);
-                                    return res;
-                            }}),
-                  new Cell({name: localization.archive.templates.columns.template, width:"450px", field:"title",
+                  new Cell({name: localization.archive.templates.columns.template, width:"360px", field:"title",
                             rendering : function(title, _mainrow, listobject) {
                                       var link = jQuery("<a/>").text(title);
                                       link.click(function(){
@@ -61,7 +45,22 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
                                           return false;
                                       });
                                       return link;
-                                  }})
+                                  }}),
+                  new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
+                            rendering: function(value,_idx,model) {
+                                   var res= $("<div/>");
+                                    if (model.field("authentication") == "eleg")
+                                        res.text(localization.eleg);
+                                    else if (model.field("delivery") == "pad")
+                                        res.text(localization.pad.delivery);
+                                    else
+                                        res.text(localization.email);
+                                    return res;
+                            }}),
+                  new Cell({name: localization.archive.templates.columns.shared, width:"52px", field:"shared", special: "rendered",
+                            rendering: function(shared) {
+                                  return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
+                            }})
                   ]
               })
         })

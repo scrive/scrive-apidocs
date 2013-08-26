@@ -625,7 +625,7 @@ javascriptLocalisation =
                     ,  columns :{
                               time       : "$_SortTime()$"
                             , template   : "$_SortTemplate()$"
-                            , shared      : "$_share()$"
+                            , shared      : "$_shared()$"
                             , verificationMethod : "$_verificationMethod()$"
                        }
                 }
@@ -650,7 +650,7 @@ javascriptLocalisation =
                     ,  search : "$_pageAttachmentListSearchInfo()$"
                     ,  columns :{
                               time       : "$_SortTime()$"
-                            , shared      : "$_share()$"
+                            , shared      : "$_shared()$"
                             , attachment   : "$_SortAttachment()$"
 
                        }
