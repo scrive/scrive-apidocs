@@ -174,8 +174,14 @@ verifySignatureAndGetSignInfo docid signid magic fields provider signature trans
     logicaconf          <-               ctxlogicaconf <$> getContext
 
     -- valid transaction?
-    unless (transactiondocumentid == docid && transactionsignatorylinkid == Just signid && transactionmagichash == Just magic )
-           internalError
+    unless (transactiondocumentid == docid) internalError -- Error if document does not match
+
+    if (isJust transactionsignatorylinkid && isJust transactionmagichash)
+       -- Either we have siglink and magichash in transaction and it matches current one
+       then unless (transactionsignatorylinkid == Just signid && transactionmagichash == Just magic) internalError
+       -- Or we have don't have it, and current one is the author
+       else unless (isAuthor siglink) internalError
+
     -- our encodedtbs should be a Just at this point
     etbs <- guardJust transactionencodedtbs
 
@@ -484,8 +490,16 @@ verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
                     , transactionstatus          = status
                     , transactiontbs
                     } <- guardJustM $ dbQuery $ GetELegTransaction transactionid
-    unless (tdocid == docid && mtsignid == Just signid && mtmagic == Just magic )
-           internalError
+
+
+    -- valid transaction?
+    unless (tdocid == docid) internalError -- Error if document does not match
+
+    if (isJust mtsignid && isJust mtmagic)
+       -- Either we have siglink and magichash in transaction and it matches current one
+       then unless (mtsignid == Just signid && mtmagic == Just magic) internalError
+       -- Or we have don't have it, and current one is the author
+       else unless (isAuthor siglink) internalError
 
     case status of
       Right (CRComplete _ signature attrs) -> do
