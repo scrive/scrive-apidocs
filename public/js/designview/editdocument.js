@@ -20,9 +20,9 @@
 
             div.append(view.help1());
             div.append(view.help2());
-            div.append(view.text());
-            div.append(view.signature());
 	    div.append(view.checkbox());
+            div.append(view.signature());
+            div.append(view.text());
 
             view.$el.html(div.children());
 

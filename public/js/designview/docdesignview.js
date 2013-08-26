@@ -337,17 +337,16 @@
             var model = view.model;
             var document = model.document();
             var signatory = document.currentSignatory();
-            var box = $('<div />');
+            var box = $('<div class="send-modal-body"/>');
             var content = $("<p/>").append($("<span/>").append(localization.process.confirmsendtext));
             if (!document.authorIsOnlySignatory())
-                    content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
-            content.append($("<span>?</span>"));
+                    content.append($("<span/>").text(localization.to + ': ')).append("<br /><span class='unsignedpartynotcurrent'/>");
             box.append(DocumentDataFiller.fill(document,content));
 
             Confirmation.popup({
                 title : localization.process.confirmsendtitle,
+                icon: '/img/modal-icons/send.png',
                 acceptButton : new Button({
-                    size: "tiny",
                     color : "green",
                     shape : "rounded",
                     text : localization.process.sendbuttontext,

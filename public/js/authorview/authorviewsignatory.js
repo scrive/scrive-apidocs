@@ -264,7 +264,6 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model.signatory();
                  var button = new Button({
-                            size: "tiny",
                             color: "blue",
                             text: localization.changePhone,
                             onClick: function() {
@@ -384,7 +383,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       numspace.append(company);
 
       if (signatory.email() != '') {
-        var email   = $('<div class="email field" />').text(localization.email + ':' + signatory.email()).attr('title', signatory.email());
+        var email   = $('<div class="email field" />').text(localization.email + ": " + signatory.email()).attr('title', signatory.email());
         numspace.append(email);
       }
 

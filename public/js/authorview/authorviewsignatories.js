@@ -60,7 +60,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var middle2    = $("<div class='middle' />");
           var middle3    = $("<div class='middle float-right' style='white-space: nowrap;'/>");
           var statusicon = $("<div class='icon status' style='vertical-align: top; margin-top: 4px;' />").addClass(sigview.status());
-          var status     = $("<div class='statustext' style='margin-bottom: 7px; margin-top: 3px; line-height: 13px; height: 100%; vertial-align: top;' />").addClass(sigview.status()).html(sigview.signatoryViewerySummary());
+          var status     = $("<div class='statustext' style='margin-bottom: 7px; margin-top: 17px; line-height: 13px; height: 100%; vertial-align: top;' />").addClass(sigview.status()).html(sigview.signatoryViewerySummary());
           var details    = $('<a class="details clickable" href="#" />').text(localization.docsignview.showDetails);
           middle1.append(statusicon);
           middle2.append(status);
@@ -87,9 +87,9 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       var table = $("<table class='signatories-box' style='float: right;' />");
       var tbody = $("<tbody/>");
       var tr = $("<tr style='height: 220px;'/>");
-      var td1 = $("<td class='signatory-box' style='width: 330px;' />");
+      var td1 = $("<td class='signatory-box' style='width: 300px;' />");
       var tdseparator = $("<td class='signatory-box-separator'/>");
-      var td2 = $("<td class='signatory-box'/>");
+      var td2 = $("<td class='signatory-box' style='width: 300px;' />");
       var box1 = $('<div class="column spacing" style="width: 95%;" />');
       var box2 = $('<div class="column spacing" />');
       table.append(tbody.append(tr.append(td1.append(box1)).append(tdseparator).append(td2.append(box2))));

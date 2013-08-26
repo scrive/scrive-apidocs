@@ -1,8 +1,10 @@
 @import 'branding/colors';
+@import 'branding/elements';
+@import 'designview/util';
 
 .authorview {
 
-  background: #f8f8f8;
+  background: @grey-background;
 
   .signatories-box {
     margin-right: 36px;
@@ -12,16 +14,27 @@
       width : 1018px;
       margin: 0 auto;
       .headline {
-        background-color: #f3f3f3;
-        border: 1px solid #868686;
-        color: black;
-        font-size: 16px;
+        background-color: @slightly-darker-grey-background;
+        border: 1px solid @dark-border;
+        color: #333;
+        font-size: 20px;
         line-height: 18px;
-        margin: 15px 0px 20px;
+        margin: 15px 0px 25px;
         padding: 22px;
         text-align : center;
       }
 
+      .document-history-container {
+        box-sizing: border-box;
+        border: 1px solid @dark-border;
+      }
+
+      .table > table {
+        border: none;
+        thead > tr {
+          border-top: none;
+        }
+      }
   }
 
   .titlebox {
@@ -43,7 +56,7 @@
     .duedate {
         font-weight: normal;
         display: block;
-        margin-bottom : 30px;
+        margin-bottom : 28px;
     }
 
     a.download {
@@ -52,16 +65,8 @@
         font-weight: normal;
     }
     .buttonbox {
-      margin: 40px auto 0;
+      margin: 32px auto 0;
       text-align : center;
-      .button {
-        display : inline-block;
-        min-width: 200px;
-        margin-left: 10px;
-        margin-right : 10px;
-        font-size: 18px;
-        height: 30px;
-      }
     }
   }
 
@@ -69,19 +74,20 @@
       padding-top: 20px;
       margin-left: auto;
       margin-right: auto;
-      border: 1px solid #868686;
+      border: 1px solid @dark-border;
       clear: both;
       background-color: white;
       overflow: hidden;
       margin-top: 17px;
       width: 1018px;
+      box-sizing: border-box;
       h2 {
           float: left;
           width: 260px;
           margin-bottom: 20px;
           color: black;
           padding-left: 30px;
-          font-size: 16px;
+          font-size: 20px;
           font-weight: 300;
         }
     }
@@ -118,11 +124,12 @@
           margin-top: 0px;
       }
 
-      padding-bottom: 35px;
-      padding-top: 35px;
+      padding-bottom: 30px;
+      padding-top: 30px;
 
       td.signatory-box {
-          border: solid #575756 1px;
+          border: solid @dark-border 1px;
+          background: @grey-background;
           vertical-align : top;
       }
       td.signatory-box-separator {
@@ -142,19 +149,20 @@
           font-size: 16px;
           height: 19px;
           padding-left: 10px;
-          padding-top: 6px;
+          margin-top: -2px;
+          margin-bottom: -2px;
       }
 
       .company {
-          font-size: 16px;
-          line-height: 35px;
+          font-size: 14px;
+          margin-bottom: 5px;
       }
 
       .inner {
           margin-top: 10px;
           min-height: 75px;
           color : #505050;
-          border-top: 1px dashed;
+          border-top: 1px dashed #ccc;
 
           &.spacing {
             padding-top: 20px;
@@ -175,22 +183,21 @@
           height: 16px;
           font-size: 14px;
           line-height: 15px;
-          width: 160px;
+          width: 200px;
           text-overflow: ellipsis;
           white-space: nowrap;
           overflow:hidden;
           margin-bottom: 5px;
       }
       .statustext {
-          font-size: 13px;
-          font-style: italic;
+          font-size: 14px;
       }
       .statusbox {
-          border-top: 1px dashed;
+          border-top: 1px dashed #ccc;
           font-size: 13px;
           vertical-align: middle;
           line-height: 13px;
-          margin-top: 40px;
+          margin-top: 29px;
       }
 
       .statusbox .spacing {
@@ -208,6 +215,7 @@
           overflow: hidden;
           height: 15px;
           width: 100%;
+          margin-left: 10px;
       }
 
       .line .middle {
@@ -232,10 +240,10 @@
         }
       }
      .optionbox {
-        padding: 8px 0px 0px 18px;
+        padding: 12px 0px 2px 18px;
         height : 40px;
-        border-top: 1px dashed;
-        margin-top: 16px;
+        border-top: 1px dashed #ccc;
+        margin-top: 15px;
 
         .change-email-box {
             display: inline-block;
@@ -301,6 +309,7 @@
      }
 
   }
+
   .signatoryattachments {
 
     .item {
@@ -328,5 +337,16 @@
       }
     }
 
+  }
+
+  .subcontainer .document-pages .pagediv {
+    margin-top: 25px;
+    border: 1px dashed @dark-border;
+    padding: 35px;
+    .box-shadow(none);
+    .border-radius(16px,16px,16px,16px);
+    .pagejpg {
+      .box-shadow(0 0 5px #aaa);
+    }
   }
 }

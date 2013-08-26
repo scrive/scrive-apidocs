@@ -110,7 +110,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return new Button({
       size: "big",
       shape: "rounded",
-      color: "blue",
+      color: "light-blue",
       text: localization.process.cancelbuttontext,
       cssClass: "s-withdraw-button",
       onClick: function() {
