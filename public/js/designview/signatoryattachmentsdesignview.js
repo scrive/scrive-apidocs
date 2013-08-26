@@ -141,7 +141,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         td3.append(selectSignatory);
 
         var td4 = $("<td class='editSignatoryAttachmentTDRemove'>");
-        var removeIcon = $("<div class='removeSignatoryAttachmentIcon'>");
+        var removeIcon = $("<div class='removeSignatoryAttachmentIcon'>X</div>");
         removeIcon.click(function() {
             attachments.removeAttachment(attachment);
             mixpanel.track('Remove sig attachment');
