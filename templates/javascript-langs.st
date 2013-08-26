@@ -428,6 +428,7 @@ javascriptLocalisation =
              , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
              , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
+	     , signOrRejectTitle: "$_signOrRejectTitle()$"
              , newAccountTitle: "$_signViewCreateAccountTitle()$"
              , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
              , emailLabel: "$_email()$"

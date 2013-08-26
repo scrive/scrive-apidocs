@@ -186,6 +186,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        var model = this.model;
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
+       box.append($('<h2>' + localization.docsignview.signOrRejectTitle + '</h2>'));
        var signatory = document.currentSignatory();
        var sps = {};
        sps['Has user?'] = signatory.hasUser();
