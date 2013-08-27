@@ -7,7 +7,6 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
     <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
-    <script src="$homebase$/js/docsignviewpromotescrive.js"></script>
       </head>
   <body>
     $if(usestandardheaders)$
