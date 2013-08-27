@@ -502,7 +502,7 @@ handlePostSignSignup ctx email fn ln cnm cnr = do
       -- this email address is new to the system, so create the user
       -- and send an invite
       company <- dbUpdate $ CreateCompany
-      Log.debug $ "Creaging company " ++ cnm ++ " " ++ cnr
+
       _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
                     companyname = cnm
                   , companynumber = cnr
