@@ -12,8 +12,8 @@ cabal-dev --sandbox="$1" install --only-dependencies --force-reinstalls
 cabal-dev --sandbox="$1" configure -ftest-coverage
 
 if [ "$TEAMCITY_VERSION" = "" ]; then
-  cabal-dev --verbose=3 --sandbox="$1" build
+  cabal-dev --sandbox="$1" build
 else
-  cabal-dev --verbose=3 --sandbox="$1" build 2>&1 | runghc build-scripts/Teamcity.hs ghc
+  cabal-dev --sandbox="$1" build 2>&1 | runghc build-scripts/Teamcity.hs ghc
   exit "${PIPESTATUS[0]}"
 fi
