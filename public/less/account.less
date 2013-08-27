@@ -5,6 +5,12 @@
     font-size: 15px;
 }
 
+.account {
+    .tab-viewer-header .tabs li.active > h5{
+        font-weight: 400;
+    }
+}
+
 .account input.emailinput[type="text"],
 .account input.newpassword[type="text"] {
     width: 125px;
@@ -15,7 +21,7 @@
 }
 .account input[type="text"],
 .account input[type="password"] {
-    width: 220px;
+    width: 225px;
     height: 26px;
     font-weight: 300;
 }
@@ -64,9 +70,10 @@
     width: 385px;
 }
 
-.account > .col.float-right {
-   float: right;
-
+.account {
+   .col.float-right, .col.float-left {
+     margin: 0;
+   }
 }
 
 .account-header {

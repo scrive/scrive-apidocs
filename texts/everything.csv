@@ -309,6 +309,7 @@
 "_sendReminder","Skicka påminnelse","Send reminder"
 "_setAllFields","Var vänlig namnge alla skapade fält","Please name all created fields"
 "_share","Dela","Share"
+"_shared","Delad","Shared"
 "_bankidInvalidParameters","Ogiltigt personnummer","Invalid personal ID number"
 "_bankidInternalError","Tekniskt fel. Vänligen försök igen.","Technical error. Please try again."
 "_bankidUnknownUser","Den e-legitimation du valde går inte att använda. Välj att använda en annan e-legitimation eller kontakta din bank för att beställa ett nytt.","The e-ID you chose cannot be used. Choose to use a different e-ID or contact your bank to order a new e-ID."
