@@ -8,16 +8,15 @@ import DB.Derive
 import Utils.Enum
 import Utils.Read
 
-{-# LANGUAGE CPP #-}
 instance FromReqURI SignatureProvider where
     fromReqURI = maybeRead
 
 instance Read SignatureProvider where
-    readsPrec _ "bankid" = [(BankIDProvider,"")]
-    readsPrec _ "telia"  = [(TeliaProvider,"")]   
-    readsPrec _ "nordea" = [(NordeaProvider,"")]
+    readsPrec _ "bankid"       = [(BankIDProvider,"")]
+    readsPrec _ "telia"        = [(TeliaProvider,"")]
+    readsPrec _ "nordea"       = [(NordeaProvider,"")]
     readsPrec _ "mobilebankid" = [(MobileBankIDProvider,"")]
-    readsPrec _ _        = []
+    readsPrec _ _              = []
 
 instance SafeEnum SignatureProvider where
     fromSafeEnum BankIDProvider = 6
