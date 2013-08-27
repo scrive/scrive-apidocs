@@ -411,21 +411,16 @@
     background-repeat: no-repeat;
     overflow: hidden;
     margin-top: 17px;
-
-    width: 924px;
+    width: 883px;
     margin-left: auto;
     margin-right: auto;
+    &.highlight {
+	border: 2px solid @green;
+	box-shadow:none;
+    }
   }
 
-  .section.highlight {
-    border: 2px solid @green;
-    padding: 15px;
-    background-image: none;
-    width: 916px;
-    margin-left: auto;
-    margin-right: auto;
-    box-shadow:none;
-  }
+  .section
 
   .signatoryattachments .list {
     float: left;
@@ -534,54 +529,63 @@
   .signatories .list .sig .statustext {
       width: 124px;
       float: left;
-      font-size: 13px;
+      font-size: 14px;
       vertical-align: middle;
       line-height: 13px;
   }
 
 
-  .signatories .column {
-      width: 260px;
-      float: left;
-      border: solid #bababc 1px;
-      min-height: 185px;
-  }
+  .signatories {
+      .columns-container {
+	  float: right;
+      }
+      .column {
+	  vertical-align:top;
+	  width: 260px;
+	  display:inline-block;
+	  border: solid #bababc 1px;
+	  min-height: 196px;
+	  background-color: @grey-background;
+	  padding: 15px;
+	  &.first-column {
+	      margin-right: 20px;
+	  }
+      }
 
-  .signatories .name {
-      color: black;
-      font-size: 16px;
-      height: 19px;
-  }
+      .name {
+	  font-size: 16px;
+	  height: 19px;
+      }
 
-  .signatories .company {
-      color: black;
-      height: 14.5px;
-  }
+      h2 {
+	  display:inline-block;
+      }
 
-  .signatories .face {
-      background-image: url('../img/missing-portrait.png');
-      background-size: cover;
-      width: 60px;
-      height: 50px;
-      float: left;
-  }
+      .inner {
+	  min-height: 72px;
+	  color : #505050;
+	  border-top: 1px dashed #ccc;
+	  .email:hover{
+	      overflow: visible;
+	  }
+      }
 
-  .signatories .inner {
-      margin-top: 10px;
-      min-height: 72px;
-      color : #505050;
-  }
-  .signatories .inner .email:hover{
-          overflow: visible;
-  }
+      .details {
+	  padding: 10px;
+	  font-size: 14px;
+      }
 
-  .signatories .details {
-      float:left;
-      padding: 0px;
-      margin-top: -3px;
-      margin-left: 12px;
+      .statusbox {
+	  border-top: 1px dashed #ccc;
+	  font-size: 13px;
+	  line-height: 11px;
+	  padding:10px;	  
+	  .spacing {
+	      margin-left: auto;
+	      margin-right: auto;
+	  }
+      }
   }
-
   .field {
       height: 18px;
       line-height:16px;
@@ -592,19 +596,8 @@
       margin-bottom: 3px;
   }
 
-  .signatories .statusbox {
-      border-top: 1px dashed;
-      text-align: center;
-      font-size: 13px;
-      vertical-align: middle;
-      line-height: 11px;
-      padding-top:1px;
-
-  }
-
-  .signatories .statusbox .spacing {
-      margin-left: auto;
-      margin-right: auto;
+  .icon.status {
+      padding-top: 1px;
   }
 
   .signatories .statusbox .icon.status {
@@ -629,17 +622,10 @@
 
   .rejectwrapper {
     float: left;
-    margin-left: 30px;
-  }
-
-  .rejectwrapper a.btn-big.red .label {
-    padding-left: 10px;
-    padding-right: 10px;
   }
 
   .signwrapper {
     float: right;
-    margin-right: 30px;
   }
 
   .pagefooter {
@@ -691,18 +677,16 @@
     text-decoration: none;
   }
 
-  div.spacing {
-      padding: 8px;
-  }
-
-
-  .sig.first {
-      margin-top: 0px;
-      padding-top: 0px;
-  }
-
   .sig {
-      margin-top: 4px;
+      &.first {
+	  margin-top: 0px;
+	  padding-top: 0px;
+      }
+      &:last-child {
+	  border-bottom:none;
+      }
+      padding: 10px;
+      border-bottom: 1px dashed #ccc;
   }
 
   .sig .name {
@@ -713,19 +697,10 @@
       margin-top: 0px;
   }
 
-  .column.spacing {
-      margin-right: 20px;
-  }
-
   .section.spacing {
-      padding: 15px;
+      padding: 30px;
   }
 
-  .section.signatories {
-      padding-top: 20px;
-      margin-left: auto;
-      margin-right: auto;
-  }
 
   .signatoryattachments {
       padding-top: 20px;
@@ -765,13 +740,6 @@
     }
   }
 
-  .signbuttons.section {
-      padding-top: 35px;
-      padding-bottom:35px;
-      h2 {
-	  margin-left:30px;
-      }
-  }
 
   .section {
     box-shadow: 1px 1px 5px #505050;
@@ -805,6 +773,7 @@
       overflow: hidden;
       height: 15px;
       width: 100%;
+      margin-top:7px;
   }
 
   .line .middle {
@@ -812,40 +781,37 @@
       vertical-align: middle;
   }
 
-  .extradetails .title {
-    float: left;
-    width: 260px;
+  .titleinfo {
+      padding: 10px;
   }
 
-  .extradetails .descriptionbox {
-    float: left;
-    width: 260px;
+  .extradetails {
+      .title {
+	  float: left;
+	  width: 260px;
+      }
+
+      .descriptionbox {
+	  float: left;
+	  width: 260px;
+      }
+
+      .fillbox {
+	  float: right;
+	  width: 260px;
+	  .info-text-input{
+	      border-radius: 4px;
+	      padding: 8px;
+	      width: 248px;
+	  }
+	  .signatureBox.withImage {
+	      border: 1px solid #C6DADE;
+	      border-radius: 4px 4px 4px 4px;
+	      padding: 2px;
+	      margin-top: 5px;
+	  }
+      }
   }
-
-  .extradetails .fillbox {
-    float: left;
-    width: 260px;
-  }
-
-  .extradetails div.spacing{
-    padding-top: 0px;
-  }
-
-  .extradetails .fillbox .info-text-input{
-      border-radius: 4px 4px 4px 4px;
-      margin: 5px auto;
-      padding: 8px;
-      width: 248px;
-
-  }
-
-  .extradetails .fillbox .signatureBox.withImage {
-      border: 1px solid #C6DADE;
-      border-radius: 4px 4px 4px 4px;
-      padding: 2px;
-      margin-top: 5px;
-  }
-
   .section.highlight.extradetails {
       padding-bottom: 35px;
       padding-top: 35px;
