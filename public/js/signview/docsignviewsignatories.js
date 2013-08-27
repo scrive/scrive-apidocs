@@ -147,37 +147,25 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       name.css(this.textstyle);
       var company   = $('<div class="company" />').text(signatory.company());
       company.css(this.textstyle);
-      titleinfo.append(name).append(company);
+      titleinfo.append(name)
+
       box.append(titleinfo);
 
       var inner   = $('<div class="inner spacing" />');
 
-      var face    = $('<div class="face" />');
-
       var numspace = $('<div class="details" />');
       numspace.css(this.textstyle);
-      var orgnumtext = signatory.companynumber().trim();
-      var orgnum = null;
-      if( orgnumtext ) {
-          orgnum = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": " + orgnumtext)
-              .attr('title', signatory.companynumber());
-      }
-      var persnumtext = signatory.personalnumber().trim();
-      var persnum = null;
-      if( persnumtext ) {
-          persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": " + persnumtext)
-              .attr('title', signatory.personalnumber());
-      }
+      numspace.append(company);
 
-      if( orgnum ) {
-          numspace.append(orgnum);
-      }
-      if( persnum ) {
-          numspace.append(persnum);
-      }
+      var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": "
+                                                           + (signatory.companynumber().trim() || localization.docsignview.notEntered))
+          .attr('title', signatory.companynumber());
+      var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": "
+                                                            + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
+        .attr('title', signatory.personalnumber());
 
       if (signatory.email() != '') {
-        var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+        var email   = $('<div class="email field" />').text(localization.email + ": " + signatory.email()).attr('title', signatory.email());
         numspace.append(email);
       }
 
@@ -187,7 +175,8 @@ var DocumentSignSignatoryView = Backbone.View.extend({
         numspace.append(mobile);
       }
 
-      inner.append(face);
+      numspace.append(orgnum);
+      numspace.append(persnum);
 
       inner.append(numspace);
       box.append(inner);
@@ -213,10 +202,12 @@ var DocumentSignSignatoriesView = Backbone.View.extend({
       var header = $("<h2 />");
       header.css(this.model.textstyle());
       box.append(header.text(localization.docsignview.signatoriesTitle));
-      var box1 = $('<div class="column spacing" />');
+    
+      var box1 = $('<div class="column spacing first-column" />');
       var box2 = $('<div class="column spacing" />');
-
-      box.append(box1).append(box2);
+      var columnsContainer = $('<div class="columns-container"></div>');
+      box.append(columnsContainer);
+      columnsContainer.append(box1).append(box2);
 
       var sigbox = view.model;
 
