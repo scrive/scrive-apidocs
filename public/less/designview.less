@@ -73,24 +73,6 @@
       display: block;
       float: left;
     }
-    .setRole{
-        background-image: url("/img/iconMan.png");
-        background-repeat: no-repeat;
-        margin-top: 3px;
-        height: 16px;
-        width: 16px;
-        display: block;
-        float: left;
-        border-style: solid;
-        border-width: 1px;
-        border-color: transparent;
-        border-radius: 1px 1px 0 0;
-        &.selected{
-          border-color: #BDBDBD #BDBDBD transparent #BDBDBD;
-          position: relative;
-          z-index: 10;
-        }
-    }
 
     .selectSignOrder{
         background: none repeat scroll 0 0 #FFFFFF;
@@ -123,35 +105,6 @@
     }
 
   }
-
-  .setRoleBox{
-    background-color: white;
-    border: 1px solid #BDBDBD;
-    border-radius: 3px 3px 3px 3px;
-    height: 120px;
-    padding: 8px;
-    position: absolute;
-    width: 340px;
-    margin-top: -9px;
-    label {
-      margin-left : 5px;
-      margin-top: 8px;
-      min-width: 200px;
-    }
-    .close{
-      float:right;
-      margin: 5px;
-      z-index : 1000;
-      background: url("../img/spr-btn-close.png") no-repeat scroll 0 0 transparent;
-      display: block;
-      height: 24px;
-      width: 24px;
-      &:hover{
-        background-position: 0px -24px
-      }
-    }
-  }
-
 
   .fields {
     float: left;
@@ -529,10 +482,6 @@ th.editSignatoryAttachmentTDRemove{
     border-bottom: none;
 }
 
-.setRoleBox .option .radio {
-    margin-top:   -2px;
-    margin-right: 5px;
-}
 .csvDataTable{
   min-width: 600px;
   margin: auto;
