@@ -239,7 +239,7 @@ public class PDFSeal {
         throws IOException, DocumentException
     {
         Document document = new Document();
-        PdfCopy writer = new PdfSmartCopy(document, os);
+        PdfCopy writer = new PdfCopy(document, os);
         document.open();
 
         for(PdfReader reader: sources) {
