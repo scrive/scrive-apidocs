@@ -201,8 +201,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     var signatory = this.model.signatory();
     var container = $("<div class='change-email-box'/>");
     var fstbutton = new Button({
-                            size: "tiny",
-                            color: "blue",
+                            color: "black",
                             text: localization.changeEmail,
                             onClick: function() {
                                 mixpanel.track('Click change email',
@@ -233,8 +232,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     var signatory = this.model.signatory();
     var container = $("<div class='change-email-box'/>");
     var fstbutton = new Button({
-                            size: "tiny",
-                            color: "blue",
+                            color: "black",
                             text: localization.changePhone,
                             onClick: function() {
                                 mixpanel.track('Click change phone',
@@ -264,7 +262,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model.signatory();
                  var button = new Button({
-                            color: "blue",
+                            color: "black",
                             text: localization.changePhone,
                             onClick: function() {
                                  mixpanel.track('Click give for signing',
@@ -297,8 +295,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     removeFromPadQueueOption :  function() {
         var signatory = this.model.signatory();
         var button = new Button({
-                    size: "tiny",
-                    color: "blue",
+                    color: "black",
                     text: localization.pad.removeFromPadQueue,
                     onClick: function() {
                         mixpanel.track('Click remove from pad queue',
@@ -315,8 +312,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                  var text = localization.pad.addToPadQueue;
                  var textbox = $("<span/>").text(text);
                  var button = new Button({
-                    size: "tiny",
-                    color: "blue",
+                    color: "black",
                     text: localization.pad.addToPadQueue,
                     onClick: function() {
                          mixpanel.track('Click add to pad queue',
@@ -364,7 +360,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       box.addClass('sigbox');
       var signatory = this.model.signatory();
       var titleinfo = $('<div class="titleinfo spacing" />');
-      var name      = $('<div class="name" />').text(signatory.name());
+      var name      = $('<div class="name" />').text(signatory.nameOrEmailOrMobile());
       titleinfo.append(name);
       box.append(titleinfo);
 
@@ -378,7 +374,6 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": "
                                                             + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
         .attr('title', signatory.personalnumber());
-      var contactspace = $('<div class="spacing contactspace" />');
 
       numspace.append(company);
 
@@ -396,7 +391,6 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       numspace.append(persnum);
 
       inner.append(numspace);
-      inner.append(contactspace);
       box.append(inner);
       box.append(this.statusbox());
       if (this.model.hasAnyOptions())

@@ -187,7 +187,14 @@ window.DocumentSignSignSection = Backbone.View.extend({
        var model = this.model;
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
-       box.append($('<h2>' + localization.docsignview.signOrRejectTitle + '</h2>'));
+  
+       if(model.hasRejectOption()) {
+           var headerTitle = localization.docsignview.signOrRejectTitle;
+       } else {
+	   var headerTitle = localization.docsignview.onlySignTitle;
+       }
+       box.append($('<h2>' + headerTitle + '</h2>'));
+
        var signatory = document.currentSignatory();
        var sps = {};
        sps['Has user?'] = signatory.hasUser();
@@ -219,8 +226,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
          }
        };
        this.rejectButton = new Button({
-                                        size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
-                                        color: "red",
+                                        size: "big",
+                                        color: "blue",
                                         shape : "rounded",
                                         width: 206,
                                         text: localization.process.rejectbuttontext,
@@ -252,9 +259,9 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         }
                                 });
        this.signButton = new Button({
-                            size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
+                            size: "big",
                             shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
-                            color: "blue",
+                            color: "green",
                             width: BrowserInfo.isSmallScreen() ?  404 : 206,
                             text: localization.process.signbuttontext,
                             icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),

@@ -44,7 +44,7 @@
     margin-left: auto;
     margin-right: auto;
     .headline {
-      color: black;
+      color: #4A4A49;
       font-size: 24px;
       font-weight: 400;
     }
@@ -78,14 +78,14 @@
       clear: both;
       background-color: white;
       overflow: hidden;
-      margin-top: 17px;
+      margin-top: 35px;
       width: 1018px;
       box-sizing: border-box;
       h2 {
           float: left;
           width: 260px;
           margin-bottom: 20px;
-          color: black;
+          color: @dark-text;
           padding-left: 30px;
           font-size: 20px;
           font-weight: 300;
@@ -97,7 +97,7 @@
   }
 
   .subcontainer {
-      margin-bottom: 20px;
+      margin-bottom: 35px;
   }
 
   .subcontainer .signatories {
@@ -119,41 +119,49 @@
           margin-top: 4px;
       }
 
-      .sig .name {
-          margin-bottom: 2px;
-      }
-
-      .sig .name.first {
-          margin-top: 0px;
+      .inner .details, .titleinfo, .statusbox, .optionbox {
+	  padding:10px;
       }
 
       padding-bottom: 30px;
       padding-top: 30px;
 
-      td.signatory-box {
+      .signatory-box {
           border: solid @dark-border 1px;
           background: @grey-background;
-          vertical-align : top;
+          vertical-align: top;
+	  padding: 15px;
+	  min-width:269px;
       }
-      td.signatory-box-separator {
+
+      .signatory-box-separator {
           width: 20px;
       }  
+
       .column {
           display: inline-block;
-          width: 270px;
+          width: 100%;
           min-height: 125px;
           &.spacing {  
             margin-right: 0px;
           }
+	  .sig {
+	      &:first-child {
+		  padding-top:0px;
+	      }
+	      padding: 10px;
+	      border-bottom: 1px dashed #ccc;
+	      &:last-child {
+		  padding-bottom:0px;
+		  border-bottom:none;
+	      }
+	  }
+
       }
 
       .name {
-          color: black;
+          color: @text-dark;
           font-size: 16px;
-          height: 19px;
-          padding-left: 10px;
-          margin-top: -2px;
-          margin-bottom: -2px;
       }
 
       .company {
@@ -162,24 +170,13 @@
       }
 
       .inner {
-          margin-top: 10px;
           min-height: 75px;
           color : #505050;
           border-top: 1px dashed #ccc;
-
-          &.spacing {
-            padding-top: 20px;
-          }
       }
+
       .inner .email:hover{
               overflow: visible;
-      }
-
-      .details {
-          float:left;
-          padding: 0px;
-          font-size: 14px;
-          padding-left: 10px;
       }
 
       .field {
@@ -199,34 +196,29 @@
           border-top: 1px dashed #ccc;
           font-size: 13px;
           vertical-align: middle;
-          line-height: 13px;
-          margin-top: 29px;
-      }
-
-      .statusbox .spacing {
-          padding-left: 18px;
-          padding-top: 18px;
       }
 
       .statusbox .icon.status {
           display: inline-block; 
           float: none;
           margin-top: 1px;
-      }
-      .line {
-          display: table;
-          overflow: hidden;
-          height: 15px;
-          width: 100%;
-          margin-left: 10px;
+	  margin-right:10px;
       }
 
-      .line .middle {
-          display: table-cell;
-          vertical-align: middle;
-          a {
-            cursor: pointer;
-          }
+      .line {
+          overflow: hidden;
+	  margin-top: 2px;
+	  .middle {
+	      display:inline-block;
+              a {
+		  cursor: pointer;
+              }
+	  }
+	  .details {
+              font-size: 14px;
+	      float:right;
+	  }
+
       }
 
       .signatory {
@@ -243,10 +235,8 @@
         }
       }
      .optionbox {
-        padding: 12px 0px 2px 18px;
         height : 40px;
         border-top: 1px dashed #ccc;
-        margin-top: 15px;
 
         .change-email-box {
             display: inline-block;
@@ -320,7 +310,7 @@
       margin-right  : 10px;
       .name {
         font-weight: bold;
-        color: black;
+        color: @dark-text;
       }
     }
 
@@ -342,14 +332,18 @@
 
   }
 
-  .subcontainer .document-pages .pagediv {
-    margin-top: 25px;
-    border: 1px dashed @dark-border;
-    padding: 35px;
-    .box-shadow(none);
-    .border-radius(16px,16px,16px,16px);
-    .pagejpg {
-      .box-shadow(0 0 5px #aaa);
-    }
+  .document-pages {
+      margin: 25px auto 0 auto;
+      width: 943px;
+      padding: 35px;
+      border: 1px dashed #cccccc;
+      border: 1px dashed @dark-border;
+      .border-radius(5px, 5px, 5px, 5px);
+      .pagediv {
+	  &#page1 {
+	      margin-top:0px;
+	  }
+	  margin-top:35px;
+      }
   }
 }
