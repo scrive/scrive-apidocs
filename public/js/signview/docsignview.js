@@ -455,7 +455,10 @@ var DocumentSignViewView = Backbone.View.extend({
          || this.model.hasSignSection())
      {
         if (this.subcontainer != undefined) this.subcontainer.detach();
-        this.subcontainer = $("<div class='subcontainer'/>").appendTo(this.container);
+
+        var subcontainerWrapper = $("<div class='subcontainerWrapper'/>").appendTo(this.container);
+        
+        this.subcontainer = $("<div class='subcontainer'></div>").appendTo(subcontainerWrapper);
 
         if (this.model.hasMainFileSection())
             this.subcontainer.append(this.model.mainfile().view.el);
