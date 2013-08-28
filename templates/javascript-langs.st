@@ -470,6 +470,7 @@ javascriptLocalisation =
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
            , vat: "$_paymentsVat()$"
+           , maxUsers: "$_paymentsMaxUsers()$"
            , vat25: "$_paymentsVat25()$"
            , expires: "$_paymentsExpires()$"
            , creditcardnumber: "$_paymentsCreditCardNumber()$"
@@ -483,13 +484,13 @@ javascriptLocalisation =
                       team         : {
                       name : "$_paymentPlanTeam()$",
                       tag :"$_paymentPlanTeamTag()$",
-                      price : "$_paymentsTeamPrice()$<span class='aster'>*</span>",
+                      price : "$_paymentsTeamPrice()$",
                       price3 : "$_paymentPlanPerUserPerMonth()$"
                     }
                     , form : {
                       name : "$_paymentPlanForm()$",
                       tag : "$_paymentPlanFormTag()$",
-                      price : "$_paymentPlanFormPrice()$<span class='aster'>*</span>",
+                      price : "$_paymentPlanFormPrice()$",
                       price3 : "$_paymentPlanPerMonthPerDoc()$"
                     }
                     , enterprise : {

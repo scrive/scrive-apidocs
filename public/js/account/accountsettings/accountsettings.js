@@ -289,7 +289,6 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.phone + ':'))).append($("<td/>").append(phoneinput)));
 
-
       var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
       companynameinput.change(function() {
           model.setCompanyname(companynameinput.val());

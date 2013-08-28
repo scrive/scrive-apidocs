@@ -6,8 +6,9 @@ nicemail=
         <!-- // Begin Template Header \\ -->
         <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader" style="background-color: transparent; border-bottom: 0;">
           <tr>
-            <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle">
+            <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle" >
               <!-- // Begin Module: Standard Header Image \\ -->
+              $if(logo)$
               <table>
                 <tr>
                   <td style="padding-top: 48px; padding-bottom: 24px;">
@@ -15,6 +16,7 @@ nicemail=
                   </td>
                 </tr>
               </table>
+              $endif$
               <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
@@ -31,40 +33,7 @@ nicemail=
 
           <tr>
             <td align="center" valign="top">
-              <!-- // Begin Template Body Top \\ -->
-
-              <table border="0" cellpadding="40" cellspacing="0"width="600" id="templateTop" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid;">
-                <tr>
-                  <td valign="top" class="topContent">
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%" $if(ispreview)$style="border-collapse: separate; border-spacing: $borderspacing()$"$endif$>
-                      <tr>
-                        <td valign="top">
-                          <div>
-                            <table>
-                              <tr>
-                                <td>
-                                  <span class="h1" style="color: $if(!textcolor)$#364963$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 28px; line-height: 120%; margin-bottom: 8px; text-align: left">
-                                    $if(mailheader)$ $mailheader$ $endif$
-                                  </span>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <a style="text-decoration: none;" href="$ctxhostpart$">
-                                    <span class="h3" style="color: $if(!textcolor)$#7a94b8$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left">
-                                      $_poweredByScrive()$
-                                    </span>
-                                  </a>
-                                </td>
-                              </tr>
-                            </table>
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table><!-- // Begin Template Body \\ -->
+              <!-- // Begin Template Body \\ -->
 
               <table border="0" cellpadding="0" cellspacing="40" width="600" id="templateBody" style="border-bottom-color: $nicemailbordercolour()$; border-bottom-width: 1px; border-bottom-style: solid; $if(ispreview)$border-collapse: separate; border-spacing: $borderspacing()$$endif$">
                 <tr>
@@ -78,7 +47,7 @@ nicemail=
                             $if(previewLink)$
                               <table>
                                 <tr>
-                                  <td>
+                                  <td valign="top" style="vertical-align: top;">
                                     <table>
                                       <tr>
                                         <td style="height: 106px; color: #333; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; line-height: 0; text-align: left; border:1px solid #dee4ed; width: 150px;">
@@ -165,7 +134,7 @@ nicemailbgcolour=$if(!background)$#FFFFFF$else$$background$$endif$
 #####
 nicemailfgcolour=$if(!textcolor)$#333333$else$$textcolor$$endif$
 #####
-nicemaillogo=$if(!logo)$$ctxhostpart$/img/logo_email.png$else$$ctxhostpart$$logoLink$$endif$
+nicemaillogo=$ctxhostpart$$logoLink$
 #####
 nicemailbordercolour=$if(!bordercolour)$#dee4ed$else$$bordercolour$$endif$
 #####
@@ -211,4 +180,11 @@ nicebutton=
 </table>
 ####
 buttonborder=$if(skipbuttonborder)$$buttoncolour$$else$#CCCCCC$endif$
+####
+poweredByScrive=
+<a style="text-decoration: none;" href="$ctxhostpart$">
+  <span class="h3" style="color: $if(!textcolor)$#7a94b8$else$$textcolor$$endif$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left; margin-left: 10px;">
+    $_poweredByScrive()$
+  </span>
+</a>
 ####

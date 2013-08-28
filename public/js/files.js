@@ -348,12 +348,13 @@ var FileView = Backbone.View.extend({
     readyFirstPage : function () {
         return this.pageviews.length > 0 && this.pageviews[0].ready();
     },
-    moveCoordinateAxes : function(helper,verticaloffset) {
+    moveCoordinateAxes : function(helper,verticaloffset, xAxisOffset, yAxisOffset) {
       var self = this;
       _.defer(function() {
-
         var top = helper.offset().top - $(self.el).offset().top + helper.outerHeight() + verticaloffset;
+        top -= yAxisOffset || 0;
         var left = helper.offset().left - $(self.el).offset().left;
+        left += xAxisOffset || 0;
         var height = $(self.el).height();
         var width = $(self.el).width();
         self.hline().css({ top: top + "px",
@@ -362,11 +363,11 @@ var FileView = Backbone.View.extend({
                            height: height + "px"});
       });
     },
-    showCoordinateAxes : function(helper,verticaloffset) {
+    showCoordinateAxes : function(helper, verticaloffset, xAxisOffset, yAxisOffset) {
         var view = this;
         this.hline().show();
         this.vline().show();
-        this.moveCoordinateAxes(helper,verticaloffset);
+        this.moveCoordinateAxes(helper, verticaloffset, xAxisOffset, yAxisOffset);
     },
 
     hideCoordinateAxes : function() {
