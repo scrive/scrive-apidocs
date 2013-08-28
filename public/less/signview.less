@@ -551,12 +551,22 @@
 
   .signatories {
       .columns-container {
-	  float: right;
+	  float:right;
+	  display:inline-block;
+	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
+	  *display: inline;
+	  zoom: 1;
+	  // END - hack
+	  
       }
       .column {
 	  vertical-align:top;
 	  width: 260px;
 	  display:inline-block;
+	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
+	  *display: inline;
+	  zoom: 1;
+	  // END - hack
 	  border: solid #bababc 1px;
 	  min-height: 196px;
 	  background-color: @grey-background;
@@ -572,7 +582,7 @@
       }
 
       h2 {
-	  display:inline-block;
+	  float:left;
       }
 
       .inner {
