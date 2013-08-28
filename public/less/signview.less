@@ -28,14 +28,19 @@
     .content {
       margin: auto;
       width: 1018px;
-      padding-top: 10px;
-      padding-bottom: 10px;
       height: 120px;
       display: table;
       overflow: hidden;
       .sender {
+	  float:right;
+	  display:inline-block;
+	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
+	  *display: inline;
+	  zoom: 1;
+	  // END - hack
+	  margin-top:45px;
+
           text-align: right;
-          display: table-cell;
           vertical-align: middle;
           color: #333333;
           .name,.phone  {
@@ -45,6 +50,13 @@
       }
     }
     .logowrapper {
+	float:left;
+	display:inline-block;
+	// IE7 hack - http://stackoverflow.com/a/6545033/337587
+	*display: inline;
+	zoom: 1;
+	// END - hack
+	margin-top:45px;
     }
     div.logo {
       background: url(../img/logo-white-bg.png);
@@ -734,12 +746,6 @@
   .signatoryattachments .buttonbox {
       float: left;
       margin-left: 10px;
-  }
-
-
-  .logowrapper {
-      display: table-cell;
-      vertical-align: middle;
   }
 
   .sender .inner {
