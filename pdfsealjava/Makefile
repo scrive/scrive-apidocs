@@ -44,3 +44,13 @@ test-pdfs/incorrect-ID-length.json : test-pdfs/incorrect-ID-length.pdf example_s
 	echo ' "output": "test-pdfs/incorrect-ID-length-output.pdf",' >> $@
 	tail -n +3 example_spec.json >> $@
 	head -n 10 $@
+
+test-pdfs/broken-fonts-output.pdf : test-pdfs/broken-fonts.json test-pdfs/broken-fonts.pdf pdfseal.jar itextpdf-5.4.2.jar
+	java -jar pdfseal.jar $<
+	open $@
+
+test-pdfs/broken-fonts.json : test-pdfs/broken-fonts.pdf example_spec.json
+	echo '{"input": "'$<'",' > $@
+	echo ' "output": "test-pdfs/broken-fonts-output.pdf",' >> $@
+	tail -n +3 example_spec.json >> $@
+	head -n 10 $@
