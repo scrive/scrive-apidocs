@@ -17,7 +17,7 @@ module Doc.DocView (
   , gtVerificationPage
   ) where
 
-import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage)
+import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage, renderFromBody)
 import Company.Model
 import Company.CompanyUI
 import Doc.DocStateData
@@ -52,6 +52,7 @@ import qualified Data.Set as Set
 import Analytics.Include
 import BrandedDomains
 import qualified Amazon as AWS
+import Happstack.Server.SimpleHTTP
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
@@ -351,5 +352,5 @@ documentStatusFields document = do
       && (any (isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
 
 -- Page for GT verification
-gtVerificationPage :: TemplatesMonad m => m String
-gtVerificationPage = renderTemplate_ "gtVerificationPage"
+gtVerificationPage :: Kontrakcja m => m Response
+gtVerificationPage = renderFromBody kontrakcja =<< renderTemplate_ "gtVerificationPage"
