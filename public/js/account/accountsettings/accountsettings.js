@@ -244,7 +244,8 @@ var AccountSettingsView = Backbone.View.extend({
       // Building frame
       var self = this;
       var model = this.model;
-      var box = $("<div class='blue-box col'/>");
+
+      var box = $("<div class='blue-box'/>");
 
       var header = $("<div class='account-header'/>").text(model.user().smartname());
       var body = $("<div class='account-body'/>");
