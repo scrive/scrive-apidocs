@@ -157,6 +157,8 @@ var CsvSignatoryDesignView = Backbone.View.extend({
       table.append(thead).append(tbody);
       var fieldnames = this.model.header();
 
+      if (!this.model.header()) return $('<div />');
+
       for(var i=0;i<this.model.header().length;i++)
          thead.append($("<th />").text(this.headerName(this.model.header()[i])));
 
