@@ -396,6 +396,9 @@ var CompanyBrandingLogoModel = Backbone.Model.extend({
       return this.get("defaultlogo");
     }
   },
+  customLogoSet: function() {
+    return this.customised() && this.get("logo").length > 0;
+  },
   setLogo: function(logoBase64) {
     this.set('logoChanged', true, {silent: true});
     this.set({logo: logoBase64});
@@ -515,6 +518,7 @@ window.CompanyBrandingLogo = function(args) {
     var view = new CompanyBrandingLogoView({ model: model});
     return {
       customised : function() {return model.customised();},
+      customLogoSet : function() {return model.customLogoSet();},
       logo : function() {return model.logo();},
       onChange : function(f) {model.bind("change",function() {f(model.logo(),model.customised());});},
       el : function() { return $(view.el); }

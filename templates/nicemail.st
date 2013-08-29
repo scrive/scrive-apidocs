@@ -16,6 +16,13 @@ nicemail=
                   </td>
                 </tr>
               </table>
+              $else$
+              <table>
+                <tr>
+                  <td style="padding-top: 30px;">
+                  </td>
+                </tr>
+              </table>              
               $endif$
               <!-- // End Module: Standard Header Image \\ -->
             </td>
