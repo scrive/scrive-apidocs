@@ -19,36 +19,36 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   createElegButtonElems: function() {
     var document = this.document();
     var signatory = document.currentSignatory();
+    var self = this;
 
     var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
     var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
     var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
-    bankid.click(function() {
-      mixpanel.track('Click BankID');
-      document.takeSigningScreenshot(function() { Eleg.bankidSign(document, signatory, function(p) { document.sign().addMany(p).sendAjax(); });});
+
+    var makeCallback = function(bankName, bankSign) {
+      if (!self.screenshotDone) {
+        setTimeout(function() { makeCallback(bankSign);}, 100);
+        return false;
+      }
+      mixpanel.track('Click ' + bankName);
+      Eleg[bankSign](document, signatory, function(p) {
+        document.sign().addMany(p).sendAjax();
+      });
       return false;
-    });
-    telia.click(function() {
-      mixpanel.track('Click Telia');
-      document.takeSigningScreenshot(function() { Eleg.teliaSign(document, signatory,  function(p) { document.sign().addMany(p).sendAjax(); });});
-      return false;
-    });
-    nordea.click(function() {
-      mixpanel.track('Click Nordea');
-      document.takeSigningScreenshot(function() { Eleg.nordeaSign(document, signatory, function(p) { document.sign().addMany(p).sendAjax(); });});
-      return false;
-    });
-    mbi.click(function() {
-      mixpanel.track('Click Mobile BankID');
-      document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,function(p) { document.sign().addMany(p).sendAjax(); },signatory.personalnumberField().value()); });
-      return false;
-    });
+    };
+
+    bankid.click(function() { return makeCallback('BankID', 'bankidSign'); });
+    telia.click(function() { return makeCallback('Telia', 'teliaSign'); });
+    nordea.click(function() { return makeCallback('Nordea', 'nordeaSign'); });
+    mbi.click(function() { return makeCallback('Mobile BankID', 'mobileBankIDSign'); });
+
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
   },
   createSignButtonElems: function() {
     var document = this.document();
     var guardModel = this.guardModel;
+    var self = this;
     return new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "blue",
@@ -56,18 +56,26 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       onClick: function() {
         if (alreadyClicked(this))
           return false;
-        trackTimeout('Accept', {'Accept' : 'sign document'});
-        var errorCallback = function(xhr) {
-          if (xhr.status == 403) {
-            // session timed out
-            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-          } else {
-            new FlashMessage({content: localization.signviewSigningFailed,
-                              color: 'red',
-                              withReload: true});
+        var f = function() {
+          if (!self.screenshotDone) {
+            setTimeout(f, 100);
+            return false;
           }
+          trackTimeout('Accept', {'Accept' : 'sign document'});
+          var errorCallback = function(xhr) {
+            if (xhr.status == 403) {
+              // session timed out
+              ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+            } else {
+              new FlashMessage({content: localization.signviewSigningFailed,
+                                color: 'red',
+                                withReload: true});
+            }
+          };
+          document.sign(errorCallback).send();
         };
-        document.takeSigningScreenshot(function() { document.sign(errorCallback).send(); });
+        f();
+        return false;
       }
     }).el().css('margin-top', '-10px')
               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
@@ -123,10 +131,15 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var document = this.document();
     var signviewbranding = this.model.signviewbranding();
     var signatory = document.currentSignatory();
+    var self = this;
+    self.screenshotDone = false;
 
     Confirmation.popup({
       title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
+      onRender: function() {document.takeSigningScreenshot(function() {
+        self.screenshotDone = true;
+      });},
       rejectText: localization.cancel,
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
       textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
