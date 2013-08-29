@@ -4,7 +4,7 @@
 
 window.BrandingForSignView = Backbone.Model.extend({
   defaults : {
-      ready : false,
+      ready : false
   },
   initialize: function(args) {
       if (args.documentid && args.signatoryid)
