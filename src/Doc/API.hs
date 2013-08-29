@@ -84,6 +84,10 @@ import Utils.Either
 import Doc.SignatoryScreenshots
 import Doc.Conditions
 import Util.MonadUtils
+import Company.Model
+import Company.CompanyUI
+import User.Utils
+import User.UserView
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -114,6 +118,8 @@ versionedAPI _version = choice [
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
   dir "changemainfile"     $ hPost $ toK1 $ apiCallChangeMainFile,
+
+  dir "documentbrandingforsignview" $ hGet $ toK2 $ apiCallGetBrandingForSignView,
 
   dir "document" $ hPost $ toK6 $ documentUploadSignatoryAttachment,
   dir "document" $ hDeleteAllowHttp  $ toK6 $ documentDeleteSignatoryAttachment
@@ -637,8 +643,18 @@ apiCallChangeMainFile docid = api $ do
   doc' <- apiGuardL (serverError "No document found after change") $ dbQuery $ GetDocumentByDocumentID $ docid
   Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
 
-
-
+apiCallGetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
+apiCallGetBrandingForSignView did slid = api $ do
+  ctx <- getContext
+  magichash <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
+  doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
+  sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
+  when (signatorymagichash sl /= magichash) $ throwIO . SomeKontraException $ serverError "No document found"
+  authorid <- apiGuardL (serverError "Document problem | No author") $ return $ getAuthorSigLink doc >>= maybesignatory
+  user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByID authorid
+  company <- getCompanyForUser user
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  Ok <$> signviewBrandingJSON ctx user company companyui
 
 data SignatoryResource = SignatoryResource
 instance FromReqURI SignatoryResource where

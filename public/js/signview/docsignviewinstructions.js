@@ -12,9 +12,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.render();
   },
   welcomeText : function() {
-    return localization.docsignview.welcome + 
-           " <span class='name'>" + 
-           this.model.document().currentSignatory().name() + 
+    return localization.docsignview.welcome +
+           " <span class='name'>" +
+           this.model.document().currentSignatory().name() +
            "</span>";
   },
   // Big instruction or information about document state
@@ -60,9 +60,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       return $(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
   },
   styleText: function(elem) {
-    var document = this.model.document();
-    var textcolour = document.signviewtextcolour();
-    var textfont = document.signviewtextfont();
+    var signviewbranding = this.model.signviewbranding();
+    var textcolour = signviewbranding.signviewtextcolour();
+    var textfont = signviewbranding.signviewtextfont();
 
     if (this.model.usebranding() && textcolour) {
       elem.css('color', textcolour);

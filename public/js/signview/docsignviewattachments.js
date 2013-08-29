@@ -16,8 +16,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     this.render();
   },
   apiURL: function() {
-    var path = document.location.pathname.split("/");
-    return "/api/frontend/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + encodeURIComponent(this.model.name()) + "/file" + this.model.document().viewer().urlPart();
+    return "/api/frontend/document/" + this.model.document().documentid() + "/signatory/" + this.model.document().viewer().signatoryid() + "/attachment/" + encodeURIComponent(this.model.name()) + "/file" + this.model.document().viewer().urlPart();
   },
   removeButton: function() {
     var attachment = this.model;
@@ -142,6 +141,8 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.title = args.title;
+    this.textcolour = args.textcolour;
+    this.textfont = args.textfont;
     this.uploadElems = [];
     this.render();
   },
@@ -175,16 +176,15 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     }
 
     var document = this.model.signatories()[0].document();
-    var textcolour = document.signviewtextcolour();
-    var textfont = document.signviewtextfont();
+
     var labelCss = {};
 
     var header = $("<h2/>");
-    if (textcolour) {
-      labelCss['color'] = textcolour;
+    if (this.textcolour) {
+      labelCss['color'] = this.textcolour;
     }
-    if (textfont) {
-      labelCss['font-family'] = textfont;
+    if (this.textfont) {
+      labelCss['font-family'] = this.textfont;
     }
 
     var container = $("<div class='signatoryattachments' />");

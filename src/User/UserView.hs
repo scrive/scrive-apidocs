@@ -3,6 +3,7 @@ module User.UserView (
     -- pages
     userJSON,
     companyJSON,
+    signviewBrandingJSON,
     showAccount,
     pageAcceptTOS,
     pageDoYouWantToChangeEmail,
@@ -56,6 +57,8 @@ import qualified Data.ByteString.Base64 as B64
 import DB
 import BrandedDomains
 import Doc.DocViewMail
+import Control.Monad
+
 
 showAccount :: TemplatesMonad m => User -> m String
 showAccount user = renderTemplate "showAccount" $ do
@@ -117,6 +120,23 @@ companyJSON ctx company companyui = runJSONGenT $ do
     value "smsoriginator" $ companysmsoriginator $ companyinfo company
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     valueM "companyui" $ companyUIJson ctx companyui
+
+signviewBrandingJSON :: Monad m => Context -> User -> Company -> CompanyUI -> m JSValue
+signviewBrandingJSON ctx user company companyui = runJSONGenT $ do
+    let mdb = currentBrandedDomain ctx
+    value "fullname" $ getFullName user
+    value "email" $ getEmail user
+    value "company" $ getCompanyName company
+    value "phone" $ userphone $ userinfo user
+    value "position" $ usercompanyposition$ userinfo $ user
+    value "signviewlogo" $ if ((isJust $ companysignviewlogo companyui))
+                                    then Just (show (LinkCompanySignViewLogo $ companyid $ company))
+                                    else (bdlogolink <$> mdb)
+    value "signviewtextcolour" $ companysignviewtextcolour $ companyui
+    value "signviewtextfont" $ companysignviewtextfont   $ companyui
+    value "signviewbarscolour" $ (companysignviewbarscolour  $ companyui) `mplus` (bdbarscolour <$> mdb)
+    value "signviewbarstextcolour" $ (companysignviewbarstextcolour $ companyui) `mplus` (bdbarstextcolour <$> mdb)
+    value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour $ companyui) `mplus` (bdbackgroundcolour <$> mdb)
 
 userStatsToJSON :: (MinutesTime -> String) -> [UserUsageStats] -> [JSValue]
 userStatsToJSON formatTime uuss = map tojson uuss
