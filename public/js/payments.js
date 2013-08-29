@@ -355,7 +355,7 @@
 
             features.append(cost);
 
-            var button = $('<a class="button action-sign-up" />')
+            var button = $('<a class="button button-green action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.contact))
                 .append($('<span class="gray" />')
@@ -491,7 +491,7 @@
 
             features.append(cost);
 
-            var button = $('<a class="button action-sign-up" />')
+            var button = $('<a class="button button-green action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.purchase))
                 .append($('<span class="gray" />')
