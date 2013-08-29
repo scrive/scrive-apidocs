@@ -70,6 +70,10 @@ window.Document = Backbone.Model.extend({
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
         return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
     },
+    signatoriesThatCanSignNowOnPad: function() {
+        var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign() && sig.padDelivery()});
+        return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
+    },
     addExistingSignatory: function(sig) {
         var document = this;
         var signatories = document.signatories();
