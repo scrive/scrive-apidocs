@@ -289,18 +289,6 @@ var AccountSettingsView = Backbone.View.extend({
         });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.phone + ':'))).append($("<td/>").append(phoneinput)));
 
-      var companynameinput = $("<input type='text' name='companyname'/>").val(model.companyname());
-      companynameinput.change(function() {
-          model.setCompanyname(companynameinput.val());
-        });
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname + ':'))).append($("<td/>").append(companynameinput)));
-
-      var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
-      companynumberinput.change(function() {
-          model.setCompanynumber(companynumberinput.val());
-        });
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber + ':'))).append($("<td/>").append(companynumberinput)));
-
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
