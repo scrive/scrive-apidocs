@@ -4,7 +4,6 @@
   left: 0;
   bottom: 0;
   right: 0;
-  background: rgba(0,0,0,.8);
   height: 100%;
   z-index: 2000;
   -webkit-transition: opacity .5s ease-in;
@@ -13,6 +12,15 @@
   transition: opacity .5s ease-in;
   opacity: 0;
   pointer-events: none;
+
+
+  background: transparent ;
+  background: rgba(0,0,0,0.8);
+  .ie8 &, .ie7 & {
+      filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=1, StartColorStr='#CC000000', EndColorStr='#CC000000');
+      zoom: 1;
+  }
+
   &.active {
     pointer-events: auto;
     opacity: 1;
