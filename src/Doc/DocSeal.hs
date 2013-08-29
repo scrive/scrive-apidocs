@@ -297,7 +297,7 @@ evidenceOfIntentAttachment title sls = do
  formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
 -}
 formatMinutesTimeForVerificationPage :: MinutesTime -> String
-formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M %Z" caltime ++ " (" ++ tzinfo ++ ")"
+formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S %Z" caltime ++ " (" ++ tzinfo ++ ")"
   where
     caltime = MinutesTime.toCalendarTime mt
     tzoffset = ctTZ caltime `div` 60 -- convert seconds into minutes

@@ -633,7 +633,7 @@ public class PDFSeal {
 
         table = new PdfPTable(2);
         table.setWidthPercentage(100f);
-        table.setWidths(new int[]{1, 2});
+        table.setWidths(new int[]{12, 20});
 
         table.setTableEvent(drawFrame);
 
