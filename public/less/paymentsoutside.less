@@ -174,8 +174,10 @@ section.pricing-cases header {
 .plan-container > .plan .features div.cost {
   display: block;
   font-family: @source;
-  padding-left: 10px;
-  padding-right: 10px;
+  .lt-ie8 & {
+      padding-left: 10px;
+      padding-right: 10px;
+  }
 }
 .plan-container > .plan .features div.cost .price {
   display: block;
