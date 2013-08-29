@@ -15,12 +15,15 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     }
     this.render();
   },
-  apiURL: function() {
-    return "/api/frontend/document/" + this.model.document().documentid() + "/signatory/" + this.model.document().viewer().signatoryid() + "/attachment/" + encodeURIComponent(this.model.name()) + "/file" + this.model.document().viewer().urlPart();
+  uploadURL: function() {
+    return "/api/frontend/addsignatoryattachment/" + this.model.document().documentid() + "/" + this.model.document().viewer().signatoryid() + "/" + encodeURIComponent(this.model.name()) + "" + this.model.document().viewer().urlPart();
+  },
+  deleteURL: function() {
+    return "/api/frontend/deletesignatoryattachment/" + this.model.document().documentid() + "/" + this.model.document().viewer().signatoryid() + "/" + encodeURIComponent(this.model.name()) + "" + this.model.document().viewer().urlPart();
   },
   removeButton: function() {
     var attachment = this.model;
-    var deleteurl = this.apiURL();
+    var deleteurl = this.deleteURL();
     var button = new Button({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
             attachment.loading();
             $.ajax(deleteurl, {
@@ -40,7 +43,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   uploadButton: function() {
     var attachment = this.model;
-    var uploadurl = this.apiURL();
+    var uploadurl = this.uploadURL();
     return new UploadButton({
       width: 120,
       size : 'tiny',

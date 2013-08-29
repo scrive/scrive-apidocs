@@ -121,8 +121,8 @@ versionedAPI _version = choice [
 
   dir "documentbrandingforsignview" $ hGet $ toK2 $ apiCallGetBrandingForSignView,
 
-  dir "document" $ hPost $ toK6 $ documentUploadSignatoryAttachment,
-  dir "document" $ hDeleteAllowHttp  $ toK6 $ documentDeleteSignatoryAttachment
+  dir "addsignatoryattachment"    $ hPost $ toK3 $ documentUploadSignatoryAttachment,
+  dir "deletesignatoryattachment" $ hDeleteAllowHttp  $ toK3 $ documentDeleteSignatoryAttachment
   ]
 
 -- | Windows Explorer set the full path of a file, for example:
@@ -656,22 +656,6 @@ apiCallGetBrandingForSignView did slid = api $ do
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   Ok <$> signviewBrandingJSON ctx user company companyui
 
-data SignatoryResource = SignatoryResource
-instance FromReqURI SignatoryResource where
-    fromReqURI s = Just SignatoryResource <| s == "signatory" |> Nothing
-
-data AttachmentResource = AttachmentResource
-instance FromReqURI AttachmentResource where
-    fromReqURI s = Just AttachmentResource <| s == "attachment" |> Nothing
-
-data FileResource = FileResource
-instance FromReqURI FileResource where
-    fromReqURI s = Just FileResource <| s == "file" |> Nothing
-
-data MetadataResource = MetadataResource
-instance FromReqURI MetadataResource where
-    fromReqURI s = Just MetadataResource <| s == "metadata" |> Nothing
-
 getSigLinkID :: Kontrakcja m => APIMonad m (SignatoryLinkID, MagicHash)
 getSigLinkID = do
   msignatorylink <- lift $ readField "signatorylinkid"
@@ -680,8 +664,8 @@ getSigLinkID = do
        (Just sl, Just mh) -> return (sl,mh)
        _ -> throwIO . SomeKontraException $ badInput "The signatorylinkid or magichash were missing."
 
-documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
-documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
+documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
+documentUploadSignatoryAttachment did sid aname = api $ do
   Log.debug $ "sigattachment ajax"
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
@@ -718,8 +702,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
-documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
-documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
+documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  String -> m Response
+documentDeleteSignatoryAttachment did sid aname = api $ do
   Context{ctxtime, ctxipnumber} <- getContext
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
