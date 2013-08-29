@@ -72,7 +72,7 @@
     },
     render: function () {
         $(this.el).html('');
-        $("#page-signup").removeClass("button-red").addClass("button-gray");
+        $("#page-signup").removeClass("button-red").addClass("button-green");
         var self = this;
         var model = this.model;
         var header = $("<div class='shadowed'/>");
@@ -105,8 +105,8 @@
         }
 
         var signupButton = new Button({
-            size  : 'small',
-            color : 'blue',
+            size: 'big',
+            color : 'green',
             text: localization.signup + " ›",
             onClick: function() {
               self.clearValidationMessages();
