@@ -615,8 +615,8 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.is_partner"
   sqlResult "signatory_links.csv_title"
   sqlResult "signatory_links.csv_contents"
-  sqlResult "(signatory_links.deleted IS NOT NULL) AS \"deleted\""
-  sqlResult "(signatory_links.really_deleted IS NOT NULL) AS \"really_deleted\""
+  sqlResult "signatory_links.deleted"
+  sqlResult "signatory_links.really_deleted"
   sqlResult "signatory_links.sign_redirect_url"
   sqlResult "signatory_links.rejection_time"
   sqlResult "signatory_links.rejection_reason"
@@ -745,8 +745,8 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "signinfo_personal_number_verified" $ fmap signaturepersnumverified <$> signatorysignatureinfo <$> links
            sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
            sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
-           sqlSetCmdList "deleted" $ (\x -> if signatorylinkdeleted x then "now()" else "NULL") <$> links
-           sqlSetCmdList "really_deleted" $ (\x -> if signatorylinkreallydeleted x then "now()" else "NULL") <$> links
+           sqlSetList "deleted" $ signatorylinkdeleted <$> links
+           sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
            sqlSetList "signinfo_ocsp_response" $ fmap signatureinfoocspresponse <$> signatorysignatureinfo <$> links
            sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
            sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links

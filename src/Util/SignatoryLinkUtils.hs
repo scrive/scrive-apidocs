@@ -185,7 +185,7 @@ isSignatory = isSigLinkFor (signatoryispartner . signatorydetails)
    Is the document deleted for this signatory link?
  -}
 isDeletedFor :: (MaybeSignatoryLink a) => a -> Bool
-isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
+isDeletedFor msl = maybe False (isJust . signatorylinkdeleted) (getMaybeSignatoryLink msl)
 
 
 {-

@@ -587,19 +587,19 @@ assertOneArchivedSigLink :: MonadIO m => Document -> m ()
 assertOneArchivedSigLink doc =
   assertEqual "Expected one archived sig link"
               1
-              (length . filter signatorylinkdeleted . documentsignatorylinks $ doc)
+              (length . filter (isJust . signatorylinkdeleted) . documentsignatorylinks $ doc)
 
 assertOneReallyDeletedSigLink :: MonadIO m => Document -> m ()
 assertOneReallyDeletedSigLink doc =
   assertEqual "Expected one really deleted sig link"
               1
-              (length . filter signatorylinkreallydeleted . documentsignatorylinks $ doc)
+              (length . filter (isJust . signatorylinkreallydeleted) . documentsignatorylinks $ doc)
 
 assertNoArchivedSigLink :: MonadIO m => Document -> m ()
 assertNoArchivedSigLink doc =
   assertEqual "Expected no archived sig link"
               0
-              (length . filter signatorylinkdeleted . documentsignatorylinks $ doc)
+              (length . filter (isJust . signatorylinkdeleted) . documentsignatorylinks $ doc)
 
 testArchiveDocumentPendingLeft :: TestEnv ()
 testArchiveDocumentPendingLeft = doTimes 10 $ do
