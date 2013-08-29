@@ -57,9 +57,13 @@ var CompanyBrandingColourView = Backbone.View.extend({
     var checkboxlabel = $("<label />").append(model.label());
 
     var input = $("<input type='text' class='colour' />");
-    input.bind("keyup change", function() {
-      model.setColour(input.val().trim());
-      self.render();
+    input.bind("keyup change paste", function() {
+      // defer the changes, so the input's value is updated
+      // if there was something pasted
+      setTimeout(function() {
+        model.setColour(input.val().trim());
+        self.render();
+      }, 1);
     });
     this.input = input;
 
