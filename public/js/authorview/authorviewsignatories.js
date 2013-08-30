@@ -25,7 +25,7 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   hasList : function() {
      return this.signatoriesViews().length > 2;
   },
-  hasDummy : function() {
+  isSingleSignatory : function() {
      return this.signatoriesViews().length ==1;
   },
   signatoriesViews : function() {
@@ -95,8 +95,8 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       table.append(tbody.append(tr.append(td1.append(box1)).append(tdseparator).append(td2.append(box2))));
       box.append(table);
 
-      if (this.model.hasDummy()) {
-         td1.css("border-color","#ffffff");
+      if (this.model.isSingleSignatory()) {
+         td1.remove();
          box2.append(this.model.signatoryView().el());
       }
       else if (this.model.hasList()) {
