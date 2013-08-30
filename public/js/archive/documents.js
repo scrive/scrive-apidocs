@@ -250,7 +250,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.remove.action,
-                                icon: '/img/modal-icons/sign.png',
+                                icon: '/img/modal-icons/delete.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     mixpanel.track('Delete document');

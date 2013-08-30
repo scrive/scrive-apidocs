@@ -51,7 +51,7 @@ window.BinListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.remove.head,
-                                icon: '/img/modal-icons/sign.png',
+                                icon: '/img/modal-icons/delete.png',
                                 content: jQuery("<p/>").text(localization.archive.bin.remove.body),
                                 onAccept : function() {
                                   new Submit({

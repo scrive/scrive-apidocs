@@ -91,7 +91,7 @@ window.AttachmentsListDefinition = function(archive) {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.remove.action,
-                                icon: '/img/modal-icons/sign.png',
+                                icon: '/img/modal-icons/delete.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     var confirmationPopup = new Submit({
