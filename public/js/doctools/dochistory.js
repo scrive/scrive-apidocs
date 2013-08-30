@@ -45,6 +45,12 @@ var DocumentHistoryModel = Backbone.Model.extend({
         return this.get('historyList');
 
   },
+  checkIfHistoryChangedAndCallback : function(callback) {
+      this.historyList().fetchWithCallback(function(currentlist,newlist) {
+         if (currentlist.length != newlist.length)
+           callback();
+      });
+  },
   showAll : function() {
       return this.get("showAll");
   },
@@ -52,11 +58,12 @@ var DocumentHistoryModel = Backbone.Model.extend({
       this.set({'showAll' : !this.showAll() }, {silent : true});
       this.historyList().setShowLimit(this.get("showAll") ? undefined : 15);
   },
-  silentFetch : function() {
-      this.historyList().silentFetch();
-  },
   document : function(){
        return this.get("document");
+  },
+  ready : function() {
+    console.log("Checking if list is ready " + this.historyList().ready());
+    return this.historyList().ready();
   }
 });
 var DocumentHistoryView = Backbone.View.extend({
@@ -124,8 +131,8 @@ window.DocumentHistory = function(args){
                     });
         this.el     = function() {return $(view.el);};
         this.recall = function() { model.recall();};
-        var checkAndRefresh = function(i) {model.silentFetch(); setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+1);},i * 1000)};
-        checkAndRefresh(1);
+        this.ready  = function() {return model.ready()};
+        this.checkIfHistoryChangedAndCallback = function(callback) {return model.checkIfHistoryChangedAndCallback(callback);}
 };
 
 })(window);

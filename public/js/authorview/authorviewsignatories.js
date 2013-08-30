@@ -1,9 +1,10 @@
 (function(window){
 
 var AuthorViewSignatoriesModel = Backbone.Model.extend({
-  defaults : {
+  defaults : function() { return {
      signatoriesViews : [],
      currentSignview  : undefined
+    }
   },
   initialize: function (args) {
     var self = this;

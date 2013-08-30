@@ -9,7 +9,7 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
      return this.authorview().document();
   },
   authorview : function() {
-     return this.get("authorview"); 
+     return this.get("authorview");
   },
   text: function() {
     var document = this.document();
@@ -33,12 +33,23 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
       console.error("Unsure what state we're in");
       return "";
     }
-    
+
   },
   history : function() {
     if (this.get("history") == undefined)
-      this.set({"history" : new DocumentHistory({document : this.document()})}, {silent : true});
+      this.set({"history" : new DocumentHistory({
+                                      document : this.document()
+                                    })}, {silent : true});
     return this.get("history");
+  },
+  checkIfHistoryHasChangedAndRefresh : function() {
+    var self = this;
+    this.history().checkIfHistoryChangedAndCallback( function() {
+                                        self.authorview().reload();
+                                      });
+  },
+  ready : function() {
+    return this.history().ready();
   }
 });
 
@@ -58,6 +69,10 @@ window.AuthorViewHistory = function(args) {
           var model = new AuthorViewHistoryModel(args);
           var view =  new AuthorViewHistoryView({model : model, el : $("<div class='history-box'/>")});
           this.el = function() {return $(view.el);};
+          this.ready = function() {return model.ready()};
+
+          var checkAndRefresh = function(i) {model.checkIfHistoryHasChangedAndRefresh(); setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+1);},i * 1000)};
+          checkAndRefresh(1);
 
 };
 

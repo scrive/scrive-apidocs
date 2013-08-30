@@ -64,8 +64,11 @@ var AuthorViewModel = Backbone.Model.extend({
       this.set({"signatoryattachments" : new AuthorViewSignatoriesAttachments({authorview : this,el : $("<div class='section spacing'/>")})}, {silent : true});
     return this.get("signatoryattachments");
   },
-  ready : function() {
-     return this.document().ready();
+  readyToShow : function() {
+    return this.document().ready() && this.history().ready() && this.file().readyToConnectToPage();
+  },
+  reload : function() {
+    this.trigger("reload");
   }
 });
 
@@ -111,6 +114,8 @@ window.AuthorViewView = Backbone.View.extend({
 
 
 window.AuthorView = function(args) {
+       var self = this;
+       var div = $("<div/>");
        var document = new Document({
                         id : args.id,
                         viewer: args.viewer,
@@ -120,12 +125,47 @@ window.AuthorView = function(args) {
        var model = new AuthorViewModel({
                         document : document
                     });
+       model.bind('reload', function() {self.reload()});
        var view = new AuthorViewView({
                         model: model,
-                        el : $("<div/>")
+                        el : div
                     });
        document.fetch({ processData:  true, cache : false});
-       this.el = function() {return $(view.el);};
+       this.el = function() {return div};
+       this.reload = function() {
+                 var div_ = $("<div/>");
+                 var document_ = new Document({
+                        id : args.id,
+                        viewer: args.viewer,
+                        readOnlyView: true,
+                        evidenceAttachments: true
+                    });
+                 var model_ = new AuthorViewModel({
+                                  document : document_
+                              });
+                 var view = new AuthorViewView({
+                                  model: model_,
+                                  el : div_
+                              });
+                 var showAndClean = function() {
+                   if (model_.readyToShow()) {
+                    div.empty();
+                    div.replaceWith(div_);
+                    div = div_;
+                    console.log("Reloaded after reload");
+                   }
+                   else {
+                     console.log("Still waiting " + model_.history().ready());
+                     setTimeout(showAndClean,1000);
+                   }
+                 }
+                 document_.bind('change:ready', function() {
+                    showAndClean();
+                 });
+                 document_.fetch({ processData:  true, cache : false});
+
+
+       };
 };
 
 })(window);

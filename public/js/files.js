@@ -333,17 +333,22 @@ var FileView = Backbone.View.extend({
            });
         }
         else
-         setTimeout(function() {view.startReadyChecker()},1000);
+         setTimeout(function() {view.startReadyChecker()},100);
     },
     startReadyCheckerFirstPage : function() {
         var view = this;
         if (view.readyFirstPage())
          view.model.trigger('FirstPageReady');
         else
-         setTimeout(function() {view.startReadyCheckerFirstPage()},1000);
+         setTimeout(function() {view.startReadyCheckerFirstPage()},100);
     },
     ready : function() {
-        return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
+        return (this.readyToConnectToPage() && $(this.el).parents('body').length > 0)
+    },
+    readyToConnectToPage : function() {
+        return (this.model.ready() && (this.model.pages().length > 0)
+               && (this.pageviews.length == this.model.pages().length)
+               && _.all(this.pageviews, function(pv) {return pv.ready();}))
     },
     readyFirstPage : function () {
         return this.pageviews.length > 0 && this.pageviews[0].ready();
@@ -398,6 +403,9 @@ window.KontraFile = {
         });
         this.destroy = function() {
             this.view.destroy();
+        };
+        this.readyToConnectToPage = function() {
+            return this.view.readyToConnectToPage();
         };
         return this;
     }
