@@ -8,7 +8,6 @@ nicemail=
           <tr>
             <td class="headerContent" style="color: $nicemailbordercolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle" >
               <!-- // Begin Module: Standard Header Image \\ -->
-              $if(logo)$
               <table>
                 <tr>
                   <td style="padding-top: 48px; padding-bottom: 24px;">
@@ -16,7 +15,6 @@ nicemail=
                   </td>
                 </tr>
               </table>
-              $endif$
               <!-- // End Module: Standard Header Image \\ -->
             </td>
           </tr>
@@ -120,6 +118,14 @@ nicemail=
               </table><!-- // End Template Footer \\ -->
             </td>
           </tr>
+          $else$
+          <tr>
+            <td>
+              <div style="padding: 0 40px; padding-top: 20px; padding-bottom: 20px;">
+                $poweredByScrive()$
+              </div>
+            </td>
+          </tr>
           $endif$
         </table>
         <br />
@@ -134,7 +140,7 @@ nicemailbgcolour=$if(!background)$#FFFFFF$else$$background$$endif$
 #####
 nicemailfgcolour=$if(!textcolor)$#333333$else$$textcolor$$endif$
 #####
-nicemaillogo=$ctxhostpart$$logoLink$
+nicemaillogo=$if(!logo)$$ctxhostpart$/img/logo_email.png$else$$ctxhostpart$$logoLink$$endif$
 #####
 nicemailbordercolour=$if(!bordercolour)$#dee4ed$else$$bordercolour$$endif$
 #####

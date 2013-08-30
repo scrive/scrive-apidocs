@@ -225,13 +225,13 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
                            .css('-o-box-shadow','inset ' +this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
                            .css('box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px');
     } else {
-    this.emailpreviewbutton.css({'background': 'hsl(215 , 30%, 35%)',
-                                 'border': '2px solid hsl(215, 30%, 23%)',
-                                 '-webkit-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 '-moz-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 '-ms-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 '-o-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 'box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px'});
+    this.emailpreviewbutton.css({'background': '#3E5474',
+                                 'border': '2px solid #3E5474',
+                                 '-webkit-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 '-moz-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 '-ms-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 '-o-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 'box-shadow': 'inset #CCCCCC 0 0 0 1px'});
     }
   },
   changeEmailBackgroundColour : function(emailbackgroundcolour) {
