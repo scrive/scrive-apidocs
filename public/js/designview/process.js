@@ -360,35 +360,33 @@
 			    // If its empty and we have a placeholder set the value
 			    if (cont.length === 0) {
 				editor.setContent(placeholder);
-				// Get updated content
-				cont = placeholder;
 			    }
-			    // convert to plain text and compare strings
-			    is_default = (cont == placeholder);
-			    
-			    // nothing to do
-			    if (!is_default) {
-				return;
-			    }
-			})
-			    .on('focus', function() {
-				// replace the default content on focus if the same as original placeholder
-				if (is_default) {
-				    editor.setContent('');
-				}
-			    });
-			
-			// change placeholder text color
-			editor.on('init', function() {
-			    var $message = $(editor.getWin().document).find("p");
-			    
-			    // only change text color if it's the 'placeholder text'
+
+  			    var $message = $(editor.getWin().document).find("p");   
+			    // change placeholder text color, if it's the 'placeholder text'
 			    if($message.text() == localization.designview.editInvitation) {
 				$message.css("color", "#999999")
 			    }
+			}).on('focus', function() {
+			      // replace the default content on focus if the 
+			      // same as original placeholder
+			      var $message = $(editor.getWin().document).find("p");
+				if ($message.text() == localization.designview.editInvitation) {
+console.log("6");
+				    editor.setContent('');
+				}
+			}).on('blur', function(ed, e) {
+			    // if the input field is empty when leaving it, set default
+		  	    // placeholder message
+			    var message = $(editor.getWin().document).find("p");
+			    if(/data-mce-bogus/g.exec(message.html())) {
+			      editor.setContent(placeholder);
+			      var message = $(editor.getWin().document).find("p");
+			      $(message[0]).css("color", "#999999");
+			    }
 			});
 		    }
-		    /* END Imitate placeholder */
+		  /* END Imitate placeholder */
                 }
             });
             return view;
