@@ -45,7 +45,7 @@
 
             return div;
         },
-	createDraggable: function(fieldOrPlacementFnValues, buttonText, cssClass) {
+	createDraggable: function(fieldOrPlacementFN, buttonText, cssClass) {
 	    var div = $("<div class='design-view-action-document-draggable design-view-action-document-draggable-" + cssClass + "' />");
             var wra = $("<div class='design-view-action-document-draggable-wrapper'/>");
             var innerWrapper = $("<div class='design-view-action-document-draggable-inner-wrapper'/>");
@@ -53,9 +53,6 @@
             var imgdiv = $("<div class='design-view-action-document-draggable-icon' />");
 	    var txt = $("<div class='design-view-action-document-draggable-text'/>");
 	    
-	    var fieldOrPlacementFN = function() {
-                return new Field(fieldOrPlacementFnValues);
-            };
 
             draggebleField(div, fieldOrPlacementFN, undefined, undefined, true);
 
@@ -69,26 +66,37 @@
             return div;
 	},
         checkbox: function() {
-	    return this.createDraggable({fresh: false,
-                                       type: 'checkbox',
-                                       signatory: this.model.document().author(),
-                                       name: this.model.document().newCheckboxName()},
-					localization.designview.checkbox, 'checkbox');
+            var model = this.model;
+	    var fieldOrPlacementFN = function() {
+                return new Field({fresh: false,
+                                  type: 'checkbox',
+				  signatory: model.document().author(),
+				  name: model.document().newCheckboxName()});
+            };
+
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.checkbox, 'checkbox');
         },
         signature: function() {
-	    return this.createDraggable({fresh:false,
-                                           type:'signature',
-                                           signatory: this.model.document().author(),
-                                           name: this.model.document().newSignatureName()},
-					localization.designview.signatureBox, 'signature');
-					
+            var model = this.model;
+	    var fieldOrPlacementFN = function() {
+                return new Field({fresh:false,
+				  type:'signature',
+				  signatory: model.document().author(),
+				  name: model.document().newSignatureName()});
+            };
+
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.signatureBox, 'signature');
         },
         text: function() {
-	    return this.createDraggable({signatory: this.model.document().author(),
-					 name: 'fake',
-					 type: 'fake',
-					 value: localization.designview.freeTextBox},
-					localization.designview.freeTextBox, 'textbox');
+            var model = this.model;
+	    var fieldOrPlacementFN = function() {
+                return new Field({signatory: model.document().author(),
+				  name: 'fake',
+				  type: 'fake',
+				  value: localization.designview.freeTextBox});
+            };
+
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.freeTextBox, 'textbox');
 	}
 	});
 
