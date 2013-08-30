@@ -1,3 +1,5 @@
+@import 'colors.less';
+
 .mainContainer {
     width: 100%;
     min-height: 544px;
@@ -34,6 +36,7 @@
         h1, h2, h3, h4 {
           color: #FFFFFF;
           text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45);
+          font-weight: normal;
         }
       }
 
@@ -75,10 +78,10 @@
             padding: 8px 48px 8px 32px ;
             height: 2em;
             a {
-              color: #CCCCCC;
+              color: @text-very-light;
               text-decoration: none;
               &:hover {
-                color: #FFFFFF;
+                color: @text-light;
               }
             }
             p {

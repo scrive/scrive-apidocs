@@ -379,7 +379,7 @@ $endif$
       </li>
       <li class="session-login float-right">
         <a class="button" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
-        <a class="button" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
+        <a class="button button-green" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
       </li>
       $endif$
     </ul>

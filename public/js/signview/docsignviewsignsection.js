@@ -113,8 +113,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var content = $("<div />");
     content.append(this.createPreambleElems());
     if (BrowserInfo.isSmallScreen()) {
-        var p = content.find('p');
-        p.css('font-size', '52px');
+        var p = content.find('p'); p.css('font-size', '52px');
         p.css('line-height', '72px');
         p.css('margin-top', '40px');
     }
@@ -193,7 +192,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        } else {
 	   var headerTitle = localization.docsignview.onlySignTitle;
        }
-       box.append($('<h2>' + headerTitle + '</h2>'));
+       if (!BrowserInfo.isSmallScreen()) box.append($('<h2>' + headerTitle + '</h2>'));
 
        var signatory = document.currentSignatory();
        var sps = {};
@@ -262,7 +261,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             size: "big",
                             shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
                             color: "green",
-                            width: BrowserInfo.isSmallScreen() ?  404 : 206,
+                            width: BrowserInfo.isSmallScreen() ?  504 : 206,
                             text: localization.process.signbuttontext,
                             icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
@@ -289,7 +288,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
           'max-height': '120px',
           'line-height': '85px',
           'padding-top': '55px',
-          'padding-bottom': '55px'
+          'padding-bottom': '55px',
+          'margin': '0px'
         });
       }
 
@@ -301,6 +301,9 @@ window.DocumentSignSignSection = Backbone.View.extend({
         box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
         if (BrowserInfo.isSmallScreen()) {
           box.css("padding", "0px");
+          box.css("margin", "0px");
+          box.css("margin-top", "10px");
+          box.css("width", "939px");
         }
       }
       box.append($("<div class='clearfix' />"));
