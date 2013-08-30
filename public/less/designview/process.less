@@ -29,7 +29,7 @@
     vertical-align: top;
     width: 33%;
     height: 170px;
-    margin-top: 16px;
+    margin-top: 19px;
 }
 
 .design-view-action-row {
@@ -109,6 +109,9 @@
 .design-view-action-process-left-column-attachments {
     display: inline-block;
     width : 335px;
+    .ie8 & {
+	width:350px;
+    }
 }
 
 .designview-attachemnts-list {
@@ -168,20 +171,23 @@
 .design-view-action-process-middle-column {
     display:inline-block;
     .box-sizing(border-box);
-    width: 303px;
+    width: 307px;
     height: 170px;
-    margin-top: 16px;
-    padding: 4px 16px 8px 16px;
+    margin-top: 15px;
+    padding: 4px 16px 8px 18px;
     vertical-align: top;
 }
 
 .design-view-action-process-right-column {
     display: inline-block;
     .box-sizing(border-box);
-    margin-top: 18px;
+    margin-top: 19px;
     width: 34%;
     min-height: 170px;
     padding: 0px 16px 8px 16px;
+    .ie8 & {
+	padding-left:10px;
+    }
     vertical-align: top;
 }
 
