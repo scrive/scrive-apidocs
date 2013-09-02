@@ -32,18 +32,12 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         return false;
       }
       mixpanel.track('Click ' + bankName);
-      bankSign = _.bind(bankSign, Eleg);
 
-      if (bankSignExtraOpt != undefined) {
-        bankSign(document, signatory, function(p) {
+      bankSign(document, signatory, function(p) {
           document.sign().addMany(p).sendAjax();
         }, bankSignExtraOpt);
-      } else {
-        bankSign(document, signatory, function(p) {
-          document.sign().addMany(p).sendAjax();
-        });
-      }
       return false;
+
     };
 
     bankid.click(function() { return makeCallback('BankID', Eleg.bankidSign); });
