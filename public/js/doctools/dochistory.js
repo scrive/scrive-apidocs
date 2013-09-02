@@ -46,7 +46,9 @@ var DocumentHistoryModel = Backbone.Model.extend({
 
   },
   checkIfHistoryChangedAndCallback : function(callback) {
+      if (!this.historyList().ready()) { console.log("Not reloading, because list is not ready"); return; }// If we don't have current history, we can't really say that it changed
       this.historyList().fetchWithCallback(function(currentlist,newlist) {
+         console.log("List fetched, and it is changed: " + (currentlist.length != newlist.length));
          if (currentlist.length != newlist.length)
            callback();
       });

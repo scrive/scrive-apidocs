@@ -67,7 +67,10 @@ var AuthorViewModel = Backbone.Model.extend({
   readyToShow : function() {
     return this.document().ready() && this.history().ready() && this.file().readyToConnectToPage();
   },
-  reload : function() {
+  setDontRefresh : function() {
+    this.history().setDontRefresh();
+  },
+  reload: function() {
     this.trigger("reload");
   }
 });
@@ -114,8 +117,9 @@ window.AuthorViewView = Backbone.View.extend({
 
 
 window.AuthorView = function(args) {
+       var version = 0
        var self = this;
-       var div = $("<div/>");
+       var maindiv = $("<div/>");
        var document = new Document({
                         id : args.id,
                         viewer: args.viewer,
@@ -128,41 +132,69 @@ window.AuthorView = function(args) {
        model.bind('reload', function() {self.reload()});
        var view = new AuthorViewView({
                         model: model,
-                        el : div
+                        el : maindiv
                     });
        document.fetch({ processData:  true, cache : false});
-       this.el = function() {return div};
+       this.el = function() {return maindiv};
        this.reload = function() {
-                 var div_ = $("<div/>");
-                 var document_ = new Document({
+
+                 // Bind old variables
+                 var olddocument = document;
+                 var oldmodel = model;
+                 var oldview = view;
+
+                 // But if current model was not ready, we wait with the reload
+                 if (!oldmodel.readyToShow() || $(".modal.active").size() > 0) return;
+
+                 // Increase version, stop fetching some elements
+                 version++
+                 var reloadversion = version;
+                 oldmodel.setDontRefresh();
+
+
+
+
+                 // Init new elements
+                 var newdiv = $("<div/>")
+                 var newdocument = new Document({
                         id : args.id,
                         viewer: args.viewer,
                         readOnlyView: true,
                         evidenceAttachments: true
                     });
-                 var model_ = new AuthorViewModel({
-                                  document : document_
+                 var newmodel = new AuthorViewModel({
+                                  document : newdocument
                               });
-                 var view = new AuthorViewView({
-                                  model: model_,
-                                  el : div_
+                 newmodel.bind('reload', function() {self.reload()});
+                 var newview = new AuthorViewView({
+                                  model: newmodel,
+                                  el : newdiv
                               });
-                 var showAndClean = function() {
-                   if (model_.readyToShow()) {
-                    div.empty();
-                    div.replaceWith(div_);
-                    div = div_;
-                    console.log("Reloaded after reload");
+
+                 //Replace old div with new div
+                 var connectNewView = function() {
+                   if (newmodel.readyToShow()) {
+                     if (reloadversion == version) {
+                        maindiv.empty();
+                        maindiv.replaceWith(newdiv);
+                        document = newdocument;
+                        model = newmodel;
+                        view = newview;
+                        maindiv = newdiv;
+                     } else {
+                        newmodel.setDontRefresh();
+                    }
                    }
                    else {
-                     console.log("Still waiting " + model_.history().ready());
-                     setTimeout(showAndClean,1000);
+                     setTimeout(connectNewView,1000);
                    }
                  }
-                 document_.bind('change:ready', function() {
-                    showAndClean();
+                 newdocument.bind('change:ready', function() {
+                    connectNewView();
                  });
-                 document_.fetch({ processData:  true, cache : false});
+
+                 // Start whole fetching - need to do it after we binded to change:ready
+                 newdocument.fetch({ processData:  true, cache : false});
 
 
        };

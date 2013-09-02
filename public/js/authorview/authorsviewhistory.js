@@ -2,6 +2,7 @@
 
 var AuthorViewHistoryModel = Backbone.Model.extend({
   defaults : {
+    dontRefresh : false
   },
   initialize: function (args) {
   },
@@ -42,6 +43,12 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
                                     })}, {silent : true});
     return this.get("history");
   },
+  dontRefresh : function() {
+    return this.get("dontRefresh");
+  },
+  setDontRefresh : function() {
+    this.set({"dontRefresh" : true });
+  },
   checkIfHistoryHasChangedAndRefresh : function() {
     var self = this;
     this.history().checkIfHistoryChangedAndCallback( function() {
@@ -49,7 +56,7 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
                                       });
   },
   ready : function() {
-    return this.history().ready();
+    return this.history().ready() && this.document().ready();
   }
 });
 
@@ -70,8 +77,13 @@ window.AuthorViewHistory = function(args) {
           var view =  new AuthorViewHistoryView({model : model, el : $("<div class='history-box'/>")});
           this.el = function() {return $(view.el);};
           this.ready = function() {return model.ready()};
-
-          var checkAndRefresh = function(i) {model.checkIfHistoryHasChangedAndRefresh(); setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+1);},i * 1000)};
+          this.setDontRefresh = function() { model.setDontRefresh();};
+          var checkAndRefresh = function(i) {
+                  if (model.dontRefresh())
+                    return; // No checkAndRefresh will be called anymore if this happends
+                  model.checkIfHistoryHasChangedAndRefresh();
+                  setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+1);},i * 1000);
+          };
           checkAndRefresh(1);
 
 };
