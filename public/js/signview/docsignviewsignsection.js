@@ -26,22 +26,30 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
     var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
 
-    var makeCallback = function(bankName, bankSign) {
+    var makeCallback = function(bankName, bankSign, bankSignExtraOpt) {
       if (!self.screenshotDone) {
-        setTimeout(function() { makeCallback(bankSign);}, 100);
+        setTimeout(function() { makeCallback(bankName, bankSign, bankSignExtraOpt);}, 100);
         return false;
       }
       mixpanel.track('Click ' + bankName);
-      Eleg[bankSign](document, signatory, function(p) {
-        document.sign().addMany(p).sendAjax();
-      });
+      bankSign = _.bind(bankSign, Eleg);
+
+      if (bankSignExtraOpt != undefined) {
+        bankSign(document, signatory, function(p) {
+          document.sign().addMany(p).sendAjax();
+        }, bankSignExtraOpt);
+      } else {
+        bankSign(document, signatory, function(p) {
+          document.sign().addMany(p).sendAjax();
+        });
+      }
       return false;
     };
 
-    bankid.click(function() { return makeCallback('BankID', 'bankidSign'); });
-    telia.click(function() { return makeCallback('Telia', 'teliaSign'); });
-    nordea.click(function() { return makeCallback('Nordea', 'nordeaSign'); });
-    mbi.click(function() { return makeCallback('Mobile BankID', 'mobileBankIDSign'); });
+    bankid.click(function() { return makeCallback('BankID', Eleg.bankidSign); });
+    telia.click(function() { return makeCallback('Telia', Eleg.teliaSign); });
+    nordea.click(function() { return makeCallback('Nordea', Eleg.nordeaSign); });
+    mbi.click(function() { return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value()); });
 
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
   },

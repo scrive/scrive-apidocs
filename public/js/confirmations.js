@@ -228,6 +228,10 @@ window.Confirmation = {
           $("body").append(overlay);
           setTimeout(function() {
             overlay.addClass("active");
+            // wait for a second so the browser has the time to
+            // render everything and display the animation
+            // animation takes 600ms, but waiting for a shorter period
+            // results in not fully rendered modals sometimes
             setTimeout(function() {
               view.onRender();
             }, 1000);
