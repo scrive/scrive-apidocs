@@ -180,6 +180,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
 window.DocumentSignSignSection = Backbone.View.extend({
    initialize : function(args){
+      this.textstyle = args.textstyle;
       this.render();
    },
    render: function() {
@@ -192,7 +193,10 @@ window.DocumentSignSignSection = Backbone.View.extend({
        } else {
 	   var headerTitle = localization.docsignview.onlySignTitle;
        }
-       if (!BrowserInfo.isSmallScreen()) box.append($('<h2>' + headerTitle + '</h2>'));
+
+       var header = $('<h2>' + headerTitle + '</h2>');
+       header.css(this.textstyle);
+       if (!BrowserInfo.isSmallScreen()) box.append(header);
 
        var signatory = document.currentSignatory();
        var sps = {};
