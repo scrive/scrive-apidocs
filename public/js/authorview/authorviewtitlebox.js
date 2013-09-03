@@ -59,8 +59,13 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
 var AuthorViewTitleBoxView = Backbone.View.extend({
  initialize: function(args) {
     _.bindAll(this, 'render');
-    this.model.document().bind('change', this.render);
+    this.model.document().on('change', this.render);
     this.render();
+  },
+  destroy : function() {
+    this.model.document().off('change', this.render);
+    this.model.off();
+    $(this.el).remove();
   },
   // Big instruction or information about document state
   text: function() {
@@ -246,6 +251,7 @@ window.AuthorViewTitleBox = function(args) {
           var model = new AuthorViewTitleBoxModel(args);
           var view =  new AuthorViewTitleBoxView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
+          this.destroy = function() { view.destroy();}
 
 };
 

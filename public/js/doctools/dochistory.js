@@ -10,8 +10,14 @@ var DocumentHistoryModel = Backbone.Model.extend({
   },
   initialize : function(){
   },
+  destroy : function() {
+    this.off();
+    this.stopListening();
+    this.historyList().destroy();
+    this.clear();
+  },
   newHistoryList : function() {
-     return  new KontraList({
+     var list = new KontraList({
         name : "Document history",
         schema: new Schema({
             url: "/api/frontend/history/" + this.document().documentid(),
@@ -38,6 +44,10 @@ var DocumentHistoryModel = Backbone.Model.extend({
             })
 
     });
+    this.listenTo(list.model(),"change", function() {this.trigger("change:history")});
+    this.listenTo(list.model(),"reset",  function() {this.trigger("change:history")});
+    return list;
+
   },
   historyList : function() {
         if (this.get("historyList") == undefined)
@@ -68,14 +78,19 @@ var DocumentHistoryModel = Backbone.Model.extend({
     return this.historyList().ready();
   }
 });
+
 var DocumentHistoryView = Backbone.View.extend({
     initialize: function(args) {
         var self = this;
         _.bindAll(this, 'render');
-        this.model.historyList().model().bind("change", function() {self.render();});
-        this.model.historyList().model().bind("reset", function() {self.render();});
+        this.listenTo(this.model,"change:history",self.render);
         var view = this;
         this.render();
+    },
+    destroy : function() {
+        this.stopListening();
+        this.model.destroy();
+        $(this.el).remove();
     },
     updateOption : function() {
          if (this.model.showAll()) {
@@ -104,7 +119,9 @@ var DocumentHistoryView = Backbone.View.extend({
     render: function() {
       var self = this;
       var container = $(this.el);
-      container.children().detach();
+      this.model.historyList().el().detach();
+      container.children().empty();
+
       var historyList = this.model.historyList();
 
       container.append(historyList.el());
@@ -134,6 +151,7 @@ window.DocumentHistory = function(args){
         this.el     = function() {return $(view.el);};
         this.recall = function() { model.recall();};
         this.ready  = function() {return model.ready()};
+        this.destroy = function() {view.destroy();this.checkIfHistoryChangedAndCallback = function() {};};
         this.checkIfHistoryChangedAndCallback = function(callback) {return model.checkIfHistoryChangedAndCallback(callback);}
 };
 

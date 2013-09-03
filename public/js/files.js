@@ -13,6 +13,10 @@ window.File = Backbone.Model.extend({
         name: "",
         broken : false
     },
+    destroy : function() {
+      this.off();
+      this.clear();
+    },
     queryPart: function () {
       var params = { documentid: this.documentid(),
                      attachmentid: this.attachmentid(),
@@ -146,6 +150,10 @@ var FilePage = Backbone.Model.extend({
     }},
     initialize: function (args) {
     },
+    destroy : function() {
+      this.off();
+      this.clear();
+    },
     file : function(){
         return this.get("file");
     },
@@ -194,6 +202,7 @@ var FilePageView = Backbone.View.extend({
       });
       this.off();
       this.model.off();
+      this.model.destroy();
       $(this.el).remove();
     },
     makeDropable : function() {
@@ -272,8 +281,8 @@ var FilePageView = Backbone.View.extend({
 var FileView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.bind('reset', this.render);
-        this.model.bind('change', this.render);
+        this.model.on('reset', this.render);
+        this.model.on('change', this.render);
         this.model.view = this;
         this.pageviews = [];
         this.model.fetch({data: { signatoryid: this.model.signatoryid()},
@@ -283,7 +292,10 @@ var FileView = Backbone.View.extend({
     },
     destroy : function() {
       this.off();
-      _.each(this.pageviews, function(pv) {pv.destroy();});
+      this.model.off();
+      this.model.destroy();
+      this.destroyed = true;
+      _.each(this.pageviews || [], function(pv) {pv.destroy();});
       $(this.el).remove();
     },
     vline: function() {
@@ -324,6 +336,7 @@ var FileView = Backbone.View.extend({
 
     },
     startReadyChecker : function() {
+        if (this.destroyed) return;
         var view = this;
         if (view.ready()) {
          view.model.trigger('ready');
@@ -336,6 +349,7 @@ var FileView = Backbone.View.extend({
          setTimeout(function() {view.startReadyChecker()},100);
     },
     startReadyCheckerFirstPage : function() {
+        if (this.destroyed) return;
         var view = this;
         if (view.readyFirstPage())
          view.model.trigger('FirstPageReady');
@@ -382,8 +396,7 @@ var FileView = Backbone.View.extend({
 });
 
 
-window.KontraFile = {
-    init : function(args){
+window.KontraFile = function(args){
         if (args.file != undefined) {
             this.model = args.file;
         }
@@ -408,7 +421,6 @@ window.KontraFile = {
             return this.view.readyToConnectToPage();
         };
         return this;
-    }
 };
 
 })(window);

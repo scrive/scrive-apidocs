@@ -562,23 +562,10 @@
                                 },
                                 timeout: args.timeout
               });
-            };/*
-            this.silentFetch = function() {
-                model.fetch({ data: schema.getSchemaUrlParams(),
-                                processData: true,
-                                cache: false,
-                                reset: true,
-                                timeout: args.timeout,
-                                success: function() {isReady = true; },
-                                error : function(list,resp) {
-                                  if (resp != undefined && resp.status != undefined && resp.status == 403)
-                                    self.silentFetch = function() {return;}; // Disable featching
-                                }
-              });
             };
-            */
             this.ready = function() {return isReady;};
             this.model = function() {return model;};
+            this.destroy = function() {schema.off();model.off();$(view.el).remove();};
             this.setShowLimit = function(l) {
                     schema.paging().setShowLimit(l);
                     schema.trigger("change");

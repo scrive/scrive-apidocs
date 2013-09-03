@@ -19,6 +19,10 @@ window.SignatoryAttachment = Backbone.Model.extend({
         }
         return this;
     },
+    destroy : function() {
+      this.off();
+      this.clear();
+    },
     file: function() {
         return this.get("file");
     },
@@ -106,6 +110,12 @@ window.Signatory = Backbone.Model.extend({
                       });
 
         signatory.bindBubble();
+    },
+    destroy : function() {
+      this.off();
+      this.stopListening();
+      _.each(this.fields(),function(f) {f.destroy();});
+      this.clear();
     },
     document: function() {
         return this.get("document");

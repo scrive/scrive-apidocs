@@ -6,6 +6,11 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
   },
   initialize: function (args) {
   },
+  destroy : function() {
+    this.off();
+    this.history().destroy();
+    this.clear();
+  },
   document :function() {
      return this.authorview().document();
   },
@@ -65,6 +70,11 @@ var AuthorViewHistoryView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.render();
     },
+    destroy : function() {
+        this.model.setDontRefresh();
+        this.model.destroy();
+        $(this.el).remove();
+    },
     render: function () {
         $(this.el).append($("<div class='headline'/>").text(this.model.text()));
         $(this.el).append(this.model.history().el());
@@ -78,6 +88,7 @@ window.AuthorViewHistory = function(args) {
           this.el = function() {return $(view.el);};
           this.ready = function() {return model.ready()};
           this.setDontRefresh = function() { model.setDontRefresh();};
+          this.destroy = function() {view.destroy();}
           var checkAndRefresh = function(i) {
                   if (model.dontRefresh())
                     return; // No checkAndRefresh will be called anymore if this happends

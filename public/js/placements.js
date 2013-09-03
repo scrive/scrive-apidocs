@@ -23,6 +23,11 @@ window.FieldPlacement = Backbone.Model.extend({
         this.setSignatory(args.field.signatory());
         this.setField(args.field);
     },
+    destroy : function() {
+      this.off();
+      this.stopListening();
+      this.clear();
+    },
     placed : function() {
         return this.get("placed");
     },

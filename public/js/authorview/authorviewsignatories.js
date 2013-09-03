@@ -39,6 +39,9 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   },
   setCurrentSignview : function(sv) {
     this.set({currentSignview : sv});
+  },
+  destroy : function() {
+    _.each(this.signatoriesViews(), function(s) {s.destroy();});
   }
 });
 
@@ -46,7 +49,12 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
   initialize: function (args) {
         _.bindAll(this, 'render');
         this.render();
-        this.model.bind('change', this.render);
+        this.model.on('change', this.render);
+  },
+  destroy : function() {
+    this.model.off();
+    this.model.destroy();
+    $(this.el).remove();
   },
   list : function() {
       var model = this.model;
@@ -118,6 +126,7 @@ window.AuthorViewSignatories = function(args) {
           var model = new AuthorViewSignatoriesModel(args);
           var view =  new AuthorViewSignatoriesView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
+          this.destroy = function() {return view.destroy();}
 
 };
 

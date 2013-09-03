@@ -18,6 +18,9 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
+  destroy : function() {
+    $(this.el).remove();
+  },
   attachmentDescription: function(attachment) {
     var container = $("<div class='item' />");
     var text = attachment.hasFile() ? localization.authorview.uploadedBy : localization.authorview.requestedFrom;
@@ -75,6 +78,7 @@ window.AuthorViewSignatoriesAttachments = function(args) {
           var model = new AuthorViewSignatoriesAttachmentsModel(args);
           var view =  new AuthorViewSignatoriesAttachmentsView({model : model, el :(args.el != undefined) ? args.el : $("<div/>")});
           this.el = function() {return $(view.el);};
+          this.destroy = function() { view.destroy()};
 
 };
 

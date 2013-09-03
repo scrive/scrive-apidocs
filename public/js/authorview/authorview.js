@@ -12,8 +12,8 @@ var AuthorViewModel = Backbone.Model.extend({
   },
   initialize: function (args) {
       var self = this;
-      this.document().bind('reset', function() {self.trigger("render")});
-      this.document().bind('change', function() {self.trigger("render")});
+      this.document().on('reset', function() {self.trigger("render")});
+      this.document().on('change', function() {self.trigger("render")});
   },
   document : function() {
      return this.get("document");
@@ -35,7 +35,7 @@ var AuthorViewModel = Backbone.Model.extend({
   },
   file  : function() {
     if (this.get("file") == undefined)
-      this.set({"file" : KontraFile.init({
+      this.set({"file" : new KontraFile({
               file: this.document().mainfile()
             })}, {silent : true});
     return this.get("file");
@@ -72,6 +72,22 @@ var AuthorViewModel = Backbone.Model.extend({
   },
   reload: function() {
     this.trigger("reload");
+  },
+  destroy: function() {
+    this.document().off();
+    this.title().destroy();
+    if (this.get("history") != undefined)
+      this.history().destroy();
+    this.document().destroy();
+    this.signatories().destroy();
+    if (this.get("file") != undefined)
+      this.file().destroy();
+    //if (this.hasAuthorAttachmentsSection())
+    //  this.authorattachments().destroy();
+    //if (this.hasEvidenceAttachmentsSection())
+    //  this.evidenceattachments().destroy();
+    //if (this.hasSignatoriesAttachmentsSection())
+    //  this.signatoryattachments().destroy();
   }
 });
 
@@ -80,9 +96,15 @@ var AuthorViewModel = Backbone.Model.extend({
 window.AuthorViewView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
-    this.model.bind('render', this.render);
+    this.model.on('render', this.render);
     this.prerender();
     this.render();
+  },
+  destroy : function() {
+    this.model.off();
+    this.model.destroy();
+    this.model.setDontRefresh();
+    $(this.el).empty();
   },
   prerender: function() {
     this.container = $("<div/>");
@@ -104,12 +126,12 @@ window.AuthorViewView = Backbone.View.extend({
     this.container.append(subcontainer);
     subcontainer.append(this.model.signatories().el());
     subcontainer.append(model.file().view.el);
-    if (this.model.hasSignatoriesAttachmentsSection())
-       subcontainer.append(model.signatoryattachments().el());
-    if (this.model.hasAuthorAttachmentsSection())
-       subcontainer.append(model.authorattachments().el());
-    if (this.model.hasEvidenceAttachmentsSection())
-       subcontainer.append(model.evidenceattachments().el());
+    //if (this.model.hasSignatoriesAttachmentsSection())
+    //   subcontainer.append(model.signatoryattachments().el());
+    //if (this.model.hasAuthorAttachmentsSection())
+    //   subcontainer.append(model.authorattachments().el());
+    //if (this.model.hasEvidenceAttachmentsSection())
+    //   subcontainer.append(model.evidenceattachments().el());
     return this;
   }
 });
@@ -129,7 +151,7 @@ window.AuthorView = function(args) {
        var model = new AuthorViewModel({
                         document : document
                     });
-       model.bind('reload', function() {self.reload()});
+       model.on('reload', function() {self.reload()});
        var view = new AuthorViewView({
                         model: model,
                         el : maindiv
@@ -165,7 +187,7 @@ window.AuthorView = function(args) {
                  var newmodel = new AuthorViewModel({
                                   document : newdocument
                               });
-                 newmodel.bind('reload', function() {self.reload()});
+                 newmodel.on('reload', function() {self.reload()});
                  var newview = new AuthorViewView({
                                   model: newmodel,
                                   el : newdiv
@@ -181,15 +203,16 @@ window.AuthorView = function(args) {
                         model = newmodel;
                         view = newview;
                         maindiv = newdiv;
+                        oldview.destroy();
                      } else {
-                        newmodel.setDontRefresh();
+                        newview.destroy();
                     }
                    }
                    else {
-                     setTimeout(connectNewView,1000);
+                     setTimeout(connectNewView,500);
                    }
                  }
-                 newdocument.bind('change:ready', function() {
+                 newdocument.on('change:ready', function() {
                     connectNewView();
                  });
 

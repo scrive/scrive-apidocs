@@ -118,10 +118,14 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
 });
 
 var AuthorViewSignatoryView = Backbone.View.extend({
-    initialize: function (args) {
+  initialize: function (args) {
         _.bindAll(this, 'render');
         this.render();
-    },
+  },
+  destroy : function() {
+    this.model.off();
+    $(this.el).remove();
+  },
   statusbox: function() {
       var model = this.model;
       var statusbox  = $('<div  class="statusbox" />');
@@ -414,6 +418,7 @@ window.AuthorViewSignatory = function(args) {
           this.nameOrEmail = function() {return model.nameOrEmail();};
           this.nameOrEmailOrMobile = function() {return model.nameOrEmailOrMobile();};
           this.status = function() {return model.status();};
+          this.destroy = function() {view.destroy();}
 };
 
 

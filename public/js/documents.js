@@ -51,6 +51,14 @@ window.Document = Backbone.Model.extend({
         _.bindAll(this);
         this.bindBubble();
     },
+    destroy : function() {
+      this.off();
+      this.stopListening();
+      _.each(this.signatories(),function(s) {s.destroy();});
+      this.file().off();
+      this.lang().off();
+      this.clear();
+    },
     viewer: function() {
         if (this.get("viewer") != undefined)
             return this.get("viewer");
@@ -206,7 +214,7 @@ window.Document = Backbone.Model.extend({
         if (document.file() && document.file().view.readyFirstPage())
             document.takeScreenshot(true, null);
         else
-            document.file().bind('FirstPageReady', function() {
+            document.file().on('FirstPageReady', function() {
             document.takeScreenshot(true, null);
             });
     },
@@ -539,7 +547,7 @@ window.Document = Backbone.Model.extend({
        file: function() {
            if (args.file) {
                var file = new File(_.defaults(args.file, dataForFile));
-               file.bind('ready', function() {
+               file.on('ready', function() {
                    self.trigger('file:change');
                });
                return file;
@@ -559,7 +567,7 @@ window.Document = Backbone.Model.extend({
        }),
        lang: (function() {
            var lang = new DocLang({lang : args.lang});
-           lang.bind('change', function() {
+           lang.on('change', function() {
                self.trigger('change:lang');
            });
            return lang;
@@ -652,7 +660,7 @@ window.Document = Backbone.Model.extend({
     },
     bindBubble: function() {
         var document = this;
-        document.bind('change', document.bubbleSelf);
+        document.on('change', document.bubbleSelf);
     },
     bubbleSelf: function() {
         var document = this;
