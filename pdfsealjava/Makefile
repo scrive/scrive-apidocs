@@ -54,3 +54,24 @@ test-pdfs/broken-fonts.json : test-pdfs/broken-fonts.pdf example_spec.json
 	echo ' "output": "test-pdfs/broken-fonts-output.pdf",' >> $@
 	tail -n +3 example_spec.json >> $@
 	head -n 10 $@
+
+test-pdfs/acro-forms-empty-output.pdf : test-pdfs/acro-forms-empty.json test-pdfs/acro-forms-empty.pdf pdfseal.jar itextpdf-5.4.2.jar
+	java -jar pdfseal.jar $<
+	open $@
+
+test-pdfs/acro-forms-empty.json : test-pdfs/acro-forms-empty.pdf example_spec.json
+	echo '{"input": "'$<'",' > $@
+	echo ' "output": "test-pdfs/acro-forms-empty-output.pdf",' >> $@
+	tail -n +3 example_spec.json >> $@
+	head -n 10 $@
+
+
+test-pdfs/acro-forms-filled-in-output.pdf : test-pdfs/acro-forms-filled-in.json test-pdfs/acro-forms-filled-in.pdf pdfseal.jar itextpdf-5.4.2.jar
+	java -jar pdfseal.jar $<
+	open $@
+
+test-pdfs/acro-forms-filled-in.json : test-pdfs/acro-forms-filled-in.pdf example_spec.json
+	echo '{"input": "'$<'",' > $@
+	echo ' "output": "test-pdfs/acro-forms-filled-in-output.pdf",' >> $@
+	tail -n +3 example_spec.json >> $@
+	head -n 10 $@
