@@ -1611,11 +1611,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
                       sqlWhereEq "id" slid
                       sqlWhereEq "document_id" did
                       sqlWhere "read_invitation IS NULL"
-        _ <- update $ InsertEvidenceEvent
-          MarkInvitationReadEvidence
-          (value "email" eml >> value "actor" (actorWho actor))
-          (Just did)
-          actor
+        _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+            MarkInvitationReadEvidence
+            (value "email" eml >> value "actor" (actorWho actor))
+            (Just did)
+            (Just slid)
+            Nothing
+            actor
         return success
 
 data NewDocument = NewDocument User String DocumentType Int Actor
