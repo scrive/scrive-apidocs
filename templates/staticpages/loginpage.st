@@ -183,7 +183,7 @@ accountSetupPage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body style="background: $if(custombackground)$$custombackground$$else$none repeat scroll 0 0 #FFFFFF;$endif$">
+      <body style="background: $if(backgroundcolour)$$backgroundcolour$$else$none repeat scroll 0 0 #FFFFFF;$endif$">
 
       $flashmessages()$
 
