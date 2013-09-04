@@ -162,6 +162,7 @@ class DocHelper
   def partSign
     partSignStart
     puts "sign the document"
+    sleep 1
     click "div.modal-footer a.float-right"
   end
 
