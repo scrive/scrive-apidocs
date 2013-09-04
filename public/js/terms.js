@@ -5,7 +5,7 @@
     },
     initialize: function(args) {
       _.bindAll(this);
-    },
+    }
   });
 
   var TermsOfServicePageView = Backbone.View.extend({
