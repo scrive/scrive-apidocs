@@ -137,6 +137,7 @@ set systemPage
  js   js/doctools/docdownload.js
  js   js/doctools/docauthorattachments.js
  js   js/doctools/docevidenceattachments.js
+ js   js/signview/docsignviewbranding.js
  js   js/signview/docsignviewinstructions.js
  js   js/signview/docsignviewsignatories.js
  js   js/signview/docsignviewextradetailssection.js

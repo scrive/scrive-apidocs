@@ -121,6 +121,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   },
   popup: function() {
     var document = this.document();
+    var signviewbranding = this.model.signviewbranding();
     var signatory = document.currentSignatory();
 
     Confirmation.popup({
@@ -128,8 +129,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       icon: '/img/modal-icons/sign.png',
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
-      textcolor : this.model.usebranding() ? document.signviewtextcolour() : undefined,
-      textfont : this.model.usebranding() ? document.signviewtextfont() : undefined,
+      textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
+      textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
       content: this.createContentElems
     });
 
@@ -185,6 +186,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
    },
    render: function() {
        var model = this.model;
+       var signviewbranding = this.model.signviewbranding();
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
   
@@ -244,8 +246,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             editText: localization.reject.editMessage,
                                             rejectText: localization.cancel,
                                             acceptColor: "red",
-                                            textcolor : model.usebranding() ? document.signviewtextcolour() : undefined,
-                                            textfont : model.usebranding() ? document.signviewtextfont() : undefined,
+                                            textcolor : model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
+                                            textfont : model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
                                             onAccept: function(customtext) {
                                                 if (alreadyClicked(this))
                                                   return;

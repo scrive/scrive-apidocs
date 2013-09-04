@@ -155,7 +155,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         var view = this;
         var attachments = this.model;
         this.container = $(this.el);
-        this.container.addClass("designSignatoryAttachmentsPopupContent");
+        var div = $('<div class="designSignatoryAttachmentsPopupContent"></div>');
         this.container.empty();
         if (!attachments.isEmpty())
         {
@@ -169,9 +169,9 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
             var tbody = $("<tbody/>");
             _.each(attachments.attachments(), function(a) { tbody.append(view.attachmentRow(a));});
 
-            this.container.append(table.append(thead).append(tbody));
+            div.append(table.append(thead).append(tbody));
         }
-        this.container.append(this.addAttachmentButton());
+        this.container.append(div).append(this.addAttachmentButton());
         return this;
     }
 });
@@ -185,7 +185,7 @@ window.DesignSignatoryAttachmentsPopup = {
          var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
-              subtitle  : 'Select the files you would like to upload',
+              subtitle  : localization.selectFiles,
               icon : '/img/modal-icons/attachments.png',
               acceptText: localization.save,
               width: 800,

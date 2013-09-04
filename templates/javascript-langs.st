@@ -186,6 +186,7 @@ javascriptLocalisation =
            , to : "$_to()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
            , ok : "$_ok()$"
+           , selectFiles: "$_selectFilesYouWantToUpload()$"
            , authorattachments: {
                   selectAttachments: "$_updateAttachmentsDialogHead()$"
                 , selectAttachment : "$_updateAttachmentsDialogUpLoadChooseAttachment()$"
@@ -210,6 +211,7 @@ javascriptLocalisation =
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
+              , subtitle : "$_dialogCsvupload1Subtitle()$"
               , selectFile :  "$_dialogCsvupload2CSVMultiChooseFile()$"
               , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }

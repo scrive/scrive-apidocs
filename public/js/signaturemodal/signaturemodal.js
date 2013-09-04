@@ -173,7 +173,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
            var abutton = this.acceptButton();
            abutton.addClass("float-right");
 
-           var canceloption = $("<label class='delete' style='float:right;color: red;margin-right:20px;line-height: 32px;pointer: cursor;'>Cancel</label>").click(function() {
+           var canceloption = $("<label class='delete' style='float:right;color: red;margin-right:20px;line-height: 32px;'></label>").text(localization.cancel).click(function() {
                                      self.model.onClose();
                                      return false;
                               });

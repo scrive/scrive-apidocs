@@ -178,3 +178,16 @@ allUsersMustHaveCompany =
        _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_number"
        return ()
     }
+
+migrateUsersDeletedTime :: MonadDB m => Migration m
+migrateUsersDeletedTime =
+  Migration {
+      mgrTable = tableUsers
+    , mgrFrom = 16
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE users"
+                  <+> "ALTER deleted DROP NOT NULL,"
+                  <+> "ALTER deleted DROP DEFAULT,"
+                  <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END)"
+       return ()
+    }

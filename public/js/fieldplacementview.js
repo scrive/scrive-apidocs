@@ -1580,7 +1580,7 @@ var SignaturePlacementView = Backbone.View.extend({
             if (signatory.isCsv())
              sname =  localization.csv.title;
             else
-             sname =  localization.process.signatoryname + (localization.process.contract.numberedsignatories() ? " " + signatory.signIndex() : "");
+             sname =  localization.process.signatoryname + " " + signatory.signIndex();
         }
         if (placement.field().value() == "")
             box.text(localization.signature.placeFor(sname));

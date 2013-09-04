@@ -69,7 +69,8 @@ versionedAPI _version = choice [
   dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
   dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
-  dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo
+  dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo,
+  dir "userbrandingforsignview" $ hGet $ toK0 $ apiCallUserSignviewBranding
   ]
 
 
@@ -100,6 +101,14 @@ apiCallGetUserProfile =  api $ do
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   Ok <$> userJSON ctx user (company,companyui)
 
+
+apiCallUserSignviewBranding :: Kontrakcja m => m Response
+apiCallUserSignviewBranding =  api $ do
+  ctx <- getContext
+  (user, _ , _) <- getAPIUserWithPad APIPersonal
+  company <- getCompanyForUser user
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  Ok <$> signviewBrandingJSON ctx user company companyui
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do

@@ -325,10 +325,10 @@ fileInDocument doc fid =
 
 
 documentDeletedForUser :: Document -> UserID -> Bool
-documentDeletedForUser doc uid = fromMaybe False (fmap signatorylinkdeleted $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
+documentDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatorylinkdeleted) $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
 
 documentReallyDeletedForUser :: Document -> UserID -> Bool
-documentReallyDeletedForUser doc uid = fromMaybe False (fmap signatorylinkreallydeleted $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
+documentReallyDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatorylinkreallydeleted) $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
 
 userCanPerformSigningAction :: UserID -> Document  -> Bool
 userCanPerformSigningAction uid doc =

@@ -68,7 +68,7 @@ instance MonadDB m => DBQuery m GetPadQueue PadQueue where
   query (GetPadQueue uid) = do
     kRun_ $ SQL ("SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? " 
                 <+> "AND EXISTS (SELECT * FROM signatory_links WHERE signatory_links.document_id = padqueue.document_id " 
-                <+>                                               " AND signatory_links.user_id = ? AND NOT signatory_links.deleted)")
+                <+>                                               " AND signatory_links.user_id = ? AND signatory_links.deleted IS NULL)")
             [toSql uid,toSql uid]
     fetchPadQueue
 

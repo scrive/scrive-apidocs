@@ -12,9 +12,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.render();
   },
   welcomeText : function() {
-    return localization.docsignview.welcome + 
-           " <span class='name'>" + 
-           this.model.document().currentSignatory().name() + 
+    return localization.docsignview.welcome +
+           " <span class='name'>" +
+           this.model.document().currentSignatory().name() +
            "</span>";
   },
   // Big instruction or information about document state
@@ -61,9 +61,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       return $(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
   },
   styleText: function(elem) {
-    var document = this.model.document();
-    var textcolour = document.signviewtextcolour();
-    var textfont = document.signviewtextfont();
+    var signviewbranding = this.model.signviewbranding();
+    var textcolour = signviewbranding.signviewtextcolour();
+    var textfont = signviewbranding.signviewtextfont();
 
     if (this.model.usebranding() && textcolour) {
       elem.css('color', textcolour);
@@ -75,7 +75,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   render: function() {
     var document = this.model.document();
     $(this.el).empty();
-    if(this.model.justSaved())  return this;
 
     var container = $("<div class='instructions' />");
     if (BrowserInfo.isSmallScreen()) {
@@ -107,7 +106,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     container.append(subheadline.text(this.subtext()));
 
 
-    if (document.currentSignatory().padDelivery() && document.isSignedNotClosed())
+    if (document.currentSignatory().padDelivery() && document.isSignedNotClosed() && document.signatoriesThatCanSignNowOnPad().length > 0)
          container.append(this.giveToNextPadSignatoryOption());
 
     var smallerbit = $("<div class='smaller-bits'/>");

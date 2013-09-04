@@ -15,6 +15,7 @@ module Doc.Model
   , AttachFile(..)
   , DetachFile(..)
   , AttachSealedFile(..)
+  , AttachExtendedSealedFile(..)
   , CancelDocument(..)
   , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
@@ -425,8 +426,12 @@ documentFilterToSQL (DocumentFilterTemplate) = do
   sqlWhereEq "documents.type" Template
 
 documentFilterToSQL (DocumentFilterDeleted flag1 flag2) = do
-  sqlWhereEq "signatory_links.deleted" flag1
-  sqlWhereEq "signatory_links.really_deleted" flag2
+  if flag1
+     then sqlWhere "signatory_links.deleted IS NOT NULL"
+     else sqlWhere "signatory_links.deleted IS NULL"
+  if flag2
+     then sqlWhere "signatory_links.really_deleted IS NOT NULL"
+     else sqlWhere "signatory_links.really_deleted IS NULL"
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
@@ -1072,7 +1077,7 @@ data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
   update (ArchiveDocument uid did _actor) = do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-        sqlSet "deleted" True
+        sqlSetCmd "deleted" "now()"
 
         sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
@@ -1126,6 +1131,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
         actor
     updateMTimeAndObjectVersion did (actorTime actor)
     return ()
+
+data AttachExtendedSealedFile = AttachExtendedSealedFile DocumentID FileID SealStatus
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachExtendedSealedFile () where
+  update (AttachExtendedSealedFile did fid status) = do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      sqlSet "sealed_file_id" fid
+      sqlSet "seal_status" status
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentStatusIs Closed
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument () where
@@ -1609,9 +1623,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
   update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
   magichash <- random
-  Log.debug $ show user
   authorDetails <- signatoryDetailsFromUser user (True, True)
-  Log.debug $ show authorDetails
   let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
   let authorlink = authorlink0 {
@@ -1649,15 +1661,15 @@ data ReallyDeleteDocument = ReallyDeleteDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool where
   update (ReallyDeleteDocument uid did _actor) = do
     result <- kRun $ sqlUpdate "signatory_links" $ do
-      sqlSet "really_deleted" True
+      sqlSetCmd "really_deleted" "now()"
       sqlWhereExists $ sqlSelect "documents" $ do
         sqlWhere "documents.id = signatory_links.document_id"
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
 
-        sqlWhere "NOT signatory_links.really_deleted"
-        sqlWhere "signatory_links.deleted"
+        sqlWhere "signatory_links.really_deleted IS NULL"
+        sqlWhere "signatory_links.deleted IS NOT NULL"
         sqlWhereEq "documents.id" did
 
         sqlWhereEq "same_company_users.id" uid
@@ -1760,9 +1772,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument () 
   update (RestoreArchivedDocument user did _actor) = do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
 
-      sqlSet "deleted" False
+      sqlSet "deleted" SqlNull
 
-      sqlWhere "NOT really_deleted"
+      sqlWhere "really_deleted IS NULL"
 
       sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"

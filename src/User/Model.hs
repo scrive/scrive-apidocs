@@ -168,13 +168,13 @@ userOrderByAscDescToSQL (Desc x) = userOrderByToSQL x `mappend` SQL " DESC" []
 data GetUsers = GetUsers
 instance MonadDB m => DBQuery m GetUsers [User] where
   query GetUsers = do
-    kRun_ $ selectUsersSQL <+> "WHERE deleted = FALSE ORDER BY first_name || ' ' || last_name DESC"
+    kRun_ $ selectUsersSQL <+> "WHERE deleted IS NULL ORDER BY first_name || ' ' || last_name DESC"
     fetchUsers
 
 data GetUserByID = GetUserByID UserID
 instance MonadDB m => DBQuery m GetUserByID (Maybe User) where
   query (GetUserByID uid) = do
-    kRun_ $ selectUsersSQL <+> "WHERE id =" <?> uid <+> "AND deleted = FALSE"
+    kRun_ $ selectUsersSQL <+> "WHERE id =" <?> uid <+> "AND deleted IS NULL"
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetUserByIDIncludeDeleted = GetUserByIDIncludeDeleted UserID
@@ -186,19 +186,19 @@ instance MonadDB m => DBQuery m GetUserByIDIncludeDeleted (Maybe User) where
 data GetUserByEmail = GetUserByEmail Email
 instance MonadDB m => DBQuery m GetUserByEmail (Maybe User) where
   query (GetUserByEmail email) = do
-    kRun_ $ selectUsersSQL <+> "WHERE deleted = FALSE AND email =" <?> map toLower (unEmail email)
+    kRun_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> map toLower (unEmail email)
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance MonadDB m => DBQuery m GetCompanyAccounts [User] where
   query (GetCompanyAccounts cid) = do
-    kRun_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted = FALSE ORDER BY email DESC"
+    kRun_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email DESC"
     fetchUsers
 
 data GetCompanyAdmins = GetCompanyAdmins CompanyID
 instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
   query (GetCompanyAdmins cid) = do
-    kRun_ $ selectUsersSQL <+> "WHERE is_company_admin AND company_id =" <?> cid <+> "AND deleted = FALSE ORDER BY email DESC"
+    kRun_ $ selectUsersSQL <+> "WHERE is_company_admin AND company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email DESC"
     fetchUsers
 
 data GetInviteInfo = GetInviteInfo UserID
@@ -217,17 +217,17 @@ instance MonadDB m => DBQuery m GetInviteInfo (Maybe InviteInfo) where
 data SetUserCompany = SetUserCompany UserID CompanyID
 instance MonadDB m => DBUpdate m SetUserCompany Bool where
   update (SetUserCompany uid cid) =
-      kRun01 $ SQL "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
+      kRun01 $ SQL "UPDATE users SET company_id = ? WHERE id = ? AND deleted IS NULL"
                [toSql cid, toSql uid]
 
 data IsUserDeletable = IsUserDeletable UserID
 instance MonadDB m => DBQuery m IsUserDeletable Bool where
   query (IsUserDeletable uid) = do
     kRun_ $ sqlSelect "users" $ do
-      sqlWhereEq "users.deleted" False
+      sqlWhere "users.deleted IS NULL"
       sqlWhereEq "users.id" uid
       sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
-      sqlWhereEq "signatory_links.deleted" False
+      sqlWhere "signatory_links.deleted IS NULL"
       sqlWhere "signatory_links.is_author"
       sqlJoinOn "documents" "documents.id = signatory_links.document_id"
       sqlWhereEq "documents.status" Pending
@@ -237,12 +237,11 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
     return (null results)
 
 -- | Marks a user as deleted so that queries won't return them any more.
--- TODO: change deleted to time
 data DeleteUser = DeleteUser UserID
 instance MonadDB m => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
-    kRun01 $ SQL "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
-             [toSql True, toSql uid]
+    kRun01 $ SQL "UPDATE users SET deleted = now() WHERE id = ? AND deleted IS NULL"
+             [toSql uid]
 
 -- | Removes user who didn't accept TOS from the database
 data RemoveInactiveUser = RemoveInactiveUser UserID
@@ -277,7 +276,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
             sqlSet "phone" ("" :: String)
             sqlSet "email" $ map toLower email
             sqlSet "lang" l
-            sqlSet "deleted" False
+            sqlSet "deleted" SqlNull
             sqlSet "associated_domain" mad
             mapM_ (sqlResult . raw) selectUsersSelectorsList
         fetchUsers >>= oneObjectReturnedGuard
@@ -286,7 +285,7 @@ data SetUserEmail = SetUserEmail UserID Email
 instance MonadDB m => DBUpdate m SetUserEmail Bool where
   update (SetUserEmail uid email) = do
     kRun01 $ SQL ("UPDATE users SET email = ?"
-                  <> " WHERE id = ? AND deleted = FALSE")
+                  <> " WHERE id = ? AND deleted IS NULL")
              [toSql $ map toLower $ unEmail email, toSql uid]
 
 data SetUserPassword = SetUserPassword UserID Password
@@ -295,7 +294,7 @@ instance MonadDB m => DBUpdate m SetUserPassword Bool where
     kRun01 $ SQL ("UPDATE users SET"
                   <> "  password = ?"
                   <> ", salt = ?"
-                  <> "  WHERE id = ? AND deleted = FALSE")
+                  <> "  WHERE id = ? AND deleted IS NULL")
              [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
 
 data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
@@ -346,7 +345,7 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
                   <> ", company_position = ?"
                   <> ", phone = ?"
                   <> ", email = ?"
-                  <> "  WHERE id = ? AND deleted = FALSE")
+                  <> "  WHERE id = ? AND deleted IS NULL")
              [ toSql $ userfstname info
              , toSql $ usersndname info
              , toSql $ userpersonalnumber info
@@ -361,7 +360,7 @@ instance MonadDB m => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     kRun01 $ SQL ("UPDATE users SET"
                   <> "  lang = ?"
-                  <> "  WHERE id = ? AND deleted = FALSE")
+                  <> "  WHERE id = ? AND deleted IS NULL")
              [ toSql $ getLang us
              , toSql uid
              ]
@@ -371,7 +370,7 @@ instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
   update (AcceptTermsOfService uid time) = do
     kRun01 $ SQL ("UPDATE users SET"
                   <> "  has_accepted_terms_of_service = ?"
-                  <> "  WHERE id = ? AND deleted = FALSE")
+                  <> "  WHERE id = ? AND deleted IS NULL")
              [ toSql time
              , toSql uid
              ]
@@ -379,17 +378,17 @@ instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
 instance MonadDB m => DBUpdate m SetSignupMethod Bool where
   update (SetSignupMethod uid signupmethod) = do
-    kRun01 $ SQL ("UPDATE users SET signup_method = ? WHERE id = ? AND deleted = FALSE")
+    kRun01 $ SQL ("UPDATE users SET signup_method = ? WHERE id = ? AND deleted IS NULL")
            [toSql signupmethod, toSql uid]
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance MonadDB m => DBUpdate m SetUserCompanyAdmin Bool where
   update (SetUserCompanyAdmin uid iscompanyadmin) = do
-    mcid <- getOne $ SQL "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
+    mcid <- getOne $ SQL "SELECT company_id FROM users WHERE id = ? AND deleted IS NULL FOR UPDATE" [toSql uid]
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> kRun01 $ SQL
-        "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE"
+        "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted IS NULL"
         [toSql iscompanyadmin, toSql uid]
 
 fetchUserUsageStats :: MonadDB m => m [UserUsageStats]
@@ -477,7 +476,7 @@ composeFullName (fstname, sndname) = if null sndname
 
 checkIfUserExists :: MonadDB m => UserID -> m Bool
 checkIfUserExists uid = checkIfAnyReturned
-  $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+  $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted IS NULL" [toSql uid]
 
 selectUsersSQL :: SQL
 selectUsersSQL = "SELECT" <+> selectUsersSelectors <+> "FROM users"
@@ -573,7 +572,7 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> "  FROM users"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  LEFT JOIN user_invite_infos ON users.id = user_invite_infos.user_id"
-  <> "  WHERE users.deleted = FALSE")
+  <> "  WHERE users.deleted IS NULL")
   []
 
 

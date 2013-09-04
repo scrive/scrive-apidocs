@@ -216,7 +216,7 @@ window.DesignAuthorAttachmentsPopup = {
          var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.authorattachments.selectAttachments,
-              subtitle : 'Select the files you would like to upload',
+              subtitle : localization.selectFiles,
               icon : '/img/modal-icons/attachments.png',
               acceptText: localization.save,
               width: 740,

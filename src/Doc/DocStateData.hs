@@ -211,8 +211,8 @@ data SignatoryLink = SignatoryLink {
   , maybereadinvite            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
   , invitationdeliverystatus   :: MailsDeliveryStatus -- ^ status of email delivery
   , signatorysignatureinfo     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
-  , signatorylinkdeleted       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
-  , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
+  , signatorylinkdeleted       :: Maybe MinutesTime   -- ^ when was put in recycle bin
+  , signatorylinkreallydeleted :: Maybe MinutesTime   -- ^ when was purged from the system
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
   , signatorylinkstatusclass   :: StatusClass
@@ -238,8 +238,8 @@ instance HasDefaultValue SignatoryLink where
                   , maybereadinvite              = Nothing
                   , invitationdeliverystatus     = Unknown
                   , signatorysignatureinfo       = Nothing
-                  , signatorylinkdeleted         = False
-                  , signatorylinkreallydeleted   = False
+                  , signatorylinkdeleted         = Nothing
+                  , signatorylinkreallydeleted   = Nothing
                   , signatorylinkcsvupload       = Nothing
                   , signatoryattachments         = []
                   , signatorylinkstatusclass     = SCDraft

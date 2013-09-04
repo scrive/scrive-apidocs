@@ -15,13 +15,15 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     }
     this.render();
   },
-  apiURL: function() {
-    var path = document.location.pathname.split("/");
-    return "/api/frontend/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + encodeURIComponent(this.model.name()) + "/file" + this.model.document().viewer().urlPart();
+  uploadURL: function() {
+    return "/api/frontend/addsignatoryattachment/" + this.model.document().documentid() + "/" + this.model.document().viewer().signatoryid() + "/" + encodeURIComponent(this.model.name()) + "" + this.model.document().viewer().urlPart();
+  },
+  deleteURL: function() {
+    return "/api/frontend/deletesignatoryattachment/" + this.model.document().documentid() + "/" + this.model.document().viewer().signatoryid() + "/" + encodeURIComponent(this.model.name()) + "" + this.model.document().viewer().urlPart();
   },
   removeButton: function() {
     var attachment = this.model;
-    var deleteurl = this.apiURL();
+    var deleteurl = this.deleteURL();
     var button = new Button({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
             attachment.loading();
             $.ajax(deleteurl, {
@@ -41,7 +43,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   uploadButton: function() {
     var attachment = this.model;
-    var uploadurl = this.apiURL();
+    var uploadurl = this.uploadURL();
     return new UploadButton({
       width: 120,
       size : 'tiny',
@@ -142,6 +144,8 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.title = args.title;
+    this.textcolour = args.textcolour;
+    this.textfont = args.textfont;
     this.uploadElems = [];
     this.render();
   },
@@ -175,16 +179,15 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     }
 
     var document = this.model.signatories()[0].document();
-    var textcolour = document.signviewtextcolour();
-    var textfont = document.signviewtextfont();
+
     var labelCss = {};
 
     var header = $("<h2/>");
-    if (textcolour) {
-      labelCss['color'] = textcolour;
+    if (this.textcolour) {
+      labelCss['color'] = this.textcolour;
     }
-    if (textfont) {
-      labelCss['font-family'] = textfont;
+    if (this.textfont) {
+      labelCss['font-family'] = this.textfont;
     }
 
     var container = $("<div class='signatoryattachments' />");
