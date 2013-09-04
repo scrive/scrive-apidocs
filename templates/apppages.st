@@ -158,8 +158,33 @@ $endif$
         world. </p>
     </div>
 
-    <nav class="left">
+    <nav>
       <div class="content">
+        <ul class="tree">
+          <li class="branch"> <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api"> $_pageFooterAPI()$ </a> </li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <nav>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$about" id="nav-about">$_footerAbout()$</a></li>
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$contact" id="nav-contact">$_footerContact()$</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <nav class="right wide">
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">
+            $langSwitcher()$
+          </li>
+        </ul>
         <ul class="icons">
           <li>
             <a href="http://www.linkedin.com/company/scrive" target="_blank">
@@ -171,99 +196,11 @@ $endif$
               <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter" />
             </a>
           </li>
-          <li>
+          <li class="last">
             <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
               <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook" />
             </a>
           </li>
-        </ul>
-        <ul class="tree">
-          <li class="branch">
-            $langSwitcher()$
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-
-    <nav>
-      <header>
-        <h4>$_pageFooterExplore()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
-              $_pageFooterAPI()$
-            </a>
-          </li>
-
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
-              $_pageFooterLabs()$
-            </a>
-          </li>
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
-              $_pageFooterBlog()$
-            </a>
-          </li>
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
-              $_pageFooterWork()$
-            </a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header>
-        <h4>$_pageFooterTerms()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
-          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header>
-        <h4>$_pageFooterContact()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch">
-            $_pageFooterWorkDay()$
-          </li>
-          <li class="branch">
-            <a href="tel:$_pageFooterPhone()$">
-              $_pageFooterPhone()$
-            </a>
-          <li class="branch">
-            <a href="mailto:$_pageFooterMail()$">
-              $_pageFooterMail()$
-            </a>
-          </li>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header>
-        <h4>$_pageFooterAddress()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch">$_pageFooterAddress1()$</li>
-          <li class="branch">$_pageFooterAddress2()$</li>
-          <li class="branch">$_pageFooterAddress3()$</li>
-          <li class="branch">$_pageFooterAddress4()$</li>
         </ul>
       </div>
     </nav>
@@ -399,7 +336,9 @@ langSwitcher=
                       $endif$
                    }
                    var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
-                                              textWidth: 80,
+                                              textWidth: "189px",
+                                              optionsWidth: "216px",
+                                              border: "none",
                                               options: [ $if(langswedish)$
                                                                {name: "$_EnglishInEnglish()$", value: "en", onSelect : function() {changeLang("en");}}
                                                          $else$
