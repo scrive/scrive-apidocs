@@ -19,10 +19,6 @@ window.SignatoryAttachment = Backbone.Model.extend({
         }
         return this;
     },
-    destroy : function() {
-      this.off();
-      this.clear();
-    },
     file: function() {
         return this.get("file");
     },

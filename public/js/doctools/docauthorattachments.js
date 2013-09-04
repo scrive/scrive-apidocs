@@ -31,6 +31,9 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
+  destroy : function() {
+    $(this.el).remove();
+  },
   authorAttachmentDesc: function(attachment, labelCss) {
     var container = $("<div class='item' />");
     container.append($("<div class='icon' />"));
@@ -107,6 +110,7 @@ window.DocumentAuthorAttachments = function(args) {
                         el : (args.el != undefined) ? args.el : $("<div/>")
                     });
        this.el = function() {return $(view.el);};
+       this.destroy = function() { view.destroy();}
 };
 
 })(window);

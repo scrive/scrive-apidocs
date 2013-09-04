@@ -7,15 +7,13 @@
 (function(window){
 
 window.File = Backbone.Model.extend({
-    defaults: {
+    defaults: function() {
+      return {
         id : 0,
         pages : [],
         name: "",
         broken : false
-    },
-    destroy : function() {
-      this.off();
-      this.clear();
+      };
     },
     queryPart: function () {
       var params = { documentid: this.documentid(),
@@ -40,6 +38,7 @@ window.File = Backbone.Model.extend({
       }
     },
     initialize: function (args) {
+        console.log("Creating file");
         this.url = "/filepages/" + args.id + this.queryPart();
     },
     downloadLink : function() {
@@ -114,6 +113,7 @@ window.File = Backbone.Model.extend({
     },
     parse : function(response)
     {
+        console.log("Parsing file");
         if (response.error != undefined)
         {
             this.set({broken: true});
@@ -149,10 +149,6 @@ var FilePage = Backbone.Model.extend({
         height: 1335
     }},
     initialize: function (args) {
-    },
-    destroy : function() {
-      this.off();
-      this.clear();
     },
     file : function(){
         return this.get("file");
@@ -192,7 +188,7 @@ var FilePageView = Backbone.View.extend({
     model : FilePage,
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables', 'updateDragablesPosition');
-        this.model.bind('change:dragables', this.renderDragables);
+        this.listenTo(this.model,'change:dragables', this.renderDragables);
         this.render();
     },
     destroy : function() {
@@ -201,8 +197,7 @@ var FilePageView = Backbone.View.extend({
             p.typeSetter.clear();
       });
       this.off();
-      this.model.off();
-      this.model.destroy();
+      this.stopListening();
       $(this.el).remove();
     },
     makeDropable : function() {
@@ -292,8 +287,6 @@ var FileView = Backbone.View.extend({
     },
     destroy : function() {
       this.off();
-      this.model.off();
-      this.model.destroy();
       this.destroyed = true;
       _.each(this.pageviews || [], function(pv) {pv.destroy();});
       $(this.el).remove();
@@ -397,6 +390,7 @@ var FileView = Backbone.View.extend({
 
 
 window.KontraFile = function(args){
+        console.log("Kontra file");
         if (args.file != undefined) {
             this.model = args.file;
         }

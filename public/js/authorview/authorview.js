@@ -78,7 +78,6 @@ var AuthorViewModel = Backbone.Model.extend({
     this.title().destroy();
     if (this.get("history") != undefined)
       this.history().destroy();
-    this.document().destroy();
     this.signatories().destroy();
     if (this.get("file") != undefined)
       this.file().destroy();

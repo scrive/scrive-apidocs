@@ -51,14 +51,6 @@ window.Document = Backbone.Model.extend({
         _.bindAll(this);
         this.bindBubble();
     },
-    destroy : function() {
-      this.off();
-      this.stopListening();
-      _.each(this.signatories(),function(s) {s.destroy();});
-      this.file().off();
-      this.lang().off();
-      this.clear();
-    },
     viewer: function() {
         if (this.get("viewer") != undefined)
             return this.get("viewer");

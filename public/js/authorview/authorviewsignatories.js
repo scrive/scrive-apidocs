@@ -42,6 +42,7 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   },
   destroy : function() {
     _.each(this.signatoriesViews(), function(s) {s.destroy();});
+    this.clear();
   }
 });
 
@@ -49,16 +50,18 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
   initialize: function (args) {
         _.bindAll(this, 'render');
         this.render();
-        this.model.on('change', this.render);
+        this.listenTo(this.model,'change', this.render);
   },
   destroy : function() {
+    this.stopListening();
     this.model.off();
     this.model.destroy();
     $(this.el).remove();
   },
   list : function() {
+      var self = this;
       var model = this.model;
-      var list = $("<div class='list spacing'>");
+      this.listDiv = $("<div class='list spacing'>");
       _.each(this.model.signatoriesViews(), function(sigview, index) {
           var sigdiv     = $("<div class='sig' />");
           if(index === 0)
@@ -80,13 +83,14 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
               return false;
           });
           sigdiv.append(name).append(line);
-          list.append(sigdiv);
+          self.listDiv.append(sigdiv);
       });
-    return list;
+    return this.listDiv;
   },
   render: function() {
       var view = this;
       var box = $(this.el);
+      if (this.listDiv!= undefined) this.listDiv.remove();
       box.children().detach();
       box.addClass('section').addClass('signatories').addClass('spacing');
 

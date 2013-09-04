@@ -31,12 +31,6 @@ window.Field = Backbone.Model.extend({
             args.signatory.bind("removed", field.remove);
         field.bindBubble();
     },
-    destroy : function() {
-      this.off();
-      this.stopListening();
-      _.each(this.placements(),function(p) {p.destroy();});
-      this.clear();
-    },
     type : function() {
         return this.get("type");
     },
