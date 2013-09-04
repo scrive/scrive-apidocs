@@ -142,6 +142,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       return statusbox;
   },
   remiderOption: function() {
+         var self = this;
          var signatory = this.model.signatory();
          var button = $("<label class='clickable prepareToSendReminderMail'/>");
          var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
@@ -164,8 +165,12 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                        'Signatory index' : signatory.signIndex(),
                                        'Delivery method' : 'Email'},
                                       function() {
-                                          signatory.remind(customtext).send();
+                                          signatory.remind(customtext).sendAjax(function() {
+                                            self.model.authorviewsignatories().authorview().reload(true);
+                                          });
                                       });
+                         return true;
+
                      }
                  });
              } else if( signatory.mobileDelivery()) {
@@ -180,8 +185,11 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                        'Signatory index' : signatory.signIndex(),
                                        'Delivery method' : 'Mobile'},
                                       function() {
-                                          signatory.remind().send();
+                                          signatory.remind().sendAjax(function() {
+                                            self.model.authorviewsignatories().authorview().reload(true);
+                                          });
                                       });
+                         return true;
                      }
                  });
              } else if( signatory.emailMobileDelivery()) {
@@ -196,8 +204,11 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                        'Signatory index' : signatory.signIndex(),
                                        'Delivery method' : 'Email and Mobile'},
                                       function() {
-                                          signatory.remind().send();
+                                          signatory.remind().sendAjax(function() {
+                                            self.model.authorviewsignatories().authorview().reload(true);
+                                          });
                                       });
+                         return true;
                      }
                  });
              }

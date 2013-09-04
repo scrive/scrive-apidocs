@@ -9,6 +9,7 @@
 
 var AuthorViewModel = Backbone.Model.extend({
   defaults : {
+    dirty : false // Flag. If it is set reloads will always happend, and they will block the screen.
   },
   initialize: function (args) {
       var self = this;
@@ -65,12 +66,17 @@ var AuthorViewModel = Backbone.Model.extend({
     return this.get("signatoryattachments");
   },
   readyToShow : function() {
-    return this.document().ready() && this.history().ready() && this.file().readyToConnectToPage();
+    return this.document().ready() && !this.document().needRecall() && this.history().ready() && this.file().readyToConnectToPage();
   },
   setDontRefresh : function() {
     this.history().setDontRefresh();
   },
-  reload: function() {
+  isDirty : function() {
+    return this.get("dirty");
+  },
+  reload: function(dirty,message) {
+
+    if (dirty) this.set({dirty: true});
     this.trigger("reload");
   },
   destroy: function() {
@@ -81,12 +87,12 @@ var AuthorViewModel = Backbone.Model.extend({
     this.signatories().destroy();
     if (this.get("file") != undefined)
       this.file().destroy();
-    //if (this.hasAuthorAttachmentsSection())
-    //  this.authorattachments().destroy();
-    //if (this.hasEvidenceAttachmentsSection())
-    //  this.evidenceattachments().destroy();
-    //if (this.hasSignatoriesAttachmentsSection())
-    //  this.signatoryattachments().destroy();
+    if (this.hasAuthorAttachmentsSection())
+      this.authorattachments().destroy();
+    if (this.hasEvidenceAttachmentsSection())
+      this.evidenceattachments().destroy();
+    if (this.hasSignatoriesAttachmentsSection())
+      this.signatoryattachments().destroy();
   }
 });
 
@@ -125,12 +131,12 @@ window.AuthorViewView = Backbone.View.extend({
     this.container.append(subcontainer);
     subcontainer.append(this.model.signatories().el());
     subcontainer.append(model.file().view.el);
-    //if (this.model.hasSignatoriesAttachmentsSection())
-    //   subcontainer.append(model.signatoryattachments().el());
-    //if (this.model.hasAuthorAttachmentsSection())
-    //   subcontainer.append(model.authorattachments().el());
-    //if (this.model.hasEvidenceAttachmentsSection())
-    //   subcontainer.append(model.evidenceattachments().el());
+    if (this.model.hasSignatoriesAttachmentsSection())
+       subcontainer.append(model.signatoryattachments().el());
+    if (this.model.hasAuthorAttachmentsSection())
+       subcontainer.append(model.authorattachments().el());
+    if (this.model.hasEvidenceAttachmentsSection())
+       subcontainer.append(model.evidenceattachments().el());
     return this;
   }
 });
@@ -157,7 +163,7 @@ window.AuthorView = function(args) {
                     });
        document.fetch({ processData:  true, cache : false});
        this.el = function() {return maindiv};
-       this.reload = function() {
+       this.reload = function(force) {
 
                  // Bind old variables
                  var olddocument = document;
@@ -165,7 +171,9 @@ window.AuthorView = function(args) {
                  var oldview = view;
 
                  // But if current model was not ready, we wait with the reload
-                 if (!oldmodel.readyToShow() || $(".modal.active").size() > 0) return;
+                 if ((!oldmodel.readyToShow() || $(".modal.active").size() > 0) && (!oldmodel.isDirty()) ) return;
+
+                 if (oldmodel.isDirty()) LoadingDialog.open();
 
                  // Increase version, stop fetching some elements
                  version++
@@ -203,6 +211,7 @@ window.AuthorView = function(args) {
                         view = newview;
                         maindiv = newdiv;
                         oldview.destroy();
+                        LoadingDialog.close();
                      } else {
                         newview.destroy();
                     }

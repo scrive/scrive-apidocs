@@ -55,9 +55,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "blue",
       text: localization.process.signbuttontext,
+      oneClick : true,
       onClick: function() {
-        if (alreadyClicked(this))
-          return false;
         var f = function() {
           if (!self.screenshotDone) {
             setTimeout(f, 100);
@@ -249,9 +248,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             acceptColor: "red",
                                             textcolor : model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
                                             textfont : model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
+                                            oneClick : true,
                                             onAccept: function(customtext) {
-                                                if (alreadyClicked(this))
-                                                  return;
                                                 trackTimeout('Accept',
                                                              {'Accept' : 'reject document'},
                                                              function() {

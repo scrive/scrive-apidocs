@@ -30,7 +30,10 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
   },
   cancel : function() {
-    this.document().cancel().sendAjax(function() {window.location.reload();});
+    var self = this;
+    this.document().cancel().sendAjax(function() {
+      self.authorview().reload(true);
+    });
   },
   canGoToSignView : function() {
     return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign();
@@ -84,10 +87,9 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       color: "red",
       size: "small",
       text: localization.process.restartbuttontext,
+      oneClick : true,
       onClick: function() {
-        if (alreadyClicked(this))
-          return;
-          mixpanel.track('Click restart button');
+        mixpanel.track('Click restart button');
         model.restart();
       }
     }).el();
@@ -99,10 +101,9 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       color: "green",
       size: "small",
       text: localization.process.prolongbuttontext,
+      oneClick : true,
       onClick: function() {
-        if (alreadyClicked(this))
-          return;
-          mixpanel.track('Click prolong button');
+        mixpanel.track('Click prolong button');
         model.prolong();
       }
     }).el();
@@ -117,14 +118,9 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       cssClass: "s-withdraw-button",
       onClick: function() {
           mixpanel.track('Click withdraw button');
-          document.fetch();
-          var signers = _.reject(document.signatoriesWhoSign(),
-                                 function(signatory) {
-                                   return signatory.author();
-                                 });
-          var somebodysigned = _.some(signers,
-                                      function(signatory) {
-                                        return signatory.hasSigned();
+          var somebodysigned = _.any(document.signatories(),
+                                      function(s) {
+                                        return s.hasSigned() && !s.author();
                                       });
           var modalcontent = somebodysigned ? localization.process.cancelmodaltextwithsignatures : localization.process.cancelmodaltext;
         Confirmation.popup({
@@ -135,8 +131,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           acceptColor: "red",
           extraClass : "s-withdraw-confirmation",
           onAccept: function() {
-              if (alreadyClicked(this))
-                return;
               trackTimeout('Accept',
                            {'Accept' : 'withdraw document'},
                            function() {
@@ -229,6 +223,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     $(this.el).append(container);
 
     if (this.model.hasButtons()) {
+      console.log("Generating buttons");
       var buttonbox = $("<div class='buttonbox'/>");
       if (this.model.canBeRestarted())
         buttonbox.append(this.restartButton());
