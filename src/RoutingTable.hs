@@ -186,5 +186,6 @@ staticRoutes = choice
 
      -- public services
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
+     , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
    ]

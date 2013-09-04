@@ -2,13 +2,15 @@ module ServerUtils.ServerUtils (
      handleSerializeImage
    , handleTextToImage
    , handleUnsupportedBrowser
+   , handleScaleImage
   ) where
 
 --import Happstack.Server hiding (dir, simpleHTTP)
 import Text.JSON
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.UTF8 as BSUTF8
+import qualified Data.ByteString as BS
 import Control.Monad
 import Data.Functor
 import Kontra
@@ -24,13 +26,54 @@ import Log as Log
 import Numeric
 import Data.Maybe
 import Utils.String
+import Data.Char (ord)
 import AppView (simpleHtmlResponse)
 import Text.StringTemplates.Templates (renderTemplate)
+import Control.Concurrent (forkIO, putMVar, takeMVar, newEmptyMVar)
+import System.IO (hFlush, hClose)
+import System.Directory (getCurrentDirectory)
+import System.Path (secureAbsNormPath)
+import System.FilePath ((</>))
 
 handleSerializeImage :: Kontrakcja m => m JSValue
 handleSerializeImage = do
   logo <- guardJustM $ getFileField "logo"
   runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
+
+handleScaleImage :: Kontrakcja m => m JSValue
+handleScaleImage = do
+  logo <- guardJustM $ getFileField "logo"
+  logo' <- if base64ImgPrefix `BS.isPrefixOf` logo then
+            case B64.decode $ BS.drop (BS.length base64ImgPrefix) logo of
+              Left e -> do
+                Log.debug $ "Problem scaling image: " ++ show e
+                internalError
+              Right x -> return x
+          else do
+            cwd <- liftIO getCurrentDirectory
+            let publicDir = cwd </> "public"
+            logoPath <- guardJust $ secureAbsNormPath publicDir $ tail (BSUTF8.toString logo) -- strip leading slash from logo path
+            liftIO $ BS.readFile logoPath
+  (inh, outh, errh, pid) <- liftIO $ runInteractiveProcess "convert" ["-", "-resize", "60%", "-"] Nothing Nothing
+  -- _ <- error $ "line number: " ++ show 2
+  outMVar <- liftIO newEmptyMVar
+  _ <- liftIO $ forkIO $ BS.hGetContents outh >>= putMVar outMVar
+  errMVar <- liftIO newEmptyMVar
+  _ <- liftIO $ forkIO $ BS.hGetContents errh >>= putMVar errMVar
+  liftIO $ BS.hPutStr inh logo' >> hFlush inh
+  liftIO $ hClose inh
+  _ <- liftIO $ takeMVar errMVar
+  out <- liftIO $ takeMVar outMVar
+  procResult <- liftIO $ waitForProcess pid
+  case procResult of
+    ExitFailure msg -> do
+      Log.debug $ "Problem scaling image: " ++ show msg
+      internalError
+    ExitSuccess -> do
+      return ()
+  let result64 = base64ImgPrefix `BS.append` B64.encode out
+  runJSONGenT $ value "logo_base64" $ showJSON result64
+  where base64ImgPrefix = BS.pack $ map (fromIntegral . ord) "data:image/png;base64,"
 
 handleUnsupportedBrowser :: Kontrakcja m => m Response
 handleUnsupportedBrowser = do
@@ -68,8 +111,8 @@ handleTextToImage = do
           ExitSuccess -> (BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
          Just fcontent -> if base64
-                             then ok $ toResponseBS (BS.fromString "text/plain") $ BSL.fromChunks [BS.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
-                             else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BS.fromString "img/png") $ fcontent
+                             then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
+                             else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "img/png") $ fcontent
          Nothing -> internalError
 
 -- Point scale - some heuristic for pointsize, based on size of image, type of font and lenght of text.
