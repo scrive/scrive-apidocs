@@ -18,6 +18,7 @@ module AppView( kontrakcja
               , brandingFields
               , companyForPage
               , companyUIForPage
+              , handleTermsOfService
               ) where
 
 import FlashMessage
@@ -149,6 +150,23 @@ priceplanPage = do
        Just bd -> do
           ad <- getAnalyticsData
           content <- renderTemplate "priceplanPageWithBranding" $ do
+            F.value "logolink" $ bdlogolink bd
+            F.value "background" $ bdbackgroundcolorexternal $ bd
+            F.value "buttoncolorclass" $ bdbuttonclass bd
+            F.value "headercolour" $ bdheadercolour bd
+            F.value "textcolour" $ bdtextcolour bd
+            F.value "pricecolour" $ bdpricecolour bd
+            standardPageFields ctx kontrakcja ad
+          simpleHtmlResonseClrFlash content
+
+handleTermsOfService :: Kontrakcja m => m Response
+handleTermsOfService = do
+  ctx <- getContext
+  case currentBrandedDomain ctx of
+       Nothing -> renderTemplate_ "termsOfService" >>= renderFromBody kontrakcja
+       Just bd -> do
+          ad <- getAnalyticsData
+          content <- renderTemplate "termsOfServiceWithBranding" $ do
             F.value "logolink" $ bdlogolink bd
             F.value "background" $ bdbackgroundcolorexternal $ bd
             F.value "buttoncolorclass" $ bdbuttonclass bd
