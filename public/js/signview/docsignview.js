@@ -125,8 +125,20 @@ var DocumentSignViewModel = Backbone.Model.extend({
         return this.get('createaccountsection');
   },
   signsection : function() {
+       var document = this.document();
+       var textcolour = document.signviewtextcolour();
+       var textfont = document.signviewtextfont();
+       var textstyle = {};
+
+       if (textcolour && this.usebranding()) {
+         textstyle['color'] = textcolour;
+       }
+       if (textfont  && this.usebranding()) {
+         textstyle['font-family'] = textfont;
+       }
+
         if (this.get("signsection") == undefined)
-            this.set({'signsection' : new DocumentSignSignSection({model : this})}, {silent : true});
+            this.set({'signsection' : new DocumentSignSignSection({model : this, textstyle: textstyle})}, {silent : true});
         return this.get('signsection');
   },
   signatoriessection : function() {
