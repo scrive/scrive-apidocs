@@ -1,21 +1,26 @@
-/* Signatory view of document
- */
+/* Top and bottom of signview */
 
 
 (function(window) {
 
 window.DocumentSignViewHeader = Backbone.View.extend({
  initialize: function(args) {
-     this.mainview = args.mainview;
-     this.customdomainlogolink = args.customdomainlogolink;
-     _.bindAll(this, 'render' ,'refresh');
-     this.model.document().bind('reset', this.render);
-     this.model.document().bind('change', this.render);
+     _.bindAll(this, 'render');
+     this.model.bind('reset', this.render);
      this.model.bind('change', this.render);
-     this.mainview.bind('change:task', this.refresh);
      this.prerender();
      this.render();
 
+  },
+  prerender : function() {
+        var maindiv = $(this.el);
+        maindiv.addClass("pageheader");
+        this.content = $("<div class='content' />");
+        this.logowrapper = $("<div class='logowrapper' />");
+        this.sender = $("<div class='sender' />");
+        this.inner = $('<div class="inner" />');
+        this.content.append(this.logowrapper).append(this.sender.append(this.inner)).append("<div class='clearfix'/>");
+        maindiv.append(this.content);
   },
   refresh : function() {
       var el = $(this.el);
@@ -31,37 +36,11 @@ window.DocumentSignViewHeader = Backbone.View.extend({
             pti.css("left", width - pti.width() - 2);
       }
   },
-  updateHeaderSenderPosition: function() {
-    if ($(window).width() < 1150) {
-        this.sender.addClass("shoved");
-    } else {
-        this.sender.removeClass("shoved");
-    }
-  },
-  useStandardBranding : function() {
-    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
-  },
-  prerender : function() {
-        var maindiv = $(this.el);
-        maindiv.addClass("pageheader");
-        this.content = $("<div class='content' />");
-        this.logowrapper = $("<div class='logowrapper' />");
-        this.sender = $("<div class='sender' />");
-        this.inner = $('<div class="inner" />');
-        this.content.append(this.logowrapper).append(this.sender.append(this.inner)).append("<div class='clearfix'/>");
-        maindiv.append(this.content);
-        this.usedStandardLogo = undefined;
-        this.usedStandardColorsBars = undefined;
-        this.usedStandardColorsTexts = undefined;
-        this.usedStandardTextsFonts = undefined;
-        this.usedStandardDescription = undefined;
-  },
   render: function() {
     var view = this;
     var model = this.model;
-    var document = this.model.document();
     var maindiv = $(this.el);
-    if (!document.ready()) {
+    if (!this.model.ready()) {
       maindiv.css("display", "none");
       return this;
     }
@@ -75,103 +54,53 @@ window.DocumentSignViewHeader = Backbone.View.extend({
 
     // Setting logo
 
-
-    if((this.useStandardBranding() || document.signviewlogo() == undefined)) {
-       if (this.usedStandardLogo != true) {
-         if (this.customdomainlogolink == undefined || this.customdomainlogolink == "") {
-          maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
-          this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
-         }
-         else {
-          maindiv.removeClass('withstandardlogo').addClass('withcustomlogo');
-          var img = $("<img class='logo'></img>");
-          img.load(function(){  view.refresh();  });
-          img.attr('src',this.customdomainlogolink);
-          this.logowrapper.empty().append(img);
-         }
-         this.usedStandardLogo = true;
-
-       }
+    if(model.signviewlogo() == undefined) {
+        maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
+        this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
     }
     else {
-      if (this.usedStandardLogo != false) {
         maindiv.removeClass('withstandardlogo').addClass('withcustomlogo');
         var img = $("<img class='logo'></img>");
         img.load(function(){  view.refresh();  });
-        img.attr('src',document.signviewlogo());
+        img.attr('src',model.signviewlogo());
         this.logowrapper.empty().append(img);
-        this.usedStandardLogo = false;
-      }
     }
 
     // Background color of top bar
-    if((this.useStandardBranding() || document.signviewbarscolour() == undefined)) {
-      if (this.usedStandardColorsBars != true) {
+    if( model.signviewbarscolour() == undefined) {
         maindiv.css('background-image', '');
         maindiv.css('background-color', '');
-        this.usedStandardColorsBars = true;
-      }
     }
     else {
-      if (this.usedStandardColorsBars != false) {
         maindiv.css('background-image', 'none');
-        maindiv.css('background-color', document.signviewbarscolour());
-        this.usedStandardColorsBars = false;
-      }
+        maindiv.css('background-color', model.signviewbarscolour());
     }
 
     // Text color in header
-    if((this.useStandardBranding() || document.signviewbarstextcolour() == undefined)) {
-      if (this.usedStandardColorsTexts != true) {
+    if(model.signviewbarstextcolour() == undefined) {
         maindiv.css("color", '');
         if (this.sender != undefined) this.sender.css("color", '');
-        this.usedStandardColorsTexts = true;
-      }
     }
     else {
-      if (this.usedStandardColorsTexts != false) {
-        maindiv.css("color", document.signviewbarstextcolour());
-        if (this.sender != undefined) this.sender.css("color", document.signviewbarstextcolour());
-        this.usedStandardColorsTexts = false;
-      }
+        maindiv.css("color", model.signviewbarstextcolour());
+        if (this.sender != undefined) this.sender.css("color", model.signviewbarstextcolour());
     }
 
     // Text font in header
-    if((this.useStandardBranding() || document.signviewtextfont() == undefined)) {
-      if (this.usedStandardTextsFonts != true) {
+    if(model.signviewtextfont() == undefined) {
         maindiv.css('font-family', '');
         if (this.sender != undefined) this.sender.css('font-family', '');
-        this.usedStandardTextsFonts = true;
-      }
     }
     else {
-      if (this.usedStandardTextsFonts != false) {
-        maindiv.css('font-family', document.signviewtextfont());
-        if (this.sender != undefined) this.sender.css('font-family', document.signviewtextfont());
-        this.usedStandardTextsFonts = false;
-      }
+        maindiv.css('font-family', model.signviewtextfont());
+        if (this.sender != undefined) this.sender.css('font-family', model.signviewtextfont());
     }
 
     // Text in header | Scrive or Author details
-    if(this.useStandardBranding()) {
-      if (this.usedStandardDescription != true) {
-        var name = $("<div class='name' />").text("Scrive help desk");
-        var phone = $("<div class='phone' />").text("+46 8 519 779 00");
-        this.inner.empty().append(name).append(phone);
-        this.usedStandardDescription = true;
-      }
-    }
-    else {
-      if (this.usedStandardDescription != false) {
-        var name = $("<div class='name' />").text(document.authoruser().fullname());
-        var phone = $("<div class='phone' />").text(document.authoruser().phone());
-        this.inner.empty().append(name).append(phone);
-        this.usedStandardDescription = false;
-      }
-    }
+    var name = $("<div class='name' />").text(model.fullname());
+    var phone = $("<div class='phone' />").text(model.phone());
+    this.inner.empty().append(name).append(phone);
 
-    this.updateHeaderSenderPosition();
-    $(window).resize(function() { view.updateHeaderSenderPosition();});
     return this;
   }
 });
@@ -180,27 +109,11 @@ window.DocumentSignViewHeader = Backbone.View.extend({
 
 window.DocumentSignViewFooter = Backbone.View.extend({
   initialize: function(args) {
-    this.mainview = args.mainview;
-    _.bindAll(this, 'render' , 'refresh');
-    this.model.document().bind('reset', this.render);
-    this.model.document().bind('change', this.render);
-    this.mainview.bind('change:task', this.refresh);
+    _.bindAll(this, 'render' );
+    this.model.bind('reset', this.render);
+    this.model.bind('change', this.render);
     this.prerender();
     this.render();
-  },
-  refresh : function() {
-      var el = $(this.el);
-      var tbd = $("<span/>");
-      $(this.el).append(tbd);
-      setTimeout(function() {tbd.remove();},1);
-      if (!$.browser.msie) {
-        var width = Math.max($('body').width(),$(document).width());
-        if (width > 1020)
-          el.css("min-width",width + "px");
-      }
-  },
-  useStandardBranding : function() {
-    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
   },
   prerender : function() {
         var maindiv = $(this.el);
@@ -209,83 +122,54 @@ window.DocumentSignViewFooter = Backbone.View.extend({
         this.pbs = $("<div class='poweredbyscrive' />");
         this.content.append(this.pbs).append("<div class='clearfix'/>");
         maindiv.append(this.content);
-        this.usedStandardColorsBars = undefined;
-        this.usedStandardColorsTexts = undefined;
-        this.usedStandardTextsFonts = undefined;
-        this.usedStandardDescription = undefined;
   },
   render: function() {
     var view = this;
     var model = this.model;
-    var document = this.model.document();
     var maindiv = $(this.el);
-    if (!document.ready()) {
+    if (!model.ready()) {
       maindiv.css("display", "none");
       return this;
     }
     maindiv.css("display","block");
-    
+
     if (BrowserInfo.isSmallScreen())
       maindiv.addClass("small-screen");
 
    // Background color of top bar
-    if((this.useStandardBranding() || document.signviewbarscolour() == undefined)) {
-      if (this.useStandardBranding != true) {
+    if(model.signviewbarscolour() == undefined) {
         maindiv.css('background-image', '');
         maindiv.css('background-color', '');
-        this.usedStandardColorsBars = true;
-      }
     }
     else {
-      if (this.useStandardBranding != false) {
         maindiv.css('background-image', 'none');
-        maindiv.css('background-color', document.signviewbarscolour());
-        this.usedStandardColorsBars = false;
-      }
+        maindiv.css('background-color', model.signviewbarscolour());
     }
 
     // Text color in footer
-    if((this.useStandardBranding() || document.signviewbarstextcolour() == undefined)) {
-      if (this.usedStandardColorsTexts != true) {
+    if(model.signviewbarstextcolour() == undefined) {
         maindiv.css("color", '');
-        this.usedStandardColorsTexts = true;
-      }
     }
     else  {
-      if (this.usedStandardColorsTexts != false) {
-        maindiv.css("color", document.signviewbarstextcolour());
-        this.usedStandardColorsTexts = false;
-      }
+        maindiv.css("color", model.signviewbarstextcolour());
     }
 
     // Text font in footer
-    if((this.useStandardBranding() || document.signviewtextfont() == undefined)) {
-      if (this.usedStandardTextsFonts != true) {
+    if(model.signviewtextfont() == undefined) {
         maindiv.css('font-family', '');
-        this.usedStandardTextsFonts = true;
-      }
     }
     else  {
-      if (this.usedStandardTextsFonts != false) {
-        maindiv.css('font-family', document.signviewtextfont());
-        this.usedStandardTextsFonts = false;
-      }
+        maindiv.css('font-family', model.signviewtextfont());
     }
 
-    if(document.signviewbarscolour() != undefined) {
-      if (this.usedStandardDescription != true ) {
+    if(model.signviewbarscolour() != undefined) {
         var pbstext = $("<span class='text' />").text("Powered by Scrive");
         this.pbs.empty().append(pbstext);
-        this.usedStandardDescription = true;
-      }
     }
     else {
-      if (this.usedStandardDescription != false ) {
         var pbstext = $("<span class='text' />").text(BrowserInfo.isSmallScreen() ? "E-Signing powered by " : "Powered by ");
         var pbslogo = $("<span class='logo' />");
         this.pbs.empty().append(pbstext).append(pbslogo);
-        this.usedStandardDescription = false;
-      }
     }
 
     return this;

@@ -39,11 +39,11 @@ serviceAvailabilityChecker conf rng dbconf (master, slave) msender interruptible
               Log.mailingServer $ "Restoring service " ++ show master ++ "."
             return master
         else do
-          Log.mailingServer $ "Service testing emails failed to be delivered within 6 minutes."
+          Log.mailingServer $ "Service testing emails failed to be delivered within 11 minutes."
           oldsender <- liftIO $ takeMVar msender
           when (oldsender == master) $ do
             Log.mailingServer $ "Switching to " ++ show slave ++ " and resending all emails that were sent within this time."
-            time <- minutesBefore 5 `fmap` getMinutesTime
+            time <- minutesBefore 10 `fmap` getMinutesTime
             n <- dbUpdate $ ResendEmailsSentSince time
             Log.mailingServer $ show n ++ " emails set to be resent."
           liftIO $ putMVar msender slave
@@ -58,7 +58,7 @@ serviceAvailabilityChecker conf rng dbconf (master, slave) msender interruptible
     isDelivered mid (_, emid, _, MailGunEvent _ MG_Delivered) = mid == emid
     isDelivered _ _ = False
 
-    freq = 6 * 60 * second
+    freq = 11 * 60 * second
     second = 1000000
 
     testSender = Address { addrName = "Scrive mailer", addrEmail = "noreply@scrive.com" }

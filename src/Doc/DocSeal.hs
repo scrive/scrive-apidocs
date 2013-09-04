@@ -297,7 +297,7 @@ evidenceOfIntentAttachment title sls = do
  formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
 -}
 formatMinutesTimeForVerificationPage :: MinutesTime -> String
-formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M %Z" caltime ++ " (" ++ tzinfo ++ ")"
+formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S %Z" caltime ++ " (" ++ tzinfo ++ ")"
   where
     caltime = MinutesTime.toCalendarTime mt
     tzoffset = ctTZ caltime `div` 60 -- convert seconds into minutes
@@ -611,7 +611,7 @@ digitallySealDocument forceAttach ctxtime ctxgtconf documentid pdfpath pdfname =
 
 digitallyExtendDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
                       => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m Bool
-digitallyExtendDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
+digitallyExtendDocument _ctxtime ctxgtconf documentid pdfpath pdfname = do
   code <- liftIO $ GT.digitallyExtend ctxgtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
@@ -635,7 +635,7 @@ digitallyExtendDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
       File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
       Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
       -- TODO: keep old sealed file, or delete?
-      dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
+      dbUpdate $ AttachExtendedSealedFile documentid sealedfileid status
       return True
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.

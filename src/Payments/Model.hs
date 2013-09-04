@@ -74,7 +74,7 @@ instance MonadDB m => DBQuery m GetCompanyQuantity Int where
                 "FROM ((SELECT users.email " <+>
                 "       FROM users " <+>
                 "       WHERE users.company_id = " <?> cid <+>
-                "         AND users.deleted = FALSE)" <+>
+                "         AND users.deleted IS NULL)" <+>
                 "      UNION " <+>
                 "      (SELECT companyinvites.email " <+>
                 "       FROM companyinvites " <+>
@@ -175,7 +175,7 @@ instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
              "  LEFT OUTER JOIN (SELECT c.company_id, count(email) AS q " <>
              "                   FROM ((SELECT company_id, users.email " <>
              "                          FROM users " <>
-             "                          WHERE users.deleted = FALSE) " <>
+             "                          WHERE users.deleted IS NULL) " <>
              "                         UNION " <>
              "                         (SELECT companyinvites.company_id, companyinvites.email " <>
              "                          FROM companyinvites " <>

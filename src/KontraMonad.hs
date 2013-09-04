@@ -1,6 +1,7 @@
 module KontraMonad (
       Kontrakcja
     , KontraMonad(..)
+    , withAnonymousContext
     ) where
 
 import Control.Applicative
@@ -38,3 +39,14 @@ class (Functor m, Monad m) => KontraMonad m where
 instance (Monad m, Functor m) => KontraMonad (StateT Context m) where
   getContext    = get
   modifyContext = modify
+
+withAnonymousContext :: KontraMonad m => m a -> m a
+withAnonymousContext action = do
+  ctx <- getContext
+  let ctx' = ctx { ctxmaybeuser = Nothing
+                 , ctxmaybepaduser = Nothing
+                 }
+  modifyContext $ const ctx'
+  res <- action
+  modifyContext $ const ctx
+  return res

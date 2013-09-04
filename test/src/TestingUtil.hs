@@ -408,8 +408,8 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , maybereadinvite = Nothing
                                       , invitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
-                                      , signatorylinkdeleted = False
-                                      , signatorylinkreallydeleted = False
+                                      , signatorylinkdeleted = Nothing
+                                      , signatorylinkreallydeleted = Nothing
                                       , signatorydetails = SignatoryDetails
                                         { signatoryisauthor = False
                                         , signatoryispartner = True

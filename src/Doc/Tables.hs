@@ -78,7 +78,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 20
+  , tblVersion = 21
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -98,8 +98,8 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "signinfo_first_name_verified", colType = BoolT }
     , tblColumn { colName = "signinfo_last_name_verified", colType = BoolT }
     , tblColumn { colName = "signinfo_personal_number_verified", colType = BoolT }
-    , tblColumn { colName = "deleted", colType = BoolT, colNullable = False, colDefault = Just "false" }
-    , tblColumn { colName = "really_deleted", colType = BoolT, colNullable = False, colDefault = Just "false" }
+    , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
+    , tblColumn { colName = "really_deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "csv_title", colType = TextT }
     , tblColumn { colName = "csv_contents", colType = TextT }
     , tblColumn { colName = "signinfo_ocsp_response", colType = TextT }

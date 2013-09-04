@@ -7,7 +7,6 @@ $doctype()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
     <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
-    <script src="$homebase$/js/docsignviewpromotescrive.js"></script>
       </head>
   <body>
     $if(usestandardheaders)$
@@ -18,28 +17,26 @@ $doctype()$
         $flashmessages()$
         <div class="body-container">
           <script>
+              var svb =  new BrandingForSignView({ documentid : "$documentid$" , signatoryid : "$siglinkid$" });
+              svb.fetch({ processData:  true, cache : false});
 
               jQuery(function(){
                   var docview = new DocumentSignView({
-                      id:"$documentid$"
+                      id:"$documentid$",
+                      signviewbranding : svb
                       $if(usestandardheaders)$
                       ,  ignoredoclang : true
                       ,  usebranding : false
                       $else$
                       ,  usebranding : true
                       $endif$
-                      $if(siglinkid)$
                       , viewer : new DocumentViewer({
                           signatoryid : "$siglinkid$"
                          })
-                      $endif$
                   });
                 $if(!usestandardheaders)$
-                  jQuery('.signview').prepend(new DocumentSignViewHeader({model : docview.model,
-                                                                          mainview : docview.view,
-                                                                          customdomainlogolink : $if(customdomainlogolink)$ "$customdomainlogolink$" $else$ undefined $endif$
-                                                                         }).el)
-                  jQuery('.signview').append(new DocumentSignViewFooter({model : docview.model,  mainview : docview.view}).el)
+                  jQuery('.signview').prepend(new DocumentSignViewHeader({model : svb}).el);
+                  jQuery('.signview').append(new DocumentSignViewFooter({model : svb }).el);
                 $endif$
                 jQuery(".body-container").replaceWith(docview.view.el);
               });

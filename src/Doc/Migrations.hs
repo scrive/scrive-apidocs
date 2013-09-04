@@ -980,3 +980,19 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
       kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN image"
       Log.debug $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
   }
+
+migrateSignatoryLinksDeletedTime :: MonadDB m => Migration m
+migrateSignatoryLinksDeletedTime =
+  Migration {
+      mgrTable = tableSignatoryLinks
+    , mgrFrom = 20
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE signatory_links"
+                  <+> "ALTER deleted DROP NOT NULL,"
+                  <+> "ALTER deleted DROP DEFAULT,"
+                  <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END),"
+                  <+> "ALTER really_deleted DROP NOT NULL,"
+                  <+> "ALTER really_deleted DROP DEFAULT,"
+                  <+> "ALTER really_deleted TYPE TIMESTAMPTZ USING (CASE WHEN really_deleted THEN now() ELSE NULL END)"
+       return ()
+    }
