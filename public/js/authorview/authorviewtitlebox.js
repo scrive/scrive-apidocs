@@ -251,7 +251,7 @@ window.AuthorViewTitleBox = function(args) {
           var model = new AuthorViewTitleBoxModel(args);
           var view =  new AuthorViewTitleBoxView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
-          this.destroy = function() { view.destroy();}
+          this.destroy = function() { view.destroy();};
 
 };
 

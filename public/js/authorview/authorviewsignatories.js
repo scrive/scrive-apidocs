@@ -4,7 +4,7 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   defaults : function() { return {
      signatoriesViews : [],
      currentSignview  : undefined
-    }
+    };
   },
   initialize: function (args) {
     var self = this;
@@ -139,8 +139,8 @@ window.AuthorViewSignatories = function(args) {
           var view =  new AuthorViewSignatoriesView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
           this.currentIndex = function() { return model.currentIndex() };
-          this.setCurrentIndex = function(i) { model.setCurrentIndex(i);}
-          this.destroy = function() {return view.destroy();}
+          this.setCurrentIndex = function(i) { model.setCurrentIndex(i);};
+          this.destroy = function() {return view.destroy();};
 
 };
 

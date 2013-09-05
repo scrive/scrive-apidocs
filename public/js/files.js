@@ -349,12 +349,12 @@ var FileView = Backbone.View.extend({
          setTimeout(function() {view.startReadyCheckerFirstPage()},100);
     },
     ready : function() {
-        return (this.readyToConnectToPage() && $(this.el).parents('body').length > 0)
+        return (this.readyToConnectToPage() && $(this.el).parents('body').length > 0);
     },
     readyToConnectToPage : function() {
         return (this.model.ready() && (this.model.pages().length > 0)
                && (this.pageviews.length == this.model.pages().length)
-               && _.all(this.pageviews, function(pv) {return pv.ready();}))
+               && _.all(this.pageviews, function(pv) {return pv.ready();}));
     },
     readyFirstPage : function () {
         return this.pageviews.length > 0 && this.pageviews[0].ready();

@@ -143,7 +143,7 @@ window.AuthorViewView = Backbone.View.extend({
 
 
 window.AuthorView = function(args) {
-       var version = 0
+       var version = 0;
        var self = this;
        var maindiv = $("<div/>");
        var document = new Document({
@@ -175,7 +175,7 @@ window.AuthorView = function(args) {
                  if (oldmodel.isDirty()) LoadingDialog.open();
 
                  // Increase version, stop fetching some elements
-                 version++
+                 version++;
                  var reloadversion = version;
                  oldmodel.setDontRefresh();
 
@@ -183,7 +183,7 @@ window.AuthorView = function(args) {
 
 
                  // Init new elements
-                 var newdiv = $("<div/>")
+                 var newdiv = $("<div/>");
                  var newdocument = new Document({
                         id : args.id,
                         viewer: args.viewer,
@@ -225,7 +225,7 @@ window.AuthorView = function(args) {
                    else {
                      setTimeout(connectNewView,500);
                    }
-                 }
+                 };
                  newdocument.on('change:ready', function() {
                     connectNewView();
                  });

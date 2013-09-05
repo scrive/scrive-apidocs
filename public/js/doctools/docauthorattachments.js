@@ -110,7 +110,7 @@ window.DocumentAuthorAttachments = function(args) {
                         el : (args.el != undefined) ? args.el : $("<div/>")
                     });
        this.el = function() {return $(view.el);};
-       this.destroy = function() { view.destroy();}
+       this.destroy = function() { view.destroy();};
 };
 
 })(window);

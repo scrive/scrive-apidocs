@@ -546,7 +546,7 @@
             this.fetchWithCallback = function(callback) {
                 $.get(schema.url(),schema.getSchemaUrlParams(),function(res) {
                     callback(model, JSON.parse(res).list);
-                })
+                });
             };
             this.recall = function() {
               view.startLoading();

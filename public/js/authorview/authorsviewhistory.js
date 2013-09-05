@@ -90,7 +90,7 @@ window.AuthorViewHistory = function(args) {
           this.setDontRefresh = function() { model.setDontRefresh();};
           this.expanded = function() { return model.history().expanded();};
           this.setExpanded = function(expanded) { model.history().setExpanded(expanded);};
-          this.destroy = function() {view.destroy();}
+          this.destroy = function() {view.destroy();};
           var checkAndRefresh = function(i) {
                   if (model.dontRefresh())
                     return; // No checkAndRefresh will be called anymore if this happends

@@ -148,11 +148,11 @@ window.DocumentHistory = function(args){
                     });
         this.el     = function() {return $(view.el);};
         this.recall = function() { model.recall();};
-        this.expanded = function() { return model.expanded();}
+        this.expanded = function() { return model.expanded();};
         this.setExpanded = function(expanded) {model.setExpanded(expanded);};
         this.ready  = function() {return model.ready()};
         this.destroy = function() {view.destroy();this.checkIfHistoryChangedAndCallback = function() {};};
-        this.checkIfHistoryChangedAndCallback = function(callback) {return model.checkIfHistoryChangedAndCallback(callback);}
+        this.checkIfHistoryChangedAndCallback = function(callback) {return model.checkIfHistoryChangedAndCallback(callback);};
 };
 
 })(window);

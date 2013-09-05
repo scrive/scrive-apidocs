@@ -244,7 +244,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                          LoadingDialog.open();
                                                          signatory.changeEmail(input.val()).sendAjax(function() {
                                                           self.model.authorviewsignatories().authorview().reload(true);
-                                                        });;
+                                                        });
                                                      });
                                     }
                                     });
@@ -454,7 +454,7 @@ window.AuthorViewSignatory = function(args) {
           this.nameOrEmail = function() {return model.nameOrEmail();};
           this.nameOrEmailOrMobile = function() {return model.nameOrEmailOrMobile();};
           this.status = function() {return model.status();};
-          this.destroy = function() {view.destroy();}
+          this.destroy = function() {view.destroy();};
 };
 
 
