@@ -34,8 +34,6 @@
     position: absolute;
     display: block;
     z-index: 999;
-    width: 38px;
-    height: 44px;
   }
 
   .front {
@@ -60,12 +58,31 @@
 
   }
 
-  .action-arrow.right {
-    background-image: url(../img/sign-arrow-action-right.png);
+  .action-arrow.right .front {
+    float : left;
+    background-image: url(../img/sign-arrow-action-right-front.png);
+  }
+  .action-arrow.right .back {
+    float : left;
+    background-image: url(../img/sign-arrow-action-right-back.png);
+  }
+  .action-arrow.right .label {
+    float : left;
+    background-image: url(../img/sign-arrow-action-label.png);
   }
 
-  .action-arrow.left {
-    background-image: url(../img/sign-arrow-action-left.png);
+  .action-arrow.left .front {
+    float : right;
+    background-image: url(../img/sign-arrow-action-left-front.png);
   }
+  .action-arrow.left .back {
+    float : right;
+    background-image: url(../img/sign-arrow-action-left-back.png);
+  }
+  .action-arrow.left .label {
+    float : right;
+    background-image: url(../img/sign-arrow-action-label.png);
+  }
+
 
 }
