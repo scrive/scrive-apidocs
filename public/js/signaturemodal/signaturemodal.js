@@ -80,7 +80,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     header: function() {
         var self = this;
         var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 15px 40px;'/>");
-        header.append($("<div style='font-size:20px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
+        header.append($("<div style='font-size:28px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
         if (!BrowserInfo.isIE8orLower()) {
@@ -158,7 +158,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         var signatory = this.model.field().signatory();
         return new Button({
                     color : 'green',
-                    size: BrowserInfo.isSmallScreen() ? 'small' : 'tiny',
+                    size: 'small',
                     text: localization.signature.confirmSignature,
                     onClick : function(){
                         self.model.typerOrDrawer().saveImage();
@@ -172,8 +172,9 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
            var signatory = this.model.field().signatory();
            var abutton = this.acceptButton();
            abutton.addClass("float-right");
+           abutton.css('margin-top', '-4px');
 
-           var canceloption = $("<label class='delete' style='float:right;color: red;margin-right:20px;line-height: 32px;'></label>").text(localization.cancel).click(function() {
+           var canceloption = $("<label class='delete' style='float:left;margin-right:20px;line-height: 40px;'></label>").text(localization.cancel).click(function() {
                                      self.model.onClose();
                                      return false;
                               });
@@ -185,7 +186,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
            detailsBox.append($("<div class='header'/>").text(name));
            detailsBox.append($("<div class='subheader'/>").text(company ));
 
-           return $("<div class='footer'/>").append(abutton).append(canceloption).append(detailsBox);
+           return $('<div></div>').append(detailsBox).append($("<div class='modal-footer'/>").append(abutton).append(canceloption));
     },
     render: function () {
         var box = $(this.el).empty();
@@ -203,7 +204,7 @@ window.SignatureDrawOrTypeModal = function(args){
         var width = BrowserInfo.isSmallScreen() ? 980 : 900;
         var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
         var modal = $("<div class='modal'></div>");
-        var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
+        var container = $("<div class='modal-container drawing-modal grey'/>").css("width",width);
 
         if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
 

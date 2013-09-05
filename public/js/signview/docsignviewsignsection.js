@@ -125,10 +125,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var signatory = document.currentSignatory();
 
     Confirmation.popup({
+      cssClass: 'grey',
       title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
-      icon: '/img/modal-icons/sign.png',
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
+      width: signatory.elegAuthentication() ? 800 : 520,
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
       textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
       content: this.createContentElems
@@ -242,6 +243,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             title: localization.process.signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
                                             icon: null,
+                                            cssClass: "grey",
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
                                             rejectText: localization.cancel,
