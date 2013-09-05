@@ -10,6 +10,13 @@ menu, nav, output, ruby, section, summary, time, mark, audio, video {
     outline: 0;
 }
 
+html {
+    // always show scrollbar, even if it's not needed for the current page
+    // effect: the content isn't moved a few pixels to the left/right, when
+    // switching between pages that have and don't have scrollbars
+    overflow-y:scroll;
+}
+
 body {
   font-size: 15px;
   font-family: @source;
