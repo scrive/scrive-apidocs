@@ -147,20 +147,20 @@
 }
 
 .modal-close {
-    background: url("/img/spr-btn-close.png") no-repeat scroll 0 0 transparent;
+    background: url("/img/sprite-green-X.png") no-repeat scroll 0 0 transparent;
+    .grey & {
+      background: url("/img/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
+    }
     cursor: pointer;
     display: block;
-    height: 24px;
-    width: 24px;
+    height: 12px;
+    width: 12px;
     position: absolute;
     top: 20px;
     right: 15px;
     float: right;
     &:hover {
-      background-position: 0 -24px;
-    }
-    &:active {
-      background-position: 0 -48px;
+      background-position: 0 -12px;
     }
 }
 
