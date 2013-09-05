@@ -50,6 +50,8 @@ import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.CMYKColor;
 import com.itextpdf.text.pdf.PdfPTableEvent;
 
+import org.bouncycastle.util.encoders.Base64;
+
 /*
  * Class that directly serve deserialization of JSON data.
  */
