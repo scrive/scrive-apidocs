@@ -26,11 +26,10 @@ import Log as Log
 import Numeric
 import Data.Maybe
 import Utils.String
+import Utils.IO
 import Data.Char (ord)
 import AppView (simpleHtmlResponse)
 import Text.StringTemplates.Templates (renderTemplate)
-import Control.Concurrent (forkIO, putMVar, takeMVar, newEmptyMVar)
-import System.IO (hFlush, hClose)
 import System.Directory (getCurrentDirectory)
 import System.Path (secureAbsNormPath)
 import System.FilePath ((</>))
@@ -54,26 +53,17 @@ handleScaleImage = do
             let publicDir = cwd </> "public"
             logoPath <- guardJust $ secureAbsNormPath publicDir $ tail (BSUTF8.toString logo) -- strip leading slash from logo path
             liftIO $ BS.readFile logoPath
-  (inh, outh, errh, pid) <- liftIO $ runInteractiveProcess "convert" ["-", "-resize", "60%", "-"] Nothing Nothing
-  -- _ <- error $ "line number: " ++ show 2
-  outMVar <- liftIO newEmptyMVar
-  _ <- liftIO $ forkIO $ BS.hGetContents outh >>= putMVar outMVar
-  errMVar <- liftIO newEmptyMVar
-  _ <- liftIO $ forkIO $ BS.hGetContents errh >>= putMVar errMVar
-  liftIO $ BS.hPutStr inh logo' >> hFlush inh
-  liftIO $ hClose inh
-  _ <- liftIO $ takeMVar errMVar
-  out <- liftIO $ takeMVar outMVar
-  procResult <- liftIO $ waitForProcess pid
+  (procResult, out, _) <- readProcessWithExitCode' "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
   case procResult of
     ExitFailure msg -> do
       Log.debug $ "Problem scaling image: " ++ show msg
       internalError
     ExitSuccess -> do
-      return ()
-  let result64 = base64ImgPrefix `BS.append` B64.encode out
-  runJSONGenT $ value "logo_base64" $ showJSON result64
+      let result64 = base64ImgPrefix `BS.append` B64.encode (lazyBStoStrictBS out)
+      runJSONGenT $ value "logo_base64" $ showJSON result64
   where base64ImgPrefix = BS.pack $ map (fromIntegral . ord) "data:image/png;base64,"
+        strictBStoLazyBS = BSL.fromChunks . (:[])
+        lazyBStoStrictBS = BS.concat . BSL.toChunks
 
 handleUnsupportedBrowser :: Kontrakcja m => m Response
 handleUnsupportedBrowser = do

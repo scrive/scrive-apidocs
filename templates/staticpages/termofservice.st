@@ -1,0 +1,45 @@
+###
+termsOfService=
+<div class="mainContainer" >
+  <div class="body-container">
+
+    <div class="js-terms-of-service terms-of-service"></div>
+    <script>
+      jQuery('body').css('background','none repeat scroll 0 0 #FFFFFF');
+      TermsOfServicePage({}).show('.js-terms-of-service');
+      mixpanel.track('View Terms Of Service Page');
+    </script>
+ </div>
+</div>
+###
+termsOfServiceWithBranding=
+$doctype()$
+<html>
+  <head>
+    <script src="//cdn.optimizely.com/js/158965942.js"></script>
+    <title>$pagetitle()$</title>
+    $standardHeaderContents()$
+  </head>
+  <body style="background: $background$">
+    <div style='width:275px;margin:20px auto;'>
+      <div style="margin-bottom: 100px; margin-top: 50px;">
+        <img alt="logo" src="$logolink$"/>
+        <div class="divider-line"></div>
+        <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
+      </div>
+    </div>
+    <div class="js-terms-of-service terms-of-service"></div>
+    <script>
+      TermsOfServicePage({noheaders: true,
+                 includeenterprise: false,
+                 buttoncolorclass : "$buttoncolorclass$",
+                 headercolour: "$headercolour$",
+                 textcolour: "$textcolour$",
+                 pricecolour: "$pricecolour$"
+                 }).show('.js-terms-of-service');
+      mixpanel.track('View Terms Of Service Page | Branded');
+    </script>
+
+  </body>
+</html>
+####
