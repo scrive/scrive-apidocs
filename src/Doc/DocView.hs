@@ -3,8 +3,6 @@ module Doc.DocView (
     pageCreateFromTemplate
   , documentInfoFields
   , flashDocumentRestarted
-  , flashDocumentProlonged
-  , flashRemindMailSent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -28,7 +26,6 @@ import KontraLink
 import MinutesTime
 import Utils.Prelude
 import Text.StringTemplates.Templates
-import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
 import Doc.DocInfo
@@ -56,19 +53,6 @@ pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentRestarted document = do
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageContractRestarted" $ documentInfoFields document)
-
-flashDocumentProlonged :: TemplatesMonad m => Document -> m FlashMessage
-flashDocumentProlonged document = do
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageContractProlonged" $ documentInfoFields document)
-
-flashRemindMailSent :: TemplatesMonad m => SignatoryLink -> m FlashMessage
-flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
-  toFlashMsg OperationDone <$> (renderTemplate (template_name maybesigninfo) $ do
-    F.value "personname" $ getSmartName signlink)
-  where
-    template_name =
-      maybe "flashRemindMailSentNotSigned"
-      (const "flashRemindMailSentSigned")
 
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do

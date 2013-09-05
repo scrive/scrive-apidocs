@@ -24,22 +24,27 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     this.document().restart().send();
   },
   prolong : function() {
-    this.document().prolong().send();
+    var self = this;
+    LoadingDialog.open();
+    this.document().prolong().sendAjax(function() {
+      self.authorview().reload(true);
+    });
   },
   canBeWithdrawn : function() {
     return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
   },
   cancel : function() {
     var self = this;
+    LoadingDialog.open();
     this.document().cancel().sendAjax(function() {
       self.authorview().reload(true);
     });
   },
   canGoToSignView : function() {
-    return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign();
+    return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign() && this.document().pending();
   },
   canGiveToNextSignatoryPad : function() {
-    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && _.any(this.document().signatoriesThatCanSignNow(), function(s) {return s.padDelivery();}) && this.document().signatoriesThatCanSignNow().length > 0;
+    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && this.document().pending() && _.any(this.document().signatoriesThatCanSignNow(), function(s) {return s.padDelivery();}) && this.document().signatoriesThatCanSignNow().length > 0;
   },
   goToSignView : function() {
     new Submit({method: 'POST', url : '/d/signview/' + this.document().documentid()}).send();

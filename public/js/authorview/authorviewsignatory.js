@@ -165,6 +165,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                        'Signatory index' : signatory.signIndex(),
                                        'Delivery method' : 'Email'},
                                       function() {
+                                          LoadingDialog.open();
                                           signatory.remind(customtext).sendAjax(function() {
                                             self.model.authorviewsignatories().authorview().reload(true);
                                           });
@@ -185,6 +186,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                        'Signatory index' : signatory.signIndex(),
                                        'Delivery method' : 'Mobile'},
                                       function() {
+                                          LoadingDialog.open();
                                           signatory.remind().sendAjax(function() {
                                             self.model.authorviewsignatories().authorview().reload(true);
                                           });
@@ -204,6 +206,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                        'Signatory index' : signatory.signIndex(),
                                        'Delivery method' : 'Email and Mobile'},
                                       function() {
+                                          LoadingDialog.open();
                                           signatory.remind().sendAjax(function() {
                                             self.model.authorviewsignatories().authorview().reload(true);
                                           });
@@ -238,6 +241,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                      {'Signatory index':signatory.signIndex(),
                                                       'Accept' : 'change email'},
                                                      function() {
+                                                         LoadingDialog.open();
                                                          signatory.changeEmail(input.val()).sendAjax(function() {
                                                           self.model.authorviewsignatories().authorview().reload(true);
                                                         });;
@@ -273,6 +277,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                      {'Signatory index':signatory.signIndex(),
                                                       'Accept' : 'change phone'},
                                                      function() {
+                                                         LoadingDialog.open();
                                                          signatory.changePhone(input.val()).sendAjax(function() {
                                                             self.model.authorviewsignatories().authorview().reload(true);
                                                           });
@@ -333,6 +338,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
         button.click(function() {
             mixpanel.track('Click remove from pad queue',
                            {'Signatory index':signatory.signIndex()});
+            LoadingDialog.open();
             signatory.removeFromPadQueue().sendAjax(function() {
                                             self.model.authorviewsignatories().authorview().reload(true);
                                           });
@@ -361,6 +367,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                             mixpanel.track('Accept',
                                                            {'Accept' : 'add to pad queue',
                                                             'Signatory index':signatory.signIndex()});
+                                           LoadingDialog.open();
                                            signatory.addtoPadQueue().sendAjax(function() {
                                             self.model.authorviewsignatories().authorview().reload(true);
                                           });

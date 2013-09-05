@@ -74,8 +74,7 @@ var AuthorViewModel = Backbone.Model.extend({
   isDirty : function() {
     return this.get("dirty");
   },
-  reload: function(dirty,message) {
-
+  reload: function(dirty) {
     if (dirty) this.set({dirty: true});
     this.trigger("reload");
   },
@@ -218,7 +217,7 @@ window.AuthorView = function(args) {
                         view = newview;
                         maindiv = newdiv;
                         oldview.destroy();
-                        LoadingDialog.close();
+                        if (oldmodel.isDirty()) LoadingDialog.close();
                      } else {
                         newview.destroy();
                     }

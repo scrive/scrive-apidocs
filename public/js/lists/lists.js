@@ -544,7 +544,7 @@
             this.model = function() {return model;};
             this.el = function() {return $(view.el);};
             this.fetchWithCallback = function(callback) {
-                $.get(schema.url(),function(res) {
+                $.get(schema.url(),schema.getSchemaUrlParams(),function(res) {
                     callback(model, JSON.parse(res).list);
                 })
             };

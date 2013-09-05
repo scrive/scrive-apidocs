@@ -408,7 +408,6 @@ handleProlong docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
   guardRightM $ prolongDocument doc
   triggerAPICallbackIfThereIsOne doc
-  addFlashM $ flashDocumentProlonged doc
   return $ LinkIssueDoc (documentid doc)
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
@@ -419,7 +418,6 @@ handleResend docid signlinkid  = withUserPost $ do
   customMessage <- getOptionalField  asValidInviteText "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
   _ <- sendReminderEmail customMessage ctx actor doc signlink
-  addFlashM $ flashRemindMailSent signlink
   return (LinkIssueDoc docid)
 
 --This only works for undelivered mails. We shoulkd check if current user is author
