@@ -937,6 +937,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             });
         }
         if (field && signatory.canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
+            place.css('border', '1px solid black'); // Only optional fields?
             place.click(function() {
                 return view.startInlineEditing();
             });
@@ -1332,7 +1333,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
 
                 var textholder = $("<span class='text'/>");
 
-                var button = $("<div class='placesignaturebutton'/>");
+                var button = $("<div class='button button-green'/>");
                 var document = field.signatory().document();
 
                 button.append(textholder.text(localization.signature.placeYour));

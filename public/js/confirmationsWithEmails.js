@@ -124,7 +124,7 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       title  : "",
       acceptText: "Ok",
       rejectText: "Cancel",
-	  editText : "Edit",
+      editText : "Edit",
       acceptColor : "green",
       onEdit: function() {},
       textfont : undefined,
@@ -171,8 +171,7 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
 
 var ConfirmationWithEmailView = Backbone.View.extend({
   events: {
-        "click .close" :  "reject",
-        "click .edit"  :  "edit"
+        "click .close" :  "reject"
     },
     initialize: function (args) {
         _.bindAll(this, 'render', 'reject');
@@ -217,16 +216,26 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var footer = $("<div class='modal-footer'>");
        var cancelOption = $("<label class='clickable cancel close float-left' s/>");
        cancelOption.text(this.model.rejectText());
-	   this.editOption = $("<label class='clickable edit float-left' style='margin-left:10px;'/>");
-       this.editOption.text(this.model.editText());
+       this.editOption = new Button({color: 'black',
+                                    style: 'margin-left: 15px',
+                                    cssClass: 'float-left',
+                                    shape: 'rounded',
+                                    text: this.model.editText(),
+                                    onClick: function() {
+                                        view.edit();
+                                    }
+       });
        if (model.textfont()) {
          cancelOption.css("font-family",model.textfont());
          this.editOption.css("font-family",model.textfont());
        }
        footer.append(cancelOption);
 
-       if (!BrowserInfo.isSmallScreen()) // We skip editing message on small screens
+       if (!BrowserInfo.isSmallScreen()) { // We skip editing message on small screens
+         this.editOption = this.editOption.el(); // make it hideable from other places.
          footer.append(this.editOption);
+       }
+
 
        var accept = new Button({color:model.acceptColor(),
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
@@ -274,6 +283,8 @@ window.ConfirmationWithEmail = {
     popup: function (args) {
           var model = new ConfirmationWithEmailModel(args);
           var overlay = $("<div class='modal'/>");
+          if (args.cssClass != undefined)
+            overlay.addClass(args.cssClass);
           overlay.height($(document).height());
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
           $("body").append(overlay);

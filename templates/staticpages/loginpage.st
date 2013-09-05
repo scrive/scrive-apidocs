@@ -209,7 +209,7 @@ accountSetupPage=
                                                   userid : "$userid$",
                                                   signupmethod : "$signupmethod$",
                                                   companyAdmin : $if(companyAdmin)$true$else$false$endif$,
-                                                  buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$blue$endif$",
+                                                  buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$green$endif$",
                                                   branded : $if(hasbrandeddomain)$true$else$false$endif$,
                                                   servicelinkcolour: $if(customservicelinkcolour)$"$customservicelinkcolour$"$else$null$endif$
                                                   })

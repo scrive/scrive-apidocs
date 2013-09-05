@@ -66,13 +66,29 @@ var PointLeftArrowView = Backbone.View.extend({
     clear : function() {
         $(this.el).remove();
     },
+    fixWidth : function() {
+       var container = $(this.el);
+       var desiredWidth = $('.front',container).width() + $('.label',container).width() + $('.back',container).width()+10;
+       if (this.right != undefined && this.right + desiredWidth > $('body').width() && BrowserInfo.isPadDevice()) {
+         var maxLabelWidth = $('body').width() - this.right - $('.front',container).width() - $('.back',container).width() - 2;
+         if (maxLabelWidth < 0 ) maxLabelWidth = 0;
+         $('.label',container).text("").css("min-width", maxLabelWidth + "px");
+         container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+2);
+       }
+       else
+        container.width(desiredWidth);
+
+    },
     render: function () {
        var container = $(this.el);
        container.addClass('action-arrow').addClass('left');
+       container.append($("<div class='front' />"));
+       container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
+       container.append($("<div class='back' />"));
 
        if (this.model.point() != undefined) {
-          this.right = ($(document).width() - this.model.point().offset().left + 10);
-          container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 22) + "px");
+          this.right = ($(document).width() - this.model.point().offset().left );
+          container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 14) + "px");
           container.css("right", this.right + "px");
        }
        return this;
@@ -89,9 +105,24 @@ var PointRightArrowView = Backbone.View.extend({
     clear : function() {
         $(this.el).remove();
     },
+    fixWidth : function() {
+       var container = $(this.el);
+       var desiredWidth = $('.front',container).width() + $('.label',container).width() + $('.back',container).width() + 2;
+       if (this.left != undefined && this.left + desiredWidth > $('body').width() && BrowserInfo.isPadDevice()) {
+         var maxLabelWidth = $('body').width() - this.left - $('.front',container).width() - $('.back',container).width() - 2;
+         if (maxLabelWidth < 0 ) maxLabelWidth = 0;
+         $('.label',container).text("").css("min-width", maxLabelWidth + "px");
+         container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+2);
+       }
+       else
+        container.width(desiredWidth);
+    },
     render: function () {
        var container = $(this.el);
        container.addClass('action-arrow').addClass('right');
+       container.append($("<div class='front' />"));
+       container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
+       container.append($("<div class='back' />"));
 
        if (this.model.point() != undefined) {
           var p = this.model.point();
@@ -101,8 +132,8 @@ var PointRightArrowView = Backbone.View.extend({
             top = p.children().offset().top;
           if (p.children().size() == 1 && p.children().outerHeight() > height)
             height = p.children().outerHeight();
-          this.left = (this.model.point().offset().left + this.model.point().outerWidth() + 3.5);
-          container.css("top", (top + (height / 2) - 22) + "px");
+          this.left = (this.model.point().offset().left + this.model.point().outerWidth() + 6);
+          container.css("top", (top + (height / 2) - 14) + "px");
           container.css("left", this.left + "px");
        }
        return this;
@@ -250,6 +281,10 @@ window.Arrow = {
                          el.show();
                     setTimeout(function() {arrow.blink(i - 1)},200);
               },
+              /* We need to recalculate width after appending arrow to page */
+              fixWidth: function() {
+                   if (view.fixWidth != undefined) view.fixWidth();
+              }
             });
         }
 };
