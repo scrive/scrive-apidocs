@@ -113,7 +113,6 @@ window.File = Backbone.Model.extend({
     },
     parse : function(response)
     {
-        console.log("Parsing file");
         if (response.error != undefined)
         {
             this.set({broken: true});
@@ -390,7 +389,6 @@ var FileView = Backbone.View.extend({
 
 
 window.KontraFile = function(args){
-        console.log("Kontra file");
         if (args.file != undefined) {
             this.model = args.file;
         }
