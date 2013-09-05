@@ -148,17 +148,17 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var self = this;
     this.logo.css("width","").css("height","").attr('src', '');
     this.logo.attr('src', logo);
-    var scaleWhenComplete = function() {
-      if (self.logo[0].complete && self.logo.width() > 0) {
-        var w = self.logo.width();
-        var h = self.logo.height();
-        self.logo.css("width", Math.ceil(3*w/5) + "px").css("height",Math.ceil(3*h/5) + "px");
-      }
-      else setTimeout(scaleWhenComplete,5);
-    };
-    if (!BrowserInfo.isIE8orLower()) //Scaling inlined images with css properties fails in IE
-      setTimeout(scaleWhenComplete,5);
-
+    var submit = new Submit({method: 'POST',
+                             url: '/scale_image',
+                             ajax: true,
+                             ajaxsuccess: function (rs) {
+                               var response = JSON.parse(rs);
+                               var logo_base64 = response.logo_base64;
+                               self.logo.attr('src', logo_base64);
+                             }
+                            });
+    submit.add('logo', logo);
+    submit.send();
   },
   changeTextColor : function(signviewtextcolour) {
     this.contentheader.css('color', signviewtextcolour);
