@@ -125,9 +125,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
         return this.get('createaccountsection');
   },
   signsection : function() {
-       var document = this.document();
-       var textcolour = document.signviewtextcolour();
-       var textfont = document.signviewtextfont();
+       var signviewbranding = this.signviewbranding();
+       var textcolour = signviewbranding.signviewtextcolour();
+       var textfont = signviewbranding.signviewtextfont();
        var textstyle = {};
 
        if (textcolour && this.usebranding()) {
