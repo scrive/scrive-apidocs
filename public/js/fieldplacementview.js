@@ -252,6 +252,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 }),
                 name: options[selected].name,
                 cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
+                style: 'font-size: 16px',
                 textWidth: "191px",
                 optionsWidth: "218px",
                 onSelect: function(v) {
@@ -373,6 +374,7 @@ var TextTypeSetterView = Backbone.View.extend({
         return new Select({name : localization.fontSize.name + ": " + fontSizeName,
                            textWidth: "191px",
                            optionsWidth: "218px",
+                           style: "font-size: 16px",
                            options: [
                               { name : localization.fontSize.small,
                                 style: "font-size: 12px",
@@ -850,7 +852,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         var button = new Button({
             color: 'black',
-            size: 'tiny',
             text: localization.ok,
             width: 64,
             onClick: setName
