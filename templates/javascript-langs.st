@@ -482,6 +482,7 @@ javascriptLocalisation =
            , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
+	   , numberOfUsers: "$_paymentNumberOfUsers()$"
            , plans: {
                       team         : {
                       name : "$_paymentPlanTeam()$",
@@ -514,6 +515,9 @@ javascriptLocalisation =
                     , nextpayment : "$_paymentPlanNextPayment()$"
                     , previouspayments : "$_paymentPlanPreviousPayments()$"
                     , changebilling: "$_paymentPlanChangeBilling()$"
+		    , changecard: "$_paymentChangeCard()$"
+		    , cardinformation: "$_cardInformation()$"
+		    , billinginformation: "$_billingInformation()$"
                     , none: "$_paymentPlanNone()$"
                     }
             , subscribe: "$_paymentPlanSubscribe()$"

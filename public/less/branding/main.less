@@ -25,26 +25,18 @@ table {
 }
 
 p {
-  margin: 0 0 1.5em;
-}
-p a {
-  color: @red;
-  text-decoration: none;
-  &:hover {
-    color: @red-dark;
-    text-decoration: underline;
-  }
+  color: @text-dark;
 }
 
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
   font-family: @source;
   margin: 0;
+  color: @default-text-color;
 }
 
 h1, .h1 {
   font-size: 3.5*@em;
-  color: @blue-dark;
   letter-spacing: -1px;
   letter-spacing: -2px;
   line-height: 1.2em;
@@ -54,26 +46,22 @@ h1, .h1 {
 h2, .h2 {
   font-size: 2*@em;
   font-weight: normal;
-  color: @blue-medium;
   line-height: 1.5em;
 }
 h3, .h3 {
   font-size: 2*@em;
   font-weight: bold;
-  color: @blue-dark;
   line-height: 1.2em;
 }
 
 h4, .h4 {
   font-size: 1.5*@em;
-  font-weight: normal;
-  color: @blue-dark;
+  font-weight: 300;
   line-height: 1.2em;
 }
 
 h5 {
   font-size: 1.25*@em;
-  color: @blue-medium;
   font-weight: normal;
   line-height: 1.2em;
 }
@@ -81,7 +69,6 @@ h5 {
 h6 {
   font-size: 1*@em;
   font-weight: bold;
-  color: @blue-dark;
   line-height: 1.2em;
 }
 
@@ -136,9 +123,6 @@ label {
   &.clickable {
     color: @blue-medium;
     cursor: pointer;
-    &:hover {
-      color : @blue-dark;
-    }
   }
 }
 a {
