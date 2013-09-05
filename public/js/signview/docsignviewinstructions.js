@@ -76,7 +76,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var document = this.model.document();
     $(this.el).empty();
 
-    var container = $("<div class='instructions' />");
+    var container = $("<div class='instructions section spacing' />");
     if (BrowserInfo.isSmallScreen()) {
         container.addClass("small-screen");
     }

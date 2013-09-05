@@ -1,9 +1,9 @@
  .signview .arrows {
    @scroll-arrow-size: 102px;
    @scroll-arrow-margin: 50px;
-   @action-arrow-front-width:18px;
-   @action-arrow-back-width:7px;
-   @action-arrow-height: 28px;
+   @action-arrow-front-width:20px;
+   @action-arrow-back-width:9px;
+   @action-arrow-height: 38px;
 
   .scroll-arrow {
     height:    @scroll-arrow-size;
@@ -51,10 +51,12 @@
   .label {
     background-repeat: repeat-x;
     color: white;
-    padding-top: 4px;
+    font-size: 14px;
+    padding-top: 7px;
+    padding-left: 2px;
     height : @action-arrow-height;
     white-space:nowrap;
-    min-width : 70px;
+    min-width : 68px;
 
   }
 
@@ -74,6 +76,7 @@
   .action-arrow.left .front {
     float : right;
     background-image: url(../img/sign-arrow-action-left-front.png);
+    margin-top: -1px; // is this an image problem? i just rotated the right one 180 deg.
   }
   .action-arrow.left .back {
     float : right;

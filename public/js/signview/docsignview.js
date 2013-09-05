@@ -441,10 +441,16 @@ var DocumentSignViewView = Backbone.View.extend({
         return this;
      }
 
-     this.container.append(this.model.instructionssection().el);
+     if (this.subcontainer != undefined) this.subcontainer.detach();
+
+     var subcontainerWrapper = $("<div class='subcontainerWrapper'/>").appendTo(this.container);
+        
+     this.subcontainer = $("<div class='subcontainer'></div>").appendTo(subcontainerWrapper);
+
+     this.subcontainer.append(this.model.instructionssection().el);
 
      if (this.model.hasCreateAccountSection())
-         this.container.append(this.model.createaccountsection().el);
+         this.subcontainer.append(this.model.createaccountsection().el);
 
      if (   this.model.hasMainFileSection()
          || this.model.hasAuthorAttachmentsSection()
@@ -452,11 +458,6 @@ var DocumentSignViewView = Backbone.View.extend({
          || this.model.hasSignatoriesAttachmentsSection()
          || this.model.hasSignSection())
      {
-        if (this.subcontainer != undefined) this.subcontainer.detach();
-
-        var subcontainerWrapper = $("<div class='subcontainerWrapper'/>").appendTo(this.container);
-        
-        this.subcontainer = $("<div class='subcontainer'></div>").appendTo(subcontainerWrapper);
 
         if (this.model.hasMainFileSection())
             this.subcontainer.append(this.model.mainfile().view.el);
