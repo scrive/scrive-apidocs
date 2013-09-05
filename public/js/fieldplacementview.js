@@ -937,6 +937,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             });
         }
         if (field && signatory.canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
+            place.css('border', '1px solid black'); // Only optional fields?
             place.click(function() {
                 return view.startInlineEditing();
             });
