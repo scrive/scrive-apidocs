@@ -138,11 +138,10 @@ $endif$
 </style>
 
 
-<footer class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+<footer class="site $if(thin)$thin$endif$ $if(logged)$logged-in$endif$ $if(!logged)$thin$endif$">
   <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
     $if(logged)$
-
       <div class="poweredbyscrive" style="text-align: center; width: 100%;">
         $if(!custombarscolour)$
         <div class='text'>Powered by <div class='logo'/></div>
