@@ -204,6 +204,13 @@ window.AuthorView = function(args) {
                  var connectNewView = function() {
                    if (newmodel.readyToShow()) {
                      if (reloadversion == version) {
+
+                        // Initial settings based on old model
+                        newmodel.signatories().setCurrentIndex(oldmodel.signatories().currentIndex());
+                        console.log("Expanded " + oldmodel.history().expanded());
+                        newmodel.history().setExpanded(oldmodel.history().expanded());
+
+                        // Connecting to page
                         maindiv.empty();
                         maindiv.replaceWith(newdiv);
                         document = newdocument;

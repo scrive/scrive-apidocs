@@ -217,6 +217,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
 
   },
   changeEmailOption : function() {
+    var self = this;
     var signatory = this.model.signatory();
     var container = $("<div class='change-email-box'/>");
     var fstbutton = new Button({
@@ -237,7 +238,9 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                      {'Signatory index':signatory.signIndex(),
                                                       'Accept' : 'change email'},
                                                      function() {
-                                                         signatory.changeEmail(input.val()).send();
+                                                         signatory.changeEmail(input.val()).sendAjax(function() {
+                                                          self.model.authorviewsignatories().authorview().reload(true);
+                                                        });;
                                                      });
                                     }
                                     });
@@ -249,6 +252,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     return container;
   },
   changePhoneOption : function() {
+    var self = this;
     var signatory = this.model.signatory();
     var container = $("<div class='change-email-box'/>");
     var fstbutton = new Button({
@@ -269,7 +273,9 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                      {'Signatory index':signatory.signIndex(),
                                                       'Accept' : 'change phone'},
                                                      function() {
-                                                         signatory.changePhone(input.val()).send();
+                                                         signatory.changePhone(input.val()).sendAjax(function() {
+                                                            self.model.authorviewsignatories().authorview().reload(true);
+                                                          });
                                                      });
                                     }
                                     });
@@ -281,6 +287,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     return container;
   },
   giveForSigningOnThisDeviceOption : function() {
+                 var self = this;
                  var signatory = this.model.signatory();
                  var button = $("<label  class='clickable giveForSigning'/>");
                  var icon = $("<div class='giveForSigningIcon'/>");
@@ -316,6 +323,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                  return button;
     },
     removeFromPadQueueOption :  function() {
+        var self = this;
         var signatory = this.model.signatory();
         var button = $("<label class='clickable removeFromPad'/>");
         var icon = $("<div class='removeFromPadIcon'/>");
@@ -325,12 +333,15 @@ var AuthorViewSignatoryView = Backbone.View.extend({
         button.click(function() {
             mixpanel.track('Click remove from pad queue',
                            {'Signatory index':signatory.signIndex()});
-            signatory.removeFromPadQueue().sendAjax( function() { window.location = window.location;});
+            signatory.removeFromPadQueue().sendAjax(function() {
+                                            self.model.authorviewsignatories().authorview().reload(true);
+                                          });
         });
         return button;
 
     },
     addToPadQueueOption : function() {
+                 var self = this;
                  var signatory = this.model.signatory();
                  var button = $("<label  class='clickable addToPad'/>");
                  var icon = $("<div class='addToPadIcon'/>");
@@ -350,7 +361,9 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                             mixpanel.track('Accept',
                                                            {'Accept' : 'add to pad queue',
                                                             'Signatory index':signatory.signIndex()});
-                                           signatory.addtoPadQueue(function(resp) {window.location = window.location;}).sendAjax();
+                                           signatory.addtoPadQueue().sendAjax(function() {
+                                            self.model.authorviewsignatories().authorview().reload(true);
+                                          });
                                            return true;
 
                                         }

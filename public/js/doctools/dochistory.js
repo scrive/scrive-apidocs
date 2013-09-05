@@ -6,7 +6,7 @@
 
 var DocumentHistoryModel = Backbone.Model.extend({
   defaults : {
-      showAll : false
+      expanded : false
   },
   initialize : function(){
   },
@@ -21,7 +21,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
         name : "Document history",
         schema: new Schema({
             url: "/api/frontend/history/" + this.document().documentid(),
-            paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 15 }),
+            paging : new Paging({disabled: true, showLimit : this.get("expanded") ? undefined : 15 }),
             cells : [
                 new Cell({name: localization.archive.documents.columns.status, width:"46px", field:"status",
                   rendering: function(status) {
@@ -63,12 +63,13 @@ var DocumentHistoryModel = Backbone.Model.extend({
            callback();
       });
   },
-  showAll : function() {
-      return this.get("showAll");
+  expanded : function() {
+      return this.get("expanded");
   },
-  toogleShowAll : function() {
-      this.set({'showAll' : !this.showAll() }, {silent : true});
-      this.historyList().setShowLimit(this.get("showAll") ? undefined : 15);
+  setExpanded : function(bool) {
+      this.set({'expanded' : bool }, {silent : true});
+      this.historyList().setShowLimit(bool ? undefined : 15);
+      this.trigger("change:history");
   },
   document : function(){
        return this.get("document");
@@ -84,7 +85,6 @@ var DocumentHistoryView = Backbone.View.extend({
         var self = this;
         _.bindAll(this, 'render');
         this.listenTo(this.model,"change:history",self.render);
-        var view = this;
         this.render();
     },
     destroy : function() {
@@ -93,7 +93,7 @@ var DocumentHistoryView = Backbone.View.extend({
         $(this.el).remove();
     },
     updateOption : function() {
-         if (this.model.showAll()) {
+         if (this.model.expanded()) {
             this.checkbox.addClass("expanded");
             this.label.text(localization.history.hide);
          }
@@ -110,7 +110,7 @@ var DocumentHistoryView = Backbone.View.extend({
         this.label = $("<div class='label'/>");
         this.updateOption();
         option.click(function() {
-            model.toogleShowAll();
+            model.setExpanded(!model.expanded());
             view.updateOption();
             return false;
         });
@@ -120,20 +120,18 @@ var DocumentHistoryView = Backbone.View.extend({
       var self = this;
       var container = $(this.el);
       this.model.historyList().el().detach();
-      container.children().empty();
+      container.empty();
 
       var historyList = this.model.historyList();
 
       container.append(historyList.el());
 
-      var footer = $("<div class='document-history-footer'/>");
-        if (historyList.model().length <= 15)
-            footer.hide();
-        else
-            self.updateOption();
-      footer.append(this.expandAllOption());
-      container.append(footer);
-
+      if (historyList.model().length >= 15) {
+           var footer = $("<div class='document-history-footer'/>");
+           footer.append(this.expandAllOption());
+           container.append(footer);
+           self.updateOption();
+        }
 
       return this;
     }
@@ -150,6 +148,8 @@ window.DocumentHistory = function(args){
                     });
         this.el     = function() {return $(view.el);};
         this.recall = function() { model.recall();};
+        this.expanded = function() { return model.expanded();}
+        this.setExpanded = function(expanded) {model.setExpanded(expanded);};
         this.ready  = function() {return model.ready()};
         this.destroy = function() {view.destroy();this.checkIfHistoryChangedAndCallback = function() {};};
         this.checkIfHistoryChangedAndCallback = function(callback) {return model.checkIfHistoryChangedAndCallback(callback);}

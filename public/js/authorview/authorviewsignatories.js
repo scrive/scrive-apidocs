@@ -17,6 +17,14 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   signatories: function() {
     return this.document().signatories();
   },
+  currentIndex : function() {
+    for(var i = 0;i < this.get("signatoriesViews").length ; i++ )
+      if (this.get("signatoriesViews")[i] == this.get("currentSignview")) return i;
+  },
+  setCurrentIndex : function(i) {
+      if (this.get("signatoriesViews")[i] != undefined)
+        this.setCurrentSignview(this.get("signatoriesViews")[i]);
+  },
   authorview :function() {
      return this.get("authorview");
   },
@@ -130,6 +138,8 @@ window.AuthorViewSignatories = function(args) {
           var model = new AuthorViewSignatoriesModel(args);
           var view =  new AuthorViewSignatoriesView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
+          this.currentIndex = function() { return model.currentIndex() };
+          this.setCurrentIndex = function(i) { model.setCurrentIndex(i);}
           this.destroy = function() {return view.destroy();}
 
 };

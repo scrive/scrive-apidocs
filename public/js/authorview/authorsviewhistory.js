@@ -88,6 +88,8 @@ window.AuthorViewHistory = function(args) {
           this.el = function() {return $(view.el);};
           this.ready = function() {return model.ready()};
           this.setDontRefresh = function() { model.setDontRefresh();};
+          this.expanded = function() { return model.history().expanded();};
+          this.setExpanded = function(expanded) { model.history().setExpanded(expanded);};
           this.destroy = function() {view.destroy();}
           var checkAndRefresh = function(i) {
                   if (model.dontRefresh())

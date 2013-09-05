@@ -568,7 +568,7 @@
             this.destroy = function() {schema.off();model.off();$(view.el).remove();};
             this.setShowLimit = function(l) {
                     schema.paging().setShowLimit(l);
-                    schema.trigger("change");
+                    model.trigger('change');
             };
             schema.bind('change', function() {self.recall();});
             if (args.loadOnInit != false) self.recall();
