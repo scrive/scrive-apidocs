@@ -167,7 +167,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
         this.pbs.empty().append(pbstext);
     }
     else {
-        var pbstext = $("<span class='text' />").text(BrowserInfo.isSmallScreen() ? "E-Signing powered by " : "Powered by ");
+        var pbstext = $("<div class='text' />").text(BrowserInfo.isSmallScreen() ? "E-Signing powered by " : "Powered by ");
         var pbslogo = $("<span class='logo' />");
         this.pbs.empty().append(pbstext).append(pbslogo);
     }
