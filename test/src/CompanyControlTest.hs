@@ -60,8 +60,8 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Email email background was set" (Just "color3") $ companyemailemailbackgroundcolour $ companyui
   assertEqual "Email background was set" (Just "color11") $ companyemailbackgroundcolour $ companyui
   assertEqual "Email text colour was set" (Just "color4") $ companyemailtextcolour $ companyui
-  assertBool "Email logo file was set" $ isJust $ companyemaillogo $ companyui
-  assertBool "Signview logo file was set" $ isJust $ companysignviewlogo $ companyui
+  assertBool "Email logo file was not set" $ isNothing $ companyemaillogo $ companyui
+  assertBool "Signview logo file was not set" $ isNothing $ companysignviewlogo $ companyui
   assertEqual "Signview text colour was set" (Just "color5") $ companysignviewtextcolour $ companyui
   assertEqual "Signview text font was set" (Just "font3") $ companysignviewtextfont $ companyui
   assertEqual "Signview bars colour was set" (Just "color6") $ companysignviewbarscolour $ companyui
