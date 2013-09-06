@@ -105,14 +105,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
              && window.CreateAccountAfterSignView != undefined;
   },
   instructionssection : function() {
-        if (this.get("instructionssection") == undefined)
-            this.set({'instructionssection' :
-                new DocumentSignInstructionsView({
-                    model: this,
-                    el: $("<div />")
-                })
-            });
-        return this.get('instructionssection');
+      // I don't understand what is going on here, but if I cache it doesn't show up properly.
+      return new DocumentSignInstructionsView({
+        model: this,
+        el: $("<div />")
+      });
   },
   createaccountsection : function() {
         if (this.get("createaccountsection") == undefined)
@@ -439,7 +436,7 @@ var DocumentSignViewView = Backbone.View.extend({
         return this;
      }
 
-     if (this.subcontainer != undefined) this.subcontainer.detach();
+     if (this.subcontainer != undefined) this.subcontainer.empty();
 
      var subcontainerWrapper = $("<div class='subcontainerWrapper'/>").appendTo(this.container);
         
