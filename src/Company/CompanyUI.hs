@@ -11,6 +11,7 @@ import DB.SQL2
 import Company.CompanyID
 import Control.Monad.State
 import OurPrelude
+import qualified Data.ByteString.Char8 as BS
 
 data CompanyUI = CompanyUI
   { companyuicompanyid                :: CompanyID
@@ -93,6 +94,9 @@ selectCompanyUIsSelectors = do
 fetchCompanyUIs :: MonadDB m => m [CompanyUI]
 fetchCompanyUIs = kFold decoder []
   where
+    -- We should interpret empty logos as no logos.
+    logoFromBinary (Just l) = if (BS.null $ unBinary l) then Nothing else Just l
+    logoFromBinary Nothing = Nothing
     decoder acc
       company_id
       email_font
@@ -107,15 +111,15 @@ fetchCompanyUIs = kFold decoder []
         , companyemailbuttoncolour = email_buttoncolour
         , companyemailemailbackgroundcolour = email_emailbackgroundcolour
         , companyemailbackgroundcolour = email_backgroundcolour
-        , companyemailtextcolour = email_textcolour
-        , companyemaillogo = email_logo
-        , companysignviewlogo = signview_logo
+        , companyemailtextcolour =  email_textcolour
+        , companyemaillogo = logoFromBinary email_logo
+        , companysignviewlogo = logoFromBinary signview_logo
         , companysignviewtextcolour = signview_textcolour
         , companysignviewtextfont = signview_textfont
         , companysignviewbarscolour = signview_barscolour
         , companysignviewbarstextcolour = signview_barstextcolour
         , companysignviewbackgroundcolour = signview_backgroundcolour
-        , companycustomlogo  = custom_logo
+        , companycustomlogo  = logoFromBinary custom_logo
         , companycustombarscolour = custom_barscolour
         , companycustombarstextcolour = custom_barstextcolour
         , companycustombarssecondarycolour = custom_barssecondarycolour
