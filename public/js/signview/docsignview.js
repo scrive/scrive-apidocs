@@ -319,7 +319,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                        {Label : placement.field().name()});
                     },
                     tipSide : placement.tip(),
-                    //label: placement.field().isCheckbox() ? localization.checkHere : localization.writeHere,
                     label: label,
                     labelCss: arrowLabelCss
                 });
