@@ -4,8 +4,6 @@ module File.Model (
     , GetFileByFileID(..)
     , GetFileThatShouldBeMovedToAmazon(..)
     , NewFile(..)
-    , GetFileWithNoChecksum(..)
-    , SetChecksum(..)
     ) where
 
 import Control.Applicative
@@ -54,21 +52,6 @@ instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) wh
   query GetFileThatShouldBeMovedToAmazon = do
     kRun_ $ selectFilesSQL <> SQL "WHERE content IS NOT NULL LIMIT 1" []
     fetchFiles >>= oneObjectReturnedGuard
-
--- | Needed for encrypting/calculating checksum for old files. To be removed after 15.08.2012.
-data GetFileWithNoChecksum = GetFileWithNoChecksum
-instance MonadDB m => DBQuery m GetFileWithNoChecksum (Maybe File) where
-  query GetFileWithNoChecksum = do
-    kRun_ $ selectFilesSQL <> SQL "WHERE checksum IS NULL LIMIT 1" []
-    fetchFiles >>= oneObjectReturnedGuard
-
--- | Needed for encrypting/calculating checksum for old files. To be removed after 15.08.2012.
-data SetChecksum = SetChecksum FileID Binary
-instance MonadDB m => DBUpdate m SetChecksum Bool where
-  update (SetChecksum fid checksum) = do
-    kRun01 $ sqlUpdate "files" $ do
-      sqlSet "checksum" checksum
-      sqlWhereEq "id" fid
 
 selectFilesSQL :: SQL
 selectFilesSQL = "SELECT" <+> sqlConcatComma (map raw filesSelectors) <+> "FROM files "
