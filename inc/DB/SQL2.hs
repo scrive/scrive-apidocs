@@ -982,10 +982,13 @@ data DBBaseLineConditionIsFalse = DBBaseLineConditionIsFalse SQL
 
 instance KontraException DBBaseLineConditionIsFalse
 
+--
+-- It it quite tempting to put the offending SQL as text in the JSON
+-- that we produce.  This would aid debugging greatly, but could
+-- possibly also reveal too much information to a potential attacker.
 instance JSON.ToJSValue DBBaseLineConditionIsFalse where
-  toJSValue _ = JSON.runJSONGen $ do
-                JSON.value "message" "DBBaseLineConditionIsFalse"
-                JSON.value "http_status" (403::Int)
+  toJSValue _sql = JSON.runJSONGen $ do
+                     JSON.value "message" "DBBaseLineConditionIsFalse"
 
 {- Warning: use kWhyNot1 for now as kWhyNot does not work in expected way.
 
@@ -1130,6 +1133,17 @@ kRun1OrThrowWhyNot sqlcommand = do
         -- most generic one.
         kThrow ex
 
+isBaseLineException :: (Exception ex) => ex -> Bool
+isBaseLineException ex =
+  case cast ex of
+    Just (SomeKontraException ex') ->
+      case cast ex' of
+        Just (DBBaseLineConditionIsFalse{}) -> True
+        _ -> False
+    _ -> case cast ex of
+          Just (DBBaseLineConditionIsFalse{}) -> True
+          _ -> False
+
 kRun1OrThrowWhyNotAllowBaseLine :: (SqlTurnIntoSelect s, MonadDB m)
                    => s -> m ()
 kRun1OrThrowWhyNotAllowBaseLine sqlcommand = do
@@ -1137,17 +1151,12 @@ kRun1OrThrowWhyNotAllowBaseLine sqlcommand = do
   when (not success) $ do
     listOfExceptions <- kWhyNot1 sqlcommand
 
-    let filterOutBaseline = filter (not . isBaseline)
-        isBaseline x = case cast x of
-                         Just (DBBaseLineConditionIsFalse{}) -> True
-                         _ -> False
-    case filterOutBaseline listOfExceptions of
+    case listOfExceptions of
       [] -> do
         return ()
       (ex:_) -> do
-        -- Lets throw first exception on the list. It should be the
-        -- most generic one.
-        kThrow ex
+        when (not (isBaseLineException ex)) $
+           kThrow ex
 
 kRunAndFetch1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, Fetcher v [a])
                            => ([a] -> v) -> s -> m a
