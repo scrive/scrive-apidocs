@@ -16,7 +16,7 @@ tableFiles = tblTable {
     , tblColumn { colName = "checksum",      colType = BinaryT,     colNullable = False }
     , tblColumn { colName = "aes_key",       colType = BinaryT }
     , tblColumn { colName = "aes_iv",        colType = BinaryT }
-    , tblColumn { colName = "purged",        colType = TimestampWithZoneT }
+    , tblColumn { colName = "purge_time",    colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey = ["id"]
   }

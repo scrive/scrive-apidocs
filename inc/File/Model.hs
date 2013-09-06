@@ -7,7 +7,6 @@ module File.Model (
     ) where
 
 import Control.Applicative
-import Data.Monoid
 import Database.HDBC
 
 import Crypto
@@ -16,13 +15,17 @@ import DB
 import DB.SQL2
 import File.File
 import File.FileID
+import File.Conditions
 import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
 
 data GetFileByFileID = GetFileByFileID FileID
 instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
   query (GetFileByFileID fid) = do
-    kRun_ $ selectFilesSQL <> SQL "WHERE id = ?" [toSql fid]
+    kRun_ $ sqlSelect "files" $ do
+      mapM_ (sqlResult . raw) filesSelectors
+      sqlWhereFileIDIs fid
+      sqlWhereFileWasNotPurged
     fetchFiles >>= oneObjectReturnedGuard
 
 data NewFile = NewFile String Binary
@@ -47,16 +50,17 @@ instance MonadDB m => DBUpdate m FileMovedToAWS () where
         sqlSet "amazon_url" url
         sqlSet "aes_key" $ aesKey aes
         sqlSet "aes_iv" $ aesIV aes
-        sqlWhereEq "id" fid
+        sqlWhereFileIDIs fid
+        sqlWhereFileWasNotPurged
 
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
   query GetFileThatShouldBeMovedToAmazon = do
-    kRun_ $ selectFilesSQL <> SQL "WHERE content IS NOT NULL LIMIT 1" []
+    kRun_ $ sqlSelect "files" $ do
+      sqlWhere "content IS NOT NULL"
+      sqlLimit 1
+      mapM_ (sqlResult . raw) filesSelectors
     fetchFiles >>= oneObjectReturnedGuard
-
-selectFilesSQL :: SQL
-selectFilesSQL = "SELECT" <+> sqlConcatComma (map raw filesSelectors) <+> "FROM files "
 
 filesSelectors :: [RawSQL]
 filesSelectors = [
