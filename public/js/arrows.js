@@ -73,7 +73,7 @@ var PointLeftArrowView = Backbone.View.extend({
          var maxLabelWidth = $('body').width() - this.right - $('.front',container).width() - $('.back',container).width() - 2;
          if (maxLabelWidth < 0 ) maxLabelWidth = 0;
          $('.label',container).text("").css("min-width", maxLabelWidth + "px");
-         container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+2);
+         container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+8);
        }
        else
         container.width(desiredWidth);
@@ -88,7 +88,7 @@ var PointLeftArrowView = Backbone.View.extend({
 
        if (this.model.point() != undefined) {
           this.right = ($(document).width() - this.model.point().offset().left );
-          container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 14) + "px");
+          container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 19) + "px");
           container.css("right", this.right + "px");
        }
        return this;
@@ -107,12 +107,12 @@ var PointRightArrowView = Backbone.View.extend({
     },
     fixWidth : function() {
        var container = $(this.el);
-       var desiredWidth = $('.front',container).width() + $('.label',container).width() + $('.back',container).width() + 2;
+       var desiredWidth = $('.front',container).width() + $('.label',container).width() + $('.back',container).width() + 10;
        if (this.left != undefined && this.left + desiredWidth > $('body').width() && BrowserInfo.isPadDevice()) {
          var maxLabelWidth = $('body').width() - this.left - $('.front',container).width() - $('.back',container).width() - 2;
          if (maxLabelWidth < 0 ) maxLabelWidth = 0;
          $('.label',container).text("").css("min-width", maxLabelWidth + "px");
-         container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+2);
+         container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+10);
        }
        else
         container.width(desiredWidth);

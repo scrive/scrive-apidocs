@@ -450,9 +450,8 @@ javascriptLocalisation =
              , phoneConfirmationText: "$_phoneConfirmationText()$"
              , startButtonLabel: "$_startButtonLabel()$"
              , notEntered: "$_notEntered()$"
-             , checkboxes : {
-                    pleaseCheck : "$_checkboxPleaseCheck()$"
-               }
+             , checkbox: "$_signViewCheckbox()$"
+             , textfield: "$_signViewTextField()$"
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
              , welcome : "$_welcome()$"
