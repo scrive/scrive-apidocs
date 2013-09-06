@@ -133,7 +133,7 @@ window.CompanyBrandingColour = function(args) {
 var CompanyBrandingFontModel = Backbone.Model.extend({
   defaults: {
     customised: false,
-    defaultfont: 'Helvetica Neue, Arial, sans-serif',
+    defaultfont: 'Source Sans Pro, Helvetica Neue, Arial, sans-serif',
     label: '',
     font : ""
   },

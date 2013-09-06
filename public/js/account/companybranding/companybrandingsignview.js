@@ -81,27 +81,29 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var company = this.model;
 
     this.container = $("<div class='sample-sign-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
-    this.header = $("<div class='sample-sign-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED '/>");
+    this.header = $("<div class='sample-sign-view-header' style='min-height: 50px; width: 100%;border-bottom: 1px solid #DEE4ED '/>");
 
     this.logo = $('<img/>');
-    var leftheader = $('<div style="float: left; margin: 20px;"/>');
+    var leftheader = $('<div style="float: left; margin: 10px;"/>');
     leftheader.append(this.logo);
-    this.rightheader = $('<div style="float: right; margin: 20px;font-size: 10px;"/>');
+    this.rightheader = $('<div style="float: right; margin: 10px;font-size: 10px;"/>');
     this.rightheader.text('HEADER TEXT');
     this.header.append(leftheader).append(this.rightheader).append($('<div style="clear:both;"/>'));
 
-    this.contentheader = $('<div style="text-align: center;padding-top:5px;font-size: 12px;font-weight: bold;"/>');
+
+    this.contentheader = $('<div style="text-align: center;padding-top:5px;font-size: 12px;box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);background-color: white;margin-bottom:10px;"/>');
     this.contentheader.html('<p style="font-size: 18px;margin-bottom: 0px;">Follow the <span style="color:#53b688" class="highlight-green">GREEN ARROW</span> to e-sign</p><p style="margin-right: 20px;font-weight: normal;margin-bottom: 1px;">Due date 2020-09-16</p><p style="background: url(../img/senddoc.png) no-repeat;padding-left: 20px;font-weight: normal;display: inline-block;background-position: 0px 2px;position: relative;font-size:11px;left: -10px;color: #7a94b8;cursor: pointer;margin-bottom:8px;">MyNewsdesk demo document</p>');
     var documentpic = $('<img src="/img/document_example.png" style="box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);width: 480px;"/>')
                         .css("width","480px");
 
     var document = $("<div/>").css("border", "1px dashed #cccccc")
-      .css("padding", "10px").css("text-align","center").css("margin-top", "4px");
+      .css("padding", "10px").css("text-align","center");
+    document.append(this.contentheader);
     document.append(documentpic);
     var rejectbuttoncontainer = $('<div style="float: left;padding:10px;"/>');
     var rejectbutton = new Button({size: 'tiny',
                                     color: 'blue',
-                                    shape: "rounded",
+                                    shape: 'rounded',
                                     width: 150,
                                     text: 'Reject document',
                                     onClick: function() {}});
@@ -109,7 +111,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var signbuttoncontainer = $('<div style="float: right;padding:10px;"/>');
     var signbutton = new Button({size: 'tiny',
                                   color: 'green',
-                                  shape: "rounded",
+                                  shape: 'rounded',
                                   width: 150,
                                   text: 'Sign document',
                                   onClick: function() {}});
@@ -117,10 +119,10 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var buttonsdiv = $('<div style="height: 56px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;margin: 10px 0px;box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);background-color:white;"/>');
     buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
     var contentcontent = $('<div/>').css("width","500px").css("margin","auto")
-      .css("padding-bottom", "10px");
+      .css("padding-bottom", "10px").css("padding-top", "15px");
     
     document.append(buttonsdiv);
-    contentcontent.append(this.contentheader).append(document);
+    contentcontent.append(document);
     this.content = $('<div style="padding-bottom:20px;"/>');
     this.content.append(contentcontent);
 
