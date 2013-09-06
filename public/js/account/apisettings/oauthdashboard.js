@@ -104,7 +104,7 @@ var OauthDashboardModel = Backbone.Model.extend({
         var self = this;
         return  new KontraList({
           name : "Granted Privileges",
-          bottomExtras: jQuery("<div style='margin-left:1px;margin-top:5px;margin-bottom:5px;'/>").append(new Button({
+          bottomExtras: jQuery("<div style='margin-left:1px;margin-top:15px;margin-bottom:5px;'/>").append(new Button({
                             size: "tiny",
                             color: "green",
                             text: localization.apiDashboard.apiTokenCreate,

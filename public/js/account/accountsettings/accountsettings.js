@@ -493,7 +493,7 @@ var AccountSettingsView = Backbone.View.extend({
 
 window.AccountSettings = function(args) {
           var model = new AccountSettingsModel(args);
-          var view =  new AccountSettingsView({model : model, el : $("<div class='tab-container'/>")});
+          var view =  new AccountSettingsView({model : model, el : $("<div class='tab-container account-settings'/>")});
           return {
               refresh : function() {model.refresh();},
               el  : function() {return $(view.el);}

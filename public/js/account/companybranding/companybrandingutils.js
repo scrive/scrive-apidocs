@@ -33,6 +33,7 @@ var CompanyBrandingColourModel = Backbone.Model.extend({
 });
 
 var CompanyBrandingColourView = Backbone.View.extend({
+  className: "colourBox",
   initialize: function(args) {
     _.bindAll(this, 'render');
     if (this.model) {
@@ -86,7 +87,7 @@ var CompanyBrandingColourView = Backbone.View.extend({
 
 
 
-    this.customdiv = $("<div />");
+    this.customdiv = $("<div style='padding-bottom:10px' />");
     this.customdiv.append(this.input);
     this.customdiv.append(this.display);
     this.customdiv.append(this.colourpicker);
@@ -232,7 +233,7 @@ var CompanyBrandingFontView = Backbone.View.extend({
                               options: options
                              });
 
-    this.customdiv = $('<div />').css({width: 220, 'margin-left': '23px'});
+    this.customdiv = $('<div />').css({width: 220, 'margin-left': '23px', 'padding-bottom': '10px'});
     this.customdiv.append(this.select.el());
 
     var container = $('<div/>');

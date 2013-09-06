@@ -205,7 +205,7 @@ window.CompanyBrandingSignViewView = Backbone.View.extend({
   render: function() {
     var container = $(this.el);
     $(this.el).empty();
-    var options = $("<div style='width: 220px; margin:20px 0px 20px 20px; display: inline-block;vertical-align: top;height: 100%'/>");
+    var options = $("<div style='width: 220px; margin:10px 0px 20px 20px; display: inline-block;vertical-align: top;height: 100%'/>");
     container.append(options);
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.signviewlogo().el()));
