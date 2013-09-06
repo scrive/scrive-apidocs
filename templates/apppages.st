@@ -59,11 +59,13 @@ wholePage=
         $standardHeaderContents()$
       </head>
       <body $if(custombackground)$style="background:$custombackground$;"$endif$>
-       $header()$
-       $flashmessages()$
-       $content:noescape()$
-       $contactUsVivocha()$
-       $pageFooter()$
+        <div class="wrapper-position-footer">
+         $header()$
+         $flashmessages()$
+         $content:noescape()$
+         $contactUsVivocha()$
+         $pageFooter()$
+ 	</div>
       </body>
     </html>
 

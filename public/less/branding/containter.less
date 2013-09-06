@@ -1,5 +1,17 @@
 @import 'colors.less';
 
+// Used for keeping the footer at the bottom
+// http://matthewjamestaylor.com/blog/keeping-footers-at-the-bottom-of-the-page
+.wrapper-position-footer {
+    min-height:100%;
+    position:relative;
+}
+
+.body-container {
+    xpadding-bottom: 40px;
+    padding-bottom:101px;   /* 61px + 40px: Height of the footer + wanted space between footer and content*/
+}
+
 .mainContainer {
     width: 100%;
     min-height: 544px;
