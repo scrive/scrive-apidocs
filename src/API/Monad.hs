@@ -36,7 +36,6 @@ import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen
-import Text.JSON.Types
 import qualified Happstack.Server.Response as Web
 import Control.Monad.Error
 import Control.Applicative
@@ -88,16 +87,31 @@ data APIError = BadInput           String
 instance KontraException APIError
 
 instance ToJSValue APIError where
-  toJSValue (BadInput msg) = jsonError 400 $ value "message" msg
-  toJSValue (Forbidden msg) = jsonError 403 $ value "message" msg
-  toJSValue (NotLoggedIn msg) = jsonError 403 $ do
+  toJSValue (BadInput msg) = jsonError $ value "message" msg
+  toJSValue (Forbidden msg) = jsonError $ value "message" msg
+  toJSValue (NotLoggedIn msg) = jsonError $ do
                                   value "message" msg
                                   value "url" "https://scrive.com/login"
-  toJSValue (ServerError msg) = jsonError 500 $ value "message" msg
-  toJSValue (ActionNotAvailable msg) = jsonError 500 $ value "message" msg
-  toJSValue (NoAvailableYet msg) = jsonError 420 $ value "message" msg
-  toJSValue (ConflictError msg) = jsonError 409 $ value "message" msg
+  toJSValue (ServerError msg) = jsonError $ value "message" msg
+  toJSValue (ActionNotAvailable msg) = jsonError $ value "message" msg
+  toJSValue (NoAvailableYet msg) = jsonError $ value "message" msg
+  toJSValue (ConflictError msg) = jsonError $ value "message" msg
 
+
+httpCodeFromAPIError :: APIError -> Int
+httpCodeFromAPIError (BadInput {}) = 400
+httpCodeFromAPIError (Forbidden {}) = 403
+httpCodeFromAPIError (NotLoggedIn {}) = 403
+httpCodeFromAPIError (ServerError {}) = 500
+httpCodeFromAPIError (ActionNotAvailable {}) = 500
+httpCodeFromAPIError (NoAvailableYet {}) = 420
+httpCodeFromAPIError (ConflictError {}) = 409
+
+httpCodeFromSomeKontraException :: SomeKontraException -> Int
+httpCodeFromSomeKontraException (SomeKontraException ex) =
+  case cast ex of
+    Just (apierror :: APIError) -> httpCodeFromAPIError apierror
+    Nothing -> 400
 
 badInput :: String -> APIError
 badInput = BadInput
@@ -152,15 +166,7 @@ instance ToAPIResponse Response where
 instance ToAPIResponse JSValue where
   toAPIResponse jv =
     -- must be text/plain because some browsers complain about JSON type
-    (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv) { rsCode = code }
-    where
-       -- Am I stupid or it is realy so hard to get an integer from a json object?
-       -- The below simulates: (jv.http_status_code || 200)
-       code = case jv of
-                JSObject obj -> case get_field obj "http_status_code" of
-                                  Just (JSRational _ c) -> round c
-                                  _ -> 200
-                _ -> 200
+    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in
@@ -203,11 +209,10 @@ instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
   modifyContext = lift . modifyContext
 
-jsonError :: Int -> JSONGen () -> JSValue
-jsonError http msg = runJSONGen $ do
-  value "http_status_code" http
+jsonError :: JSONGen () -> JSValue
+jsonError rest = runJSONGen $ do
   value "status" "error"
-  msg
+  rest
 
 
 
@@ -215,19 +220,20 @@ jsonError http msg = runJSONGen $ do
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => APIMonad m v -> m Response
 api acc = (toAPIResponse <$> runAPIMonad acc)
-          `catches` [ Handler $ \(SomeKontraException e) ->
-                        return . toAPIResponse $ toJSValue e
-                    , Handler $ \e -> return . toAPIResponse $ case e of
-                                        DBResourceNotAvailable ->
-                                          jsonError 403 $ do
-                                            value "message" "The resource you are trying to access does not exist or you do not have permission to access it."
-                                        DBNotLoggedIn ->
-                                          jsonError 404 $ do
-                                            value "message" "You must identify yourself to access this resource."
-                                            value "url" "https://scrive.com/login"
-                                        DBActionNotAvailable msg ->
-                                          jsonError 500 $ do
-                                            value "message" msg
+          `catches` [ Handler $ \ex@(SomeKontraException e) ->
+                        return $ ((toAPIResponse $ toJSValue e) { rsCode = httpCodeFromSomeKontraException ex })
+                    , Handler $ \e ->
+                        case e of
+                          DBResourceNotAvailable ->
+                            return (toAPIResponse $ jsonError $ do
+                                       value "message" "The resource you are trying to access does not exist or you do not have permission to access it.") { rsCode = 403 }
+                          DBNotLoggedIn ->
+                            return (toAPIResponse $ jsonError $ do
+                                       value "message" "You must identify yourself to access this resource."
+                                       value "url" "https://scrive.com/login") { rsCode = 404 }
+                          DBActionNotAvailable msg ->
+                            return (toAPIResponse $ jsonError $ do
+                                      value "message" msg) { rsCode = 500 }
                     ]
 
 apiErrorFromDBError :: DBError -> APIError
