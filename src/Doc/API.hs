@@ -468,7 +468,7 @@ apiCallGet did = api $ do
          doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
          sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
          when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
-         _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
+         dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                          (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
          lift $ switchLang (getLang doc)
 
@@ -484,7 +484,7 @@ apiCallGet did = api $ do
         (user, _actor, external) <- getAPIUser APIDocCheck
         doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
         let msiglink = getMaybeSignatoryLink (doc,user)
-        when_ (isJust $ msiglink) $ do
+        when_ ((isJust msiglink) && (not (isPreparation doc))) $ do
             let sl = fromJust msiglink
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
