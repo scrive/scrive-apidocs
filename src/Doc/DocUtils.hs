@@ -308,10 +308,10 @@ isAuthorAdmin user doc =
   useriscompanyadmin user && (getAuthorSigLink doc >>= maybesignatory) == Just (userid user)
 
 documentfileM :: MonadDB m => Document -> m (Maybe File)
-documentfileM = maybe (return Nothing) (dbQuery . GetFileByFileID) . documentfile
+documentfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentfile
 
 documentsealedfileM :: MonadDB m => Document -> m (Maybe File)
-documentsealedfileM = maybe (return Nothing) (dbQuery . GetFileByFileID) . documentsealedfile
+documentsealedfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentsealedfile
 
 fileInDocument :: Document -> FileID -> Bool
 fileInDocument doc fid =

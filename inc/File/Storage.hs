@@ -34,8 +34,5 @@ getFileContents file = do
 
 getFileIDContents :: (MonadDB m, MonadIO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
 getFileIDContents fid = do
-  mfile <- dbQuery $ GetFileByFileID fid
-  case mfile of
-    Just file -> getFileContents file
-    Nothing -> return BS.empty
-
+  file <- dbQuery $ GetFileByFileID fid
+  getFileContents file

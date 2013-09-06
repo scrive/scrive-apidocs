@@ -1104,10 +1104,22 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where
   update (AttachFile did fid a) = do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
       sqlSet "file_id" fid
-      -- FIXME: check if file actually exists
+      -- FIXME:
+      --
+      -- We do not need to check if the file really exists because if
+      -- it does not then at the end of the transation we will get
+      -- foreign key violation.
+      --
+      -- But there is another thing to check here: if the actor really
+      -- has access rights to the file. It might be that we will
+      -- connect somebody elses file to the document thus letting
+      -- unrecognized person to see contents of somebody elses
+      -- document.
+      --
+      -- Some magic needs to be invented to prevent that from
+      -- happening.
       sqlWhereDocumentIDIs did
       sqlWhereDocumentStatusIs Preparation
-    _ <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
     updateMTimeAndObjectVersion did (actorTime a)
     return ()
 

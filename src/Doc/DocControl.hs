@@ -73,7 +73,6 @@ import Doc.DocInfo
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Util.MonadUtils
 import User.Utils
-import File.File
 import Control.Applicative
 import Control.Concurrent
 import qualified Control.Exception.Lifted as E
@@ -616,10 +615,11 @@ handleSetAttachments did = do
                           Just fid -> do
                             access <- hasAccess doc fid
                             if access
-                              then (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
+                              then return (Just fid)
                               else internalError
                           Nothing -> internalError
                  _ -> return Nothing
+
         hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
         hasAccess doc fid = do
           user <- fromJust <$> ctxmaybeuser <$> getContext

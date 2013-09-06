@@ -93,7 +93,7 @@ remindMailNotSigned forMail customMessage ctx document signlink ispreview = do
           then makeFullLink ctx $ show $ LinkSignDoc document signlink
           else makeFullLink ctx "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         F.value "isattachments" $ length (documentauthorattachments document) > 0
-        F.value "attachments" $ map (filename) (catMaybes authorattachmentfiles)
+        F.value "attachments" $ map filename authorattachmentfiles
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
         F.value "hassigattachments" $ not $ null $ concat $ signatoryattachments <$> documentsignatorylinks document
         -- We try to use generic templates and this is why we return a tuple
@@ -248,7 +248,7 @@ mailInvitation forMail
         F.value "someonesigned" $ not $ null $ partySignedList document
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "isattachments" $ length (documentauthorattachments document) > 0
-        F.value "attachments" $ map (filename) (catMaybes authorattachmentfiles)
+        F.value "attachments" $ map filename authorattachmentfiles
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
         F.value "hassigattachments" $ length (concatMap signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple

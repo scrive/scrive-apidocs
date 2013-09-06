@@ -234,8 +234,8 @@ findOutAttachmentDesc document = do
         let fileid' = authorattachmentfile authorattach
         (numberOfPages,name) <- do
           contents <- getFileIDContents fileid'
-          mfile <- dbQuery $ GetFileByFileID fileid'
-          let name' = maybe "" filename mfile
+          file <- dbQuery $ GetFileByFileID fileid'
+          let name' = filename file
           return (getNumberOfPDFPages contents, name')
         numberOfPagesText <-
           if numberOfPages==1

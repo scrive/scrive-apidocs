@@ -67,7 +67,7 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "title" $ documenttitle doc
       J.value "file" $ fmap fileJSON file
       J.value "sealedfile" $ fmap fileJSON sealedfile
-      J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
+      J.value "authorattachments" $ map fileJSON authorattachmentfiles
       J.objects "evidenceattachments" $ for evidenceattachments $ \a -> do
         J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
         J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
@@ -153,7 +153,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
 signatoryAttachmentJSON :: MonadDB m => SignatoryAttachment -> JSONGenT m ()
 signatoryAttachmentJSON sa = do
   mfile <- lift $ case (signatoryattachmentfile sa) of
-    Just fid -> dbQuery $ GetFileByFileID fid
+    Just fid -> fmap Just $ dbQuery $ GetFileByFileID fid
     _ -> return Nothing
   J.value "name" $ signatoryattachmentname sa
   J.value "description" $ signatoryattachmentdescription sa

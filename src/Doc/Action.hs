@@ -443,7 +443,7 @@ makeMailAttachments document = do
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
       allfiles' = maybeToList mainfile ++ aattachments ++ sattachments
-  allfiles <- catMaybes `liftM` mapM (dbQuery . GetFileByFileID) allfiles'
+  allfiles <- mapM (dbQuery . GetFileByFileID) allfiles'
   let dropPDFSuffix name | ".pdf" `isSuffixOf` (map toLower name) = reverse . drop 4 $ reverse name
                          | otherwise = name
   --use the doc title rather than file name for the main file (see jira #1152)

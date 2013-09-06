@@ -20,13 +20,12 @@ import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
 
 data GetFileByFileID = GetFileByFileID FileID
-instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
+instance MonadDB m => DBQuery m GetFileByFileID File where
   query (GetFileByFileID fid) = do
-    kRun_ $ sqlSelect "files" $ do
+    kRunAndFetch1OrThrowWhyNot fetchFilesDecoder $ sqlSelect "files" $ do
       mapM_ (sqlResult . raw) filesSelectors
       sqlWhereFileIDIs fid
       sqlWhereFileWasNotPurged
-    fetchFiles >>= oneObjectReturnedGuard
 
 data NewFile = NewFile String Binary
 instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile FileID where
@@ -75,9 +74,19 @@ filesSelectors = [
   ]
 
 fetchFiles :: MonadDB m => m [File]
-fetchFiles = kFold decoder []
-  where
-    decoder acc fid fname content amazon_bucket
+fetchFiles = kFold fetchFilesDecoder []
+
+fetchFilesDecoder :: [File]
+                  -> FileID
+                  -> String
+                  -> Maybe Binary
+                  -> Maybe String
+                  -> Maybe String
+                  -> Maybe Binary
+                  -> Maybe Binary
+                  -> Maybe Binary
+                  -> [File]
+fetchFilesDecoder acc fid fname content amazon_bucket
       amazon_url checksum maes_key maes_iv = File {
         fileid = fid
       , filename = fname
