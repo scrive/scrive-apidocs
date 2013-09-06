@@ -40,7 +40,9 @@ testFileIDUriShow = doTimes 100 $  do
 testFileNewFile :: TestEnv ()
 testFileNewFile  = doTimes 100 $ do
   (name, content) <- fileData
-  File { fileid = fileid , filename = fname1 , filestorage = FileStorageMemory fcontent1 } <- dbUpdate $  NewFile name $ Binary content
+  fileid' <- dbUpdate $ NewFile name $ Binary content
+  Just (File { fileid = fileid, filename = fname1, filestorage = FileStorageMemory fcontent1 }) <- dbQuery $ GetFileByFileID fileid'
+
   assertEqual "File content doesn't change" content fcontent1
   assertEqual "File name doesn't change" name fname1
   Just (File { filename = fname2 , filestorage = FileStorageMemory fcontent2}) <- dbQuery $ GetFileByFileID fileid
@@ -52,11 +54,11 @@ testFileMovedToAWS  = doTimes 100 $ do
   (name,content) <- fileData
   bucket <- viewableS
   url <- viewableS
-  file <- dbUpdate $ NewFile name $ Binary content
+  fileid' <- dbUpdate $ NewFile name $ Binary content
   let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
 
-  dbUpdate $ FileMovedToAWS (fileid file) bucket url aes
-  Just (File { filename = fname , filestorage = FileStorageAWS fbucket furl aes2 }) <- dbQuery $ GetFileByFileID (fileid file)
+  dbUpdate $ FileMovedToAWS fileid' bucket url aes
+  Just (File { filename = fname , filestorage = FileStorageAWS fbucket furl aes2 }) <- dbQuery $ GetFileByFileID fileid'
   assertEqual "File data name does not change" name fname
   assertEqual "Bucket and url are persistent" (bucket,url) (fbucket,furl)
   assertEqual "AES key is persistent" aes aes2
@@ -64,18 +66,18 @@ testFileMovedToAWS  = doTimes 100 $ do
 testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do
   (name,content) <- fileData
-  file <- dbUpdate $ NewFile name $ Binary content
-  checker file
+  fileid' <- dbUpdate $ NewFile name $ Binary content
+  checker fileid'
  where
-  checker file = do
+  checker fileid' = do
    mf <- dbQuery $ GetFileThatShouldBeMovedToAmazon
    case mf of
-       Just f -> if (f == file)
+       Just f -> if (fileid f == fileid')
                     then return ()
                     else do
                         let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
-                        dbUpdate $ FileMovedToAWS (fileid f) "" "" aes
-                        checker file
+                        dbUpdate $ FileMovedToAWS fileid' "" "" aes
+                        checker fileid'
        Nothing ->  assertFailure  "Newly created file will not"
 
 viewableS :: TestEnv String

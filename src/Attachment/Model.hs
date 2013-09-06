@@ -16,7 +16,6 @@ import DB.SQL2
 import DB
 import Attachment.AttachmentID
 import File.FileID
-import File.File
 import File.Model
 import User.UserID
 import MinutesTime
@@ -67,7 +66,7 @@ data NewAttachment = NewAttachment UserID String String Binary Actor
 instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m NewAttachment (Either String Attachment) where
   update (NewAttachment uid title filename filecontents actor) = do
   let ctime = actorTime actor
-  file <- update $ NewFile filename filecontents
+  fileid <- update $ NewFile filename filecontents
   kRun_ $ sqlInsert "attachments" $ do
     sqlSet "user_id" uid
     sqlSet "title" title
@@ -75,7 +74,7 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m NewAttachment (Ei
     sqlSet "mtime" ctime
     sqlSet "shared" False
     sqlSet "deleted" False
-    sqlSet "file_id" (fileid file)
+    sqlSet "file_id" fileid
     sqlAttachmentResults
   atts <- fetchAttachments
   case atts of

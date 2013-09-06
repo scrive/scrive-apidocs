@@ -610,7 +610,7 @@ digitallySealDocument forceAttach ctxtime ctxgtconf documentid pdfpath pdfname =
       return (res, Missing)
   if status /= Missing || forceAttach then do
     Log.debug $ "Adding new sealed file to DB"
-    File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname newfilepdf
+    sealedfileid <- dbUpdate $ NewFile pdfname newfilepdf
     Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
     dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
     return (Just sealedfileid)
@@ -640,7 +640,7 @@ digitallyExtendDocument _ctxtime ctxgtconf documentid pdfpath pdfname = do
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
       Log.debug $ "Adding new extended file to DB"
-      File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
+      sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
       Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
       -- TODO: keep old sealed file, or delete?
       dbUpdate $ AttachExtendedSealedFile documentid sealedfileid status

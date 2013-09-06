@@ -85,7 +85,6 @@ import Crypto.RNG
 import Doc.Conditions
 import File.FileID
 import File.Model
-import File.File
 import File.Storage
 import qualified Amazon
 import qualified Control.Monad.State.Lazy as State
@@ -957,13 +956,13 @@ insertSignatoryScreenshots l = do
   let (slids, types, times, ss) = unzip4 $ [ (slid, "first",     t, s) | (slid, Just (t, s)) <- map (second first) l ]
                                         <> [ (slid, "signing",   t, s) | (slid, Just (t, s)) <- map (second signing) l ]
                                         <> [ (slid, "reference", t, s) | (slid,      (t, s)) <- map (second reference) l ]
-  (files :: [File]) <- mapM (\(t,s) -> dbUpdate $ NewFile (t ++ "_screenshot.jpeg") (Screenshot.image s)) (zip types ss)
+  (fileids :: [FileID]) <- mapM (\(t,s) -> dbUpdate $ NewFile (t ++ "_screenshot.jpeg") (Screenshot.image s)) (zip types ss)
   if null slids then return 0 else
     kRun $ sqlInsert "signatory_screenshots" $ do
            sqlSetList "signatory_link_id" $ slids
            sqlSetList "type"              $ (types :: [String])
            sqlSetList "time"              $ times
-           sqlSetList "file_id"           $ (map fileid files)
+           sqlSetList "file_id"           $ fileids
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
 instance (MonadDB m, MonadIO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where

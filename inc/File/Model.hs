@@ -26,15 +26,17 @@ instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
     fetchFiles >>= oneObjectReturnedGuard
 
 data NewFile = NewFile String Binary
-instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile File where
+instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile FileID where
   update (NewFile filename content) = do
     kRun_ $ sqlInsert "files" $ do
         sqlSet "name" filename
         sqlSet "content" $ content
         sqlSet "checksum" $ SHA1.hash `binApp` content
         sqlSet "size" $ BS.length $ unBinary content
-        mapM_ (sqlResult . raw) filesSelectors
-    fetchFiles >>= exactlyOneObjectReturnedGuard
+        sqlResult "id"
+    let fetchIDs = kFold decoder []
+        decoder acc fid = fid : acc
+    fetchIDs >>= exactlyOneObjectReturnedGuard
 
 data FileMovedToAWS = FileMovedToAWS FileID String String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where

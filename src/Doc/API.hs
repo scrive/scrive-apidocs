@@ -171,14 +171,14 @@ apiCallCreateFromFile = api $ do
                         Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
                                       Right dcontent -> preCheckPDF dcontent
                                       Left _ -> return (Left m)
-      file <- dbUpdate $ NewFile filename pdfcontent
-      return (Just file, takeBaseName filename)
+      fileid' <- dbUpdate $ NewFile filename pdfcontent
+      return (Just fileid', takeBaseName filename)
   Just doc <- dbUpdate $ NewDocument user title doctype 0 actor
   when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
   case mfile of
     Nothing -> return ()
-    Just file -> do
-      dbUpdate $ AttachFile (documentid doc) (fileid file) actor
+    Just fileid' -> do
+      dbUpdate $ AttachFile (documentid doc) fileid' actor
       return ()
   doc' <- apiGuardL  (forbidden "Access to file is forbiden")  $ dbQuery $ GetDocumentByDocumentID (documentid doc)
   Created <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
@@ -633,8 +633,8 @@ apiCallChangeMainFile docid = api $ do
                         Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
                                       Right dcontent -> preCheckPDF dcontent
                                       Left _ -> return (Left m)
-      file <- dbUpdate $ NewFile filename pdfcontent
-      return $ Just (fileid file, filename)
+      fileid' <- dbUpdate $ NewFile filename pdfcontent
+      return $ Just (fileid', filename)
 
   case mft of
     Just  (fileid,filename) -> do
@@ -691,17 +691,18 @@ documentUploadSignatoryAttachment did sid aname = api $ do
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
 
-  file <- dbUpdate $ NewFile (dropFilePathFromWindows filename) content
+  let sanitizedFileName = dropFilePathFromWindows filename
+  fileid' <- dbUpdate $ NewFile sanitizedFileName content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
-    dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
+    dbUpdate $ SaveSigAttachment (documentid doc) sid aname fileid' actor
     Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
     return newdoc
 
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
 
-  return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
+  return $ Created $ jsonSigAttachmentWithFile sigattach' (Just (fileid',sanitizedFileName))
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  String -> m Response
 documentDeleteSignatoryAttachment did sid aname = api $ do
@@ -751,13 +752,13 @@ checkObjectVersionIfProvidedAndThrowError did err = lift $ do
 
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair
-jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe File -> JSValue
+jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe (FileID,String) -> JSValue
 jsonSigAttachmentWithFile sa mfile =
   runJSONGen $ do
     value "name"        $ signatoryattachmentname sa
     value "description" $ signatoryattachmentdescription sa
     case mfile of
       Nothing   -> value "requested" True
-      Just file -> object "file" $ do
-        value "id"   $ show (fileid file)
-        value "name" $ filename file
+      Just (fileid',filename') -> object "file" $ do
+        value "id"   $ show fileid'
+        value "name" $ filename'

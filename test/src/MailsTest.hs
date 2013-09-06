@@ -20,7 +20,6 @@ import Mails.SendMail
 import Company.Model
 import Company.CompanyUI
 import Test.QuickCheck
-import File.File
 import Control.Monad
 import MinutesTime
 import Util.SignatoryLinkUtils
@@ -89,7 +88,7 @@ sendDocumentMails mailTo author = do
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         file <- addNewRandomFile
-        randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
+        randomUpdate $ AttachFile docid file (systemActor $ ctxtime ctx)
 
         isl <- rand 10 arbitrary
 

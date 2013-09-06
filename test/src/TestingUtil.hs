@@ -23,7 +23,6 @@ import qualified Test.HUnit as T
 import Control.Monad.Reader.Class
 
 import File.FileID
-import File.File
 import Crypto.RNG
 import DB
 import DB.SQL2
@@ -464,10 +463,10 @@ addNewCompany = do
     Just company <- dbQuery $ GetCompany cid
     return company
 
-addNewFile :: String -> BS.ByteString -> TestEnv File
+addNewFile :: String -> BS.ByteString -> TestEnv FileID
 addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
 
-addNewRandomFile :: TestEnv File
+addNewRandomFile :: TestEnv FileID
 addNewRandomFile = do
   fn <- rand 10 $ arbString 3 30
   cnt <- rand 10 $ arbString 3 30
@@ -574,7 +573,7 @@ addRandomDocument2 :: User -> (RandomDocumentAllows -> RandomDocumentAllows) -> 
 addRandomDocument2 user refine =
   addRandomDocument (refine (randomDocumentAllowsDefault user))
 
-addRandomDocumentWithAuthorAndConditionAndFile :: User -> (Document -> Bool) -> File -> TestEnv Document
+addRandomDocumentWithAuthorAndConditionAndFile :: User -> (Document -> Bool) -> FileID -> TestEnv Document
 addRandomDocumentWithAuthorAndConditionAndFile user p file =
   addRandomDocumentWithFile file ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
 
@@ -583,7 +582,7 @@ addRandomDocument rda = do
   file <- addNewRandomFile
   addRandomDocumentWithFile file rda
 
-addRandomDocumentWithFile :: File -> RandomDocumentAllows -> TestEnv Document
+addRandomDocumentWithFile :: FileID -> RandomDocumentAllows -> TestEnv Document
 addRandomDocumentWithFile file rda = do
   now <- getMinutesTime
   let user = randomDocumentAuthor rda
@@ -621,9 +620,9 @@ addRandomDocumentWithFile file rda = do
 
       let adoc = doc { documentsignatorylinks = alllinks
                      , documentlang = getLang user
-                     , documentfile = Just (fileid file)
+                     , documentfile = Just file
                      , documentsealedfile = if documentstatus doc == Closed
-                                               then Just (fileid file)
+                                               then Just file
                                                else Nothing
                      }
       case (p adoc, invariantProblems now adoc) of

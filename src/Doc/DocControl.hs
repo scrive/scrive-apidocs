@@ -553,9 +553,9 @@ handleSigAttach docid siglinkid = do
   -- we use gs to do that of course
   ctx <- getContext
   content <- guardRightM $ liftIO $ preCheckPDF (concatChunks content1)
-  file <- dbUpdate $ NewFile attachname content
+  fileid' <- dbUpdate $ NewFile attachname content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
-  dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
+  dbUpdate $ SaveSigAttachment docid siglinkid attachname fileid' actor
   newdoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
   return $ LinkSignDoc newdoc siglink
 
@@ -609,8 +609,8 @@ handleSetAttachments did = do
                          Log.debug $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
                          internalError
                        Right content' -> do
-                         file <- dbUpdate $ NewFile filename content'
-                         return (Just (fileid file))
+                         fileid' <- dbUpdate $ NewFile filename content'
+                         return (Just fileid')
                  Just (Input  (Right c)  _ _)  -> do
                       case maybeRead (BSL.toString c) of
                           Just fid -> do
