@@ -337,6 +337,7 @@ langSwitcher=
                       $endif$
                    }
                    var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
+		                              cssClass: "change-language",
                                               textWidth: "189px",
                                               optionsWidth: "216px",
                                               border: "none",
