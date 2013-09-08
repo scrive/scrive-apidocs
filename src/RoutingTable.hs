@@ -176,6 +176,7 @@ staticRoutes = choice
      , dir "dave"      $ Administration.daveRoutes
 
      , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ ServerUtils.handleUnsupportedBrowser
+     , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
 
      , documentAPI
      , userAPI
@@ -185,5 +186,6 @@ staticRoutes = choice
 
      -- public services
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
+     , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
    ]

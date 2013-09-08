@@ -7,11 +7,13 @@
 (function(window){
 
 window.File = Backbone.Model.extend({
-    defaults: {
+    defaults: function() {
+      return {
         id : 0,
         pages : [],
         name: "",
         broken : false
+      };
     },
     queryPart: function () {
       var params = { documentid: this.documentid(),
@@ -36,6 +38,7 @@ window.File = Backbone.Model.extend({
       }
     },
     initialize: function (args) {
+        console.log("Creating file");
         this.url = "/filepages/" + args.id + this.queryPart();
     },
     downloadLink : function() {
@@ -184,7 +187,7 @@ var FilePageView = Backbone.View.extend({
     model : FilePage,
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables', 'updateDragablesPosition');
-        this.model.bind('change:dragables', this.renderDragables);
+        this.listenTo(this.model,'change:dragables', this.renderDragables);
         this.render();
     },
     destroy : function() {
@@ -193,7 +196,7 @@ var FilePageView = Backbone.View.extend({
             p.typeSetter.clear();
       });
       this.off();
-      this.model.off();
+      this.stopListening();
       $(this.el).remove();
     },
     makeDropable : function() {
@@ -272,8 +275,8 @@ var FilePageView = Backbone.View.extend({
 var FileView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.bind('reset', this.render);
-        this.model.bind('change', this.render);
+        this.model.on('reset', this.render);
+        this.model.on('change', this.render);
         this.model.view = this;
         this.pageviews = [];
         this.model.fetch({data: { signatoryid: this.model.signatoryid()},
@@ -283,7 +286,8 @@ var FileView = Backbone.View.extend({
     },
     destroy : function() {
       this.off();
-      _.each(this.pageviews, function(pv) {pv.destroy();});
+      this.destroyed = true;
+      _.each(this.pageviews || [], function(pv) {pv.destroy();});
       $(this.el).remove();
     },
     vline: function() {
@@ -324,6 +328,7 @@ var FileView = Backbone.View.extend({
 
     },
     startReadyChecker : function() {
+        if (this.destroyed) return;
         var view = this;
         if (view.ready()) {
          view.model.trigger('ready');
@@ -333,17 +338,23 @@ var FileView = Backbone.View.extend({
            });
         }
         else
-         setTimeout(function() {view.startReadyChecker()},1000);
+         setTimeout(function() {view.startReadyChecker()},100);
     },
     startReadyCheckerFirstPage : function() {
+        if (this.destroyed) return;
         var view = this;
         if (view.readyFirstPage())
          view.model.trigger('FirstPageReady');
         else
-         setTimeout(function() {view.startReadyCheckerFirstPage()},1000);
+         setTimeout(function() {view.startReadyCheckerFirstPage()},100);
     },
     ready : function() {
-        return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
+        return (this.readyToConnectToPage() && $(this.el).parents('body').length > 0);
+    },
+    readyToConnectToPage : function() {
+        return (this.model.ready() && (this.model.pages().length > 0)
+               && (this.pageviews.length == this.model.pages().length)
+               && _.all(this.pageviews, function(pv) {return pv.ready();}));
     },
     readyFirstPage : function () {
         return this.pageviews.length > 0 && this.pageviews[0].ready();
@@ -377,8 +388,7 @@ var FileView = Backbone.View.extend({
 });
 
 
-window.KontraFile = {
-    init : function(args){
+window.KontraFile = function(args){
         if (args.file != undefined) {
             this.model = args.file;
         }
@@ -399,8 +409,10 @@ window.KontraFile = {
         this.destroy = function() {
             this.view.destroy();
         };
+        this.readyToConnectToPage = function() {
+            return this.view.readyToConnectToPage();
+        };
         return this;
-    }
 };
 
 })(window);

@@ -65,6 +65,7 @@ set systemPage
  less less/designview/process.less
  less less/designview/welcomemodal.less
  less less/designview/modals.less
+ less less/terms.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  jsx  tiny_mce/tinymce.min.js
@@ -199,4 +200,3 @@ set systemPage
  js   js/account/account.js
  js   js/blocking.js
  js   js/oauth.js
-

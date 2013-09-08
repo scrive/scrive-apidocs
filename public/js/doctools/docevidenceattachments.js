@@ -19,6 +19,9 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
+  destroy : function() {
+    $(this.el).remove();
+  },
   evidenceAttachmentDesc: function(attachment) {
     var container = $("<div class='item' />");
     container.append($("<div class='icon' />"));
@@ -76,6 +79,7 @@ window.DocumentEvidenceAttachments = function(args) {
                         el : (args.el != undefined) ? args.el : $("<div/>")
                     });
        this.el = function() {return $(view.el);};
+       this.destroy = function() {view.destroy();};
 };
 
 })(window);

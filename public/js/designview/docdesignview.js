@@ -254,36 +254,36 @@
 
                     });
                 };
+                var bankidclicked = false;
                 bankid.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (bankidclicked) return false; else bankidclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'BankID'
                     });
                     document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, callback); });
                     return false;
                 });
+                var teliaclicked = false;
                 telia.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (teliaclicked) return false; else teliaclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Telia'
                     });
                     document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, callback); });
                     return false;
                 });
+                var nordeaclicked = false;
                 nordea.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (nordeaclicked) return false; else nordeaclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Nordea'
                     });
                     document.takeSigningScreenshot(function() { Eleg.nordeaSign(document,signatory,callback); });
                     return false;
                 });
+                var mbiclicked = false;
                 mbi.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (mbiclicked) return false; else mbiclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Mobile BankID'
                     });
@@ -296,9 +296,8 @@
                     color : "green",
                     shape : "rounded",
                     text : localization.designview.sign,
+                    oneClick : true,
                     onClick : function() {
-                        if (alreadyClicked(this))
-                            return;
                         mixpanel.track('Click accept sign', {
                             'Button' : 'sign'
                         });
@@ -351,9 +350,8 @@
                     color : "green",
                     shape : "rounded",
                     text : localization.process.sendbuttontext,
+                    oneClick : true,
                     onClick : function() {
-                        if (alreadyClicked(this))
-                            return;
                         mixpanel.track('Click accept sign', {
                             'Button' : 'send'
                         });

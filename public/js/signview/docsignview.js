@@ -212,7 +212,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       var model = this;
       if (this.get("mainfile") == undefined) {
         this.set({'mainfile' :
-                    KontraFile.init({
+                    new KontraFile({
                             file: this.document().mainfile(),
                             document: this.document()
                         })

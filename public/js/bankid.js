@@ -320,7 +320,6 @@ window.Eleg = {
     });
     },
     mobileBankIDSign: function(document, signatory, callback, personnummer) {
-        var eleg = this;
         var url;
         if(document.preparation())// designview
             url = "/d/eleg/mbi/" + document.documentid();
@@ -363,7 +362,7 @@ window.Eleg = {
 
             }});
         // retry after 5 seconds if it hasn't worked.
-        window.setTimeout(function() {if (fetching) eleg.mobileBankIDSign(document,signatory,callback);}, 5000);
+        window.setTimeout(function() {if (fetching) window.Eleg.mobileBankIDSign(document,signatory,callback,personnummer);}, 5000);
     }
 
 };

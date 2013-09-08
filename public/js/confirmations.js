@@ -43,6 +43,14 @@ var ConfirmationModel = Backbone.Model.extend({
           return this.get("onReject");
       return function() {};
   },
+  onRender : function() {
+    var callback = this.get('onRender');
+    if (callback != undefined) {
+      return callback();
+    } else {
+      return;
+    }
+  },
   reject : function(silent) {
       if (!(typeof silent == "boolean" && silent === true)) {
           return this.onReject()();
@@ -207,6 +215,9 @@ var ConfirmationView = Backbone.View.extend({
        $(this.el).append(container);
        return this;
     },
+    onRender: function() {
+      this.model.onRender();
+    },
     reject: function(silent){
         var self = this;
         $(this.el).removeClass("active");
@@ -235,7 +246,16 @@ window.Confirmation = {
           overlay.height($(document).height());
           var view = new ConfirmationView({model : model, el : overlay});
           $("body").append(overlay);
-          setTimeout(function() {overlay.addClass("active");},100);
+          setTimeout(function() {
+            overlay.addClass("active");
+            // wait for a second so the browser has the time to
+            // render everything and display the animation
+            // animation takes 600ms, but waiting for a shorter period
+            // results in not fully rendered modals sometimes
+            setTimeout(function() {
+              view.onRender();
+            }, 1000);
+          }, 100);
           return model;
    }
 

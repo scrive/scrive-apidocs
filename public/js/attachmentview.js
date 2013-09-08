@@ -117,7 +117,7 @@ var AttachmentView = Backbone.View.extend({
     if (this.editing && this.input != undefined)
       this.input.focus();
 
-    this.file = KontraFile.init({
+    this.file = new KontraFile({
       file: attachment.file()
     });
 
