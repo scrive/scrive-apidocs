@@ -22,7 +22,6 @@
         },
         render: function() {
             var view = this;
-            console.log("Rendering process");
             var div = $('<div />');
 
             div.append(view.leftColumn());
@@ -164,7 +163,6 @@
             var label = $('<div />');
             label.addClass('design-view-action-process-left-column-deadline-label');
             label.text(labelText + ':');
-            console.log(doc.daystosign());
             var calendarbutton = $("<div class='calendarbutton'/>");
             var calendar = new Calendar({on : calendarbutton,
                                          days : doc.daystosign(),
@@ -372,7 +370,6 @@
 			      // same as original placeholder
 			      var $message = $(editor.getWin().document).find("p");
 				if ($message.text() == localization.designview.editInvitation) {
-console.log("6");
 				    editor.setContent('');
 				}
 			}).on('blur', function(ed, e) {

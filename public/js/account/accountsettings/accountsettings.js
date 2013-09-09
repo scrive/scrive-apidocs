@@ -222,13 +222,9 @@ var AccountSettingsModel = Backbone.Model.extend({
     });
   },
   refresh : function() {
-    console.log("Forcing refresh");
     this.user().set({"ready" : false}, {silent: true});
-    console.log("User marked as dirty");
     this.user().fetch({cache: false, processData: true});
-    console.log("Done fetching, now reset");
     this.reset();
-
   }
 });
 
