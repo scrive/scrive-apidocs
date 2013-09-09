@@ -168,17 +168,30 @@
         border: 1px solid red;
         width: 150px;
         vertical-align: top;
-        height: 25px;
+        height: 19px;
         padding: 5px;
     }
+    input {
+        height: 24px;
+        font-size: 14px;
+    }
     .button {
-        padding: 10px 12px 11px;
+        padding: 8px 12px 9px;
         vertical-align: top;
     }
 }
 
 .text-field-placement-setter-field-selector, .text-field-placement-setter-field-field-selector {
-    font-size: 16px; // keep consistent with size of .placedfield.ui-draggable when placing fields.
+    font-size: 14.5px; // keep consistent with size of .placedfield.ui-draggable when placing fields.
+    height: 29px;
+    .select-button {
+      height: 29px;
+      .select-button-label { padding-top: 5px }
+      .select-button-right, .select-button-left { top: -2px; }
+    }
+    .select-opts {
+      top: 28px !important;
+    }
 }
 
 .text-field-placement-setter-field-editor {

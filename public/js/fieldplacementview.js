@@ -712,6 +712,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var selector = new Select({
             name: name,
             options: options,
+
             cssClass: 'text-field-placement-setter-field-selector',
             border : "1px solid #f33",
             onSelect: function(s) {
@@ -852,6 +853,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         var button = new Button({
             color: 'black',
+            size: 'tiny',
             text: localization.ok,
             width: 64,
             onClick: setName
