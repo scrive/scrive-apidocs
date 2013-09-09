@@ -348,7 +348,7 @@
                         view.pretableboxleft.append(filter.el);
                     });
                     if (!this.schema.textfiltering().disabled()) {
-                        var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
+                        var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='height:30px'/>")});
                         this.pretableboxright.append(filter.el);
                     }
                 }
