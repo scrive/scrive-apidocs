@@ -83,6 +83,7 @@ handleCompanyAccountsInternal cid = do
                   (Just _, False) -> RoleStandard
       , cadeletable = userid u `elem` deletableuserids
       , caactivated = isJust $ userhasacceptedtermsofservice u
+      , catos = userhasacceptedtermsofservice u
       }
     mkAccountFromInvite i = CompanyAccount {
         camaybeuserid = Nothing
@@ -93,6 +94,7 @@ handleCompanyAccountsInternal cid = do
       , carole = RolePending
       , cadeletable = True
       , caactivated = False
+      , catos = Nothing
       }
   params <- getListParams
   let companypage = companyAccountsSortSearchPage params companyaccounts
@@ -107,7 +109,7 @@ handleCompanyAccountsInternal cid = do
                 value "deletable" $ cadeletable f
                 value "activated" $ caactivated f
                 value "isctxuser" $ Just (userid user) == camaybeuserid f
-                value "tos"       $ formatMinutesTimeRealISO <$> (userhasacceptedtermsofservice user)
+                value "tos"       $ formatMinutesTimeRealISO <$> (catos f)
 
     value "paging" $ pagingParamsJSON companypage
 
@@ -124,6 +126,7 @@ data CompanyAccount = CompanyAccount
   , carole        :: Role         -- ^ the account's role
   , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents?
   , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos?
+  , catos         :: Maybe MinutesTime -- ^ TOS time if any
   }
 
 data Role = RoleAdmin    -- ^ an admin user
