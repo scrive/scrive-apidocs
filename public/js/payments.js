@@ -448,6 +448,7 @@
             this.onClick = args.onClick;
             var view = this;
             this.$el.click(function() {
+                mixpanel.track('Team Box Purchase click');
                 view.onClick();
                 return false;
             });
