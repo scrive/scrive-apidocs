@@ -113,7 +113,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                  })] : [],
             new IntervalDoubleSelectFiltering({
                              name: "time",
-                             textWidth : "80px",
+                             textWidth : "100px",
                              selectedBottomPrefix : localization.filterByTime.filterForm,
                              selectedTopPrefix :    localization.filterByTime.filterTo ,
                              options: function() {
