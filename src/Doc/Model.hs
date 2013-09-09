@@ -1577,7 +1577,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen () where
               sqlWhereDocumentIDIs did
               sqlWhereSignatoryLinkIDIs slid
               sqlWhereSignatoryLinkMagicHashIs mh
-              --sqlWhereDocumentTypeIs (Signable)
+              sqlWhereDocumentTypeIs (Signable)
               sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError undefined, Rejected]
               sqlWhere "signatory_links.seen_time IS NULL"
               sqlWhere "signatory_links.sign_time IS NULL"
