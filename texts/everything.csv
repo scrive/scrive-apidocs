@@ -90,7 +90,7 @@
 "_dialogCsvupload1ChooseFileToUpLoad","Välj fil att ladda upp","Select a file to upload"
 "_participantsIncludedInFile","deltagare i filen","participants included in file"
 "_dialogCsvupload1Head","Massutskick","Multisend"
-"_dialogCsvupload1Subtitle","Välj en fil att ladda upp (endast .csv)",""
+"_dialogCsvupload1Subtitle","Välj en fil att ladda upp (endast .csv)","Select a file (.csv only) to upload"
 "_dialogCsvupload2CSVMultiChooseFile","Välj fil (endast .csv)","Select a file (.csv only)"
 "_docListTabsAttachemtns","Bilagor","Attachments"
 "_docListTabsDocs","Dokument","Documents"
