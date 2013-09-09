@@ -7,7 +7,7 @@ pageDocumentsList=
 <script>
 jQuery(".archive").append(new Archive({month : $month$, year : $year$, forCompanyAdmin : $if(isadmin)$true$else$false$endif$ }).view().el);
 
-  jQuery("body").addClass("archive");
+  /*jQuery("body").addClass("archive");*/
   mixpanel.register({Context : 'Archive'});
   mixpanel.track('View Archive');
 </script>
