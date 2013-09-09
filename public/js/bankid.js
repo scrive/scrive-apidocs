@@ -137,9 +137,7 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
-	       console.log("before");
 	       console.log(data.tbs);
- 	       console.log("after");
                LoadingDialog.close(); // this was opened just before starting
                 if ($.browser.msie && hasSign2PluginIE())
                     installSign2IE();
