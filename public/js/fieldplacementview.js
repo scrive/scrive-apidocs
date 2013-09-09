@@ -558,8 +558,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 0.5) - textPlacementLeftMargin,
-                top: Math.floor(placement.yrel() * parentHeight + 0.5) - textPlacementTopMargin,
+                left: Math.floor(placement.xrel() * parentWidth + 1.5) - textPlacementLeftMargin,
+                top: Math.floor(placement.yrel() * parentHeight + 1.5) - textPlacementTopMargin,
                 fontSize: placement.fsrel() * parentWidth
             });
         }
