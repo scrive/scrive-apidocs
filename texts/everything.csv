@@ -105,7 +105,7 @@
 "_firstname","Förnamn","First name"
 "_fullName","Namn","Full name"
 "_flashMessageCompanyAccountDeleted","Kontot har tagits bort.","The account was successfully removed."
-"_flashMessageAccessNewAccountLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>Klicka på ""$_forgotpassword()$"" så mailar vi en ny länk som du kan använda för att komma åt ditt e-arkiv.","We are sorry. This link is no longer valid.  Click on ""$_forgotpassword()$"", and we will mail you a new link by which you can access your e-archive."
+"_flashMessageAccessNewAccountLinkNotValid","Vi beklagar. Länken är inte längre giltig. Klicka på ""$_forgotpassword()$"" så mailar vi en ny länk som du kan använda för att komma åt ditt e-arkiv.","We are sorry. This link is no longer valid.  Click on ""$_forgotpassword()$"", and we will mail you a new link by which you can access your e-archive."
 "_flashMessageAttachmentArchiveDone","Valda bilagor har blivit raderade.","The selected attachments have been deleted."
 "_flashMessageBadOldPassword","Du har skrivit in fel nuvarande lösenord.","Current password incorrect."
 "_flashMessageBulkDocumentRemindsSent","Påminnelser har skickats till samtliga parter som ännu inte signerat.","Reminders have been sent to all recipients who have not yet signed."
