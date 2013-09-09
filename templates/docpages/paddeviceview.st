@@ -13,17 +13,19 @@ $doctype()$
   </head>
   <body class="signview" style="min-height:100%">
     $flashmessages()$
-    <div class="mainContainer" >
-      <div class="body-container">
-        <div class="padview"></div>
-        <script>
-        jQuery(function(){
-            var pad = new KontraPad();
-            jQuery(".padview").append(pad.view().el)
-        });
+    <div class="wrapper-position-footer">
+        <div class="mainContainer" >
+          <div class="body-container">
+            <div class="padview"></div>
+            <script>
+            jQuery(function(){
+                var pad = new KontraPad();
+                jQuery(".padview").append(pad.view().el)
+            });
 
-        </script>
-      </div>
+            </script>
+          </div>
+        </div>
     </div>
   </body>
 </html>

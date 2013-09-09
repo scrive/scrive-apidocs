@@ -143,8 +143,8 @@ window.PadQueueView = Backbone.View.extend({
                   if (svb.ready() && svb.signviewbackgroundcolour())
                     $('.signview').css('background-image','none').css('background-color', svb.signviewbackgroundcolour());
                 });
-                $('body').prepend(this.signviewheader(svb).el);
-                $('body').append(this.signviewfooter(svb).el);
+                $('.mainContainer').prepend(this.signviewheader(svb).el);
+                $('.mainContainer').append(this.signviewfooter(svb).el);
                 if (padqueue.hasDocument()) {
                   container.append(this.documentView(svb));
                 }
@@ -156,9 +156,9 @@ window.PadQueueView = Backbone.View.extend({
                 container.append(this.logToPadDevice());
 
             if (padqueue.loggedToPad())
-               $('body').append(this.padLogoutIcon());
+               $('.mainContainer').append(this.padLogoutIcon());
             if (padqueue.loggedToSystem())
-               $('body').append(this.backToSystemIcon());
+               $('.mainContainer').append(this.backToSystemIcon());
 
         }
         return this;
