@@ -147,7 +147,6 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
   changeLogo : function(logo) {
     var self = this;
     this.logo.css("width","").css("height","").attr('src', '');
-    this.logo.attr('src', logo);
     var submit = new Submit({method: 'POST',
                              url: '/scale_image',
                              ajax: true,
