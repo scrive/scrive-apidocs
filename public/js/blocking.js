@@ -61,6 +61,7 @@
             return this.get('dunning');
         },
         hasUsedAll: function() {
+            return false;
             return !this.isEnterprise()  &&
                    !this.isTrial()       &&
                    !this.isFree()        &&
@@ -100,7 +101,8 @@
             var model = view.model;
             var $el = $(view.el);
             $el.removeClass('warn').removeClass('good').removeClass('hide');
-            if(model.isFree() && model.docsLeft() > 0)
+            //if(model.isFree() && model.docsLeft() > 0)
+            if (true)
                 $el.addClass('good');
             else if(model.isFree())
                 $el.addClass('warn');
@@ -120,8 +122,9 @@
         headline: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree() && model.docsLeft() > 0)
-                return localization.blocking.free.has.headline + " " + model.docsUsed();
+            //if(model.isFree() && model.docsLeft() > 0 )
+            if (true)
+                return localization.blocking.free.has.headline.replace('XX', model.docsUsed());
             else if(model.isFree())
                 return localization.blocking.free.hasNot.headline;
             else if(model.hasUsedAll())
@@ -141,8 +144,10 @@
             var view = this;
             var model = view.model;
 
-            if(model.isFree() && model.docsLeft() > 0)
-                return localization.blocking.free.has.subtext1;
+            //if(model.isFree() && model.docsLeft() > 0)
+            if (true)
+                //return localization.blocking.free.has.subtext1;
+                return "";
             else if(model.isFree())
                 return localization.blocking.free.hasNot.subtext1;
             else if(model.hasUsedAll())
