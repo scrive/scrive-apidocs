@@ -18,7 +18,7 @@ loginPage=
 ###
 loginPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>$pagetitle()$</title>
@@ -80,7 +80,7 @@ accessNewAccountPage=
 ###
 changePasswordPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
@@ -105,7 +105,7 @@ $doctype()$
 ###
 accessNewAccountPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
@@ -148,7 +148,7 @@ signupPage=
 ######
 signupPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>$pagetitle()$</title>
@@ -178,7 +178,7 @@ $doctype()$
 accountSetupPage=
 
     $doctype()$
-    <html>
+    $htmlopentag()$
       <head>
         <title>$pagetitle()$</title>
         $standardHeaderContents()$

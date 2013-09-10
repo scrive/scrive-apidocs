@@ -47,12 +47,7 @@ mixpanel.track('Error', {
 ###
 wholePage=
     $doctype()$
-    <!--[if lt IE 7]>  <html class="ie ie6 lte9 lte8 lte7"> <![endif]-->
-    <!--[if IE 7]>     <html class="ie ie7 lte9 lte8 lte7"> <![endif]-->
-    <!--[if IE 8]>     <html class="ie ie8 lte9 lte8"> <![endif]-->
-    <!--[if IE 9]>     <html class="ie ie9 lte9"> <![endif]-->
-    <!--[if gt IE 9]>  <html> <![endif]-->
-    <!--[if !IE]> -->  <html><!-- <![endif]-->	
+    $htmlopentag()$
       <head>
         <script src="//cdn.optimizely.com/js/158965942.js"></script>
         <title>$pagetitle()$</title>
@@ -73,6 +68,14 @@ wholePage=
 pagetitle=$title$$if(production)$$else$ (devel) $endif$
 ####
 doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+####
+htmlopentag=
+    <!--[if lt IE 7]>  <html class="ie ie6 lte9 lte8 lte7"> <![endif]-->
+    <!--[if IE 7]>     <html class="ie ie7 lte9 lte8 lte7"> <![endif]-->
+    <!--[if IE 8]>     <html class="ie ie8 lte9 lte8"> <![endif]-->
+    <!--[if IE 9]>     <html class="ie ie9 lte9"> <![endif]-->
+    <!--[if gt IE 9]>  <html> <![endif]-->
+    <!--[if !IE]> -->  <html><!-- <![endif]-->	
 ####
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
