@@ -61,7 +61,7 @@
 	    innerWrapper.append(iconWrapper);
 	    innerWrapper.append(txt);
             iconWrapper.append(imgdiv);
-            txt.append('<span>' + buttonText + '</span>');
+            txt.append($('<span>').text(buttonText));
 
             return div;
 	},

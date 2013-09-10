@@ -211,7 +211,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
 	   var headerTitle = localization.docsignview.onlySignTitle;
        }
 
-       var header = $('<h2>' + headerTitle + '</h2>');
+       var header = $('<h2 />').text(headerTitle);
        header.css(this.textstyle);
        if (!BrowserInfo.isSmallScreen()) box.append(header);
 

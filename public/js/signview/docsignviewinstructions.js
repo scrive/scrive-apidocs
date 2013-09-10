@@ -35,6 +35,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       console.error("Unsure what state we're in");
       string = localization.docsignview.unavailableForSign;
     }
+    // Keep this as a string to preserve the ability to have HTML in the translation strings.
     return $("<div>" + string + "</div>");
   },
   // Smaller text with more details on some states

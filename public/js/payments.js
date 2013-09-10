@@ -925,17 +925,17 @@
 
           var div = $('<div class="col subscription-plan" />');
             var header = $('<div class="account-header" />')
-                .append('<h4>' + localization.payments.table.currentplan + '</h4>');
+                .append($('<h4></h4>').text(localization.payments.table.currentplan));
           var table = $('<div class="account-body" />')
                 
 	  var planInformation = $('<div class="plan-information" />')
-          var planName = $('<p class="plan-name">' + localization.payments.plans[model.paidPlan()].name + '</p>');
-          var numberOfUsers = $('<p>' + localization.payments.numberOfUsers + " : " + model.quantity() + " " + localization.payments.users + '</p>')
+          var planName = $('<p class="plan-name"></p>').text(localization.payments.plans[model.paidPlan()].name);
+          var numberOfUsers = $('<p></p>').text(localization.payments.numberOfUsers + " : " + model.quantity() + " " + localization.payments.users);
 	  planInformation.append(planName);
 	  planInformation.append(numberOfUsers);
 	  table.append(planInformation);
 	        
-	  var askviktor = $('<p class="askviktor">' + localization.payments.askviktor + '</p>');
+	  var askviktor = $('<p class="askviktor"></p>').text(localization.payments.askviktor);
 	  table.append(askviktor);
 
           $el.html(div.append(header).append(table));
