@@ -230,7 +230,7 @@ var FilePageView = Backbone.View.extend({
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (!placement.placed() && placement.page()==page.number()) {
-                var elem = $("<div>").appendTo(container);
+                var elem = $("<div />").appendTo(container);
                 createFieldPlacementPlacedView({model: placement, el: elem});
             }
         });
