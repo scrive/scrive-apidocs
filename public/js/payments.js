@@ -935,7 +935,7 @@
 	  planInformation.append(numberOfUsers);
 	  table.append(planInformation);
 	        
-	  var askviktor = $('<p class="askviktor"></p>').text(localization.payments.askviktor);
+	  var askviktor = $('<p class="askviktor"></p>').html(localization.payments.askviktor);
 	  table.append(askviktor);
 
           $el.html(div.append(header).append(table));
