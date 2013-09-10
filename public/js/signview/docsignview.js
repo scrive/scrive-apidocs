@@ -436,7 +436,7 @@ var DocumentSignViewView = Backbone.View.extend({
         return this;
      }
 
-     if (this.subcontainer != undefined) this.subcontainer.empty();
+     if (this.subcontainer != undefined) this.subcontainer.detach();
 
      var subcontainerWrapper = $("<div class='subcontainerWrapper'/>").appendTo(this.container);
         
