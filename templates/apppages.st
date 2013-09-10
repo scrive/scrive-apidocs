@@ -221,7 +221,12 @@ var google_custom_params = window.google_tag_params;
 var google_remarketing_only = true;
 /* ]]> */
 </script>
-<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
+<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
+<script>
+var container = jQuery('.mainContainer');
+// Fill the whole page
+if ($if(logged)$true$else$false$endif$ && container.find('.short-input-section').length > 0)
+  container.height(jQuery(window).height() - jQuery('header').height() - jQuery('footer').height());
 </script>
 <noscript>
 <div style="display:inline;">
