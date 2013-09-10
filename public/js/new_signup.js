@@ -37,7 +37,11 @@
         lang : Language.current(),
         email: model.email(),
         ajaxsuccess: function(rs) {
-          resp = JSON.parse(rs);
+          try {
+            resp = JSON.parse(rs);
+          } catch (e) {
+            resp = JSON.parse($(rs).text());
+          }
           if (resp.sent === true) {
             mixpanel.track('Create new account', {
                 'Email' : model.email()
