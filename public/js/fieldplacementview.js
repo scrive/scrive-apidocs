@@ -1199,8 +1199,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 0.5),
-                top: Math.floor(placement.yrel() * parentHeight + 0.5),
+                left: Math.floor(placement.xrel() * parentWidth + 1.5),
+                top: Math.floor(placement.yrel() * parentHeight + 1.5),
                 width: Math.ceil(placement.wrel() * parentWidth),
                 height: Math.ceil(placement.hrel() * parentHeight),
                 fontSize: placement.fsrel() * parentWidth
