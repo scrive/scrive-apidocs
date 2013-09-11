@@ -20,6 +20,7 @@ var fillWith = function(e, s) {
 
 var buildDialog = function(cfg) {
   var dialog = $('<div class="modal screenblockingdialog" />');
+  dialog.height($(document).height());
   var modalcontainer = $('<div class="modal-container" />');
   dialog.append(modalcontainer);
   var modalbody = $('<div class="modal-body" />');
