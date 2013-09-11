@@ -6,6 +6,7 @@ module InputValidation
     , isGood
     , isBad
     , isEmpty
+    , resultToMaybe
     , getOptionalField
     , getDefaultedField
     , getCriticalField
@@ -180,6 +181,11 @@ logIfBad x = return x
 asMaybe :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 asMaybe (_,Good x) = return $ Just x
 asMaybe _        = return Nothing
+
+
+resultToMaybe :: Result a -> Maybe a
+resultToMaybe (Good a) = Just a
+resultToMaybe _ = Nothing
 
 {- |
     If the result is Empty then this uses the

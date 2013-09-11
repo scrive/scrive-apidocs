@@ -8,7 +8,7 @@ $doctype()$
     $standardHeaderContents()$
     <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
       </head>
-  <body>
+  <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
     $if(usestandardheaders)$
     $header()$
     $endif$
