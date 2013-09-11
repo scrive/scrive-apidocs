@@ -11,6 +11,7 @@ $htmlopentag()$
   <body>
     $if(usestandardheaders)$
     $header()$
+    <div class="wrapper-position-footer">
     $endif$
     <div class="signview">
       <div class="mainContainer" >
@@ -56,6 +57,7 @@ $htmlopentag()$
     </div>
     $if(usestandardheaders)$
     $pageFooter()$
+    </div>
     $endif$
   </body>
 </html>
