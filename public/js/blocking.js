@@ -101,8 +101,7 @@
             var model = view.model;
             var $el = $(view.el);
             $el.removeClass('warn').removeClass('good').removeClass('hide');
-            //if(model.isFree() && model.docsLeft() > 0)
-            if (true)
+            if(model.isFree() && model.docsLeft() > 0)
                 $el.addClass('good');
             else if(model.isFree())
                 $el.addClass('warn');
@@ -122,8 +121,7 @@
         headline: function() {
             var view = this;
             var model = view.model;
-            //if(model.isFree() && model.docsLeft() > 0 )
-            if (true)
+            if(model.isFree() && model.docsLeft() > 0 )
                 return localization.blocking.free.has.headline.replace('XX', model.docsUsed());
             else if(model.isFree())
                 return localization.blocking.free.hasNot.headline;
@@ -144,9 +142,7 @@
             var view = this;
             var model = view.model;
 
-            //if(model.isFree() && model.docsLeft() > 0)
-            if (true)
-                //return localization.blocking.free.has.subtext1;
+            if(model.isFree() && model.docsLeft() > 0)
                 return "";
             else if(model.isFree())
                 return localization.blocking.free.hasNot.subtext1;
