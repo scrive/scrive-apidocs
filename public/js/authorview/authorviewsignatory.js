@@ -169,6 +169,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                                 self.model.authorviewsignatories().authorview().reload(true);
                                                               });
                                                           });
+                                             return true;
                                          }
                                      });
                                  } else if( signatory.mobileDelivery()) {
@@ -188,6 +189,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                                 self.model.authorviewsignatories().authorview().reload(true);
                                                               });
                                                           });
+                                             return true;
                                          }
                                      });
                                  } else if( signatory.emailMobileDelivery()) {
@@ -207,6 +209,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                                 self.model.authorviewsignatories().authorview().reload(true);
                                                               });
                                                           });
+                                             return true;
                                          }
                                      });
                                  }
