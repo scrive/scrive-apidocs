@@ -78,7 +78,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 21
+  , tblVersion = 22
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -90,7 +90,6 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "seen_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "seen_ip", colType = IntegerT }
     , tblColumn { colName = "read_invitation", colType = TimestampWithZoneT }
-    , tblColumn { colName = "invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     , tblColumn { colName = "signinfo_text", colType = TextT }
     , tblColumn { colName = "signinfo_signature", colType = TextT }
     , tblColumn { colName = "signinfo_certificate", colType = TextT }
@@ -114,6 +113,8 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "eleg_data_mismatch_last_name", colType = TextT }
     , tblColumn { colName = "eleg_data_mismatch_personal_number", colType = TextT }
     , tblColumn { colName = "delivery_method", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "mail_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
+    , tblColumn { colName = "sms_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [

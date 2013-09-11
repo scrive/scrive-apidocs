@@ -11,7 +11,7 @@ module Doc.DocStateData (
   , FieldPlacement(..)
   , AuthenticationMethod(..)
   , DeliveryMethod(..)
-  , MailsDeliveryStatus(..)
+  , DeliveryStatus(..)
   , SignatureProvider(..)
   , SignInfo(..)
   , SignOrder(..)
@@ -209,7 +209,8 @@ data SignatoryLink = SignatoryLink {
   , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
   , maybeseeninfo              :: Maybe SignInfo      -- ^ when a person has first seen this document
   , maybereadinvite            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
-  , invitationdeliverystatus   :: MailsDeliveryStatus -- ^ status of email delivery
+  , mailinvitationdeliverystatus  :: DeliveryStatus -- ^ status of email delivery
+  , smsinvitationdeliverystatus   :: DeliveryStatus -- ^ status of email delivery
   , signatorysignatureinfo     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
   , signatorylinkdeleted       :: Maybe MinutesTime   -- ^ when was put in recycle bin
   , signatorylinkreallydeleted :: Maybe MinutesTime   -- ^ when was purged from the system
@@ -236,7 +237,8 @@ instance HasDefaultValue SignatoryLink where
                   , maybesigninfo                = Nothing
                   , maybeseeninfo                = Nothing
                   , maybereadinvite              = Nothing
-                  , invitationdeliverystatus     = Unknown
+                  , mailinvitationdeliverystatus = Unknown
+                  , smsinvitationdeliverystatus  = Unknown
                   , signatorysignatureinfo       = Nothing
                   , signatorylinkdeleted         = Nothing
                   , signatorylinkreallydeleted   = Nothing
@@ -434,7 +436,7 @@ data SignatoryAttachment = SignatoryAttachment {
   , signatoryattachmentdescription     :: String
   } deriving (Eq, Ord, Show)
 
-data MailsDeliveryStatus = Delivered
+data DeliveryStatus = Delivered
                          | Undelivered
                          | Unknown
                          | Deferred
@@ -442,7 +444,7 @@ data MailsDeliveryStatus = Delivered
 
 -- stuff for converting to pgsql
 
-$(enumDeriveConvertible ''MailsDeliveryStatus)
+$(enumDeriveConvertible ''DeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(enumDeriveConvertible ''StatusClass)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
