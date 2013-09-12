@@ -6,6 +6,10 @@
 var textPlacementTopMargin  = 8;
 var textPlacementLeftMargin = 7;
 
+/* Margins for checkbox placement. */
+var checkboxPlacementTopMargin  = 1;
+var checkboxPlacementLeftMargin = 1;
+
 // !!! Not placed views model field, not placement
 window.createFieldPlacementView = function (args) {
     if (args.model.isSignature())
@@ -126,6 +130,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             if (field.isText() || field.isFake() ) {
               x += textPlacementLeftMargin;
               y += textPlacementTopMargin;
+            } else if (field.isCheckbox()) {
+              x += checkboxPlacementLeftMargin;
+              y += checkboxPlacementTopMargin;
             }
             droppedInside = true;
             var signatory = field.signatory();
@@ -1199,8 +1206,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 1.5),
-                top: Math.floor(placement.yrel() * parentHeight + 1.5),
+                left: Math.floor(placement.xrel() * parentWidth + 0.5),
+                top: Math.floor(placement.yrel() * parentHeight + 0.5),
                 width: Math.ceil(placement.wrel() * parentWidth),
                 height: Math.ceil(placement.hrel() * parentHeight),
                 fontSize: placement.fsrel() * parentWidth
