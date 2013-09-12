@@ -1882,58 +1882,68 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLang Bool where
 data SetEmailInvitationDeliveryStatus = SetEmailInvitationDeliveryStatus DocumentID SignatoryLinkID DeliveryStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetEmailInvitationDeliveryStatus Bool where
   update (SetEmailInvitationDeliveryStatus did slid status actor) = do
-    setInvitationDeliveryStatusWorker did slid status actor "email" getEmail InvitationDeliveredByEmail InvitationUndeliveredByEmail
-
-data SetSMSInvitationDeliveryStatus = SetSMSInvitationDeliveryStatus DocumentID SignatoryLinkID DeliveryStatus Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
-  update (SetSMSInvitationDeliveryStatus did slid status actor) = do
-    setInvitationDeliveryStatusWorker did slid status actor "phone" getMobile InvitationDeliveredBySMS InvitationUndeliveredBySMS
-
-setInvitationDeliveryStatusWorker :: (TemplatesMonad m, MonadDB m)
-                                     => DocumentID
-                                  -> SignatoryLinkID
-                                  -> DeliveryStatus
-                                  -> Actor
-                                  -> String
-                                  -> (SignatoryLink -> String)
-                                  -> EvidenceEventType
-                                  -> EvidenceEventType
-                                  -> m Bool
-setInvitationDeliveryStatusWorker did slid status actor fieldName getFieldValue
-                                  invitationDeliveredEvent invitationUndeliveredEvent = do
-    let decode acc st = acc ++ [st]
-    old_status <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_links" $ do
+    sig <- query $ GetSignatoryLinkByID did slid Nothing
+    kRun1OrThrowWhyNot $  sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
         sqlJoin "signatory_links AS signatory_links_old"
         sqlWhere "signatory_links.id = signatory_links_old.id"
-        sqlSet "invitation_delivery_status" status
-        sqlResult "signatory_links_old.invitation_delivery_status"
-
+        sqlSet "mail_invitation_delivery_status" status
         sqlWhereSignatoryLinkIDIs slid
         sqlWhereDocumentIDIs did
-
         sqlWhereDocumentTypeIs Signable
-
-    sig <- query $ GetSignatoryLinkByID did slid Nothing
-    let (fieldValue, changed) = (getFieldValue sig, old_status /= status)
+    nsig <- query $ GetSignatoryLinkByID did slid Nothing
+    let changed = mailinvitationdeliverystatus sig /= mailinvitationdeliverystatus nsig
 
     when_ (changed && status == Delivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-        invitationDeliveredEvent
-        (value fieldName fieldValue >> value "status" (show status) >> value "actor" (actorWho actor))
+        InvitationDeliveredByEmail
+        (value "email" (getEmail sig) >> value "status" (show status) >> value "actor" (actorWho actor))
         (Just did)
         (Just slid)
         Nothing
         actor
     when_ (changed && status == Undelivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-        invitationUndeliveredEvent
-        (value fieldName fieldValue >> value "status" (show status) >> value "actor" (actorWho actor))
+        InvitationUndeliveredByEmail
+        (value "email" (getEmail sig) >> value "status" (show status) >> value "actor" (actorWho actor))
         (Just did)
         (Just slid)
         Nothing
         actor
     return True
+
+data SetSMSInvitationDeliveryStatus = SetSMSInvitationDeliveryStatus DocumentID SignatoryLinkID DeliveryStatus Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
+  update (SetSMSInvitationDeliveryStatus did slid status actor) = do
+    sig <- query $ GetSignatoryLinkByID did slid Nothing
+    kRun_ $  sqlUpdate "signatory_links" $ do
+        sqlFrom "documents"
+        sqlJoin "signatory_links AS signatory_links_old"
+        sqlWhere "signatory_links.id = signatory_links_old.id"
+        sqlSet "sms_invitation_delivery_status" status
+        sqlWhereSignatoryLinkIDIs slid
+        sqlWhereDocumentIDIs did
+        sqlWhereDocumentTypeIs Signable
+    nsig <- query $ GetSignatoryLinkByID did slid Nothing
+    let changed = smsinvitationdeliverystatus sig /= smsinvitationdeliverystatus nsig
+    when_ (changed && status == Delivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        InvitationDeliveredBySMS
+        (value "phone" (getMobile sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (Just did)
+        (Just slid)
+        Nothing
+        actor
+    when_ (changed && status == Undelivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        InvitationUndeliveredBySMS
+        (value "phone" (getMobile sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (Just did)
+        (Just slid)
+        Nothing
+        actor
+    return True
+
 
 data SetDocumentSharing = SetDocumentSharing [DocumentID] Bool
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool where

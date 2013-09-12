@@ -123,6 +123,8 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
     J.value "undeliveredInvitation" $ Undelivered == mailinvitationdeliverystatus siglink || Undelivered == smsinvitationdeliverystatus siglink
+    J.value "undeliveredMailInvitation" $ Undelivered == mailinvitationdeliverystatus siglink
+    J.value "undeliveredSMSInvitation" $  Undelivered == smsinvitationdeliverystatus siglink
     J.value "deliveredInvitation" $ Delivered == mailinvitationdeliverystatus siglink || Delivered == smsinvitationdeliverystatus siglink
     J.value "delivery" $ signatorylinkdeliverymethod siglink
     J.value "signs" $ isSignatory siglink
