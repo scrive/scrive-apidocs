@@ -262,7 +262,7 @@ $endif$
 $if(custombarstextcolour)$
   header.site nav ul.ct li a.page  {
     color: $custombarstextcolour$;
-    text-shadow: none;"
+    text-shadow: none;
   }
 $endif$
 
