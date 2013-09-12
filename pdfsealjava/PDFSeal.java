@@ -69,10 +69,12 @@ class Person
     public String personalnumber;
     public String companynumber;
     public String email;
+    public String phone;
     public Boolean fullnameverified;
     public Boolean companyverified;
     public Boolean numberverified;
     public Boolean emailverified;
+    public Boolean phoneverified;
     public ArrayList<Field> fields;
 
 }
@@ -479,6 +481,11 @@ public class PDFSeal {
             }
             if( person.email!=null && !person.email.equals("") ) {
                 para = createParagraph(person.email, 10, person.emailverified ? Font.ITALIC : Font.NORMAL, lightTextColor);
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
+            }
+            if( person.phone!=null && !person.phone.equals("") ) {
+                para = createParagraph(person.phone, 10, person.phoneverified ? Font.ITALIC : Font.NORMAL, lightTextColor);
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }

@@ -81,12 +81,14 @@ personFromSignatoryDetails boxImages details =
     Seal.Person { Seal.fullname = getFullName details
                 , Seal.company = getCompanyName details
                 , Seal.email = getEmail details
+                , Seal.phone = getMobile details
                 , Seal.personalnumber = getPersonalNumber details
                 , Seal.companynumber = getCompanyNumber details
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
                 , Seal.emailverified = True
+                , Seal.phoneverified = False
                 , Seal.fields = fieldsFromSignatory False [] boxImages details
                 }
 
@@ -115,10 +117,11 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
                                                       , signatorylinkdeliverymethod
                                                       }) =
   ((personFromSignatoryDetails boxImages signatorydetails)
-     { Seal.emailverified    = True
+     { Seal.emailverified    = signatorylinkdeliverymethod `elem` [EmailDelivery, EmailAndMobileDelivery]
      , Seal.fullnameverified = fullnameverified
      , Seal.companyverified  = False
      , Seal.numberverified   = numberverified
+     , Seal.phoneverified    = signatorylinkdeliverymethod `elem` [MobileDelivery, EmailAndMobileDelivery]
      }
     , maybe signinfo id maybeseeninfo -- some old broken documents do not have seeninfo before signinfo
     , signinfo
