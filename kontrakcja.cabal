@@ -164,7 +164,7 @@ Executable kontrakcja-server
   Build-depends: DRBG == 0.2.3
   Build-depends: Decimal == 0.2.3
   Build-depends: HDBC == 2.3.1.1
-  Build-depends: HDBC-postgresql == 2.3.2.1.1
+  Build-depends: HDBC-postgresql == 2.3.2.1.2
   Build-depends: HPDF == 1.4.2
   Build-depends: HStringTemplate == 0.7.0
   Build-depends: HTTP == 4000.*
