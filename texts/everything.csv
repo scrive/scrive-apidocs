@@ -184,7 +184,7 @@
 "_listReallyDeleteDialogHead","Radera permanent","Permanent delete"
 "_listRestoreDialogBody","Vill du återställa följande dokument?","Would you like to restore the selected documents?"
 "_listRestoreDialogHead","Återställ","Restore"
-"_listShareDialogBody","Vill du dela detta med alla i din organisation.","Do you want to share this with everyone in your organisation?"
+"_listShareDialogBody","Vill du dela detta med alla i din organisation?","Do you want to share this with everyone in your organisation?"
 "_listShareDialogHead","Dela","Share"
 "_listand","och","and"
 "_loadingFile","Laddar upp . . .","Uploading . . ."
@@ -914,3 +914,4 @@
 "_unsupportedBrowserInstruction1","Uppdatera din webbläsare till en nyare version av Internet Explorer.","Update your browser to a newer version of Internet Explorer."
 "_unsupportedBrowserInstruction2","Öppna länken i en annan webbläsare (t ex Chrome eller Firefox)","Open the link in a different browser (i.e. Chrome or Firefox)."
 "_unsupportedBrowserTitle","Din webbläsare stöds inte","Your browser is not supported"
+"_flashMessageBecomeCompanyLogInDifferentUser","En annan användare är redan inloggad. För att överföra kontot, vänligen logga ut och logga in på kontot du önskar flyttat.","Another user is currently logged in. To transfer account, please log out and log in to the account you would like to transfer."

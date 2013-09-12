@@ -294,16 +294,22 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     the old stuff that was based in UserID.  It checks that the logged in
     user has actually been invited to join the company in the URL.
 -}
-handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either KontraLink String)
+handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either KontraLink (Either KontraLink String))
 handleGetBecomeCompanyAccount companyid = withUserGet $ do
-  _ <- guardGoodForTakeover companyid
-  newcompany <- guardJustM $ dbQuery $ GetCompany companyid
-  pageDoYouWantToBeCompanyAccount newcompany
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  invite <- dbQuery $ GetCompanyInvite companyid (Email $ getEmail user)
+  case invite of
+       Nothing -> do
+        addFlashM $ flashMessageBecomeCompanyLogInDifferentUser
+        return $ Left LinkAccount
+       _ -> do
+        newcompany <- guardJustM $ dbQuery $ GetCompany companyid
+        Right <$> pageDoYouWantToBeCompanyAccount newcompany
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do
-  _ <- guardGoodForTakeover cid
   user <- guardJustM $ ctxmaybeuser <$> getContext
+  _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (Email $ getEmail user)
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
   _ <- dbUpdate $ SetUserCompany (userid user) (companyid newcompany)
@@ -312,13 +318,3 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
   return $ LinkAccount
 
-{- |
-    This checks that the logged in user is suitable for being
-    taken over by a company.  This means that they are a private user
-    and that they were actually invited by the company.
--}
-guardGoodForTakeover :: Kontrakcja m => CompanyID -> m ()
-guardGoodForTakeover companyid = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  _ <- guardJustM $ dbQuery $ GetCompanyInvite companyid (Email $ getEmail user)
-  return ()
