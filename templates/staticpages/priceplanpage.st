@@ -1,7 +1,7 @@
 ###
 priceplanPage=
 <div class="mainContainer" >
-  <div class="body-container">
+  <div class="body-container pricing">
 
     <div class="js-price-plan price-plan price-plan-outside"></div>
     <script>
