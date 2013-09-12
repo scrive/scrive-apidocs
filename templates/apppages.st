@@ -121,7 +121,7 @@ pageFooter=
 <style>
 $if(custombarscolour)$
   footer.site {
-      background: $custombarscolour$;
+      background: $custombarscolour$ !important;
   }
 $endif$
 

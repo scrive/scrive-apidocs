@@ -74,7 +74,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
 
     this.container = $("<div class='sample-custom-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: #F7F7F7'/>");
     this.header = $("<div class='sample-custom-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED;'/>");
-    this.subheader = $("<div style='width:560px;border-top:1px solid #DEE4ED;height:0px;position:absolute;margin-top:2px;'/>");
+    this.subheader = $("<div style='width:560px;height:0px;position:absolute;margin-top:2px;'/>");
     this.header.append(this.subheader);
 
     this.header1 = $('<div style="float: left;margin-left:16px;"/>');
@@ -113,7 +113,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.content = $('<div style="padding:20px;text-align:center"><img src="/img/branding-archive-sample.png"></div>');
     this.footercontent = $('<div style="text-align: center;"/>');
     this.footercontent.text('Powered by Scrive');
-    this.footer = $('<div style="height: 20px; padding:10px;border-top: 1px solid #DEE4ED;font-size: 10px;"/>');
+    this.footer = $('<div style="height: 20px; padding:10px;font-size: 10px;"/>');
     this.footer.append(this.footercontent);
 
     this.container.append(this.header).append(this.content).append(this.footer);

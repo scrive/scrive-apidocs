@@ -81,7 +81,7 @@
         refreshMargins : function() {
           // where do these constants come from?
           if (this.wrapperDiv != undefined)
-            this.wrapperDiv.css("height", ($(window).height() - 216) + "px");
+            this.wrapperDiv.css("height", ($(window).height() - 216 - $('.blocking-info').height()) + "px");
           if (this.wrapperDiv != undefined)
             this.innerDiv.css("margin-top", (Math.floor($(window).height() - 256)/2) - 60) + "px";
         },
