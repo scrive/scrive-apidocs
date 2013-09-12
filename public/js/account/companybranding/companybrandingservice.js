@@ -11,19 +11,19 @@ window.CompanyBrandingServiceViewModel = Backbone.Model.extend({
         customlogo: new CompanyBrandingLogo({
           customised: companyui.customlogo().trim() != '',
           logo: companyui.customlogo(),
-          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo_email.png",
+          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo.png",
           label: localization.companyBranding.customiseLogo,
           url: ''
         }),
         custombarscolour: new CompanyBrandingColour({
           customised: companyui.custombarscolour().trim() != '',
-          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#FFFFFF",
+          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#495259",
           colour: companyui.custombarscolour(),
           label: localization.companyBranding.barsColour
         }),
         custombarstextcolour: new CompanyBrandingColour({
           customised: companyui.custombarstextcolour().trim() != '',
-          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#333333",
+          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#FFFFFF",
           colour: companyui.custombarstextcolour(),
           label: localization.companyBranding.barsTextColour
         }),
@@ -35,7 +35,7 @@ window.CompanyBrandingServiceViewModel = Backbone.Model.extend({
         }),
         custombackgroundcolour: new CompanyBrandingColour({
           customised: companyui.custombackgroundcolour().trim() != '',
-          defaultcolour:  companyui.domainbackgroundcolour() != "" ? companyui.domainbackgroundcolour() : "#EEEEEE",
+          defaultcolour:  companyui.domainbackgroundcolour() != "" ? companyui.domainbackgroundcolour() : "#F7F7F7",
           colour: companyui.custombackgroundcolour(),
           label: localization.companyBranding.customiseSignViewBackgroundColour
         })
@@ -72,27 +72,27 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
   prerender: function() {
     var company = this.model;
 
-    this.container = $("<div class='sample-custom-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
+    this.container = $("<div class='sample-custom-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: #F7F7F7'/>");
     this.header = $("<div class='sample-custom-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED;'/>");
     this.subheader = $("<div style='width:560px;border-top:1px solid #DEE4ED;height:0px;position:absolute;margin-top:2px;'/>");
     this.header.append(this.subheader);
 
     this.header1 = $('<div style="float: left;margin-left:16px;"/>');
-    this.logowrapper = $("<a class='hoverable logo' style='line-height:62px;'/>");
+    this.logowrapper = $("<a class='hoverable logo' style='line-height:70px;'/>");
     this.logo = $("<img style='padding-top:5px;padding-bottom:5px'/>");
     this.header1.append(this.logowrapper.append(this.logo));
 
     this.header2 = $('<div style="float: right; margin: 23px 8px;"/>');
-    this.header2.append(new Button({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).el());
+    this.header2.append(new Button({size: 'tiny', color: 'blue', text: 'Start new process', style:"padding: 4px 8px;font-size:9px", onClick : function() {return false;}}).el());
 
     this.header3 = $('<div style="float: right; margin: 23px 8px;"/>');
-    this.header3.append(new Button({size: 'tiny', color: 'blue', text: 'Start from templat', style:"padding: 4px 8px;font-size:8px", onClick : function() {return false;}}).el());
+    this.header3.append(new Button({size: 'tiny', color: 'blue', text: 'Start from template', style:"padding: 4px 8px;font-size:9px", onClick : function() {return false;}}).el());
 
-    this.header4 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;border-right:1px solid white"/>');
+    this.header4 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;"/>');
     this.header4content = $("<a class='hoverable'>Archive</a>");
     this.header4.append(this.header4content);
 
-    this.header5 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;border-right:1px solid white"/>');
+    this.header5 = $('<div style="float: right;  margin: 30px 0px;height: 15px; line-height: 15px; font-size:10px;"/>');
     this.header5content = $("<a class='hoverable'>Account</a>");
     this.header5.append(this.header5content);
 
@@ -104,9 +104,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header.append(this.header1).append(this.header6).append(this.header5).append(this.header4).append(this.header3).append(this.header2).append($('<div style="clear:both;"/>'));
     this.header.append("<style>"
                           + ".sample-custom-view-header .hoverable {display:block;margin-top:-30px;padding-top:30px; padding-left:8px;padding-right:8px;}"
-                          + ".sample-custom-view-header .hoverable:hover {border-top: 2px solid white;padding-top:28px}"
-                          + ".sample-custom-view-header .logo.hoverable {display:block;margin-top:0px;padding-top:5px;}"
-                          + ".sample-custom-view-header .logo.hoverable:hover {border-top: 2px solid white;padding-top:3px}"
+                          + ".sample-custom-view-header .hoverable:hover {color: }"
                         +"</style>");
 
     this.stylepeace = $("<style></style>");
@@ -115,7 +113,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.content = $('<div style="padding:20px;text-align:center"><img src="/img/branding-archive-sample.png"></div>');
     this.footercontent = $('<div style="text-align: center;"/>');
     this.footercontent.text('Powered by Scrive');
-    this.footer = $('<div style="height: 30px; padding:10px;border-top: 1px solid #DEE4ED;font-size: 10px;"/>');
+    this.footer = $('<div style="height: 20px; padding:10px;border-top: 1px solid #DEE4ED;font-size: 10px;"/>');
     this.footer.append(this.footercontent);
 
     this.container.append(this.header).append(this.content).append(this.footer);
