@@ -737,9 +737,15 @@
   }
 
   .sender .inner {
-      margin-right: 30px;
+      margin-right: 130px;
   }
 
+  // the iPad JS borrowed from the office needed this? idk.
+  @media screen and (max-device-width: 2048px) and (-webkit-min-device-pixel-ratio: 2) {
+    .sender .inner {
+        margin-right: 100px;
+    }
+  }
   @media screen and (max-width: 1220px) {
     .sender .inner {
         margin-right: 100px;
