@@ -7,7 +7,8 @@ module CompanyAccounts.CompanyAccountsView (
     pageDoYouWantToBeCompanyAccount,
 
     -- flash messages
-    flashMessageUserHasBecomeCompanyAccount
+    flashMessageUserHasBecomeCompanyAccount,
+    flashMessageBecomeCompanyLogInDifferentUser
     ) where
 
 import Control.Applicative ((<$>))
@@ -74,3 +75,7 @@ flashMessageUserHasBecomeCompanyAccount company =
                                   (F.value "companyname" $ getCompanyName company)
 
 -------------------------------------------------------------------------------
+
+flashMessageBecomeCompanyLogInDifferentUser :: (TemplatesMonad m) => m FlashMessage
+flashMessageBecomeCompanyLogInDifferentUser  =
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageBecomeCompanyLogInDifferentUser"

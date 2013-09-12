@@ -109,3 +109,5 @@ flashMessageYourEmailHasChanged=$_flashMessageYourEmailHasChanged()$
 ###
 flashMessageProblemWithPassword=$_flashMessageProblemWithPassword()$
 ###
+flashMessageBecomeCompanyLogInDifferentUser=$_flashMessageBecomeCompanyLogInDifferentUser()$
+####
