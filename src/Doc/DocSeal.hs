@@ -393,27 +393,32 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                           document
 
                     descs <- flip mapM sortedPeople $ \people -> do
-                      let peopleWithEmailDelivery = filter ((==) EmailDelivery . signatorylinkdeliverymethod) people
-                      case peopleWithEmailDelivery of
-                        [] -> do
-                          -- everybody in this signatory order was Pad delivery or API delivery
-                          return Nothing
-                        _ -> do
-                          tmpl <- renderLocalTemplate document "_invitationSentEntry" $ do
-                            F.valueM "partyList" $ renderListTemplateNormal $ map getSmartName $ peopleWithEmailDelivery
-                          return (Just tmpl)
+                      let filterByDelivery delivery =
+                            filter (\p -> signatorylinkdeliverymethod p == delivery)
+                      let entry delivery templateName =
+                            case filterByDelivery delivery people of
+                              [] -> do
+                                  -- everybody in this signatory order was Pad delivery or API delivery
+                                  return []
+                              them -> do
+                                 tmpl <- renderLocalTemplate document templateName $ do
+                                     F.valueM "partyList" $ renderListTemplateNormal $ map getSmartName $ them
+                                 return [tmpl]
+                      concat <$> sequence [ entry EmailDelivery "_invitationEmailSentEntry"
+                                          , entry MobileDelivery "_invitationSMSSentEntry"
+                                          , entry EmailAndMobileDelivery "_invitationEmailAndSMSSentEntry"
+                                          ]
 
                     -- times is offset by one in position wrt
                     -- sortedPeople last element of times is actually
                     -- ignored here
                     let times = time : map (maximum . map (signtime . fromJust . maybesigninfo)) sortedPeople
-                    let mkEntry time' (Just desc) = Just $ Seal.HistEntry
-                                            { Seal.histdate = formatMinutesTimeForVerificationPage time'
-                                            , Seal.histcomment = pureString desc
-                                            , Seal.histaddress = "IP: " ++ show ipnumber
-                                            }
-                        mkEntry _ _ = Nothing
-                    return $ catMaybes $ zipWith mkEntry times descs
+                    let mkEntry time' descsx = [Seal.HistEntry
+                                                      { Seal.histdate = formatMinutesTimeForVerificationPage time'
+                                                      , Seal.histcomment = pureString desc
+                                                      , Seal.histaddress = "IP: " ++ show ipnumber
+                                                      } | desc <- descsx]
+                    return $ concat $ zipWith mkEntry times descs
                   _ -> do
                     -- document does not have documentinvitetime, what
                     -- does it mean really?
