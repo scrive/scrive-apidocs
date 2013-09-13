@@ -26,7 +26,7 @@
 
             var button = new Button({
                 color: 'black',
-                text: '+ ' + localization.designview.addField,
+                text: localization.designview.addField,
                 onClick: function() {
                     mixpanel.track('Click add field');
                     view.addOne();
