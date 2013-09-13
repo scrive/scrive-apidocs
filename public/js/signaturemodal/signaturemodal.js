@@ -115,7 +115,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
           var fontSelect = new Select({
                                 name : "",
                                 cssClass : "float-left",
-                                style : "background-position: 10px -10px;width:200px;height:30px;" + fontBackground(self.model.typerOrDrawer().font()),
+                                style : "background-position: 10px -3px;width:200px;height:40px;" + fontBackground(self.model.typerOrDrawer().font()),
                                 options: [
                                   {  name : ""
                                    , disabled : (self.model.typerOrDrawer().font() == "JenniferLynne")
@@ -203,7 +203,7 @@ window.SignatureDrawOrTypeModal = function(args){
         var self = this;
         var width = BrowserInfo.isSmallScreen() ? 980 : 900;
         var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
-        var modal = $("<div class='modal'></div>");
+        var modal = $("<div class='modal'></div>").css("height", $(document).height());
         var container = $("<div class='modal-container drawing-modal grey'/>").css("width",width);
 
         if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
