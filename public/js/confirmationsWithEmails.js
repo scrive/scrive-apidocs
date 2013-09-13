@@ -227,13 +227,13 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        });
        if (model.textfont()) {
          cancelOption.css("font-family",model.textfont());
-         this.editOption.css("font-family",model.textfont());
        }
        footer.append(cancelOption);
 
        if (!BrowserInfo.isSmallScreen()) { // We skip editing message on small screens
          this.editOption = this.editOption.el(); // make it hideable from other places.
          if (model.editText())
+            if (model.textfont()) this.editOption.css("font-family",model.textfont());
             footer.append(this.editOption);
        }
 
@@ -249,8 +249,11 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                      if (res == true) view.reject(); //We don't actually reject. Just clean the modal.
 
 								}
-        });
-       footer.append(accept.el());
+       });
+       var acceptButton = accept.el();
+       if (model.textfont()) acceptButton.css("font-family",model.textfont());
+
+       footer.append(acceptButton);
        container.append(header);
        container.append(body);
        container.append(footer);
