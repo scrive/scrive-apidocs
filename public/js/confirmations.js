@@ -253,6 +253,9 @@ window.Confirmation = {
             // animation takes 600ms, but waiting for a shorter period
             // results in not fully rendered modals sometimes
             setTimeout(function() {
+              // Sometimes when the overlay pushes the document down,
+              // we have to make sure that the overlay covers the whole doc.
+              overlay.height($(document).height());
               view.onRender();
             }, 1000);
           }, 100);
