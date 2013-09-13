@@ -293,7 +293,7 @@
 
             var button = new Button({
                 color: 'green',
-                text: '+ ' + localization.designview.addParty,
+                text: localization.designview.addParty,
                 onClick: function() {
                     mixpanel.track('Click add signatory');
                     model.setParticipantDetail(null);
@@ -322,7 +322,7 @@
 
             var button = new Button({
                 color: 'black',
-                text: '+ ' + localization.designview.addMultisend,
+                text: localization.designview.addMultisend,
                 onClick: function() {
                     mixpanel.track('Click add CSV');
 
