@@ -114,7 +114,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     if (document.timeouttime() != undefined && document.signingInProcess() &&
         !BrowserInfo.isSmallScreen()) {
-        var duedate = $("<div class='duedate' />");
+        var duedate = $("<span class='duedate' />");
         this.styleText(duedate);
         smallerbit.append(duedate.text(this.dueDateDescription()));
     }
