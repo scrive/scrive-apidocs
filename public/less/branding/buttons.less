@@ -130,6 +130,7 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     &.red, &.green,&.black {
         border-color: @dark-border;
     }
+   
   }
   &.button-round.button-small {
     .border-radius(16px,16px,16px,16px);
@@ -138,6 +139,9 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   &.button-round.button-large {
     .border-radius(32px,32px,32px,32px);
     border: #EEE 5px solid;
+     &.black {
+	border:none;
+    }
   }
 }
 input[type=submit].button.button-large,
