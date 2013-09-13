@@ -204,16 +204,6 @@ window.DocumentSignSignSection = Backbone.View.extend({
        var signviewbranding = this.model.signviewbranding();
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
-  
-       if(model.hasRejectOption()) {
-           var headerTitle = localization.docsignview.signOrRejectTitle;
-       } else {
-	   var headerTitle = localization.docsignview.onlySignTitle;
-       }
-
-       var header = $('<h2 />').text(headerTitle);
-       header.css(this.textstyle);
-       if (!BrowserInfo.isSmallScreen()) box.append(header);
 
        var signatory = document.currentSignatory();
        var sps = {};
