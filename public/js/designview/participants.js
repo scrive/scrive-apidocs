@@ -1111,7 +1111,7 @@
             if(!view.active) {
                 view.active = true;
                 var detailsHeight = view.detailsView.$el.outerHeight();
-                var totalHeight = detailsHeight + 58;
+                var totalHeight = detailsHeight + 46;
                 if(!view.opened) {
                     view.innerDiv.animate({height: totalHeight}, {
                         duration: 250,
@@ -1149,7 +1149,7 @@
                 if(view.opened) {
                     view.innerDiv.css({'overflow': 'hidden',
                                        'z-index': 1});
-                    view.innerDiv.animate({height:58}, {
+                    view.innerDiv.animate({height:46}, {
                         duration: 250,
                         easing: "linear",
                         step: function() {
@@ -1163,7 +1163,7 @@
                     view.active = false;
                     view.opened = false;
                 } else {
-                    view.innerDiv.css({height:58,
+                    view.innerDiv.css({height:46,
                                        overflow:'hidden',
                                        'z-index': 1});
                     view.active = false;
