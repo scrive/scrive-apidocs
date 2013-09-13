@@ -222,7 +222,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     },
                     onError : function() {}
             });
-         return uploadButton();
+         return uploadButton.el();
     },
     render: function () {
         var view = this;
