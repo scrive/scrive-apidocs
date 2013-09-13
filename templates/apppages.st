@@ -278,9 +278,9 @@ $endif$
 
 
 
-<header class="site">
+<header class="site $if(!logged)$thin$endif$">
   <nav>
-    <ul class="ct">
+    <ul class="ct $if(!logged)$thin$endif$">
       <li id="branding">
         <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="22" $endif$ /></a>
         <div id="tagline" class="h3"></div>
