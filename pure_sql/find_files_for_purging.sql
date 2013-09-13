@@ -1,4 +1,18 @@
 
+--
+-- This script finds all files in the database that:
+--
+-- - are not yet purged (purge_time is null)
+-- - are not referenced at all or all that references them is itself purged
+--
+-- A table with URLs to files is produced. What should happen next:
+-- - files should be marked as purged
+-- - a script removing those files from Amazon should be executed
+--
+-- Note about output syntax: output starts after some garbage at the
+-- token START. Then it is lines with space separated values. First
+-- one is file id, then comes file url relative to the Amazon
+-- including bucket it is in.  Output ends on token FINISH.
 
 BEGIN;
 
@@ -27,9 +41,10 @@ SELECT * FROM refs EXCEPT SELECT * FROM expected_refs;
 SELECT * FROM expected_refs EXCEPT SELECT * FROM refs;
 
 \pset format unaligned
+\pset fieldsep ' '
 \echo START
 
-SELECT id, amazon_url
+SELECT id, amazon_bucket || '/' || amazon_url
   FROM files
  WHERE files.content IS NULL -- were already moved to Amazon
    -- Case 1:
