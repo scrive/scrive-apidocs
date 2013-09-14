@@ -45,9 +45,10 @@ SELECT * FROM expected_refs EXCEPT SELECT * FROM refs;
 \pset tuples_only on
 \echo START
 
-SELECT id, amazon_bucket || '/' || amazon_url
-  FROM files
+UPDATE files
+   SET purged_time = now()
  WHERE files.content IS NULL -- were already moved to Amazon
+   AND purged_time IS NULL
    -- Case 1:
    -- File is connected as source to a document that is still available to somebody.
    AND NOT EXISTS (
@@ -100,6 +101,7 @@ SELECT id, amazon_bucket || '/' || amazon_url
         WHERE signatory_screenshots.file_id = files.id
           AND signatory_links.really_deleted IS NULL
        )
+RETURNING id, amazon_bucket || '/' || amazon_url
    ;
 \echo FINISH
 
