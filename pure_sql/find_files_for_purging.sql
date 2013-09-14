@@ -42,6 +42,7 @@ SELECT * FROM expected_refs EXCEPT SELECT * FROM refs;
 
 \pset format unaligned
 \pset fieldsep ' '
+\pset tuples_only on
 \echo START
 
 SELECT id, amazon_bucket || '/' || amazon_url
