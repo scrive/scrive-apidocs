@@ -54,3 +54,14 @@ addFileIdSequence = Migration {
       _ <- kRunRaw $ "ALTER TABLE files ALTER id SET DEFAULT nextval('files_id_seq')"
       return ()
   }
+
+
+addPurgedTimeToFiles :: MonadDB m => Migration m
+addPurgedTimeToFiles = Migration {
+    mgrTable = tableFiles
+  , mgrFrom = 5
+  , mgrDo = do
+      -- create the sequence
+      _ <- kRunRaw $ "ALTER TABLE files ADD COLUMN purged_time TIMESTAMPTZ NULL"
+      return ()
+  }

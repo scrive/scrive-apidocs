@@ -36,11 +36,11 @@ instance ToJSValue FileWasPurged where
   toJSValue (FileWasPurged fid time) = runJSONGen $ do
                      value "message" ("File was purged from the system and is no longer available" :: String)
                      value "file_id" (show fid)
-                     value "purge_time" (show time)
+                     value "purged_time" (show time)
 
 instance KontraException FileWasPurged
 
 sqlWhereFileWasNotPurged :: (MonadState v m, SqlWhere v)
                      => m ()
 sqlWhereFileWasNotPurged =
-  sqlWhereEVV (FileWasPurged,"files.id","files.purge_time") ("files.purge_time IS NULL")
+  sqlWhereEVV (FileWasPurged,"files.id","files.purged_time") ("files.purged_time IS NULL")

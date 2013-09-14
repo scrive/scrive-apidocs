@@ -5,7 +5,7 @@ import DB
 tableFiles :: Table
 tableFiles = tblTable {
     tblName = "files"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblColumns = [
       tblColumn { colName = "id",            colType = BigSerialT,  colNullable = False }
     , tblColumn { colName = "name",          colType = TextT,       colNullable = False }
@@ -16,7 +16,7 @@ tableFiles = tblTable {
     , tblColumn { colName = "checksum",      colType = BinaryT,     colNullable = False }
     , tblColumn { colName = "aes_key",       colType = BinaryT }
     , tblColumn { colName = "aes_iv",        colType = BinaryT }
-    , tblColumn { colName = "purge_time",    colType = TimestampWithZoneT }
+    , tblColumn { colName = "purged_time",   colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey = ["id"]
   }
