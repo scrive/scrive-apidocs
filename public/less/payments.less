@@ -21,6 +21,9 @@
 
 .price-plan {
     margin: 35px 0px 0px 0px !important;
+    &.tab-content.account { // for people who're using the free plan
+        margin: auto !important;
+    }
 }
 
 
@@ -53,8 +56,12 @@
 }
 
 .payments {
-    margin-bottom:50px;
-    margin-top: 38px;
+    padding-bottom: 50px;
+    padding-top: 38px;
+    .price-plan.tab-content.account & { // for inside the system
+        padding-bottom: 10px;
+        padding-top: 10px;
+    }
     h4 {
 	font-size: 25px;
 	line-height: 21px;
