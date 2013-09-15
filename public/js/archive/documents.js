@@ -311,7 +311,7 @@ window.DocumentsListDefinition = function(archive) { return {
                             var text = $("<div class='float-left'/>").text(text);
                             return $.merge(icon,text);
                         };
-                        box.append(description("draft",localization.archive.documents.statusDescription.draft));
+                        box.append(description("draft",localization.archive.documents.statusDescription.draft).addClass('first'));
                         box.append(description("problem",localization.archive.documents.statusDescription.cancelled));
                         box.append(description("sent",localization.archive.documents.statusDescription.sent));
                         box.append(description("delivered",localization.archive.documents.statusDescription.delivered));
