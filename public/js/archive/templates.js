@@ -15,12 +15,8 @@ window.TemplatesListDefinition = function(archive) { return {
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.templates.columns.shared, width:"60px", field:"shared", special: "rendered",
-                  rendering: function(shared) {
-                         return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
-                  }}),
 
-        new Cell({name: localization.archive.templates.columns.time, width:"150px", field:"time", special: "rendered",
+        new Cell({name: localization.archive.templates.columns.time, width:"60px", field:"time", special: "rendered",
                   rendering: function(time) {
                          return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                   }}),
@@ -35,7 +31,11 @@ window.TemplatesListDefinition = function(archive) { return {
                              res.text(localization.email);
                          return res;
                   }}),
-        new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"})
+        new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.templates.columns.shared, width:"50px", field:"shared", special: "rendered",
+                  rendering: function(shared) {
+                         return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
+                  }})
         ],
     actions : [
        new ListAction({

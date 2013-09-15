@@ -17,7 +17,7 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
               cells : [
                   new Cell({name: localization.archive.templates.columns.time, width:"100px", field:"time", special: "rendered",
                   rendering: function(time) {
-                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                         return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                   }}),
                   new Cell({name: localization.archive.templates.columns.template, width:"360px", field:"title",
                             rendering : function(title, _mainrow, listobject) {
