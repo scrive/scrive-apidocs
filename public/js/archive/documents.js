@@ -18,15 +18,12 @@ window.DocumentCellsDefinition = function(archive) { return  [
                     return icon;
                  }
         }),
-        new Cell({name: localization.archive.documents.columns.time, width:"140px", field:"time", special: "rendered",
+        new Cell({name: localization.archive.documents.columns.time, width:"60px", field:"time", special: "rendered",
                   rendering: function(time) {
                          if (time != undefined && time != "")
                            return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                          else return $("<div/>");
         }}),
-        new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
-        new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.party, width:"190px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.title, width:"230px", substyle: "", field:"id",special: "rendered",
                  rendering: function(value,idx,listobject) {
@@ -75,7 +72,10 @@ window.DocumentCellsDefinition = function(archive) { return  [
                         return actionIcon;
                      }
 
-                 }})
+                 }}),
+        new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
+        new Cell({width:"5px" }),
+        new Cell({name: localization.archive.documents.columns.party, width:"210px", field:"party", special: "expandable", subfield : "name"})
         ];
 };
 
