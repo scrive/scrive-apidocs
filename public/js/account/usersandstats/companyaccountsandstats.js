@@ -40,7 +40,7 @@ window.CompanyAccountsAndStatsModel = Backbone.Model.extend({
                     }
                   })
                 ],
-                innerText: localization.account.companyAccounts.list,
+                innerText: localization.account.companyAccounts.name,
                 inner: true
           })
         });
