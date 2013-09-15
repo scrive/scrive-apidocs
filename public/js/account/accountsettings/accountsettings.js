@@ -276,7 +276,7 @@ var AccountSettingsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.email + ':'))).append($("<td/>").append(emailinput).append(this.changeEmailButton())));
 
       var passwordinput = $("<input type='text' disabled='disabled' class='newpassword'/>").val("************");
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Password"))).append($("<td/>").append(passwordinput).append(this.changePasswordButton())));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.password + ':'))).append($("<td/>").append(passwordinput).append(this.changePasswordButton())));
 
 
       var phoneinput = $("<input type='text' name='phone'/>").val(model.phone());
@@ -366,7 +366,7 @@ var AccountSettingsView = Backbone.View.extend({
             companysmsoriginatorinput.change(function() {
               model.setCompanysmsoriginator(companysmsoriginatorinput.val());
             });
-            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.smsOriginator))).append($("<td/>").append(companysmsoriginatorinput)));
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.smsOriginator + ':'))).append($("<td/>").append(companysmsoriginatorinput)));
             table.append($("<tr/>").append($("<td/>")).append($("<td/>").append($("<div style='font-size:10px;line-height: 10px;color:#999999;margin:-5px 10px 0px 0px;width:234px;font-style:italic'/>").text(localization.account.accountDetails.smsOriginatorDescription))));
 
 
