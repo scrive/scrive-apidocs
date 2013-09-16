@@ -276,7 +276,7 @@ var AccountSettingsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.email + ':'))).append($("<td/>").append(emailinput).append(this.changeEmailButton())));
 
       var passwordinput = $("<input type='text' disabled='disabled' class='newpassword'/>").val("************");
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.password + ':'))).append($("<td/>").append(passwordinput).append(this.changePasswordButton())));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.passwordSection + ':'))).append($("<td/>").append(passwordinput).append(this.changePasswordButton())));
 
 
       var phoneinput = $("<input type='text' name='phone'/>").val(model.phone());
