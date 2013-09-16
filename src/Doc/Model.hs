@@ -1788,8 +1788,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument () 
 
       sqlSet "deleted" SqlNull
 
-      sqlWhere "really_deleted IS NULL"
-
       sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
           sqlWhere "signatory_links.user_id = users.id"
@@ -1799,6 +1797,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument () 
 
       sqlWhereExists $ sqlSelect "documents" $ do
           sqlJoinOn "users AS same_company_users" "TRUE"
+
+          sqlWhere "documents.purged_time IS NULL"
 
           sqlWhere $ "signatory_links.document_id = " <?> did
           sqlWhere "documents.id = signatory_links.document_id"

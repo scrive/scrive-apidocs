@@ -152,6 +152,7 @@ kontraMigrations = [
   , migrateSeparateDeliveryStatuses
   , removeCSVStuffFromDocuments
   , addPurgedTimeToFiles
+  , migrateDocumentsAddPurgedTime
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

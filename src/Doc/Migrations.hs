@@ -997,6 +997,7 @@ migrateSignatoryLinksDeletedTime =
        return ()
     }
 
+
 migrateSeparateDeliveryStatuses :: MonadDB m => Migration m
 migrateSeparateDeliveryStatuses =
   Migration {
@@ -1022,5 +1023,16 @@ removeCSVStuffFromDocuments =
     , mgrFrom = 26
     , mgrDo = do
        _ <- kRunRaw $ "ALTER TABLE documents DROP COLUMN csv_title, DROP COLUMN csv_contents, DROP COLUMN csv_signatory_index"
+       return ()
+    }
+
+migrateDocumentsAddPurgedTime :: MonadDB m => Migration m
+migrateDocumentsAddPurgedTime =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 27
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE documents"
+                  <+> "ADD COLUMN purged_time TIMESTAMPTZ"
        return ()
     }
