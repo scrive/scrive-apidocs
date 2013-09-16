@@ -18,7 +18,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                     return icon;
                  }
         }),
-        new Cell({name: localization.archive.documents.columns.time, width:"60px", field:"time", special: "rendered",
+        new Cell({name: localization.archive.documents.columns.time, width:"105px", field:"time", special: "rendered",
                   rendering: function(time) {
                          if (time != undefined && time != "")
                            return $("<div/>").text(new Date(Date.parse(time)).toYMDString());

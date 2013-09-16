@@ -13,7 +13,7 @@ window.AttachmentsListDefinition = function(archive) {
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.attachments.search}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.attachments.columns.time, width:"60px", field:"time", special: "rendered",
+        new Cell({name: localization.archive.attachments.columns.time, width:"105px", field:"time", special: "rendered",
                   rendering: function(time) {
                          return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                   }}),
