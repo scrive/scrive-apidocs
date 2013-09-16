@@ -198,10 +198,11 @@ body.designview .mainContainer {
     a.sendButton {
         float: right;
         &.disabled {
-            color: #9e9e9e !important;
-            background-color: darken(@green, 50%);
+            @disabled: #384349;
+            color: #29333B !important;
+            background-color: @disabled;
             &:hover {
-                background-color: darken(@green, 50%);
+                background-color: darken(@disabled, 10%);
             }
         }
     }
