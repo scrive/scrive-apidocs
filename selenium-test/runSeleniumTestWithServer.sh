@@ -5,7 +5,7 @@ if [ "$1" == "" ]; then
 else
   echo "starting selenium server, expecting you to put jar at: selenium-test/lib/selenium-server-standalone-2.7.0.jar"
   rm -f selenium-server.out
-  java -jar selenium-test/lib/selenium-server-standalone-2.7.0.jar > selenium-server.out &
+  java -jar selenium-test/lib/selenium-server-standalone-2.35.0.jar > selenium-server.out &
   SSPID=$!
   echo $SSPID > selenium-server.pid
   sleep 10

@@ -62,14 +62,16 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-info-box')]"}).click
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-selector')]//a[contains(@class,'button')]"}).click
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
+    puts "XXX selecting last item"
     @driver.execute_script("$('ul.select-opts li').last().click()")
+    puts "YYY selecetd last item"
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-name-input')]//input"}).send_keys fieldname
     (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button-gray')][../div[contains(@class,'design-view-action-participant-new-field-name-input')]//input]"}).click
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'design-view-action-participant-details-information-field-wrapper')]//input[contains(@placeholder,'" + fieldname + "')]"}).send_keys fieldvalue
 
     fieldtab
-    @driver.action.drag_and_drop((@driver.find_element :xpath => "//div[contains(@class, 'design-view-action-document-draggables-textbox-icon')]"), (@driver.find_element :css => "img.pagejpg")).perform
+    @driver.action.drag_and_drop((@driver.find_element :css => ".design-view-action-document-draggable.design-view-action-document-draggable-textbox .design-view-action-document-draggable-icon"), (@driver.find_element :css => "img.pagejpg")).perform
     # set target party
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-selector')]//ul[contains(@class,'select-opts')]//li[" + part.to_s() + "]"}).click
@@ -112,7 +114,7 @@ class DocHelper
     (@h.wait_until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
     sleep 1
     puts "Closing attachment modal"
-    @driver.execute_script("$('.modal.active .modal-footer .button-small.button-green').click()")
+    @driver.execute_script("$('.modal.active .modal-footer .button.button-green').click()")
     puts "Modal closed"
     sleep 1
     # @h.wait_until { @driver.execute_script("return $('.authorattachmentssetuptext span.countspan').first().text()") == "("+no.to_s()+")" }
@@ -125,7 +127,8 @@ class DocHelper
     sleep 2
     counterparts.each do |counterpart|
       sleep 2
-      @driver.execute_script("$('.modal.active div.designSignatoryAttachmentsPopupContent .button-small.blue').focus().click()")
+      @driver.execute_script("$('.modal.active div.modal-body .button-large').focus().click()")
+      sleep 100
       (@h.wait_until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
       @driver.execute_script("$('.modal.active input.editSignatoryAttachmentName').change()");
       (@h.wait_until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
@@ -133,7 +136,7 @@ class DocHelper
       @driver.execute_script("$(\".modal.active option:contains('" + counterpart + "')\").last().attr('selected','true')");
       @driver.execute_script("$('.modal.active  select').change()");
     end
-     @driver.execute_script("$('.modal.active .modal-footer .button-small.button-green').click()")
+     @driver.execute_script("$('.modal.active .modal-footer .button.button-green').click()")
      sleep 2
   end
 
@@ -169,7 +172,7 @@ class DocHelper
 
   def signAndSend
     puts "Sign and send"
-    (@h.wait_until { @driver.find_element :css => ".design-view-button3-text" }).click
+    (@h.wait_until { @driver.find_element :css => ".sendButton" }).click
     puts "Final approval modal"
     sleep 1
     acceptStandardModal
@@ -179,7 +182,7 @@ class DocHelper
 
   def acceptStandardModal
     puts "acceptStandardModal"
-    (@h.wait_until { @driver.find_element :css => ".modal-footer .button-small.float-right" }).click
+    (@h.wait_until { @driver.find_element :css => ".modal-footer .button.float-right" }).click
 
     # If you are thinking of inserting a delay here because there is
     # another modal coming up after this one, please don't (it doesn't
