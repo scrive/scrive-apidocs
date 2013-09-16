@@ -21,7 +21,7 @@ window.AttachmentsListDefinition = function(archive) {
         new Cell({name: localization.archive.attachments.columns.shared, width:"50px", field:"shared", special: "rendered",
                   rendering: function(shared) {
                          return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
-                  }}),
+                  }})
         ],
     actions : [
         new ListAction({

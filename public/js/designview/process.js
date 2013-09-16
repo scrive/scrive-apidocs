@@ -365,7 +365,7 @@
   			    var $message = $(editor.getWin().document).find("p");   
 			    // change placeholder text color, if it's the 'placeholder text'
 			    if($message.text() == localization.designview.editInvitation) {
-				$message.css("color", "#999999")
+				$message.css("color", "#999999");
 			    }
 			}).on('focus', function() {
 			      // replace the default content on focus if the 

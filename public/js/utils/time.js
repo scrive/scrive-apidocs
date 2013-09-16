@@ -50,7 +50,7 @@ if (!Date.prototype.toYMDString) {
         return this.getUTCFullYear() + '-'
          + pad(this.getUTCMonth() + 1) + '-'
          + pad(this.getUTCDate());
-    }
+    };
 }
 
 if (!Date.prototype.toTimeAbrev) {

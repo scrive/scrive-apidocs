@@ -147,7 +147,7 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       name.css(this.textstyle);
       var company   = $('<div class="company" />').text(signatory.company());
       company.css(this.textstyle);
-      titleinfo.append(name)
+      titleinfo.append(name);
 
       box.append(titleinfo);
 

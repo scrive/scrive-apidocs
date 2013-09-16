@@ -127,7 +127,7 @@
                 }
             });
 
-            return saveAsTemplateButton.el()
+            return saveAsTemplateButton.el();
         },
         send: function() {
             var view = this;

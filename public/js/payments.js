@@ -926,9 +926,9 @@
           var div = $('<div class="col subscription-plan" />');
             var header = $('<div class="account-header" />')
                 .append($('<h4></h4>').text(localization.payments.table.currentplan));
-          var table = $('<div class="account-body" />')
+          var table = $('<div class="account-body" />');
                 
-	  var planInformation = $('<div class="plan-information" />')
+	  var planInformation = $('<div class="plan-information" />');
           var planName = $('<p class="plan-name"></p>').text(localization.payments.plans[model.paidPlan()].name);
           var numberOfUsers = $('<p></p>').text(localization.payments.numberOfUsers + " : " + model.quantity() + " " + localization.payments.users);
 	  planInformation.append(planName);
@@ -1121,7 +1121,7 @@
                 .append($('<h4 />')
                         .text(localization.payments.cancelsubscription));
             var cancelbody = $('<div class="account-body" />');
-	    cancelbody.append(view.cancelButton())
+	    cancelbody.append(view.cancelButton());
 	    cancel.append(cancelheader);
 	    cancel.append(cancelbody);
 
