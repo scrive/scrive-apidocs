@@ -525,7 +525,7 @@ sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> m () -> m () 
 sendNotifications sl domail dosms = do
   Log.debug $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
   case signatorylinkdeliverymethod sl of
-    EmailDelivery   -> domailIfNotUndelivered
-    MobileDelivery  -> dosmsIfNotUndelivered
-    EmailAndMobileDelivery -> domailIfNotUndelivered >> dosmsIfNotUndelivered
+    EmailDelivery   -> domail
+    MobileDelivery  -> dosms
+    EmailAndMobileDelivery -> domail >> dosms
     _               -> return ()
