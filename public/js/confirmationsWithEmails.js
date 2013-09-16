@@ -232,9 +232,10 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 
        if (!BrowserInfo.isSmallScreen()) { // We skip editing message on small screens
          this.editOption = this.editOption.el(); // make it hideable from other places.
-         if (model.editText())
+         if (model.editText()) {
             if (model.textfont()) this.editOption.css("font-family",model.textfont());
             footer.append(this.editOption);
+        }
        }
 
 
