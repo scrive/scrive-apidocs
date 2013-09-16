@@ -336,7 +336,7 @@
 "_signMethodMobile","SMS","SMS"
 "_signMethodEmailAndMobile","e-post/SMS","email/SMS"
 "_onlyPDF","OBS! Endast PDF","PDF only!"
-"_signStepsBodyUploadBoxStepButtonChooseFile","Välj fil (Endast PDF)","Open a PDF file"
+"_signStepsBodyUploadBoxStepButtonChooseFile","Välj en PDF-fil","Open a PDF file"
 "_signStepsMenuEmptyStepSaveAsTemplate","Spara som mall","Save as template"
 "_signViewNotsignedbymeAttachmentBoxHead","Bilagor","Attachments"
 "_signViewSigAttachmentBoxChooseFile","Välj PDF-fil","Select PDF file"
