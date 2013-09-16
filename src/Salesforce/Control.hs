@@ -1,5 +1,6 @@
 module Salesforce.Control (
-    handleSalesforceIntegration
+     handleSalesforceIntegration
+   , getSalesforceKeys
   ) where
 
 import Data.Functor
@@ -13,7 +14,8 @@ import User.Utils
 import User.Model
 import Data.Maybe
 import DB
-
+import Text.JSON.Gen
+import Text.JSON
 
 {- This handlers sets SalesforceScheme for callbacks for give user -}
 
@@ -31,3 +33,11 @@ handleSalesforceIntegration  = withUserGet $ do
                 dbUpdate $ UpdateUserCallbackScheme (userid $ fromJust $ ctxmaybeuser ctx) (SalesforceScheme token)
                 return $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
        _ ->  LinkExternal <$> (withSalesforceConf ctx (initAuthorizationWorkflowUrl mstate))
+
+{- Returns access keys for salesforce user. User by They salesfroce plugin to start propper oauth wokflow. Keys are hardcodded in config file. -}
+getSalesforceKeys :: Kontrakcja m => m JSValue
+getSalesforceKeys = do
+  sc <- getSalesforceConf <$> getContext
+  runJSONGenT $ do
+    value "token"  $ salesforceIntegrationAPIToken sc
+    value "secret" $ salesforceIntegrationAPISecret sc

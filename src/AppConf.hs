@@ -89,6 +89,8 @@ instance Configuration AppConf where
                               , salesforceConsumerKey = "3MVG9A2kN3Bn17htNVdtvb5RT3xDFJXCsLqYZX0eYz18WEOqZcOCwrusUxSEOanVBEZRYhhFpZbtjEQGJI7Db"
                               , salesforceConsumerSecret = "5081538550608494771"
                               , salesforceRedirectUrl = "https://scrive.com/salesforce/integration"
+                              , salesforceIntegrationAPIToken  = "12ef3_22"
+                              , salesforceIntegrationAPISecret = "a1033b2caa"
                               }
     }
   confOptions = [

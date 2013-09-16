@@ -171,6 +171,7 @@ staticRoutes = choice
      , dir "payments" $ dir "contact" $ hPostAllowHttp $ toK0 $ UserControl.handleContactUs
 
      , dir "salesforce" $ dir "integration" $ hGet $ toK0 $ Salesforce.handleSalesforceIntegration
+     , dir "salesforce" $ dir "keys"        $ hGet $ toK0 $ Salesforce.getSalesforceKeys
 
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes
