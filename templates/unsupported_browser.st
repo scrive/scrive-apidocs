@@ -47,4 +47,4 @@ $htmlopentag()$
     </div>
 
   </body>
-</html>
+$htmlclosingtag()$

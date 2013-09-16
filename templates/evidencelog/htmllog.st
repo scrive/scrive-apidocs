@@ -222,5 +222,5 @@ between Scrive system clocks and reference time:
    <tr><td>Number of failed collection attempts</td><td>$ce_missed$</td></tr>
 </table>
 </body>
-</html>
+$htmlclosingtag()$
 ###

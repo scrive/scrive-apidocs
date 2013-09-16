@@ -11,7 +11,7 @@ $htmlopentag()$
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
     $if(usestandardheaders)$
     $header()$
-    <div class="wrapper-position-footer">
+    $wrapperopentag()$
     $endif$
     <div class="signview">
       <div class="mainContainer" >
@@ -57,8 +57,12 @@ $htmlopentag()$
     </div>
     $if(usestandardheaders)$
     $pageFooter()$
-    </div>
+    $wrapperclosetag()$
     $endif$
   </body>
-</html>
+$htmlclosingtag$
 ####
+wrapperopentag=
+<div class="wrapper-position-footer">
+wrapperclosingtag=
+</div>

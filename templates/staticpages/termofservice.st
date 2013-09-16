@@ -33,7 +33,7 @@ $htmlopentag()$
     </script>
 
   </body>
-</html>
+$htmlclosingtag()$
 ####
 termsOfServiceContent=
 <section>

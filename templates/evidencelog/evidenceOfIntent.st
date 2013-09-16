@@ -212,5 +212,5 @@ $htmlopentag()$
 </table>
 
 </body>
-</html>
+$htmlclosingtag()$
 ###

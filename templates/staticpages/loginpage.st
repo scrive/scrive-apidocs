@@ -47,7 +47,7 @@ $htmlopentag()$
   </script>
 
   </body>
-</html>
+$htmlclosingtag()$
 ###
 changePasswordPage=
 <div class='mainContainer big'>
@@ -101,7 +101,7 @@ $htmlopentag()$
   });
 </script>
   </body>
-</html>
+$htmlclosingtag()$
 ###
 accessNewAccountPageWithBranding=
 $doctype()$
@@ -130,7 +130,7 @@ $htmlopentag()$
   });
 </script>
   </body>
-</html>
+$htmlclosingtag()$
 ###
 signupPage=
 <div class='mainContainer big'>
@@ -173,7 +173,7 @@ $htmlopentag()$
   </script>
 
   </body>
-</html>
+$htmlclosingtag()$
 ###
 accountSetupPage=
 
@@ -220,7 +220,7 @@ accountSetupPage=
         </div>
 
       </body>
-    </html>
+    $htmlclosingtag()$
 ###
 pageAcceptTOS =
 <div class='mainContainer big'>

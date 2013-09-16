@@ -25,5 +25,5 @@ pagePrivilegesConfirm =
           });
         </script>
       </body>
-    </html>
+    $htmlclosingtag()$
 #####

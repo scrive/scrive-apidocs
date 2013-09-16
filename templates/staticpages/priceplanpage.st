@@ -46,5 +46,5 @@ $htmlopentag()$
     </script>
 
   </body>
-</html>
+$htmlclosingtag()$
 ####
