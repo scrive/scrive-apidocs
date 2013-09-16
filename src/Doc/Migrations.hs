@@ -996,3 +996,21 @@ migrateSignatoryLinksDeletedTime =
                   <+> "ALTER really_deleted TYPE TIMESTAMPTZ USING (CASE WHEN really_deleted THEN now() ELSE NULL END)"
        return ()
     }
+
+migrateSeparateDeliveryStatuses :: MonadDB m => Migration m
+migrateSeparateDeliveryStatuses =
+  Migration {
+      mgrTable = tableSignatoryLinks
+    , mgrFrom = 21
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN mail_invitation_delivery_status SMALLINT NULL DEFAULT 3"
+       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sms_invitation_delivery_status  SMALLINT NULL DEFAULT 3"
+       _ <- kRunRaw $ "UPDATE signatory_links "
+             <> "      SET mail_invitation_delivery_status = invitation_delivery_status "
+             <> "      WHERE delivery_method = 1 OR delivery_method = 5"
+       _ <- kRunRaw $ "UPDATE signatory_links "
+             <> "      SET sms_invitation_delivery_status = invitation_delivery_status "
+             <> "      WHERE delivery_method = 4 OR delivery_method = 5"
+       _ <- kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN invitation_delivery_status"
+       return ()
+    }

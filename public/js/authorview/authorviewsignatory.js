@@ -80,18 +80,18 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
  hasChangeEmailOption: function() {
    var signatory = this.signatory();
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-          && signatory.undeliveredInvitation()
+          && signatory.undeliveredMailInvitation()
           && signatory.document().signingInProcess()
           && signatory.document().pending()
-          && signatory.emailDelivery();
+          && (signatory.emailDelivery() || signatory.emailMobileDelivery());
  },
  hasChangePhoneOption: function() {
    var signatory = this.signatory();
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-          && signatory.undeliveredInvitation()
+          && signatory.undeliveredSMSInvitation()
           && signatory.document().signingInProcess()
           && signatory.document().pending()
-          && signatory.mobileDelivery();
+          && (signatory.mobileDelivery() || signatory.emailMobileDelivery());
  },
  hasPadOptions : function() {
    var signatory = this.signatory();
@@ -225,6 +225,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     var fstbutton = new Button({
                             color: "black",
                             text: localization.changeEmail,
+                            style: "width:200px",
                             onClick: function() {
                                 mixpanel.track('Click change email',
                                                {'Signatory index':signatory.signIndex()});
@@ -256,10 +257,11 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   changePhoneOption : function() {
     var self = this;
     var signatory = this.model.signatory();
-    var container = $("<div class='change-email-box'/>");
+    var container = $("<div class='change-mobile-box'/>");
     var fstbutton = new Button({
                             color: "black",
                             text: localization.changePhone,
+                            style: "width:200px",
                             onClick: function() {
                                 mixpanel.track('Click change phone',
                                                {'Signatory index':signatory.signIndex()});

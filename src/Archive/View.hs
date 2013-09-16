@@ -93,7 +93,10 @@ docFieldsListForJSON userid padqueue doc = do
       [APIDelivery]   -> "api"
       [MobileDelivery]-> "mobile"
       _                        -> "mixed"
-    J.value "anyinvitationundelivered" $ anyInvitationUndelivered  doc && Pending == documentstatus doc
+    J.value "anyinvitationundelivered" $ Pending == documentstatus doc &&
+                                            (   (any (== Undelivered) $ mailinvitationdeliverystatus <$> documentsignatorylinks doc)
+                                             || (any (== Undelivered) $ smsinvitationdeliverystatus  <$> documentsignatorylinks doc)
+                                            )
     J.value "shared" $ documentsharing doc == Shared
     J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
     J.value "inpadqueue" $  (fmap fst padqueue == Just (documentid doc))
@@ -111,7 +114,7 @@ signatoryFieldsListForJSON padqueue doc sl = do
                        "" -> getSmartName sl
                        _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
     J.value "time" $ fromMaybe "" $ formatMinutesTimeRealISO <$> (sign `mplus` reject `mplus` seen `mplus` open)
-    J.value "invitationundelivered" $ isUndelivered sl && Pending == documentstatus doc
+    J.value "invitationundelivered" $ Pending == documentstatus doc && (Undelivered == mailinvitationdeliverystatus sl || Undelivered == smsinvitationdeliverystatus sl)
     J.value "inpadqueue" $  (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl))
     J.value "isauthor" $ isAuthor sl
     J.value "authentication" $ case signatorylinkauthenticationmethod sl of

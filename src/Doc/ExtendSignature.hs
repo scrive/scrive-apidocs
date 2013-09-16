@@ -9,7 +9,7 @@ import AppConf (guardTimeConf, hostpart, mailsConfig, brandedDomains)
 import BrandedDomains (findBrandedDomain, bdurl)
 import Context (MailContext(..))
 import Control.Applicative ((<$>))
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.Reader (MonadReader, runReaderT, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -36,6 +36,7 @@ import User.Lang (getLang)
 import Util.HasSomeUserInfo (getEmail)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
 import Utils.Directory (withSystemTempDirectory')
+import Doc.API.Callback.Model
 
 latest_publication_time :: MonadDB m => m MinutesTime
 latest_publication_time = do
@@ -129,7 +130,10 @@ extendDocumentSeal doc = do
     now <- getMinutesTime
     gtconf <- asks (guardTimeConf . sdAppConf)
     templates <- getGlobalTemplates
-    flip runReaderT templates $ digitallyExtendDocument now gtconf (documentid doc) sealedpath (filename file)
+    res <- flip runReaderT templates $ digitallyExtendDocument now gtconf (documentid doc) sealedpath (filename file)
+    when res $ triggerAPICallbackIfThereIsOne doc -- Users that get API callback on document change, also get information about sealed file being extended.
+    return res
+
     -- Here, we have the option of notifying signatories of the
     -- extended version.  However: customers that choose to create an
     -- account will be able to access the extended version in their

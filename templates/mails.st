@@ -271,6 +271,26 @@ invitationMailUndeliveredMainP =
        <div style="margin-left: 50px;">
          $_invitationMailUndeliveredContentInstruction()$
        </div>
+#######
+### UNDELIVERED SMS
+###
+invitationSMSUndelivered=
+    $_invitationSMSUndeliveredTitle()$
+    $nicemail(
+        mailheader=_invitationSMSUndeliveredTitle();
+        mailp1=invitationSMSUndeliveredMainP()
+    )$
+####
+####
+invitationSMSUndeliveredMainP =
+       <br/>
+       $_invitationSMSUndeliveredContentBody()$
+       <br/>
+       <br/>
+       $_invitationSMSUndeliveredContentBodyFirst()$
+       <div style="margin-left: 50px;">
+         $_invitationSMSUndeliveredContentInstruction()$
+       </div>
 ####
 #### DOCUMENT ERROR
 ####
