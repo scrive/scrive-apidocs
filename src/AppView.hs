@@ -218,11 +218,11 @@ simpleJsonResponse = ok . toResponseBS (BS.fromString "text/html; charset=utf-8"
 
 {- |
    Changing our pages into reponses, and clearing flash messages.
+   For HTML response we don't allow framing to skip problems with clickjacking.
 -}
 simpleHtmlResponse :: Kontrakcja m => String -> m Response
-simpleHtmlResponse = ok . toResponseBS (BS.fromString "text/html;charset=utf-8") . BSL.fromString
-    -- change this to HtmlString from helpers package
-    -- (didn't want to connect it one day before prelaunch)
+simpleHtmlResponse s = ok $ (setHeaderBS "X-Frame-Options" "SAMEORIGIN") $ toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
+
 
 {- | Sames as simpleHtmlResponse, but clears also flash messages and modals -}
 simpleHtmlResonseClrFlash :: Kontrakcja m => String -> m Response

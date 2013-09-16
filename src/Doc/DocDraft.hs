@@ -26,7 +26,7 @@ import Utils.Read
 import qualified Log
 import File.FileID
 import Control.Monad
-
+import InputValidation
 
 data DraftData = DraftData {
       title :: String
@@ -78,7 +78,7 @@ instance FromJSValue DraftData where
              | daystosign >= minDaysToSign && daystosign <= maxDaysToSign ->
                 return $ Just DraftData {
                                       title =  t
-                                    , invitationmessage = invitationmessage
+                                    , invitationmessage = (resultToMaybe . asValidInviteText) =<< invitationmessage
                                     , daystosign = daystosign
                                     , authentication = authentication'
                                     , delivery = delivery'
