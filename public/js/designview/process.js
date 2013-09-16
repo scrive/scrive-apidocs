@@ -321,7 +321,8 @@
 	    }
             tinymce.init({
 	        selector: '#design-view-action-process-right-column-invitation-editor',
-                width: 275,
+                width: 275, // TODO this is overwritten by cwidth (?)
+                height: 138,
                 menubar: false,
                 plugins: "noneditable,paste",
                 external_plugins: {
@@ -330,6 +331,7 @@
                 readonly: !view.emaildeliveryused,
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul,i[style<_color: #AAAAAA;]",
                 width: cwidth, // automatically adjust for different swed/eng text
+                theme_advanced_fonts : "Verdana=Source Sans Pro, Helvetica Neue;", // fake using source sans pro / helvetica neue
                 setup: function(editor) {
 
                     editor.on('init', function() {
