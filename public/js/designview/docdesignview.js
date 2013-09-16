@@ -468,6 +468,7 @@
             view.topBar.css({position:'relative',
                              top: '',
                              left: ''});
+	    // needs to be the same value, as the padding-top value set in frame.less on '.design-view-document-container'
             view.docView.css({'padding-top' : 20});
         },
         affix: function() {
