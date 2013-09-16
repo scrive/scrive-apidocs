@@ -15,8 +15,6 @@ module Util.SignatoryLinkUtils (
   isSigLinkFor,
   getAuthorSigLink,
   getAuthorName,
-  isUndelivered,
-  isDeferred,
   hasSigned,
   isAuthor,
   isSignatory,
@@ -85,9 +83,6 @@ instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
 instance SignatoryLinkIdentity MagicHash where
   isJustSigLinkFor mh sl = mh == signatorymagichash sl
 
-instance SignatoryLinkIdentity MailsDeliveryStatus where
-  isJustSigLinkFor mds sl = mds == invitationdeliverystatus sl
-
 instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
   isJustSigLinkFor (a, b) sl = isJustSigLinkFor a sl && isJustSigLinkFor b sl
 
@@ -144,18 +139,6 @@ getAuthorSigLink doc = getSigLinkFor doc (signatoryisauthor . signatorydetails)
 -}
 getAuthorName :: Document -> String
 getAuthorName doc = maybe "" getSmartName $ getAuthorSigLink doc
-
-{- |
-   Is this SignatoryLink undelivered?
- -}
-isUndelivered :: (MaybeSignatoryLink msl) => msl -> Bool
-isUndelivered = isSigLinkFor Undelivered
-
-{- |
-   Is this SignatoryLink Deferred?
- -}
-isDeferred :: (MaybeSignatoryLink msl) => msl -> Bool
-isDeferred = isSigLinkFor Delivered
 
 {- |
    Does the given SignatoryLink have SignInfo (meaning the signatory has signed)?

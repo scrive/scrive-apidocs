@@ -149,6 +149,7 @@ kontraMigrations = [
   , paymentsStatsOnlyForCompanies
   , migrateUsersDeletedTime
   , migrateSignatoryLinksDeletedTime
+  , migrateSeparateDeliveryStatuses
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

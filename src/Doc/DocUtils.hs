@@ -17,7 +17,6 @@ module Doc.DocUtils(
   , renderListTemplate
   , renderLocalListTemplate
   , replaceFieldValue
-  , anyInvitationUndelivered
   , documentcurrentsignorder
   , signatoryDetailsFromUser
   , isEligibleForReminder
@@ -185,12 +184,6 @@ replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) o
                             Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
                             Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[], sfObligatory = True, sfShouldBeFilledBySender = False}) a
 
-{- |
-   Are there any undelivered signatory links?
- -}
-anyInvitationUndelivered :: Document -> Bool
-anyInvitationUndelivered doc =  any isUndelivered $ documentsignatorylinks doc
-
 -- OTHER UTILS
 
 -- | Indicates which signatories were activated (received
@@ -245,8 +238,12 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
     && userIsAuthor
     && not isUserSignator
     && not dontShowAnyReminder
-    && invitationdeliverystatus siglink /= Undelivered
-    && invitationdeliverystatus siglink /= Deferred
+    && (signatorylinkdeliverymethod siglink /= EmailDelivery || (mailinvitationdeliverystatus siglink /= Undelivered && mailinvitationdeliverystatus siglink /= Deferred))
+    && (signatorylinkdeliverymethod siglink /= MobileDelivery || (smsinvitationdeliverystatus siglink /= Undelivered && smsinvitationdeliverystatus siglink /= Deferred))
+    && (signatorylinkdeliverymethod siglink /= EmailAndMobileDelivery
+                                      || (mailinvitationdeliverystatus siglink /= Undelivered && mailinvitationdeliverystatus siglink /= Deferred)
+                                      || (smsinvitationdeliverystatus siglink /= Undelivered && smsinvitationdeliverystatus siglink /= Deferred)
+                                      )
     && wasNotSigned
     && signatoryispartner (signatorydetails siglink)
   where

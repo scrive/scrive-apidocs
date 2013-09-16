@@ -1456,7 +1456,7 @@ testSetInvitationDeliveryStatusNotLeft :: TestEnv ()
 testSetInvitationDeliveryStatusNotLeft = doTimes 10 $ do
   actor <- unSystemActor <$> rand 10 arbitrary
   --assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-  assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
     success <- randomUpdate $ \d s st-> SetEmailInvitationDeliveryStatus d s st actor
     assert $ not success
 

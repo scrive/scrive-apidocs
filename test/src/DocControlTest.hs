@@ -234,7 +234,7 @@ testSendingReminderClearsDeliveryInformation = do
   (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx actor doc sl
   Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
-  assertEqual "Invitation is not delivered" (Unknown) (invitationdeliverystatus sl')
+  assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
 
 
 testDocumentFromTemplate :: TestEnv ()

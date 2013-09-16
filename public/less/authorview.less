@@ -140,12 +140,12 @@
       }
       td.signatory-box-separator {
           width: 20px;
-      }  
+      }
       .column {
           display: inline-block;
           width: 270px;
           min-height: 125px;
-          &.spacing {  
+          &.spacing {
             margin-right: 0px;
           }
       }
@@ -213,7 +213,7 @@
       }
 
       .statusbox .icon.status {
-          display: inline-block; 
+          display: inline-block;
           float: none;
           margin-top: 1px;
       }
@@ -246,12 +246,13 @@
         }
       }
      .optionbox {
+        display: block;
         padding: 8px 0px 0px 0px;
         text-align: center;
-        height : 18px;
         color: @blueH;
-        .change-email-box {
-            display: inline-block;
+        .change-email-box, .change-mobile-box {
+            margin-bottom: 4px;
+            display: block;
             input {
               width: 180px;
               float: left;

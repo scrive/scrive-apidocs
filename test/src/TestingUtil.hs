@@ -111,7 +111,7 @@ instance Arbitrary CompanyInfo where
 instance Arbitrary MagicHash where
   arbitrary = unsafeMagicHash <$> arbitrary
 
-instance Arbitrary MailsDeliveryStatus where
+instance Arbitrary DeliveryStatus where
   arbitrary = elements [ Delivered
                        , Undelivered
                        , Unknown
@@ -406,7 +406,8 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
                                       , maybeseeninfo = Just $ SignInfo (fromSeconds 0) noIP
                                       , maybereadinvite = Nothing
-                                      , invitationdeliverystatus = Delivered
+                                      , mailinvitationdeliverystatus = Delivered
+                                      , smsinvitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
                                       , signatorylinkdeleted = Nothing
                                       , signatorylinkreallydeleted = Nothing
