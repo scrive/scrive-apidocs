@@ -191,16 +191,12 @@ docStateTests env = testGroup "DocState" [
   testThat "ArchiveDocument succeeds if the archiving user is a company admin" env testArchiveDocumentCompanyAdminRight,
   testThat "RestoreArchivedDocument succeeds if the restoring user is the author" env testRestoreArchivedDocumentAuthorRight,
   testThat "RestoreArchivedDocument succeeds if the restoring user is the company admin" env testRestoreArchiveDocumentCompanyAdminRight,
-  testThat "ReallyDeleteDocument succeeds if deleted by a company admin user" env testReallyDeleteDocumentCompanyAdminRight,
   -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 
   testThat "ArchiveDocument fails if the archiving user is an unrelated user" env testArchiveDocumentUnrelatedUserLeft,
   testThat "ArchiveDocument fails if the archiving user is just another standard company user" env testArchiveDocumentCompanyStandardLeft,
   testThat "RestoreArchivedDocument fails if the storing user is an unrelated user" env testRestoreArchivedDocumentUnrelatedUserLeft,
   testThat "RestoreArchivedDocument fails if the restoring user is just another standard company user" env testRestoreArchiveDocumentCompanyStandardLeft,
-  testThat "ReallyDeleteDocument fails if deleted by the author who is a standard company user" env testReallyDeleteDocumentCompanyAuthorLeft,
-  testThat "ReallyDeleteDocument fails if the deleting user is just another standard company user" env testReallyDeleteDocumentCompanyStandardLeft,
-  testThat "ReallyDeleteDocument fails if the document hasn't been archived" env testReallyDeleteNotArchivedLeft,
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
@@ -588,12 +584,6 @@ assertOneArchivedSigLink doc =
               1
               (length . filter (isJust . signatorylinkdeleted) . documentsignatorylinks $ doc)
 
-assertOneReallyDeletedSigLink :: MonadIO m => Document -> m ()
-assertOneReallyDeletedSigLink doc =
-  assertEqual "Expected one really deleted sig link"
-              1
-              (length . filter (isJust . signatorylinkreallydeleted) . documentsignatorylinks $ doc)
-
 assertNoArchivedSigLink :: MonadIO m => Document -> m ()
 assertNoArchivedSigLink doc =
   assertEqual "Expected no archived sig link"
@@ -652,19 +642,6 @@ testRestoreArchiveDocumentCompanyAdminRight = doTimes 10 $ do
 
   assertNoArchivedSigLink ndoc
 
-testReallyDeleteDocumentCompanyAdminRight :: TestEnv ()
-testReallyDeleteDocumentCompanyAdminRight = doTimes 10 $ do
-  company <- addNewCompany
-  author <- addNewRandomCompanyUser (companyid company) False
-  adminuser <- addNewRandomCompanyUser (companyid company) True
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (documentid doc) (systemActor t)
-  Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-
-  assert success
-  assertOneReallyDeletedSigLink ndoc
-
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 testArchiveDocumentUnrelatedUserLeft :: TestEnv ()
 testArchiveDocumentUnrelatedUserLeft = doTimes 10 $ do
@@ -701,33 +678,6 @@ testRestoreArchiveDocumentCompanyStandardLeft = doTimes 10 $ do
   randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $ do
     randomUpdate $ \t->RestoreArchivedDocument standarduser (documentid doc) (systemActor t)
-
-testReallyDeleteDocumentCompanyAuthorLeft :: TestEnv ()
-testReallyDeleteDocumentCompanyAuthorLeft = doTimes 10 $ do
-  company <- addNewCompany
-  author <- addNewRandomCompanyUser (companyid company) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
-  assertBool "Not admin can only delete drafts" (not success || Preparation == documentstatus doc)
-
-testReallyDeleteDocumentCompanyStandardLeft :: TestEnv ()
-testReallyDeleteDocumentCompanyStandardLeft = doTimes 10 $ do
-  company <- addNewCompany
-  author <- addNewRandomCompanyUser (companyid company) False
-  standarduser <- addNewRandomCompanyUser (companyid company) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->ReallyDeleteDocument (userid standarduser) (documentid doc) (systemActor t)
-  assertBool "Not admin can only delete drafts" (not success || Preparation == documentstatus doc)
-
-testReallyDeleteNotArchivedLeft :: TestEnv ()
-testReallyDeleteNotArchivedLeft = doTimes 10 $ do
-  company <- addNewCompany
-  author <- addNewRandomCompanyUser (companyid company) True
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  success <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
-  assert $ not success
 
 testGetDocumentsByAuthorNoArchivedDocs :: TestEnv ()
 testGetDocumentsByAuthorNoArchivedDocs =

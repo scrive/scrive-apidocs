@@ -447,11 +447,6 @@ apiCallDelete did =  api $ do
          throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
   dbUpdate $ ArchiveDocument (userid user) did actor
 
-  case (documentstatus doc) of
-       Preparation -> do
-         _ <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
-         return ()
-       _ -> return ()
   Accepted <$> (runJSONGenT $ return ())
 
 

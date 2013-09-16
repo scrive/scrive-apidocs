@@ -38,7 +38,6 @@ module Doc.Model
   , MarkInvitationRead(..)
   , NewDocument(..)
   , PreparationToPending(..)
-  , ReallyDeleteDocument(..)
   , RejectDocument(..)
   , RemoveDocumentAttachment(..)
   , ResetSignatoryDetails(..)
@@ -156,7 +155,7 @@ data DocumentFilter
   | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
   | DocumentFilterSignable                    -- ^ Document is signable
   | DocumentFilterTemplate                    -- ^ Document is template
-  | DocumentFilterDeleted Bool Bool           -- ^ Only deleted (=True) or non-deleted (=False) documents. Other bool is for really deleted.
+  | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents.
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
@@ -423,13 +422,11 @@ documentFilterToSQL (DocumentFilterSignable) = do
 documentFilterToSQL (DocumentFilterTemplate) = do
   sqlWhereEq "documents.type" Template
 
-documentFilterToSQL (DocumentFilterDeleted flag1 flag2) = do
+documentFilterToSQL (DocumentFilterDeleted flag1) = do
+  sqlWhere "signatory_links.really_deleted IS NULL"
   if flag1
      then sqlWhere "signatory_links.deleted IS NOT NULL"
      else sqlWhere "signatory_links.deleted IS NULL"
-  if flag2
-     then sqlWhere "signatory_links.really_deleted IS NOT NULL"
-     else sqlWhere "signatory_links.really_deleted IS NULL"
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
@@ -1508,9 +1505,8 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash 
          sqlWhere "signatory_links.document_id = documents.id"
          -- Thought for later: Here we might actually check if
          -- visibility rules allow a person to see this document, for
-         -- example if it was not really_deleted and if sign order
-         -- allows to see the document. For now we are sloppy and let
-         -- a person see the document.
+         -- example if sign order allows to see the document. For now
+         -- we are sloppy and let a person see the document.
          sqlWhereEq "signatory_links.id" slid
          sqlWhereEq "signatory_links.token" mh
       sqlWhereEq "documents.id" did)
@@ -1555,18 +1551,18 @@ instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
-    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False False] [Asc DocumentOrderByMTime] (0,maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
-    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (0,maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetAvailableTemplates = GetAvailableTemplates UserID
 instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
   query (GetAvailableTemplates uid) =
     query (GetDocuments [DocumentsVisibleToUser uid]
-                            [DocumentFilterTemplate, DocumentFilterDeleted False False]
+                            [DocumentFilterTemplate, DocumentFilterDeleted False]
                             [Asc DocumentOrderByMTime]
                             (0,maxBound))
 
@@ -1671,30 +1667,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
         Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
         return Nothing
 
-data ReallyDeleteDocument = ReallyDeleteDocument UserID DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool where
-  update (ReallyDeleteDocument uid did _actor) = do
-    result <- kRun $ sqlUpdate "signatory_links" $ do
-      sqlSetCmd "really_deleted" "now()"
-      sqlWhereExists $ sqlSelect "documents" $ do
-        sqlWhere "documents.id = signatory_links.document_id"
-        sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
-        sqlLeftJoinOn "companies" "users.company_id = companies.id"
-        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
-
-        sqlWhere "signatory_links.really_deleted IS NULL"
-        sqlWhere "signatory_links.deleted IS NOT NULL"
-        sqlWhereEq "documents.id" did
-
-        sqlWhereEq "same_company_users.id" uid
-        sqlWhereAny $ do
-          sqlWhereAll $ do           -- 1: see own documents
-            sqlWhere "users.id = same_company_users.id"
-            sqlWhere "users.company_id IS NULL"
-          sqlWhereAll $ do           -- 5: see documents of subordinates
-            sqlWhere "same_company_users.is_company_admin"
-
-    return (result>0)
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where

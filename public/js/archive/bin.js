@@ -41,34 +41,7 @@ window.BinListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-               }),
-     new ListAction({
-                name : localization.archive.bin.remove.action,
-                emptyMessage :  localization.archive.bin.remove.emptyMessage,
-                avaible : function() {return true;},
-                onSelect: function(docs){
-                              var confirmationPopup = Confirmation.popup({
-                                acceptText: localization.ok,
-                                rejectText: localization.cancel,
-                                title: localization.archive.bin.remove.head,
-                                icon: '/img/modal-icons/delete.png',
-                                content: jQuery("<p/>").text(localization.archive.bin.remove.body),
-                                onAccept : function() {
-                                  new Submit({
-                                                url: "/d/reallydelete",
-                                                method: "POST",
-                                                documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
-                                                ajaxsuccess : function() {
-                                                    new FlashMessage({color : "green", content : localization.archive.bin.remove.successMessage});
-                                                    archive.bin().recall();
-                                                    confirmationPopup.view.clear();
-                                                }
-                                          }).sendAjax();
-                                }
-                              });
-                            return true;
-                          }
-                })
+               })
               ]
 
     })

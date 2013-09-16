@@ -3,7 +3,6 @@ module Archive.Control
        handleDelete,
        handleSendReminders,
        handleRestore,
-       handleReallyDelete,
        handleShare,
        handleCancel,
        handleZip,
@@ -26,7 +25,6 @@ import Utils.Monad
 import Util.MonadUtils
 
 import Control.Applicative
-import Control.Monad.Trans.Maybe
 import Util.SignatoryLinkUtils
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -81,12 +79,6 @@ handleDelete = do
                   _ -> return ()
               dbUpdate $ ArchiveDocument (userid user) (documentid doc) actor
 
-              case (documentstatus doc) of
-                   Preparation -> do
-                       _ <- dbUpdate $ ReallyDeleteDocument (userid user) (documentid doc) actor
-                       return ()
-
-                   _ -> return ()
     J.runJSONGenT $ return ()
 
 
@@ -123,21 +115,6 @@ handleRestore = do
   mapM_ (\did -> dbUpdate $ RestoreArchivedDocument user did actor) docids
   J.runJSONGenT $ return ()
 
-handleReallyDelete :: Kontrakcja m => m JSValue
-handleReallyDelete = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  docids <- getCriticalField asValidDocIDList "documentids"
-  mapM_ (\did -> do
-            _ <- guardJustM . runMaybeT $ do
-              True <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
-              Just doc <- dbQuery $ GetDocumentByDocumentID did
-              return doc
-            return ())
-    docids
-  J.runJSONGenT $ return ()
-
-
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do
     _ <- guardJustM $ ctxmaybeuser <$> getContext
@@ -173,15 +150,15 @@ jsonDocumentsList = do
   params <- getListParams
   let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted False False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
                           "Template"          -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterDeleted False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
                           "MyTemplate"        -> ([DocumentsVisibleToUser uid] -- Sometimes we want to show only templates that user can change
-                                                 ,[DocumentFilterByAuthor uid, DocumentFilterDeleted False False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted True False, DocumentFilterUnsavedDraft False])
+                                                 ,[DocumentFilterDeleted True, DocumentFilterUnsavedDraft False])
                           "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])
-                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False False, DocumentFilterUnsavedDraft False])
+                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("time", tostr) = case reads tostr of
                                     (((Just from',Just to'),""):_) -> [DocumentFilterByMonthYearFrom from',DocumentFilterByMonthYearTo to']
