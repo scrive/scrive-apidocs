@@ -91,110 +91,99 @@
         },
         saveAsDraft: function() {
             var view = this;
-            var viewmodel = view.model;
+            var model = view.model;
 
-            var div = $('<div />');
-            div.addClass('design-view-button1');
-            div.append($('<div />')
-                       .addClass('design-view-button1-text')
-                       .append(localization.saveAsDraft));
-
-            div.click(function() {
-                mixpanel.track('Click save as draft');
-                viewmodel.document().save(function() {
-                  new Submit({
-                                          ajax : 'true',
-                                          method : 'POST',
-                                          url : '/d/save/' + viewmodel.document().documentid(),
-                                          ajaxsuccess : function() {
-                                              new FlashMessage({color: "green", content : localization.designview.saved});
-                                          }
-                                        }).send();
-                });
+            var saveAsDraftButton = new Button({
+                text: localization.saveAsDraft,
+                color: 'blue',
+                onClick: function() {
+                    mixpanel.track('Click save as draft');
+                    model.document().save(function() {
+                      new Submit({
+                        ajax : 'true',
+                        method : 'POST',
+                        url : '/d/save/' + view.model.document().documentid(),
+                        ajaxsuccess : function() {
+                          new FlashMessage({color: "green", content : localization.designview.saved});
+                        }
+                      }).send();
+                    });
+                }
             });
 
-            return div;
+            return saveAsDraftButton.el();
         },
         saveAsTemplate: function() {
             var view = this;
-            var viewmodel = view.model;
+            var model = view.model;
 
-            var div = $('<div />');
-            div.addClass('design-view-button2');
-            div.append($('<div />')
-                       .addClass('design-view-button2-text')
-                       .append(localization.saveAsTemplate));
-
-            div.click(function() {
-                viewmodel.document().makeTemplate();
-                viewmodel.document().save();
-                mixpanel.track('Click save as template');
+            var saveAsTemplateButton = new Button({
+                text: localization.saveAsTemplate,
+                color: 'blue',
+                onClick: function() {
+                    model.document().makeTemplate();
+                    model.document().save();
+                    mixpanel.track('Click save as template');
+                }
             });
 
-            return div;
+            return saveAsTemplateButton.el();
         },
         send: function() {
             var view = this;
 
-            this.sendButton = $('<div />');
-            this.sendButton .addClass('design-view-button3');
-            this.sendButton .append($('<div />')
-                       .addClass('design-view-button3-text')
-                       .append(localization.designview.startSigning));
+            this.sendButton = new Button({
+                text: localization.designview.startSigning,
+                color: 'green',
+                cssClass: 'sendButton'
+            }).el();
             this.updateSaveButton();
-            return this.sendButton ;
+            return this.sendButton;
         },
         updateSaveButton : function() {
            if (this.sendButton != undefined) {
              if (this.model.document().hasProblems(true)) {
-              this.sendButton.removeClass("active");
+              this.sendButton.addClass('disabled');
               this.sendButton.unbind('click');
              } else  {
-              this.sendButton.addClass("active");
+              this.sendButton.removeClass("disabled");
               this.sendButton.unbind('click').click(this.finalClick);
              }
            }
         },
         removeDocumentButton: function() {
             var view = this;
-            var viewmodel = view.model;
-            var doc = viewmodel.document();
+            var model = view.model;
+            var doc = model.document();
 
-            var div = $('<div />');
-            div.addClass('design-view-button-remove');
-            div.append(view.removeDocumentButtonLabel());
-            div.click(function() {
-                mixpanel.track('Click remove file');
-                doc.markAsNotReady();
-                doc.removeTypeSetters();
-                doc.save();
-                doc.afterSave( function() {
-                    new Submit({
-                        method : "POST",
-                        url :  "/api/frontend/changemainfile/" + doc.documentid(),
-                        ajax: true,
-                        onSend: function() {
+            var removeDocumentButton = new Button({
+                text: localization.designview.removeThisDocument,
+                color: 'blue',
+                onClick: function() {
+                    mixpanel.track('Click remove file');
+                    doc.markAsNotReady();
+                    doc.removeTypeSetters();
+                    doc.save();
+                    doc.afterSave(function() {
+                        new Submit({
+                            method : "POST",
+                            url :  "/api/frontend/changemainfile/" + doc.documentid(),
+                            ajax: true,
+                            onSend: function() {
 
-                        },
-                        ajaxerror: function(d,a){
-                            doc.recall();
-                        },
-                        ajaxsuccess: function() {
-                            doc.recall();
+                            },
+                            ajaxerror: function(d,a){
+                                doc.recall();
+                            },
+                            ajaxsuccess: function() {
+                                doc.recall();
 
-                        }}).send();
-                });
-
+                            }}).send();
+                    });
+                }
             });
-            return div;
-        },
-        removeDocumentButtonLabel: function() {
-            var view = this;
-            var div = $('<div />');
-            div.addClass('design-view-button-remove-label');
-            div.append(localization.designview.removeThisDocument);
-            return div;
 
+            return removeDocumentButton.el();
         },
         finalClick: function() {
             var view = this;
@@ -246,54 +235,55 @@
                 var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
                 var callback = function(params) {
                     document.afterSave(function(){
-                      document.verifyEleg().sendAjax(function(resp) {
+                      document.verifyEleg().addMany(params).sendAjax(function(resp) {
                         var resp = JSON.parse(resp);
                         if (resp.verified) {
-                          document.makeReadyForSigning().sendAjax(function(docdata) {
+                          document.makeReadyForSigning().add("skipauthorinvitation","YES").sendAjax(function(docdata) {
                             var newdoc = new Document(new Document({}).parse(docdata));
+                            newdoc.set({"screenshots" : document.get("screenshots")}); // We need to propagate screenshots
                             newdoc.sign().addMany(params).sendAjax(function() {
                                 window.location.reload();
                             });
                           });
                         }
                         else {
-                          new FlashMessage({color: "red", content: "Elegitimation varification failed"});
+                          new FlashMessage({color: "red", content: "Elegitimation verification failed"});
                           if (view.confirmationpopup != undefined) view.confirmationpopup.close();
                         }
                       });
 
                     });
                 };
+                var bankidclicked = false;
                 bankid.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (bankidclicked) return false; else bankidclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'BankID'
                     });
                     document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, callback); });
                     return false;
                 });
+                var teliaclicked = false;
                 telia.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (teliaclicked) return false; else teliaclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Telia'
                     });
                     document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, callback); });
                     return false;
                 });
+                var nordeaclicked = false;
                 nordea.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (nordeaclicked) return false; else nordeaclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Nordea'
                     });
                     document.takeSigningScreenshot(function() { Eleg.nordeaSign(document,signatory,callback); });
                     return false;
                 });
+                var mbiclicked = false;
                 mbi.click(function() {
-                    if (alreadyClicked(acceptButton))
-                        return false;
+                    if (mbiclicked) return false; else mbiclicked = true;
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Mobile BankID'
                     });
@@ -303,13 +293,11 @@
                 acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
             } else {
                 acceptButton = new Button({
-                    size: "tiny",
-                    color : "blue",
+                    color : "green",
                     shape : "rounded",
                     text : localization.designview.sign,
+                    oneClick : true,
                     onClick : function() {
-                        if (alreadyClicked(this))
-                            return;
                         mixpanel.track('Click accept sign', {
                             'Button' : 'sign'
                         });
@@ -338,6 +326,7 @@
             }
             this.confirmationpopup = Confirmation.popup({
                 title : localization.signByAuthor.modalTitle,
+                icon : '/img/modal-icons/sign.png',
                 acceptButton : acceptButton,
                 rejectText: localization.cancel,
                 content  : content
@@ -348,23 +337,21 @@
             var model = view.model;
             var document = model.document();
             var signatory = document.currentSignatory();
-            var box = $('<div />');
+            var box = $('<div class="send-modal-body"/>');
             var content = $("<p/>").append($("<span/>").append(localization.process.confirmsendtext));
             if (!document.authorIsOnlySignatory())
-                    content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
-            content.append($("<span>?</span>"));
+                    content.append($("<span/>").text(localization.to + ': ')).append("<br /><span class='unsignedpartynotcurrent'/>");
             box.append(DocumentDataFiller.fill(document,content));
 
             Confirmation.popup({
                 title : localization.process.confirmsendtitle,
+                icon: '/img/modal-icons/send.png',
                 acceptButton : new Button({
-                    size: "tiny",
                     color : "green",
                     shape : "rounded",
                     text : localization.process.sendbuttontext,
+                    oneClick : true,
                     onClick : function() {
-                        if (alreadyClicked(this))
-                            return;
                         mixpanel.track('Click accept sign', {
                             'Button' : 'send'
                         });
@@ -481,6 +468,7 @@
             view.topBar.css({position:'relative',
                              top: '',
                              left: ''});
+	    // needs to be the same value, as the padding-top value set in frame.less on '.design-view-document-container'
             view.docView.css({'padding-top' : 20});
         },
         affix: function() {

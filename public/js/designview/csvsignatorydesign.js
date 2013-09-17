@@ -157,6 +157,8 @@ var CsvSignatoryDesignView = Backbone.View.extend({
       table.append(thead).append(tbody);
       var fieldnames = this.model.header();
 
+      if (!this.model.header()) return $('<div />');
+
       for(var i=0;i<this.model.header().length;i++)
          thead.append($("<th />").text(this.headerName(this.model.header()[i])));
 
@@ -184,17 +186,15 @@ var CsvSignatoryDesignView = Backbone.View.extend({
       }
       return table;
     },
-    firstUploadBox : function(){
+    uploadButton : function(){
          var model = this.model;
-         var box = $("<div class='option-box middle-box'>");
-         var header = $("<div class='header'/>").text(localization.csv.selectFileHeader);
-         var subheader = $("<div class='sheader'/>").text(localization.csv.selectFileSubheader);
          var uploadButton = new UploadButton({
                     name: "csv",
-                    color : "green",
-                    size: "small",
+                    color : "black",
+                    shape: 'rounded',
+                    width: 300,
+                    size: "big",
                     text: localization.csv.selectFile,
-                    width: 200,
                     type: "application/csv",
                     onAppend : function(input) {
                         setTimeout(function() {model.upload($(input));},100);
@@ -202,27 +202,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     },
                     onError : function() {}
             });
-         box.append(header);
-         box.append(subheader);
-         box.append($("<div class='buttonbox'/>").append(uploadButton.el()));
-         return box;
-    },
-    nextUploadButton : function(){
-         var model = this.model;
-         var uploadButton = new UploadButton({
-                    name: "csv",
-                    color : "green",
-                    size: "tiny",
-                    text: localization.csv.selectOtherFile,
-                    width: 100,
-                    type: "application/csv",
-                    onAppend : function(input) {
-                        setTimeout(function() {model.upload($(input));},100);
-
-                    },
-                    onError : function() {}
-            });
-         return uploadButton();
+         return $("<div class='buttonbox'/>").append(uploadButton.el());
     },
     render: function () {
         var view = this;
@@ -231,12 +211,24 @@ var CsvSignatoryDesignView = Backbone.View.extend({
         this.container.addClass("designCSVSignatoryPopupContent");
         this.container.empty();
         if (model.isEmpty()) {
-            this.container.append(this.firstUploadBox());
+            this.container.append(this.uploadButton());
         }
         else {
-            this.container.append(this.generalProblemsList());
-            this.container.append(this.dataTable());
-            this.container.append(this.nextUploadButton());
+            var scrollable = $('<div class="designCSVSignatoryPopupScroll" />');
+            this.container.addClass('file-uploaded');
+            scrollable.append(this.generalProblemsList());
+            scrollable.append(this.dataTable());
+            this.container.append(scrollable);
+            this.container.append(this.uploadButton());
+
+            // Make a slightly ugly thing here...
+            if (model.rows()) {
+                var participants = model.rows().length;
+                // TODO rework this so languages that don't have the number in the beginning of the sentence can be translated.
+                $('.modal-subtitle').text(participants + ' ' + localization.designview.participantsInFile);
+            } else {
+                $('.modal-subtitle').text(localization.csv.subtitle); // reset to the normal text.
+            }
         }
         return this;
     }
@@ -259,9 +251,11 @@ window.CsvSignatoryDesignPopup =  function(args) {
          var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")});
          var popup = Confirmation.popup({
               content  : $(view.el),
+              icon: '/img/modal-icons/multisend.png',
+              subtitle: localization.csv.subtitle,
               title  : localization.csv.title,
-              acceptText: localization.save,
-              width: 960,
+              acceptText: localization.done,
+              width: 1018,
               acceptVisible : model.ready(),
               onAccept : function() {
                   if (csvSignatory == undefined) {

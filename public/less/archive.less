@@ -1,16 +1,58 @@
+@import 'designview/util.less';
+@import 'branding/colors.less';
+
+.archive, .admin {
+    .list-container {
+        border: none;
+        width: 1018px;
+        margin: auto;
+        background: transparent;
+
+        .table {
+            border: none;
+            thead {
+                background: @grey;
+            }
+            tr:hover {
+                background: @slightly-darker-grey-background;
+            }
+        }
+    }
+
+    .option-top-box {
+        border-bottom: none;
+        // align to menu and the list.
+        .col.float-left, .col.float-right {
+            margin: 0;
+        }
+        .subbox {
+            padding-left: 0px;
+            padding-right: 0px;
+
+            .options-box .select {
+                margin-right: 0px;
+            }
+        }
+    }
+
+    .tab-viewer-header .tabs li.active > h5{
+        font-weight: 400;
+    }
+}
+
 .archive .scrolled .option-top-box{
     position: fixed;
-    top: -61px;
-    background : #ffffff;
+    top: -57px;
+    height: 113px;
     width: 1018px;
-    border-bottom : 1px solid #808080;
-
+    background: @grey-background;
 }
+
 .table-statuses {
       background: #fff;
       border: 1px solid #e0e0e0;
       border-radius: 3px;
-      color: #999;
+      color: @text-medium;
       font-size: 13px;
       margin-top: 10px;
       padding: 10px 10px;
@@ -18,9 +60,10 @@
       line-height: 13px;
       -moz-border-radius: 3px;
       -webkit-border-radius: 3px;
-  }
+ }
 
 .table-statuses .icon {
-      margin-top: 1px;
-      margin-left: 8px;
-  }
+      margin-top: -4px;
+      margin-left: 30px;
+      &.first { margin-left: 4px }
+ }

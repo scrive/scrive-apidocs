@@ -1,113 +1,106 @@
 @import 'branding/colors';
+@import 'branding/elements';
+@import 'designview/util';
 
 .authorview {
-
-  .subcontainer {
-      background-color: #F0F0F0;
-      background-image: url("../img/horizontal-shading-bar.png");
-      background-repeat: no-repeat;
-      box-shadow: 1px 1px 5px #505050 inset;
-      padding-bottom: 23px;
-      padding-top: 10px;
+  padding-bottom: 61px;
+  .signatories-box {
+    margin-right: 36px;
   }
 
   .history-box {
-      width : 960px;
-      background-color : #FFFFFF;
-      border: 1px solid #BABABC;
-      margin-top: 20px;
-      padding : 10px 29px;
+      width : 1018px;
+      margin: 0 auto;
       .headline {
-        text-transform: uppercase;
-        color: black;
-        font-size: 16px;
-        margin: 20px;
+        background-color: @slightly-darker-grey-background;
+        border: 1px solid @dark-border;
+        color: #333;
+        font-size: 20px;
+        line-height: 18px;
+        margin: 15px 0px 25px;
+        padding: 22px;
         text-align : center;
       }
 
+      .document-history-container {
+        box-sizing: border-box;
+        border: 1px solid @dark-border;
+      }
+
+      .table > table {
+        border: none;
+        thead > tr {
+          border-top: none;
+        }
+      }
   }
 
   .titlebox {
-    background-color: white;
     padding-top: 40px;
     padding-bottom: 25px;
-    border: solid #bababc 1px;
     text-align: center;
-    font-weight: bold;
     margin-left: auto;
     margin-right: auto;
     .headline {
-      text-transform: uppercase;
-      color: black;
-      font-size: x-large;
-      margin-bottom: 5px;
+      color: #4A4A49;
+      font-size: 24px;
+      font-weight: 400;
     }
     .subheadline {
       margin-left: auto;
       margin-right: auto;
-      margin-top: 12px;
-      margin-bottom : 15px;
+      margin-top: 11px;
     }
     .duedate {
-        margin-right: 40px;
-        display: inline;
         font-weight: normal;
+        display: block;
+        margin-bottom : 28px;
     }
 
     a.download {
         background: url(../img/senddoc.png) no-repeat;
         padding-left: 20px;
         font-weight: normal;
-        display: inline;
     }
     .buttonbox {
-      margin: 10px auto 0;
+      margin: 32px auto 0;
       text-align : center;
-      .button {
-        display : inline-block;
-        min-width: 200px;
-        margin-left: 10px;
-        margin-tight : 10px;
-      }
     }
   }
 
   .section {
       padding-top: 20px;
+      padding-bottom: 10px;
       margin-left: auto;
       margin-right: auto;
-
+      border: 1px solid @dark-border;
       clear: both;
       background-color: white;
-      background-repeat: no-repeat;
       overflow: hidden;
-      margin-top: 17px;
-      width: 924px;
-      box-shadow: 1px 1px 5px #505050;
+      margin-top: 35px;
+      width: 1018px;
+      box-sizing: border-box;
       h2 {
           float: left;
           width: 260px;
           margin-bottom: 20px;
-          text-transform: uppercase;
-          color: black;
-          font-weight: normal;
+          color: @dark-text;
           padding-left: 30px;
-          font-size: large;
+          font-size: 20px;
+          font-weight: 300;
         }
     }
 
   .column.spacing {
           margin-right: 20px;
-      }
+  }
 
-  .section.spacing {
-          padding: 15px;
-      }
+  .subcontainer {
+      margin-bottom: 35px;
+  }
 
   .subcontainer .signatories {
-
       div.spacing {
-          padding: 8px;
           .butt {
             padding-bottom: 0px;
             margin-bottom: 0px;
@@ -124,112 +117,106 @@
           margin-top: 4px;
       }
 
-      .sig .name {
-          margin-bottom: 2px;
+      .inner .details, .titleinfo, .statusbox, .optionbox {
+	  padding:10px;
       }
 
-      .sig .name.first {
-          margin-top: 0px;
+      padding-bottom: 30px;
+      padding-top: 30px;
+
+      .signatory-box {
+          border: solid @dark-border 1px;
+          background: @grey-background;
+          vertical-align: top;
+	  padding: 15px;
+	  min-width:269px;
       }
 
-      padding-bottom: 35px;
-      padding-top: 35px;
-      td.signatory-box {
-          border: solid #bababc 1px;
-          vertical-align : top;
-      }
-      td.signatory-box-separator {
+      .signatory-box-separator {
           width: 20px;
       }  
+
       .column {
           display: inline-block;
-          width: 270px;
+          width: 100%;
           min-height: 125px;
-          &.spacing {  
+          &.spacing {
             margin-right: 0px;
           }
+	  .sig {
+	      &:first-child {
+		  padding-top:0px;
+	      }
+	      padding: 10px;
+	      border-bottom: 1px dashed #ccc;
+	      &:last-child {
+		  padding-bottom:0px;
+		  border-bottom:none;
+	      }
+	  }
+
       }
 
       .name {
-          color: black;
+          color: @text-dark;
           font-size: 16px;
-          height: 19px;
       }
 
       .company {
-          color: black;
-          height: 14.5px;
-      }
-
-      .face {
-          background-image: url('../img/missing-portrait.png');
-          background-size: cover;
-          width: 60px;
-          height: 50px;
-          float: left;
+          font-size: 14px;
+          margin-bottom: 5px;
       }
 
       .inner {
-          margin-top: 10px;
-          min-height: 52px;
+          min-height: 75px;
           color : #505050;
+          border-top: 1px dashed #ccc;
       }
+
       .inner .email:hover{
               overflow: visible;
       }
 
-      .details {
-          float:left;
-          padding: 0px;
-          margin-left: 12px;
-          margin-top: -2px;
-      }
-
       .field {
           height: 16px;
-          font-size: 14.5px;
-          line-height: 14.5px;
-          width: 160px;
+          font-size: 14px;
+          line-height: 15px;
+          width: 200px;
           text-overflow: ellipsis;
           white-space: nowrap;
           overflow:hidden;
           margin-bottom: 5px;
       }
       .statustext {
-          font-size: 13px;
+          font-size: 14px;
       }
       .statusbox {
-          border-top: 1px dashed;
-          text-align: center;
+          border-top: 1px dashed #ccc;
           font-size: 13px;
           vertical-align: middle;
-          line-height: 13px;
-          margin-top: 20px;
-      }
-
-      .statusbox .spacing {
-          margin-left: auto;
-          margin-right: auto;
       }
 
       .statusbox .icon.status {
-          display: inline-block; 
+          display: inline-block;
           float: none;
           margin-top: 1px;
-      }
-      .line {
-          display: table;
-          overflow: hidden;
-          height: 15px;
-          width: 100%;
+	  margin-right:10px;
       }
 
-      .line .middle {
-          display: table-cell;
-          vertical-align: middle;
-          a {
-            cursor: pointer;
-          }
+      .line {
+          overflow: hidden;
+	  margin-top: 2px;
+	  .middle {
+	      display:inline-block;
+              a {
+		  cursor: pointer;
+              }
+	  }
+	  .details {
+              font-size: 14px;
+	      float:right;
+	  }
+
       }
 
       .signatory {
@@ -246,12 +233,14 @@
         }
       }
      .optionbox {
-        padding: 8px 0px 0px 0px;
-        text-align: center;
-        height : 18px;
+        height : 40px;
+        border-top: 1px dashed #ccc;
+        display: block;
         color: @blueH;
-        .change-email-box {
+        .change-email-box, .change-mobile-box {
+            margin-bottom: 4px;
             display: inline-block;
+            padding: 8px 0px 0px 0px;
             input {
               width: 180px;
               float: left;
@@ -314,19 +303,20 @@
      }
 
   }
+
   .signatoryattachments {
 
     .item {
       margin-bottom : 10px;
       margin-right  : 10px;
       .name {
-        font-weight: bold;
-        color: black;
+        font-weight: 400;
+        color: @dark-text;
       }
     }
 
     .list {
-      float: left;
+      float: right;
       width: 580px;
       margin-left: 23px;
       margin-right: 20px;
@@ -341,5 +331,19 @@
       }
     }
 
+  }
+
+  .document-pages {
+      margin: 25px auto 0 auto;
+      padding: 35px;
+      border: 1px dashed #cccccc;
+      border: 1px dashed @dark-border;
+      .border-radius(5px, 5px, 5px, 5px);
+      .pagediv {
+	  &#page1 {
+	      margin-top:0px;
+	  }
+	  margin-top:35px;
+      }
   }
 }

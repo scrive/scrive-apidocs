@@ -1,69 +1,58 @@
 header.site {
-  min-width: 1020px;
-  &.thin { min-width: 960px; }
+  min-width: 1018px;
+  &.thin { min-width: 960px; } // related to tablets
   top : 0;
   left : 0;
   width : 100%;
   z-index : 100;
-  background : #fff;
-  border-top : 3px solid #fff;
-  box-shadow : b10 0 0 8px;
-  background : w97;
-  background : #fff;
-  font-size: 16px;
+  background : #495259;
+  font-size: @regular-font-size;
+  font-family: @source;
   nav {
     position : relative;
-    border-top : 1px solid @blue-border;
-    min-height : 95px;
-    border-bottom : 1px solid @blue-border;
+    height: 80px;
+    border-bottom : 1px solid black;
+    .box-shadow(0 4px 0 rgba(0, 0, 0, 0.1));
     ul.ct {
       .clearfix;
-      min-height : 95px;
+      height: 80px;
       margin: 0 auto;
-      width: 1020px;
+      width: 1018px;
+      &.thin { width: 960px; } // related to tablets, can't be wider in ipad
       position : relative;
-      &.thin { width: 960px; }
       li {
-        border-left : 1px solid @blue-border;
         height : 24px;
-        margin : 35px 0 34px;
+        margin : 32px 0 24px;
         a.page {
-          display : inline-block;
-          font : 1em/95px @source;
+          display : block;
+          font : 15px/80px @source;
           text-align : center;
-          color : @text-medium;
-          text-shadow : #fff 0 1px 0;
-          min-height : 95px + 4px;
-          margin-top : -39px;
+          color : @text-very-light;
+          height : 80px;
+          margin-top : -37px;
           border-top : 4px solid transparent;
-          transition : .15s ease-in-out all;
           padding: 0 1em;
           &.last-link {
             padding: 0 0 0 1em;
           }
           &:hover {
-            border-top-color : @blue-medium;
-            color : @blue-medium;
+            color : @text-light;
           }
          &.active {
-          border-top-color: #C2000A;
-          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-          color: #C2000A;
-          cursor: default;
           font-weight: bold;
+          cursor: default;
           }
         }
         &.session-login {
           margin-right: 16px;
+          margin-top: 23px;
           width : auto;
           .clearfix;
-          a.button.button-small {
+          a.button {
             margin-top : -4px;
             margin-left: 8px;
             margin-right : 0px;
             min-width : 32px;
-            padding-left:10px;
-            padding-right:10px;
             float : left;
             transform : translateZ(0);
             #page-login{
@@ -72,14 +61,17 @@ header.site {
           }
         }
         &.session-create {
-          padding-right : 30px;
-          width : 140px;
+          padding-right : 10px;
           .clearfix;
-          a.button.button-small {
-            width: 120px;
-            margin-top : -4px;
+          &.fromtemplate {
+            // be careful with this, sometimes we pop down from the header in branded domains
+            padding-right: 40px; 
+          }
+          a.button {
+            margin-top : -14px;
+            font-size: @regular-font-size;
             margin-right : 0px;
-            min-width : 40px;
+            padding: 14px 20px;
             float : left;
             transform : translateZ(0);
           }
@@ -98,22 +90,12 @@ header.site {
           a#logo {
             display : block;
             text-align : left;
-            padding-left: 14px;
+            padding-left: 0px;
             img {
-              margin : 27px 0 26px;
+              margin : 20px 0 26px;
               padding-top: 10px;
               padding-bottom: 10px;
             }
-          }
-          #tagline {
-            position : absolute;
-            top  : 12px;
-            left : 150px;
-            font-weight : normal;
-            display : none;
-            font-size : 1em;
-            cursor : pointer;
-            width : 140px;
           }
         }
       }

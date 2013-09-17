@@ -24,7 +24,7 @@ var OauthDashboardModel = Backbone.Model.extend({
           name : "Personal Access Token",
           bottomExtras : function(elemCount) {
             if (elemCount == 0)
-              return $("<div style='margin-top:5px;margin-bottom:5px;'/>").append(new Button({
+              return $("<div style='margin-left:1px;margin-top:12px;margin-bottom:5px;'/>").append(new Button({
                               size: "tiny",
                               color: "green",
                               text: localization.apiDashboard.personalTokenCreate,
@@ -104,7 +104,7 @@ var OauthDashboardModel = Backbone.Model.extend({
         var self = this;
         return  new KontraList({
           name : "Granted Privileges",
-          bottomExtras: jQuery("<div style='margin-top:5px;margin-bottom:5px;'/>").append(new Button({
+          bottomExtras: jQuery("<div style='margin-left:1px;margin-top:12px;margin-bottom:5px;'/>").append(new Button({
                             size: "tiny",
                             color: "green",
                             text: localization.apiDashboard.apiTokenCreate,

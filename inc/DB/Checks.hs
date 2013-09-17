@@ -271,8 +271,8 @@ checkDBConsistency logger tables migrations = do
 
         checkColumns :: Int -> [TableColumn] -> [TableColumn] -> ValidationResult
         checkColumns _ [] [] = mempty
-        checkColumns _ rest [] = ValidationOk $ map (\col -> "ALTER TABLE" <+> raw tblName <+> "ADD COLUMN" <+> columnToSQL col) rest
-        checkColumns !n [] rest = ValidationError $ "Table in database has too many columns (definition: " ++ show n ++ ", database: " ++ show (n + length rest) ++ ")"
+        checkColumns _ rest [] = ValidationError $ "Table '" ++ tblNameString table ++ "' needs to have columns added: " ++ show (map (\col -> "ALTER TABLE" <+> raw tblName <+> "ADD COLUMN" <+> columnToSQL col) rest)
+        checkColumns !n [] rest = ValidationError $ "Table '" ++ tblNameString table ++ "' in database has too many columns (definition: " ++ show n ++ ", database: " ++ show (n + length rest) ++ ")"
         checkColumns !n (d:defs) (c:cols) = mconcat [
             validateNames $ colName d == colName c
           -- bigserial == bigint + autoincrement and there is no

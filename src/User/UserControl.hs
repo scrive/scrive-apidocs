@@ -291,11 +291,13 @@ handleAccountSetupGetWithMethod :: Kontrakcja m => UserID -> MagicHash -> Signup
 handleAccountSetupGetWithMethod uid token sm = do
   ctx <- getContext
   muser <- getUserAccountRequestUser uid token
-  case (muser, userhasacceptedtermsofservice =<< muser) of
-    (Just user, Nothing) -> do
+  case (muser, userhasacceptedtermsofservice =<< muser, ctxmaybeuser ctx) of
+    (Just user, Nothing,_) -> do
       company <-  getCompanyForUser user
       companyui <- dbQuery $ GetCompanyUI (usercompany user)
       mbd <- return $ currentBrandedDomain ctx
+      let background =
+              companycustombackgroundcolour companyui `mplus` (bdbackgroundcolorexternal <$>  mbd) `mplus` (bdbackgroundcolour <$> mbd)
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
@@ -304,13 +306,11 @@ handleAccountSetupGetWithMethod uid token sm = do
                                             F.value "companyAdmin" $ useriscompanyadmin user
                                             F.value "signupmethod" $ show sm
                                             brandingFields mbd (Just companyui)
+                                            F.value "backgroundcolour" background
                                             ))
-    (Just _user, Just _) -> do
-      -- this case looks impossible since we delete the account request upon signing up
-      -- but may it happen if they sign tos in some other way?
-      return $ Left $ LinkLogin (ctxlang ctx) NotLogged
-    _ -> do
-      return $ Left $ LinkSignup $ ctxlang ctx
+    (Just _user, Just _, Just _)  -> return $ Left $ LinkDesignView
+    (Just _user, Just _, Nothing) -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
+    _ -> return $ Left $ LinkSignup $ ctxlang ctx
 
 handleAccountSetupPostWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPostWithMethod uid token sm = do

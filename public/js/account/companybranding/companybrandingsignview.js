@@ -81,47 +81,50 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var company = this.model;
 
     this.container = $("<div class='sample-sign-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
-    this.header = $("<div class='sample-sign-view-header' style='min-height: 70px; width: 100%;border-bottom: 1px solid #DEE4ED'/>");
+    this.header = $("<div class='sample-sign-view-header' style='min-height: 50px; width: 100%;border-bottom: 1px solid #DEE4ED '/>");
 
     this.logo = $('<img/>');
-    var leftheader = $('<div style="float: left; margin: 20px;"/>');
+    var leftheader = $('<div style="float: left; margin: 10px;"/>');
     leftheader.append(this.logo);
-    this.rightheader = $('<div style="float: right; margin: 20px;font-size: 10px;"/>');
+    this.rightheader = $('<div style="float: right; margin: 10px;font-size: 10px;"/>');
     this.rightheader.text('HEADER TEXT');
     this.header.append(leftheader).append(this.rightheader).append($('<div style="clear:both;"/>'));
 
-    this.contentheader = $('<div style="text-align: center; border: 1px solid #BABABC; background:#ffffff;font-size: 12px;font-weight: bold;"/>');
-    this.contentheader.html('WELCOME JOHN SMITH<br/>Due date 2013-01-01');
-    var documentpic = $('<img src="/img/document_example.png" style="width: 480px;margin:10px;"/>')
-                        .css("width","480px").css("margin","10px").css("border","1px solid #777777").css("box-shadow","1px 1px 5px #505050");
 
-    var document = $("<div/>").css("margin","auto").css("text-align","center");
+    this.contentheader = $('<div style="text-align: center;padding-top:5px;font-size: 12px;box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);background-color: white;margin-bottom:10px;"/>');
+    this.contentheader.html('<p style="font-size: 18px;margin-bottom: 0px;">Follow the <span style="color:#53b688" class="highlight-green">GREEN ARROW</span> to e-sign</p><p style="margin-right: 20px;font-weight: normal;margin-bottom: 1px;">Due date 2020-09-16</p><p style="background: url(../img/senddoc.png) no-repeat;padding-left: 20px;font-weight: normal;display: inline-block;background-position: 0px 2px;position: relative;font-size:11px;left: -10px;color: #7a94b8;cursor: pointer;margin-bottom:8px;">MyNewsdesk demo document</p>');
+    var documentpic = $('<img src="/img/document_example.png" style="box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);width: 480px;"/>')
+                        .css("width","480px");
+
+    var document = $("<div/>").css("border", "1px dashed #cccccc")
+      .css("padding", "10px").css("text-align","center");
+    document.append(this.contentheader);
     document.append(documentpic);
     var rejectbuttoncontainer = $('<div style="float: left;padding:10px;"/>');
     var rejectbutton = new Button({size: 'tiny',
-                                    color: 'red',
-                                    shape: "rounded",
+                                    color: 'blue',
+                                    shape: 'rounded',
                                     width: 150,
                                     text: 'Reject document',
                                     onClick: function() {}});
     rejectbuttoncontainer.append(rejectbutton.el());
     var signbuttoncontainer = $('<div style="float: right;padding:10px;"/>');
     var signbutton = new Button({size: 'tiny',
-                                  color: 'blue',
-                                  shape: "rounded",
+                                  color: 'green',
+                                  shape: 'rounded',
                                   width: 150,
                                   text: 'Sign document',
                                   onClick: function() {}});
     signbuttoncontainer.append(signbutton.el());
-    var buttonsdiv = $('<div style="height: 56px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;margin: 0 10px; background:#ffffff;box-shadow: 1px 1px 5px #505050;"/>');
+    var buttonsdiv = $('<div style="height: 56px; text-align: center; border-top-width: 1px; border-top-color: #eee; border-top-style: solid;margin: 10px 0px;box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);background-color:white;"/>');
     buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
     var contentcontent = $('<div/>').css("width","500px").css("margin","auto")
-                              .css("background-image", "url('/img/horizontal-shading-bar.png')").css("background-color","#F0F0F0")
-                              .css("background-repeat","no-repeat").css("box-shadow","1px 1px 5px #505050 inset").css("padding-bottom", "10px");
-    contentcontent.append(this.contentheader).append(document).append(buttonsdiv);
-    var contentpadding = $('<div style="height: 30px; width: 100%;"/>');
+      .css("padding-bottom", "10px").css("padding-top", "15px");
+    
+    document.append(buttonsdiv);
+    contentcontent.append(document);
     this.content = $('<div style="padding-bottom:20px;"/>');
-    this.content.append(contentpadding).append(contentcontent);
+    this.content.append(contentcontent);
 
     this.footercontent = $('<div style="text-align: center;"/>');
     this.footercontent.text('FOOTER TEXT');
@@ -147,18 +150,17 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
   changeLogo : function(logo) {
     var self = this;
     this.logo.css("width","").css("height","").attr('src', '');
-    this.logo.attr('src', logo);
-    var scaleWhenComplete = function() {
-      if (self.logo[0].complete && self.logo.width() > 0) {
-        var w = self.logo.width();
-        var h = self.logo.height();
-        self.logo.css("width", Math.ceil(3*w/5) + "px").css("height",Math.ceil(3*h/5) + "px");
-      }
-      else setTimeout(scaleWhenComplete,5);
-    };
-    if (!BrowserInfo.isIE8orLower()) //Scaling inlined images with css properties fails in IE
-      setTimeout(scaleWhenComplete,5);
-
+    var submit = new Submit({method: 'POST',
+                             url: '/scale_image',
+                             ajax: true,
+                             ajaxsuccess: function (rs) {
+                               var response = JSON.parse(rs);
+                               var logo_base64 = response.logo_base64;
+                               self.logo.attr('src', logo_base64);
+                             }
+                            });
+    submit.add('logo', logo);
+    submit.send();
   },
   changeTextColor : function(signviewtextcolour) {
     this.contentheader.css('color', signviewtextcolour);
@@ -180,7 +182,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     if (customized || this.model.companyui().domainbackgroundcolour() != "")
       this.content.css('background-color', signviewbackgroundcolour);
     else
-      this.content.css('background-color', '');
+      this.content.css('background-color', '#F7F7F7');
   },
   render: function() {
 
@@ -204,11 +206,8 @@ window.CompanyBrandingSignViewView = Backbone.View.extend({
   render: function() {
     var container = $(this.el);
     $(this.el).empty();
-    var options = $("<div style='width: 220px; margin:20px 0px 20px 20px; display: inline-block;vertical-align: top;height: 100%'/>");
+    var options = $("<div style='width: 220px; margin:10px 0px 20px 20px; display: inline-block;vertical-align: top;height: 100%'/>");
     container.append(options);
-
-
-    options.append($("<h5 style='margin-bottom: 10px'/>").text(localization.companyBranding.customize));
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.signviewlogo().el()));
 
@@ -222,7 +221,7 @@ window.CompanyBrandingSignViewView = Backbone.View.extend({
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.signviewbackgroundcolour().el()));
 
-    var sample = $("<div style='width: 600px;   margin:20px; padding-left: 30px; border-left: 1px solid #333333; display: inline-block;'/>");
+    var sample = $("<div class='branding-container'/>");
     container.append(sample.append(new CompanyBrandingSignViewSampleView({model : this.model, el : $("<div/>")}).el));
 
     $(this.el).append("<div class='clearfix'></div>");

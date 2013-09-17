@@ -408,7 +408,6 @@ handleProlong docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
   guardRightM $ prolongDocument doc
   triggerAPICallbackIfThereIsOne doc
-  addFlashM $ flashDocumentProlonged doc
   return $ LinkIssueDoc (documentid doc)
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
@@ -419,7 +418,6 @@ handleResend docid signlinkid  = withUserPost $ do
   customMessage <- getOptionalField  asValidInviteText "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
   _ <- sendReminderEmail customMessage ctx actor doc signlink
-  addFlashM $ flashRemindMailSent signlink
   return (LinkIssueDoc docid)
 
 --This only works for undelivered mails. We shoulkd check if current user is author
@@ -665,8 +663,10 @@ switchLangWhenNeeded mslid doc = do
   when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLang (getLang doc)
 -- GuardTime verification page. This can't be external since its a page in our system.
 
-handleShowVerificationPage :: Kontrakcja m =>  m String
-handleShowVerificationPage = gtVerificationPage
+-- withAnonymousContext so the verify page looks like the user is not logged in
+-- (e.g. for default footer & header)
+handleShowVerificationPage :: Kontrakcja m =>  m Response
+handleShowVerificationPage = withAnonymousContext gtVerificationPage
 
 handleVerify :: Kontrakcja m => m JSValue
 handleVerify = do

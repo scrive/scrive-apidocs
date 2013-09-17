@@ -1,9 +1,9 @@
 ###
 priceplanPage=
 <div class="mainContainer" >
-  <div class="body-container">
+  <div class="body-container pricing">
 
-    <div class="js-price-plan price-plan"></div>
+    <div class="js-price-plan price-plan price-plan-outside"></div>
     <script>
       jQuery('body').css('background','none repeat scroll 0 0 #FFFFFF');
       jQuery('.price-plan-page-link').addClass('active');
@@ -16,7 +16,7 @@ priceplanPage=
 ###
 priceplanPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>$pagetitle()$</title>
@@ -46,5 +46,5 @@ $doctype()$
     </script>
 
   </body>
-</html>
+$htmlclosingtag()$
 ####

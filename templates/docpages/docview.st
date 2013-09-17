@@ -4,7 +4,7 @@ pageDocumentView=
 <div class="body-container">
 <script>
 jQuery(function(){
-  jQuery(".body-container").replaceWith(new AuthorView({
+  var authorView = new AuthorView({
     id:"$documentid$"
      $if(siglinkid)$
     , viewer : new DocumentViewer({
@@ -15,7 +15,8 @@ jQuery(function(){
         authorcompanyadmin : true
         })
     $endif$
-  }).el());
+  });
+  jQuery(".body-container").replaceWith(authorView.el());
 });
 mixpanel.register({DocumentID : "$documentid$"
                    $if(siglinkid)$

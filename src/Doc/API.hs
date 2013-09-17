@@ -84,6 +84,10 @@ import Utils.Either
 import Doc.SignatoryScreenshots
 import Doc.Conditions
 import Util.MonadUtils
+import Company.Model
+import Company.CompanyUI
+import User.Utils
+import User.UserView
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -115,8 +119,10 @@ versionedAPI _version = choice [
   dir "padqueue"           $ PadQueue.padqueueAPI,
   dir "changemainfile"     $ hPost $ toK1 $ apiCallChangeMainFile,
 
-  dir "document" $ hPost $ toK6 $ documentUploadSignatoryAttachment,
-  dir "document" $ hDeleteAllowHttp  $ toK6 $ documentDeleteSignatoryAttachment
+  dir "documentbrandingforsignview" $ hGet $ toK2 $ apiCallGetBrandingForSignView,
+
+  dir "addsignatoryattachment"    $ hPost $ toK3 $ documentUploadSignatoryAttachment,
+  dir "deletesignatoryattachment" $ hDeleteAllowHttp  $ toK3 $ documentDeleteSignatoryAttachment
   ]
 
 -- | Windows Explorer set the full path of a file, for example:
@@ -462,7 +468,8 @@ apiCallGet did = api $ do
          doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
          sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
          when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
-         _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
+         when (not (isTemplate doc)) $
+           dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                          (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
          lift $ switchLang (getLang doc)
 
@@ -478,7 +485,7 @@ apiCallGet did = api $ do
         (user, _actor, external) <- getAPIUser APIDocCheck
         doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
         let msiglink = getMaybeSignatoryLink (doc,user)
-        when_ (isJust $ msiglink) $ do
+        when_ ((isJust msiglink) && (not (isPreparation doc)) && (not (isTemplate doc))) $ do
             let sl = fromJust msiglink
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
@@ -637,24 +644,18 @@ apiCallChangeMainFile docid = api $ do
   doc' <- apiGuardL (serverError "No document found after change") $ dbQuery $ GetDocumentByDocumentID $ docid
   Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
 
-
-
-
-data SignatoryResource = SignatoryResource
-instance FromReqURI SignatoryResource where
-    fromReqURI s = Just SignatoryResource <| s == "signatory" |> Nothing
-
-data AttachmentResource = AttachmentResource
-instance FromReqURI AttachmentResource where
-    fromReqURI s = Just AttachmentResource <| s == "attachment" |> Nothing
-
-data FileResource = FileResource
-instance FromReqURI FileResource where
-    fromReqURI s = Just FileResource <| s == "file" |> Nothing
-
-data MetadataResource = MetadataResource
-instance FromReqURI MetadataResource where
-    fromReqURI s = Just MetadataResource <| s == "metadata" |> Nothing
+apiCallGetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
+apiCallGetBrandingForSignView did slid = api $ do
+  ctx <- getContext
+  magichash <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
+  doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
+  sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
+  when (signatorymagichash sl /= magichash) $ throwIO . SomeKontraException $ serverError "No document found"
+  authorid <- apiGuardL (serverError "Document problem | No author") $ return $ getAuthorSigLink doc >>= maybesignatory
+  user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByID authorid
+  company <- getCompanyForUser user
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  Ok <$> signviewBrandingJSON ctx user company companyui
 
 getSigLinkID :: Kontrakcja m => APIMonad m (SignatoryLinkID, MagicHash)
 getSigLinkID = do
@@ -664,8 +665,8 @@ getSigLinkID = do
        (Just sl, Just mh) -> return (sl,mh)
        _ -> throwIO . SomeKontraException $ badInput "The signatorylinkid or magichash were missing."
 
-documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
-documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
+documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
+documentUploadSignatoryAttachment did sid aname = api $ do
   Log.debug $ "sigattachment ajax"
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
@@ -702,8 +703,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
-documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
-documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
+documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  String -> m Response
+documentDeleteSignatoryAttachment did sid aname = api $ do
   Context{ctxtime, ctxipnumber} <- getContext
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash

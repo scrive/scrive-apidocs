@@ -97,7 +97,7 @@ instance InspectXML Password where
 instance InspectXML FlashMessage where
 instance InspectXML Email where
 instance InspectXML SignupMethod where
-instance InspectXML MailsDeliveryStatus where
+instance InspectXML DeliveryStatus where
 instance InspectXML UserInfo where
 instance InspectXML UserSettings where
 instance InspectXML AuthenticationMethod where

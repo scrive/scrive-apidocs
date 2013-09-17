@@ -64,6 +64,8 @@ set systemPage
  less less/designview/documentview.less
  less less/designview/process.less
  less less/designview/welcomemodal.less
+ less less/designview/modals.less
+ less less/terms.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
  jsx  tiny_mce/tinymce.min.js
@@ -136,6 +138,7 @@ set systemPage
  js   js/doctools/docdownload.js
  js   js/doctools/docauthorattachments.js
  js   js/doctools/docevidenceattachments.js
+ js   js/signview/docsignviewbranding.js
  js   js/signview/docsignviewinstructions.js
  js   js/signview/docsignviewsignatories.js
  js   js/signview/docsignviewextradetailssection.js
@@ -197,4 +200,3 @@ set systemPage
  js   js/account/account.js
  js   js/blocking.js
  js   js/oauth.js
-

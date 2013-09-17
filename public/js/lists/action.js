@@ -10,7 +10,7 @@
             name : "",
             acceptEmpty : false,
             color : "black",
-            width : 144, // Default button width
+            size: "normal",
             button : undefined, //Custom button, jQuery object. We don't control it's visability.
             emptyMessage : "", // Message to show when nothing is selected and we dont accept empty
             notAvailableMessage : ""
@@ -45,6 +45,9 @@
         color : function() {
           return this.get("color");
         },
+        size : function() {
+            return this.get("size");
+        },
         width : function() {
           return this.get("width");
         }
@@ -75,7 +78,7 @@
             if (button == undefined)
                 button = new Button({
                                       color : model.color(),
-                                      size : "tiny",
+                                      size : model.size(),
                                       text  : model.name(),
                                       width : model.width(),
                                       onClick : function() { return self.onSelect();}

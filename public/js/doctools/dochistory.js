@@ -6,16 +6,22 @@
 
 var DocumentHistoryModel = Backbone.Model.extend({
   defaults : {
-      showAll : false
+      expanded : false
   },
   initialize : function(){
   },
+  destroy : function() {
+    this.off();
+    this.stopListening();
+    this.historyList().destroy();
+    this.clear();
+  },
   newHistoryList : function() {
-     return  new KontraList({
+     var list = new KontraList({
         name : "Document history",
         schema: new Schema({
             url: "/api/frontend/history/" + this.document().documentid(),
-            paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 15 }),
+            paging : new Paging({disabled: true, showLimit : this.get("expanded") ? undefined : 15 }),
             cells : [
                 new Cell({name: localization.archive.documents.columns.status, width:"46px", field:"status",
                   rendering: function(status) {
@@ -38,6 +44,10 @@ var DocumentHistoryModel = Backbone.Model.extend({
             })
 
     });
+    this.listenTo(list.model(),"change", function() {this.trigger("change:history")});
+    this.listenTo(list.model(),"reset",  function() {this.trigger("change:history")});
+    return list;
+
   },
   historyList : function() {
         if (this.get("historyList") == undefined)
@@ -45,31 +55,45 @@ var DocumentHistoryModel = Backbone.Model.extend({
         return this.get('historyList');
 
   },
-  showAll : function() {
-      return this.get("showAll");
+  checkIfHistoryChangedAndCallback : function(callback) {
+      if (!this.historyList().ready()) { console.log("Not reloading, because list is not ready"); return; }// If we don't have current history, we can't really say that it changed
+      this.historyList().fetchWithCallback(function(currentlist,newlist) {
+         console.log("List fetched, and it is changed: " + (currentlist.length != newlist.length));
+         if (currentlist.length != newlist.length)
+           callback();
+      });
   },
-  toogleShowAll : function() {
-      this.set({'showAll' : !this.showAll() }, {silent : true});
-      this.historyList().setShowLimit(this.get("showAll") ? undefined : 15);
+  expanded : function() {
+      return this.get("expanded");
   },
-  silentFetch : function() {
-      this.historyList().silentFetch();
+  setExpanded : function(bool) {
+      this.set({'expanded' : bool }, {silent : true});
+      this.historyList().setShowLimit(bool ? undefined : 15);
+      this.trigger("change:history");
   },
   document : function(){
        return this.get("document");
+  },
+  ready : function() {
+    console.log("Checking if list is ready " + this.historyList().ready());
+    return this.historyList().ready();
   }
 });
+
 var DocumentHistoryView = Backbone.View.extend({
     initialize: function(args) {
         var self = this;
         _.bindAll(this, 'render');
-        this.model.historyList().model().bind("change", function() {self.render();});
-        this.model.historyList().model().bind("reset", function() {self.render();});
-        var view = this;
+        this.listenTo(this.model,"change:history",self.render);
         this.render();
     },
+    destroy : function() {
+        this.stopListening();
+        this.model.destroy();
+        $(this.el).remove();
+    },
     updateOption : function() {
-         if (this.model.showAll()) {
+         if (this.model.expanded()) {
             this.checkbox.addClass("expanded");
             this.label.text(localization.history.hide);
          }
@@ -86,7 +110,7 @@ var DocumentHistoryView = Backbone.View.extend({
         this.label = $("<div class='label'/>");
         this.updateOption();
         option.click(function() {
-            model.toogleShowAll();
+            model.setExpanded(!model.expanded());
             view.updateOption();
             return false;
         });
@@ -95,19 +119,19 @@ var DocumentHistoryView = Backbone.View.extend({
     render: function() {
       var self = this;
       var container = $(this.el);
-      container.children().detach();
+      this.model.historyList().el().detach();
+      container.empty();
+
       var historyList = this.model.historyList();
 
       container.append(historyList.el());
 
-      var footer = $("<div class='document-history-footer'/>");
-        if (historyList.model().length <= 15)
-            footer.hide();
-        else
-            self.updateOption();
-      footer.append(this.expandAllOption());
-      container.append(footer);
-
+      if (historyList.model().length >= 15) {
+           var footer = $("<div class='document-history-footer'/>");
+           footer.append(this.expandAllOption());
+           container.append(footer);
+           self.updateOption();
+        }
 
       return this;
     }
@@ -124,8 +148,11 @@ window.DocumentHistory = function(args){
                     });
         this.el     = function() {return $(view.el);};
         this.recall = function() { model.recall();};
-        var checkAndRefresh = function(i) {model.silentFetch(); setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+1);},i * 1000)};
-        checkAndRefresh(1);
+        this.expanded = function() { return model.expanded();};
+        this.setExpanded = function(expanded) {model.setExpanded(expanded);};
+        this.ready  = function() {return model.ready()};
+        this.destroy = function() {view.destroy();this.checkIfHistoryChangedAndCallback = function() {};};
+        this.checkIfHistoryChangedAndCallback = function(callback) {return model.checkIfHistoryChangedAndCallback(callback);};
 };
 
 })(window);

@@ -39,7 +39,9 @@ window.CompanyAccountsAndStatsModel = Backbone.Model.extend({
                             self.stats().refresh();
                     }
                   })
-                ]
+                ],
+                innerText: localization.account.companyAccounts.name,
+                inner: true
           })
         });
         return this.tabs();

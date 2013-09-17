@@ -1,16 +1,21 @@
 /* Tab Viewer */
+@import 'designview/util.less'; // refactor
 
 .tab-viewer {
-   width: 1020px;
+   width: 100%;
+   min-width: 1018px;
   .tabs {
-      background: #f4f4f4;
-      border: solid #808080;
-      border-width: 1px 0px 1px 0px;
-      height: 48px;
+      height: 60px;
+      width: 1018px;
+      margin-left: auto;
+      margin-right: auto;
+      & :first-child {
+        padding-left: 0px;
+      } 
       li {
         font-size: 11px;
         height: 20px;
-        padding: 14px 24px;
+        padding: 23px 24px;
         .numbericon {
           background-repeat: no-repeat;
           padding-left:22px;
@@ -26,48 +31,55 @@
           }
         }
         h1,h2,h3,h4,h5,h6 {
+            font-weight: 300;
             color: #000;
             cursor: pointer;
         }
         h5 {
-          font-size: 16px;
+          font-size: 15px;
+        }
+        h4 {
+          font-size: 25px;
+          line-height: 21px;
+          font-weight: 300;
+          margin-left: -5px;
+          cursor: default;
         }
         &.active {
-            background: url(../img/bg-header.jpg);
-            h1,h2,h3,h4,h5,h6 {
-                color: #fff;
-                cursor: pointer;
+            h5 {
+                font-weight: normal;
             }
-        }
-        
-        &.float-left:first-child {
-            border: solid #808080;
-            border-width: 0px 0px 0px 1px;
-        }
-        &.float-right.last-tab {
-            border: solid #808080;
-            border-width: 0px 1px 0px 0px;
-        }
-
-        &.float-right.empty {
-            padding: 0px 0px 0px 0px;
-            height: 60px;
-        }
-
-        &.float-left.active:first-child {
-            border-width: 0;
-        }
-        &.float-right.active.last-tab {
-            border-width: 0;
         }
      }
   }
 
+  .tab-viewer-header {
+    margin-bottom: 15px;
+    width: 100%;
+    background: #fff;
+    border-top: 3px #eee;
+    .box-shadow(0px 4px rgba(0, 0, 0, 0.05));
+  }
+
+  &.inner {
+    .tab-viewer-header {
+      background: none;
+      .box-shadow(none);
+      h5 { padding-top: 4px; }
+    }
+    .tabs {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 5px;
+    }
+    .tab-arrow {
+      margin-left: 10px;
+      width: 12px;
+    }
+  }
+
   .tab-container {
-     border: solid #808080;
-     border-width: 0 1px 1px 1px;
-     -moz-border-radius: 0 0 5px 5px;
-     -webkit-border-radius: 0 0 5px 5px;
+     width: 1018px;
+     margin: auto;
   }
 
 }

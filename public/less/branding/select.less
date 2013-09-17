@@ -1,25 +1,26 @@
 .select{
-    font-family: @sans;
-    font-size : 14.5px;
+    font-family: @source;
+    font-weight: 300;
+    color: #000;
     position: relative;
     cursor: pointer;
     text-align : left;
     background: #fff;
     .select-button {
-            height: 30px;
+            height: 38px;
             position: relative;
             background: #fff;
             .select-button-left {
                     float: left;
-                    height: 30px;
+                    height: 34px;
                     position: relative;
                     width: 6px;
             }
 
             .select-button-right {
                     background: url('/img/select-arrow.png') no-repeat;
-                    background-position: 0px 8px;
-                    height: 30px;
+                    background-position: 0px 11px;
+                    height: 34px;
                     width: 21px;
                     position: relative;
                     float: right;
@@ -29,11 +30,12 @@
                     background-repeat:repeat-y;
                     text-decoration: none;
                     float: left;
-                    padding-top: 5px;
+                    padding-top: 9px;
                     white-space:nowrap;
                     overflow: hidden;
                     text-indent: 5px;
                     line-height: 21px;
+                    color: black;
             }
             .closer {
                 width: 24px;
@@ -58,30 +60,29 @@
         z-index: 5002;
       }
       .select-opts {
-                background: #fff;
-                position: absolute;
-                top: 29px;
-                z-index: 5001;
-                left : -1px ;
-                text-align : left;
-                padding:0px;
-                &.right {
-                  left: auto;
-                  right: -1px;
-                  text-align: right;
-                }
-                li {
-                  text-indent: 9px;
-                  padding: 6px;
-                  height: 20px;
-                  line-height :  22px;
-                  &:hover {
-                    background: @blue-border;
-                        }
-                }
+          background: #fff;
+          position: absolute;
+          top: 37px;
+          z-index: 5001;
+          left : -1px ;
+          text-align : left;
+          padding:0px;
+          &.right {
+              left: auto;
+              right: -1px;
+              text-align: right;
+          }
+          li {
+              text-indent: 5px;
+              padding: 6px;
+              height: 20px;
+              line-height :  22px;
+              &:hover {
+                  background: @slightly-darker-grey-background;
+              }
+          }
       }
     }
-
 }
 
 

@@ -261,7 +261,6 @@
             });
 
             var button = new Button({color: "black",
-                                      size: "tiny",
                                       text: localization.searchBoxButtonText,
                                       cssClass: "float-right search-button",
                                       onClick: function() {

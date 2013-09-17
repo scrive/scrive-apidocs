@@ -18,7 +18,7 @@ loginPage=
 ###
 loginPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>$pagetitle()$</title>
@@ -47,7 +47,7 @@ $doctype()$
   </script>
 
   </body>
-</html>
+$htmlclosingtag()$
 ###
 changePasswordPage=
 <div class='mainContainer big'>
@@ -80,7 +80,7 @@ accessNewAccountPage=
 ###
 changePasswordPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
@@ -101,11 +101,11 @@ $doctype()$
   });
 </script>
   </body>
-</html>
+$htmlclosingtag()$
 ###
 accessNewAccountPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
@@ -130,7 +130,7 @@ $doctype()$
   });
 </script>
   </body>
-</html>
+$htmlclosingtag()$
 ###
 signupPage=
 <div class='mainContainer big'>
@@ -148,7 +148,7 @@ signupPage=
 ######
 signupPageWithBranding=
 $doctype()$
-<html>
+$htmlopentag()$
   <head>
     <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>$pagetitle()$</title>
@@ -173,17 +173,17 @@ $doctype()$
   </script>
 
   </body>
-</html>
+$htmlclosingtag()$
 ###
 accountSetupPage=
 
     $doctype()$
-    <html>
+    $htmlopentag()$
       <head>
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body style="background: $if(custombackground)$$custombackground$$else$none repeat scroll 0 0 #FFFFFF;$endif$">
+      <body style="background: $if(backgroundcolour)$$backgroundcolour$$else$none repeat scroll 0 0 #FFFFFF;$endif$">
 
       $flashmessages()$
 
@@ -209,7 +209,7 @@ accountSetupPage=
                                                   userid : "$userid$",
                                                   signupmethod : "$signupmethod$",
                                                   companyAdmin : $if(companyAdmin)$true$else$false$endif$,
-                                                  buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$blue$endif$",
+                                                  buttoncolorclass : "$if(customdomainbdbuttonclass)$$customdomainbdbuttonclass$$else$green$endif$",
                                                   branded : $if(hasbrandeddomain)$true$else$false$endif$,
                                                   servicelinkcolour: $if(customservicelinkcolour)$"$customservicelinkcolour$"$else$null$endif$
                                                   })
@@ -220,7 +220,7 @@ accountSetupPage=
         </div>
 
       </body>
-    </html>
+    $htmlclosingtag()$
 ###
 pageAcceptTOS =
 <div class='mainContainer big'>

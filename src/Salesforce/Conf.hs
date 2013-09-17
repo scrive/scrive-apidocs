@@ -12,7 +12,10 @@ data SalesforceConf = SalesforceConf {
   , salesforceConsumerKey :: String
   , salesforceConsumerSecret :: String
   , salesforceRedirectUrl :: String
-  } deriving (Show, Read, Eq, Ord)
+    -- oauth_access_token for user that is coresponding to SalesForce service in our system. It should be hardcodded in salesforce plugin, but due to their policy it can't.
+  , salesforceIntegrationAPIToken  :: String
+  , salesforceIntegrationAPISecret :: String
+} deriving (Show, Read, Eq, Ord)
 
 class HasSalesforceConf c where
   getSalesforceConf :: c -> SalesforceConf

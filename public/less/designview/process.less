@@ -1,7 +1,13 @@
 @import 'util.less';
+@import '../branding/colors.less';
 
 .design-view-action-process {
-    background-color: #f2f2f2;
+    font-size: 15px;
+    font-weight: 300;
+    width: 1018px;
+    margin: auto;
+    padding-bottom:14px;
+    background-color: @grey-background;
     border-bottom: 4px solid #fff;
     border-left: 4px solid #fff;
     border-right: 4px solid #fff;
@@ -23,7 +29,7 @@
     vertical-align: top;
     width: 33%;
     height: 170px;
-    margin-top: 16px;
+    margin-top: 19px;
 }
 
 .design-view-action-row {
@@ -102,11 +108,14 @@
 
 .design-view-action-process-left-column-attachments {
     display: inline-block;
-    width : 310px;
+    width : 335px;
+    .ie8 & {
+	width:350px;
+    }
 }
 
 .designview-attachemnts-list {
-  margin-top: 40px;
+  margin-top: 55px;
   .icon-td {
     width:24px;
     .author-attachment-icon {
@@ -128,7 +137,7 @@
     }
   }
   .name-td {
-    width:275px;
+    width: 300px;
     line-height: 16px;
   }
   .remove-td {
@@ -162,20 +171,23 @@
 .design-view-action-process-middle-column {
     display:inline-block;
     .box-sizing(border-box);
-    width: 333px;
-    height: 170px;
-    margin-top: 16px;
-    padding: 4px 16px 8px 16px;
+    width: 307px;
+    height: 200px;
+    margin-top: 15px;
+    padding: 4px 16px 8px 18px;
     vertical-align: top;
 }
 
 .design-view-action-process-right-column {
     display: inline-block;
     .box-sizing(border-box);
-    margin-top: 18px;
+    margin-top: 19px;
     width: 34%;
     min-height: 170px;
     padding: 0px 16px 8px 16px;
+    .ie8 & {
+	padding-left:10px;
+    }
     vertical-align: top;
 }
 
@@ -184,24 +196,14 @@
 }
 
 .design-view-action-process-right-column-invitation-link {
-    position: absolute;
-    top: 0;
-    right: 0;
-    color: #7a94b8;
-    text-decoration: underline;
-}
-
-.design-view-action-process-right-column-invitation-label {
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 8px;
-    margin-bottom: 4px;
+    float: right;
+    margin-top: 10px;
 }
 
 .design-view-action-process-right-column-invitation-wrapper {
     display: inline-block;
     width: 310px;
-    height: 124px;
+    height: 140px;
     vertical-align: top;
     overflow: hidden;
 }

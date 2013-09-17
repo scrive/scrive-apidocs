@@ -980,3 +980,37 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
       kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN image"
       Log.debug $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
   }
+
+migrateSignatoryLinksDeletedTime :: MonadDB m => Migration m
+migrateSignatoryLinksDeletedTime =
+  Migration {
+      mgrTable = tableSignatoryLinks
+    , mgrFrom = 20
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE signatory_links"
+                  <+> "ALTER deleted DROP NOT NULL,"
+                  <+> "ALTER deleted DROP DEFAULT,"
+                  <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END),"
+                  <+> "ALTER really_deleted DROP NOT NULL,"
+                  <+> "ALTER really_deleted DROP DEFAULT,"
+                  <+> "ALTER really_deleted TYPE TIMESTAMPTZ USING (CASE WHEN really_deleted THEN now() ELSE NULL END)"
+       return ()
+    }
+
+migrateSeparateDeliveryStatuses :: MonadDB m => Migration m
+migrateSeparateDeliveryStatuses =
+  Migration {
+      mgrTable = tableSignatoryLinks
+    , mgrFrom = 21
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN mail_invitation_delivery_status SMALLINT NULL DEFAULT 3"
+       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sms_invitation_delivery_status  SMALLINT NULL DEFAULT 3"
+       _ <- kRunRaw $ "UPDATE signatory_links "
+             <> "      SET mail_invitation_delivery_status = invitation_delivery_status "
+             <> "      WHERE delivery_method = 1 OR delivery_method = 5"
+       _ <- kRunRaw $ "UPDATE signatory_links "
+             <> "      SET sms_invitation_delivery_status = invitation_delivery_status "
+             <> "      WHERE delivery_method = 4 OR delivery_method = 5"
+       _ <- kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN invitation_delivery_status"
+       return ()
+    }

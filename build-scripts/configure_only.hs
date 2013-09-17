@@ -10,7 +10,6 @@ allFlags = [ "test"
            , "mailing-server"
            , "pdfseal"
            , "cron"
-           , "update-reference-screenshot"
            , "messenger-server"
            ]
 

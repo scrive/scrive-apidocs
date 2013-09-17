@@ -8,9 +8,10 @@ import Happstack.Server
 
 import DB.Derive
 import Utils.Read
+import Data.Typeable
 
 newtype FileID = FileID Int64
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''FileID)
 $(newtypeDeriveConvertible ''FileID)
 

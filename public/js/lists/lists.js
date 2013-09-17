@@ -348,7 +348,7 @@
                         view.pretableboxleft.append(filter.el);
                     });
                     if (!this.schema.textfiltering().disabled()) {
-                        var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
+                        var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='height:30px'/>")});
                         this.pretableboxright.append(filter.el);
                     }
                 }
@@ -480,7 +480,6 @@
 
 
             var body = this.tbody;
-            var odd = true;
             var schema = this.schema;
             var elems = this.model.first(this.schema.paging().showLimit());
 
@@ -504,13 +503,6 @@
                     });
                 else
                   $(trs[i]).replaceWith(e.view.el);
-                if (odd) {
-                     $(e.view.el).addClass("odd");
-                }
-                else {
-                     $(e.view.el).removeClass("odd");
-                 }
-                 odd = !odd;
             }
 
             return this;
@@ -529,6 +521,7 @@
     window.KontraList = function(args) {
             var self = this;
             var schema = args.schema;
+            var isReady = false;
             schema.initSessionStorageNamespace(args.name);
             var model = new List({ schema: schema });
             var view = new ListView({
@@ -542,13 +535,18 @@
 
             this.model = function() {return model;};
             this.el = function() {return $(view.el);};
+            this.fetchWithCallback = function(callback) {
+                $.get(schema.url(),schema.getSchemaUrlParams(),function(res) {
+                    callback(model, JSON.parse(res).list);
+                });
+            };
             this.recall = function() {
               view.startLoading();
               model.fetch({ data: schema.getSchemaUrlParams(),
                                 processData: true,
                                 cache: false,
                                 reset: true,
-                                success: function() {view.stopLoading(); },
+                                success: function() {view.stopLoading();isReady = true; },
                                 error : function(list,resp) {
                                   if (resp != undefined && resp.status != undefined && resp.status == 403)
                                     window.location.reload(); // Reload page since we are not authorized to see it, one should
@@ -557,22 +555,12 @@
                                 timeout: args.timeout
               });
             };
-            this.silentFetch = function() {
-                model.fetch({ data: schema.getSchemaUrlParams(),
-                                processData: true,
-                                cache: false,
-                                reset: true,
-                                timeout: args.timeout,
-                                error : function(list,resp) {
-                                  if (resp != undefined && resp.status != undefined && resp.status == 403)
-                                    self.silentFetch = function() {return;}; // Disable featching
-                                }
-              });
-            };
+            this.ready = function() {return isReady;};
             this.model = function() {return model;};
+            this.destroy = function() {schema.off();model.off();$(view.el).remove();};
             this.setShowLimit = function(l) {
                     schema.paging().setShowLimit(l);
-                    schema.trigger("change");
+                    model.trigger('change');
             };
             schema.bind('change', function() {self.recall();});
             if (args.loadOnInit != false) self.recall();

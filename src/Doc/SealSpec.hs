@@ -9,10 +9,12 @@ data Person =
            , personalnumber   :: String
            , companynumber    :: String
            , email            :: String
+           , phone            :: String
            , fullnameverified :: Bool
            , companyverified  :: Bool
            , numberverified   :: Bool
            , emailverified    :: Bool
+           , phoneverified    :: Bool
            , fields           :: [Field]
            }
     deriving (Eq,Ord,Show,Read)
@@ -24,10 +26,12 @@ instance J.ToJSValue Person where
     J.value "personalnumber" $ personalnumber person
     J.value "companynumber" $ companynumber person
     J.value "email" $ email person
+    J.value "phone" $ phone person
     J.value "fullnameverified" $ fullnameverified person
     J.value "companyverified" $ companyverified person
     J.value "numberverified" $ numberverified person
     J.value "emailverified" $ emailverified person
+    J.value "phoneverified" $ phoneverified person
     J.value "fields" $ map J.toJSValue $ fields person
 
 -- | Field coordinates are in screen coordinate space. That means:

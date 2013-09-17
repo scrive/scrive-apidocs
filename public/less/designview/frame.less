@@ -8,22 +8,21 @@ body.designview > footer {
 }
 
 body.designview .mainContainer {
-    margin-top: 20px;
+    margin-top: 0;
     margin-bottom: 0;
-    min-height : auto;
+    min-height : 0;
+    width: 100%;
 }
 
 .design-view-frame {
     .box-sizing(border-box);
-    border: 1px solid #ccc;
     border-bottom: none;
     position: relative;
-    background-color: #fafafa;
 }
 
 .design-view-frame-top-bar {
     width: 100%;
-    height: 54px;
+    height: 60px;
     z-index: 1000;
     left: 0;
     position: relative;
@@ -32,8 +31,7 @@ body.designview .mainContainer {
 
 .design-view-tab-container {
     .box-sizing(border-box);
-    height: 54px;
-    border-bottom: 1px solid #ccc;
+    height: 60px;
     font-size:16px;
     cursor: pointer;
     width: 1018px;
@@ -53,22 +51,30 @@ body.designview .mainContainer {
 
 
 .designview {
+  .pagediv {
+      margin-top: 15px;
+      &#page1 {
+	  margin-top: 0px;
+      }
+  }
+
   .tab-viewer {
-    width: 1018px;
-    background: none repeat scroll 0 0 white;
+    width: 100%;
+    .tab-viewer-header {
+        .box-sizing(border-box);
+        margin-bottom: 0px;
+	z-index:999;
+	position:relative;
+    }
     .tabs {
-        background: none repeat scroll 0 0 white;
-        border-bottom: 1px solid #CCCCCC;
-        border-top: none;
-        border-left: none;
-        border-right: none;
-        height: 50px;
+        margin: auto;
+        width: 1018px;
+        border: none;
+        height: 60px;
         li {
-          padding: 16px 24px 14px 24px;
-          line-height: 20px;
+          padding: 22px 24px 18px 24px;
+          line-height: 32px;
           &.inactive, &.inactive:hover{
-            border-top-color : #FBFBFB;
-            background-color: #FBFBFB;
             .design-view-tab-text {
               color: #AAAAAA;
               .design-view-tab-text-optional {
@@ -77,8 +83,8 @@ body.designview .mainContainer {
             }
           }
           &.active, &:hover {
-              border-top: 4px solid #7A94B8;
-              padding: 12px 24px 14px 24px;
+              border-top: 4px solid @blue;
+              padding: 18px 24px 18px 24px;
               background: none repeat scroll 0 0 white;
               h5 {
                   color : #333333;
@@ -89,10 +95,12 @@ body.designview .mainContainer {
               display: inline-block;
               width: 290px;
               height: 100%;
+              font-size: 18px;
+	      color:#262626;
               position: relative;
               text-align : center;
               &.grayed {
-                  background-color: #FBFBFB;
+                  background-color: @disabled-grey-background;
                   color: #AAAAAA;
                   .design-view-tab-text-optional {
                     color: #AAAAAA;
@@ -100,7 +108,7 @@ body.designview .mainContainer {
 
               }
               .design-view-tab-text-optional {
-                font-size: 12.5px;
+                font-size: 15px;
                 color: #808080;
             }
           }
@@ -113,15 +121,10 @@ body.designview .mainContainer {
         &.float-left:first-child {
           border-right: 1px solid #CCCCCC;
           border-left: none;
-          padding: 16px 24px 14px 24px;
-          &.active, &:hover {
-              border-top: 4px solid #7A94B8;
-              padding: 12px 24px 14px 24px;
-          }
-
         }
       }
     }
+
   }
 }
 
@@ -161,9 +164,9 @@ body.designview .mainContainer {
     .box-sizing(border-box);
     overflow: auto;
     min-height: 300px;
-    padding-top: 20px;
-    padding-bottom: 60px; // room for the button bar
+    margin: auto;
     position: relative;
+    padding-top: 20px; // needs to be the same value, as the padding-top value in DesignView.unfix()
 }
 
 
@@ -172,44 +175,37 @@ body.designview .mainContainer {
 
 .design-view-button-bar {
     width: 100%;
-    height: 52px;
+    height: 64px;
     bottom: 0;
     left: 0;
     position: absolute;
     position: fixed;
     z-index: 1001;
+    background: #495259;
+    .box-shadow(0px -4px rgba(0, 0, 0, 0.05));
 }
 
 .design-view-button-bar-inner {
-    border: 1px solid #ccc;
     width: 1018px;
     height: 100%;
     margin: auto;
-    background: #FAFAFA;
-    .box-shadow(0 -4px 0 rgba(0,0,0,0.05));
-}
 
-
-.design-view-button1 {
-    .box-sizing(border-box);
-    display: inline-block;
-    width: 20%;
-    border-right: 1px solid #ccc;
-    height: 100%;
-    position: relative;
-    cursor: pointer;
-    background: white;
-}
-
-.design-view-button2 {
-    .box-sizing(border-box);
-    display: inline-block;
-    width: 20%;
-    border-right: 1px solid #ccc;
-    height: 100%;
-    position: relative;
-    cursor: pointer;
-    background: white;
+    a.button {
+        margin-top: 15px;
+        margin-right: 15px;
+    }
+    
+    a.sendButton {
+        float: right;
+        &.disabled {
+            @disabled: @blue;
+            color: #6B6B6B !important;
+            background-color: @disabled;
+            &:hover {
+                background-color: darken(@disabled, 10%);
+            }
+        }
+    }
 }
 
 .design-view-button-remove {
@@ -222,40 +218,3 @@ body.designview .mainContainer {
     border-right: 1px solid #ccc;
     background-color: white;
 }
-
-.design-view-button3 {
-    .box-sizing(border-box);
-    display: inline-block;
-    width: 20%;
-    float: right;
-    border-left: 1px solid #ccc;
-    height: 100%;
-    position: relative;
-    cursor: pointer;
-    color: #DDDDDD;
-    background-color: white;
-    &.active {
-      .gradient(hsl(@greenH,@greenS,35%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,40%));
-      .box-shadow(inset hsl(@greenH,66%,60%) 0 0 0 2px);
-      border: 2px solid hsl(@greenH,@greenS,23%);
-      color: white;
-      font-size: 18px;
-      font-weight: 400;
-    }
-}
-
-.design-view-button1-text,
-.design-view-button2-text,
-.design-view-button3-text,
-.design-view-button-remove-label {
-    .center-vh(100%,1em);
-    text-align: center;
-}
-
-
-
-
-
-
-
-

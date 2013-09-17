@@ -20,115 +20,85 @@
 
             div.append(view.help1());
             div.append(view.help2());
-            div.append(view.checkbox());
+  	    div.append(view.text());
             div.append(view.signature());
-            div.append(view.text());
+	    div.append(view.checkbox());
+            
 
             view.$el.html(div.children());
 
             return view;
         },
         help1: function() {
-            var div = $("<div class='design-view-action-document-draggables-help'/>");
+            var div = $("<div class='design-view-action-document-draggables-help help1'/>");
             div.append($("<div class='wrapper'>")
-              .append($("<span class='number'/>").text("1."))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp1))
-              .append($("<img src='/img/place-fields-help1.png'/>")));
+              .append($("<div class='icon'/>"))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp1)));
             return div;
         },
         help2: function() {
-            var div = $("<div class='design-view-action-document-draggables-help' style='margin-right:80px'/>");
+            var div = $("<div class='design-view-action-document-draggables-help help2'/>");
             div.append($("<div class='wrapper'>")
-              .append($("<span class='number'/>").text("2."))
-              .append($("<span class='text'/>").text(localization.designview.draggablehelp2))
-              .append($("<img src='/img/place-fields-help2.png'/>")));
+              .append($("<div class='icon' />"))
+              .append($("<span class='text'/>").text(localization.designview.draggablehelp2)));
 
 
             return div;
         },
-        checkbox: function() {
-            var view = this;
-            var viewmodel = view.model;
-            var doc = viewmodel.document();
+	createDraggable: function(fieldOrPlacementFN, buttonText, cssClass) {
+	    var div = $("<div class='design-view-action-document-draggable design-view-action-document-draggable-" + cssClass + "' />");
+            var wra = $("<div class='design-view-action-document-draggable-wrapper'/>");
+            var innerWrapper = $("<div class='design-view-action-document-draggable-inner-wrapper'/>");
+	    var iconWrapper = $("<div class='design-view-action-document-draggable-icon-wrapper' />");
+            var imgdiv = $("<div class='design-view-action-document-draggable-icon' />");
+	    var txt = $("<div class='design-view-action-document-draggable-text'/>");
+	    
 
-            var div = $("<div class='design-view-action-document-draggables-checkbox'/>");
-            var wra = $("<div class='design-view-action-document-draggables-checkbox-wrapper'/>");
-            var txt = $("<div class='design-view-action-document-draggables-checkbox-text'/>");
-            var imgdiv = $("<div class='design-view-action-document-draggables-checkbox-icon'/>");
-
-            // a function because author is not yet defined
-            var getcheckbox = function() {
-                var field = new Field({fresh: false,
-                                       type: 'checkbox',
-                                       signatory: viewmodel.document().author(),
-                                       name: viewmodel.document().newCheckboxName()});
-                return field;
-            };
-
-            draggebleField(div, getcheckbox,undefined, undefined,true);
+            draggebleField(div, fieldOrPlacementFN, undefined, undefined, true);
 
             div.append(wra);
-            wra.append(txt);
-            txt.append(imgdiv);
-            txt.append(localization.designview.checkbox);
+            wra.append(innerWrapper);
+	    innerWrapper.append(iconWrapper);
+	    innerWrapper.append(txt);
+            iconWrapper.append(imgdiv);
+            txt.append($('<span>').text(buttonText));
 
             return div;
+	},
+        checkbox: function() {
+            var model = this.model;
+	    var fieldOrPlacementFN = function() {
+                return new Field({fresh: false,
+                                  type: 'checkbox',
+				  signatory: model.document().author(),
+				  name: model.document().newCheckboxName()});
+            };
+
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.checkbox, 'checkbox');
         },
         signature: function() {
-            var view = this;
-            var viewmodel = view.model;
-            var doc = viewmodel.document();
-            var author = doc.author();
-
-            var div = $("<div class='design-view-action-document-draggables-signature'/>");
-            var wra = $("<div class='design-view-action-document-draggables-signature-wrapper'/>");
-            var txt = $("<div class='design-view-action-document-draggables-signature-text'/>");
-            var imgdiv = $("<div class='design-view-action-document-draggables-signature-icon'/>");
-
-            var getsignature = function() {
-                var signature = new Field({fresh:false,
-                                           type:'signature',
-                                           signatory: viewmodel.document().author(),
-                                           name: viewmodel.document().newSignatureName()});
-                return signature;
+            var model = this.model;
+	    var fieldOrPlacementFN = function() {
+                return new Field({fresh:false,
+				  type:'signature',
+				  signatory: model.document().author(),
+				  name: model.document().newSignatureName()});
             };
-            draggebleField(div, getsignature,undefined, undefined,true);
 
-            div.append(wra);
-            wra.append(txt);
-            txt.append(imgdiv);
-            txt.append(localization.designview.signatureBox);
-
-            return div;
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.signatureBox, 'signature');
         },
         text: function() {
-            var view      = this;
-            var viewmodel = view.model;
-
-            var div = $("<div class='design-view-action-document-draggables-textbox'/>");
-            var wra = $("<div class='design-view-action-document-draggables-textbox-wrapper'/>");
-            var txt = $("<div class='design-view-action-document-draggables-textbox-text'/>");
-            var imgdiv = $("<div class='design-view-action-document-draggables-textbox-icon'/>");
-
-            var gettext = function() {
-                return new Field({
-                    signatory: viewmodel.document().author(),
-                    name: 'fake',
-                    type: 'fake',
-                    value: localization.designview.freeTextBox
-                });
+            var model = this.model;
+	    var fieldOrPlacementFN = function() {
+                return new Field({signatory: model.document().author(),
+				  name: 'fake',
+				  type: 'fake',
+				  value: localization.designview.freeTextBox});
             };
 
-            draggebleField(div, gettext, undefined, undefined, true);
-
-            div.append(wra);
-            wra.append(txt);
-            txt.append(imgdiv);
-            txt.append(localization.designview.freeTextBox);
-
-            return div;
-        }
-    });
+	    return this.createDraggable(fieldOrPlacementFN, localization.designview.freeTextBox, 'textbox');
+	}
+	});
 
 
 

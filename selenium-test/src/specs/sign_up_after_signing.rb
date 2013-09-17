@@ -35,6 +35,7 @@ describe "sign up after signing a document" do
     @h.dochelper.partSign
 
     puts "we should be given the option to save the doc in the archive and create an account"
+    sleep 2
     @h.wait_until { @h.driver.find_element :css => "a.button.button-large" }.click
 
     puts "should be logged in and able to upload a document"
@@ -49,7 +50,7 @@ describe "sign up after signing a document" do
     @h.driver.execute_script("$('a.blue.button').click()")
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
-    (@h.wait_until { @h.driver.find_element :css => ".flash-close img" }).click
+    @h.driver.execute_script("$('.flash-close img').click()")
 
     puts "fill in the password details incorrectly and make sure we get invalid elements"
     (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-12"
@@ -58,7 +59,7 @@ describe "sign up after signing a document" do
     @h.driver.execute_script("$('a.blue.button').click()")
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
-    (@h.wait_until { @h.driver.find_element :css => ".flash-close img" }).click
+    @h.driver.execute_script("$('.flash-close img').click()")
 
     puts "clear password2 and really activate"
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"

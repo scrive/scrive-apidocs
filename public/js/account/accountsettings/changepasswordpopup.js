@@ -1,4 +1,6 @@
-/* Main archive definition. Its a tab based set of different documents lists. */
+/* 
+ * Defines the model and view for the change password popup.
+ */
 
 (function(window){
 
@@ -65,7 +67,7 @@ var ChangePasswordPopupView = Backbone.View.extend({
     passwordSettings : function() {
       // Building frame
       var model = this.model;
-      var box = $("<div>");
+      var box = $("<div style='padding-right: 45px; padding-left: 45px'>");
 
       var table = $("<table/>");
       box.append(table);
@@ -112,6 +114,7 @@ var ChangePasswordPopupView = Backbone.View.extend({
        var model = this.model;
        var popup = Confirmation.popup({
           title: localization.account.accountSecurity.passwordSection,
+          icon: '/img/modal-icons/password.png',
           content: $("<div>").append(this.passwordSettings()),
           onAccept:  function() {
             if (self.passwordsAreValid())

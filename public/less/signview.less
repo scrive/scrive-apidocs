@@ -1,40 +1,76 @@
+@import 'branding/colors';
+@import 'designview/util';
+
 .signview {
   width: 100%;
-  min-width: 1020px;
+  min-width: 1018px;
+  min-height:100%;
+  position:relative;
+
+  h2 {
+      font-weight:300;
+      color:#4A4A49;
+      font-size:20px;
+      margin-bottom:20px;
+  }
+
+  .pagediv {
+      margin-top:15px;
+      &:first-child {
+	  margin-top:0px;
+      }
+  }
+  
+  .mainContainer {
+      padding-bottom: 121px;
+  }
 
   .pageheader {
-    min-width: 1020px;
+    min-width: 1018px;
     width: 100%;
     background: #FFFFFF;
     color: white;
     border-bottom: solid #DEE4ED 1px;
     .content {
       margin: auto;
-      width: 1020px;
-      padding-top: 10px;
-      padding-bottom: 10px;
+      width: 1018px;
       height: 120px;
       display: table;
       overflow: hidden;
       .sender {
+	  float:right;
+	  display:inline-block;
+	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
+	  *display: inline;
+	  zoom: 1;
+	  // END - hack
+	  margin-top:45px;
+
           text-align: right;
-          display: table-cell;
           vertical-align: middle;
           color: #333333;
           .name,.phone  {
-            font-weight: bold;
             vertical-align: middle;
           }
       }
     }
     .logowrapper {
+	float:left;
+	display:inline-block;
+	// IE7 hack - http://stackoverflow.com/a/6545033/337587
+	*display: inline;
+	zoom: 1;
+	// END - hack
+	margin-top: 45px;
+        margin-bottom: 10px;
     }
     div.logo {
-      background: url(../img/logo.png);
+      background: url(../img/logo-white-bg.png);
       height: 22px;
       width: 120px;
       background-repeat: no-repeat;
       margin-left: 30px;
+      background-size: cover;
     }
     .logo {
       margin-left: 30px;
@@ -43,15 +79,20 @@
 
 
   .instructions {
-    background-color: white;
+    background: white;
     padding-top: 40px;
     padding-bottom: 25px;
-    margin-top: 20px;
-    border: solid #bababc 1px;
+    margin-top: 0px !important;
+    margin-bottom: 15px;
     text-align: center;
-    font-weight: bold;
     margin-left: auto;
     margin-right: auto;
+
+    .highlight-green {
+	text-transform: uppercase;
+	color: @green;
+        font-weight: 600;
+    }
 
     &.small-screen {
       padding-bottom: 45px;
@@ -66,11 +107,11 @@
       }
     }
 
+
     .headline {
-      text-transform: uppercase;
-      color: black;
-      font-size: x-large;
-      margin-bottom: 5px;
+      font-size: 22px;
+      color:#4A4A49;
+      margin-bottom: 10px;
 
       .name {
         white-space: nowrap;
@@ -94,23 +135,24 @@
       margin-left: auto;
       margin-right: auto;
       margin-top: 0px;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
      .smaller-bits {
-        margin: 10px auto;
-        margin-top: 10px;
+        margin: 0px auto 10px auto;
+        margin-top: 0px;
         text-align : center;
         .duedate {
-          display: inline;
           margin-right:20px;
-          font-weight : normal;
+          font-weight:normal;
+	  margin-bottom:20px;
         }
         .download  {
           background: url(../img/senddoc.png) no-repeat;
-          padding-left: 20px;
-          margin-left:20px;
-          display: inline;
-          font-weight : normal;
-          display: inline-block;
+          padding-left:20px;
+          font-weight:normal;
+          display:inline-block;
+	  background-position:0px 2px;
+	  position:relative;
+	  left:-10px;
           .docname {
               text-align: left;
               text-decoration: underline;
@@ -125,12 +167,11 @@
 
   .save {
     background-color: white;
-    border: solid #bababc 1px;
     text-align: center;
     padding: 40px;
     overflow: none;
-    margin-top: 30px;
-    margin-bottom : 30px;
+    margin-top: 15px;
+    margin-bottom : 15px;
 
     &.small-screen {
       .title {
@@ -147,10 +188,10 @@
   }
 
   .save .title {
-    font-size: large;
-    color: black;
-    text-transform: uppercase;
-    margin-bottom: 5px;
+    font-size: 22px;
+    color: #4A4A49;
+    margin-bottom: 10px;
+    font-weight: 400;
   }
 
   .save .subtitle {
@@ -158,23 +199,6 @@
     max-width: 602px;
     margin-right: auto;
     margin-left: auto;
-  }
-
-  .save.saving {
-    min-height: 118px;
-    background-image: url(/img/wait30trans.gif);
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-
-  .save.done {
-    background-color: white;
-    padding-top: 31px;
-    padding-bottom: 15px;
-    margin-bottom: 7px;
-    border: solid #bababc 1px;
-    text-align: center;
-    font-weight: bold;
   }
 
   .save .headline {
@@ -379,15 +403,18 @@
     padding-left: 50px;
   }
 
+  .subcontainerWrapper {
+      padding-bottom:23px;
+      padding-top:10px;
+      margin-top: 20px;
+  }
+
   .subcontainer {
-    background-color: #F0F0F0;
-    box-shadow: inset 1px 1px 5px #505050;
-    -moz-box-shadow: inset 1px 1px 5px #505050;
-    -webkit-box-shadow: inset 1px 1px 5px #505050;
-    background-image: url(../img/horizontal-shading-bar.png);
-    background-repeat: no-repeat;
-    padding-bottom:23px;
-    padding-top:10px;
+      width: 943px;
+      margin: 0 auto;
+      border: 1px dashed #cccccc;
+      border-radius: 5px;
+      padding: 15px;
   }
 
   .subcontainer .end {
@@ -398,51 +425,24 @@
 
   .section {
     clear: both;
-    margin: 7px;
     background-color: white;
     /* background-image: url(../img/horizontal-shading-bar.png); */
     background-repeat: no-repeat;
     overflow: hidden;
-    margin-top: 17px;
-
-    width: 924px;
+    margin-top: 15px;
+    width: 883px;
     margin-left: auto;
     margin-right: auto;
+    &.highlight {
+	border: 2px solid @green;
+	box-shadow:none;
+	width: 880px;
+    }
   }
-
-  .section.highlight {
-    border: 5px solid #83bc39;
-    padding: 15px;
-    background-image: none;
-    width: 916px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .section h2 {
-    float: left;
-    width: 220px;
-    margin-bottom: 20px;
-    margin-right: 20px;
-    text-transform: uppercase;
-    color: black;
-    font-weight: normal;
-    padding-left: 30px;
-    padding-right: 10px;
-    font-size: large;
-  }
-
-
-  .signatoryattachments .list {
-    float: left;
-    width: 605px;
-    margin-right: 20px;
-  }
-
 
   .signatoryattachments .item {
     margin-bottom : 10px;
-    margin-right  : 10px;
+    margin-right  : 9px;
   }
 
 
@@ -451,11 +451,11 @@
       color: black;
   }
 
-  .signatoryattachments .list {
-      float: left;
-      width: 580px;
+  .authorattachments .list, .signatoryattachments .list {
+      float: right;
+      width: 610px;
       margin-left: 23px;
-      margin-right: 20px;
+      margin-right: -10px; // line up with the signatory boxes
   }
   .signatoryattachments  .list .desc {
       width: 420px;
@@ -493,7 +493,7 @@
   }
 
   .signatoryattachments .list .item .name {
-    font-weight: bold;
+    font-weight: 400;
   }
 
   .signatoryattachments .list .item .description {
@@ -540,77 +540,85 @@
   .signatories .list .sig .statustext {
       width: 124px;
       float: left;
-      font-size: 13px;
+      font-size: 14px;
       vertical-align: middle;
       line-height: 13px;
   }
 
 
-  .signatories .column {
-      width: 260px;
-      float: left;
-      border: solid #bababc 1px;
-      min-height: 185px;
-  }
+  .signatories {
+      .columns-container {
+	  float:right;
+	  display:inline-block;
+	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
+	  *display: inline;
+	  zoom: 1;
+	  // END - hack
+	  
+      }
+      .column {
+	  vertical-align:top;
+	  width: 260px;
+	  display:inline-block;
+	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
+	  *display: inline;
+	  zoom: 1;
+	  // END - hack
+	  border: solid #bababc 1px;
+	  min-height: 196px;
+	  background-color: @grey-background;
+	  padding: 15px;
+	  &.first-column {
+	      margin-right: 20px;
+	  }
+      }
 
-  .signatories .name {
-      color: black;
-      font-size: 16px;
-      height: 19px;
-  }
+      .name {
+	  font-size: 16px;
+	  height: 19px;
+      }
 
-  .signatories .company {
-      color: black;
-      height: 14.5px;
-  }
+      h2 {
+	  float:left;
+      }
 
-  .signatories .face {
-      background-image: url('../img/missing-portrait.png');
-      background-size: cover;
-      width: 60px;
-      height: 50px;
-      float: left;
-  }
+      .inner {
+	  min-height: 72px;
+	  color : #505050;
+	  border-top: 1px dashed #ccc;
+	  .email:hover{
+	      overflow: visible;
+	  }
+      }
 
-  .signatories .inner {
-      margin-top: 10px;
-      min-height: 72px;
-      color : #505050;
-  }
-  .signatories .inner .email:hover{
-          overflow: visible;
-  }
+      .details {
+	  padding: 10px;
+	  font-size: 14px;
+      }
 
-  .signatories .details {
-      float:left;
-      padding: 0px;
-      margin-top: -3px;
-      margin-left: 12px;
+      .statusbox {
+	  border-top: 1px dashed #ccc;
+	  font-size: 13px;
+	  line-height: 11px;
+	  padding:10px;	  
+	  .spacing {
+	      margin-left: auto;
+	      margin-right: auto;
+	  }
+      }
   }
-
   .field {
       height: 18px;
       line-height:16px;
-      width: 160px;
+      width: 200px;
       text-overflow: ellipsis;
       white-space: nowrap;
       overflow:hidden;
       margin-bottom: 3px;
   }
 
-  .signatories .statusbox {
-      border-top: 1px dashed;
-      text-align: center;
-      font-size: 13px;
-      vertical-align: middle;
-      line-height: 11px;
-      padding-top:1px;
-
-  }
-
-  .signatories .statusbox .spacing {
-      margin-left: auto;
-      margin-right: auto;
+  .icon.status {
+      padding-top: 1px;
   }
 
   .signatories .statusbox .icon.status {
@@ -635,33 +643,26 @@
 
   .rejectwrapper {
     float: left;
-    margin-left: 30px;
-  }
-
-  .rejectwrapper a.btn-big.red .label {
-    padding-left: 10px;
-    padding-right: 10px;
   }
 
   .signwrapper {
     float: right;
-    margin-right: 30px;
   }
 
   .pagefooter {
-    min-width: 1020px;
+    min-width: 1018px;
     width: 100%;
-    min-height: 120px;
+    height: 120px;
     background: #FFFFFF;
     color: #333333;
     border-top: solid #DEE4ED 1px;
-  }
-
-  .pagefooter .content {
-    width: 1020px;
-    padding-top: 50px;
-    padding-bottom: 50px;
-    margin : auto;
+    position:absolute;
+    bottom:0;
+    .content {
+	width: 1018px;
+	padding-top: 40px;
+	margin : auto;
+    }
   }
 
   .pagefooter.small-screen .poweredbyscrive {
@@ -678,13 +679,10 @@
   .pagefooter .poweredbyscrive {
     margin: 00px auto;
     text-align : center;
-    .text {
-        font-weight: bold;
-    }
     .logo {
-        background-image : url("../img/logo-small.png");
+        background-image : url("../img/logo-small-grey.png");
         width: 80px;
-        height: 14px;
+        height: 16px;
         margin-left: 2px;
         display: inline-block;
     }
@@ -697,18 +695,16 @@
     text-decoration: none;
   }
 
-  div.spacing {
-      padding: 8px;
-  }
-
-
-  .sig.first {
-      margin-top: 0px;
-      padding-top: 0px;
-  }
-
   .sig {
-      margin-top: 4px;
+      &.first {
+	  margin-top: 0px;
+	  padding-top: 0px;
+      }
+      &:last-child {
+	  border-bottom:none;
+      }
+      padding: 10px;
+      border-bottom: 1px dashed #ccc;
   }
 
   .sig .name {
@@ -719,19 +715,10 @@
       margin-top: 0px;
   }
 
-  .column.spacing {
-      margin-right: 20px;
-  }
-
   .section.spacing {
-      padding: 15px;
+      padding: 30px;
   }
 
-  .section.signatories {
-      padding-top: 20px;
-      margin-left: auto;
-      margin-right: auto;
-  }
 
   .signatoryattachments {
       padding-top: 20px;
@@ -743,16 +730,16 @@
       margin-left: 10px;
   }
 
-
-  .logowrapper {
-      display: table-cell;
-      vertical-align: middle;
-  }
-
   .sender .inner {
-      margin-right: 30px;
+      margin-right: 130px;
   }
 
+  // the iPad JS borrowed from the office needed this? idk.
+  @media screen and (max-device-width: 2048px) and (-webkit-min-device-pixel-ratio: 2) {
+    .sender .inner {
+        margin-right: 100px;
+    }
+  }
   @media screen and (max-width: 1220px) {
     .sender .inner {
         margin-right: 100px;
@@ -771,17 +758,11 @@
     }
   }
 
-  .signbuttons.section {
-      padding-top: 35px;
-      padding-bottom:35px;
-  }
 
   .section {
-    box-shadow: 1px 1px 5px #505050;
-    -moz-box-shadow: 1px 1px 5px #505050;
-    -webkit-box-shadow: 1px 1px 5px #505050;
-    padding-top: 35px;
-    padding-bottom:35px;
+      .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
+      padding-top: 35px;
+      padding-bottom:35px;
   }
 
   .newaccount .inner {
@@ -794,13 +775,11 @@
   }
 
   .video {
-    box-shadow: inset 1px 1px 5px #505050;
-    -moz-box-shadow: inset 1px 1px 5px #505050;
-    -webkit-box-shadow: inset 1px 1px 5px #505050;
-    background-color: #e1e1e1;
-    padding: 30px;
-    margin-left: 227px;
-    height: 328px;
+      .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
+      background-color: #e1e1e1;
+      padding: 30px;
+      margin-left: 227px;
+      height: 328px;
   }
 
   .line {
@@ -808,6 +787,7 @@
       overflow: hidden;
       height: 15px;
       width: 100%;
+      margin-top:7px;
   }
 
   .line .middle {
@@ -815,40 +795,37 @@
       vertical-align: middle;
   }
 
-  .extradetails .title {
-    float: left;
-    width: 260px;
+  .titleinfo {
+      padding: 10px;
   }
 
-  .extradetails .descriptionbox {
-    float: left;
-    width: 260px;
+  .extradetails {
+      .title {
+	  float: left;
+	  width: 260px;
+      }
+
+      .descriptionbox {
+	  float: left;
+	  width: 260px;
+      }
+
+      .fillbox {
+	  float: right;
+	  width: 260px;
+	  .info-text-input{
+	      padding: 8px;
+              margin-bottom: 15px;
+	      width: 248px;
+	  }
+	  .signatureBox.withImage {
+	      border: 1px solid #C6DADE;
+	      border-radius: 4px 4px 4px 4px;
+	      padding: 2px;
+	      margin-top: 5px;
+	  }
+      }
   }
-
-  .extradetails .fillbox {
-    float: left;
-    width: 260px;
-  }
-
-  .extradetails div.spacing{
-    padding-top: 0px;
-  }
-
-  .extradetails .fillbox .info-text-input{
-      border-radius: 4px 4px 4px 4px;
-      margin: 5px auto;
-      padding: 8px;
-      width: 248px;
-
-  }
-
-  .extradetails .fillbox .signatureBox.withImage {
-      border: 1px solid #C6DADE;
-      border-radius: 4px 4px 4px 4px;
-      padding: 2px;
-      margin-top: 5px;
-  }
-
   .section.highlight.extradetails {
       padding-bottom: 35px;
       padding-top: 35px;

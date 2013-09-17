@@ -61,6 +61,7 @@
             return this.get('dunning');
         },
         hasUsedAll: function() {
+            return false;
             return !this.isEnterprise()  &&
                    !this.isTrial()       &&
                    !this.isFree()        &&
@@ -120,8 +121,8 @@
         headline: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree() && model.docsLeft() > 0)
-                return localization.blocking.free.has.headline + " " + model.docsUsed();
+            if(model.isFree() && model.docsLeft() > 0 )
+                return localization.blocking.free.has.headline.replace('XX', model.docsUsed());
             else if(model.isFree())
                 return localization.blocking.free.hasNot.headline;
             else if(model.hasUsedAll())
@@ -142,7 +143,7 @@
             var model = view.model;
 
             if(model.isFree() && model.docsLeft() > 0)
-                return localization.blocking.free.has.subtext1;
+                return "";
             else if(model.isFree())
                 return localization.blocking.free.hasNot.subtext1;
             else if(model.hasUsedAll())
@@ -238,7 +239,7 @@
                 title: opts.title,
                 content: div,
                 acceptVisible: false,
-                width: 1200
+                width: 980
             });
             var o = {hideContacts:true};
             if(opts.header)

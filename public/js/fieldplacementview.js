@@ -6,6 +6,10 @@
 var textPlacementTopMargin  = 8;
 var textPlacementLeftMargin = 7;
 
+/* Margins for checkbox placement. */
+var checkboxPlacementTopMargin  = 1;
+var checkboxPlacementLeftMargin = 1;
+
 // !!! Not placed views model field, not placement
 window.createFieldPlacementView = function (args) {
     if (args.model.isSignature())
@@ -126,6 +130,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
             if (field.isText() || field.isFake() ) {
               x += textPlacementLeftMargin;
               y += textPlacementTopMargin;
+            } else if (field.isCheckbox()) {
+              x += checkboxPlacementLeftMargin;
+              y += checkboxPlacementTopMargin;
             }
             droppedInside = true;
             var signatory = field.signatory();
@@ -252,6 +259,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 }),
                 name: options[selected].name,
                 cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
+                style: 'font-size: 16px',
                 textWidth: "191px",
                 optionsWidth: "218px",
                 onSelect: function(v) {
@@ -373,6 +381,7 @@ var TextTypeSetterView = Backbone.View.extend({
         return new Select({name : localization.fontSize.name + ": " + fontSizeName,
                            textWidth: "191px",
                            optionsWidth: "218px",
+                           style: "font-size: 16px",
                            options: [
                               { name : localization.fontSize.small,
                                 style: "font-size: 12px",
@@ -556,8 +565,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
             var parentWidth = parent.width();
             var parentHeight = parent.height();
             place.css({
-                left: Math.floor(placement.xrel() * parentWidth + 0.5) - textPlacementLeftMargin,
-                top: Math.floor(placement.yrel() * parentHeight + 0.5) - textPlacementTopMargin,
+                left: Math.floor(placement.xrel() * parentWidth + 1.5) - textPlacementLeftMargin,
+                top: Math.floor(placement.yrel() * parentHeight + 1.5) - textPlacementTopMargin,
                 fontSize: placement.fsrel() * parentWidth
             });
         }
@@ -632,10 +641,10 @@ var TextPlacementPlacedView = Backbone.View.extend({
           infotext: field.nicetext(),
           value : field.value(),
           style: "font-size:" + this.fontSize() + "px;" +
-                 "line-height: " + (this.fontSize() + 2) +  "px;" +
-                 "height:"+ (this.fontSize() + 4) +"px;" +
+                 "line-height: " + (this.fontSize() + 1) +  "px;" +
+                 "height:"+ (this.fontSize() + 2) +"px;" +
                  "border-radius: 2px;",
-          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 2) + "px; height:"+ (this.fontSize() + 4) +"px",
+          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 1) + "px; height:"+ (this.fontSize() + 4) +"px",
           textWidth: width,
           onEnter : accept,
           onTab : accept,
@@ -710,6 +719,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var selector = new Select({
             name: name,
             options: options,
+
             cssClass: 'text-field-placement-setter-field-selector',
             border : "1px solid #f33",
             onSelect: function(s) {
@@ -937,6 +947,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             });
         }
         if (field && signatory.canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
+            place.css('border', '1px solid black'); // Only optional fields?
             place.click(function() {
                 return view.startInlineEditing();
             });
@@ -1332,7 +1343,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
 
                 var textholder = $("<span class='text'/>");
 
-                var button = $("<div class='placesignaturebutton'/>");
+                var button = $("<div class='button button-green'/>");
                 var document = field.signatory().document();
 
                 button.append(textholder.text(localization.signature.placeYour));
@@ -1580,7 +1591,7 @@ var SignaturePlacementView = Backbone.View.extend({
             if (signatory.isCsv())
              sname =  localization.csv.title;
             else
-             sname =  localization.process.signatoryname + (localization.process.contract.numberedsignatories() ? " " + signatory.signIndex() : "");
+             sname =  localization.process.signatoryname + " " + signatory.signIndex();
         }
         if (placement.field().value() == "")
             box.text(localization.signature.placeFor(sname));

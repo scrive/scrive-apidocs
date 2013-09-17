@@ -26,7 +26,7 @@ window.DesignViewTabsView = function(args) {
   var tab1 = new Tab({
           name: tab1Name,
           pagehash : "participants",
-          elems: [ $(participantsView.el)],
+          elems: [ $("<div class='design-view-tab-center' />").append($(participantsView.el))],
           onActivate : function() {
                mixpanel.track('Click tab', {
                         Action: 'Open',
@@ -41,7 +41,7 @@ window.DesignViewTabsView = function(args) {
           name: tab2Name,
           pagehash : "placements",
           available : document.mainfile() != undefined,
-          elems: [ $(draggablesView.el)],
+          elems: [ $("<div class='design-view-tab-center' />").append($(draggablesView.el))],
           onActivate : function() {
                mixpanel.track('Click tab', {
                         Action: 'Open',
@@ -52,7 +52,7 @@ window.DesignViewTabsView = function(args) {
   var tab3 = new Tab({
           name: tab3Name,
           pagehash : "process",
-          elems: [ $(processView.el)],
+          elems: [ $("<div class='design-view-tab-center' />").append($(processView.el))],
           onShow : function() {
               processView.rerenderMiddleColumn();
             },

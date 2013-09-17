@@ -92,16 +92,6 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.logo = $('<img class="emailpreviewlogo" />');
     var logorow = $('<tr/>').append($('<td/>').append($('<table/>').append($('<tr/>').append($('<td/>').append(this.logo)))));
 
-    this.subjectspan = $('<span class="emailpreviewsubject"/>').text(localization.companyBranding.sampleEmailHeader);
-    this.poweredbyscrivespan = $('<span class="emailpreviewpoweredbyscrive"/>').text('Powered by Scrive');
-    var poweredbyscrive = $('<a style="text-decoration: none;" href="#" onclick="return false"/>').append(this.poweredbyscrivespan);
-    var headercontent = $('<div/>').append(this.subjectspan).append(poweredbyscrive);
-    var headersubtable = $('<table border="0" cellpadding="0" cellspacing="0" width="100%"/>');
-    headersubtable.append($('<tr/>').append($('<td/>').append(headercontent)));
-    this.headersubtablecell = $('<td class="emailpreviewheadersubtablecell"/>').append(headersubtable);
-    this.headertable = $('<table class="emailpreviewheadertable" border="0" cellpadding="40" cellspacing="0"width="600"/>');
-    this.headertable.append($('<tr/>').append(this.headersubtablecell));
-
     var previewtextcontent = $('<div class="emailpreviewcontent"/>').append(localization.companyBranding.sampleEmailContent);
     this.emailpreviewbutton = $('<a href="#" onclick="return false" class="emailpreviewbutton"/>').text(localization.companyBranding.sampleEmailButtonLabel);
     var divcontent = $('<div class="divcontent"/>');
@@ -124,7 +114,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.contenttable = $('<table class="contenttable" border="0" cellpadding="0" cellspacing="40" width="600"/>');
     this.contenttable.append($('<tr/>').append($('<td/>').append(contentsubtable)));
 
-    var contentmainrow = $('<tr/>').append($('<td/>').append(this.headertable).append(this.contenttable));
+    var contentmainrow = $('<tr/>').append($('<td/>').append(this.contenttable));
 
     this.emailpreviewfooter = $('<div class="emailpreviewfooter"/>').text(localization.companyBranding.sampleEmailFooter);
     var emailpreviewfootercell = $('<td/>');
@@ -145,7 +135,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.maincontenttable.append(contentmainrow);
     this.maincontenttable.append(footerrow);
 
-    var maincontentrow = $('<tr/>').append($('<td/>').append(this.maincontenttable));
+    var maincontentrow = $('<tr/>').append($('<td style="padding-bottom: 30px; padding-top: 30px;"/>').append(this.maincontenttable));
 
     var maintable = $('<table class="maintable"/>');
     maintable.append(logorow);
@@ -176,34 +166,23 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
   },
   changeBBColour : function(bbcolour) {
     this.maincontenttable.css('background-color', bbcolour);
-    this.headersubtablecell.css('background-color', bbcolour);
     this.emailpreviewfootertable.css('background-color', bbcolour);
   },
   changeBTColour: function(btcolour,customised) {
     this.documentcontent.css('color', btcolour);
     if (customised) {
-      this.subjectspan.css('color', btcolour);
-      this.poweredbyscrivespan.css('color', btcolour);
       this.emailpreviewfooter.css('color', btcolour);
     } else if (this.model.companyui().domainmailstextcolor() != "") {
-      this.subjectspan.css('color', this.model.companyui().domainmailstextcolor());
-      this.poweredbyscrivespan.css('color', this.model.companyui().domainmailstextcolor());
       this.emailpreviewfooter.css('color', this.model.companyui().domainmailstextcolor());
-
     } else {
-      this.subjectspan.css('color', '');
-      this.poweredbyscrivespan.css('color', '');
       this.emailpreviewfooter.css('color', '');
     }
   },
   changeBorderColour : function(bordercolour) {
-    this.headertable.css('border-bottom-color', bordercolour);
     this.contenttable.css('border-bottom-color', bordercolour);
     this.maincontenttable.css('border', '1px solid ' + bordercolour);
   },
   changeFont : function(font) {
-    this.subjectspan.css('font-family', font);
-    this.poweredbyscrivespan.css('font-family', font);
     this.documentcontent.css('font-family', font);
     this.emailpreviewfooter.css('font-family', font);
   },
@@ -225,13 +204,13 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
                            .css('-o-box-shadow','inset ' +this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
                            .css('box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px');
     } else {
-    this.emailpreviewbutton.css({'background': 'hsl(215 , 30%, 35%)',
-                                 'border': '2px solid hsl(215, 30%, 23%)',
-                                 '-webkit-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 '-moz-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 '-ms-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 '-o-box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px',
-                                 'box-shadow': 'inset hsl(215, 30%, 60%) 0 0 0 1px'});
+    this.emailpreviewbutton.css({'background': '#3E5474',
+                                 'border': '2px solid #3E5474',
+                                 '-webkit-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 '-moz-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 '-ms-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 '-o-box-shadow': 'inset #CCCCCC 0 0 0 1px',
+                                 'box-shadow': 'inset #CCCCCC 0 0 0 1px'});
     }
   },
   changeEmailBackgroundColour : function(emailbackgroundcolour) {
@@ -258,10 +237,8 @@ window.CompanyBrandingEmailView = Backbone.View.extend({
   render: function() {
     var container = $(this.el);
     $(this.el).empty();
-    var options = $("<div style='width: 220px; margin:20px 0px 20px 20px; display: inline-block;vertical-align: top;height: 100%'/>");
+    var options = $("<div style='width: 220px; margin:10px 0px 20px 20px; display: inline-block;vertical-align: top;height: 100%'/>");
     container.append(options);
-
-    options.append($("<h5 style='margin-bottom: 10px'/>").text(localization.companyBranding.customize));
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.emaillogo().el()));
 
@@ -278,7 +255,7 @@ window.CompanyBrandingEmailView = Backbone.View.extend({
 
     options.append($("<div class='option' style='display:block'/>").append(this.model.emailbordercolour().el()));
 
-    var sample = $("<div style='width: 600px;   margin:20px; padding-left: 20px; border-left: 1px solid #333333; display: inline-block;'/>");
+    var sample = $("<div class='branding-container'/>");
     container.append(sample.append(new CompanyBrandingEmailSampleView({model : this.model, el : $("<div/>")}).el));
 
     $(this.el).append("<div class='clearfix'></div>");

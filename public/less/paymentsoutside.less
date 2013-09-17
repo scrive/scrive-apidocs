@@ -32,7 +32,10 @@
     width: 918px;
 
     h1 {
-        color: @blue-dark;
+        color: @text-very-dark;
+        font-weight: 400;
+        padding-top: 30px;
+        padding-bottom: 20px;
     }
 
     /* @amount is between 0.0 and 1.0 */
@@ -82,10 +85,6 @@
 
         header {
             text-align: center;
-        }
-
-        .vat-box {
-          margin-left: 180px;
         }
     }
 }
@@ -146,6 +145,7 @@ section.pricing-cases header {
 }
 .plan-container > .plan .features {
   width: 248px;
+  height: 100%;
   padding: 0 1em;
   float: left;
   position: relative;
@@ -159,13 +159,12 @@ section.pricing-cases header {
 }
 .plan-container > .plan .features div p {
   font-family: @source;
-  color: @blue-medium;
+  color: @text-very-dark;
   margin: 0;
   line-height: 1.25em;
 }
 .plan-container > .plan .features div.title h2 {
-  color: @blue-dark;
-  font-weight: bold;
+  color: @text-dark;
   font-size: 2em;
   letter-spacing: -1px;
   line-height: 2.25em;
@@ -174,11 +173,15 @@ section.pricing-cases header {
 .plan-container > .plan .features div.cost {
   display: block;
   font-family: @source;
+  .lte8 & {
+      padding-left: 10px;
+      padding-right: 10px;
+  }
 }
 .plan-container > .plan .features div.cost .price {
   display: block;
   font-size: 2.5em;
-  color: @red;
+  color: @text-dark;
   line-height: 1.5em;
   font-weight: bold;
 }
@@ -396,6 +399,11 @@ section.pricing-cases header {
 
     div.title {
         display: none;
+
+        h4 {
+            padding-bottom: 10px;
+            font-weight: 400;
+        }
     }
 
     div.subscription {
@@ -553,4 +561,8 @@ section.pricing-cases header {
         display: none;
     }
 
+}
+
+.price-plan-outside {
+    margin: 0 auto !important;
 }

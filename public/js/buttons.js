@@ -5,6 +5,7 @@
  *                   size: "tiny | small | big",
  *                   text: "Text that will be put inside of button"
  *                   onClick* : "Function to be called when button is clicked" })
+ *                   oneClick : Bool | If set to true, button can be clicked only once. Further clicks will be ignored.
  *  will return Button object.
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
@@ -24,7 +25,8 @@ var ButtonModel = Backbone.Model.extend({
       labelstyle : undefined,
       width: undefined,
       cssClass : "",
-      style : ""
+      style : "",
+      oneClick : false
   },
   color : function(){
        return this.get("color");
@@ -38,8 +40,12 @@ var ButtonModel = Backbone.Model.extend({
   setText : function(text) {
        this.set({text : text});
   },
+  oneClick : function() {
+       this.get("oneClick");
+  },
   clicked : function(){
        this.get("onClick")();
+       if (this.oneClick()) this.set({onClick : function() {return;}}); //After calling onClick, it can't be called again.
   },
   icon : function() {
        return this.get("icon");

@@ -1,14 +1,33 @@
-.body-container > .account {
-  background: #FFFFFF;
+@import 'branding/colors.less';
+
+.account input {
+    padding-left: 10px;
+    font-size: 15px;
 }
 
-.account .new-mail-button {
-    width: 40px;
+.account {
+    .tab-viewer-header .tabs li.active > h5{
+        font-weight: 400;
+    }
+}
+
+.account-settings {
+    padding-top: 23px;
+}
+
+.account input.emailinput[type="text"],
+.account input.newpassword[type="text"] {
+    width: 125px;
+    margin-right: 10px;
+    border-color: transparent;
+    background: transparent;
+    color: #222;
 }
 .account input[type="text"],
 .account input[type="password"] {
-    width: 220px;
-
+    width: 225px;
+    height: 26px;
+    font-weight: 300;
 }
 .account input[type="checkbox"]{
     margin-right : 6px;
@@ -16,75 +35,74 @@
 }
 
 .account-body table td {
-   padding: 4px;
-}
+   padding: 5px;
+   text-align: left;
+   font-weight: 300;
 
-.account-body table td:first-child {
-   width: 120px;
-}
+   input {
+      height: 28px;
+      width: 317px;
+   }
 
-.account-body table td{
-   padding: 4px;
-}
-
-.tab-viewer .account,
-.tab-viewer .companybranding,
-.tab-viewer .apisettings,
-.tab-viewer .companyaccountsandstats  {
-   padding: 40px 50px 20px;
+   &:first-child {
+    width: 85px;
+   }  
 }
 
 .account > .col,
 .account > .blue-box,
-.companybranding > .col,
-.noprovider > .col {
-   margin: 0 20px 20px;
-   border: 4px solid #DEE4ED;
-   transition: all 0.5s ease-in-out 0s;
+.companybranding > .col  {
+   margin: 0 20px 20px 0;
 }
-.account > .col,
-.noprovider > .col {
+.account > .col {
      float: left;
-     width: 410px;
+     width: 430px;
+
+    .account-header.company {
+        border-bottom: none;
+	width:100%;
+    }
 }
 
-.account > .col:hover,
-.account > .blue-box:hover,
-.noprovider > .col:hover{
-    border-color: #364963;
+.account > .col {
+    margin-left: 150px;
 }
 
-.account > .col.float-right {
-   float: right;
+.account > .blue-box {
+    float: left;
+    width: 385px;
+}
+
+.account {
+   .col.float-right, .col.float-left {
+     margin: 0;
+   }
 }
 
 .account-header {
-   min-height: 32px;
-   margin: 20px 18px 5px 18px;
-   padding-bottom: 15px;
-   position: relative;
-   color: #333333;
-   display: block;
-   text-align: left;
-   border-bottom: 1px solid #DEE4ED;
-   font-family: Source Sans Pro,Helvetica Neue,sans-serif;
-   font-size: 1.5em;
-   line-height: 25px;
+    width: 1018px;
+    min-height: 32px;
+    padding-bottom: 10px;
+    position: relative;
+    color: #333333;
+    display: block;
+    text-align: left;
+    border-bottom: 2px solid #EEE;
+    font-family: Source Sans Pro,Helvetica Neue,sans-serif;
+    font-size: 25px;
+    line-height: 21px;
+    font-weight: 300;
 }
 
 
 
 .account-body {
-   margin-top: 0px;
-   padding: 10px 15px;
-   min-height: 170px;
+   margin-top: 20px;
 }
 
 
 .account-footer {
-    float:right;
-    margin-right:20px;
-    margin-top:10px;
+    margin-left: 774px; 
 }
 
 .account-body .col .account-footer {
@@ -94,6 +112,12 @@
 .account-body .account-footer a {
    display: inline-block;
    margin: 0 auto;
+}
+
+.account-body label {
+    font-size: 15px;
+    font-weight: 300;
+    color: @text-very-dark;
 }
 
 
@@ -113,9 +137,12 @@
   .option-top-box {
       display: none;
   }
-  .jsdaytable, .usagestats .jsmonthtable {
+  .jsdaytable {
       margin-top: 20px;
       margin-bottom: 40px;
+  }
+  .jsmonthtable {
+      margin-top: 20px;
   }
   h2 {
       text-align: center;
@@ -123,10 +150,6 @@
       font-size: 1.5em;
       line-height: 25px;
       color: #333333;
-  }
-  td.num {
-      font-weight: bold;
-      font-family: "Courier New", Courier, monospace;
   }
 }
 

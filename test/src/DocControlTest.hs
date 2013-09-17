@@ -116,7 +116,7 @@ testLastPersonSigningADocumentClosesIt = do
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  True <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
+  randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
                (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
   Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
 
@@ -234,7 +234,7 @@ testSendingReminderClearsDeliveryInformation = do
   (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx actor doc sl
   Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
-  assertEqual "Invitation is not delivered" (Unknown) (invitationdeliverystatus sl')
+  assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
 
 
 testDocumentFromTemplate :: TestEnv ()

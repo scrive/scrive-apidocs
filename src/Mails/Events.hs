@@ -107,7 +107,7 @@ handleDeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       -- send it only if email was reported deferred earlier
-      when (invitationdeliverystatus signlink == Deferred) $ do
+      when (mailinvitationdeliverystatus signlink == Deferred) $ do
         mail <- mailDeliveredInvitation hostpart doc signlink
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]

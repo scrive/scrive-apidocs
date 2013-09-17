@@ -48,19 +48,19 @@ tableELegTransactions = tblTable {
     tblName = "eleg_transactions"
   , tblVersion = 1
   , tblColumns = [
-      tblColumn { colName = "id", colType = TextT, colNullable = False }
-    , tblColumn { colName = "session_id", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "nonce", colType = TextT }
-    , tblColumn { colName = "tbs", colType = TextT, colNullable = False }
-    , tblColumn { colName = "encoded_tbs", colType = TextT }
-    , tblColumn { colName = "signatory_link_id", colType = BigIntT }
-    , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "token", colType = BigIntT }
-    , tblColumn { colName = "status", colType = TextT, colNullable = False }
-    , tblColumn { colName = "cr_transaction_id", colType = TextT }
-    , tblColumn { colName = "cr_signature", colType = TextT }
-    , tblColumn { colName = "cr_attributes", colType = TextT }
-    , tblColumn { colName = "oref", colType = TextT }
+      tblColumn { colName = "id",                colType = TextT,   colNullable = False }
+    , tblColumn { colName = "session_id",        colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "nonce",             colType = TextT                        }
+    , tblColumn { colName = "tbs",               colType = TextT,   colNullable = False }
+    , tblColumn { colName = "encoded_tbs",       colType = TextT                        }
+    , tblColumn { colName = "signatory_link_id", colType = BigIntT                      }
+    , tblColumn { colName = "document_id",       colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "token",             colType = BigIntT                      }
+    , tblColumn { colName = "status",            colType = TextT,   colNullable = False }
+    , tblColumn { colName = "cr_transaction_id", colType = TextT                        }
+    , tblColumn { colName = "cr_signature",      colType = TextT                        }
+    , tblColumn { colName = "cr_attributes",     colType = TextT                        }
+    , tblColumn { colName = "oref",              colType = TextT                        }
     ]
   , tblPrimaryKey = ["id", "session_id"]
   , tblForeignKeys = [

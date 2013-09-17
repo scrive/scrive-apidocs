@@ -47,25 +47,37 @@ mixpanel.track('Error', {
 ###
 wholePage=
     $doctype()$
-    <html>
+    $htmlopentag()$
       <head>
         <script src="//cdn.optimizely.com/js/158965942.js"></script>
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
       <body $if(custombackground)$style="background:$custombackground$;"$endif$>
-       $header()$
-       $flashmessages()$
-       $content:noescape()$
-       $contactUsVivocha()$
-       $pageFooter()$
+        <div class="wrapper-position-footer">
+         $header()$
+         $flashmessages()$
+         $content:noescape()$
+         $contactUsVivocha()$
+         $pageFooter()$
+ 	</div>
       </body>
-    </html>
-
+    $htmlclosingtag()$
 ####
 pagetitle=$title$$if(production)$$else$ (devel) $endif$
 ####
 doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+####
+htmlclosingtag=
+</html>
+####
+htmlopentag=
+    <!--[if lt IE 7]>  <html class="ie ie6 lte9 lte8 lte7"> <![endif]-->
+    <!--[if IE 7]>     <html class="ie ie7 lte9 lte8 lte7"> <![endif]-->
+    <!--[if IE 8]>     <html class="ie ie8 lte9 lte8"> <![endif]-->
+    <!--[if IE 9]>     <html class="ie ie9 lte9"> <![endif]-->
+    <!--[if gt IE 9]>  <html> <![endif]-->
+    <!--[if !IE]> -->  <html><!-- <![endif]-->	
 ####
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -111,7 +123,7 @@ pageFooter=
 <style>
 $if(custombarscolour)$
   footer.site {
-      background: $custombarscolour$;
+      background: $custombarscolour$ !important;
   }
 $endif$
 
@@ -133,11 +145,10 @@ $endif$
 </style>
 
 
-<footer class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+<footer class="site $if(thin)$thin$endif$ $if(logged)$logged-in$endif$ $if(!logged)$thin$endif$">
   <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
     $if(logged)$
-
       <div class="poweredbyscrive" style="text-align: center; width: 100%;">
         $if(!custombarscolour)$
         <div class='text'>Powered by <div class='logo'/></div>
@@ -153,8 +164,33 @@ $endif$
         world. </p>
     </div>
 
-    <nav class="left">
+    <nav>
       <div class="content">
+        <ul class="tree">
+          <li class="branch"> <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api"> $_pageFooterAPI()$ </a> </li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <nav>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$about" id="nav-about">$_footerAbout()$</a></li>
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$contact" id="nav-contact">$_footerContact()$</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <nav class="right wide">
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">
+            $langSwitcher()$
+          </li>
+        </ul>
         <ul class="icons">
           <li>
             <a href="http://www.linkedin.com/company/scrive" target="_blank">
@@ -166,99 +202,11 @@ $endif$
               <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter" />
             </a>
           </li>
-          <li>
+          <li class="last">
             <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
               <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook" />
             </a>
           </li>
-        </ul>
-        <ul class="tree">
-          <li class="branch">
-            $langSwitcher()$
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-
-    <nav>
-      <header>
-        <h4>$_pageFooterExplore()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
-              $_pageFooterAPI()$
-            </a>
-          </li>
-
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
-              $_pageFooterLabs()$
-            </a>
-          </li>
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
-              $_pageFooterBlog()$
-            </a>
-          </li>
-          <li class="branch">
-            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
-              $_pageFooterWork()$
-            </a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header>
-        <h4>$_pageFooterTerms()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
-          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
-          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header>
-        <h4>$_pageFooterContact()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch">
-            $_pageFooterWorkDay()$
-          </li>
-          <li class="branch">
-            <a href="tel:$_pageFooterPhone()$">
-              $_pageFooterPhone()$
-            </a>
-          <li class="branch">
-            <a href="mailto:$_pageFooterMail()$">
-              $_pageFooterMail()$
-            </a>
-          </li>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-    <nav>
-      <header>
-        <h4>$_pageFooterAddress()$</h4>
-      </header>
-      <div class="content">
-        <ul class="tree">
-          <li class="branch">$_pageFooterAddress1()$</li>
-          <li class="branch">$_pageFooterAddress2()$</li>
-          <li class="branch">$_pageFooterAddress3()$</li>
-          <li class="branch">$_pageFooterAddress4()$</li>
         </ul>
       </div>
     </nav>
@@ -275,7 +223,12 @@ var google_custom_params = window.google_tag_params;
 var google_remarketing_only = true;
 /* ]]> */
 </script>
-<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
+<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
+<script>
+var container = jQuery('.mainContainer');
+// Fill the whole page
+if ($if(logged)$true$else$false$endif$ && container.find('.short-input-section').length > 0)
+  container.height(jQuery(window).height() - jQuery('header').height() - jQuery('footer').height());
 </script>
 <noscript>
 <div style="display:inline;">
@@ -311,7 +264,7 @@ $endif$
 $if(custombarstextcolour)$
   header.site nav ul.ct li a.page  {
     color: $custombarstextcolour$;
-    text-shadow: none;"
+    text-shadow: none;
   }
 $endif$
 
@@ -327,11 +280,11 @@ $endif$
 
 
 
-<header class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+<header class="site $if(!logged)$thin$endif$">
   <nav>
-    <ul class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+    <ul class="ct $if(!logged)$thin$endif$">
       <li id="branding">
-        <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="22" $endif$ /></a>
+        <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img $if(customlogo)$ src="$customlogolink$"  style="margin:0px" $else$ src="/img/logo.png" width="120" height="23" $endif$ /></a>
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
@@ -344,11 +297,11 @@ $endif$
       <li class="page-first float-right" >
           <a class="s-archive page"  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
       </li>
-      <li class="session-create float-right">
-          <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
+      <li class="session-create float-right fromtemplate">
+          <a class="button button fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
-          <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
+          <a class="button button js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
       </li>
       $else$
       <li class="page-first float-left" >
@@ -373,8 +326,8 @@ $endif$
           <a class="page last-link"   href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a>
       </li>
       <li class="session-login float-right">
-        <a class="button button-small" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
-        <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
+        <a class="button" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
+        <a class="button button-green" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
       </li>
       $endif$
     </ul>
@@ -394,7 +347,10 @@ langSwitcher=
                       $endif$
                    }
                    var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
-                                              textWidth: 80,
+		                              cssClass: "change-language",
+                                              textWidth: "189px",
+                                              optionsWidth: "216px",
+                                              border: "none",
                                               options: [ $if(langswedish)$
                                                                {name: "$_EnglishInEnglish()$", value: "en", onSelect : function() {changeLang("en");}}
                                                          $else$

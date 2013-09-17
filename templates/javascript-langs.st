@@ -186,12 +186,14 @@ javascriptLocalisation =
            , to : "$_to()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
            , ok : "$_ok()$"
+           , selectFiles: "$_selectFilesYouWantToUpload()$"
            , authorattachments: {
                   selectAttachments: "$_updateAttachmentsDialogHead()$"
                 , selectAttachment : "$_updateAttachmentsDialogUpLoadChooseAttachment()$"
                 , selectAttachmentsDescription: "$_updateAttachmentsDialogChooseAttachment()$"
                 , storedInScrive: "$_updateAttachmentsDialogUpLoadSaved()$"
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
+                , selectFromScrive : "$_updateAttachmentsDialogChooseFromScrive()$"
                 , selectedAttachments : "$_selectedAttachments()$"
                 , invalidAttachments : "$_invalidAttachments()$"
             }
@@ -209,8 +211,7 @@ javascriptLocalisation =
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
-              , selectFileHeader : "$_dialogCsvupload1ChooseFileToUpLoad()$"
-              , selectFileSubheader : "$_dialogCsvupload1CSVOnly()$"
+              , subtitle : "$_dialogCsvupload1Subtitle()$"
               , selectFile :  "$_dialogCsvupload2CSVMultiChooseFile()$"
               , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }
@@ -231,6 +232,7 @@ javascriptLocalisation =
            }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
+	      editInvitationMessage: "$_editInvitationMessage()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
               selectField: "$_selectField()$",
               validation : {
@@ -284,6 +286,7 @@ javascriptLocalisation =
              , addParty: "$_designViewAddParty()$"
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
+             , participantsInFile: "$_participantsIncludedInFile()$"
              , fullName: "$_designViewFullName()$"
              , mandatoryForRecipient: "$_designViewMandatoryForRecipient()$"
              , mandatoryForSender: "$_designViewMandatoryForSender()$"
@@ -427,6 +430,8 @@ javascriptLocalisation =
              , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
              , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
+	     , signOrRejectTitle: "$_signOrRejectTitle()$"
+	     , onlySignTitle: "$_onlySignTitle()$"
              , newAccountTitle: "$_signViewCreateAccountTitle()$"
              , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
              , emailLabel: "$_email()$"
@@ -445,9 +450,8 @@ javascriptLocalisation =
              , phoneConfirmationText: "$_phoneConfirmationText()$"
              , startButtonLabel: "$_startButtonLabel()$"
              , notEntered: "$_notEntered()$"
-             , checkboxes : {
-                    pleaseCheck : "$_checkboxPleaseCheck()$"
-               }
+             , checkbox: "$_signViewCheckbox()$"
+             , textfield: "$_signViewTextField()$"
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
              , welcome : "$_welcome()$"
@@ -477,6 +481,7 @@ javascriptLocalisation =
            , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
+	   , numberOfUsers: "$_paymentNumberOfUsers()$"
            , plans: {
                       team         : {
                       name : "$_paymentPlanTeam()$",
@@ -509,6 +514,9 @@ javascriptLocalisation =
                     , nextpayment : "$_paymentPlanNextPayment()$"
                     , previouspayments : "$_paymentPlanPreviousPayments()$"
                     , changebilling: "$_paymentPlanChangeBilling()$"
+		    , changecard: "$_paymentChangeCard()$"
+		    , cardinformation: "$_cardInformation()$"
+		    , billinginformation: "$_billingInformation()$"
                     , none: "$_paymentPlanNone()$"
                     }
             , subscribe: "$_paymentPlanSubscribe()$"
@@ -624,7 +632,7 @@ javascriptLocalisation =
                     ,  columns :{
                               time       : "$_SortTime()$"
                             , template   : "$_SortTemplate()$"
-                            , shared      : "$_share()$"
+                            , shared      : "$_shared()$"
                             , verificationMethod : "$_verificationMethod()$"
                        }
                 }
@@ -649,7 +657,7 @@ javascriptLocalisation =
                     ,  search : "$_pageAttachmentListSearchInfo()$"
                     ,  columns :{
                               time       : "$_SortTime()$"
-                            , shared      : "$_share()$"
+                            , shared      : "$_shared()$"
                             , attachment   : "$_SortAttachment()$"
 
                        }
@@ -858,6 +866,7 @@ javascriptLocalisation =
               , createNewModalTitle:"$_modalAddCompanyAccountTitle()$"
               , createNewModalAcceptButton: "$_modalAddCompanyAccountInviteButtonText()$"
               , search : "$_SearchCompanyAccount()$"
+              , list : "$_list()$"
               , roleAdmin : "$_admin()$"
               , roleStandard : "$_standard()$"
               , rolePending : "$_pendingcompanyaccount()$"

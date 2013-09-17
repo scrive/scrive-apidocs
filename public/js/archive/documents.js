@@ -18,15 +18,12 @@ window.DocumentCellsDefinition = function(archive) { return  [
                     return icon;
                  }
         }),
-        new Cell({name: localization.archive.documents.columns.time, width:"140px", field:"time", special: "rendered",
+        new Cell({name: localization.archive.documents.columns.time, width:"105px", field:"time", special: "rendered",
                   rendering: function(time) {
                          if (time != undefined && time != "")
-                           return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+                           return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                          else return $("<div/>");
         }}),
-        new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
-        new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.party, width:"190px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.title, width:"230px", substyle: "", field:"id",special: "rendered",
                  rendering: function(value,idx,listobject) {
@@ -75,14 +72,17 @@ window.DocumentCellsDefinition = function(archive) { return  [
                         return actionIcon;
                      }
 
-                 }})
+                 }}),
+        new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
+        new Cell({width:"5px" }),
+        new Cell({name: localization.archive.documents.columns.party, width:"210px", field:"party", special: "expandable", subfield : "name"})
         ];
 };
 
 window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
             new SelectFiltering({
                              name: "status",
-                             textWidth : "109px",
+                             textWidth : "135px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
@@ -93,7 +93,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
             archive.forCompanyAdmin() ?
               [new SelectAjaxFiltering({
                              name: "sender",
-                             textWidth : "109px",
+                             textWidth : "135px",
                              text : "sender",
                              optionsURL : "/companyaccounts",
                              defaultName : localization.filterByAuthor.showAnyAuthor,
@@ -113,7 +113,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                  })] : [],
             new IntervalDoubleSelectFiltering({
                              name: "time",
-                             textWidth : "109px",
+                             textWidth : "100px",
                              selectedBottomPrefix : localization.filterByTime.filterForm,
                              selectedTopPrefix :    localization.filterByTime.filterTo ,
                              options: function() {
@@ -149,6 +149,7 @@ window.DocumentsListDefinition = function(archive) { return {
             name :  localization.archive.documents.sendreminder.action,
             emptyMessage :  localization.archive.documents.sendreminder.emptyMessage,
             notAvailableMessage :  localization.archive.documents.sendreminder.notAvailableMessage,
+            size: "normal",
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -168,6 +169,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.sendreminder.action,
+                                icon: '/img/modal-icons/remind.png',
                                 content: content,
                                 onAccept : function() {
                                     mixpanel.track('Send reminder');
@@ -195,6 +197,7 @@ window.DocumentsListDefinition = function(archive) { return {
             name :  localization.archive.documents.cancel.action,
             emptyMessage :  localization.archive.documents.cancel.emptyMessage,
             notAvailableMessage :  localization.archive.documents.cancel.notAvailableMessage,
+            size: 'normal',
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -206,6 +209,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.cancel.action,
+                                icon: '/img/modal-icons/sign.png',
                                 content: jQuery("<p/>").text(localization.archive.documents.cancel.body),
                                 onAccept : function() {
                                     mixpanel.track('Cancel document');
@@ -231,6 +235,7 @@ window.DocumentsListDefinition = function(archive) { return {
         new ListAction({
             name : localization.archive.documents.remove.action,
             emptyMessage :  localization.archive.documents.cancel.emptyMessage,
+            size: 'normal',
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
                          var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
@@ -245,6 +250,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.remove.action,
+                                icon: '/img/modal-icons/delete.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     mixpanel.track('Delete document');
@@ -305,7 +311,7 @@ window.DocumentsListDefinition = function(archive) { return {
                             var text = $("<div class='float-left'/>").text(text);
                             return $.merge(icon,text);
                         };
-                        box.append(description("draft",localization.archive.documents.statusDescription.draft));
+                        box.append(description("draft",localization.archive.documents.statusDescription.draft).addClass('first'));
                         box.append(description("problem",localization.archive.documents.statusDescription.cancelled));
                         box.append(description("sent",localization.archive.documents.statusDescription.sent));
                         box.append(description("delivered",localization.archive.documents.statusDescription.delivered));

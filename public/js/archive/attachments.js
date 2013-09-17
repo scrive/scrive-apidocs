@@ -13,14 +13,14 @@ window.AttachmentsListDefinition = function(archive) {
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.attachments.search}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.attachments.columns.shared, width:"60px", field:"shared", special: "rendered",
-                  rendering: function(shared) {
-                         return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
+        new Cell({name: localization.archive.attachments.columns.time, width:"105px", field:"time", special: "rendered",
+                  rendering: function(time) {
+                         return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                   }}),
         new Cell({name: localization.archive.attachments.columns.attachment, width:"600px", field:"title",  special: "link"}),
-        new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time", special: "rendered",
-                  rendering: function(time) {
-                         return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
+        new Cell({name: localization.archive.attachments.columns.shared, width:"50px", field:"shared", special: "rendered",
+                  rendering: function(shared) {
+                         return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
                   }})
         ],
     actions : [
@@ -29,8 +29,7 @@ window.AttachmentsListDefinition = function(archive) {
                 avaible : function(){return true;},
                 acceptEmpty : true,
                 button: new UploadButton({
-                            size: "tiny",
-                            width : 144,
+                            width : 158,
                             color : "black",
                             text: localization.archive.attachments.createnew.action,
                             name : "doc",
@@ -57,6 +56,7 @@ window.AttachmentsListDefinition = function(archive) {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.share.head,
+                                icon: '/img/modal-icons/multisend.png',
                                 content: jQuery("<p/>").text(localization.archive.attachments.share.body),
                                 onAccept : function() {
                                     new Submit({
@@ -91,6 +91,7 @@ window.AttachmentsListDefinition = function(archive) {
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.remove.action,
+                                icon: '/img/modal-icons/delete.png',
                                 content: confirmtext,
                                 onAccept : function() {
                                     var confirmationPopup = new Submit({

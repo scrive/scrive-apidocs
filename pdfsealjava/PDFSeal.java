@@ -50,6 +50,8 @@ import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.CMYKColor;
 import com.itextpdf.text.pdf.PdfPTableEvent;
 
+import org.bouncycastle.util.encoders.Base64;
+
 /*
  * Class that directly serve deserialization of JSON data.
  */
@@ -67,10 +69,12 @@ class Person
     public String personalnumber;
     public String companynumber;
     public String email;
+    public String phone;
     public Boolean fullnameverified;
     public Boolean companyverified;
     public Boolean numberverified;
     public Boolean emailverified;
+    public Boolean phoneverified;
     public ArrayList<Field> fields;
 
 }
@@ -239,7 +243,7 @@ public class PDFSeal {
         throws IOException, DocumentException
     {
         Document document = new Document();
-        PdfCopy writer = new PdfSmartCopy(document, os);
+        PdfCopy writer = new PdfCopy(document, os);
         document.open();
 
         for(PdfReader reader: sources) {
@@ -480,6 +484,11 @@ public class PDFSeal {
                 para.setLeading(0f, 1.2f);
                 cell.addElement(para);
             }
+            if( person.phone!=null && !person.phone.equals("") ) {
+                para = createParagraph(person.phone, 10, person.phoneverified ? Font.ITALIC : Font.NORMAL, lightTextColor);
+                para.setLeading(0f, 1.2f);
+                cell.addElement(para);
+            }
             for( Field field : person.fields ) {
                 if( field.valueBase64!=null &&
                     field.valueBase64!="" &&
@@ -499,11 +508,29 @@ public class PDFSeal {
                                                               field.keyColor.get(2),
                                                               field.keyColor.get(2)} );
                         }
-                        image.scaleAbsoluteWidth(150);
-                        image.setBorder(Rectangle.BOTTOM);
-                        image.setBorderWidth(1f);
-                        image.setBorderColor(lightTextColor);
-                        cell.addElement(image);
+
+                        /*
+                         * The magic below is to add a bottom line to
+                         * an image.  We cannot just set border on the
+                         * image, because the worder width will be
+                         * scaled together with the image, and that is
+                         * wrong.
+                         *
+                         * Also table2.setTotalWidth(150) does not
+                         * work, is ignored, so we need to use
+                         * table2.setWidthPercentage(50).
+                         */
+                        PdfPTable table2 = new PdfPTable(new float[]{1});
+                        table2.setWidthPercentage(50);
+                        table2.setHorizontalAlignment(Element.ALIGN_LEFT);
+
+                        PdfPCell cell2 = new PdfPCell(image, true);
+                        cell2.setBorder(Rectangle.BOTTOM);
+                        cell2.setBorderWidth(0.6f);
+                        cell2.setBorderColor(lightTextColor);
+
+                        table2.addCell(cell2);
+                        cell.addElement(table2);
                 }
             }
             table.addCell(cell);
@@ -633,7 +660,7 @@ public class PDFSeal {
 
         table = new PdfPTable(2);
         table.setWidthPercentage(100f);
-        table.setWidths(new int[]{1, 2});
+        table.setWidths(new int[]{12, 20});
 
         table.setTableEvent(drawFrame);
 

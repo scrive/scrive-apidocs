@@ -74,7 +74,9 @@ window.CompanyBrandingModel = Backbone.Model.extend({
                     pagehash :  "branding-service",
                     elems : [serviceBranding.el()]
                   })
-                ]
+                ],
+            inner: true,
+            innerText: localization.companyBranding.customize
         });
       this.set({ "emailBranding" : emailBranding ,
                  "signviewBranding" : signviewBranding,
@@ -163,8 +165,8 @@ window.CompanyBrandingView = Backbone.View.extend({
   saveButton: function() {
     var model = this.model;
     return new Button({
-      color: "blue",
-      shape: "rounded",
+      color: "green",
+      cssClass: "button-green save",
       size: "small",
       text: localization.companyBranding.saveBranding,
       onClick: function() {

@@ -328,7 +328,7 @@
 
             var features = $('<div class="features" />');
 
-            var titleheader = $('<h2 />').text(localization.payments.plans[view.plan].name);
+            var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
             if (model.headercolour()) {
               titleheader.css('color', model.headercolour());
             }
@@ -355,7 +355,7 @@
 
             features.append(cost);
 
-            var button = $('<a class="button action-sign-up" />')
+            var button = $('<a class="button button-green action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.contact))
                 .append($('<span class="gray" />')
@@ -448,6 +448,7 @@
             this.onClick = args.onClick;
             var view = this;
             this.$el.click(function() {
+                mixpanel.track('Team Box Purchase click');
                 view.onClick();
                 return false;
             });
@@ -463,7 +464,7 @@
 
             var features = $('<div class="features" />');
 
-            var titleheader = $('<h2 />').text(localization.payments.plans[view.plan].name);
+            var titleheader = $('<h4 />').text(localization.payments.plans[view.plan].name);
             if (model.headercolour()) {
               titleheader.css('color', model.headercolour());
             }
@@ -491,7 +492,7 @@
 
             features.append(cost);
 
-            var button = $('<a class="button action-sign-up" />')
+            var button = $('<a class="button button-green action-sign-up" />')
                 .append($('<span class="blue" />')
                         .text(localization.payments.purchase))
                 .append($('<span class="gray" />')
@@ -805,7 +806,7 @@
                     loadingicon = $(form).find('img.loading-icon');
                 }
                 , onError: function() {
-                    console.log("hello!! Error!!!");
+                    console.log("Recurly error: Something with Recurly setup went wrong. Correct Recurly config set up?");
                     console.log(loadingicon);
                     loadingicon.hide();
                 }
@@ -886,7 +887,7 @@
 
             var header = $('<header />')
                 .append($('<h1 />').text(model.header()))
-                .append($('<h2 />').text('')); //localization.payments.subheader
+                .append($('<h4 />').text('')); //localization.payments.subheader
             if (!this.noheaders)
               div.append(header);
             //div.append($('<h3 />').text(localization.payments.chooseplan));
@@ -908,7 +909,8 @@
         }
     });
 
-    var PaymentsDashboardNoneView = Backbone.View.extend({
+    var PaymentsCurrentSubscriptionView = Backbone.View.extend({
+        /* This view is used both indepenendently and by PaymentsDashboardRecurlyView */
         className: 'noprovider',
         initialize: function(args) {
             var view = this;
@@ -921,19 +923,22 @@
             var model = view.model;
             var $el = $(view.el);
 
-            var div = $('<div class="col" />');
+          var div = $('<div class="col subscription-plan" />');
             var header = $('<div class="account-header" />')
-                .append($('<h2 />')
-                        .text(localization.payments.table.currentplan));
-            var table = $('<div class="account-body" />')
-                .append($('<div class="plan-name" />')
-                        .text(localization.payments.plans[model.paidPlan()].name))
-                .append($('<p />')
-                       .text(model.quantity() + " " + localization.payments.users))
-                .append($('<p class="askviktor" />')
-                        .html(localization.payments.askviktor));
+                .append($('<h4></h4>').text(localization.payments.table.currentplan));
+          var table = $('<div class="account-body" />');
+                
+	  var planInformation = $('<div class="plan-information" />');
+          var planName = $('<p class="plan-name"></p>').text(localization.payments.plans[model.paidPlan()].name);
+          var numberOfUsers = $('<p></p>').text(localization.payments.numberOfUsers + " : " + model.quantity() + " " + localization.payments.users);
+	  planInformation.append(planName);
+	  planInformation.append(numberOfUsers);
+	  table.append(planInformation);
+	        
+	  var askviktor = $('<p class="askviktor"></p>').html(localization.payments.askviktor);
+	  table.append(askviktor);
 
-            $el.html(div.append(header).append(table));
+          $el.html(div.append(header).append(table));
         }
     });
 
@@ -950,9 +955,9 @@
             var model = view.model;
 
             var payments = $('<div class="col" />');
-            var paymentsheader = $('<div class="account-header" />')
-                .append($('<h2 />')
-                        .text(localization.payments.table.payments));
+            var paymentsheader = $('<div class="account-header" />').append($('<h4 />')
+									    .text(localization.payments.table.payments));
+           
             var paymentstable = $('<div class="account-body" />')
                 .append(view.nextPayment())
                 .append(view.previousPayments());
@@ -1011,8 +1016,8 @@
                 var status = invoice.state();
                 var line   = $('<div class="line" />')
                     .append($('<span class="invoice-date" />').text(datef))
-                    .append($('<span class="invoice-status" />').text(status))
-                    .append($('<span class="total" />').text(totalf));
+                    .append($('<span class="total" />').text(totalf))
+                    .append($('<span class="invoice-status" />').text(status));
                 lines = lines.add(line);
             });
 
@@ -1026,13 +1031,17 @@
     });
 
     var ChangeBillingFormView = Backbone.View.extend({
-        className: 'col',
         initialize: function(args) {
             var view = this;
             view.model = args.model;
             _.bindAll(this);
             view.model.bind('fetch', this.render);
+	    view.model.bind('subscriptionCancelled', this.subscriptionCancelled);
         },
+	subscriptionCancelled: function() {
+	    this.remove();
+	    this.unbind();
+	},
         render: function() {
             var view = this;
             var model = view.model;
@@ -1040,7 +1049,7 @@
 
             var billing = $('<div class="col" />');
             var billingheader = $('<div class="account-header" />')
-                .append($('<h2 />')
+                .append($('<h4 />')
                         .text(localization.payments.table.changebilling));
             var billingform = $('<div class="account-body changebilling-form" />');
             Recurly.config({
@@ -1105,53 +1114,64 @@
                  }
                 }
             );
-            billingform.find('.footer').prepend($('<div class="cancel" />').append(view.cancelButton()));
-            $el.html($().add(billingheader).add(billingform));
+
+
+	    var cancel = $('<div class="col cancel-subscription" />');
+            var cancelheader = $('<div class="account-header" />')
+                .append($('<h4 />')
+                        .text(localization.payments.cancelsubscription));
+            var cancelbody = $('<div class="account-body" />');
+	    cancelbody.append(view.cancelButton());
+	    cancel.append(cancelheader);
+	    cancel.append(cancelbody);
+
+	    var viewContainer = $('<div class="view-container" />');
+	    viewContainer.append($('<div class="col" />').append(billingheader).append(billingform));
+	    viewContainer.append(cancel);
+            $el.html(viewContainer);
         },
         cancelButton: function() {
             var view = this;
             var model = view.model;
 
-            var button = new Button({color:'red',
-                                      size: 'small',
-                                      cssClass: 'cancel-button',
-                                      text: localization.payments.cancelsubscription,
-                                      onClick: function() {
-                                          mixpanel.track('Click cancel subscription button');
-                                          var message = localization.payments.cancelDialog;
+	    var cancelSubscriptionButton = $('<a href="">' + localization.payments.cancelsubscription + '</a>');
+	    cancelSubscriptionButton.click(function() {
+                mixpanel.track('Click cancel subscription button');
+                var message = localization.payments.cancelDialog;
 
-                                          var conf = Confirmation.popup({
-                                              title: localization.payments.cancelsubscription,
-                                              acceptText: localization.payments.cancelsubscription,
-                                              content: $('<p />').text(message),
-                                              submit: new Submit({url: "/payments/changeplan",
-                                                                  method: "POST",
-                                                                  plan: "free",
-                                                                  ajax: true,
-                                                                  ajaxsuccess: function() {
-                                                                      model.fetch({success:function() {
-                                                                          LoadingDialog.close();
-                                                                          model.trigger('fetch');
-                                                                          new FlashMessage({color:'green', content: localization.blocking.willcancel.headline.replace('XX', Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays())) });
-                                                                      }});
-                                                                  },
-                                                                  onSend: function() {
-                                                                      mixpanel.track('Accept',
-                                                                                     {'Accept' : 'Cancel subscription'});
-                                                                      conf.view.clear();
-                                                                      LoadingDialog.open(localization.payments.cancelingSubscription);
-                                                                  }
-                                                                 })
-                                          });
-                                          return false;
-                                      }
-                                     });
-            return button.el();
+                var conf = Confirmation.popup({
+                    title: localization.payments.cancelsubscription,
+                    acceptText: localization.payments.cancelsubscription,
+                    content: $('<p />').text(message),
+                    submit: new Submit({url: "/payments/changeplan",
+                                        method: "POST",
+                                        plan: "free",
+                                        ajax: true,
+                                        ajaxsuccess: function() {
+                                            model.fetch({success:function() {
+                                                LoadingDialog.close();
+                                                model.trigger('fetch');
+                                                new FlashMessage({color:'green', content: localization.blocking.willcancel.headline.replace('XX', Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays())) });
+						model.trigger('subscriptionCancelled');
+                                            }});
+                                        },
+                                        onSend: function() {
+                                            mixpanel.track('Accept',
+                                                           {'Accept' : 'Cancel subscription'});
+                                            conf.view.clear();
+                                            LoadingDialog.open(localization.payments.cancelingSubscription);
+                                        }
+                                       })
+                });
+                return false;
+            });
+
+            return cancelSubscriptionButton;
         }
     });
 
     var RewnewSubscriptionView = Backbone.View.extend({
-        className: 'col',
+        className: 'col renew-subscription',
         initialize: function(args) {
             var view = this;
             view.model = args.model;
@@ -1165,7 +1185,7 @@
 
             var billing = $('<div class="col" />');
             var billingheader = $('<div class="account-header" />')
-                .append($('<h2 />')
+                .append($('<h4 />')
                         .text(localization.payments.renewSubscription));
             var billingform = $('<div class="account-body renew-form" />');
 
@@ -1207,6 +1227,8 @@
                                                                           LoadingDialog.close();
                                                                           model.trigger('fetch');
                                                                           new FlashMessage({color:'green', content: localization.payments.subscriptionRenewed });
+									  view.unbind();
+									  view.remove();
                                                                       }});
                                                                   },
                                                                   onSend: function() {
@@ -1224,6 +1246,7 @@
         }
     });
 
+
     var PaymentsDashboardRecurlyView = Backbone.View.extend({
         className: 'payments subscribed',
         initialize: function(args) {
@@ -1231,6 +1254,7 @@
             view.model = args.model;
             _.bindAll(this);
             view.model.bind('fetch', this.render);
+	    view.paymentsSubscription = new PaymentsCurrentSubscriptionView({model:view.model});
             view.paymentsTable = new InvoicePaymentsView({model:view.model});
             view.changeBillingForm = new ChangeBillingFormView({model:view.model});
             view.renewSubscription = new RewnewSubscriptionView({model:view.model});
@@ -1241,30 +1265,26 @@
             var $el = $(view.el);
 
             $el.addClass("subscribed").removeClass("subscribing");
-
-            var col1 = $('<div class="col1" />')
-                .append(view.paymentsTable.el);
-
-            var col2 = $('<div class="col2" />');
+	    $el.append(view.paymentsSubscription.el);
+            $el.append(view.paymentsTable.el);
 
             if(model.subscription().code() === 'free' || (model.subscription().pending() && model.subscription().pending().code() === 'free'))
-                col2.append(view.renewSubscription.el);
+                $el.append(view.renewSubscription.el);
             else
-                col2.append(view.changeBillingForm.el);
+                $el.append(view.changeBillingForm.el);
 
-            var c = $().add(col1).add(col2);
-            $el.html(c);
         }
     });
 
     var chooseView = function(model) {
+        /* Choose main view to display on the subscribe page */
         if(model.type()      === 'nouser')
             return new PricePageView({model:model});
         else if(model.type() === 'user')
             return new PricePageView({model:model,
                                       hideContacts: true});
         else if(model.type() === 'plannone')
-            return new PaymentsDashboardNoneView({model:model});
+            return new PaymentsCurrentSubscriptionView({model:model});
         else if(model.type() === 'planrecurly')
             return new PaymentsDashboardRecurlyView({model:model});
     };

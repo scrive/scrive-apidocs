@@ -81,12 +81,14 @@ personFromSignatoryDetails boxImages details =
     Seal.Person { Seal.fullname = getFullName details
                 , Seal.company = getCompanyName details
                 , Seal.email = getEmail details
+                , Seal.phone = getMobile details
                 , Seal.personalnumber = getPersonalNumber details
                 , Seal.companynumber = getCompanyNumber details
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
                 , Seal.emailverified = True
+                , Seal.phoneverified = False
                 , Seal.fields = fieldsFromSignatory False [] boxImages details
                 }
 
@@ -115,10 +117,11 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
                                                       , signatorylinkdeliverymethod
                                                       }) =
   ((personFromSignatoryDetails boxImages signatorydetails)
-     { Seal.emailverified    = True
+     { Seal.emailverified    = signatorylinkdeliverymethod `elem` [EmailDelivery, EmailAndMobileDelivery]
      , Seal.fullnameverified = fullnameverified
      , Seal.companyverified  = False
      , Seal.numberverified   = numberverified
+     , Seal.phoneverified    = signatorylinkdeliverymethod `elem` [MobileDelivery, EmailAndMobileDelivery]
      }
     , maybe signinfo id maybeseeninfo -- some old broken documents do not have seeninfo before signinfo
     , signinfo
@@ -297,7 +300,7 @@ evidenceOfIntentAttachment title sls = do
  formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
 -}
 formatMinutesTimeForVerificationPage :: MinutesTime -> String
-formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M %Z" caltime ++ " (" ++ tzinfo ++ ")"
+formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S %Z" caltime ++ " (" ++ tzinfo ++ ")"
   where
     caltime = MinutesTime.toCalendarTime mt
     tzoffset = ctTZ caltime `div` 60 -- convert seconds into minutes
@@ -390,27 +393,32 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                           document
 
                     descs <- flip mapM sortedPeople $ \people -> do
-                      let peopleWithEmailDelivery = filter ((==) EmailDelivery . signatorylinkdeliverymethod) people
-                      case peopleWithEmailDelivery of
-                        [] -> do
-                          -- everybody in this signatory order was Pad delivery or API delivery
-                          return Nothing
-                        _ -> do
-                          tmpl <- renderLocalTemplate document "_invitationSentEntry" $ do
-                            F.valueM "partyList" $ renderListTemplateNormal $ map getSmartName $ peopleWithEmailDelivery
-                          return (Just tmpl)
+                      let filterByDelivery delivery =
+                            filter (\p -> signatorylinkdeliverymethod p == delivery)
+                      let entry delivery templateName =
+                            case filterByDelivery delivery people of
+                              [] -> do
+                                  -- everybody in this signatory order was Pad delivery or API delivery
+                                  return []
+                              them -> do
+                                 tmpl <- renderLocalTemplate document templateName $ do
+                                     F.valueM "partyList" $ renderListTemplateNormal $ map getSmartName $ them
+                                 return [tmpl]
+                      concat <$> sequence [ entry EmailDelivery "_invitationEmailSentEntry"
+                                          , entry MobileDelivery "_invitationSMSSentEntry"
+                                          , entry EmailAndMobileDelivery "_invitationEmailAndSMSSentEntry"
+                                          ]
 
                     -- times is offset by one in position wrt
                     -- sortedPeople last element of times is actually
                     -- ignored here
                     let times = time : map (maximum . map (signtime . fromJust . maybesigninfo)) sortedPeople
-                    let mkEntry time' (Just desc) = Just $ Seal.HistEntry
-                                            { Seal.histdate = formatMinutesTimeForVerificationPage time'
-                                            , Seal.histcomment = pureString desc
-                                            , Seal.histaddress = "IP: " ++ show ipnumber
-                                            }
-                        mkEntry _ _ = Nothing
-                    return $ catMaybes $ zipWith mkEntry times descs
+                    let mkEntry time' descsx = [Seal.HistEntry
+                                                      { Seal.histdate = formatMinutesTimeForVerificationPage time'
+                                                      , Seal.histcomment = pureString desc
+                                                      , Seal.histaddress = "IP: " ++ show ipnumber
+                                                      } | desc <- descsx]
+                    return $ concat $ zipWith mkEntry times descs
                   _ -> do
                     -- document does not have documentinvitetime, what
                     -- does it mean really?
@@ -611,7 +619,7 @@ digitallySealDocument forceAttach ctxtime ctxgtconf documentid pdfpath pdfname =
 
 digitallyExtendDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
                       => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m Bool
-digitallyExtendDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
+digitallyExtendDocument _ctxtime ctxgtconf documentid pdfpath pdfname = do
   code <- liftIO $ GT.digitallyExtend ctxgtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
@@ -635,7 +643,7 @@ digitallyExtendDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
       File{fileid = sealedfileid} <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
       Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
       -- TODO: keep old sealed file, or delete?
-      dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
+      dbUpdate $ AttachExtendedSealedFile documentid sealedfileid status
       return True
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.

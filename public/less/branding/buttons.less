@@ -1,16 +1,18 @@
+@import 'colors.less';
+
 input[type="submit"]::-moz-focus-inner {border:0;}
 
 .button {
-  .gradient(hsl(@blueH,@blueS,35%), hsl(@blueH,@blueS,30%), hsl(@blueH,@blueS,40%));
-  border: 2px solid hsl(@blueH,@blueS,23%);
-  .box-shadow(inset hsl(@blueH,@blueS,60%) 0 0 0 2px);
+  background-color: @blue;
   max-height: 16px;
-  font-size: @em;
+  min-width: 50px;
+  .border-radius(1px,1px,1px,1px);
+  font-size: 15px;
+  font-weight: 300;
   text-decoration: none;
-  padding: 14px 20px;
+  padding: 13px 20px;
   margin: 0;
   color: #fff !important;
-  text-shadow: hsla(0,0,0,.5) 0 1px 0;
   text-align: center;
   .transition(.15s, ease-in-out);
   cursor: pointer;
@@ -24,123 +26,95 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   *display:inline;
 
   &.button-green {
-    .gradient(hsl(@greenH,@greenS,35%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,40%));
-    .box-shadow(inset hsl(@greenH,66%,60%) 0 0 0 2px);
-    border: 2px solid hsl(@greenH,@greenS,23%);
+    background-color: @green;
     &:hover {
-      .gradient(hsl(@greenH,@greenS,38%), hsl(@greenH,@greenS,30%), hsl(@greenH,@greenS,47%));
-      .box-shadow(inset hsl(@greenH,66%,75%) 0 0 0 2px);
-      border-color: hsl(@greenH,@greenS,23%);
+       background-color: #49A979;
       .transition(.15s, ease-in-out);
     }
     &:active, &.active {
-      .gradient(hsl(@greenH,@greenS,17%), hsl(@greenH,@greenS,13%), hsl(@greenH,@greenS,20%));
-      .box-shadow(inset hsl(@greenH,30%,50%) 0 0 0 2px);
-      border-color: hsl(@greenH,@greenS,23%);
+       background-color: @green;
       .transition(.15s, ease-in-out);
     }
-
   }
 
   &.button-gray {
-    .gradient(hsl(0,0,41%), hsl(0,0,33%), hsl(0,0,50%));
-    .box-shadow(inset hsl(0,0,80%) 0 0 0 2px);
-    border-color: hsl(0,0%,27%);
+    color: @text-very-dark !important;
+    background: @grey;
+    border: none;
     &:hover {
-      .gradient(hsl(0,0,46%), hsl(0,0,33%), hsl(0,0,60%));
-      .box-shadow(inset hsl(0,0,88%) 0 0 0 2px);
-      border-color: hsl(0,0,33%);
+        background: darken(@grey, 5%);
     }
     &:active {
-      .gradient(hsl(0,0,32%), hsl(0,0,25%), hsl(0,0,40%));
-      .box-shadow(inset hsl(0,0,70%) 0 0 0 2px);
-      border-color: hsl(0,0,20%);
+        background: @grey;
     }
   }
 
   &.button-light-blue {
-    background : #0768A9;
-    .box-shadow(inset  #0768A9 0 0 0 0px);
-    border-color:  #0768A9;
+    background: @blue-secondary;
+    border: none;
     &:hover {
-      background : #53B7E9;
-      .box-shadow(inset #53B7E9 0 0 0 2px);
-      border-color: #53B7E9;
+        background: darken(@blue-secondary, 5%);
     }
     &:active {
-      background : #53B7E9;
-      .box-shadow(inset #53B7E9 0 0 0 2px);
-      border-color: #53B7E9;
+        background: @blue-secondary;
     }
   }
 
-
   &.button-red {
-    .gradient(hsl(@redH,@redS,30%), hsl(@redH,@redS,25%), hsl(@redH,@redS,@redL));
-    border-color: hsl(@redH,@redS,30%);
-    .box-shadow(inset hsl(@redH,60%,67%) 0 0 0 2px);
+    background: @red;
+    border: none;
     &:hover {
-      .gradient(hsl(@redH,@redS,35%), hsl(@redH,@redS,28%), hsl(@redH,@redS,41%));
-      border-color: hsl(@redH,@redS,38%);
-      .box-shadow(inset hsl(@redH,66%,73%) 0 0 0 2px);
+        background: @red-dark;
     }
-    &:active, &.active {
-      .gradient(hsl(@redH,@redS,25%), hsl(@redH,@redS,20%), hsl(@redH,@redS,30%));
-      border-color: hsl(@redH,@redS,27%);
-      .box-shadow(inset hsl(@redH,54%,60%) 0 0 0 2px);
+    &:active {
+        background: @red;
     }
   }
 
   &:hover {
-    .gradient(hsl(@blueH,@blueS,38%), hsl(@blueH,@blueS,30%), hsl(@blueH,@blueS,47%));
-    .box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 2px);
-    .transition(.15s, ease-in-out);
-    border-color: hsl(@blueH,@blueS,23%);
+      background-color: #2C353D;
   }
   &:active, &.active {
-    .box-shadow(inset hsl(@blueH,@blueS,50) 0 0 0 2px);
-    .gradient(hsl(@blueH,@blueS,17%), hsl(@blueH,@blueS,13%), hsl(@blueH,@blueS,20%));
-    .transition(.15s, ease-in-out);
-    border-color: hsl(@blueH,23%,23%);
+      background-color: @blue;
   }
   &.button-small {
-    max-height: 12px;
-    .box-shadow(inset hsl(@blueH,@blueS,60%) 0 0 0 1px);
-    font-size: 12px;
-    font-weight: bold;
+    max-height: 14px;
+    min-width: 35px;
+    background-color: @blue;
+    font-size: 13px;
     font-family: @source;
-    line-height: 12px;
+    line-height: 14px;
     padding: 8px 12px;
-    &:hover {.box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 1px)}
-    &:active, &.active {.box-shadow(inset hsl(@blueH,@blueS,50%) 0 0 0 1px)}
 
-    &.button-gray {.box-shadow(inset hsl(0,0,80%) 0 0 0 1px)}
-    &.button-gray:hover {.box-shadow(inset hsl(0,0,70%) 0 0 0 1px)}
+    &.button-gray { background: @grey; color: @text-very-dark !important }
+    &.button-gray:hover { background: darken(@grey, 25%); }
     &.button-gray:active,
-    &.button-gray.active, {.box-shadow(inset hsl(0,0,80%) 0 0 0 1px)}
+    &.button-gray.active, { background: @grey; }
 
     &.button-light-blue {.box-shadow(inset #0768A9 0 0 0 1px)}
     &.button-light-blue:hover {.box-shadow(inset #53B7E9 0 0 0 1px)}
     &.button-light-blue:active,
     &.button-light-blue.active, {.box-shadow(inset #53B7E9 0 0 0 1px)}
 
-    &.button-red{.box-shadow(inset hsl(@redH,60%,67%) 0 0 0 1px)}
-    &.button-red:hover{.box-shadow(inset hsl(@redH,66%,73%) 0 0 0 1px)}
+    &.button-red { background: @red;}
+    &.button-red:hover { background: @red-dark; }
     &.button-red:active,
-    &.button-red.active{.box-shadow(inset hsl(@redH,54%,60%) 0 0 0 1px)}
-    &.button-green {.box-shadow(inset hsl(@greenH,66%,65%) 0 0 0 1px)}
-    &.button-green:hover {.box-shadow(inset hsl(@greenH,66%,77%) 0 0 0 1px)}
+    &.button-red.active, { background: @red; }
+
+    /* there's a lot of overlap between this and the bigger button button-green definition */
+    &.button-green { background: @green; }
+    &.button-green:hover { background: @green-dark; }
     &.button-green:active,
-    &.button-green.active {.box-shadow(inset hsl(@greenH,30%,75%) 0 0 0 1px)}
+    &.button-green.active { background: @green; }
   }
 
   &.button-large {
-    max-height: 31px;
-    font-size: 24px;
-    line-height: 31px;
+    max-height: 18px;
+    font-size: 18px;
+    line-height: 18px;
     font-family: @source;
     /* to fix Firefox bug, have to use padding instead of line height */
-    padding: 15px 30px 14px;
+    padding: 17px 25px 17px;
 
     .small-screen & {
         font-size: 42px;
@@ -151,15 +125,27 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   }
 
   &.button-round {
-    .border-radius(24px,24px,24px,24px);
+    .border-radius(25px,25px,25px,25px);
+    border: @light-border 4px solid;
+    &.red,&.black {
+        border-color: @dark-border;
+    }
+    &.green {
+        border-color: rgba(0,0,0,0.1);
+    }
+   
   }
   &.button-round.button-small {
     .border-radius(16px,16px,16px,16px);
+    border: @light-border 3px solid;
   }
   &.button-round.button-large {
     .border-radius(32px,32px,32px,32px);
+    border: #EEE 5px solid;
+     &.black {
+	border:none;
+    }
   }
-
 }
 input[type=submit].button.button-large,
 button.button.button-large {

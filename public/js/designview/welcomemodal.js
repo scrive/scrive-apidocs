@@ -32,6 +32,7 @@ var WelcomeInformation = Backbone.View.extend({
             size: 'big',
             color: 'blue',
             onClick: function() {
+                mixpanel.people.set({'Welcome modal accepted': true});
                 mixpanel.track('Welcome modal accept', {}, function() {
                     popup.view.clear();
                 });

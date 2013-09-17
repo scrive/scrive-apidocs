@@ -66,7 +66,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
                 Log.cron $ signphone ++ " == " ++ phone
                 runTemplatesT (getLang doc, templates) $ case ev of
                   SMSDelivered -> handleDeliveredInvitation (host, mc) doc slid
-                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredInvitation (host, mc) doc slid
+                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation (host, mc) doc slid
           handleEv eventType
     processEvent (eid, _ , _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
@@ -90,9 +90,9 @@ handleDeliveredInvitation (_hostpart, _mc) doc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MonadBase IO m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
-handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
-  Log.cron $ "handleUndeliveredInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
+handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MonadBase IO m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation (hostpart, mc) doc signlinkid = do
+  Log.cron $ "handleUndeliveredSMSInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       time <- getMinutesTime
@@ -106,10 +106,11 @@ handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
 
 smsUndeliveredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
 smsUndeliveredInvitation hostpart doc signlink =
-  kontramail "invitationMailUndelivered" $ do
+  kontramail "invitationSMSUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink
+    F.value "mobile" $ getMobile signlink
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" hostpart

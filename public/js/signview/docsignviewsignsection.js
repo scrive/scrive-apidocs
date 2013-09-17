@@ -19,55 +19,65 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   createElegButtonElems: function() {
     var document = this.document();
     var signatory = document.currentSignatory();
+    var self = this;
 
     var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
     var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
     var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
-    bankid.click(function() {
-      mixpanel.track('Click BankID');
-      document.takeSigningScreenshot(function() { Eleg.bankidSign(document, signatory, function(p) { document.sign().addMany(p).sendAjax(); });});
+
+    var makeCallback = function(bankName, bankSign, bankSignExtraOpt) {
+      if (!self.screenshotDone) {
+        setTimeout(function() { makeCallback(bankName, bankSign, bankSignExtraOpt);}, 100);
+        return false;
+      }
+      mixpanel.track('Click ' + bankName);
+
+      bankSign(document, signatory, function(p) {
+          document.sign().addMany(p).sendAjax();
+        }, bankSignExtraOpt);
       return false;
-    });
-    telia.click(function() {
-      mixpanel.track('Click Telia');
-      document.takeSigningScreenshot(function() { Eleg.teliaSign(document, signatory,  function(p) { document.sign().addMany(p).sendAjax(); });});
-      return false;
-    });
-    nordea.click(function() {
-      mixpanel.track('Click Nordea');
-      document.takeSigningScreenshot(function() { Eleg.nordeaSign(document, signatory, function(p) { document.sign().addMany(p).sendAjax(); });});
-      return false;
-    });
-    mbi.click(function() {
-      mixpanel.track('Click Mobile BankID');
-      document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,function(p) { document.sign().addMany(p).sendAjax(); },signatory.personalnumberField().value()); });
-      return false;
-    });
+
+    };
+
+    bankid.click(function() { return makeCallback('BankID', Eleg.bankidSign); });
+    telia.click(function() { return makeCallback('Telia', Eleg.teliaSign); });
+    nordea.click(function() { return makeCallback('Nordea', Eleg.nordeaSign); });
+    mbi.click(function() { return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value()); });
+
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
   },
   createSignButtonElems: function() {
     var document = this.document();
     var guardModel = this.guardModel;
+    var self = this;
     return new Button({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
-      color: "blue",
+      color: "green",
+      shape: "rounded",
       text: localization.process.signbuttontext,
+      oneClick : true,
       onClick: function() {
-        if (alreadyClicked(this))
-          return false;
-        trackTimeout('Accept', {'Accept' : 'sign document'});
-        var errorCallback = function(xhr) {
-          if (xhr.status == 403) {
-            // session timed out
-            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-          } else {
-            new FlashMessage({content: localization.signviewSigningFailed,
-                              color: 'red',
-                              withReload: true});
+        var f = function() {
+          if (!self.screenshotDone) {
+            setTimeout(f, 100);
+            return false;
           }
+          trackTimeout('Accept', {'Accept' : 'sign document'});
+          var errorCallback = function(xhr) {
+            if (xhr.status == 403) {
+              // session timed out
+              ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+            } else {
+              new FlashMessage({content: localization.signviewSigningFailed,
+                                color: 'red',
+                                withReload: true});
+            }
+          };
+          document.sign(errorCallback).send();
         };
-        document.takeSigningScreenshot(function() { document.sign(errorCallback).send(); });
+        f();
+        return false;
       }
     }).el().css('margin-top', '-10px')
               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
@@ -112,8 +122,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var content = $("<div />");
     content.append(this.createPreambleElems());
     if (BrowserInfo.isSmallScreen()) {
-        var p = content.find('p');
-        p.css('font-size', '52px');
+        var p = content.find('p'); p.css('font-size', '52px');
         p.css('line-height', '72px');
         p.css('margin-top', '40px');
     }
@@ -121,14 +130,22 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   },
   popup: function() {
     var document = this.document();
+    var signviewbranding = this.model.signviewbranding();
     var signatory = document.currentSignatory();
+    var self = this;
+    self.screenshotDone = false;
 
     Confirmation.popup({
+      cssClass: 'grey',
       title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
+      onRender: function() {document.takeSigningScreenshot(function() {
+        self.screenshotDone = true;
+      });},
       rejectText: localization.cancel,
-      textcolor : this.model.usebranding() ? document.signviewtextcolour() : undefined,
-      textfont : this.model.usebranding() ? document.signviewtextfont() : undefined,
+      width: signatory.elegAuthentication() ? 800 : 520,
+      textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
+      textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
       content: this.createContentElems
     });
 
@@ -179,12 +196,15 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
 window.DocumentSignSignSection = Backbone.View.extend({
    initialize : function(args){
+      this.textstyle = args.textstyle;
       this.render();
    },
    render: function() {
        var model = this.model;
+       var signviewbranding = this.model.signviewbranding();
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
+
        var signatory = document.currentSignatory();
        var sps = {};
        sps['Has user?'] = signatory.hasUser();
@@ -216,8 +236,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
          }
        };
        this.rejectButton = new Button({
-                                        size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
-                                        color: "red",
+                                        size: "big",
+                                        color: "blue",
                                         shape : "rounded",
                                         width: 206,
                                         text: localization.process.rejectbuttontext,
@@ -226,15 +246,16 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             ConfirmationWithEmail.popup({
                                             title: localization.process.signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
+                                            icon: null,
+                                            cssClass: "grey",
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
                                             rejectText: localization.cancel,
                                             acceptColor: "red",
-                                            textcolor : model.usebranding() ? document.signviewtextcolour() : undefined,
-                                            textfont : model.usebranding() ? document.signviewtextfont() : undefined,
+                                            textcolor : model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
+                                            textfont : model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
+                                            oneClick : true,
                                             onAccept: function(customtext) {
-                                                if (alreadyClicked(this))
-                                                  return;
                                                 trackTimeout('Accept',
                                                              {'Accept' : 'reject document'},
                                                              function() {
@@ -248,10 +269,10 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         }
                                 });
        this.signButton = new Button({
-                            size: BrowserInfo.isSmallScreen() ? 'big' : 'small',
+                            size: "big",
                             shape : BrowserInfo.isSmallScreen() ? "" : "rounded",
-                            color: "blue",
-                            width: BrowserInfo.isSmallScreen() ?  404 : 206,
+                            color: "green",
+                            width: BrowserInfo.isSmallScreen() ?  504 : 206,
                             text: localization.process.signbuttontext,
                             icon: BrowserInfo.isSmallScreen() ? undefined : $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
@@ -278,7 +299,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
           'max-height': '120px',
           'line-height': '85px',
           'padding-top': '55px',
-          'padding-bottom': '55px'
+          'padding-bottom': '55px',
+          'margin': '0px'
         });
       }
 
@@ -290,6 +312,9 @@ window.DocumentSignSignSection = Backbone.View.extend({
         box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
         if (BrowserInfo.isSmallScreen()) {
           box.css("padding", "0px");
+          box.css("margin", "0px");
+          box.css("margin-top", "10px");
+          box.css("width", "939px");
         }
       }
       box.append($("<div class='clearfix' />"));

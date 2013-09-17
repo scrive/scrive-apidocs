@@ -99,7 +99,7 @@ sendDocumentMails mailTo author = do
         randomUpdate $ PreparationToPending docid (systemActor now) Nothing
         Just d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
-        True <- randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
+        randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
         randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
         Just doc <- dbQuery $ GetDocumentByDocumentID docid

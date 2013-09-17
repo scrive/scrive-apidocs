@@ -12,29 +12,31 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.render();
   },
   welcomeText : function() {
-    return localization.docsignview.welcome + 
-           " <span class='name'>" + 
-           this.model.document().currentSignatory().name() + 
+    return localization.docsignview.welcome +
+           " <span class='name'>" +
+           this.model.document().currentSignatory().name() +
            "</span>";
   },
   // Big instruction or information about document state
   text: function() {
     var document = this.model.document();
+    var string = "";
     if (document.isSigning()) {
-      return localization.docsignview.followArrowToSign;
+      string = localization.docsignview.followArrowToSign;
     } else if (document.isReviewing()) {
-      return localization.docsignview.reviewDocument;
+      string = localization.docsignview.reviewDocument;
     } else if (document.isSignedAndClosed()) {
-      return localization.docsignview.signedAndClosed;
+      string = localization.docsignview.signedAndClosed;
     } else if (document.isSignedNotClosed()) {
-      return localization.docsignview.signedNotClosed;
+      string = localization.docsignview.signedNotClosed;
     } else if (document.isUnavailableForSign()) {
-      return localization.docsignview.unavailableForSign;
+      string = localization.docsignview.unavailableForSign;
     } else {
       console.error("Unsure what state we're in");
-      return localization.docsignview.unavailableForSign;
+      string = localization.docsignview.unavailableForSign;
     }
-
+    // Keep this as a string to preserve the ability to have HTML in the translation strings.
+    return $("<div>" + string + "</div>");
   },
   // Smaller text with more details on some states
   subtext: function() {
@@ -60,9 +62,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       return $(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
   },
   styleText: function(elem) {
-    var document = this.model.document();
-    var textcolour = document.signviewtextcolour();
-    var textfont = document.signviewtextfont();
+    var signviewbranding = this.model.signviewbranding();
+    var textcolour = signviewbranding.signviewtextcolour();
+    var textfont = signviewbranding.signviewtextfont();
 
     if (this.model.usebranding() && textcolour) {
       elem.css('color', textcolour);
@@ -74,9 +76,8 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   render: function() {
     var document = this.model.document();
     $(this.el).empty();
-    if(this.model.justSaved())  return this;
 
-    var container = $("<div class='instructions' />");
+    var container = $("<div class='instructions section spacing' />");
     if (BrowserInfo.isSmallScreen()) {
         container.addClass("small-screen");
     }
@@ -100,20 +101,20 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
 
     this.styleText(headline);
-    container.append(headline.text(this.text()));
+    container.append(headline.append(this.text()));
     var subheadline = $("<div class='subheadline' />");
     this.styleText(subheadline);
     container.append(subheadline.text(this.subtext()));
 
 
-    if (document.currentSignatory().padDelivery() && document.isSignedNotClosed())
+    if (document.currentSignatory().padDelivery() && document.isSignedNotClosed() && document.signatoriesThatCanSignNowOnPad().length > 0)
          container.append(this.giveToNextPadSignatoryOption());
 
     var smallerbit = $("<div class='smaller-bits'/>");
 
     if (document.timeouttime() != undefined && document.signingInProcess() &&
         !BrowserInfo.isSmallScreen()) {
-        var duedate = $("<div class='duedate' />");
+        var duedate = $("<span class='duedate' />");
         this.styleText(duedate);
         smallerbit.append(duedate.text(this.dueDateDescription()));
     }

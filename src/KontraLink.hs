@@ -82,7 +82,7 @@ instance Show KontraLink where
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
     showsPrec _ (LinkAccountCompany Nothing) = (++) "/account#company"
-    showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/branding/" ++ show cid
+    showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/" ++ show cid
     showsPrec _ (LinkCompanySignViewLogo cid) = (++) $ "/account/company/signview/" ++ show cid
     showsPrec _ (LinkCompanyCustomLogo cid) = (++) $ "/account/company/custom/" ++ show cid
     showsPrec _ (LinkCompanyEmailLogo cid) = (++) $ "/account/company/email/" ++ show cid

@@ -14,26 +14,76 @@
     width: 240px;
 }
 
-.payments-dashboard {
-    .noprovider {
+.body-container.pricing {
+  background-color: @grey-background;
 
-        height: 320px;
+}
+
+.price-plan {
+    margin: 35px 0px 0px 0px !important;
+    &.tab-content.account .noprovider { // for people who're using the free plan
+        margin: auto !important;
     }
 }
 
+
+.surround-content {
+    padding: 20px;  
+    background-color:white;
+    border: 1px solid #ddd;
+}
+
+.payments-dashboard {
+    .subscription-plan {
+	margin-bottom:50px;
+	.plan-information {
+	    .surround-content;
+	    text-align: center;
+	    padding-bottom: 35px;
+	    width: 320px;
+	}
+	.plan-name {
+	    font-size: 24px;
+	    border-bottom: 1px solid #ddd;
+	    padding-bottom: 12px;
+	    margin-bottom: 35px;
+	}
+	.askviktor {
+	    padding-top: 10px;
+	    padding-left: 5px;
+            a {
+                color: @blue;
+                font-weight: 400;
+            }
+	}
+    }
+}
+
+.payments {
+    padding-bottom: 50px;
+    padding-top: 38px;
+    .price-plan.tab-content.account & { // for inside the system
+        padding-bottom: 10px;
+        padding-top: 10px;
+    }
+    h4 {
+	font-size: 25px;
+	line-height: 21px;
+	font-weight: 300;
+	color: #000;
+    }
+}
+
+.payments-dashboard .features{
+	height: 465px;
+}
 
 .payments-dashboard .subscribed {
 
     @blue: #35a4d6;
     @darkblue: #137DAD;
     @green: #9bd567;
-
-    color: #666;
-
-    height: 800px;
-    font: 16px/16px @sans;
-
-
+    
     .payments {
         margin: auto;
         height: 650px;
@@ -49,34 +99,6 @@
         padding: 12px;
     }
 
-    .plan-total {
-        border-top: 1px dashed #CCC;
-        width: 100%;
-        margin-top:16px;
-        padding-top: 12px;
-        font-weight: bold;
-    }
-
-
-    .subheader {
-        /* cascading this from somewhere else; have to reset it */
-        color: #666;
-        font-weight: normal;
-    }
-
-    .line .total {
-        float: right;
-    }
-
-    .next-payment {
-        border-bottom: 1px dashed #CCC;
-        padding-bottom: 12px;
-        margin-top: 16px;
-    }
-
-    .previous-payments {
-        margin-top: 12px;
-    }
 
     .btn-small {
         float:right;
@@ -101,6 +123,10 @@
 
     .changesubscription .header {
         margin-top:0px;
+    }
+
+    .cancel-subscription {
+	margin-top: 38px;
     }
 
     .cancel-button {
@@ -139,31 +165,8 @@
         width: 90px;
     }
 
-    .recurly.update_billing_info .billing_info {
-        
-    }
-
     .recurly.update_billing_info {
         width: 458px;
-    }
-
-    .col1 .col {
-        width: 320px;
-    }
-
-    .col2 .col {
-        width: 460px;
-    }
-
-    .plan, .payments {
-    }
-
-    .changesubscription, .changebilling {
-    }
-
-    .noprovider {
-        width: 480px;
-        height: 360px;
     }
 
     .changebilling .header {
@@ -172,16 +175,6 @@
 
     .recurly .accepted_cards {
         right: 28px;
-    }
-
-    .col1 {
-        width: 320px;
-        float: left;
-    }
-
-    .col2 {
-        width: 480px;
-        float: right;
     }
 
     .recurly .contact_info {
@@ -242,13 +235,6 @@
         display: block;
     }
 
-    .plan-name {
-        padding-top: 16px;
-        line-height: 25px;
-        height: 25px;
-        font-weight: bold;
-        font-size: 14px;
-    }
 
     .current-subscription {
         height: 350px;
@@ -359,32 +345,50 @@
         display: none;
     }
 
-    .subheader {
-        font-weight: bold;
-        margin-bottom: 6px;
+    .subscription-payments {
+	margin-bottom:50px;
+	.account-body {
+	    .surround-content;
+	    display:inline-block;
+	    min-height:0px;
+            min-width: 320px;
+            
+	    .subheader, .line {
+		display: block;
+	    }
+	    .subheader {
+		width: 150px;
+	    }
+	    .total {
+		width: 100px;
+		display: inline-block;
+	    }
+	    .plan-total {
+		border-top: 1px dashed #CCC;
+		width: 100%;
+		margin-top:16px;
+		padding-top: 12px;
+		font-weight: bold;
+	    }
+
+	    .next-payment {
+		border-bottom: 1px solid #CCC;
+		padding-bottom: 12px;
+	    }
+
+	    .previous-payments {
+		margin-top: 12px;
+	    }
+
+	}
     }
 
-    .subscription-payments .account-body {
-        min-height: 190px;
-        
-    }
-
-    .askviktor {
-        margin-top: 16px;
-    }
-
-    h3 {
-        
-        
-    }
-
-    .renew-button {
-        margin-top: 8px;
-
-    }
-
-    .renew-form {
-        padding-top: 16px;
+    .renew-subscription {
+	margin-bottom:50px;
+	.renew-button {
+            margin-top: 18px;
+	    
+	}
     }
 }
 

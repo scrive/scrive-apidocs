@@ -24,19 +24,27 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     this.document().restart().send();
   },
   prolong : function() {
-    this.document().prolong().send();
+    var self = this;
+    LoadingDialog.open();
+    this.document().prolong().sendAjax(function() {
+      self.authorview().reload(true);
+    });
   },
   canBeWithdrawn : function() {
     return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
   },
   cancel : function() {
-    this.document().cancel().sendAjax(function() {window.location.reload();});
+    var self = this;
+    LoadingDialog.open();
+    this.document().cancel().sendAjax(function() {
+      self.authorview().reload(true);
+    });
   },
   canGoToSignView : function() {
-    return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign();
+    return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign() && this.document().pending();
   },
   canGiveToNextSignatoryPad : function() {
-    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && _.any(this.document().signatoriesThatCanSignNow(), function(s) {return s.padDelivery();}) && this.document().signatoriesThatCanSignNow().length > 0;
+    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && this.document().pending() && _.any(this.document().signatoriesThatCanSignNow(), function(s) {return s.padDelivery();}) && this.document().signatoriesThatCanSignNow().length > 0;
   },
   goToSignView : function() {
     new Submit({method: 'POST', url : '/d/signview/' + this.document().documentid()}).send();
@@ -59,8 +67,13 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
 var AuthorViewTitleBoxView = Backbone.View.extend({
  initialize: function(args) {
     _.bindAll(this, 'render');
-    this.model.document().bind('change', this.render);
+    this.model.document().on('change', this.render);
     this.render();
+  },
+  destroy : function() {
+    this.model.document().off('change', this.render);
+    this.model.off();
+    $(this.el).remove();
   },
   // Big instruction or information about document state
   text: function() {
@@ -77,12 +90,12 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var document = this.model.document();
     return new Button({
       color: "red",
-      size: "small",
+      size: "big",
+      shape: "rounded",
       text: localization.process.restartbuttontext,
+      oneClick : true,
       onClick: function() {
-        if (alreadyClicked(this))
-          return;
-          mixpanel.track('Click restart button');
+        mixpanel.track('Click restart button');
         model.restart();
       }
     }).el();
@@ -92,12 +105,12 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var document = this.model.document();
     return new Button({
       color: "green",
-      size: "small",
+      size: "big",
+      shape: "rounded",
       text: localization.process.prolongbuttontext,
+      oneClick : true,
       onClick: function() {
-        if (alreadyClicked(this))
-          return;
-          mixpanel.track('Click prolong button');
+        mixpanel.track('Click prolong button');
         model.prolong();
       }
     }).el();
@@ -106,32 +119,28 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var model = this.model;
     var document = this.model.document();
     return new Button({
-      color: "red",
-      size: "small",
+      size: "big",
+      shape: "rounded",
+      color: "light-blue",
       text: localization.process.cancelbuttontext,
       cssClass: "s-withdraw-button",
       onClick: function() {
           mixpanel.track('Click withdraw button');
-          document.fetch();
-          var signers = _.reject(document.signatoriesWhoSign(),
-                                 function(signatory) {
-                                   return signatory.author();
-                                 });
-          var somebodysigned = _.some(signers,
-                                      function(signatory) {
-                                        return signatory.hasSigned();
+          var somebodysigned = _.any(document.signatories(),
+                                      function(s) {
+                                        return s.hasSigned() && !s.author();
                                       });
           var modalcontent = somebodysigned ? localization.process.cancelmodaltextwithsignatures : localization.process.cancelmodaltext;
         Confirmation.popup({
           title: localization.process.cancelmodaltitle,
-          content: modalcontent,
+          content: $('<p class="center">' + modalcontent + '</p>'),
+          icon: '/img/modal-icons/withdraw.png',
+          width: 533,
           acceptText: localization.process.cancelbuttontext,
           rejectText: localization.cancel,
-          acceptColor: "red",
+          acceptColor: "green",
           extraClass : "s-withdraw-confirmation",
           onAccept: function() {
-              if (alreadyClicked(this))
-                return;
               trackTimeout('Accept',
                            {'Accept' : 'withdraw document'},
                            function() {
@@ -147,8 +156,9 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var model = this.model;
     var document = this.model.document();
     return new Button({
-      color: "green",
-      size: "small",
+      color: "black",
+      size: "big",
+      shape: "rounded",
       text: localization.authorview.goToSignView,
       onClick: function() {
           mixpanel.track('Click go to sign view');
@@ -164,7 +174,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     if (sig == undefined) return; // Should never happend
     return new Button({
       color: "green",
-      size: "small",
+      size: "big",
+      shape: "rounded",
       text: localization.authorview.goToSignView,
       onClick: function() {
           //Refactor this when we will get confirmation that this is what viktor needs.
@@ -224,6 +235,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     $(this.el).append(container);
 
     if (this.model.hasButtons()) {
+      console.log("Generating buttons");
       var buttonbox = $("<div class='buttonbox'/>");
       if (this.model.canBeRestarted())
         buttonbox.append(this.restartButton());
@@ -246,6 +258,7 @@ window.AuthorViewTitleBox = function(args) {
           var model = new AuthorViewTitleBoxModel(args);
           var view =  new AuthorViewTitleBoxView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
+          this.destroy = function() { view.destroy();};
 
 };
 

@@ -137,9 +137,7 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
-	       console.log("before");
 	       console.log(data.tbs);
- 	       console.log("after");
                LoadingDialog.close(); // this was opened just before starting
                 if ($.browser.msie && hasSign2PluginIE())
                     installSign2IE();
@@ -320,7 +318,6 @@ window.Eleg = {
     });
     },
     mobileBankIDSign: function(document, signatory, callback, personnummer) {
-        var eleg = this;
         var url;
         if(document.preparation())// designview
             url = "/d/eleg/mbi/" + document.documentid();
@@ -363,7 +360,7 @@ window.Eleg = {
 
             }});
         // retry after 5 seconds if it hasn't worked.
-        window.setTimeout(function() {if (fetching) eleg.mobileBankIDSign(document,signatory,callback);}, 5000);
+        window.setTimeout(function() {if (fetching) window.Eleg.mobileBankIDSign(document,signatory,callback,personnummer);}, 5000);
     }
 
 };

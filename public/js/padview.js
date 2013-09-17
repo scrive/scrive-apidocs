@@ -74,18 +74,32 @@ window.PadQueueView = Backbone.View.extend({
         this.model.view = this;
         this.render();
     },
-    documentView : function() {
+    documentView : function(svb) {
         var padqueue = this.model;
         var doc =  new DocumentSignView({
                     id: padqueue.documentid(),
+                    signviewbranding : svb,
                     usebranding : true,
                     viewer : new DocumentViewer({
                         signatoryid : padqueue.signatorylinkid()
                       })
                    });
-        $('body').prepend(new DocumentSignViewHeader({model : doc.model, mainview : doc.view}).el);
-        $('body').append(new DocumentSignViewFooter({model : doc.model,  mainview : doc.view}).el);
         return doc.view.el;
+    },
+    signViewBranding : function() {
+      var svb = new BrandingForSignView({});
+      svb.fetch({ processData:  true, cache : false});
+      return svb;
+    },
+    signviewheader : function(svb) {
+      if (this.signviewheader_ == undefined)
+        this.signviewheader_ = new DocumentSignViewHeader({model : svb});
+      return this.signviewheader_;
+    },
+    signviewfooter: function(svb) {
+      if (this.signviewfooter_ == undefined)
+        this.signviewfooter_ = new DocumentSignViewFooter({model : svb});
+      return this.signviewfooter_;
     },
     noDocumentView : function() {
         var box = $("<div class='noDocumentAvaible'> </div>");
@@ -122,18 +136,29 @@ window.PadQueueView = Backbone.View.extend({
         container.empty();
         if (padqueue.ready()) {
             if (padqueue.needFullRefresh())
-               window.location = window.location; // We reload if content has changes so much that it is not good to keep it opened.
-            else if (padqueue.hasDocument())
-                container.append(this.documentView());
-            else if (padqueue.logged())
-                container.append(this.noDocumentView());
+               window.location.reload(); // We reload if content has changes so much that it is not good to keep it opened.
+            else if (padqueue.logged()) {
+                var svb = this.signViewBranding();
+                svb.bind("change", function() {
+                  if (svb.ready() && svb.signviewbackgroundcolour())
+                    $('.signview').css('background-image','none').css('background-color', svb.signviewbackgroundcolour());
+                });
+                $('.mainContainer').prepend(this.signviewheader(svb).el);
+                $('.mainContainer').append(this.signviewfooter(svb).el);
+                if (padqueue.hasDocument()) {
+                  container.append(this.documentView(svb));
+                }
+                else {
+                  container.append(this.noDocumentView());
+                }
+            }
             else
                 container.append(this.logToPadDevice());
 
             if (padqueue.loggedToPad())
-               $('body').append(this.padLogoutIcon());
+               $('.mainContainer').append(this.padLogoutIcon());
             if (padqueue.loggedToSystem())
-               $('body').append(this.backToSystemIcon());
+               $('.mainContainer').append(this.backToSystemIcon());
 
         }
         return this;

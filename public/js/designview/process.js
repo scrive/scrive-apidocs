@@ -22,7 +22,6 @@
         },
         render: function() {
             var view = this;
-            console.log("Rendering process");
             var div = $('<div />');
 
             div.append(view.leftColumn());
@@ -164,7 +163,6 @@
             var label = $('<div />');
             label.addClass('design-view-action-process-left-column-deadline-label');
             label.text(labelText + ':');
-            console.log(doc.daystosign());
             var calendarbutton = $("<div class='calendarbutton'/>");
             var calendar = new Calendar({on : calendarbutton,
                                          days : doc.daystosign(),
@@ -207,8 +205,7 @@
             var label = $("<div class='design-view-action-process-left-column-attachments-label'/>").text(localization.attachments + ':');
 
             var authorAttachmentButton = new Button({
-                color: 'blue',
-                size: 'tiny',
+                color: 'black',
                 text: localization.designview.addRemove,
                 cssClass: 'design-view-action-process-left-column-attachments-author-button',
                 onClick: function() {
@@ -219,8 +216,7 @@
             });
 
             var sigAttachmentButton = new Button({
-                color: 'blue',
-                size: 'tiny',
+                color: 'black',
                 text: localization.designview.request,
                 cssClass: 'design-view-action-process-left-column-attachments-signatory-button',
                 onClick: function() {
@@ -258,7 +254,7 @@
             });
 	},
         invitationBox: function() {
-            var view = this;
+           var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
@@ -267,13 +263,6 @@
             var topLine = $('<div />');
             topLine.addClass('design-view-action-process-right-column-invitation-topline');
 
-            var label = $('<div />');
-            label.addClass('design-view-action-process-right-column-invitation-label');
-	    if (!view.emaildeliveryused) {
-		label.css('color','#AAAAAA');
-	    }
-            label.text(localization.designview.editInvitation);
-            view.editInvitationLabel = label;
 
             var wrapper = $('<div />');
             wrapper.addClass('design-view-action-process-right-column-invitation-wrapper');
@@ -281,7 +270,7 @@
 	      wrapper.addClass('disabled');
 	    }
 
-            var textarea = $('<textarea id="design-view-action-process-right-column-invitation-editor"/>');
+            var textarea = $('<textarea id="design-view-action-process-right-column-invitation-editor" placeholder="' + localization.designview.editInvitation + '"></textarea>');
             textarea.addClass('design-view-action-process-right-column-invitation-editor');
             textarea.hide();
 
@@ -289,31 +278,33 @@
 
             view.invitationEditor = textarea;
 
-            var previewLink = $('<a />');
-            previewLink.addClass('design-view-action-process-right-column-invitation-link');
-            previewLink.text(localization.designview.previewInvitation);
-            previewLink.click(function() {
-                mixpanel.track('Open invitation preview');
-                doc.save();
-                doc.afterSave(function() {
-                    var popup = ConfirmationWithEmail.popup({
-                        editText: '',
-                        title: localization.editInviteDialogHead,
-                        mail: doc.inviteMail(),
-                        onAccept: function() {
+            var previewLink = new Button({
+                color: 'black',
+                text: localization.designview.previewInvitation,
+                cssClass: 'design-view-action-process-right-column-invitation-link',
+                onClick: function() {
+                    mixpanel.track('Open invitation preview');
+                    doc.save();
+                    doc.afterSave(function() {
+			var popup = ConfirmationWithEmail.popup({
+                            editText: '',
+                            title: localization.editInviteDialogHead,
+                            mail: doc.inviteMail(),
+                            onAccept: function() {
                             popup.close();
-                        }
+                            }
+			});
                     });
-                });
+                }
             });
-
-            topLine.append(label);
-	    if (view.emaildeliveryused) {
-		topLine.append(previewLink);
-	    }
 
             div.append(topLine);
             div.append(wrapper);
+
+	    if (view.emaildeliveryused) {
+		div.append(previewLink.el());
+	    }
+
 
             return div.children();
         },
@@ -330,7 +321,8 @@
 	    }
             tinymce.init({
 	        selector: '#design-view-action-process-right-column-invitation-editor',
-                width: 300,
+                width: 275, // TODO this is overwritten by cwidth (?)
+                height: 138,
                 menubar: false,
                 plugins: "noneditable,paste",
                 external_plugins: {
@@ -339,23 +331,63 @@
                 readonly: !view.emaildeliveryused,
                 valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul,i[style<_color: #AAAAAA;]",
                 width: cwidth, // automatically adjust for different swed/eng text
+                font_formats : "Verdana=Source Sans Pro, Helvetica Neue;", // fake using source sans pro / helvetica neue
                 setup: function(editor) {
-                  editor.on('init', function() {
-                    $(editor.getDoc()).blur(function() {
-		      if (view.emaildeliveryused) {
-                        doc.setInvitationMessage(editor.getBody().innerHTML);
-		      }
+
+                    editor.on('init', function() {
+			$(editor.getDoc()).blur(function() {
+			    if (view.emaildeliveryused) {
+				doc.setInvitationMessage(editor.getBody().innerHTML);
+			    }
+			});
+			if (!view.emaildeliveryused) {
+         		    editor.getWin().document.body.style.color = '#AAAAAA';
+			}
                     });
-		    if (!view.emaildeliveryused) {
-         	      editor.getWin().document.body.style.color = '#AAAAAA';
+                    editor.on('change', function () {
+			doc.setInvitationMessage(editor.getBody().innerHTML);
+                    });
+		    
+
+		    /* Imitate a HTML5 placeholder on the TinyMCE textarea */
+		    var placeholder = $('#' + editor.id).attr('placeholder');
+		    if (typeof placeholder !== 'undefined' && placeholder !== false) {
+			var is_default = false;
+			editor.on('init', function() {
+			    // get the current content
+			    var cont = editor.getContent();
+			    
+			    // If its empty and we have a placeholder set the value
+			    if (cont.length === 0) {
+				editor.setContent(placeholder);
+			    }
+
+  			    var $message = $(editor.getWin().document).find("p");   
+			    // change placeholder text color, if it's the 'placeholder text'
+			    if($message.text() == localization.designview.editInvitation) {
+				$message.css("color", "#999999");
+			    }
+			}).on('focus', function() {
+			      // replace the default content on focus if the 
+			      // same as original placeholder
+			      var $message = $(editor.getWin().document).find("p");
+				if ($message.text() == localization.designview.editInvitation) {
+				    editor.setContent('');
+				}
+			}).on('blur', function(ed, e) {
+			    // if the input field is empty when leaving it, set default
+		  	    // placeholder message
+			    var message = $(editor.getWin().document).find("p");
+			    if(/data-mce-bogus/g.exec(message.html())) {
+			      editor.setContent(placeholder);
+			      var message = $(editor.getWin().document).find("p");
+			      $(message[0]).css("color", "#999999");
+			    }
+			});
 		    }
-                  });
-                  editor.on('change', function () {
-                    doc.setInvitationMessage(editor.getBody().innerHTML);
-                  });
+		  /* END Imitate placeholder */
                 }
             });
-
             return view;
         }
     });

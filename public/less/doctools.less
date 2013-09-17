@@ -33,7 +33,7 @@
       float: left;
       width: 13px;
       height: 14px;
-      margin-top: 4px;
+      margin-top: 3px;
       margin-right: 2px;
       background: url(../img/attachment-icon.png);
     }
@@ -43,9 +43,9 @@
       margin-right  : 10px;
     }
 
+    .desc .item .label { margin-top: 6px; }
 
     .item .name {
-      font-weight: bold;
       color: black;
     }
 
@@ -54,10 +54,14 @@
     }
 
     .list {
-      float: left;
+      float: right;
       width: 580px;
       margin-left: 23px;
       margin-right: 20px;
+      & .signview {
+        margin-right: -10px;
+        width: 610px;
+      }
       .desc {
           width: 420px;
           .description {
@@ -73,22 +77,41 @@
 .document-history-container {
     margin-top: 10px;
     background-color : #ffffff;
-    width: 928px;
-    border : 1px solid #AAAAAA;
-    margin : 10px auto;
-    min-height: 120px;
+    width: 1018px;
+    border : 1px solid #868686;
+    margin : 0 auto 25px;
+    min-height: 100px;
 
     .tab-container {
         border-color: transparent;
     }
 
     .list-container .table {
-        border-color: transparent;
+        border: none;
         background-color: #FFFFFF;
+
+        thead {
+            background-color: #f3f3f3;
+            tr {
+                th {
+                    span {
+                        font-size: 14px;
+                    }
+                }
+            }
+        }
+
+        tbody {
+            tr td.row {
+                line-height: 24px;
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+        }
     }
 
     .list-container{
-        border-color: transparent;
+        border: none;
     }
 
     .document-history-footer{

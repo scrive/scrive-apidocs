@@ -5,6 +5,7 @@
     display: inline-block;
     height: 15px;
     margin-right: 4px;
+    margin-bottom: -6px;
 }
 
 .icon.small.business {
@@ -29,70 +30,70 @@
 /* Status Icons */
 
 .icon.status {
-    height: 11px;
-    width: 11px;
+    height: 21px;
+    width: 21px;
+    background: url(../img/status-icons.png) 0 0 no-repeat;
 }
 
 .icon.signed {
-    background-position: -199px 1px;
-    width: 15px;
+    background-position: -84px 0;
 }
 
 .icon.draft {
-    background-position: -214px 0;
+    background-position: -210px 0;
 }
 
 .icon.template {
-    background-position: -225px 0;
+    background-position: -233px 0;
 }
 
 .icon.problem {
-    background-position: -236px 0;
+    background-position: -20px 0;
     margin-right: 7px;
 }
 
 .icon.rejected {
-    background-position: -247px 0;
+    background-position: -105px 0;
     margin-right: 7px;
 }
 
-.icon.deliveryproblem {
-    background-position: -258px 0;
+.icon.deliveryproblem, .icon.problem {
+    background-position: -189px 0;
     margin-right: 7px;
 }
 
 .icon.timeouted {
-    background-position: -269px 0;
+    background-position: -147px 0;
     margin-right: 7px;
 }
 
 .icon.cancelled {
-    background-position: -280px 0;
+    background-position: -126px 0;
     margin-right: 7px;
 }
 
 .icon.sent {
-    background-position: -291px 0;
+    background-position: 0px 0;
     margin-right: 7px;
 }
 
 .icon.delivered {
-    background-position: -302px 0;
+    background-position: -21px 0;
     margin-right: 7px;
 }
 
 .icon.read {
-    background-position: -313px 0;
+    background-position: -42px 0;
     margin-right: 7px;
 }
 
 .icon.opened {
-    background-position: -324px 0;
+    background-position: -63px 0;
     margin-right: 7px;
 }
 
 .icon.prolonged {
-    background-position: -335px 0;
+    background-position: -169px 0;
     margin-right: 7px;
 }
 
@@ -150,17 +151,19 @@
 .notSharedIcon
 {
     display : block;
-    width: 16px;
-    height: 16px;
-    background-image: url(/img/iconMan.png);
+    width: 14px;
+    height: 14px;
+    background-image: url(/img/notshared.png);
+    margin-left: 10px; 
 }
 
 .sharedIcon
 {
     display : block;
-    width: 16px;
-    height: 16px;
-    background-image: url(/img/iconGroup.png);
+    width: 17px;
+    height: 14px;
+    background-image: url(/img/shared.png);
+    margin-left: 10px; 
 }
 
 .actionIcon.removefromqueue{
@@ -192,26 +195,6 @@
     width: 16px;
     background: url(/img/exit.png) 0 -0 no-repeat;
 
-}
-
-.statustext.signed {
-      color: black;
-}
-
-.statustext.opened {
-      color: #71a0c2;
-}
-
-.statustext.sent {
-      color: #eea045;
-}
-
-.statustext.canceled {
-      color: #d55d5d;
-}
-
-.statustext.delivered {
-      color: black;
 }
 
 .editable {

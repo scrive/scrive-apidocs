@@ -25,31 +25,6 @@ window.DocumentViewer = Backbone.Model.extend({
     }
 });
 
-window.DocumentAuthor = Backbone.Model.extend({
-   defaults: {
-       fullname: "",
-       email: "",
-       company: "",
-       phone: "",
-       position: ""
-    },
-    fullname: function() {
-        return this.get("fullname");
-    },
-    email: function() {
-        return this.get("email");
-    },
-    company: function() {
-        return this.get("company");
-    },
-    phone: function() {
-        return this.get("phone");
-    },
-    position: function() {
-        return this.get("position");
-    }
-});
-
 window.Document = Backbone.Model.extend({
     defaults: function() { return {
         id: 0,
@@ -93,6 +68,10 @@ window.Document = Backbone.Model.extend({
     },
     signatoriesThatCanSignNow: function() {
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
+        return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
+    },
+    signatoriesThatCanSignNowOnPad: function() {
+        var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign() && sig.padDelivery()});
         return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
     },
     addExistingSignatory: function(sig) {
@@ -227,7 +206,7 @@ window.Document = Backbone.Model.extend({
         if (document.file() && document.file().view.readyFirstPage())
             document.takeScreenshot(true, null);
         else
-            document.file().bind('FirstPageReady', function() {
+            document.file().on('FirstPageReady', function() {
             document.takeScreenshot(true, null);
             });
     },
@@ -523,27 +502,6 @@ window.Document = Backbone.Model.extend({
     currentSignatoryCanSign: function() {
       return this.currentSignatory() && this.currentSignatory().canSign();
     },
-    signviewlogo: function() {
-      return this.get('signviewlogo');
-    },
-    signviewtextcolour: function() {
-      return this.get('signviewtextcolour');
-    },
-    signviewtextfont: function() {
-      return this.get('signviewtextfont');
-    },
-    signviewbarscolour: function() {
-      return this.get('signviewbarscolour');
-    },
-    signviewbarstextcolour: function() {
-      return this.get('signviewbarstextcolour');
-    },
-    signviewbackgroundcolour: function() {
-      return this.get('signviewbackgroundcolour');
-    },
-    authoruser: function() {
-        return this.get("authoruser");
-    },
     signatoriesWhoSign: function() {
         return _.filter(this.signatories(), function(sig) {
             return sig.signs();
@@ -581,7 +539,7 @@ window.Document = Backbone.Model.extend({
        file: function() {
            if (args.file) {
                var file = new File(_.defaults(args.file, dataForFile));
-               file.bind('ready', function() {
+               file.on('ready', function() {
                    self.trigger('file:change');
                });
                return file;
@@ -599,10 +557,9 @@ window.Document = Backbone.Model.extend({
        signatories: _.map(args.signatories || [], function(signatoryargs) {
          return new Signatory(_.defaults(signatoryargs, { document: self }));
        }),
-       authoruser: args.author != undefined ? new DocumentAuthor(_.defaults(args.author, { document: self })) : undefined,
        lang: (function() {
            var lang = new DocLang({lang : args.lang});
-           lang.bind('change', function() {
+           lang.on('change', function() {
                self.trigger('change:lang');
            });
            return lang;
@@ -620,12 +577,6 @@ window.Document = Backbone.Model.extend({
        template: args.template,
        daystosign: args.daystosign,
        invitationmessage: args.invitationmessage,
-       signviewlogo: args.signviewlogo,
-       signviewtextcolour: args.signviewtextcolour,
-       signviewtextfont: args.signviewtextfont,
-       signviewbarscolour: args.signviewbarscolour,
-       signviewbarstextcolour: args.signviewbarstextcolour,
-       signviewbackgroundcolour: args.signviewbackgroundcolour,
        ready: true
      };
     },
@@ -701,7 +652,7 @@ window.Document = Backbone.Model.extend({
     },
     bindBubble: function() {
         var document = this;
-        document.bind('change', document.bubbleSelf);
+        document.on('change', document.bubbleSelf);
     },
     bubbleSelf: function() {
         var document = this;

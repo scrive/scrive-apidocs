@@ -18,6 +18,7 @@ module AppView( kontrakcja
               , brandingFields
               , companyForPage
               , companyUIForPage
+              , handleTermsOfService
               ) where
 
 import FlashMessage
@@ -128,7 +129,6 @@ brandingFields mbd mcompanyui = do
   F.value "custombarstextcolour" $ mcolour bdbarstextcolour companycustombarstextcolour
   F.value "custombarshighlightcolour" $ mcolour bdbarssecondarycolour companycustombarssecondarycolour
   F.value "custombackground" $ mcolour bdbackgroundcolour companycustombackgroundcolour
-  F.value "customdomainlogolink" $ bdlogolink <$> mbd
   F.value "customdomainbdbuttonclass" $ bdbuttonclass <$> mbd
   F.value "customservicelinkcolour" $ bdservicelinkcolour <$> mbd
   F.value "hasbrandeddomain" $ isJust mbd
@@ -150,6 +150,23 @@ priceplanPage = do
        Just bd -> do
           ad <- getAnalyticsData
           content <- renderTemplate "priceplanPageWithBranding" $ do
+            F.value "logolink" $ bdlogolink bd
+            F.value "background" $ bdbackgroundcolorexternal $ bd
+            F.value "buttoncolorclass" $ bdbuttonclass bd
+            F.value "headercolour" $ bdheadercolour bd
+            F.value "textcolour" $ bdtextcolour bd
+            F.value "pricecolour" $ bdpricecolour bd
+            standardPageFields ctx kontrakcja ad
+          simpleHtmlResonseClrFlash content
+
+handleTermsOfService :: Kontrakcja m => m Response
+handleTermsOfService = do
+  ctx <- getContext
+  case currentBrandedDomain ctx of
+       Nothing -> renderTemplate_ "termsOfService" >>= renderFromBody kontrakcja
+       Just bd -> do
+          ad <- getAnalyticsData
+          content <- renderTemplate "termsOfServiceWithBranding" $ do
             F.value "logolink" $ bdlogolink bd
             F.value "background" $ bdbackgroundcolorexternal $ bd
             F.value "buttoncolorclass" $ bdbuttonclass bd
@@ -201,11 +218,11 @@ simpleJsonResponse = ok . toResponseBS (BS.fromString "text/html; charset=utf-8"
 
 {- |
    Changing our pages into reponses, and clearing flash messages.
+   For HTML response we don't allow framing to skip problems with clickjacking.
 -}
 simpleHtmlResponse :: Kontrakcja m => String -> m Response
-simpleHtmlResponse = ok . toResponseBS (BS.fromString "text/html;charset=utf-8") . BSL.fromString
-    -- change this to HtmlString from helpers package
-    -- (didn't want to connect it one day before prelaunch)
+simpleHtmlResponse s = ok $ (setHeaderBS "X-Frame-Options" "SAMEORIGIN") $ toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
+
 
 {- | Sames as simpleHtmlResponse, but clears also flash messages and modals -}
 simpleHtmlResonseClrFlash :: Kontrakcja m => String -> m Response

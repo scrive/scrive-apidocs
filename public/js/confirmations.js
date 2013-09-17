@@ -3,6 +3,8 @@ $(function(){
 var ConfirmationModel = Backbone.Model.extend({
   defaults : {
       title  : "",
+      subtitle: "",
+      icon: undefined,
       acceptText: "Ok",
       rejectText: localization.cancel,
       acceptColor : "green",
@@ -17,6 +19,12 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   title : function(){
        return this.get("title");
+  },
+  subtitle : function(){
+       return this.get("subtitle");
+  },
+  icon : function(){
+       return this.get("icon");
   },
   content : function(){
        return this.get("content");
@@ -34,6 +42,14 @@ var ConfirmationModel = Backbone.Model.extend({
       if (this.get("onReject") != undefined )
           return this.get("onReject");
       return function() {};
+  },
+  onRender : function() {
+    var callback = this.get('onRender');
+    if (callback != undefined) {
+      return callback();
+    } else {
+      return;
+    }
   },
   reject : function(silent) {
       if (!(typeof silent == "boolean" && silent === true)) {
@@ -116,15 +132,20 @@ var ConfirmationView = Backbone.View.extend({
        var container = $("<div class='modal-container'/>");
        if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
        container.css("top",$(window).scrollTop());
-       container.css("margin-top",$(window).height() > 700 ? 200 : 100);
+       container.css("margin-top","50px");
        container.css("left","0px");
        var left = Math.floor(($(window).width() - model.width()) / 2);
        container.css("margin-left",left > 20 ? left : 20);
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
        container.width(model.width());
-       var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
-       var title = $("<span class='modal-title'/>");
+       var header = $("<div class='modal-header'></div>");
+       var inner = $("<div class='modal-header-inner'></div>");
+       var title = $("<div class='modal-title'/>");
+       var subtitle = $("<div class='modal-subtitle'/>");
+       var icon = $("<img class='modal-icon'/>");
+       icon.attr('src', model.icon());
+       subtitle.append(this.model.subtitle());
        if (BrowserInfo.isSmallScreen()) {
          title.css('font-size', '42px');
          title.css('font-style', 'bold');
@@ -135,9 +156,17 @@ var ConfirmationView = Backbone.View.extend({
        if (model.textfont())
          title.css("font-family",model.textfont());
 
-       header.append(title);
+       if (model.icon() == null) {
+         header.addClass('no-icon');
+         inner.append(title);
+       } else {
+         inner.append(icon);
+         inner.append(title);
+         inner.append(subtitle);
+       }
        if (model.canCancel())
         header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
+       header.append(inner);
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
        if (model.textcolor())
@@ -160,7 +189,6 @@ var ConfirmationView = Backbone.View.extend({
 
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             new Button({         color:model.acceptColor(),
-                                 size: BrowserInfo.isSmallScreen() ? "small" : "tiny",
                                  style : BrowserInfo.isSmallScreen() ? "margin-top:-10px" : "",
                                  shape: "rounded",
                                  cssClass: "float-right",
@@ -186,6 +214,9 @@ var ConfirmationView = Backbone.View.extend({
          container.append(footer);
        $(this.el).append(container);
        return this;
+    },
+    onRender: function() {
+      this.model.onRender();
     },
     reject: function(silent){
         var self = this;
@@ -215,7 +246,19 @@ window.Confirmation = {
           overlay.height($(document).height());
           var view = new ConfirmationView({model : model, el : overlay});
           $("body").append(overlay);
-          setTimeout(function() {overlay.addClass("active");},100);
+          setTimeout(function() {
+            overlay.addClass("active");
+            // wait for a second so the browser has the time to
+            // render everything and display the animation
+            // animation takes 600ms, but waiting for a shorter period
+            // results in not fully rendered modals sometimes
+            setTimeout(function() {
+              // Sometimes when the overlay pushes the document down,
+              // we have to make sure that the overlay covers the whole doc.
+              overlay.height($(document).height());
+              view.onRender();
+            }, 1000);
+          }, 100);
           return model;
    }
 

@@ -33,6 +33,7 @@ var CompanyBrandingColourModel = Backbone.Model.extend({
 });
 
 var CompanyBrandingColourView = Backbone.View.extend({
+  className: "colourBox",
   initialize: function(args) {
     _.bindAll(this, 'render');
     if (this.model) {
@@ -57,9 +58,13 @@ var CompanyBrandingColourView = Backbone.View.extend({
     var checkboxlabel = $("<label />").append(model.label());
 
     var input = $("<input type='text' class='colour' />");
-    input.bind("keyup change", function() {
-      model.setColour(input.val().trim());
-      self.render();
+    input.bind("keyup change paste", function() {
+      // defer the changes, so the input's value is updated
+      // if there was something pasted
+      setTimeout(function() {
+        model.setColour(input.val().trim());
+        self.render();
+      }, 1);
     });
     this.input = input;
 
@@ -82,7 +87,7 @@ var CompanyBrandingColourView = Backbone.View.extend({
 
 
 
-    this.customdiv = $("<div />");
+    this.customdiv = $("<div style='padding-bottom:10px' />");
     this.customdiv.append(this.input);
     this.customdiv.append(this.display);
     this.customdiv.append(this.colourpicker);
@@ -126,104 +131,10 @@ window.CompanyBrandingColour = function(args) {
     };
 };
 
-
-
-var CompanyBrandingHueColourView = Backbone.View.extend({
-  initialize: function(args) {
-    _.bindAll(this, 'render');
-    if (this.model) {
-      this.model.bind('change', this.render);
-      this.prerender();
-      this.render();
-    }
-  },
-  prerender: function() {
-    var model = this.model;
-    var self = this;
-    var checkboxbox = $("<div class='checkbox-box'/>");
-    this.checkbox = $("<div class='checkbox'/>");
-    this.checkbox.click(function() {
-        if(!self.checkbox.hasClass("checked"))
-            mixpanel.track('Check ' + model.label().toLowerCase());
-        else
-            mixpanel.track('Uncheck ' + model.label().toLowerCase());
-        self.checkbox.toggleClass("checked");
-        model.setCustomised(!model.customised());
-    });
-    var checkboxlabel = $("<label />").append(model.label());
-
-    var input = $("<input type='text' class='colour' />");
-    input.bind("keyup change", function() {
-      model.setColour(input.val().trim());
-      self.render();
-    });
-    this.input = input;
-
-    this.display = $('<a href="#" class="hue-display" onclick="return false" />').text('x');
-
-    var colour = this.model.colour();
-    this.display.css({'background': 'hsl(' + colour + ', 30%, 35%)',
-                      'border': '2px solid hsl(' + colour + ', 30%, 23%)',
-                      '-webkit-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      '-moz-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      '-ms-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      '-o-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      'box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px'});
-
-    this.customdiv = $("<div />");
-    this.customdiv.append(this.input);
-    this.customdiv.append(this.display);
-
-    var container = $("<div/>");
-    container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));
-    container.append($("<div />").append(this.customdiv));
-
-
-    $(this.el).empty();
-    $(this.el).append(container);
-
-    return this;
-  },
-  render: function() {
-    if (this.model.customised()) {
-      this.checkbox.addClass("checked");
-      this.customdiv.show();
-    } else {
-      this.checkbox.removeClass("checked");
-      this.customdiv.hide();
-    }
-
-    var colour = this.model.colour();
-    if (this.input.val()!=colour && this.input[0] !== document.activeElement) {
-      this.input.val(colour);
-    }
-    this.display.css({'background': 'hsl(' + colour + ', 30%, 35%)',
-                      'border': '2px solid hsl(' + colour + ', 30%, 23%)',
-                      '-webkit-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      '-moz-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      '-ms-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      '-o-box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px',
-                      'box-shadow': 'inset hsl(' + colour + ', 30%, 60%) 0 0 0 1px'});
-  }
-});
-
-window.CompanyBrandingHue = function(args) {
-    var model = new CompanyBrandingColourModel(args);
-    var view = new CompanyBrandingHueColourView({ model: model});
-    return {
-      customised : function() {return model.customised();},
-      colour : function() {return model.colour();},
-      onChange : function(f) {model.bind("change",function() {f(model.colour(),model.customised());});},
-      el : function() { return $(view.el); }
-    };
-};
-
-
-
 var CompanyBrandingFontModel = Backbone.Model.extend({
   defaults: {
     customised: false,
-    defaultfont: 'Helvetica Neue, Arial, sans-serif',
+    defaultfont: 'Source Sans Pro, Helvetica Neue, Arial, sans-serif',
     label: '',
     font : ""
   },
@@ -322,7 +233,7 @@ var CompanyBrandingFontView = Backbone.View.extend({
                               options: options
                              });
 
-    this.customdiv = $('<div />').css({width: 220, 'margin-left': '23px'});
+    this.customdiv = $('<div />').css({width: 220, 'margin-left': '23px', 'padding-bottom': '10px'});
     this.customdiv.append(this.select.el());
 
     var container = $('<div/>');
@@ -466,8 +377,7 @@ var CompanyBrandingLogoView = Backbone.View.extend({
     });
     var checkboxlabel = $("<label />").append(model.label());
 
-    this.upload = new UploadButton({color: 'blue',
-                                     size: 'tiny',
+    this.upload = new UploadButton({color: 'black',
                                      text: localization.companyBranding.selectImageLabel,
                                      width: 150,
                                      name: 'logo',

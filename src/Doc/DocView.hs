@@ -3,8 +3,6 @@ module Doc.DocView (
     pageCreateFromTemplate
   , documentInfoFields
   , flashDocumentRestarted
-  , flashDocumentProlonged
-  , flashRemindMailSent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -17,9 +15,7 @@ module Doc.DocView (
   , gtVerificationPage
   ) where
 
-import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage)
-import Company.Model
-import Company.CompanyUI
+import AppView (kontrakcja, standardPageFields, brandingFields, companyUIForPage, renderFromBody)
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -30,8 +26,6 @@ import KontraLink
 import MinutesTime
 import Utils.Prelude
 import Text.StringTemplates.Templates
-import Util.HasSomeCompanyInfo
-import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
 import Doc.DocInfo
@@ -50,8 +44,8 @@ import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 import qualified Data.Set as Set
 import Analytics.Include
-import BrandedDomains
 import qualified Amazon as AWS
+import Happstack.Server.SimpleHTTP
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
@@ -59,19 +53,6 @@ pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentRestarted document = do
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageContractRestarted" $ documentInfoFields document)
-
-flashDocumentProlonged :: TemplatesMonad m => Document -> m FlashMessage
-flashDocumentProlonged document = do
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageContractProlonged" $ documentInfoFields document)
-
-flashRemindMailSent :: TemplatesMonad m => SignatoryLink -> m FlashMessage
-flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
-  toFlashMsg OperationDone <$> (renderTemplate (template_name maybesigninfo) $ do
-    F.value "personname" $ getSmartName signlink)
-  where
-    template_name =
-      maybe "flashRemindMailSentNotSigned"
-      (const "flashRemindMailSentSigned")
 
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
@@ -81,12 +62,6 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     evidenceattachments <- if includeEvidenceAttachments then EvidenceAttachments.fetch doc else return []
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
-    let mdb = currentBrandedDomain ctx
-    mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
-    mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
-                   Nothing -> return Nothing
-    mcompanyui <- maybe (return Nothing) (\x -> Just <$> (dbQuery . GetCompanyUI $ (companyid x))) mcompany
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
@@ -133,15 +108,6 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "process" $ "Contract"
       J.value "isviewedbyauthor" $ isSigLinkFor mviewer (getAuthorSigLink doc)
       when (not $ forapi) $ do
-        J.value "signviewlogo" $ if ((isJust $ companysignviewlogo =<< mcompanyui))
-                                    then Just (show (LinkCompanySignViewLogo $ companyid $ fromJust mcompany))
-                                    else (bdlogolink <$> mdb)
-        J.value "signviewtextcolour" $ companysignviewtextcolour =<< mcompanyui
-        J.value "signviewtextfont" $ companysignviewtextfont  =<< mcompanyui
-        J.value "signviewbarscolour" $ (companysignviewbarscolour  =<<  mcompanyui) `mplus` (bdbarscolour <$> mdb)
-        J.value "signviewbarstextcolour" $ (companysignviewbarstextcolour =<< mcompanyui) `mplus` (bdbarstextcolour <$> mdb)
-        J.value "signviewbackgroundcolour" $ (companysignviewbackgroundcolour =<< mcompanyui) `mplus` (bdbackgroundcolour <$> mdb)
-        J.value "author" $ authorJSON mauthor mcompany
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
         J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
@@ -156,8 +122,10 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
-    J.value "undeliveredInvitation" $ invitationdeliverystatus siglink == Undelivered
-    J.value "deliveredInvitation" $ invitationdeliverystatus siglink == Delivered
+    J.value "undeliveredInvitation" $ Undelivered == mailinvitationdeliverystatus siglink || Undelivered == smsinvitationdeliverystatus siglink
+    J.value "undeliveredMailInvitation" $ Undelivered == mailinvitationdeliverystatus siglink
+    J.value "undeliveredSMSInvitation" $  Undelivered == smsinvitationdeliverystatus siglink
+    J.value "deliveredInvitation" $ Delivered == mailinvitationdeliverystatus siglink || Delivered == smsinvitationdeliverystatus siglink
     J.value "delivery" $ signatorylinkdeliverymethod siglink
     J.value "signs" $ isSignatory siglink
     J.value "author" $ isAuthor siglink
@@ -273,15 +241,6 @@ fileJSON file = runJSONGen $ do
     J.value "id" $ show $ fileid file
     J.value "name" $ filename file
 
-authorJSON :: Maybe User -> Maybe Company -> JSValue
-authorJSON mauthor mcompany = runJSONGen $ do
-    J.value "fullname" $ getFullName <$> mauthor
-    J.value "email" $ getEmail <$> mauthor
-    J.value "company" $ getCompanyName <$> mcompany
-    J.value "phone" $ userphone <$> userinfo <$> mauthor
-    J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
-
-
 
 pageDocumentDesign :: TemplatesMonad m
                    => Document
@@ -351,5 +310,5 @@ documentStatusFields document = do
       && (any (isJust . signatorylinkelegdatamismatchmessage) $ documentsignatorylinks document))
 
 -- Page for GT verification
-gtVerificationPage :: TemplatesMonad m => m String
-gtVerificationPage = renderTemplate_ "gtVerificationPage"
+gtVerificationPage :: Kontrakcja m => m Response
+gtVerificationPage = renderFromBody kontrakcja =<< renderTemplate_ "gtVerificationPage"

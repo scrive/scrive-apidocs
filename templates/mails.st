@@ -271,6 +271,26 @@ invitationMailUndeliveredMainP =
        <div style="margin-left: 50px;">
          $_invitationMailUndeliveredContentInstruction()$
        </div>
+#######
+### UNDELIVERED SMS
+###
+invitationSMSUndelivered=
+    $_invitationSMSUndeliveredTitle()$
+    $nicemail(
+        mailheader=_invitationSMSUndeliveredTitle();
+        mailp1=invitationSMSUndeliveredMainP()
+    )$
+####
+####
+invitationSMSUndeliveredMainP =
+       <br/>
+       $_invitationSMSUndeliveredContentBody()$
+       <br/>
+       <br/>
+       $_invitationSMSUndeliveredContentBodyFirst()$
+       <div style="margin-left: 50px;">
+         $_invitationSMSUndeliveredContentInstruction()$
+       </div>
 ####
 #### DOCUMENT ERROR
 ####
@@ -303,16 +323,10 @@ passwordChangeLinkMail=
     $_passwordChangeLinkMailTitle()$
     $nicemail(
         mailheader=_passwordChangeLinkMailTitle();
-        mailp1=passwordChangeLinkMailMainP();
-        mailp2=""
+        mailp1=_passwordChangeLinkMailContentBody();
+        mailp2=nicebutton(link=concat(a1=ctxhostpart;a2=passwordlink); text=_passwordChangeLinkButtonLabel());
+        mailp3=_passwordChangeLinkMailContentBody2()
     )$
-###
-passwordChangeLinkMailMainP=
-<br/>
-$_passwordChangeLinkMailContentBody()$
-<br/>
-<br/>
-$_passwordChangeLinkMailContentBody2()$
 ###
 ### MISMATCH MAILS
 ###

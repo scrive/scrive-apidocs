@@ -283,6 +283,12 @@ window.Signatory = Backbone.Model.extend({
     undeliveredInvitation: function() {
           return this.get("undeliveredInvitation");
     },
+    undeliveredMailInvitation: function() {
+          return this.get("undeliveredMailInvitation");
+    },
+    undeliveredSMSInvitation: function() {
+          return this.get("undeliveredSMSInvitation");
+    },
     signorder: function() {
          return this.get("signorder");
     },

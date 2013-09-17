@@ -4,10 +4,27 @@ module Doc.SignatoryScreenshots
   ) where
 
 import Doc.Screenshot
-import Doc.ReferenceScreenshot (referenceScreenshot)
-import MinutesTime (MinutesTime,parseMinutesTimeRealISO)
+import MinutesTime (MinutesTime,parseMinutesTimeRealISO, fromSeconds)
 import Text.JSON.FromJSValue
 import Data.Maybe
+import qualified Data.ByteString as BS
+import System.IO.Unsafe
+import DB.Binary
+
+referenceScreenshotBinary :: Screenshot
+referenceScreenshotBinary = unsafePerformIO $ do
+  jpg <- BS.readFile "public/reference_screenshot.jpg"
+  return (Screenshot (Binary jpg))
+
+referenceScreenshotTime :: MinutesTime
+referenceScreenshotTime = unsafePerformIO $ do
+  mt <- readFile "public/reference_screenshot_seconds.txt"
+  seconds <- readIO mt
+  return (fromSeconds seconds)
+
+{-# NOINLINE referenceScreenshot #-}
+referenceScreenshot :: (MinutesTime, Screenshot)
+referenceScreenshot = (referenceScreenshotTime,referenceScreenshotBinary)
 
 data SignatoryScreenshots = SignatoryScreenshots
   { first     :: Maybe (MinutesTime, Screenshot)

@@ -2,27 +2,49 @@
 @blueS: 30%;
 @blueL: 30%;
 
-@blue-dark: hsl(@blueH,@blueS,@blueL);
+// TODO: Don't forget to rename @blue-darker -> @blue-dark, when this is removed
+@blue-dark: hsl(@blueH,@blueS,@blueL); 
 @blue-medium: hsl(@blueH,@blueS,60%);
 @blue-light: hsl(@blueH,@blueS,70%);
 @blue-border: hsl(@blueH,@blueS,90%);
 
-@greenH: 91;
-@greenS: 79%;
-@greenL: 43%;
+@gray-border: #ddd;
 
-@redH: 357;
-@redS: 100%;
-@redL: 38%;
+@green: #53B688;
+@green-dark: darken(@green, 25%);
+@green-secondary: #80C4A1;
 
-@red: hsl(@redH,@redS,@redL);
-@hover: hsl(@redH,@redS,50%);
+@blue: #323B45;
+// TODO: This should be renamed to @blue-dark, when the old @blue-dark is removed
+@blue-darker: darken(@blue, 25%); 
+@blue-secondary: #3D464F;
 
+@grey: #e6e6e6;
+@light-blue: #0768a9;
+
+@grey-background: #f7f7f7;
+@slightly-darker-grey-background: #f2f2f2;
+@darker-grey-background: #ebebeb;
+@disabled-grey-background: #fbfbfb;
+
+@light-border: #f7f7f7;
+@dark-border: #E2E2E2;
+
+@red: #B9322F;
+@red-dark: darken(@red, 25%);
+@red-secondary: #8A2525;
+
+@default-text-color: #262626;
+
+@dark-text: #4A4A49;
+
+@text-very-dark: #262626;
 @text-dark: #333;
 @text-medium: #666;
 @text-light: #999;
-@text-very-light : #CCC;
+@text-very-light : #fff;
 
+/* TODO: The colors below should be removed */
 @txt: @text-dark;
 @dim: @text-medium;
 @light: @text-light;

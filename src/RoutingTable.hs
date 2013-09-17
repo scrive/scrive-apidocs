@@ -171,11 +171,13 @@ staticRoutes = choice
      , dir "payments" $ dir "contact" $ hPostAllowHttp $ toK0 $ UserControl.handleContactUs
 
      , dir "salesforce" $ dir "integration" $ hGet $ toK0 $ Salesforce.handleSalesforceIntegration
+     , dir "salesforce" $ dir "keys"        $ hGet $ toK0 $ Salesforce.getSalesforceKeys
 
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes
 
      , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ ServerUtils.handleUnsupportedBrowser
+     , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
 
      , documentAPI
      , userAPI
@@ -185,5 +187,6 @@ staticRoutes = choice
 
      -- public services
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
+     , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
    ]

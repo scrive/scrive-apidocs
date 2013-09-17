@@ -6,10 +6,19 @@
     position: relative;
 }
 
+.design-view-document-buttons-wrapper-outer {
+    width: 1018px;
+    margin: auto;
+    background: white;
+    padding-top: 18px;
+    margin-top: -20px; // don't leave any space when the document is not uploaded yet
+}
+
 .design-view-document-buttons-wrapper {
     width: 943px;
+    height: 95%;
     border: 1px dashed #B3B3B3;
-    .rounded(4px);
+    .rounded(8px);
     margin: 18px auto;
 }
 
@@ -23,20 +32,12 @@
     .box-sizing(border-box);
     margin: auto;
     font-size: 20px;
+    font-weight: 300;
 }
 
 .design-view-document-buttons-buttons {
     .box-sizing(border-box);
     margin: 16px auto;
-}
-
-
-
-.design-view-document-buttons-upload-button {
-    a.button-large.button {
-        font-weight: 400;
-        font-size: 18px;
-    }
 }
 
 .design-view-document-buttons-upload-button-circle {
@@ -114,4 +115,8 @@
     position:relative;
     top:50%;
     left:50%;
+}
+
+.design-view-document-pages {
+    margin-bottom: 90px;
 }

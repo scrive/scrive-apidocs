@@ -2,7 +2,6 @@
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( isTemplate -- fromUtils
-  , anyInvitationUndelivered
   , insertDocumentAsIs
 
   , DocumentFilter(..)
@@ -15,6 +14,7 @@ module Doc.Model
   , AttachFile(..)
   , DetachFile(..)
   , AttachSealedFile(..)
+  , AttachExtendedSealedFile(..)
   , CancelDocument(..)
   , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
@@ -425,8 +425,12 @@ documentFilterToSQL (DocumentFilterTemplate) = do
   sqlWhereEq "documents.type" Template
 
 documentFilterToSQL (DocumentFilterDeleted flag1 flag2) = do
-  sqlWhereEq "signatory_links.deleted" flag1
-  sqlWhereEq "signatory_links.really_deleted" flag2
+  if flag1
+     then sqlWhere "signatory_links.deleted IS NOT NULL"
+     else sqlWhere "signatory_links.deleted IS NULL"
+  if flag2
+     then sqlWhere "signatory_links.really_deleted IS NOT NULL"
+     else sqlWhere "signatory_links.really_deleted IS NULL"
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
@@ -455,7 +459,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "maybesigninfo" maybesigninfo
                          , checkEqualBy "maybeseeninfo" maybeseeninfo
                          , checkEqualBy "maybereadinvite" maybereadinvite
-                         , checkEqualBy "invitationdeliverystatus" invitationdeliverystatus
+                         , checkEqualBy "mailinvitationdeliverystatus" mailinvitationdeliverystatus
+                         , checkEqualBy "smsinvitationdeliverystatus" smsinvitationdeliverystatus
                          , checkEqualBy "signatorysignatureinfo" signatorysignatureinfo
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
@@ -579,8 +584,10 @@ statusClassCaseExpression =
    <> SQL " WHEN signatory_links.sign_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCSigned]
    <> SQL " WHEN signatory_links.seen_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCOpened]
    <> SQL " WHEN signatory_links.read_invitation IS NOT NULL THEN (? :: INTEGER)"                                 [toSql SCRead]
-   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Undelivered,           toSql SCDeliveryProblem]
-   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Delivered,             toSql SCDelivered]
+   <> SQL " WHEN signatory_links.mail_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Undelivered,           toSql SCDeliveryProblem]
+   <> SQL " WHEN signatory_links.sms_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Undelivered,           toSql SCDeliveryProblem]
+   <> SQL " WHEN signatory_links.mail_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Delivered,             toSql SCDelivered]
+   <> SQL " WHEN signatory_links.sms_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Delivered,             toSql SCDelivered]
    <> SQL " ELSE (? :: INTEGER)"                                                                                  [toSql SCSent]
   <> SQL " END " []
 
@@ -597,7 +604,8 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.seen_time"
   sqlResult "signatory_links.seen_ip"
   sqlResult "signatory_links.read_invitation"
-  sqlResult "signatory_links.invitation_delivery_status"
+  sqlResult "signatory_links.mail_invitation_delivery_status"
+  sqlResult "signatory_links.sms_invitation_delivery_status"
   sqlResult "signatory_links.signinfo_text"
   sqlResult "signatory_links.signinfo_signature"
   sqlResult "signatory_links.signinfo_certificate"
@@ -641,7 +649,7 @@ fetchSignatoryLinks = do
     nulldocid = unsafeDocumentID $ -1
     decoder (docid, links, linksmap) slid document_id user_id
      sign_order token sign_time sign_ip seen_time seen_ip read_invitation
-     invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
+     mail_invitation_delivery_status sms_invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified signinfo_ocsp_response
      is_author is_partner csv_title csv_contents
@@ -679,7 +687,8 @@ fetchSignatoryLinks = do
           , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
           , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
           , maybereadinvite = read_invitation
-          , invitationdeliverystatus = invitation_delivery_status
+          , mailinvitationdeliverystatus = mail_invitation_delivery_status
+          , smsinvitationdeliverystatus = sms_invitation_delivery_status
           , signatorysignatureinfo = do -- Maybe Monad
               signinfo_text' <- signinfo_text
               signinfo_signature' <- signinfo_signature
@@ -730,7 +739,8 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "seen_time" $ fmap signtime <$> maybeseeninfo <$> links
            sqlSetList "seen_ip" $ fmap signipnumber <$> maybeseeninfo <$> links
            sqlSetList "read_invitation" $ maybereadinvite <$> links
-           sqlSetList "invitation_delivery_status" $ invitationdeliverystatus <$> links
+           sqlSetList "mail_invitation_delivery_status" $ mailinvitationdeliverystatus <$> links
+           sqlSetList "sms_invitation_delivery_status" $ smsinvitationdeliverystatus <$> links
            sqlSetList "signinfo_text" $ fmap signatureinfotext <$> signatorysignatureinfo <$> links
            sqlSetList "signinfo_signature" $ fmap signatureinfosignature <$> signatorysignatureinfo <$> links
            sqlSetList "signinfo_certificate" $ fmap signatureinfocertificate <$> signatorysignatureinfo <$> links
@@ -1072,7 +1082,7 @@ data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
   update (ArchiveDocument uid did _actor) = do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-        sqlSet "deleted" True
+        sqlSetCmd "deleted" "now()"
 
         sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
@@ -1126,6 +1136,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
         actor
     updateMTimeAndObjectVersion did (actorTime actor)
     return ()
+
+data AttachExtendedSealedFile = AttachExtendedSealedFile DocumentID FileID SealStatus
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachExtendedSealedFile () where
+  update (AttachExtendedSealedFile did fid status) = do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      sqlSet "sealed_file_id" fid
+      sqlSet "seal_status" status
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentStatusIs Closed
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument () where
@@ -1201,7 +1220,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" EmailFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-          sqlSet "invitation_delivery_status" Unknown
+          sqlSet "mail_invitation_delivery_status" Unknown
           sqlSet "user_id" $ fmap userid muser
           sqlWhereEq "signatory_links.id" slid
           sqlWhereExists $ sqlSelect "documents" $ do
@@ -1226,7 +1245,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneWhenUnd
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" MobileFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-          sqlSet "invitation_delivery_status" Unknown
+          sqlSet "sms_invitation_delivery_status" Unknown
           sqlSet "user_id" $ SqlNull
           sqlWhereEq "signatory_links.id" slid
           sqlWhereExists $ sqlSelect "documents" $ do
@@ -1550,27 +1569,23 @@ instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] 
       sqlLimit (fromIntegral size)
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen () where
   update (MarkDocumentSeen did slid mh actor) = do
-        -- have to make sure slid and mh match to record log; sorry for inefficiency -EN
-        _ <- query $ GetSignatoryLinkByID did slid (Just mh)
         let time = actorTime actor
             ipnumber = fromMaybe noIP $ actorIP actor
-        kRun01 $ sqlUpdate "signatory_links" $ do
+        kRun1OrThrowWhyNotAllowBaseLine $ sqlUpdate "signatory_links" $ do
             sqlSet "seen_time" time
             sqlSet "seen_ip" ipnumber
-            sqlWhereEq "id" slid
-            sqlWhereEq "document_id" did
-            sqlWhereEq "token" mh
-            sqlWhere "seen_time IS NULL"
-            sqlWhere "sign_time IS NULL"
+
             sqlWhereExists $ sqlSelect "documents" $ do
-               sqlWhereEq "id" did
-               sqlWhereEq "type" $ Signable
-               sqlWhereNotEq "status" Preparation
-               sqlWhereNotEq "status" Closed
-          -- it's okay if we don't update the doc because it's been seen or signed already
-          -- (see jira #1194)
+              sqlWhere "documents.id = signatory_links.document_id"
+              sqlWhereDocumentIDIs did
+              sqlWhereSignatoryLinkIDIs slid
+              sqlWhereSignatoryLinkMagicHashIs mh
+              sqlWhereDocumentTypeIs (Signable)
+              sqlWhere "signatory_links.seen_time IS NULL"
+              sqlWhere "signatory_links.sign_time IS NULL"
+              sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError undefined, Rejected]
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool where
@@ -1597,11 +1612,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
                       sqlWhereEq "id" slid
                       sqlWhereEq "document_id" did
                       sqlWhere "read_invitation IS NULL"
-        _ <- update $ InsertEvidenceEvent
-          MarkInvitationReadEvidence
-          (value "email" eml >> value "actor" (actorWho actor))
-          (Just did)
-          actor
+        _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+            MarkInvitationReadEvidence
+            (value "email" eml >> value "actor" (actorWho actor))
+            (Just did)
+            (Just slid)
+            Nothing
+            actor
         return success
 
 data NewDocument = NewDocument User String DocumentType Int Actor
@@ -1609,9 +1626,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
   update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
   magichash <- random
-  Log.debug $ show user
   authorDetails <- signatoryDetailsFromUser user (True, True)
-  Log.debug $ show authorDetails
   let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
   let authorlink = authorlink0 {
@@ -1649,15 +1664,15 @@ data ReallyDeleteDocument = ReallyDeleteDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool where
   update (ReallyDeleteDocument uid did _actor) = do
     result <- kRun $ sqlUpdate "signatory_links" $ do
-      sqlSet "really_deleted" True
+      sqlSetCmd "really_deleted" "now()"
       sqlWhereExists $ sqlSelect "documents" $ do
         sqlWhere "documents.id = signatory_links.document_id"
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
 
-        sqlWhere "NOT signatory_links.really_deleted"
-        sqlWhere "signatory_links.deleted"
+        sqlWhere "signatory_links.really_deleted IS NULL"
+        sqlWhere "signatory_links.deleted IS NOT NULL"
         sqlWhereEq "documents.id" did
 
         sqlWhereEq "same_company_users.id" uid
@@ -1760,9 +1775,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument () 
   update (RestoreArchivedDocument user did _actor) = do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
 
-      sqlSet "deleted" False
+      sqlSet "deleted" SqlNull
 
-      sqlWhere "NOT really_deleted"
+      sqlWhere "really_deleted IS NULL"
 
       sqlWhereExists $ sqlSelect "users" $ do
           sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
@@ -1864,61 +1879,71 @@ data SetDocumentLang = SetDocumentLang DocumentID Lang Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLang Bool where
   update (SetDocumentLang did lang _actor) = updateWithoutEvidence did "lang" lang
 
-data SetEmailInvitationDeliveryStatus = SetEmailInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
+data SetEmailInvitationDeliveryStatus = SetEmailInvitationDeliveryStatus DocumentID SignatoryLinkID DeliveryStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetEmailInvitationDeliveryStatus Bool where
   update (SetEmailInvitationDeliveryStatus did slid status actor) = do
-    setInvitationDeliveryStatusWorker did slid status actor "email" getEmail InvitationDeliveredByEmail InvitationUndeliveredByEmail
-
-data SetSMSInvitationDeliveryStatus = SetSMSInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
-  update (SetSMSInvitationDeliveryStatus did slid status actor) = do
-    setInvitationDeliveryStatusWorker did slid status actor "phone" getMobile InvitationDeliveredBySMS InvitationUndeliveredBySMS
-
-setInvitationDeliveryStatusWorker :: (TemplatesMonad m, MonadDB m)
-                                     => DocumentID
-                                  -> SignatoryLinkID
-                                  -> MailsDeliveryStatus
-                                  -> Actor
-                                  -> String
-                                  -> (SignatoryLink -> String)
-                                  -> EvidenceEventType
-                                  -> EvidenceEventType
-                                  -> m Bool
-setInvitationDeliveryStatusWorker did slid status actor fieldName getFieldValue
-                                  invitationDeliveredEvent invitationUndeliveredEvent = do
-    let decode acc st = acc ++ [st]
-    old_status <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_links" $ do
+    sig <- query $ GetSignatoryLinkByID did slid Nothing
+    kRun1OrThrowWhyNot $  sqlUpdate "signatory_links" $ do
         sqlFrom "documents"
         sqlJoin "signatory_links AS signatory_links_old"
         sqlWhere "signatory_links.id = signatory_links_old.id"
-        sqlSet "invitation_delivery_status" status
-        sqlResult "signatory_links_old.invitation_delivery_status"
-
+        sqlSet "mail_invitation_delivery_status" status
         sqlWhereSignatoryLinkIDIs slid
         sqlWhereDocumentIDIs did
-
         sqlWhereDocumentTypeIs Signable
-
-    sig <- query $ GetSignatoryLinkByID did slid Nothing
-    let (fieldValue, changed) = (getFieldValue sig, old_status /= status)
+    nsig <- query $ GetSignatoryLinkByID did slid Nothing
+    let changed = mailinvitationdeliverystatus sig /= mailinvitationdeliverystatus nsig
 
     when_ (changed && status == Delivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-        invitationDeliveredEvent
-        (value fieldName fieldValue >> value "status" (show status) >> value "actor" (actorWho actor))
+        InvitationDeliveredByEmail
+        (value "email" (getEmail sig) >> value "status" (show status) >> value "actor" (actorWho actor))
         (Just did)
         (Just slid)
         Nothing
         actor
     when_ (changed && status == Undelivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-        invitationUndeliveredEvent
-        (value fieldName fieldValue >> value "status" (show status) >> value "actor" (actorWho actor))
+        InvitationUndeliveredByEmail
+        (value "email" (getEmail sig) >> value "status" (show status) >> value "actor" (actorWho actor))
         (Just did)
         (Just slid)
         Nothing
         actor
     return True
+
+data SetSMSInvitationDeliveryStatus = SetSMSInvitationDeliveryStatus DocumentID SignatoryLinkID DeliveryStatus Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
+  update (SetSMSInvitationDeliveryStatus did slid status actor) = do
+    sig <- query $ GetSignatoryLinkByID did slid Nothing
+    kRun_ $  sqlUpdate "signatory_links" $ do
+        sqlFrom "documents"
+        sqlJoin "signatory_links AS signatory_links_old"
+        sqlWhere "signatory_links.id = signatory_links_old.id"
+        sqlSet "sms_invitation_delivery_status" status
+        sqlWhereSignatoryLinkIDIs slid
+        sqlWhereDocumentIDIs did
+        sqlWhereDocumentTypeIs Signable
+    nsig <- query $ GetSignatoryLinkByID did slid Nothing
+    let changed = smsinvitationdeliverystatus sig /= smsinvitationdeliverystatus nsig
+    when_ (changed && status == Delivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        InvitationDeliveredBySMS
+        (value "phone" (getMobile sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (Just did)
+        (Just slid)
+        Nothing
+        actor
+    when_ (changed && status == Undelivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        InvitationUndeliveredBySMS
+        (value "phone" (getMobile sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (Just did)
+        (Just slid)
+        Nothing
+        actor
+    return True
+
 
 data SetDocumentSharing = SetDocumentSharing [DocumentID] Bool
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool where
@@ -2161,7 +2186,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
        sqlFrom "documents"
        sqlSet "read_invitation" SqlNull
-       sqlSet "invitation_delivery_status" Unknown
+       sqlSet "mail_invitation_delivery_status" Unknown
+       sqlSet "sms_invitation_delivery_status" Unknown
        sqlWhere "documents.id = signatory_links.document_id"
 
        sqlWhereDocumentIDIs (documentid doc)

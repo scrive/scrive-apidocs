@@ -10,12 +10,22 @@ menu, nav, output, ruby, section, summary, time, mark, audio, video {
     outline: 0;
 }
 
+html {
+    // always show scrollbar, even if it's not needed for the current page
+    // effect: the content isn't moved a few pixels to the left/right, when
+    // switching between pages that have and don't have scrollbars
+    overflow-y:scroll;
+    height:100%;
+}
+
 body {
-  font-size: 14.5px;
-  font-family: @sans;
+  font-size: 15px;
+  font-family: @source;
   line-height: 22px;
   color: @text-dark;
-  background: url("/img/bg-body.png") repeat scroll 0 0 transparent;
+  background-color: @grey-background;
+  font-weight:300;
+  height:100%;
 }
 
 table {
@@ -24,26 +34,18 @@ table {
 }
 
 p {
-  margin: 0 0 1.5em;
-}
-p a {
-  color: @red;
-  text-decoration: none;
-  &:hover {
-    color: @hover;
-    text-decoration: underline;
-  }
+  color: @text-dark;
 }
 
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
   font-family: @source;
   margin: 0;
+  color: @default-text-color;
 }
 
 h1, .h1 {
   font-size: 3.5*@em;
-  color: @blue-dark;
   letter-spacing: -1px;
   letter-spacing: -2px;
   line-height: 1.2em;
@@ -53,26 +55,22 @@ h1, .h1 {
 h2, .h2 {
   font-size: 2*@em;
   font-weight: normal;
-  color: @blue-medium;
   line-height: 1.5em;
 }
 h3, .h3 {
   font-size: 2*@em;
   font-weight: bold;
-  color: @blue-dark;
   line-height: 1.2em;
 }
 
 h4, .h4 {
   font-size: 1.5*@em;
-  font-weight: normal;
-  color: @blue-dark;
+  font-weight: 300;
   line-height: 1.2em;
 }
 
 h5 {
   font-size: 1.25*@em;
-  color: @blue-medium;
   font-weight: normal;
   line-height: 1.2em;
 }
@@ -80,7 +78,6 @@ h5 {
 h6 {
   font-size: 1*@em;
   font-weight: bold;
-  color: @blue-dark;
   line-height: 1.2em;
 }
 
@@ -88,7 +85,7 @@ h6 {
     background: none repeat scroll 0 0 #FFFFFF;
     border: 1px solid #DDDDDD;
     box-shadow: none;
-    font: 16px/1 @sans;
+    font: 16px/1 @source;
     padding: 14px;
     line-height: 19px;
     width: 100%;
@@ -116,14 +113,14 @@ input.grayed {
 }
 
 input, textarea {
-  font-family : @sans;
+  font-family : @source;
   background: none repeat scroll 0 0 #FFFFFF;
   border: 1px solid #DDDDDD;
   box-shadow: none;
   height: 20px;
   padding: 5px;
   &:focus, &:hover {
-      border-color: #7A94B8;
+      border-color: @dark-border;
       outline: medium none;
   }
 }
@@ -131,13 +128,10 @@ input, textarea {
 label {
   color : @dim;
   display: inline-block;
-  font-size: 14.5px;
+  font-size: 15px;
   &.clickable {
     color: @blue-medium;
     cursor: pointer;
-    &:hover {
-      color : @blue-dark;
-    }
   }
 }
 a {

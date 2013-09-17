@@ -113,7 +113,9 @@ window.Tab = Backbone.Model.extend({
 var Tabs = Backbone.Model.extend({
    defaults: {
        canHaveNoActiveTab : false,
-       slideEffect : false
+       slideEffect : false,
+       inner: false,
+       innerText: ""
     },
    initialize : function(args){
        if (!this.canHaveNoActiveTab() && _.all(args.tabs,function(t) {return !t.active(); }))
@@ -166,7 +168,13 @@ var Tabs = Backbone.Model.extend({
    },
    slideEffect : function() {
      return this.get('slideEffect');
-  }
+   },
+   inner: function() {
+     return this.get('inner');
+   },
+   innerText: function() {
+     return this.get('innerText');
+   }
 });
 
 
@@ -225,6 +233,16 @@ var TabsView = Backbone.View.extend({
         var tabsrow = $("<ul class='tabs'/>");
         var model = this.model;
         var hasRight = false;
+
+        if (model.inner()) {
+            container.addClass('inner');
+            var li = $('<li/>');
+            li.addClass('float-left');
+            var h4 = $('<h4/>').text(model.innerText());
+            h4.append($('<img class="tab-arrow" src="/img/gray-arrow.png" />'));
+            li.append(h4);
+            tabsrow.append(li);
+        }
         _.each(this.model.tabs(), function(tab)
         {
             if (tab.disabled()) return;
@@ -257,8 +275,6 @@ var TabsView = Backbone.View.extend({
             tabsrow.append(li);
 
         });
-        if (!hasRight && model.tabsTail() == undefined)
-            tabsrow.append("<li class='float-right empty'/>");
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
         if (model.tabsTail() != undefined)

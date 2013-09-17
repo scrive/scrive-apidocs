@@ -74,19 +74,21 @@
             var div = $('<div />');
             div.addClass('design-view-document-pages');
             if (!this.file)
-              this.file = KontraFile.init({file: document.mainfile()});
+              this.file = new KontraFile({file: document.mainfile()});
             div.append(this.file.view.el);
             return div;
         },
         refreshMargins : function() {
+          // where do these constants come from?
           if (this.wrapperDiv != undefined)
-            this.wrapperDiv.css("height", ($(window).height() - 306) + "px");
+            this.wrapperDiv.css("height", ($(window).height() - 216 - $('.blocking-info').height()) + "px");
           if (this.wrapperDiv != undefined)
-            this.innerDiv.css("margin-top", (Math.floor($(window).height() - 306)/2) - 60) + "px";
+            this.innerDiv.css("margin-top", (Math.floor($(window).height() - 256)/2) - 60) + "px";
         },
         uploadButtons: function() {
             var view = this;
-            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper'/>");
+            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper-outer'/>");
+            var innerWrapper = $("<div class='design-view-document-buttons-wrapper'/>");
             var div = $("<div class='design-view-document-buttons'/>");
 
             this.innerDiv = $("<div class='design-view-document-buttons-inner'/>");
@@ -98,7 +100,8 @@
                 this.innerDiv.append(view.exampleDocument());
                 SessionStorage.set('postsignview', 'signup', false);
             }
-            this.wrapperDiv.append(div);
+            innerWrapper.append(div);
+            this.wrapperDiv.append(innerWrapper);
 
             this.refreshMargins();
 
@@ -198,6 +201,7 @@
              });
             return new UploadButton({    color: 'green',
                                      size: 'big',
+                                     shape: 'rounded',
                                      text: localization.uploadButton,
                                      width: 245,
                                      name: 'file',

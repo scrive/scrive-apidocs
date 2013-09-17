@@ -37,7 +37,11 @@
         lang : Language.current(),
         email: model.email(),
         ajaxsuccess: function(rs) {
-          resp = JSON.parse(rs);
+          try {
+            resp = JSON.parse(rs);
+          } catch (e) {
+            resp = JSON.parse($(rs).text());
+          }
           if (resp.sent === true) {
             mixpanel.track('Create new account', {
                 'Email' : model.email()
@@ -72,7 +76,7 @@
     },
     render: function () {
         $(this.el).html('');
-        $("#page-signup").removeClass("button-red").addClass("button-gray");
+        $("#page-signup").removeClass("button-red").addClass("button-green");
         var self = this;
         var model = this.model;
         var header = $("<div class='shadowed'/>");
@@ -105,8 +109,8 @@
         }
 
         var signupButton = new Button({
-            size  : 'small',
-            color : 'blue',
+            size: 'big',
+            color : 'green',
             text: localization.signup + " ›",
             onClick: function() {
               self.clearValidationMessages();
