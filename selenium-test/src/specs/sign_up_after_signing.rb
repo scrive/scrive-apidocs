@@ -50,7 +50,7 @@ describe "sign up after signing a document" do
     @h.driver.execute_script("$('a.blue.button').click()")
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
-    (@h.wait_until { @h.driver.find_element :css => ".flash-close img" }).click
+    @driver.execute_script("$('.flash-close img').click()")
 
     puts "fill in the password details incorrectly and make sure we get invalid elements"
     (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-12"
@@ -59,7 +59,7 @@ describe "sign up after signing a document" do
     @h.driver.execute_script("$('a.blue.button').click()")
     sleep 1
     @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
-    (@h.wait_until { @h.driver.find_element :css => ".flash-close img" }).click
+    @driver.execute_script("$('.flash-close img').click()")
 
     puts "clear password2 and really activate"
     (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
