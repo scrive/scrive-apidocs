@@ -128,7 +128,6 @@ class DocHelper
     counterparts.each do |counterpart|
       sleep 2
       @driver.execute_script("$('.modal.active div.modal-body .button-large').focus().click()")
-      sleep 100
       (@h.wait_until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
       @driver.execute_script("$('.modal.active input.editSignatoryAttachmentName').change()");
       (@h.wait_until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
@@ -172,7 +171,10 @@ class DocHelper
 
   def signAndSend
     puts "Sign and send"
-    (@h.wait_until { @driver.find_element :css => ".sendButton" }).click
+    sleep 2
+    # the build server has a really tiny screen where the sendbutton is not always visible, so
+    # we do this workaround. otherwise we get an error about the element being out of bounds.
+    @driver.execute_script("$('.sendButton').click()"); 
     puts "Final approval modal"
     sleep 1
     acceptStandardModal
