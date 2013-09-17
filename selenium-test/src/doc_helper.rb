@@ -60,7 +60,9 @@ class DocHelper
     p = partno(part)
     partytab
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-info-box')]"}).click
-    (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-selector')]//a[contains(@class,'button')]"}).click
+    sleep 1
+    @driver.execute_script("$('div.design-view-action-participant-new-field-selector a.button').click()")
+    sleep 1
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
     puts "XXX selecting last item"
     @driver.execute_script("$('ul.select-opts li').last().click()")
