@@ -15,6 +15,7 @@ import Doc.DocumentID
 import Doc.SignatoryLinkID
 import Text.JSON.Gen
 import MagicHash
+import MinutesTime
 
 -- This is the part where we define all possible wrongs about a document.
 
@@ -142,7 +143,13 @@ instance KontraException DocumentDoesNotExist
 
 sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()
-sqlWhereDocumentIDIs did =
+sqlWhereDocumentIDIs did = do
+  sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
+  sqlWhereDocumentWasNotPurged
+
+sqlWhereDocumentIDIsIncludingPurged :: (MonadState v m, SqlWhere v)
+                                    => DocumentID -> m ()
+sqlWhereDocumentIDIsIncludingPurged did = do
   sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
 
 data SignatoryLinkDoesNotExist = SignatoryLinkDoesNotExist SignatoryLinkID
@@ -248,3 +255,21 @@ sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
                                  => DocumentID -> Int -> m ()
 sqlWhereDocumentObjectVersionIs did object_version = sqlWhereE DocumentObjectVersionDoesNotMatch $
  ("documents.object_version = " <?> object_version)  <+> ("AND documents.id = " <?> did)
+
+data DocumentWasPurged = DocumentWasPurged DocumentID String MinutesTime
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue DocumentWasPurged where
+  toJSValue (DocumentWasPurged did title time) = runJSONGen $ do
+    value "message" ("Document was purged from the system and is no longer available" :: String)
+    value "document_id" (show did)
+    value "purged_time" (show time)
+    value "title" title
+
+instance KontraException DocumentWasPurged
+
+sqlWhereDocumentWasNotPurged :: (MonadState v m, SqlWhere v)
+                             => m ()
+sqlWhereDocumentWasNotPurged = sqlWhereEVVV (DocumentWasPurged,
+                                             "documents.id", "documents.title","documents.purged_time")
+                               "documents.purged_time IS NULL"
