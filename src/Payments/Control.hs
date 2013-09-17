@@ -446,7 +446,7 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
 sendInvoiceEmail :: Kontrakcja m => User -> Company -> Subscription -> m ()
 sendInvoiceEmail user company subscription = do
   ctx <- getContext
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (ctxhostpart ctx) user company subscription
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (userBrandedDomain ctx user) (ctxhostpart ctx) user company subscription
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                      fullname = getFullName user
@@ -454,7 +454,7 @@ sendInvoiceEmail user company subscription = do
 
 sendInvoiceFailedEmail :: (MonadDB m, CryptoRNG m) => String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
 sendInvoiceFailedEmail hostpart mailsconfig lang templates user company invoice = do
-  mail <- runTemplatesT (lang, templates) $ mailFailed hostpart user company invoice
+  mail <- runTemplatesT (lang, templates) $ mailFailed Nothing hostpart user company invoice
   scheduleEmailSendout mailsconfig
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user}]})
@@ -462,7 +462,7 @@ sendInvoiceFailedEmail hostpart mailsconfig lang templates user company invoice 
 sendExpiredEmail :: Kontrakcja m => User -> m ()
 sendExpiredEmail user = do
   ctx <- getContext
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (ctxhostpart ctx)
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (userBrandedDomain ctx user) (ctxhostpart ctx)
   scheduleEmailSendout (ctxmailsconfig ctx)
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user }]})
