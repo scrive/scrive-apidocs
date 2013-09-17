@@ -56,7 +56,7 @@ UPDATE files
          FROM documents
          JOIN signatory_links ON signatory_links.document_id = documents.id
         WHERE documents.file_id = files.id
-          AND signatory_links.really_deleted IS NULL
+          AND documents.purged_time IS NULL
        )
    -- Case 2:
    -- File is connected as sealed file to a document that is still available to somebody.
@@ -65,7 +65,7 @@ UPDATE files
          FROM documents
          JOIN signatory_links ON signatory_links.document_id = documents.id
         WHERE documents.sealed_file_id = files.id
-          AND signatory_links.really_deleted IS NULL
+          AND documents.purged_time IS NULL
        )
    -- Case 3:
    -- File is connected as a signatory attachment to a document that is available to somebody.
@@ -75,20 +75,20 @@ UPDATE files
          JOIN signatory_links ON signatory_links.document_id = documents.id
          JOIN signatory_attachments ON signatory_attachments.signatory_link_id = signatory_links.id
         WHERE signatory_attachments.file_id = files.id
-          AND signatory_links.really_deleted IS NULL
+          AND documents.purged_time IS NULL
        )
-   -- Case 3:
-   -- File is connected as a author attachment to a document that is available to somebody.
+   -- Case 4:
+   -- File is connected as an author attachment to a document that is available to somebody.
    AND NOT EXISTS (
        SELECT TRUE
          FROM documents
          JOIN signatory_links ON signatory_links.document_id = documents.id
          JOIN author_attachments ON author_attachments.document_id = documents.id
         WHERE author_attachments.file_id = files.id
-          AND signatory_links.really_deleted IS NULL
+          AND documents.purged_time IS NULL
        )
-   -- Case 4:
-   -- There is an email with this file as attachment
+   -- Case 5:
+   -- There is an email with this file as an attachment
    AND NOT EXISTS (
        SELECT TRUE
          FROM mail_attachments
@@ -96,10 +96,11 @@ UPDATE files
        )
    AND NOT EXISTS (
        SELECT TRUE
-         FROM signatory_screenshots
-         JOIN signatory_links ON signatory_screenshots.signatory_link_id = signatory_links.id
+         FROM documents
+         JOIN signatory_links ON signatory_links.document_id = documents.id
+         JOIN signatory_screenshots ON signatory_screenshots.signatory_link_id = signatory_links.id
         WHERE signatory_screenshots.file_id = files.id
-          AND signatory_links.really_deleted IS NULL
+          AND documents.purged_time IS NULL
        )
 RETURNING id, amazon_bucket || '/' || amazon_url
    ;
