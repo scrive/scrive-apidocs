@@ -17,7 +17,7 @@ window.AttachmentsListDefinition = function(archive) {
                   rendering: function(time) {
                          return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
                   }}),
-        new Cell({name: localization.archive.attachments.columns.attachment, width:"600px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.attachments.columns.attachment, width:"680px", field:"title",  special: "link"}),
         new Cell({name: localization.archive.attachments.columns.shared, width:"50px", field:"shared", special: "rendered",
                   rendering: function(shared) {
                          return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");
