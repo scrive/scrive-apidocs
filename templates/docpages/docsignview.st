@@ -57,12 +57,14 @@ $htmlopentag()$
     </div>
     $if(usestandardheaders)$
     $pageFooter()$
-    $wrapperclosetag()$
+    $wrapperclosingtag()$
     $endif$
   </body>
 $htmlclosingtag$
 ####
 wrapperopentag=
 <div class="wrapper-position-footer">
+####
 wrapperclosingtag=
 </div>
+####
