@@ -106,7 +106,7 @@ main = Log.withLogger $ do
          ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
          temps <- snd `liftM` liftIO (readMVar templates)
          when (System.Time.ctHour ctime == 0) $ do -- midnight
-           handleSyncWithRecurly (hostpart appConf) (mailsConfig appConf)
+           handleSyncWithRecurly appConf (mailsConfig appConf)
              temps (recurlyAPIKey $ recurlyConfig appConf) mtime
            handleSyncNoProvider mtime
      ] ++ (if AWS.isAWSConfigOk $ amazonConfig appConf
