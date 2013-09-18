@@ -3,11 +3,14 @@ DBUSER=kontra
 DBBACKUP=$(DBNAME).dump
 TESTS=all --plain
 
-INSTALL=BUILD_DATE=2010-01-01-00-00-00 cabal-dev install $(INSTALLFLAGS)
+CABAL_CONFIGURE=cabal configure $(CONFIGURE_FLAGS)
 
 .PHONY : all
 all:
-	$(INSTALL) -f-test
+	cabal sandbox init
+	cabal install --only-dependencies
+	$(CABAL_CONFIGURE) -f-test
+	cabal build
 
 # Make "pretty" diagram of database model (requires postgresql-autodoc and graphwiz)
 .PHONY: dot
@@ -27,7 +30,9 @@ schemaspy:
 # Build and run all tests
 .PHONY : test
 test:
-	$(INSTALL) -f-server -f-cron -f-mailing-server -f-messenger-server -f-update-reference-screenshot -ftest-coverage
+	cabal sandbox init
+	$(CABAL_CONFIGURE) -f-server -f-cron -f-mailing-server -f-messenger-server -f-update-reference-screenshot -ftest-coverage
+	cabal build
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
@@ -60,6 +65,7 @@ restore-test-db: reset-test-db
 
 .PHONY : profiling
 profiling:
-	$(INSTALL) --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
-	cabal-dev configure --enable-executable-profiling --ghc-options="-auto-all -caf-all"
-	cabal-dev build
+	cabal sandbox init
+	cabal install --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
+	$(CABAL_CONFIGURE) --enable-executable-profiling --ghc-options="-auto-all -caf-all"
+	cabal build
