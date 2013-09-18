@@ -7,6 +7,13 @@
   min-height:100%;
   position:relative;
 
+  // Don't make it relative when the author signs, because that results
+  // in the arrow being off (since signview is not 100% of the document the
+  // as it is in normal sign view).
+  .wrapper-position-footer & {
+    position: static;
+  }
+
   h2 {
       font-weight:300;
       color:#4A4A49;
