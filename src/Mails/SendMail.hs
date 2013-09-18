@@ -39,7 +39,7 @@ scheduleEmailSendout MailsConfig{..} mail@Mail{..} = do
     then Log.error $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
       fromAddr <- do
-        niceAddress <- fromNiceAddress mailInfo $ fromMaybe ourInfoEmailNiceName originator
+        niceAddress <- fromNiceAddress mailInfo $ originator
         return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
       token <- random
       now <- getMinutesTime
@@ -91,18 +91,18 @@ fromNiceAddress (Invitation did _) servicename = do
       (LANG_SV, an) -> return $ an ++ " genom " ++ servicename
       (LANG_EN, an) -> return $ an ++ " through " ++ servicename
 
-kontramaillocal :: (HasLang a, T.TemplatesMonad m) => Maybe BrandedDomain -> a -> String -> F.Fields m () -> m Mail
-kontramaillocal mbd = kontramailHelper mbd . renderLocalTemplate
+kontramaillocal :: (HasLang a, T.TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> a -> String -> F.Fields m () -> m Mail
+kontramaillocal mc mbd = kontramailHelper mc mbd . renderLocalTemplate
 
-kontramail :: T.TemplatesMonad m  => Maybe BrandedDomain  -> String -> F.Fields m () -> m Mail
-kontramail mbd = kontramailHelper mbd T.renderTemplate
+kontramail :: T.TemplatesMonad m  => MailsConfig -> Maybe BrandedDomain  -> String -> F.Fields m () -> m Mail
+kontramail mc mbd = kontramailHelper mc mbd T.renderTemplate
 
-kontramailHelper :: T.TemplatesMonad m => Maybe BrandedDomain -> (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
-kontramailHelper mbd renderFunc tname fields = do
+kontramailHelper :: T.TemplatesMonad m => MailsConfig -> Maybe BrandedDomain -> (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
+kontramailHelper mc mbd renderFunc tname fields = do
     wholemail <- renderFunc tname fields
     let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
     return $ emptyMail {
-                         originator = fmap bdemailoriginator mbd
+                         originator = fromMaybe (ourInfoEmailNiceName mc) (fmap bdemailoriginator mbd)
                        , title   = title
                        , content = content
                        }

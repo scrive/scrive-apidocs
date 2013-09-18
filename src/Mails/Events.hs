@@ -116,7 +116,7 @@ handleDeliveredInvitation mbd hostpart mc doc signlinkid = do
     Just signlink -> do
       -- send it only if email was reported deferred earlier
       when (mailinvitationdeliverystatus signlink == Deferred) $ do
-        mail <- mailDeliveredInvitation mbd hostpart doc signlink
+        mail <- mailDeliveredInvitation mc mbd hostpart doc signlink
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
         }
@@ -142,7 +142,7 @@ handleDeferredInvitation mbd hostpart mc doc signlinkid email = do
       success <- dbUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
       when success $ do
         Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-        mail <- mailDeferredInvitation mbd hostpart d sl
+        mail <- mailDeferredInvitation mc mbd hostpart d sl
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink d]
         }
@@ -155,15 +155,15 @@ handleUndeliveredInvitation mbd hostpart mc doc signlinkid = do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
-      mail <- mailUndeliveredInvitation mbd hostpart doc signlink
+      mail <- mailUndeliveredInvitation mc mbd hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
       }
     Nothing -> return ()
 
-mailDeliveredInvitation :: TemplatesMonad m => Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
-mailDeliveredInvitation mbd hostpart doc signlink =
-  kontramail mbd "invitationMailDeliveredAfterDeferred" $ do
+mailDeliveredInvitation :: TemplatesMonad m =>  MailsConfig -> Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
+mailDeliveredInvitation mc mbd hostpart doc signlink =
+  kontramail mc mbd "invitationMailDeliveredAfterDeferred" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "email" $ getEmail signlink
     F.value "documenttitle" $ documenttitle doc
@@ -171,8 +171,8 @@ mailDeliveredInvitation mbd hostpart doc signlink =
     brandingMailFields mbd Nothing
 
 
-mailDeferredInvitation :: TemplatesMonad m => Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
-mailDeferredInvitation mbd hostpart doc sl = kontramail mbd "invitationMailDeferred" $ do
+mailDeferredInvitation :: TemplatesMonad m => MailsConfig -> Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
+mailDeferredInvitation mc mbd hostpart doc sl = kontramail mc mbd "invitationMailDeferred" $ do
   F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
   F.value "counterpartname" $ getFullName sl
   F.value "counterpartemail" $ getEmail sl
@@ -181,9 +181,9 @@ mailDeferredInvitation mbd hostpart doc sl = kontramail mbd "invitationMailDefer
   brandingMailFields mbd Nothing
 
 
-mailUndeliveredInvitation :: TemplatesMonad m => Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
-mailUndeliveredInvitation mbd hostpart doc signlink =
-  kontramail mbd "invitationMailUndelivered" $ do
+mailUndeliveredInvitation :: TemplatesMonad m => MailsConfig -> Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
+mailUndeliveredInvitation mc mbd hostpart doc signlink =
+  kontramail mc mbd "invitationMailUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink

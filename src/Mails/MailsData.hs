@@ -13,7 +13,7 @@ data MailAddress = MailAddress {
 -- as SkrivaPa admin (fromMails Config).
 data Mail = Mail {
     to          :: [MailAddress]
-  , originator   :: Maybe String -- Name of service sending email. Nothing == Scrive. Can be set to NJ or something like that
+  , originator   :: String -- Name of service sending email. Default is Scrive
   , title       :: String
   , content     :: String
   , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
@@ -23,7 +23,7 @@ data Mail = Mail {
 emptyMail :: Mail
 emptyMail = Mail {
     to             = []
-  , originator     = Nothing
+  , originator     = "Scrive"
   , title          = []
   , content        = []
   , attachments    = []

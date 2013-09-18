@@ -359,7 +359,7 @@ documentMail haslang ctx doc mailname otherfields = do
         F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
         brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
         otherfields
-    kontramaillocal (mctxcurrentBrandedDomain mctx) haslang mailname allfields
+    kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname allfields
 
 brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()
 brandingMailFields mbd companyui = do

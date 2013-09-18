@@ -20,10 +20,11 @@ import Util.HasSomeCompanyInfo
 import Control.Monad
 import Control.Applicative
 import BrandedDomains
+import Mails.MailsConfig
 
-mailSignup :: (TemplatesMonad m) => Maybe BrandedDomain -> String -> User -> Company -> Recurly.Subscription -> m Mail
-mailSignup mbd hp user company subscription = do
-  kontramail mbd "paymentsSignupEmail" $ do
+mailSignup :: (TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> String -> User -> Company -> Recurly.Subscription -> m Mail
+mailSignup mc mbd hp user company subscription = do
+  kontramail mc mbd "paymentsSignupEmail" $ do
     F.value "ctxhostpart" hp
     F.value "fullname" $ getFullName user
     F.value "startdate" $ showDate $ Recurly.subCurrentBillingStarted subscription
@@ -37,9 +38,9 @@ mailSignup mbd hp user company subscription = do
       F.value "companyname" $ getCompanyName company
     F.value "email" $ getEmail user
 
-mailFailed :: (TemplatesMonad m) => Maybe BrandedDomain ->  String -> User -> Company -> Recurly.Invoice -> m Mail
-mailFailed mbd hp user company invoice = do
-  kontramail mbd "paymentsDeclinedEmail" $ do
+mailFailed :: (TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain ->  String -> User -> Company -> Recurly.Invoice -> m Mail
+mailFailed mc mbd hp user company invoice = do
+  kontramail mc mbd "paymentsDeclinedEmail" $ do
     F.value "ctxhostpart" hp
     F.value "fullname" $ getFullName user
     when (not $ null $ getCompanyName company) $ do
@@ -49,9 +50,9 @@ mailFailed mbd hp user company invoice = do
     F.value "total" $ showTotal 1 $ Recurly.inTotalInCents invoice
     F.value "currency" $ Recurly.inCurrency invoice
 
-mailExpired :: TemplatesMonad m => Maybe BrandedDomain ->  String -> m Mail
-mailExpired mbd hp = do
-  kontramail mbd "paymentsExpiredEmail" $ do
+mailExpired :: TemplatesMonad m => MailsConfig -> Maybe BrandedDomain ->  String -> m Mail
+mailExpired mc mbd hp = do
+  kontramail mc mbd "paymentsExpiredEmail" $ do
     F.value "ctxhostpart" hp
 
 showTotal :: Int -> Int -> String

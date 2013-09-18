@@ -106,15 +106,15 @@ handleUndeliveredSMSInvitation mbd hostpart mc doc signlinkid = do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
-      mail <- smsUndeliveredInvitation mbd hostpart doc signlink
+      mail <- smsUndeliveredInvitation mc mbd hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
       }
     Nothing -> return ()
 
-smsUndeliveredInvitation :: TemplatesMonad m => Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
-smsUndeliveredInvitation mbd hostpart doc signlink =
-  kontramail mbd "invitationSMSUndelivered" $ do
+smsUndeliveredInvitation :: TemplatesMonad m => MailsConfig -> Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
+smsUndeliveredInvitation mc mbd hostpart doc signlink =
+  kontramail mc mbd "invitationSMSUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink

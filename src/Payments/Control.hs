@@ -220,7 +220,7 @@ handleSyncWithRecurly appConf mailsconfig templates recurlyapikey time = do
                 _ <- dbUpdate $ SavePaymentPlan (plan {ppDunningStep = Just (n+1), ppDunningDate = Just $ daysAfter 3 time}) time
                 let lang' = lang $ usersettings user
                 let mbd = findBrandedDomain (fromMaybe "" $ userassociateddomain user) (brandedDomains appConf)
-                _ <- sendInvoiceFailedEmail mbd (hostpart appConf) mailsconfig lang' templates user company invoice
+                _ <- sendInvoiceFailedEmail (mailsConfig appConf) mbd (hostpart appConf) mailsconfig lang' templates user company invoice
                 return ()
       _ -> return ()
 
@@ -263,7 +263,7 @@ postBackCache pr = do
       -- next email 7 days later
       _ <- cachePlan time Stats.PushAction ac s is (ppCompanyID plan) (Just 1) (Just $ daysAfter 7 time)
       ctx <- getContext
-      sendInvoiceFailedEmail (userBrandedDomain ctx user) (ctxhostpart ctx) (ctxmailsconfig ctx) (lang $ usersettings user) (ctxglobaltemplates ctx) user company invoice
+      sendInvoiceFailedEmail (ctxmailsconfig ctx) (userBrandedDomain ctx user) (ctxhostpart ctx) (ctxmailsconfig ctx) (lang $ usersettings user) (ctxglobaltemplates ctx) user company invoice
     (SuccessfulPayment _, _, _) -> do
       -- need to remove dunning step
       _ <- cachePlan time Stats.PushAction ac s is (ppCompanyID plan) Nothing Nothing
@@ -449,15 +449,15 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
 sendInvoiceEmail :: Kontrakcja m => User -> Company -> Subscription -> m ()
 sendInvoiceEmail user company subscription = do
   ctx <- getContext
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (userBrandedDomain ctx user) (ctxhostpart ctx) user company subscription
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (ctxmailsconfig ctx) (userBrandedDomain ctx user) (ctxhostpart ctx) user company subscription
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                      fullname = getFullName user
                                    , email = getEmail user }]})
 
-sendInvoiceFailedEmail :: (MonadDB m, CryptoRNG m) => Maybe BrandedDomain -> String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
-sendInvoiceFailedEmail mbd hostpart mailsconfig lang templates user company invoice = do
-  mail <- runTemplatesT (lang, templates) $ mailFailed mbd hostpart user company invoice
+sendInvoiceFailedEmail :: (MonadDB m, CryptoRNG m) => MailsConfig -> Maybe BrandedDomain -> String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
+sendInvoiceFailedEmail mc mbd hostpart mailsconfig lang templates user company invoice = do
+  mail <- runTemplatesT (lang, templates) $ mailFailed mc mbd hostpart user company invoice
   scheduleEmailSendout mailsconfig
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user}]})
@@ -465,7 +465,7 @@ sendInvoiceFailedEmail mbd hostpart mailsconfig lang templates user company invo
 sendExpiredEmail :: Kontrakcja m => User -> m ()
 sendExpiredEmail user = do
   ctx <- getContext
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (userBrandedDomain ctx user) (ctxhostpart ctx)
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (ctxmailsconfig ctx) (userBrandedDomain ctx user) (ctxhostpart ctx)
   scheduleEmailSendout (ctxmailsconfig ctx)
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user }]})

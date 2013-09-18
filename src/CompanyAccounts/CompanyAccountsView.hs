@@ -31,7 +31,7 @@ import Context
 mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
 mailNewCompanyUserInvite ctx invited inviter company companyui link =
-  kontramail (currentBrandedDomain ctx)  "mailNewCompanyUserInvite" $ do
+  kontramail (ctxmailsconfig ctx)  (currentBrandedDomain ctx)  "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
     F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just companyui)
@@ -42,7 +42,7 @@ mailTakeoverSingleUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
 mailTakeoverSingleUserInvite ctx invited inviter company companyui link =
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal (currentBrandedDomain ctx)  invited  "mailTakeoverSingleUserInvite" $ do
+  kontramaillocal (ctxmailsconfig ctx)  (currentBrandedDomain ctx)  invited  "mailTakeoverSingleUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
     F.object "companybrand" $ brandingMailFields (currentBrandedDomain ctx) (Just companyui)
