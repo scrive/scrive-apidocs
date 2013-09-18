@@ -33,7 +33,7 @@ $htmlopentag()$
         <label style="text-align:center;width:275px;">E-signing powered by Scrive</label>
       </div>
     </div>
-    <div class="js-price-plan price-plan"></div>
+    <div class="js-price-plan price-plan price-plan-branded"></div>
     <script>
       PricePage({noheaders: true,
                  includeenterprise: false,
