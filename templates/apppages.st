@@ -144,6 +144,14 @@ $endif$
 
 </style>
 
+<!-- Styling of the design view footer -->
+<style> 
+$if(custombarscolour)$
+  .design-view-button-bar {
+      background: $custombarscolour$ !important;
+  }
+$endif$
+</style>
 
 <footer class="site $if(thin)$thin$endif$ $if(logged)$logged-in$endif$ $if(!logged)$thin$endif$">
   <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
