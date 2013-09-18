@@ -2683,6 +2683,7 @@ window.html2canvas = function(elements, opts) {
 
     width: null,
     height: null,
+    scale: 1,
     taintTest: true, // do a taint test with all images before applying to canvas
     renderer: "Canvas"
   };
@@ -2811,9 +2812,10 @@ _html2canvas.Renderer.Canvas = function(options) {
     fstyle,
     zStack = parsedData.stack;
 
-    canvas.width = canvas.style.width =  options.width || zStack.ctx.width;
-    canvas.height = canvas.style.height = options.height || zStack.ctx.height;
+    canvas.width = canvas.style.width =  options.scale * (options.width || zStack.ctx.width);
+    canvas.height = canvas.style.height = options.scale * (options.height || zStack.ctx.height);
 
+    ctx.scale(options.scale, options.scale);
     fstyle = ctx.fillStyle;
     ctx.fillStyle = (Util.isTransparent(zStack.backgroundColor) && options.background !== undefined) ? options.background : parsedData.backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
