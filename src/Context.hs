@@ -2,6 +2,7 @@ module Context (
       Context(..),
       anonymousContext,
       currentBrandedDomain,
+      userBrandedDomain,
       MailContext(..),
       HasMailContext(..)
     ) where
@@ -25,6 +26,7 @@ import GuardTime (GuardTimeConf(..))
 import Payments.Config (RecurlyConfig)
 import BrandedDomains
 import Salesforce.Conf
+import Data.Maybe
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -65,6 +67,10 @@ anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, 
 -- | Current branded domain
 currentBrandedDomain :: Context -> Maybe BrandedDomain
 currentBrandedDomain ctx = findBrandedDomain (ctxhostpart ctx) (ctxbrandeddomains ctx)
+
+-- | Branded domain for given user
+userBrandedDomain ::  Context -> User -> Maybe BrandedDomain
+userBrandedDomain ctx user = findBrandedDomain (fromMaybe "" $ userassociateddomain user) (ctxbrandeddomains ctx)
 
 -- TODO: consider breaking KontraMonad into smaller parts for more
 -- fine-grained access to context, because some parts are needed

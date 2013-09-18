@@ -82,7 +82,7 @@ instance Configuration AppConf where
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
     , homebase           = "https://staging.scrive.com"
     , ntpServers         = defaultNtpServers
-    , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#CCCCCCC" "#AAAAAA" "blue" "hsl(215,30%,60%)" "#364963" "#7A94B8" "#C2000A" "Scrive SMS"]
+    , brandedDomains     = [BrandedDomain "https://domain.scrive.com" "/img/logo.png" "#000000" "#000000" "#FFFFFF" "#FFFFFF" "#FFFFFF" "#DDDDDD" "#CCCCCCC" "#AAAAAA" "blue" "hsl(215,30%,60%)" "#364963" "#7A94B8" "#C2000A" "Scrive SMS" "Scrive Email"]
     , salesforceConf     = SalesforceConf
                               { salesforceAuthenticationUrl = "https://login.salesforce.com/services/oauth2/authorize"
                               , salesforceTokenUrl = "https://login.salesforce.com/services/oauth2/token"
