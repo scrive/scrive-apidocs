@@ -537,7 +537,7 @@
 "_textFieldFor","Part ","Party "
 "_textFieldDone","Spara","Save"
 "_verificationTitle","Verifiera signatur","Verify signature"
-"_verificationDescription","Du kan kontrollera att dokumentet du har har en giltig digital signatur<br/>genom att ladda upp dokumentet här.","You can check if the file that you have has a valid digital signature by uploading the document here."
+"_verificationDescription","Du kan kontrollera att ditt dokument har en giltig signatur genom att ladda upp det här.","You can check if the file that you have has a valid digital signature by uploading the document here."
 "_documentSentBy","Skickat av $author$","Sent by $author$"
 "_numberOfPagesIs1","1 sida","1 page"
 "_numberOfPages","$pages$ sidor","$pages$ pages"
