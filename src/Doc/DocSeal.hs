@@ -70,11 +70,11 @@ import Control.Arrow (first)
 import EvidenceLog.Model
 import EvidenceLog.View
 import Util.Actor
-import Control.Monad.Trans.Maybe
 import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Utils.Prelude
 import qualified Amazon as AWS
+import Doc.API.Callback.Model
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails boxImages details =
@@ -556,9 +556,8 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     case code of
       ExitSuccess -> do
         Just sealedfileid <- digitallySealDocument True ctxtime ctxgtconf documentid tmpout filename
-        res <- runMaybeT $ do
-          Just doc <- dbQuery $ GetDocumentByDocumentID documentid
-          return doc
+        triggerAPICallbackIfThereIsOne document -- Callback does not depend on sealed file
+        res <- dbQuery $ GetDocumentByDocumentID documentid
         Log.debug $ "Should be attached to document; is it? " ++ show (((Just sealedfileid==) . documentsealedfile) <$> res)
         return $ maybe (Left "AttachSealedFile failed") Right res
       ExitFailure _ -> do
@@ -574,6 +573,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
           hClose handle
           return msg
         _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (systemActor ctxtime)
+        triggerAPICallbackIfThereIsOne document
         return $ Left msg
 
 digitallySealDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
