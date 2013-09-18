@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 26
+  , tblVersion = 27
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "file_id", colType = BigIntT }
@@ -21,9 +21,6 @@ tableDocuments = tblTable {
     , tblColumn { colName = "invite_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "invite_ip", colType = IntegerT }
     , tblColumn { colName = "invite_text", colType = TextT, colNullable = False }
-    , tblColumn { colName = "csv_title", colType = TextT }
-    , tblColumn { colName = "csv_contents", colType = TextT }
-    , tblColumn { colName = "csv_signatory_index", colType = IntegerT }
     , tblColumn { colName = "sharing", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "lang", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "api_callback_url", colType = TextT }

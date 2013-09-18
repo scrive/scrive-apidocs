@@ -150,6 +150,7 @@ kontraMigrations = [
   , migrateUsersDeletedTime
   , migrateSignatoryLinksDeletedTime
   , migrateSeparateDeliveryStatuses
+  , removeCSVStuffFromDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

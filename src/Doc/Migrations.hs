@@ -1014,3 +1014,13 @@ migrateSeparateDeliveryStatuses =
        _ <- kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN invitation_delivery_status"
        return ()
     }
+
+removeCSVStuffFromDocuments  :: MonadDB m => Migration m
+removeCSVStuffFromDocuments =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 26
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE documents DROP COLUMN csv_title, DROP COLUMN csv_contents, DROP COLUMN csv_signatory_index"
+       return ()
+    }
