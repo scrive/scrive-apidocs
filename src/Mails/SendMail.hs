@@ -29,14 +29,17 @@ import User.Lang
 import Util.SignatoryLinkUtils
 import Doc.Model
 import Doc.DocStateData
+import Data.Maybe
+import BrandedDomains
 
 scheduleEmailSendout :: (CryptoRNG m, MonadDB m) => MailsConfig -> Mail -> m ()
 scheduleEmailSendout MailsConfig{..} mail@Mail{..} = do
+  Log.error $ "Sending mail with originator" ++ show originator
   if unsendable to
     then Log.error $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
       fromAddr <- do
-        niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
+        niceAddress <- fromNiceAddress mailInfo $ originator
         return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
       token <- random
       now <- getMinutesTime
@@ -88,16 +91,18 @@ fromNiceAddress (Invitation did _) servicename = do
       (LANG_SV, an) -> return $ an ++ " genom " ++ servicename
       (LANG_EN, an) -> return $ an ++ " through " ++ servicename
 
-kontramaillocal :: (HasLang a, T.TemplatesMonad m) => a -> String -> F.Fields m () -> m Mail
-kontramaillocal = kontramailHelper . renderLocalTemplate
+kontramaillocal :: (HasLang a, T.TemplatesMonad m) => MailsConfig -> Maybe BrandedDomain -> a -> String -> F.Fields m () -> m Mail
+kontramaillocal mc mbd = kontramailHelper mc mbd . renderLocalTemplate
 
-kontramail :: T.TemplatesMonad m  => String -> F.Fields m () -> m Mail
-kontramail = kontramailHelper T.renderTemplate
+kontramail :: T.TemplatesMonad m  => MailsConfig -> Maybe BrandedDomain  -> String -> F.Fields m () -> m Mail
+kontramail mc mbd = kontramailHelper mc mbd T.renderTemplate
 
-kontramailHelper :: T.TemplatesMonad m => (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
-kontramailHelper renderFunc tname fields = do
+kontramailHelper :: T.TemplatesMonad m => MailsConfig -> Maybe BrandedDomain -> (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
+kontramailHelper mc mbd renderFunc tname fields = do
     wholemail <- renderFunc tname fields
     let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
-    return $ emptyMail { title   = title
+    return $ emptyMail {
+                         originator = fromMaybe (ourInfoEmailNiceName mc) (fmap bdemailoriginator mbd)
+                       , title   = title
                        , content = content
                        }

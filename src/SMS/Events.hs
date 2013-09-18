@@ -37,6 +37,9 @@ import qualified Log
 import Util.Actor
 import qualified Text.StringTemplates.Fields as F
 import Utils.Read
+import Data.Functor
+import BrandedDomains
+import Doc.DocViewMail
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent (a,b,c, fromMaybe None $ maybeRead d))
@@ -54,10 +57,15 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
         Just doc -> do
           let msl = getSigLinkFor doc slid
           let signphone = maybe "" getMobile msl
-          sd <- ask
           templates <- getGlobalTemplates
-          let host = hostpart $ sdAppConf sd
-              mc = mailsConfig $ sdAppConf sd
+          appConf <- sdAppConf <$> ask
+          mbd <- case (maybesignatory =<< getAuthorSigLink doc) of
+                          Nothing -> return Nothing
+                          Just uid -> do
+                            user  <- dbQuery $ GetUserByID uid
+                            return $ findBrandedDomain (fromMaybe "" $ join $ userassociateddomain <$> user) (brandedDomains $ appConf)
+          let host = fromMaybe (hostpart $ appConf) (bdurl <$> mbd)
+              mc = mailsConfig $ appConf
               -- since when email is reported deferred author has a possibility to
               -- change email address, we don't want to send him emails reporting
               -- success/failure for old signatory address, so we need to compare
@@ -65,8 +73,8 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
               handleEv (SMSEvent phone ev) = do
                 Log.cron $ signphone ++ " == " ++ phone
                 runTemplatesT (getLang doc, templates) $ case ev of
-                  SMSDelivered -> handleDeliveredInvitation (host, mc) doc slid
-                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation (host, mc) doc slid
+                  SMSDelivered -> handleDeliveredInvitation doc slid
+                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation mbd host mc doc slid
           handleEv eventType
     processEvent (eid, _ , _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
@@ -79,8 +87,8 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
         then Log.error $ "Couldn't delete email #" ++ show mid
         else Log.debug $ "Deleted email #" ++ show mid
 
-handleDeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
-handleDeliveredInvitation (_hostpart, _mc) doc signlinkid = do
+handleDeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLinkID -> m ()
+handleDeliveredInvitation doc signlinkid = do
   Log.cron $ "handleDeliveredInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
@@ -90,23 +98,23 @@ handleDeliveredInvitation (_hostpart, _mc) doc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MonadBase IO m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
-handleUndeliveredSMSInvitation (hostpart, mc) doc signlinkid = do
+handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MonadBase IO m) => Maybe BrandedDomain -> String -> MailsConfig -> Document -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation mbd hostpart mc doc signlinkid = do
   Log.cron $ "handleUndeliveredSMSInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
-      mail <- smsUndeliveredInvitation hostpart doc signlink
+      mail <- smsUndeliveredInvitation mc mbd hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
       }
     Nothing -> return ()
 
-smsUndeliveredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
-smsUndeliveredInvitation hostpart doc signlink =
-  kontramail "invitationSMSUndelivered" $ do
+smsUndeliveredInvitation :: TemplatesMonad m => MailsConfig -> Maybe BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
+smsUndeliveredInvitation mc mbd hostpart doc signlink =
+  kontramail mc mbd "invitationSMSUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
@@ -114,3 +122,4 @@ smsUndeliveredInvitation hostpart doc signlink =
     F.value "mobile" $ getMobile signlink
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" hostpart
+    brandingMailFields mbd Nothing

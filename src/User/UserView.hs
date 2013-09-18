@@ -187,7 +187,7 @@ pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
 
 accessNewAccountMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 accessNewAccountMail ctx user setpasslink = do
-  kontramail "accessNewAccountMail" $ do
+  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)  "accessNewAccountMail" $ do
     F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
@@ -196,7 +196,7 @@ accessNewAccountMail ctx user setpasslink = do
 
 resetPasswordMail :: TemplatesMonad m => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
-  kontramail "passwordChangeLinkMail" $ do
+  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)   "passwordChangeLinkMail" $ do
     F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
@@ -205,7 +205,7 @@ resetPasswordMail ctx user setpasslink = do
 
 newUserMail :: TemplatesMonad m => Context -> String -> String -> KontraLink -> m Mail
 newUserMail ctx emailaddress personname activatelink = do
-  kontramail "newUserMail" $ do
+  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)  "newUserMail" $ do
     F.value "personname"   $ personname
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
@@ -215,7 +215,7 @@ newUserMail ctx emailaddress personname activatelink = do
 
 mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
 mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage = do
-  kontramaillocal lang "mailNewAccountCreatedByAdmin" $ do
+  kontramaillocal (ctxmailsconfig ctx) (currentBrandedDomain ctx)  lang "mailNewAccountCreatedByAdmin" $ do
     F.value "personname"    $ personname
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink
@@ -227,7 +227,7 @@ mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage
 
 mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => Context -> a -> Email -> KontraLink -> m Mail
 mailEmailChangeRequest ctx user newemail link = do
-  kontramail "mailRequestChangeEmail" $ do
+  kontramail (ctxmailsconfig ctx) (currentBrandedDomain ctx)  "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
     F.value "ctxhostpart" $ ctxhostpart ctx

@@ -113,9 +113,9 @@ sendDocumentMails mailTo author = do
                               sendoutForManualChecking s req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl) False
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc sl
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation  (ctxhostpart ctx) doc sl
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailsconfig ctx) Nothing (ctxhostpart ctx) doc sl
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) doc sl
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl False
         --reject mail
