@@ -55,6 +55,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       size: BrowserInfo.isSmallScreen() ? "big" : "small",
       color: "green",
       shape: "rounded",
+      cssClass: 'greybg',
       text: localization.process.signbuttontext,
       oneClick : true,
       onClick: function() {
