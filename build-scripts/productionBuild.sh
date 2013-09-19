@@ -87,7 +87,7 @@ cat "$TMP/$finalfile" | ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment &&
 scp "/home/builds/key/builds.scrive.com.pubkey.pem" "builds@prod.scrive.lan:/tmp/"$SRV"_deployment/."
 
 echo "Verifying and unzipping deployment file"
-ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && tar -zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
+ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
 
