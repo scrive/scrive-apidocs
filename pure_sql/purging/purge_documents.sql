@@ -22,6 +22,7 @@
 -- - all values of all signatory_link_fields
 -- - all IP addresses related to document
 -- - e-leg data
+-- - removing all evidence_log data
 --
 -- Important note: do not set to null any files referenced. Files
 -- themselves will be purged by another script.
@@ -91,6 +92,11 @@ UPDATE signatory_link_fields
        (SELECT id
           FROM signatory_links
          WHERE signatory_links.document_id IN (SELECT id FROM documents_to_purge))
+     ;
+
+DELETE
+  FROM evidence_log
+ WHERE document_id IN (SELECT id FROM documents_to_purge)
      ;
 
 ROLLBACK;
