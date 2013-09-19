@@ -684,7 +684,7 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsSignature: function() {
-        return this.padDelivery();
+        return this.padDelivery() && this.signs();
     },
     ensureSignature: function() {
         var signatory = this;
