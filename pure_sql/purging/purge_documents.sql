@@ -1,27 +1,31 @@
-
-
--- This SQL commans file should find all documents that should be
+--
+-- This SQL commands file should find all documents that should be
 -- purged, then purges them, then marks them as purged.
 --
--- Document is a candidate for purging when for each of signatory
--- links one of the below is true:
+-- A document is a candidate for purging when is does not contain live
+-- signatory links. A live signatory link is one that either:
 --
--- - signatory links is deleted and 3 months went by after that point
+-- - signatory link is in user account and not deleted
+-- - signatory link is in user account and deleted no longer
+--   than 3 months ago
+-- - signatory link is not in user account and no longer than 1 month
+--   passed since document reached final state (closed, rejected,
+--   canceled or error)
 --
--- - signatory link is not deleted but is wasn't saved to an account
---   and 1 month went by since document reached final state (closed,
---   rejected or canceled or error)
+-- Note: user accounts have lifetime extent the same as companies have
+-- as user account represent current or historical fact of employment
+-- and working on behalf of the company. As soon as we will be
+-- supporting removal of companies document purging rules should take
+-- that into account companies.purged_time.
 --
--- Purging consists of:
--- - blanking values of all signatory_link_fields
--- - blanking all IP addresses related to document
+-- Purging consists of blanking the following:
+-- - all values of all signatory_link_fields
+-- - all IP addresses related to document
+-- - e-leg data
 --
--- Note: do not set to null any files referenced. Files themselves
--- will be purged by another script.
+-- Important note: do not set to null any files referenced. Files
+-- themselves will be purged by another script.
 --
--- Note: when we have implemented company deletes then we will be able
--- to purge document based on companies.purged_time. This is a long
--- term task.
 BEGIN;
 
 SELECT count(*) AS "Total documents"

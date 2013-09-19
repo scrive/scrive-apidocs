@@ -1,9 +1,13 @@
 #!/bin/sh
 
+#
+# This script creates another script. As single input it should get
+# output from purge_files.sql.
+#
 if [ -z $1 ];
 then
     echo "Usage:"
-    echo "   $0 <outout from find_files_for_purging.sql>"
+    echo "   $0 <outout from purge_files.sql>"
     exit 56
 fi
 

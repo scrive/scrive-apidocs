@@ -1,18 +1,21 @@
-
 --
 -- This script finds all files in the database that:
 --
 -- - are not yet purged (purge_time is null)
--- - are not referenced at all or all that references them is itself purged
+-- - are not referenced at all or are only referenced by purged documents
 --
--- A table with URLs to files is produced. What should happen next:
--- - files should be marked as purged
--- - a script removing those files from Amazon should be executed
+-- All found files are marked as purged and a table with URLs to files
+-- is produced. A script called purge_files_from_amazon.sh removing
+-- those files from Amazon should be executed.
 --
 -- Note about output syntax: output starts after some garbage at the
 -- token START. Then it is lines with space separated values. First
 -- one is file id, then comes file url relative to the Amazon
 -- including bucket it is in.  Output ends on token FINISH.
+--
+-- Note: this script dumps all know foreign keys referencing 'files'
+-- table. If there are some new foreign keys then script needs to take
+-- this fact into account as appriopriate.
 
 BEGIN;
 
