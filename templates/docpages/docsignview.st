@@ -10,8 +10,8 @@ $htmlopentag()$
       </head>
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
     $if(usestandardheaders)$
-    $header()$
     $wrapperopentag()$
+    $header()$
     $endif$
     <div class="signview">
       <div class="mainContainer" >

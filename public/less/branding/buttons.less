@@ -132,7 +132,12 @@ input[type="submit"]::-moz-focus-inner {border:0;}
         border-color: @dark-border;
     }
     &.green {
-        border-color: rgba(0,0,0,0.1);
+        // There is a problem in Safari where the bordered element expands into the border when
+        // the border is transparent. What we want is this:
+        // border-color: rgba(0,0,0,0.1);
+        // but we go with this hack to make the border look OK on both backgrounds.
+        border-color: #e1e1e1;
+        & .greybg { border-color: #d4d4d4; }
     }
    
   }
