@@ -83,7 +83,7 @@ fi
 
 echo "Copying deployment file to /tmp on $SRV server"
 ssh builds@prod.scrive.lan "rm -rf /tmp/"$SRV"_deployment && mkdir /tmp/"$SRV"_deployment"
-scp "$TMP/$finalfile" "builds@prod.scrive.lan:/tmp/"$SRV"_deployment/."
+cat "$TMP/$finalfile" | ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && tar -zx"
 scp "/home/builds/key/builds.scrive.com.pubkey.pem" "builds@prod.scrive.lan:/tmp/"$SRV"_deployment/."
 
 echo "Verifying and unzipping deployment file"
@@ -94,8 +94,7 @@ echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has bee
 if [ ! -z "$SRV2" ]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
    ssh api-testbed@vm-dev.scrive.com "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
-   scp "$TMP/$finalfile" "api-testbed@vm-dev.scrive.com:/tmp/"$SRV2"_deployment/."
-   ssh api-testbed@vm-dev.scrive.com "cd /tmp/"$SRV2"_deployment && tar -zxf $finalfile ; exit \$?"
+   cat "$TMP/$finalfile" | ssh api-testbed@vm-dev.scrive.com "cd /tmp/"$SRV2"_deployment && tar -zx ; exit \$?"
 fi
 
 exit 0
