@@ -1393,10 +1393,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
     return ()
 
 selectDocuments :: MonadDB m => SqlSelect -> m [Document]
-selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit Nothing sqlquery
+selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit True Nothing sqlquery
 
-selectDocumentsWithSoftLimit :: MonadDB m => Maybe Int -> SqlSelect -> m (Int,[Document])
-selectDocumentsWithSoftLimit softlimit sqlquery = do
+selectDocument :: MonadDB m => SqlSelect -> m Document
+selectDocument sqlquery = $(head) . snd <$> selectDocumentsWithSoftLimit False Nothing sqlquery
+
+selectDocumentsWithSoftLimit :: MonadDB m => Bool ->  Maybe Int -> SqlSelect -> m (Int,[Document])
+selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
 
     {-
     kRun_ $ "EXPLAIN (ANALYZE, VERBOSE, COSTS, BUFFERS)" <+> toSQLCommand sqlquery
@@ -1418,23 +1421,39 @@ selectDocumentsWithSoftLimit softlimit sqlquery = do
         kRunRaw "DROP TABLE docs1"
         return count
 
-    _ <- kRun $ SQL "SELECT * FROM docs" []
+    when (allDocumentsCount==0 && not allowzeroresults) $ do
+      kRunRaw "DROP TABLE docs"
+      listOfExceptions <- kWhyNot1 sqlquery
+
+      case listOfExceptions of
+        [] -> do
+          -- This case should not really happen due to how we handle
+          -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
+          -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
+          kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlquery)
+        (ex:_) -> do
+          -- Lets throw first exception on the list. It should be the
+          -- most generic one.
+          kThrow ex
+
+
+    kRun_ $ SQL "SELECT * FROM docs" []
     docs <- reverse `liftM` fetchDocuments
 
 
-    _ <- kRun $ SQL "CREATE TEMP TABLE links AS " [] <>
+    kRun_ $ SQL "CREATE TEMP TABLE links AS " [] <>
          selectSignatoryLinksSQL <>
          SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, signatory_links.id DESC" []
-    _ <- kRun $ SQL "SELECT * FROM links" []
+    kRun_ $ SQL "SELECT * FROM links" []
     sls <- fetchSignatoryLinks
 
-    _ <- kRun $ selectSignatoryLinkFieldsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY signatory_link_fields.id DESC" []
+    kRun_ $ selectSignatoryLinkFieldsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY signatory_link_fields.id DESC" []
     fields <- fetchSignatoryLinkFields
 
-    _ <- kRun $ selectAuthorAttachmentsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
+    kRun_ $ selectAuthorAttachmentsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     ats <- fetchAuthorAttachments
 
-    _ <- kRun $ selectDocumentTagsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE document_tags.document_id = docs.id)" []
+    kRun_ $ selectDocumentTagsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE document_tags.document_id = docs.id)" []
     tags <- fetchDocumentTags
 
     kRunRaw "DROP TABLE docs"
@@ -1499,8 +1518,9 @@ instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
   query (GetDocumentByDocumentID did) = do
-    query (GetDocumentsByDocumentIDs [did])
-      >>= oneObjectReturnedGuard
+    Just <$> (selectDocument $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentIDIs did)
 
 data GetDocumentsByDocumentIDs = GetDocumentsByDocumentIDs [DocumentID]
 instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
@@ -1512,17 +1532,16 @@ instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) where
   query (GetDocumentBySignatoryLinkID slid) =
-     (selectDocuments $ sqlSelect "documents" $ do
+     (Just <$> (selectDocument $ sqlSelect "documents" $ do
        mapM_ sqlResult documentsSelectors
        sqlWhereExists $ sqlSelect "signatory_links" $ do
          sqlWhereEq "signatory_links.id" slid
-         sqlWhere "signatory_links.document_id = documents.id")
-    >>= oneObjectReturnedGuard
+         sqlWhere "signatory_links.document_id = documents.id"))
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash (Maybe Document) where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
-    (selectDocuments $ sqlSelect "documents" $ do
+    (Just <$> (selectDocument $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereExists $ sqlSelect "signatory_links" $ do
          sqlWhere "signatory_links.document_id = documents.id"
@@ -1532,8 +1551,7 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash 
          -- we are sloppy and let a person see the document.
          sqlWhereEq "signatory_links.id" slid
          sqlWhereEq "signatory_links.token" mh
-      sqlWhereEq "documents.id" did)
-      >>= oneObjectReturnedGuard
+      sqlWhereEq "documents.id" did))
 
 -- | GetDocuments is central switch for documents list queries.
 --
@@ -1554,7 +1572,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
 data GetDocuments2 = GetDocuments2 [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int,Maybe Int)
 instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
   query (GetDocuments2 domains filters orderbys (offset,limit,softlimit)) = do
-    selectDocumentsWithSoftLimit softlimit $ sqlSelect "documents" $ do
+    selectDocumentsWithSoftLimit True softlimit $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
       sqlOffset $ fromIntegral offset

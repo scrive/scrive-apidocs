@@ -878,9 +878,9 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  success <- dbUpdate $ ResetSignatoryDetails a [defaultValue { signatoryisauthor = True }] (systemActor mt)
-  --assert
-  assert $ not success
+
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+    dbUpdate $ ResetSignatoryDetails a [defaultValue { signatoryisauthor = True }] (systemActor mt)
 
 
 
