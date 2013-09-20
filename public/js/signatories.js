@@ -104,7 +104,6 @@ window.Signatory = Backbone.Model.extend({
         signatory.set({"fields": fields,
                        "attachments": attachments
                       });
-
         signatory.bindBubble();
     },
     document: function() {
@@ -592,6 +591,13 @@ window.Signatory = Backbone.Model.extend({
         else
             return 'viewer';
     },
+    ensureAllFields : function() {
+      this.ensureEmail();
+      this.ensureMobile();
+      this.ensurePersNr();
+      this.ensureSignature();
+
+    },
     ensurePersNr: function() {
         var signatory = this;
         var pn = signatory.personalnumberField();
@@ -684,19 +690,12 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsSignature: function() {
-        return this.padDelivery();
+        return this.padDelivery() && this.signs();
     },
     ensureSignature: function() {
         var signatory = this;
         var document = signatory.document();
         var signatures = signatory.signatures();
-        // remove the unplaced signatures
-        _.each(signatures, function(s) {
-            if(!s.hasPlacements())
-                signatory.deleteField(s);
-        });
-        signatures = signatory.signatures();
-
         if(signatory.needsSignature()) {
             if(signatures.length === 0)
                 signatory.addField(new Field({name:document.newSignatureName(),
@@ -704,12 +703,19 @@ window.Signatory = Backbone.Model.extend({
                                               obligatory: true,
                                               shouldbefilledbysender: signatory.author(),
                                               signatory: signatory}));
+        } else {
+          _.each(signatures, function(s) {
+            if(!s.hasPlacements())
+                signatory.deleteField(s);
+          });
         }
     },
     bindBubble: function() {
         var signatory = this;
         signatory.bind('change', signatory.bubbleSelf);
         signatory.bind('bubble', signatory.triggerBubble);
+        signatory.listenTo(signatory,'change', function() {signatory.ensureAllFields();});
+
     },
     bubbleSelf: function() {
         var signatory = this;
