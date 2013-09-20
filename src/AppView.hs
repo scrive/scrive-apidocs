@@ -160,7 +160,7 @@ priceplanPage = do
           simpleHtmlResonseClrFlash content
 
 handleTermsOfService :: Kontrakcja m => m Response
-handleTermsOfService = do
+handleTermsOfService = withAnonymousContext $ do
   ctx <- getContext
   case currentBrandedDomain ctx of
        Nothing -> renderTemplate_ "termsOfService" >>= renderFromBody kontrakcja
