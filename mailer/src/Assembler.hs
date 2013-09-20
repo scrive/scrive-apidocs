@@ -123,7 +123,7 @@ unescapeHTML (x:xs) = x : unescapeHTML xs
 
 -- | Convert e-mail from html to txt
 htmlToTxt :: String -> String
-htmlToTxt = dropWhile isSpace . unescapeHTML . toText . removeWSAfterNL . reduceWS .
+htmlToTxt = dropWhile isSpace . unescapeHTML . removeTripleNL . toText . removeWSAfterNL . reduceWS .
   replaceLinks . concatTexts . filterUnneeded . lowerTags . parseTags
   where
     toText = concat . foldr (\t ts -> f t : ts) []
@@ -139,15 +139,21 @@ htmlToTxt = dropWhile isSpace . unescapeHTML . toText . removeWSAfterNL . reduce
             "br"     -> "\r\n"
             "i"      -> "_"
             "p"      -> "\r\n"
+            "tr"     -> "\r\n"
             "strong" -> "*"
             _        -> ""
 
     replaceLinks [] = []
     replaceLinks (t@(TagOpen "a" attrs):ts) =
       case "href" `lookup` attrs of
-        Just link -> TagText link : replaceLinks (drop 1 $ dropWhile (/= (TagClose "a")) ts)
+        Just link -> TagText "[ " : linktext ++ [TagText (": " ++ link ++ " ]")] ++ replaceLinks (drop 1 rest)
+          where (linktext,rest) = break (==(TagClose "a")) ts
         Nothing   -> t : replaceLinks ts
     replaceLinks (t:ts) = t : replaceLinks ts
+
+    removeTripleNL [] = []
+    removeTripleNL ('\r':'\n':'\r':'\n':'\r':'\n':l) = removeTripleNL ('\r':'\n':'\r':'\n':l)
+    removeTripleNL (a:l) = a : removeTripleNL l
 
     removeWSAfterNL = foldr f []
       where
@@ -158,7 +164,7 @@ htmlToTxt = dropWhile isSpace . unescapeHTML . toText . removeWSAfterNL . reduce
             _            -> t : ts
           where
             g el =
-              if el `elem` ["p", "br"]
+              if el `elem` ["p", "br", "tr"]
                 then t : TagText (dropWhile isSpace s) : ts'
                 else t : ts
         f t ts = t : ts
@@ -182,8 +188,8 @@ htmlToTxt = dropWhile isSpace . unescapeHTML . toText . removeWSAfterNL . reduce
     filterUnneeded = filter f
       where
         f (TagText s)   = not $ all isSpace s
-        f (TagOpen t _) = t `elem` ["a", "b", "br", "i", "p", "strong"]
-        f (TagClose t)  = t `elem` ["a", "b", "i", "p", "strong"]
+        f (TagOpen t _) = t `elem` ["a", "b", "br", "i", "p", "strong", "tr"]
+        f (TagClose t)  = t `elem` ["a", "b", "i", "p", "strong", "tr"]
         f _             = False
 
     lowerTags = map f
