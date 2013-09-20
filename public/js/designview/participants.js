@@ -172,9 +172,6 @@
                         Where: 'select'
                     });
                     sig.setDelivery(v);
-                    sig.ensureMobile();
-                    sig.ensureSignature();
-                    sig.ensureEmail();
                     return true;
                 }
             });
@@ -240,7 +237,6 @@
                         Where: 'select'
                     });
                     sig.setAuthentication(v);
-                    sig.ensurePersNr();
                     return true;
                 }
             });
@@ -305,7 +301,6 @@
                     });
                     doc.addExistingSignatory(sig);
                     model.setParticipantDetail(sig);
-                    sig.ensureEmail();
                     return false;
                 }
             });
@@ -562,9 +557,6 @@
                 else
                     view.model.setDelivery('email');
 
-                view.model.ensureMobile();
-                view.model.ensureEmail();
-
                 return false;
             });
         },
@@ -610,7 +602,6 @@
                     sig.setAuthentication('eleg');
                 else
                     sig.setAuthentication('standard');
-                sig.ensurePersNr();
                 return false;
             });
         },

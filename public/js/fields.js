@@ -191,7 +191,6 @@ window.Field = Backbone.Model.extend({
 
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
-            console.log("Email validation");
             return new EmailValidation({message: msg});
         }
 
