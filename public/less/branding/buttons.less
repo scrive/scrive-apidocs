@@ -1,7 +1,5 @@
 @import 'colors.less';
 
-input[type="submit"]::-moz-focus-inner {border:0;}
-
 .button {
   background-color: @blue;
   max-height: 16px;
@@ -25,95 +23,21 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   zoom:1; /* IE 7 Hack starts here*/
   *display:inline;
 
-  &.button-green {
-    background-color: @green;
-    &:hover {
-       background-color: #49A979;
-      .transition(.15s, ease-in-out);
-    }
-    &:active, &.active {
-       background-color: @green;
-      .transition(.15s, ease-in-out);
-    }
-  }
+  &:hover { background-color: @blue-hover; }
+  &:active, &.active { background-color: @blue; }
 
-  &.button-gray {
-    color: @text-very-dark !important;
-    background: @grey;
-    border: none;
-    font-weight: 300;
-    &:hover {
-        background: darken(@grey, 5%);
-    }
-    &:active {
-        background: @grey;
-    }
-  }
-
-  &.button-light-blue {
-    background: @light-blue;
-    border: none;
-    &:hover {
-        background: lighten(@light-blue, 25%);
-    }
-    &:active {
-        background: @light-blue;
-    }
-  }
-
-  &.button-red {
-    background: @red;
-    border: none;
-    &:hover {
-        background: @red-dark;
-    }
-    &:active {
-        background: @red;
-    }
-  }
-
-  &:hover {
-      background-color: #1f2c36;
-  }
-  &:active, &.active {
-      background-color: @blue;
-  }
   &.button-small {
     max-height: 14px;
     min-width: 35px;
-    background-color: @blue;
     font-size: 13px;
-    font-family: @source;
     line-height: 14px;
     padding: 8px 12px;
-
-    &.button-gray { background: @grey; color: @text-very-dark !important }
-    &.button-gray:hover { background: darken(@grey, 25%); }
-    &.button-gray:active,
-    &.button-gray.active, { background: @grey; }
-
-    &.button-light-blue { background: @light-blue; font-weight: 400; }
-    &.button-light-blue:hover { background: lighten(@light-blue, 25%); }
-    &.button-light-blue:active,
-    &.button-light-blue.active, { background: @light-blue; }
-
-    &.button-red { background: @red;}
-    &.button-red:hover { background: @red-dark; }
-    &.button-red:active,
-    &.button-red.active, { background: @red; }
-
-    /* there's a lot of overlap between this and the bigger button button-green definition */
-    &.button-green { background: @green; }
-    &.button-green:hover { background: @green-dark; }
-    &.button-green:active,
-    &.button-green.active { background: @green; }
   }
 
   &.button-large {
     max-height: 18px;
     font-size: 18px;
     line-height: 18px;
-    font-family: @source;
     /* to fix Firefox bug, have to use padding instead of line height */
     padding: 17px 25px 17px;
 
@@ -128,6 +52,18 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   &.button-round {
     .border-radius(25px,25px,25px,25px);
     border: @light-border 4px solid;
+
+    &.button-small {
+      .border-radius(16px,16px,16px,16px);
+      border-width: 3px;
+    }
+
+    &.button-round.button-large {
+       .border-radius(32px,32px,32px,32px);
+        border: #EEE 5px solid;
+        &.black { border:none; }
+    }
+
     &.red,&.black {
         border-color: @dark-border;
     }
@@ -139,23 +75,41 @@ input[type="submit"]::-moz-focus-inner {border:0;}
         border-color: #e1e1e1;
         & .greybg { border-color: #d4d4d4; }
     }
-   
-  }
-  &.button-round.button-small {
-    .border-radius(16px,16px,16px,16px);
-    border: @light-border 3px solid;
-  }
-  &.button-round.button-large {
-    .border-radius(32px,32px,32px,32px);
-    border: #EEE 5px solid;
-     &.black {
-	border:none;
-    }
   }
 }
+
+.colored-button(@color, @hovercolor) {
+  background-color: @color;
+  &:hover { background-color: @hovercolor }
+  &:active { background-color: @color }
+}
+
+.button-green {
+  .colored-button(@green, @green-hover);
+}
+
+.button-gray {
+  .colored-button(@grey, darken(@grey, 5%));
+  color: @text-very-dark !important;
+}
+
+.button-light-blue {
+  .colored-button(@light-blue, darken(@light-blue, 25%));
+  &.button-small {
+    font-weight: 400;
+  }
+}
+
+.button-red {
+  .colored-button(@red, @red-dark);
+}
+
+/* Special fixes for special browsers */
 input[type=submit].button.button-large,
 button.button.button-large {
   /* ie8 and below input height fix */
   line-height: 24px\9;
   padding: 12px 30px 13px\9;
 }
+
+input[type="submit"]::-moz-focus-inner {border:0;}
