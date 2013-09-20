@@ -46,7 +46,7 @@ public abstract class PdfVerifier {
 	 * Usage message for the CLI.
 	 */
 	private static final String USAGE = TITLE + "\n" +
-			"Usage: java -jar PdfVerifier.jar [-x url] [-p url] [-f file] [-L] ...\n" +
+			"Usage: java -jar PdfVerifier.jar [-x url] [-p url] [-j] [-f file] [-L] ...\n" +
 			"\t-x - location of the extending (online verification) service\n" +
 			"\t     default is " + ServiceConfiguration.DEFAULT_EXTENDER + "\n" +
 			"\t-p - location of the control publications (Integrity Codes)\n" +
@@ -260,15 +260,22 @@ public abstract class PdfVerifier {
 			return "{\n  \"invalid\" : {\n    \"reason\": \"no Guardtime signatures in the document\"\n  }\n}\n";
 		}
 		StringBuffer res = new StringBuffer();
+                boolean extended = si.getTimestamp().isExtended();
 		VerificationResult ver = doc.verifyTimestamp(si, svc);
 		if (ver.isValid()) {
 			GTTimestamp ts = si.getTimestamp();
 			String time = PdfUtil.toUtcString(ts.getRegisteredTime());
 			String gwid = PdfUtil.formatGwId(ts.getProperty(GTTimestamp.LOCATION_ID));
 			String gwname = ts.getProperty(GTTimestamp.LOCATION_NAME);
+                        String publication_time = ts.getProperty(GTTimestamp.PUBLICATION_TIME);
 			res.append("{\n  \"valid\": {\n");
 			res.append("    \"time\": \"").append(time).append("\",\n");
 			res.append("    \"gateway_id\": \"").append(gwid).append("\",\n");
+			res.append("    \"extended\": ").append(extended ? "true" : "false").append(",\n");
+			res.append("    \"extensible\": ").append(!extended && ts.isExtended() ? "true" : "false").append(",\n");
+                        if (extended && publication_time != null) {
+                                res.append("    \"publication_time\": \"").append(publication_time).append("\",\n");
+                        }
 			if (gwname != null) {
 				res.append("    \"gateway_name\": \"").append(gwname).append("\",\n");
 			}
