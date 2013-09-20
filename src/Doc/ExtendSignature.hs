@@ -1,6 +1,6 @@
 module Doc.ExtendSignature
   ( extendSignatures
-  , sealMissingSignatures
+  , sealMissingSignaturesNewerThan
   ) where
 
 import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
@@ -28,7 +28,7 @@ import File.File (filename)
 import File.Storage (getFileContents)
 import IPAddress (noIP)
 import qualified Log
-import MinutesTime (MinutesTime, toCalendarTimeInUTC, fromClockTime)
+import MinutesTime (MinutesTime, toCalendarTimeInUTC, fromClockTime, minutesBefore)
 import System.FilePath ((</>))
 import System.Time (toClockTime, CalendarTime(..), Month(..))
 import Templates (runTemplatesT)
@@ -52,13 +52,19 @@ latest_publication_time = do
          else fifteenth{ ctMonth = pred (ctMonth fifteenth)}
 
 
-sealMissingSignatures :: (CryptoRNG m, MonadIO m, AmazonMonad m, Log.MonadLog m, MonadDB m, MonadBaseControl IO m, MonadReader SchedulerData m)
-                      => m ()
-sealMissingSignatures = do
+sealMissingSignaturesNewerThan :: (CryptoRNG m, MonadIO m, AmazonMonad m, Log.MonadLog m, MonadDB m, MonadBaseControl IO m, MonadReader SchedulerData m)
+                      => Maybe Int -> m ()
+sealMissingSignaturesNewerThan mhours = do
+  now <- getMinutesTime
+  let signtimefilter = case mhours of
+        Nothing    -> []
+        Just hours -> [DocumentFilterByLatestSignTimeAfter ((60 * hours) `minutesBefore` now)]
+
   docs <- dbQuery $ GetDocuments [DocumentsOfWholeUniverse]
-            [ DocumentFilterStatuses [Closed]
-            , DocumentFilterBySealStatus [Missing]
-            ] [] (0,100)
+            ([ DocumentFilterStatuses [Closed]
+             , DocumentFilterBySealStatus [Missing]
+             ] ++ signtimefilter)
+            [] (0,100)
   forM_ docs $ \doc -> do
     case documentsealstatus doc of
       Just Missing -> sealDocument doc
@@ -76,16 +82,12 @@ extendSignatures = do
               , Guardtime{ extended = False, private = False }
               ]
             ] [] (0,100)
-  let f [] = return ()
-      f (d:ds) = case documentsealstatus d of
-                   Just (Guardtime{ extended = False }) -> do
-                     ok <- extendDocumentSeal d
-                     if ok then do
-                       f ds
-                      else do
-                       Log.debug $ "Guardtime extension of " ++ show (documentid d) ++ " not possible - skipping the remanining documents in queue."
-                   _ -> f ds
-  f docs
+  forM_ docs $ \d -> 
+    case documentsealstatus d of
+      Just (Guardtime{ extended = False }) -> do
+        _ <- extendDocumentSeal d
+        return ()
+      _ -> return ()
 
 sealDocument :: (CryptoRNG m, MonadIO m, AmazonMonad m, MonadReader SchedulerData m, MonadBaseControl IO m, MonadDB m)
              => Document -> m ()

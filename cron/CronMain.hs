@@ -24,7 +24,7 @@ import DB.Checks
 import DB.SQLFunction
 import DB.PostgreSQL
 import Doc.API.Callback.Model
-import Doc.ExtendSignature (extendSignatures, sealMissingSignatures)
+import Doc.ExtendSignature (extendSignatures, sealMissingSignaturesNewerThan)
 import qualified MemCache
 import Utils.Cron
 import Utils.IO
@@ -74,9 +74,12 @@ main = Log.withLogger $ do
     ([ forkCron_ True "extendSignatures" (60 * 60 * 6) $ do
          Log.cron "Running extendSignatures..."
          runScheduler extendSignatures
-     , forkCron_ True "sealMissingSignatures" (60 * 10) $ do
+     , forkCron_ True "sealMissingSignatures (new)" (60 * 10) $ do
+         Log.cron "Running sealMissingSignatures (new)..."
+         runScheduler $ sealMissingSignaturesNewerThan (Just 6) -- hours
+     , forkCron_ True "sealMissingSignatures" (60 * 60 * 6) $ do
          Log.cron "Running sealMissingSignatures..."
-         runScheduler sealMissingSignatures
+         runScheduler $ sealMissingSignaturesNewerThan Nothing
      , forkCron_ True "timeoutDocuments" (60 * 10) $ do
          Log.cron "Running timeoutDocuments..."
          runScheduler timeoutDocuments
