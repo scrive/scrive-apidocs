@@ -79,17 +79,16 @@ window.DocumentCellsDefinition = function(archive) { return  [
         ];
 };
 
-window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
+window.DocumentSelectsDefinition = function(archive) { return  _.flatten([
             new SelectFiltering({
                              name: "status",
                              textWidth : "135px",
-                             options: _.union(
-                                        [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
-                                         (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
-                                        [{name: localization.filterByStatus.showCancelled, value: "[cancelled,rejected,timeouted,deliveryproblem,problem]"},
-                                         {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
-                                         {name: localization.filterByStatus.showSigned,    value: "[signed]"}
-                                        ])}),
+                             options: [{name: localization.filterByStatus.showAnyStatus, value: ""},
+                                       {name: localization.filterByStatus.showDraft,     value: "[draft]"},
+                                       {name: localization.filterByStatus.showCancelled, value: "[cancelled,rejected,timeouted,deliveryproblem,problem]"},
+                                       {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
+                                       {name: localization.filterByStatus.showSigned,    value: "[signed]"}
+                                      ]}),
             archive.forCompanyAdmin() ?
               [new SelectAjaxFiltering({
                              name: "sender",
@@ -142,7 +141,7 @@ window.DocumentsListDefinition = function(archive) { return {
     sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
-    selectfiltering : DocumentSelectsDefinition(archive, true),
+    selectfiltering : DocumentSelectsDefinition(archive),
     cells : DocumentCellsDefinition(archive),
     actions : [
         new ListAction({
