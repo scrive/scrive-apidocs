@@ -24,7 +24,8 @@ BEGIN;
 -- are to be expected:
 
 CREATE TEMP TABLE expected_refs(table_name,column_name) AS
-VALUES ('author_attachments',    'file_id'),
+VALUES ('attachments',           'file_id'),
+       ('author_attachments',    'file_id'),
        ('documents',             'file_id'),
        ('documents',             'sealed_file_id'),
        ('mail_attachments',      'file_id'),
@@ -97,6 +98,8 @@ UPDATE files
          FROM mail_attachments
         WHERE mail_attachments.file_id = files.id
        )
+   -- Case 6:
+   -- There is a screenshot useful for a non-deleted document
    AND NOT EXISTS (
        SELECT TRUE
          FROM documents
@@ -104,6 +107,14 @@ UPDATE files
          JOIN signatory_screenshots ON signatory_screenshots.signatory_link_id = signatory_links.id
         WHERE signatory_screenshots.file_id = files.id
           AND documents.purged_time IS NULL
+       )
+   -- Case 7:
+   -- There is an attachment with this file referenced.
+   AND NOT EXISTS (
+       SELECT TRUE
+         FROM attachments
+        WHERE attachments.file_id = files.id
+          AND NOT attachments.deleted
        )
 RETURNING id, amazon_bucket || '/' || amazon_url
    ;
