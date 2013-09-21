@@ -19,5 +19,6 @@ tableAttachments = tblTable {
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
       (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (tblForeignKeyColumn "file_id" "files" "id")
     ]
   }
