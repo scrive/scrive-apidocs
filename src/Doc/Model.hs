@@ -560,9 +560,10 @@ fetchDocuments = kFold decoder []
 
 documentStatusClassExpression :: SQL
 documentStatusClassExpression =
-       SQL ("(    COALESCE((SELECT min(") []
-    <> statusClassCaseExpression
-    <> SQL ") FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner), ?))" [toSql SCDraft]
+    "(SELECT COALESCE((SELECT min(" <> statusClassCaseExpressionForSignatoryLink <> ")"
+                  <> "FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner),"
+ <> "(SELECT " <> statusClassCaseExpressionForDocument <> "), "
+ <?> SCDraft <> "))"
 
 documentSignorderExpression :: SQL
 documentSignorderExpression =
@@ -571,21 +572,43 @@ documentSignorderExpression =
 
 statusClassCaseExpression :: SQL
 statusClassCaseExpression =
-  SQL " CASE " []
-   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql (DocumentError ""),                           toSql SCError]
-   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Preparation,                                  toSql SCDraft]
-   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Canceled,                                     toSql SCCancelled]
-   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Timedout,                                     toSql SCTimedout]
-   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Rejected,                                     toSql SCRejected]
-   <> SQL " WHEN signatory_links.sign_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCSigned]
-   <> SQL " WHEN signatory_links.seen_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCOpened]
-   <> SQL " WHEN signatory_links.read_invitation IS NOT NULL THEN (? :: INTEGER)"                                 [toSql SCRead]
-   <> SQL " WHEN signatory_links.mail_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Undelivered,           toSql SCDeliveryProblem]
-   <> SQL " WHEN signatory_links.sms_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Undelivered,           toSql SCDeliveryProblem]
-   <> SQL " WHEN signatory_links.mail_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Delivered,             toSql SCDelivered]
-   <> SQL " WHEN signatory_links.sms_invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Delivered,             toSql SCDelivered]
-   <> SQL " ELSE (? :: INTEGER)"                                                                                  [toSql SCSent]
-  <> SQL " END " []
+  "(CASE"
+   <+> "WHEN documents.status = " <?> (DocumentError "") <+> "THEN" <?> SCError
+   <+> "WHEN documents.status = " <?> Preparation        <+> "THEN" <?> SCDraft
+   <+> "WHEN documents.status = " <?> Canceled           <+> "THEN" <?> SCCancelled
+   <+> "WHEN documents.status = " <?> Timedout           <+> "THEN" <?> SCTimedout
+   <+> "WHEN documents.status = " <?> Rejected           <+> "THEN" <?> SCRejected
+   <+> "WHEN signatory_links.sign_time IS NOT NULL THEN"         <?> SCSigned
+   <+> "WHEN signatory_links.seen_time IS NOT NULL THEN"         <?> SCOpened
+   <+> "WHEN signatory_links.read_invitation IS NOT NULL THEN"   <?> SCRead
+   <+> "WHEN signatory_links.mail_invitation_delivery_status = " <?> Undelivered <+> "THEN" <?> SCDeliveryProblem
+   <+> "WHEN signatory_links.sms_invitation_delivery_status = "  <?> Undelivered <+> "THEN" <?> SCDeliveryProblem
+   <+> "WHEN signatory_links.mail_invitation_delivery_status = " <?> Delivered   <+> "THEN" <?> SCDelivered
+   <+> "WHEN signatory_links.sms_invitation_delivery_status = "  <?> Delivered   <+> "THEN" <?> SCDelivered
+   <+> "ELSE" <?> SCSent
+  <+> "END :: INTEGER)"
+
+statusClassCaseExpressionForDocument :: SQL
+statusClassCaseExpressionForDocument =
+  "(CASE"
+   <+> "WHEN documents.status = " <?> (DocumentError "") <+> "THEN" <?> SCError
+   <+> "WHEN documents.status = " <?> Preparation        <+> "THEN" <?> SCDraft
+   <+> "WHEN documents.status = " <?> Canceled           <+> "THEN" <?> SCCancelled
+   <+> "WHEN documents.status = " <?> Timedout           <+> "THEN" <?> SCTimedout
+   <+> "WHEN documents.status = " <?> Rejected           <+> "THEN" <?> SCRejected
+  <+> "END :: INTEGER)"
+
+statusClassCaseExpressionForSignatoryLink :: SQL
+statusClassCaseExpressionForSignatoryLink =
+  "(CASE"
+   <+> "WHEN signatory_links.sign_time IS NOT NULL THEN"         <?> SCSigned
+   <+> "WHEN signatory_links.seen_time IS NOT NULL THEN"         <?> SCOpened
+   <+> "WHEN signatory_links.read_invitation IS NOT NULL THEN"   <?> SCRead
+   <+> "WHEN signatory_links.mail_invitation_delivery_status = " <?> Undelivered <+> "THEN" <?> SCDeliveryProblem
+   <+> "WHEN signatory_links.sms_invitation_delivery_status = "  <?> Undelivered <+> "THEN" <?> SCDeliveryProblem
+   <+> "WHEN signatory_links.mail_invitation_delivery_status = " <?> Delivered   <+> "THEN" <?> SCDelivered
+   <+> "WHEN signatory_links.sms_invitation_delivery_status = "  <?> Delivered   <+> "THEN" <?> SCDelivered
+  <+> "END :: INTEGER)"
 
 
 selectSignatoryLinksX :: State.State SqlSelect () -> SqlSelect
