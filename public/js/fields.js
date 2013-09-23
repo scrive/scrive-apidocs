@@ -186,9 +186,6 @@ window.Field = Backbone.Model.extend({
         if ((this.isFstName() || this.isSndName()) && this.signatory().author())
             return new NoValidation();
 
-        if (this.isCheckbox() && this.signatory().author())
-            return new NoValidation();
-
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg});

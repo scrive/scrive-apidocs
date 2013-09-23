@@ -21,7 +21,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
         new Cell({name: localization.archive.documents.columns.time, width:"105px", field:"time", special: "rendered",
                   rendering: function(time) {
                          if (time != undefined && time != "")
-                           return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
+                           return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
                          else return $("<div/>");
         }}),
         new Cell({width:"5px" }),

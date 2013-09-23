@@ -78,7 +78,7 @@ instance FromJSValue DraftData where
              | daystosign >= minDaysToSign && daystosign <= maxDaysToSign ->
                 return $ Just DraftData {
                                       title =  t
-                                    , invitationmessage = (resultToMaybe . asValidInviteText) =<< invitationmessage
+                                    , invitationmessage = invitationmessage
                                     , daystosign = daystosign
                                     , authentication = authentication'
                                     , delivery = delivery'
@@ -100,7 +100,9 @@ applyDraftDataToDocument doc draft actor = do
      else do
       _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
                                     documenttitle = title draft
-                                  , documentinvitetext = fromMaybe (documentinvitetext doc) $ invitationmessage draft
+                                  , documentinvitetext = case (invitationmessage draft) of
+                                                              Nothing -> documentinvitetext doc
+                                                              Just s -> fromMaybe "" (resultToMaybe $ asValidInviteText s)
                                   , documentdaystosign = daystosign draft
                                   , documentlang = fromMaybe (documentlang doc) (lang draft)
                                   , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
