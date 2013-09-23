@@ -123,7 +123,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
       ctx <- getContext
       let time = ctxtime ctx
       dbUpdate $ CloseDocument documentid (systemActor time)
-      Just closeddoc <- dbQuery $ GetDocumentByDocumentID documentid
+      closeddoc <- dbQuery $ GetDocumentByDocumentID documentid
 
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       author <- getDocAuthor doc
@@ -232,7 +232,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
           udoc <- do
             mdoc <- runMaybeT $ do
               True <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
-              Just newdoc <- dbQuery $ GetDocumentByDocumentID documentid
+              newdoc <- dbQuery $ GetDocumentByDocumentID documentid
               return newdoc
             return $ maybe (Left "saveDocumentForSignatory failed") Right mdoc
           return udoc
@@ -372,7 +372,7 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
 
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
-    Just doc <- dbQuery $ GetDocumentByDocumentID documentid
+    doc <- dbQuery $ GetDocumentByDocumentID documentid
     return doc
   return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
 
@@ -475,7 +475,7 @@ sendRejectEmails customMessage ctx document signalink = do
  -}
 sendAllReminderEmails :: Kontrakcja m => Context -> Actor -> User -> DocumentID -> m [SignatoryLink]
 sendAllReminderEmails ctx actor user docid = do
-    doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+    doc <- dbQuery $ GetDocumentByDocumentID docid
     case (documentstatus doc) of
           Pending -> do
             let isEligible = isEligibleForReminder user doc

@@ -46,17 +46,13 @@ import Doc.DocViewMail
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
   where
-    processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
+    processEvent (eid, _mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
       markEventAsRead eid
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
           Log.debug $ "Processiong invitation event: " ++ show (Invitation docid signlinkid)
-          mdoc <- dbQuery $ GetDocumentByDocumentID docid
-          case mdoc of
-            Nothing -> do
-              Log.debug $ "No document with id = " ++ show docid
-              deleteEmail mid
-            Just doc -> do
+          doc <- dbQuery $ GetDocumentByDocumentID docid
+          do
               appConf <- sdAppConf <$> ask
               mbd <- case (maybesignatory =<< getAuthorSigLink doc) of
                           Nothing -> return Nothing
@@ -103,13 +99,6 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
       when (not success) $
         Log.error $ "Couldn't mark event #" ++ show eid ++ " as read"
 
-    deleteEmail :: MonadDB m => MailID -> m ()
-    deleteEmail mid = do
-      success <- dbUpdate $ DeleteEmail mid
-      if (not success)
-        then Log.error $ "Couldn't delete email #" ++ show mid
-        else Log.debug $ "Deleted email #" ++ show mid
-
 handleDeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => Maybe BrandedDomain -> String -> MailsConfig -> Document -> SignatoryLinkID -> m ()
 handleDeliveredInvitation mbd hostpart mc doc signlinkid = do
   case getSigLinkFor doc signlinkid of
@@ -141,7 +130,7 @@ handleDeferredInvitation mbd hostpart mc doc signlinkid email = do
       let actor = mailSystemActor time (maybesignatory sl) email signlinkid
       success <- dbUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
       when success $ do
-        Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+        d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
         mail <- mailDeferredInvitation mc mbd hostpart d sl
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink d]

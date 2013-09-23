@@ -83,10 +83,8 @@ wrapHTML body = concat [
 fromNiceAddress :: MonadDB m => MessageData -> String -> m String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do
-  mdoc <- dbQuery $ GetDocumentByDocumentID did
-  case mdoc of
-    Nothing -> return $ servicename
-    Just doc -> case (documentlang doc, getAuthorName doc) of
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  case (documentlang doc, getAuthorName doc) of
       (_,         []) -> return $ servicename
       (LANG_SV, an) -> return $ an ++ " genom " ++ servicename
       (LANG_EN, an) -> return $ an ++ " through " ++ servicename

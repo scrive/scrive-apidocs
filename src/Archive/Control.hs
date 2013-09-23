@@ -21,7 +21,6 @@ import Doc.DocStateData
 import Doc.Model
 import User.Model
 import User.Utils
-import Utils.Monad
 import Util.MonadUtils
 
 import Control.Applicative
@@ -120,8 +119,6 @@ handleShare =  do
     _ <- guardJustM $ ctxmaybeuser <$> getContext
     ids <- getCriticalField asValidDocIDList "documentids"
     _ <- dbUpdate $ SetDocumentSharing ids True
-    w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
-    when_ (null $ catMaybes w) internalError
     J.runJSONGenT $ return ()
 
 handleZip :: Kontrakcja m => m ZipArchive

@@ -591,13 +591,7 @@ addRandomDocumentWithFile file rda = do
   --liftIO $ print $ "about to generate document"
   document <- worker now user p mcompany
   docid <- dbUpdate $ StoreDocumentForTesting document
-  mdoc  <- dbQuery  $ GetDocumentByDocumentID docid
-  case mdoc of
-    Nothing -> do
-      assertFailure "Could not store document."
-      return document
-    Just doc' -> do
-              return doc'
+  dbQuery $ GetDocumentByDocumentID docid
   where
     worker now user p mcompany = do
       doc' <- rand 10 arbitrary

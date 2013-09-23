@@ -111,14 +111,14 @@ testLastPersonSigningADocumentClosesIt = do
 
 
   randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
-  Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
+  doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
   randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
                (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
-  Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
+  doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -128,7 +128,7 @@ testLastPersonSigningADocumentClosesIt = do
   req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
   (_link, _ctx') <- runTestKontra req ctx' $ apiCallSign (documentid doc) (signatorylinkid siglink)
 
-  Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In closed state" Closed (documentstatus signeddoc)
   --TODO: this should be commented out really, I guess it's a bug
   --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
@@ -156,7 +156,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   req <- mkRequest POST []
   (_link, _ctx') <- runTestKontra req ctx $ handleResend (documentid doc) (signatorylinkid sl)
 
-  Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
   emails <- dbQuery GetEmails
   assertEqual "Email was sent" 1 (length emails)
@@ -199,7 +199,7 @@ testSendReminderEmailByCompanyAdmin = do
     Left (_ :: E.SomeException) -> return ()
 
 
-  Just updateddoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  updateddoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is not updated" (documentmtime doc) (documentmtime updateddoc1)
   emails1 <- dbQuery GetEmails
   assertEqual "No emails were sent" 0 (length emails1)
@@ -208,7 +208,7 @@ testSendReminderEmailByCompanyAdmin = do
   req2 <- mkRequest POST []
   (_link, _ctx') <- runTestKontra req2 ctxadmin $ handleResend (documentid doc) (signatorylinkid sl)
 
-  Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctxadmin) (documentmtime updateddoc)
   emails <- dbQuery GetEmails
   assertEqual "Email was sent" 1 (length emails)
@@ -232,7 +232,7 @@ testSendingReminderClearsDeliveryInformation = do
   -- who cares which one, just pick the last one
   req <- mkRequest POST []
   (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx actor doc sl
-  Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
   assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
 

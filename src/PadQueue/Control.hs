@@ -53,7 +53,7 @@ padQueueToSignatoryData :: Kontrakcja m => PadQueue -> m (Maybe (Document,Signat
 padQueueToSignatoryData Nothing = return Nothing
 padQueueToSignatoryData (Just (did,slid)) = do
         Log.debug $ "Some document for padqueue found"
-        doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID did
+        doc <- dbQuery $ GetDocumentByDocumentID did
         sl <- guardJust $ getSigLinkFor doc slid
         if (Preparation /= documentstatus doc)
          then return $ Just (doc,sl)

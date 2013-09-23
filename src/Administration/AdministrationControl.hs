@@ -569,10 +569,10 @@ resealFile docid = onlyAdmin $ do
           (Just docid)
           actor
   doc <- do
-    doc' <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+    doc' <- dbQuery $ GetDocumentByDocumentID docid
     when_ (isDocumentError doc') $ do
        dbUpdate $ FixClosedErroredDocument docid actor
-    guardJustM  $ dbQuery $ GetDocumentByDocumentID docid
+    dbQuery $ GetDocumentByDocumentID docid
   res <- sealDocument doc
   case res of
       Left  _ -> Log.debug "We failed to reseal the document"
@@ -594,7 +594,7 @@ daveDocument documentid = onlyAdmin $ do
     Log.debug $ "location: " ++ location
     if "/" `isSuffixOf` location
      then do
-      document <- guardJustM . dbQuery $ GetDocumentByDocumentID documentid
+      document <- dbQuery $ GetDocumentByDocumentID documentid
       r <- renderTemplate "daveDocument" $ do
         F.value "daveBody" $  inspectXML document
         F.value "id" $ show documentid
@@ -608,7 +608,7 @@ daveDocument documentid = onlyAdmin $ do
 -}
 daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
 daveSignatoryLink documentid siglinkid = onlyAdmin $ do
-    document <- guardJustM . dbQuery $ GetDocumentByDocumentID documentid
+    document <- dbQuery $ GetDocumentByDocumentID documentid
     siglink <- guardJust $ getSigLinkFor document siglinkid
     renderTemplate  "daveSignatoryLink" $ do
         F.value "daveBody" $ inspectXML siglink

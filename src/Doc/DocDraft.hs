@@ -120,7 +120,7 @@ applyDraftDataToDocument doc draft actor = do
            Just sigs -> do
              mdoc <- runMaybeT $ do
                True <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
-               Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+               newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
                return newdoc
              return $ case mdoc of
                Nothing  -> Left "applyDraftDataToDocument failed"

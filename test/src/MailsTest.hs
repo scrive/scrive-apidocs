@@ -96,12 +96,12 @@ sendDocumentMails mailTo author = do
         let sigs = [authordetails, isl]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
         randomUpdate $ PreparationToPending docid (systemActor now) Nothing
-        Just d2 <- dbQuery $ GetDocumentByDocumentID docid
+        d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
         randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
         randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
-        Just doc <- dbQuery $ GetDocumentByDocumentID docid
+        doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
         --Invitation Mails
@@ -124,7 +124,7 @@ sendDocumentMails mailTo author = do
         -- Virtual signing
         randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-        (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
+        sdoc <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl False
         -- Reminder after send

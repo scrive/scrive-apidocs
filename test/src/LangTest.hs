@@ -103,8 +103,7 @@ createTestElegDoc user _ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation)
   --True <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor ctxtime)
-  Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  return ndoc
+  dbQuery $ GetDocumentByDocumentID $ documentid doc
 
 createTestUser :: Lang -> TestEnv User
 createTestUser lang = do

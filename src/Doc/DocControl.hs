@@ -357,7 +357,7 @@ showPreview docid fileid = do
 showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m (Either KontraLink Response)
 showPreviewForSignatory docid siglinkid sigmagichash fileid = do
     checkFileAccessWith fileid (Just siglinkid) (Just sigmagichash) (Just docid) Nothing
-    doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+    doc <- dbQuery $ GetDocumentByDocumentID docid
     iprev <- preview fileid 0
     case iprev of
          Just res -> return $ Right res
@@ -432,16 +432,13 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
           muser <- dbQuery $ GetUserByEmail (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
           dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
-          mnewdoc <- dbQuery $ GetDocumentByDocumentID docid
+          newdoc <- dbQuery $ GetDocumentByDocumentID docid
 
-          case mnewdoc of
-            Just newdoc -> do
-              -- get (updated) siglink from updated document
-              sl <- guardJust (getSigLinkFor newdoc slid)
-              ctx <- getContext
-              _ <- sendInvitationEmail1 ctx newdoc sl
-              return $ LoopBack
-            _ -> return LoopBack
+          -- get (updated) siglink from updated document
+          sl <- guardJust (getSigLinkFor newdoc slid)
+          ctx <- getContext
+          _ <- sendInvitationEmail1 ctx newdoc sl
+          return $ LoopBack
     _ -> return LoopBack
 
 --This only works for undelivered mails. We shoulkd check if current user is author
@@ -456,16 +453,13 @@ handleChangeSignatoryPhone docid slid = withUserPost $ do
         Right _ -> do
           actor <- guardJustM $ mkAuthorActor <$> getContext
           dbUpdate $ ChangeSignatoryPhoneWhenUndelivered docid slid phone actor
-          mnewdoc <- dbQuery $ GetDocumentByDocumentID docid
+          newdoc <- dbQuery $ GetDocumentByDocumentID docid
 
-          case mnewdoc of
-            Just newdoc -> do
-              -- get (updated) siglink from updated document
-              sl <- guardJust (getSigLinkFor newdoc slid)
-              ctx <- getContext
-              _ <- sendInvitationEmail1 ctx newdoc sl
-              return $ LoopBack
-            _ -> return LoopBack
+          -- get (updated) siglink from updated document
+          sl <- guardJust (getSigLinkFor newdoc slid)
+          ctx <- getContext
+          _ <- sendInvitationEmail1 ctx newdoc sl
+          return $ LoopBack
     _ -> return LoopBack
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
@@ -555,7 +549,7 @@ handleSigAttach docid siglinkid = do
   fileid' <- dbUpdate $ NewFile attachname content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
   dbUpdate $ SaveSigAttachment docid siglinkid attachname fileid' actor
-  newdoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+  newdoc <- dbQuery $ GetDocumentByDocumentID docid
   return $ LinkSignDoc newdoc siglink
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
@@ -569,7 +563,7 @@ prepareEmailPreview docid slid = do
              mailDocumentRemindContent  Nothing ctx doc sl True
          "reject" -> do
              Just mh <- dbQuery $ GetDocumentSessionToken slid
-             Just doc <- dbQuery $ GetDocumentByDocumentID docid
+             doc <- dbQuery $ GetDocumentByDocumentID docid
              Just sl <- return $ getSigLinkFor doc (slid,mh)
              x :: String <- mailDocumentRejectedContent Nothing ctx  doc sl True
              return x

@@ -41,7 +41,7 @@ padqueueAPI = choice
 addToQueue :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> m Response
 addToQueue did slid = api $ do
     (user, actor, _) <- getAPIUserWithPad APIDocSend
-    doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+    doc <- dbQuery $ GetDocumentByDocumentID $ did
     auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
     when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."

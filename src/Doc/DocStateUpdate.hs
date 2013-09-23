@@ -71,7 +71,7 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
         mdoc <- runMaybeT $ do
           dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh Nothing screenshots actor
-          Just doc <- dbQuery $ GetDocumentByDocumentID did
+          doc <- dbQuery $ GetDocumentByDocumentID did
 
           return doc
         return $ case mdoc of
@@ -95,7 +95,7 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
         mdoc <- runMaybeT $ do
           dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
-          Just doc <- dbQuery $ GetDocumentByDocumentID did
+          doc <- dbQuery $ GetDocumentByDocumentID did
           return doc
         return $ case mdoc of
           Nothing -> Left $ DBActionNotAvailable "Signing with Eleg failed"

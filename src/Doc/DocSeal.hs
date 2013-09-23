@@ -563,11 +563,10 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
-        Just sealedfileid <- digitallySealDocument True ctxtime ctxgtconf documentid tmpout filename
+        Just _sealedfileid <- digitallySealDocument True ctxtime ctxgtconf documentid tmpout filename
         triggerAPICallbackIfThereIsOne document -- Callback does not depend on sealed file
         res <- dbQuery $ GetDocumentByDocumentID documentid
-        Log.debug $ "Should be attached to document; is it? " ++ show (((Just sealedfileid==) . documentsealedfile) <$> res)
-        return $ maybe (Left "AttachSealedFile failed") Right res
+        return $ (Right res)
       ExitFailure _ -> do
         -- error handling
         msg <- liftIO $ do

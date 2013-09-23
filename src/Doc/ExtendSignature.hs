@@ -100,7 +100,7 @@ sealDocument doc = do
     let gtconf = guardTimeConf appConf
     templates <- getGlobalTemplates
     _ <- flip runReaderT templates $ digitallySealDocument False now gtconf (documentid doc) mainpath (filename file)
-    Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+    doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
     case documentsealstatus doc' of
       Just Guardtime{} -> do
         mauthor <- maybe (return Nothing) (dbQuery . GetUserByEmail) $

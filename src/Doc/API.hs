@@ -180,19 +180,19 @@ apiCallCreateFromFile = api $ do
     Just fileid' -> do
       dbUpdate $ AttachFile (documentid doc) fileid' actor
       return ()
-  doc' <- apiGuardL  (forbidden "Access to file is forbiden")  $ dbQuery $ GetDocumentByDocumentID (documentid doc)
+  doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   Created <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
 
 
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
 apiCallCreateFromTemplate did =  api $ do
   (user, actor, external) <- getAPIUser APIDocCreate
-  template <- apiGuardJustM (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  template <- dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission = (userid auser == userid user) ||
                       (usercompany auser == usercompany user &&  isDocumentShared template)
-  mnewdoc <- if (isTemplate template && haspermission)
+  newdoc <- if (isTemplate template && haspermission)
                     then do
                       mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
                       when (isNothing mndid) $
@@ -200,27 +200,21 @@ apiCallCreateFromTemplate did =  api $ do
                       dbUpdate $ DocumentFromTemplate (fromJust mndid) actor
                       dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
                     else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
-  case mnewdoc of
-      Just newdoc -> do
-          Log.debug $ show "Document created from template"
-          when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
-          Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
-      Nothing -> throwIO . SomeKontraException $ serverError "Create document from template failed"
+  when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
+  Created <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdoc
 
 
 apiCallClone :: Kontrakcja m => DocumentID -> m Response
 apiCallClone did =  api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
-  doc <- apiGuardJustM (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  doc <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc,user)
      then do
          mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
          when (isNothing mndid) $
              throwIO . SomeKontraException $ serverError "Can't clone given document"
-         mnewdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
-         case mnewdoc of
-             Just newdoc -> Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
-             Nothing -> throwIO . SomeKontraException $ serverError "Create document from template failed"
+         newdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
+         Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
      else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
 
 
@@ -230,7 +224,7 @@ apiCallClone did =  api $ do
 apiCallUpdate :: Kontrakcja m => DocumentID -> m Response
 apiCallUpdate did = api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
-  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  doc <- dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (documentstatus doc /= Preparation) $ do
         checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
@@ -250,7 +244,7 @@ apiCallUpdate did = api $ do
 apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do
   (user, actor, _) <- getAPIUser APIDocSend
-  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  doc <- dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   if (documentstatus doc == Pending && not (any hasSigned $ documentsignatorylinks doc))
    then Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc
@@ -267,33 +261,31 @@ apiCallReady did =  api $ do
           throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
     when (isNothing $ documentfile doc) $ do
           throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
-    mndoc <- lift $ do
+    newdocument <- lift $ do
               t <- ctxtime <$> getContext
               dbUpdate $ PreparationToPending did actor (Just timezone)
               dbUpdate $ SetDocumentInviteTime did t actor
               dbQuery $ GetDocumentByDocumentID did
-    case mndoc of
-            Just newdocument -> do
-                skipauthorinvitation <- lift $ isFieldSet "skipauthorinvitation"
-                lift $ postDocumentPreparationChange newdocument skipauthorinvitation
-                newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
-                Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
-            Nothing -> throwIO . SomeKontraException $ serverError $ "Making document ready failed"
+
+    skipauthorinvitation <- lift $ isFieldSet "skipauthorinvitation"
+    lift $ postDocumentPreparationChange newdocument skipauthorinvitation
+    newdocument' <- dbQuery $ GetDocumentByDocumentID $ did
+    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
 
 apiCallCancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallCancel did =  api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
-    doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+    doc <- dbQuery $ GetDocumentByDocumentID $ did
     auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     when (documentstatus doc /= Pending ) $ do
           throwIO . SomeKontraException $ (conflictError "Document is not pending")
     dbUpdate $ CancelDocument (documentid doc) actor
-    newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
+    newdocument <- dbQuery $ GetDocumentByDocumentID $ did
     lift $ postDocumentCanceledChange newdocument
-    newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
+    newdocument' <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
 
 
@@ -322,10 +314,10 @@ apiCallReject did slid = api $ do
       lift $ (dbUpdate $ RejectDocument did slid customtext actor)
           `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
           `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
-      Just doc' <- dbQuery $ GetDocumentByDocumentID did
+      doc' <- dbQuery $ GetDocumentByDocumentID did
 
       lift $ postDocumentRejectedChange doc' slid
-      Just doc'' <- dbQuery $ GetDocumentByDocumentID did
+      doc'' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON muid False True True Nothing Nothing doc''
 
 
@@ -374,9 +366,9 @@ apiCallSign  did slid = api $ do
   case edoc of
     Right (Right (doc, olddoc)) -> do
       lift $ postDocumentPendingChange doc olddoc
-      udoc <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
+      udoc <- dbQuery $ GetDocumentByDocumentID did
       lift $ handleAfterSigning udoc slid
-      udoc' <- apiGuardJustM (serverError "Can find document after signing") $ dbQuery $ GetDocumentByDocumentID did
+      udoc' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON muid False True True Nothing Nothing udoc'
     Right (Left err) -> throwIO . SomeKontraException $ serverError  $ "Error: DB action " ++ show err
     Left msg ->  throwIO . SomeKontraException $ serverError  $ "Error: " ++ msg
@@ -413,7 +405,7 @@ handleMismatch doc sid msg sfn sln spn = do
            (maybesignatory sl)
            (getEmail sl)
            sid)
-          Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+          newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
           return newdoc
         postDocumentCanceledChange newdoc
 
@@ -423,20 +415,20 @@ apiCallRemind :: Kontrakcja m => DocumentID -> m Response
 apiCallRemind did =  api $ do
   ctx <- getContext
   (user, actor , _) <- getAPIUser APIDocSend
-  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  doc <- dbQuery $ GetDocumentByDocumentID $ did
   when (documentstatus doc /= Pending) $ do
         throwIO . SomeKontraException $ serverError "Can't send reminder for documents that are not pending"
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
   _ <- lift $ sendAllReminderEmails ctx actor user did
-  newdocument <- apiGuardL (serverError "No document found after sending reminder") $ dbQuery $ GetDocumentByDocumentID $ did
+  newdocument <- dbQuery $ GetDocumentByDocumentID $ did
   Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
 
 apiCallDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallDelete did =  api $ do
   (user, actor, _) <- getAPIUser APIDocSend
-  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  doc <- dbQuery $ GetDocumentByDocumentID $ did
   mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
                        _ -> return Nothing
@@ -460,7 +452,7 @@ apiCallGet did = api $ do
   includeEvidenceAttachments <- lift $ (=="true") <$> getField' "evidenceAttachments"
   case (msignatorylink,mmagichashh) of
       (Just slid,Just mh) -> do
-         doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
+         doc <- dbQuery $ GetDocumentByDocumentID did
          sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
          when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
          when (not (isTemplate doc)) $
@@ -478,7 +470,7 @@ apiCallGet did = api $ do
          Ok <$> documentJSON Nothing includeEvidenceAttachments False False pq (Just sl) doc
       _ -> do
         (user, _actor, external) <- getAPIUser APIDocCheck
-        doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+        doc <- dbQuery $ GetDocumentByDocumentID $ did
         let msiglink = getMaybeSignatoryLink (doc,user)
         when_ ((isJust msiglink) && (not (isPreparation doc)) && (not (isTemplate doc))) $ do
             let sl = fromJust msiglink
@@ -595,7 +587,7 @@ apiCallChangeMainFile :: Kontrakcja m => DocumentID -> m Response
 apiCallChangeMainFile docid = api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   checkObjectVersionIfProvided docid
-  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ docid
+  doc <- dbQuery $ GetDocumentByDocumentID $ docid
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (documentstatus doc /= Preparation) $ throwIO . SomeKontraException $ (serverError "Document is not a draft or template")
   when (not $ (auid == userid user)) $ do
@@ -636,14 +628,14 @@ apiCallChangeMainFile docid = api $ do
       dbUpdate $ AttachFile docid fileid actor
       apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename actor
     Nothing -> dbUpdate $ DetachFile docid actor
-  doc' <- apiGuardL (serverError "No document found after change") $ dbQuery $ GetDocumentByDocumentID $ docid
+  doc' <- dbQuery $ GetDocumentByDocumentID $ docid
   Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
 
 apiCallGetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
 apiCallGetBrandingForSignView did slid = api $ do
   ctx <- getContext
   magichash <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
-  doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
+  doc <- dbQuery $ GetDocumentByDocumentID did
   sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
   when (signatorymagichash sl /= magichash) $ throwIO . SomeKontraException $ serverError "No document found"
   authorid <- apiGuardL (serverError "Document problem | No author") $ return $ getAuthorSigLink doc >>= maybesignatory
@@ -691,7 +683,7 @@ documentUploadSignatoryAttachment did sid aname = api $ do
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     dbUpdate $ SaveSigAttachment (documentid doc) sid aname fileid' actor
-    Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+    newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
     return newdoc
 
   -- let's dig the attachment out again
@@ -718,7 +710,7 @@ documentDeleteSignatoryAttachment did sid aname = api $ do
 
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid (signatoryActor ctxtime ctxipnumber muid email sid)
-    Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+    newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
     return newdoc
 
   -- let's dig the attachment out again

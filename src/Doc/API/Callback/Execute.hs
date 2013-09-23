@@ -23,10 +23,8 @@ import Util.SignatoryLinkUtils
 
 execute :: (MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
-  mdoc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
-  case mdoc of
-     Nothing -> (Log.debug $ "API callback for #" ++ show dacDocumentID ++ " failed: No document found") >> return False
-     Just doc -> do
+  doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
+  do
         case (join $ maybesignatory <$> getAuthorSigLink doc) of
           Nothing -> return False
           Just userid -> do

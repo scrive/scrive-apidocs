@@ -1086,12 +1086,8 @@ insertNewDocument doc = do
 -- Create new document based on existing one
 newFromDocumentID :: (MonadDB m, MonadIO m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
 newFromDocumentID f docid = do
-  mdoc <- query $ GetDocumentByDocumentID docid
-  case mdoc of
-      Just doc -> newFromDocument f doc
-      Nothing -> do
-        Log.error $ "Document " ++ show docid ++ " does not exist"
-        return Nothing
+  doc <- query $ GetDocumentByDocumentID docid
+  newFromDocument f doc
 
 newFromDocument :: (MonadDB m, MonadIO m) => (Document -> Document) -> Document -> m (Maybe Document)
 newFromDocument f doc = do
@@ -1516,11 +1512,11 @@ instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
               kThrow ex
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
-instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
+instance MonadDB m => DBQuery m GetDocumentByDocumentID Document where
   query (GetDocumentByDocumentID did) = do
-    Just <$> (selectDocument $ sqlSelect "documents" $ do
+    selectDocument $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhereDocumentIDIs did)
+      sqlWhereDocumentIDIs did
 
 data GetDocumentsByDocumentIDs = GetDocumentsByDocumentIDs [DocumentID]
 instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
@@ -2046,13 +2042,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories _actor) = do
-    mdocument <- query $ GetDocumentByDocumentID documentid
-    case mdocument of
-      Nothing -> do
-        Log.error $ "ResetSignatoryDetails: document #" ++ show documentid ++ " does not exist"
-        return False
-      Just document ->
-        case checkResetSignatoryData document signatories of
+    document <- query $ GetDocumentByDocumentID documentid
+    case checkResetSignatoryData document signatories of
           [] -> do
             kRun_ $ "DELETE FROM signatory_links WHERE document_id = " <?> documentid
 
@@ -2072,7 +2063,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                      return link
             _r1 <- insertSignatoryLinksAsAre documentid siglinks
 
-            Just newdocument <- query $ GetDocumentByDocumentID documentid
+            newdocument <- query $ GetDocumentByDocumentID documentid
             let moldcvsupload = msum (map (\(_,_,a,_,_,_) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 

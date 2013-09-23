@@ -29,8 +29,8 @@ type PadQueue = Maybe (DocumentID,SignatoryLinkID)
 data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
   update (AddToPadQueue uid did slid a) = do
-    mdoc <- query $ GetDocumentByDocumentID did
-    let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
+    doc <- query $ GetDocumentByDocumentID did
+    let memail = getEmail <$> getSigLinkFor doc slid
     update $ ClearPadQueue uid a
     r <- kRun $ SQL "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
                 [toSql uid, toSql did, toSql slid]
@@ -51,8 +51,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
     case pq of
        Nothing -> return ()
        Just (did, slid) -> do
-         mdoc <- query $ GetDocumentByDocumentID did
-         let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
+         doc <- query $ GetDocumentByDocumentID did
+         let memail = getEmail <$> getSigLinkFor doc slid
          r <- kRun $ SQL "DELETE FROM padqueue WHERE user_id = ?"
                    [toSql uid]
          when_ ((r == 1) && isJust pq ) $ do
