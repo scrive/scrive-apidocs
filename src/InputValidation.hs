@@ -41,6 +41,8 @@ import Text.Regex.TDFA ((=~))
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
+import Text.XML.HaXml(render)
+import Text.XML.HaXml.Pretty(content)
 
 import Kontra
 import Doc.DocumentID
@@ -51,6 +53,8 @@ import qualified Log (security)
 import Happstack.Fields hiding (getFields)
 import User.Model
 import Data.Monoid
+import Data.Maybe
+import Data.String.Utils
 
 {- |
     The input data.
@@ -524,41 +528,34 @@ asValidFieldValue input =
 asValidInviteText :: String -> Result String
 asValidInviteText input =
     checkIfEmpty input
-    >>= parseAsXml
-    >>= checkContent
-    >>= ignoreXml input
+    >>= parseAndFixAsXml
     where
-          parseAsXml :: String -> Result (Content Posn)
-          parseAsXml xs =
+          parseAndFixAsXml :: String -> Result String
+          parseAndFixAsXml xs =
             case xmlParse' "asValidInviteText" $ "<p>" ++ xs ++ "</p>" of
-              (Right (Document _ _ root _)) -> return $ CElem root undefined
-              _ -> Bad
-          checkContent :: Content Posn -> Result (Content Posn)
-          checkContent x@(CElem (Elem (N name) atts cnt) _)
-              | isValidElemName name
-                && all (isValidAtt name) atts
-                && all isValidChild cnt = return x
-              | otherwise = Bad
-          checkContent x@(CString _ _ _) = return x
-          checkContent x@(CRef _ _) = return x
-          checkContent x@(CMisc (Comment _) _) = return x
-          checkContent _ = Bad
-          isValidChild :: Content Posn -> Bool
-          isValidChild c = not $ isBad $ checkContent c
-          isValidElemName :: Name -> Bool
-          isValidElemName n = n `elem` ["br", "em", "li", "ol", "p", "span", "strong", "ul"]
-          isValidAtt :: Name -> Attribute -> Bool
-          isValidAtt elemname (attname, attvalue) =
-              "span"==elemname
-              && attname==N "style"
-              && isValidAttValue attvalue
-          isValidAttValue :: AttValue -> Bool
-          isValidAttValue (AttValue (Left v:[])) =
-              v `elem` ["text-decoration: underline;",
-                        "text-decoration: line-through;"]
-          isValidAttValue _ = False
-          ignoreXml :: String -> Content Posn -> Result String
-          ignoreXml c _ = return c
+              (Right (Document _ _ (Elem _ _ cs) _)) -> Good $ concatMap (render . content) $ catMaybes $ map fixContent cs
+              _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
+                   in if xsWithFixedBRs /= xs
+                         then parseAndFixAsXml xsWithFixedBRs
+                         else Good $ justText xs
+          fixContent :: Content Posn -> Maybe (Content Posn)
+          fixContent (CElem (Elem (N name) atts cs) i) = Just (CElem (Elem (N $ validName name) (catMaybes $ map validAttribute atts) (catMaybes $ map fixContent cs) ) i)
+          fixContent x@(CString _ _ _) = Just x
+          fixContent _ = Nothing
+          validName :: Name -> Name
+          validName n = if ((map toLower n) `elem` ["br", "em", "li", "ol", "p", "span", "strong", "ul", "div"])
+                           then n
+                           else "span"
+          validAttribute :: Attribute -> Maybe Attribute
+          validAttribute a@(N "style", AttValue (Left v:[])) = if (map toLower v) `elem` ["text-decoration: underline;",
+                                                                                 "text-decoration: line-through;"]
+                                                                then Just a
+                                                                else Nothing
+          validAttribute _ = Nothing
+          justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
+          justText (c:cs) = c : justText cs
+          justText [] = []
+
 
 {- |
     Lower cases everything
