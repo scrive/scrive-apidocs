@@ -701,12 +701,13 @@ window.Signatory = Backbone.Model.extend({
                 signatory.addField(new Field({name:document.newSignatureName(),
                                               type: 'signature',
                                               obligatory: true,
-                                              shouldbefilledbysender: signatory.author(),
+                                              shouldbefilledbysender: false,
                                               signatory: signatory}));
         } else {
           _.each(signatures, function(s) {
-            if(!s.hasPlacements())
+            if(!s.hasPlacements() && !s.isDDSignature()) {
                 signatory.deleteField(s);
+            }
           });
         }
     },
