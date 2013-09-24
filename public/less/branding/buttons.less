@@ -61,6 +61,17 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     }
   }
 
+  &.button-orange {
+    background: @orange;
+    border: none;
+    &:hover {
+        background: lighten(@orange, 25%);
+    }
+    &:active {
+        background: @orange;
+    }
+  }
+
   &.button-red {
     background: @red;
     border: none;
@@ -96,6 +107,11 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     &.button-light-blue:hover { background: lighten(@light-blue, 25%); }
     &.button-light-blue:active,
     &.button-light-blue.active, { background: @light-blue; }
+
+    &.button-orange { background: @orange; font-weight: 400; }
+    &.button-orange:hover { background: lighten(@orange, 25%); }
+    &.button-orange:active,
+    &.button-orange.active, { background: @orange; }
 
     &.button-red { background: @red;}
     &.button-red:hover { background: @red-dark; }
