@@ -5,6 +5,7 @@
 	color: #fff !important;
 	font-weight: 600;
     }
+
     li {
 	padding-left: 2px !important;
 	padding-bottom: 8px !important;
@@ -12,6 +13,7 @@
 	    background: #39414c !important;
 	}
     }
+
     ul {
 	left: 0px !important;
     }
@@ -29,8 +31,8 @@ footer.site {
     bottom: 0;
   }
   font-size : 16px;
-  padding-top: 78px;
-  padding-bottom: 49px;
+  padding-top: 67px;
+  padding-bottom: 36px;
   background: @blue-header;
   z-index: 90;
   .clearfix;
@@ -38,30 +40,44 @@ footer.site {
       margin: 0 auto;
       width: 1020px;
       &.thin {
-        width: 862px;
+        width: 960px;
       }
   }
   .visions p {
       font-family: @source;
-      font-size: 26px;
+      font-size: 24px;
       color: #1d2231;
       margin: 0 0 28px;
       padding: 0 16px;
   }
 
   nav {
-    width: 160px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    width: 192px;
     float: left;
     padding: 0 1em;
 
-    &.right { float: right; }
-    &.wide { width: 260px; }
+    &.last {
+        padding-right: 0px;
+        .content {
+            float: right;
+        }
+    }
+
+    header h4 {
+        font-size: 16px;
+        font-weight: 600;
+        color: @text-very-light;
+        text-align: left;
+        margin-bottom: 8px;
+    }
 
    .content {
        ul.icons {
          .clearfix;
          float: right;
-         margin: 0 0 16px;
+         margin: 0 4px 16px;
          li {
           float: left;
           margin: 0 8px 8px 0;
@@ -87,12 +103,10 @@ footer.site {
 
       ul.tree {
         li.branch {
-          color: @text-very-dark;
-          font-size: .85em;
+          color: @text-light;
+          font-size: 14px;
+          line-height: 32px;
 
-          img.globe {
-            float: left
-          }
           p {
             margin: 0 0 1.33333em;
           }
@@ -100,12 +114,9 @@ footer.site {
             margin: 0 0 1em;
           }
           > a {
-            color: @text-very-light;
-            font-size: 15px;
-            line-height: 32px;
-            font-weight: 600;
+            color: @text-lighter;
             &:hover {
-              color: @text-light;
+              color: @text-very-light;
             }
           }
         }
