@@ -11,7 +11,8 @@ window.Field = Backbone.Model.extend({
         placements : [],
         obligatory : true,
         shouldbefilledbysender : false,
-        fresh : false
+        fresh : false,
+        ddSignature : false
     },
     initialize : function(args){
         var field = this;
@@ -285,6 +286,9 @@ window.Field = Backbone.Model.extend({
     },
     isReady: function(){
       return this.get("fresh") == false && this.name() !== '' && this.type() !== '';
+    },
+    isDDSignature : function() {
+      return this.get("ddSignature");
     },
     makeReady : function() {
       this.set({fresh: false});
