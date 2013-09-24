@@ -42,7 +42,6 @@ set systemPage
  less less/blocking.less
  less less/authorview.less
  less less/doctools.less
- less less/buttons.less
  less less/util-pages.less
  less less/lists.less
  less less/tabs.less
