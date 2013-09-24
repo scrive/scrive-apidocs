@@ -23,7 +23,7 @@
   	    div.append(view.text());
             div.append(view.signature());
 	    div.append(view.checkbox());
-            
+
 
             view.$el.html(div.children());
 
@@ -52,7 +52,7 @@
 	    var iconWrapper = $("<div class='design-view-action-document-draggable-icon-wrapper' />");
             var imgdiv = $("<div class='design-view-action-document-draggable-icon' />");
 	    var txt = $("<div class='design-view-action-document-draggable-text'/>");
-	    
+
 
             draggebleField(div, fieldOrPlacementFN, undefined, undefined, true);
 
@@ -79,7 +79,9 @@
         signature: function() {
             var model = this.model;
 	    var fieldOrPlacementFN = function() {
-                return new Field({fresh:false,
+                return new Field({
+                  fresh:false,
+                  ddSignature : true,
 				  type:'signature',
 				  signatory: model.document().author(),
 				  name: model.document().newSignatureName()});
