@@ -425,7 +425,7 @@ var DocumentSignViewView = Backbone.View.extend({
      if (!this.model.isReady())
      {
          if (this.model.noMainFile())
-           this.container.append("<div class='subcontainer'><BR/><div class='document-pages'><div class='waiting4page'></div></div></div>");
+           this.container.append("<div class='subcontainerWrapper'><div class='subcontainer'><BR/><div class='document-pages'><div class='waiting4page'></div></div></div></div>");
          return this;
      }
 

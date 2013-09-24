@@ -370,6 +370,8 @@
               button.addClass('button-gray');
             else if (buttoncolour == 'light-blue')
               button.addClass("button-light-blue");
+            else if (buttoncolour == 'orange')
+              button.addClass("button-orange");
 
             var action = $('<div class="action" />').append(button);
 
@@ -507,6 +509,8 @@
               button.addClass('button-gray');
             else if (buttoncolour == 'light-blue')
               button.addClass("button-light-blue");
+            else if (buttoncolour == 'orange')
+              button.addClass("button-orange");
 
             var action = $('<div class="action" />')
                 .append(button);
