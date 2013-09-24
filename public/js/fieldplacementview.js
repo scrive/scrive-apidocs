@@ -626,8 +626,10 @@ var TextPlacementPlacedView = Backbone.View.extend({
           if (width < 30) width = 30;
 
         }
+        place.addClass('active');
         var accept = function() {
                       view.inlineediting = false;
+                      place.removeClass('active');
                       var val = input.value();
                       field.setValue(val);
                       field.signatory().trigger('change');
@@ -650,9 +652,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
           onBlur : accept,
           onOk : accept
         });
-        place.empty().append(input.el());
+        place.empty().css("z-index","1").append(input.el());
         field.trigger('change:inlineedited');
-        field.bind('change',function() { view.inlineediting  = false; view.render();});
+        field.bind('change',function() { view.inlineediting  = false;place.removeClass('active'); view.render();});
 
         if ($(window).scrollTop() + $(window).height() > input.el().offset().top && $(window).scrollTop() < input.el().offset().top) {
                    input.focus();
