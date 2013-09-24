@@ -7,7 +7,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize)
-
 import InputValidation
 
 inputValidationTests :: Test
@@ -91,7 +90,7 @@ inputValidationTests = testGroup "InputValidation"
         , testProperty "good examples pass" propValidFieldValueGoodExamples ]
     , testGroup "asValidInviteText"
         [ testCase "null is counted as empty" testValidInviteTextNullIsEmpty
-        , testCase "bad examples fail" testValidInviteTextBadExamples
+        , testCase "bad examples are fixed" testValidInviteTextBadExamplesAreFixed
         , testCase "good examples pass" testValidInviteTextGoodExamples ]
     ]
 
@@ -398,15 +397,14 @@ instance Arbitrary FieldValueChar where
 testValidInviteTextNullIsEmpty :: Assertion
 testValidInviteTextNullIsEmpty = testNullIsEmpty asValidInviteText
 
-testValidInviteTextBadExamples :: Assertion
-testValidInviteTextBadExamples = do
-    let badexamples = ["<p><a>blah</a></p>",
-                       "<script>blah</script>",
-                       "<p><span></p></span>",
-                       "<span style=\"blah\">blah</span>",
-                       "<span x=\"y\">blah</span>",
-                       "<p>Hej You,</p>\n<p>Please log into my pretend Skriva På site, and tell me your password</p>\n<p><a href=\"http://pretend.skrivapa.se\">Login Here</a></p>\n<p><script>alert(\"this bit only runs if your email client is stupid\")</script>\n<!-- btw, I forgot the closing p tag -->"]
-    assert $ all (isBad . asValidInviteText) badexamples
+testValidInviteTextBadExamplesAreFixed :: Assertion
+testValidInviteTextBadExamplesAreFixed = do
+    let e1 = asValidInviteText "<p><a href='aaaa'>blah</a></p>"
+    assert $ isGood e1 && (filter (\c -> not $ isSpace c || isControl c)   $ fromGood e1) == "<p><span>blah</span></p>"
+    let e2 = asValidInviteText "<p><BR></p>"
+    assert $ isGood e2 && (filter (\c -> not $ isSpace c || isControl c)  $ fromGood e2) == "<p><BR/></p>"
+    let e3 = asValidInviteText "<p --A >aaaa<>"
+    assert $ isGood e3 && fromGood e3 == "aaaa"
 
 testValidInviteTextGoodExamples :: Assertion
 testValidInviteTextGoodExamples = do

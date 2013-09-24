@@ -30,11 +30,13 @@ ZIP="$BUILD_ID.$SRV.tar.gz"
 
 echo "Creating zip file"
 
-tar zcf "$TMP/$ZIP"                        \
-    --exclude=.git*                   \
-    --exclude=_local*                 \
-    --exclude=_darcs*                 \
-    --exclude=log \
+tar zcf "$TMP/$ZIP"                              \
+    --exclude=.git*                              \
+    --exclude=_local*                            \
+    --exclude=_darcs*                            \
+    --exclude=log                                \
+    --exclude=pdfsealjava/itextpdf-5.4.2-sources \
+    --exclude=dist/build/*/*-tmp                 \
     *
 ls -lh "$TMP/$ZIP"
 
@@ -83,19 +85,18 @@ fi
 
 echo "Copying deployment file to /tmp on $SRV server"
 ssh builds@prod.scrive.lan "rm -rf /tmp/"$SRV"_deployment && mkdir /tmp/"$SRV"_deployment"
-scp "$TMP/$finalfile" "builds@prod.scrive.lan:/tmp/"$SRV"_deployment/."
+cat "$TMP/$finalfile" | ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && tar -zx"
 scp "/home/builds/key/builds.scrive.com.pubkey.pem" "builds@prod.scrive.lan:/tmp/"$SRV"_deployment/."
 
 echo "Verifying and unzipping deployment file"
-ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && tar -zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP && mkdir kontrakcja && tar -C kontrakcja -zxf $ZIP ; exit \$?"
+ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
 
 if [ ! -z "$SRV2" ]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
    ssh api-testbed@vm-dev.scrive.com "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
-   scp "$TMP/$finalfile" "api-testbed@vm-dev.scrive.com:/tmp/"$SRV2"_deployment/."
-   ssh api-testbed@vm-dev.scrive.com "cd /tmp/"$SRV2"_deployment && tar -zxf $finalfile && mkdir kontrakcja && tar -C kontrakcja -zxf $ZIP ; exit \$?"
+   cat "$TMP/$finalfile" | ssh api-testbed@vm-dev.scrive.com "cd /tmp/"$SRV2"_deployment && tar -zx ; exit \$?"
 fi
 
 exit 0
