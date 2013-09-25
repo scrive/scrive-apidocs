@@ -15,7 +15,7 @@ import File.File
 import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
-import Doc.ExtendSignature (sealMissingSignatures, extendSignatures)
+import Doc.ExtendSignature (sealMissingSignaturesNewerThan, extendSignatures)
 import Templates (getTemplatesModTime, readGlobalTemplates)
 import ActionQueue.Monad (ActionQueueT)
 import ActionQueue.Scheduler (SchedulerData(..))
@@ -223,7 +223,7 @@ testSealMissingSignatures = do
   file <- addNewFile filename filecontent
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
   randomUpdate $ \t -> AttachSealedFile (documentid doc) (fileid file) Missing (systemActor t)
-  runScheduler sealMissingSignatures
+  runScheduler $ sealMissingSignaturesNewerThan Nothing
   Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   case documentsealstatus doc' of
     Just (Guardtime{}) -> assertSuccess
