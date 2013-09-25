@@ -8,7 +8,8 @@
 
 module Doc.SignatoryTMP (
       SignatoryTMP -- do not expose attachments, there is a getter for that
-    , emptySignatoryTMP
+    , maybeSignatoryTMPid
+    , setSignatoryTMPid
     , fstname
     , setFstname
     , sndname
@@ -27,8 +28,9 @@ module Doc.SignatoryTMP (
     , makePartner
     , customField
     , setCustomField
-    , toSignatoryDetails1
-    , toSignatoryDetails2
+    , signatoryDetails
+    , setSignatoryDetails
+    , toSignatoryDetails
     , isAuthorTMP
     , isSignatoryTMP
     , getAttachments
@@ -47,9 +49,11 @@ import Utils.Prelude
 import Text.JSON.FromJSValue
 import Control.Applicative
 import Data.String.Utils
+import Doc.SignatoryLinkID
 
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
+        mid :: Maybe SignatoryLinkID,
         details :: SignatoryDetails,
         attachments :: [SignatoryAttachment], -- Do not expose it as durring runtime this does not have email set
         csvupload :: Maybe CSVUpload,
@@ -57,7 +61,15 @@ data SignatoryTMP = SignatoryTMP {
         rejectredirecturl :: Maybe String,
         authentication :: AuthenticationMethod,
         delivery :: DeliveryMethod
-    } deriving (Show)
+    } deriving (Show,Eq)
+
+
+instance Ord SignatoryTMP where
+  compare s1 s2 | isAuthorTMP s1 = LT
+                | isAuthorTMP s2 = GT
+                | mid s2 == Nothing = LT
+                | mid s1 == Nothing = GT
+                | otherwise = compare (mid s1) (mid s2)
 
 instance HasFields SignatoryTMP where
     replaceField f s = s {details = replaceField f (details s)}
@@ -65,6 +77,7 @@ instance HasFields SignatoryTMP where
 
 emptySignatoryTMP :: SignatoryTMP
 emptySignatoryTMP = SignatoryTMP {
+    mid = Nothing,
     details = SignatoryDetails {
       signatorysignorder = SignOrder 1
     , signatoryfields   = []
@@ -83,6 +96,12 @@ emptySignatoryTMP = SignatoryTMP {
 
 liftTMP ::  (SignatoryDetails -> SignatoryDetails) -> SignatoryTMP -> SignatoryTMP
 liftTMP f s = s {details  =  f $ details s}
+
+maybeSignatoryTMPid :: SignatoryTMP -> Maybe SignatoryLinkID
+maybeSignatoryTMPid = mid
+
+setSignatoryTMPid :: SignatoryLinkID -> SignatoryTMP -> SignatoryTMP
+setSignatoryTMPid sid stmp = stmp {mid = Just sid}
 
 fstname:: SignatoryTMP -> Maybe String
 fstname = nothingIfEmpty . getFirstName . details
@@ -150,6 +169,12 @@ isSignatoryTMP = signatoryispartner . details
 setSignOrder :: SignOrder -> SignatoryTMP -> SignatoryTMP
 setSignOrder i =  liftTMP $  \s -> s {signatorysignorder = i}
 
+signatoryDetails :: SignatoryTMP -> SignatoryDetails
+signatoryDetails = details
+
+setSignatoryDetails :: SignatoryDetails -> SignatoryTMP -> SignatoryTMP
+setSignatoryDetails d = liftTMP $  \_ -> d
+
 --signOrder :: SignatoryTMP -> SignOrder
 --signOrder = signatorysignorder . details
 
@@ -167,13 +192,11 @@ setSignredirecturl rurl s = s {signredirecturl = rurl}
 setRejectredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
 setRejectredirecturl rurl s = s {rejectredirecturl = rurl}
 
-
-toSignatoryDetails1 :: SignatoryTMP -> SignatoryDetails
-toSignatoryDetails1 sTMP = (\(x,_,_,_,_,_,_) -> x) (toSignatoryDetails2 sTMP)
--- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,Maybe String, AuthenticationMethod, DeliveryMethod)
-toSignatoryDetails2 sTMP  =
-  ( details sTMP
+ -- To SignatoryLink or SignatoryDetails conversion
+toSignatoryDetails :: SignatoryTMP -> (Maybe SignatoryLinkID, SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload,Maybe String, Maybe String, AuthenticationMethod, DeliveryMethod)
+toSignatoryDetails sTMP  =
+  ( maybeSignatoryTMPid sTMP
+  , details sTMP
   , attachments $ sTMP
   , csvupload $ sTMP
   , signredirecturl $ sTMP
@@ -183,6 +206,7 @@ toSignatoryDetails2 sTMP  =
 
 instance FromJSValue SignatoryTMP where
     fromJSValue = do
+        mid'    <- fromJSValueField "id"
         author <- fromJSValueField "author"
         signs  <- fromJSValueField "signs"
         mfields <- fromJSValueField "fields"
@@ -204,9 +228,21 @@ instance FromJSValue SignatoryTMP where
                 (setRejectredirecturl $ rredirecturl) $
                 (map replaceField fields) $^^
                 (map addAttachment attachments) $^^
-                (emptySignatoryTMP { authentication = fromMaybe StandardAuthentication authentication'
-                                   , delivery = fromMaybe EmailDelivery delivery'
-                                   })
+                (SignatoryTMP {
+                    mid = maybeRead =<< mid'
+                  , details = SignatoryDetails {
+                      signatorysignorder = SignOrder 1
+                    , signatoryfields   = []
+                    , signatoryispartner = False
+                    , signatoryisauthor = False
+                    }
+                  , attachments = []
+                  , csvupload = Nothing
+                  , signredirecturl = Nothing
+                  , rejectredirecturl = Nothing
+                  , authentication = fromMaybe StandardAuthentication authentication'
+                  , delivery = fromMaybe EmailDelivery delivery'
+                  })
           _ -> return Nothing
 
 instance FromJSValue SignatoryField where
@@ -260,6 +296,7 @@ instance FromJSValue CSVUpload  where
                         , csvcontents = rs
                         }
              _ -> return Nothing
+
 
 
 signatoryTMPIsChangingSignatoryLink :: SignatoryTMP -> SignatoryLink -> Bool

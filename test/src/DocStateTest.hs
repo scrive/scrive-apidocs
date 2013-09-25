@@ -864,14 +864,14 @@ testPreparationResetSignatoryDetails2Works = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  let newData1 = (defaultValue { signatoryisauthor = True },[],Nothing, Nothing, Nothing, StandardAuthentication, EmailDelivery)
+  let newData1 = (Nothing,defaultValue { signatoryisauthor = True },[],Nothing, Nothing,Nothing, StandardAuthentication, EmailDelivery)
   success1 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData1] (systemActor mt)
   assert success1
   ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc1))
   assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc1))
 
-  let newData2 = (defaultValue { signatoryisauthor = True },[],Nothing, Nothing, Nothing, ELegAuthentication, PadDelivery)
+  let newData2 = (Nothing,defaultValue { signatoryisauthor = True },[],Nothing,Nothing,Nothing, ELegAuthentication, PadDelivery)
   success2 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData2] (systemActor mt)
   assert success2
   ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc

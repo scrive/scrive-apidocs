@@ -27,6 +27,8 @@ import qualified Log
 import File.FileID
 import Control.Monad
 import InputValidation
+import Doc.SignatoryLinkID
+import Data.Functor
 
 data DraftData = DraftData {
       title :: String
@@ -115,7 +117,7 @@ applyDraftDataToDocument doc draft actor = do
               when_ (not $ (authorattachmentfile att) `elem` (fromJust $ authorattachments draft)) $ do
                 dbUpdate $ RemoveDocumentAttachment (documentid doc) (authorattachmentfile att) actor
 
-      case (mergeSignatories draft (fromJust $ getAuthorSigLink doc) (signatories draft)) of
+      case (mergeSignatories draft (documentsignatorylinks doc) (sort $ signatories draft)) of
            Nothing   -> return $ Left "Problem with author details while sending draft"
            Just sigs -> do
              mdoc <- runMaybeT $ do
@@ -126,31 +128,40 @@ applyDraftDataToDocument doc draft actor = do
                Nothing  -> Left "applyDraftDataToDocument failed"
                Just newdoc -> Right newdoc
 
-mergeSignatories :: DraftData
-                 -> SignatoryLink
-                 -> [SignatoryTMP]
-                 -> Maybe [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,Maybe String, AuthenticationMethod, DeliveryMethod)]
-mergeSignatories docdraft docAuthor tmps =
-        let
-            (atmp, notatmps) = partition isAuthorTMP tmps
-            setAuthorConstantDetails =  setFstname (getFirstName docAuthor) .
-                                        setSndname (getLastName docAuthor) .
-                                        setEmail   (getEmail docAuthor)
-            mapAuthenticationMethod (a,b,c,d,e,f,g) =
-              case authentication docdraft of
-                Just x -> (a,b,c,d,e,x,g)
-                _ -> (a,b,c,d,e,f,g)
-            mapDeliveryMethod (a,b,c,d,e,f,g) =
-              case delivery docdraft of
-                Just x -> (a,b,c,d,e,f,x)
-                _ -> (a,b,c,d,e,f,g)
 
-        in case (atmp) of
-                ([authorTMP]) -> Just $ map (mapDeliveryMethod .
-                                             mapAuthenticationMethod .
-                                             toSignatoryDetails2) $
-                                              (setAuthorConstantDetails authorTMP) : notatmps
-                _ -> Nothing
+matchSignatoriesAndSignatoriesTMPAndFixAuthor :: [SignatoryLink] -> [SignatoryTMP] -> Maybe [(Maybe SignatoryLink,SignatoryTMP)]
+matchSignatoriesAndSignatoriesTMPAndFixAuthor sigs tmps =
+          let
+            (atmp, notatmps) = partition isAuthorTMP tmps
+            (asig, notasigs) = partition isAuthor sigs
+            matchSigs (s:ss) (t:ts) = if (Just (signatorylinkid s) == maybeSignatoryTMPid t)
+                                          then (Just s,t) : matchSigs ss ts
+                                          else matchSigs ss (t:ts)
+            matchSigs [] (t:ts) = (Nothing,t) : matchSigs [] ts
+            matchSigs _ _ = []
+            setConstantDetails a =  setFstname (getFirstName a) .
+                                    setSndname (getLastName a) .
+                                    setEmail   (getEmail a) .
+                                    setSignatoryTMPid (signatorylinkid a)
+          in case (asig, atmp) of
+               ([asig'], [atmp']) ->
+                 if (Just (signatorylinkid asig') == maybeSignatoryTMPid atmp')
+                   then Just $ (Just asig',setConstantDetails asig' atmp') : (matchSigs notasigs notatmps)
+                   else Just $ (Nothing,setConstantDetails asig' atmp') : (matchSigs notasigs notatmps)
+               _ -> Nothing
+
+mergeSignatoryAndSignatoryTMP :: Maybe SignatoryLink -> SignatoryTMP -> SignatoryTMP
+mergeSignatoryAndSignatoryTMP _  t = t
+
+mergeSignatories :: DraftData
+                 -> [SignatoryLink]
+                 -> [SignatoryTMP]
+                 -> Maybe [(Maybe SignatoryLinkID , SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,  Maybe String, AuthenticationMethod, DeliveryMethod)]
+mergeSignatories docdraft sigs tmps =
+        let
+            tmps' = map (\(s,t) -> mergeSignatoryAndSignatoryTMP s t) <$> matchSignatoriesAndSignatoriesTMPAndFixAuthor sigs tmps
+        in map toSignatoryDetails <$> tmps'
+
 
 
 draftIsChangingDocument :: DraftData -> Document -> Bool
