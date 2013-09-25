@@ -343,30 +343,30 @@ $endif$
           <a class="button button js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
       </li>
       $else$
-      <li class="page-first float-left" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a>
-      </li>
-      <li class="float-left" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a>
-      </li>
-      <li class="float-left" >
-          <a class="page price-plan-page-link"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a>
-      </li>
-      <li class="float-left" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a>
-      </li>
-      <li class="float-left" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a>
-      </li>
-      <li class="float-left" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a>
-      </li>
-      <li class="float-left"  >
-          <a class="page last-link"   href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a>
-      </li>
       <li class="session-login float-right">
         <a class="button" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
-        <a class="button button-green" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
+        <a class="button" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
+      </li>
+      <li class="float-right"  >
+          <a class="page"   href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a>
+      </li>
+      <li class="float-right" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a>
+      </li>
+      <li class="float-right" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a>
+      </li>
+      <li class="float-right" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a>
+      </li>
+      <li class="float-right" >
+          <a class="page price-plan-page-link"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a>
+      </li>
+      <li class="float-right" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a>
+      </li>
+      <li class="float-right" >
+          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a>
       </li>
       $endif$
     </ul>
