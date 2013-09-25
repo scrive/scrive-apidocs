@@ -450,6 +450,7 @@ handlePasswordReminderPost uid token = do
 handleContactUs :: Kontrakcja m => m KontraLink
 handleContactUs = do
   Context{..} <- getContext
+  ctx <- getContext
   fname   <- getField' "firstname"
   lname   <- getField' "lastname"
   email   <- getField' "email"
@@ -457,20 +458,33 @@ handleContactUs = do
   plan    <- getField' "plan"
 
   let uid = maybe "user not logged in" ((++) "user with id " . show . userid) ctxmaybeuser
+      mbd = currentBrandedDomain ctx
+      domainInfo = case mbd of
+                     Nothing -> ""
+                     Just bd -> " (from domain " ++ bdurl bd ++ " )"
       content = "<p>Hi there!</p>" ++
-                "<p>Someone requested information from the payments form.</p>" ++
+                "<p>Someone requested information from the payments form" ++
+                domainInfo ++
+                ".</p>" ++
                 "<p>Name: " ++ fname ++ " " ++ lname ++ "</p>" ++
                 "<p>Email: " ++ email ++ "</p>" ++
                 "<p>Message: \n" ++ message ++ "</p>" ++
                 "<p>Looking at plan: " ++ plan ++ "</p>" ++
                 "<p>" ++ uid ++ "</p>" ++
                 "<p>Have a good one!</p>"
+      contactEmail = "info@scrive.com"
+      mpartnerEmail = bdcontactemail <$> mbd
+      sendEmailTo emailAddress = scheduleEmailSendout ctxmailsconfig $ emptyMail {
+                                   to = [MailAddress { fullname = emailAddress, email = emailAddress }]
+                                 , title = "Contact request (" ++ plan ++ ")"
+                                 , content = content
+                                 }
 
-  scheduleEmailSendout ctxmailsconfig $ emptyMail {
-            to = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
-          , title = "Contact request (" ++ plan ++ ")"
-          , content = content
-      }
+  sendEmailTo contactEmail
+  case mpartnerEmail of
+    Nothing -> return ()
+    Just partnerEmail -> sendEmailTo partnerEmail
+
   return $ LoopBack
 
 -- For User Admin tab in adminonly

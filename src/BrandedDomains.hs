@@ -26,6 +26,7 @@ data BrandedDomain = BrandedDomain {
                         , bdpricecolour :: String
                         , bdsmsoriginator :: String
                         , bdemailoriginator :: String
+                        , bdcontactemail :: String
                       } deriving (Read, Eq, Ord, Show)
 
 findBrandedDomain :: String -> BrandedDomains -> Maybe BrandedDomain
