@@ -1,10 +1,10 @@
 /*
- * $Id: PdfStamper.java 283 2013-03-28 16:42:48Z ahto.truu $
+ * $Id: PdfStamper.java 302 2013-09-19 13:07:41Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,20 +36,21 @@ public abstract class PdfStamper {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "GuardTime PDF Signing Tool v.0.3.2-scrive";
+	private static final String TITLE = "Guardtime PDF Signing Tool v.0.3.3";
 
 	/**
 	 * Usage message for the CLI.
 	 */
 	private static final String USAGE = TITLE + "\n" +
-			"Usage: java -jar PdfStamper.jar [-i] [-s url] [-n name] [-f file] [-L] ...\n" +
+			"Usage: java -jar PdfStamper.jar [-i] [-s url] [-f file] [-n name] [-L] ...\n" +
+			"\t-r - remove all existing signatures from the file\n" +
 			"\t-i - create invisible signature\n" +
 			"\t-s - location of the signing service\n" +
 			"\t     default is " + ServiceConfiguration.DEFAULT_STAMPER + "\n" +
-			"\t-n - the signer name to be added to the document metadata\n" +
-			"\t     only plain text supported; should be enclosed in quotes\n" +
 			"\t-f - name of the file to be signed\n" +
 			"\t     a new signature will be appended to the file\n" +
+			"\t-n - the signer name to be added to the document metadata\n" +
+			"\t     only plain text supported; should be enclosed in quotes\n" +
 			"\t-L - display license information and acknowledgements\n" +
 			"The command line is scanned left to right\n" +
 			"Each option takes effect as it is encountered\n" +
@@ -60,8 +61,8 @@ public abstract class PdfStamper {
 	 * License and acknowledgments message.
 	 */
 	private static final String LICENSE = TITLE + "\n\n" +
-			"Copyright 2008-2011 GuardTime AS\n" +
-			"Licensed under the GuardTime Tools End User Licensing Agreement\n" +
+			"Copyright 2008-2013 Guardtime AS\n" +
+			"Licensed under the Guardtime Tools End User Licensing Agreement\n" +
 			"\thttp://www.guardtime.com/eula\n\n" +
 			"Includes software developed by the Legion of the Bouncy Castle\n" +
 			"\thttp://www.bouncycastle.org/\n\n" +
@@ -119,7 +120,7 @@ public abstract class PdfStamper {
 
 		try {
 			File file = jfc.getSelectedFile();
-			createTimestamp(file, true, null);
+			createTimestamp(file, false, true, null);
 			PdfUtil.showMessage(file + " signed", TITLE);
 		} catch (Exception x) {
 			PdfUtil.showMessage(x, TITLE);
@@ -131,6 +132,7 @@ public abstract class PdfStamper {
 	 * and optionally the service to use.
 	 */
 	private static void runCli(String[] args) {
+		boolean remove = false;
 		boolean visible = true;
 		String name = null;
 		for (int i = 0; i < args.length; ++i) {
@@ -138,16 +140,17 @@ public abstract class PdfStamper {
 				System.err.println(USAGE);
 			} else if ("-L".equals(args[i])) {
 				System.err.println(LICENSE);
+			} else if ("-r".equals(args[i])) {
+				remove = true;
 			} else if ("-i".equals(args[i])) {
 				visible = false;
 			} else if ("-f".equals(args[i])) {
 				if (++i < args.length) {
 					File file = new File(args[i]);
 					try {
-						createTimestamp(file, visible, name);
+						createTimestamp(file, remove, visible, name);
 						System.out.println(file + " signed");
 					} catch (Exception x) {
-						x.printStackTrace();
 						System.err.println(file + " not signed: " + x);
 					}
 				} else {
@@ -180,6 +183,8 @@ public abstract class PdfStamper {
 	 *
 	 * @param file
 	 *            the file to time-stamp.
+	 * @param remove
+	 *            whether to remove existing signatures from the file.
 	 * @param visible
 	 *            whether to add a visible "seal" image.
 	 * @param name
@@ -188,9 +193,12 @@ public abstract class PdfStamper {
 	 * @throws Exception
 	 *             on any errors.
 	 */
-	private static void createTimestamp(File file, boolean visible, String name)
+	private static void createTimestamp(File file, boolean remove, boolean visible, String name)
 	throws Exception {
 		PDFSigner doc = new PDFSigner(file);
+		if (remove) {
+			doc.removeSignatures();
+		}
 		doc.sign(svc, (visible ? seal : null), name);
 	}
 

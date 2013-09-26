@@ -1,10 +1,10 @@
 /*
- * $Id: ServiceConfiguration.java 246 2012-02-25 21:53:38Z ahto.truu $
+ * $Id: ServiceConfiguration.java 301 2013-09-19 13:00:29Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import com.guardtime.tsp.GTPublicationsFile;
 import com.guardtime.tsp.GTVerificationResult;
 
 /**
- * Represents the configuration information needed to access the GuardTime
+ * Represents the configuration information needed to access the Guardtime
  * service.
  */
 public class ServiceConfiguration {
@@ -38,8 +38,8 @@ public class ServiceConfiguration {
 	/**
 	 * The default time-stamping service.
 	 * <p>
-	 * Note that this is the global public service provided by GuardTime for
-	 * integration testing on "as-is" basis. Please contact GuardTime for a
+	 * Note that this is the global public service provided by Guardtime for
+	 * integration testing on "as-is" basis. Please contact Guardtime for a
 	 * commercial service if you require any availability guarantees for a
 	 * production deployment.
 	 * 
@@ -51,8 +51,8 @@ public class ServiceConfiguration {
 	/**
 	 * The default extending (online verification) service.
 	 * <p>
-	 * Note that this is the global public service provided by GuardTime for
-	 * integration testing on "as-is" basis. Please contact GuardTime for a
+	 * Note that this is the global public service provided by Guardtime for
+	 * integration testing on "as-is" basis. Please contact Guardtime for a
 	 * commercial service if you require any availability guarantees for a
 	 * production deployment.
 	 * 

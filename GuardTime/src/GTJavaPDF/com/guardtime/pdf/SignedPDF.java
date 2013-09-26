@@ -1,10 +1,10 @@
 /*
- * $Id: SignedPDF.java 234 2011-12-19 22:37:50Z ahto.truu $
+ * $Id: SignedPDF.java 301 2013-09-19 13:00:29Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ import com.lowagie.text.pdf.PdfString;
 
 /**
  * Encapsulates a signed PDF document and provides operations to manipulate
- * existing GuardTime time-stamps embedded in the document.
+ * existing Guardtime time-stamps embedded in the document.
  * <p>
  * Current implementation relies on the iText library which was dual-licensed
  * under the LGPL and MPL up to versions 2.1.x, but then changed to AGPL and
@@ -61,7 +61,7 @@ import com.lowagie.text.pdf.PdfString;
 public class SignedPDF {
 
 	/**
-	 * The name of the preferred handler for GuardTime time-stamps, as defined
+	 * The name of the preferred handler for Guardtime time-stamps, as defined
 	 * in the PDF specification (ISO 32000-1:2008, Section 12.8), and registered
 	 * in the PDF Name Registry maintained by Adobe.
 	 */
@@ -78,7 +78,7 @@ public class SignedPDF {
 	private PdfReader rdr;
 
 	/**
-	 * List of signature objects (both GuardTime and others) found in the
+	 * List of signature objects (both Guardtime and others) found in the
 	 * document. The list is ordered from newest to oldest, as defined by the
 	 * ordering of the document revisions they sign.
 	 * 
@@ -128,19 +128,19 @@ public class SignedPDF {
 	}
 		
 	/**
-	 * Verifies the GuardTime time-stamp in the document.
+	 * Verifies the Guardtime time-stamp in the document.
 	 * 
 	 * @param si
 	 *            the time-stamp to verify.
 	 * @param svc
-	 *            the configuration for accessing GuardTime service.
+	 *            the configuration for accessing Guardtime service.
 	 * @return the verification result as a {@code GTVerificationResult} object;
 	 *         use the {@code isValid()} method for just a yes/no answer, or
 	 *         {@code getError()} and {@code getStatus()} methods for more
 	 *         details.
 	 * 
 	 * @throws IOException
-	 *             when there are errors accessing the GuardTime service.
+	 *             when there are errors accessing the Guardtime service.
 	 * @throws GTException
 	 *             when the electronic archive of control publications
 	 *             (Integrity Codes) is invalid.
@@ -155,7 +155,7 @@ public class SignedPDF {
 	}
 	
 	/**
-	 * Returns all GuardTime time-stamps from the document.
+	 * Returns all Guardtime time-stamps from the document.
 	 * 
 	 * @return all time-stamps, ordered from newest to oldest.
 	 * 
@@ -173,7 +173,7 @@ public class SignedPDF {
 	}
 
 	/**
-	 * Returns the most recent GuardTime time-stamp from the document.
+	 * Returns the most recent Guardtime time-stamp from the document.
 	 * 
 	 * @return the time-stamp, or {@code null} if there is none.
 	 * 
@@ -190,7 +190,7 @@ public class SignedPDF {
 	}
 	
 	/**
-	 * Extends the GuardTime time-stamp in the document.
+	 * Extends the Guardtime time-stamp in the document.
 	 * <p>
 	 * Note that if there are several signatures in a PDF document, each
 	 * subsequent one normally signs over all the previous ones and therefore
@@ -198,16 +198,16 @@ public class SignedPDF {
 	 * without invalidating others.
 	 * <p>
 	 * This method checks for the existence of other signatures and a
-	 * {@code DocumentException} is thrown if extending the GuardTime time-stamp
+	 * {@code DocumentException} is thrown if extending the Guardtime time-stamp
 	 * would invalidate other signatures.
 	 * <p>
-	 * For the above reasons, only the most recent GuardTime time-stamp can be
+	 * For the above reasons, only the most recent Guardtime time-stamp can be
 	 * extended in case there are several in the document. This is also why this
 	 * method does not have a parameter to indicate which time-stamp is to be
 	 * extended.
 	 * 
 	 * @param svc
-	 *            the configuration for accessing GuardTime service.
+	 *            the configuration for accessing Guardtime service.
 	 * 
 	 * @throws IOException
 	 *             when there are errors parsing the document.
@@ -215,7 +215,7 @@ public class SignedPDF {
 	 *             when there are errors creating the signature structures in
 	 *             the document.
 	 * @throws GTException
-	 *             when there are errors accessing the GuardTime service.
+	 *             when there are errors accessing the Guardtime service.
 	 * @throws FormatException
 	 *             when there are errors parsing the signatures embedded in the
 	 *             document.
@@ -226,10 +226,10 @@ public class SignedPDF {
 		// retrieve the most recent time-stamp
 		SignatureInfo si = getTimestamp();
 		if (si == null) {
-			throw new DocumentException("No GuardTime signatures in the document");
+			throw new DocumentException("No Guardtime signatures in the document");
 		}
 		if (!si.isLast()) {
-			throw new DocumentException("The GuardTime signature has been signed over and can't be updated");
+			throw new DocumentException("The Guardtime signature has been signed over and can't be updated");
 		}
 
 		// extend the time-stamp
@@ -375,7 +375,7 @@ public class SignedPDF {
 		private String name;
 
 		/**
-		 * The GuardTime time-stamp object, if the signature is one.
+		 * The Guardtime time-stamp object, if the signature is one.
 		 * 
 		 * @see #getTimestamp()
 		 */
@@ -430,7 +430,7 @@ public class SignedPDF {
 				throw new FormatException("Invalid signature format in field " + name + ": no FILTER");
 			}
 			if (filter.toString().equals("/" + TS_FILTER)) {
-				// a GuardTime time-stamp, we need the contents
+				// a Guardtime time-stamp, we need the contents
 				PdfString stamp = dict.getAsString(PdfName.CONTENTS);
 				if (stamp == null) {
 					throw new FormatException("Invalid signature format in field " + name + ": no CONTENTS");
@@ -441,7 +441,7 @@ public class SignedPDF {
 					throw new FormatException("Invalid signature format in field " + name + ": invalid CONTENTS", x);
 				}
 			} else {
-				// a non-GuardTime signature, we don't need the contents
+				// a non-Guardtime signature, we don't need the contents
 				this.stamp = null;
 			}
 
@@ -479,9 +479,9 @@ public class SignedPDF {
 		}
 
 		/**
-		 * Returns the GuardTime time-stamp object, if the signature is one.
+		 * Returns the Guardtime time-stamp object, if the signature is one.
 		 * <p>
-		 * If the signature is in fact a GuardTime time-stamp, this method
+		 * If the signature is in fact a Guardtime time-stamp, this method
 		 * returns the time-stamp object. Otherwise, the method returns
 		 * {@code null}.
 		 * 
@@ -530,7 +530,7 @@ public class SignedPDF {
 		}
 
 		/**
-		 * Marks this as the last signature (whether GuardTime or other) in the
+		 * Marks this as the last signature (whether Guardtime or other) in the
 		 * document.
 		 * 
 		 * @see #isLast()
@@ -540,7 +540,7 @@ public class SignedPDF {
 		}
 
 		/**
-		 * Returns whether this is the last signature (either GuardTime or
+		 * Returns whether this is the last signature (either Guardtime or
 		 * other) in the document.
 		 * 
 		 * @return whether this is the last signature in the document.

@@ -1,9 +1,12 @@
-2013-03-28 release (0.3.2-scrive)
-* Bugfix in iText 2.1.7.
+2013-09-19 release (0.3.3)
+* Option to remove all existing signatures before signing.
 
-2012-06-12 release (0.3.1-scrive)
+2013-04-03 release (0.3.2)
 * Support for custom signer names in stamper and bundler.
 * Support for JSON output in verifier.
+* Upgraded to GT API 0.4.6.
+* Upgraded to BC API 1.47.
+* Bugfix in iText 2.1.7.
 
 2012-03-21 release (0.3.1)
 * Support for cropped PDF documents.
@@ -19,5 +22,5 @@
 * Also verification.
 
 2008-10-10 release (0.1)
-* GuardTime internal release.
+* Guardtime internal release.
 * Siging only.

@@ -1,10 +1,10 @@
 /*
- * $Id: PdfFileFilter.java 177 2011-04-01 19:10:34Z ahto.truu $
+ * $Id: PdfFileFilter.java 301 2013-09-19 13:00:29Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

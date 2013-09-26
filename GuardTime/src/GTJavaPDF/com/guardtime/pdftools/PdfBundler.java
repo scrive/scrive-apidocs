@@ -1,10 +1,10 @@
 /*
- * $Id: PdfBundler.java 283 2013-03-28 16:42:48Z ahto.truu $
+ * $Id: PdfBundler.java 302 2013-09-19 13:07:41Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public abstract class PdfBundler {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "GuardTime PDF Bundling Tool v.0.3.2-scrive";
+	private static final String TITLE = "Guardtime PDF Bundling Tool v.0.3.3";
 
 	/**
 	 * Default output file name.
@@ -90,8 +90,8 @@ public abstract class PdfBundler {
 	 * License and acknowledgments message.
 	 */
 	private static final String LICENSE = TITLE + "\n\n" +
-			"Copyright 2008-2011 GuardTime AS\n" +
-			"Licensed under the GuardTime Tools End User Licensing Agreement\n" +
+			"Copyright 2008-2013 Guardtime AS\n" +
+			"Licensed under the Guardtime Tools End User Licensing Agreement\n" +
 			"\thttp://www.guardtime.com/eula\n\n" +
 			"Includes software developed by the Legion of the Bouncy Castle\n" +
 			"\thttp://www.bouncycastle.org/\n\n" +

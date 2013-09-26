@@ -1,10 +1,10 @@
 /*
- * $Id: PdfVerifier.java 283 2013-03-28 16:42:48Z ahto.truu $
+ * $Id: PdfVerifier.java 302 2013-09-19 13:07:41Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public abstract class PdfVerifier {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "GuardTime PDF Verification Tool v.0.3.2a-scrive";
+	private static final String TITLE = "Guardtime PDF Verification Tool v.0.3.3";
 
 	/**
 	 * Usage message for the CLI.
@@ -52,22 +52,22 @@ public abstract class PdfVerifier {
 			"\t-p - location of the control publications (Integrity Codes)\n" +
 			"\t     default is " + ServiceConfiguration.DEFAULT_PUBLICATIONS + "\n" +
 			"\t-f - name of the file to be verified\n" +
-			"\t     all GuardTime signatures in the file will be verified\n" +
+			"\t     all Guardtime signatures in the file will be verified\n" +
 			"\t-j - verification result will be printed in JSON\n" +
-			"\t     only the last GuardTime signature will be verified in JSON mode\n" +
+			"\t     only the last Guardtime signature will be verified in JSON mode\n" +
 			"\t-L - display license information and acknowledgements\n" +
 			"The command line is scanned left to right\n" +
 			"Each option takes effect as it is encountered\n" +
 			"All options can be repeated as many times as desired\n" +
 			"A simple GUI will be launched when no command line is given\n" +
-			"The GUI only verifies the last GuardTime signature in the file";
+			"The GUI only verifies the last Guardtime signature in the file";
 
 	/**
 	 * License and acknowledgments message.
 	 */
 	private static final String LICENSE = TITLE + "\n\n" +
-			"Copyright 2008-2011 GuardTime AS\n" +
-			"Licensed under the GuardTime Tools End User Licensing Agreement\n" +
+			"Copyright 2008-2013 Guardtime AS\n" +
+			"Licensed under the Guardtime Tools End User Licensing Agreement\n" +
 			"\thttp://www.guardtime.com/eula\n\n" +
 			"Includes software developed by the Legion of the Bouncy Castle\n" +
 			"\thttp://www.bouncycastle.org/\n\n" +
@@ -175,7 +175,7 @@ public abstract class PdfVerifier {
 					System.err.println("-x must be followed by service URL");
 				}
 			} else if ("-j".equals(args[i])) {
-						json = true;
+				json = true;
 			} else if ("-p".equals(args[i])) {
 				if (++i < args.length) {
 					try {
@@ -207,7 +207,7 @@ public abstract class PdfVerifier {
 	private static String verifyTimestamp(SignedPDF doc, SignedPDF.SignatureInfo si)
 	throws Exception {
 		if (si == null) {
-			return "\n\tNOT verified: no GuardTime signatures in the document";
+			return "\n\tNOT verified: no Guardtime signatures in the document";
 		}
 		StringBuffer res = new StringBuffer();
 		VerificationResult ver = doc.verifyTimestamp(si, svc);
@@ -257,7 +257,7 @@ public abstract class PdfVerifier {
 	private static String verifyTimestampJSON(SignedPDF doc, SignedPDF.SignatureInfo si)
 	throws Exception {
 		if (si == null) {
-			return "{\n  \"invalid\" : {\n    \"reason\": \"no GuardTime signatures in the document\"\n  }\n}\n";
+			return "{\n  \"invalid\" : {\n    \"reason\": \"no Guardtime signatures in the document\"\n  }\n}\n";
 		}
 		StringBuffer res = new StringBuffer();
                 boolean extended = si.getTimestamp().isExtended();

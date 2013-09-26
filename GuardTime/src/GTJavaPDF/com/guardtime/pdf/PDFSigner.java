@@ -1,10 +1,10 @@
 /*
- * $Id: PDFSigner.java 264 2012-06-12 08:19:37Z ahto.truu $
+ * $Id: PDFSigner.java 301 2013-09-19 13:00:29Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import com.guardtime.format.FormatException;
 import com.guardtime.transport.SimpleHttpStamper;
@@ -37,6 +38,7 @@ import com.guardtime.tsp.GTTimestamp;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.AcroFields;
 import com.lowagie.text.pdf.PdfDictionary;
 import com.lowagie.text.pdf.PdfImportedPage;
 import com.lowagie.text.pdf.PdfName;
@@ -63,7 +65,7 @@ public class PDFSigner {
 	private static final String TS_FT = "DocTimeStamp";
 
 	/**
-	 * The name of the preferred handler for GuardTime time-stamps, as defined
+	 * The name of the preferred handler for Guardtime time-stamps, as defined
 	 * in the PDF specification (ISO 32000-1:2008, Section 12.8), and registered
 	 * in the PDF Name Registry maintained by Adobe.
 	 */
@@ -98,7 +100,7 @@ public class PDFSigner {
 	 * IText {@code PdfStamper} used for PDF modifications.
 	 */
 	private PdfStamper stamper;
-		
+
 	/**
 	 * State of the PDFSigner.
 	 * <p>
@@ -110,10 +112,10 @@ public class PDFSigner {
 
 	/**
 	 * Creates a new PDF Signer.
-	 * 
+	 *
 	 * @param file
 	 *            the file to be updated in place.
-	 * 
+	 *
 	 * @throws IOException
 	 *             when there are errors reading or writing the file or parsing
 	 *             the document.
@@ -131,12 +133,12 @@ public class PDFSigner {
 	 * <p>
 	 * The files {@code in} and {@code out} may be the same file; {@code out}
 	 * will not be written to before {@code in} has been read completely.
-	 * 
+	 *
 	 * @param in
 	 *            the file to read the original document from.
 	 * @param out
 	 *            the file to write the signed result to.
-	 * 
+	 *
 	 * @throws IOException
 	 *             when there are errors reading or writing the files or parsing
 	 *             the document.
@@ -151,12 +153,12 @@ public class PDFSigner {
 
 	/**
 	 * Creates a new PDF Signer.
-	 * 
+	 *
 	 * @param in
 	 *            the stream to read the original document from.
 	 * @param out
 	 *            the stream to write the signed result to.
-	 * 
+	 *
 	 * @throws IOException
 	 *             when there are errors reading or writing the streams or
 	 *             parsing the document.
@@ -180,12 +182,12 @@ public class PDFSigner {
 
 	/**
 	 * Adds a document level attachment to the original PDF.
-	 * 
+	 *
 	 * @param description
 	 *            file description.
 	 * @param file
 	 *            attachment.
-	 * 
+	 *
 	 * @throws IOException
 	 *             when there are errors reading the file or updating the PDF
 	 *             document.
@@ -198,14 +200,14 @@ public class PDFSigner {
 
 	/**
 	 * Adds a document level attachment to the original PDF.
-	 * 
+	 *
 	 * @param description
 	 *            file description.
 	 * @param filename
 	 *            file name displayed in Reader.
 	 * @param fileData
 	 *            file data.
-	 * 
+	 *
 	 * @throws IOException
 	 *             when there are errors updating the PDF document.
 	 */
@@ -218,13 +220,13 @@ public class PDFSigner {
 	/**
 	 * Adds default Collection element to the PDF thus turning the PDF into a
 	 * PDF Collection.
-	 * 
+	 *
 	 * @throws IOException
 	 *             when there are errors updating the PDF document.
 	 */
 	public void makeCollection()
 	throws IOException {
-		checkOpen();		
+		checkOpen();
 		PdfCollection collection = new PdfCollection(PdfCollection.TILE);
 		stamper.makePackage(collection);
 	}
@@ -240,26 +242,41 @@ public class PDFSigner {
 	}
 
 	/**
-	 * Adds a GuardTime signature to the document and writes the result. After
+	 * Removes all existing signatures from the document.
+	 */
+	public void removeSignatures() {
+		checkOpen();
+
+		AcroFields fields = stamper.getAcroFields();
+		for (Iterator iter = fields.getFields().keySet().iterator(); iter.hasNext(); ) {
+			String field = (String) iter.next();
+			if (fields.getFieldType(field) == AcroFields.FIELD_TYPE_SIGNATURE) {
+				fields.removeField(field);
+			}
+		}
+	}
+
+	/**
+	 * Adds a Guardtime signature to the document and writes the result. After
 	 * signing this object is considered closed and any successive method calls
 	 * will throw {@code IllegalStateException}.
-	 * 
+	 *
 	 * @param svc
-	 *            the configuration for accessing GuardTime service.
+	 *            the configuration for accessing Guardtime service.
 	 * @param seal
 	 *            the visual "seal" image to add to the document; an invisible
 	 *            time-stamp will be added if this is {@code null}.
 	 * @param name
 	 *            the "signer name" to add to the document metadata; the default
 	 *            from TS_NAME will be used if this is {@code null}.
-	 * 
+	 *
 	 * @throws IOException
 	 *             when there are errors parsing the document.
 	 * @throws DocumentException
 	 *             when there are errors creating the signature structures in
 	 *             the document.
 	 * @throws GTException
-	 *             when there are errors accessing the GuardTime service.
+	 *             when there are errors accessing the Guardtime service.
 	 * @throws FormatException
 	 *             when there are errors parsing the signatures embedded in the
 	 *             document.
@@ -267,7 +284,7 @@ public class PDFSigner {
 	public void sign(ServiceConfiguration svc, SealConfiguration seal, String name)
 	throws DocumentException, MalformedURLException, IOException, GTException {
 		checkOpen();
-		
+
 		PdfSignatureAppearance sap = stamper.getSignatureAppearance();
 
 		// if a "seal" image is given, add it to the document
@@ -414,7 +431,7 @@ public class PDFSigner {
 		PdfDictionary dic2 = new PdfDictionary();
 		dic2.put(PdfName.CONTENTS, new PdfString(tsb).setHexWriting(true));
 		sap.close(dic2);
-				
+
 		isOpen = false;
 	}
 

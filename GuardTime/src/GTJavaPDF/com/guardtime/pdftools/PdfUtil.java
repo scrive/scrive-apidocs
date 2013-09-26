@@ -1,10 +1,10 @@
 /*
- * $Id: PdfUtil.java 244 2012-02-09 12:11:30Z ahto.truu $
+ * $Id: PdfUtil.java 301 2013-09-19 13:00:29Z ahto.truu $
  *
- * Copyright 2008-2011 GuardTime AS
+ * Copyright 2008-2013 Guardtime AS
  *
- * This file is part of the GuardTime PDF Toolkit, an addendum
- * to the GuardTime Client SDK for Java.
+ * This file is part of the Guardtime PDF Toolkit, an addendum
+ * to the Guardtime Client SDK for Java.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ public abstract class PdfUtil {
 	}
 
 	/**
-	 * Formats a GuardTime Gateway identifier.
+	 * Formats a Guardtime Gateway identifier.
 	 * 
 	 * @param gwid
 	 *            the identifier to format.

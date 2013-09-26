@@ -32,7 +32,9 @@
     width: 918px;
 
     h1 {
-        color: @text-very-dark;
+        // Keep this consistent with the outside of the system.
+        color: #4A4949;
+        font-size: 42px;
         font-weight: 400;
         padding-top: 30px;
         padding-bottom: 20px;
@@ -135,7 +137,6 @@ section.pricing-cases header {
 .plan-container > .plan.active {
   width: 912px;
   z-index: 100;
-  border-color: @blue-dark;
 }
 .plan-container > .plan form {
     
@@ -181,10 +182,10 @@ section.pricing-cases header {
 }
 .plan-container > .plan .features div.cost .price {
   display: block;
-  font-size: 2.5em;
+  font-size: 32px;
   color: @text-dark;
   line-height: 1.5em;
-  font-weight: bold;
+  font-weight: 400;
 }
 .plan-container > .plan .features div.action {
   padding: 2em 3em;
@@ -410,7 +411,7 @@ section.pricing-cases header {
     div.subscription {
 
         font-size: 18px;
-        color: @blue-medium;
+        color: @text-dark;
         .name {
             display: none;
         }
@@ -426,7 +427,7 @@ section.pricing-cases header {
             width: 220px;
             padding: 0;
 
-            color: @red;
+            color: @text-dark;
             div {
                 display: inline-block;
                 margin: 0 0 0 8px;
@@ -443,7 +444,7 @@ section.pricing-cases header {
 
     div.vat.applicable {
         width: 320px;
-        color: @blue-medium;
+        color: @text-dark;
         margin: auto;
         .title {
             display: inline-block;
@@ -453,14 +454,16 @@ section.pricing-cases header {
             display: inline-block;
             text-align: right;
             width: 220px;
-            color: @red;
+            color: @text-dark;
         }
     }
 
     div.due_now {
         width: 320px;
-        border-top: 1px solid @blue-border;
-        color: @blue-medium;
+        border-top: 1px solid @dark-border;
+        color: @text-dark;
+        font-size: 18px;
+        line-height: 22px;
         margin: 8px auto;
         .title {
             display: inline-block;
@@ -471,8 +474,8 @@ section.pricing-cases header {
             padding: 0 0 0 0;
             text-align:right;
             display: inline-block;
-            color: @red;
-            font-weight: bold;
+            color: @green;
+            font-weight: 600;
         }
     }
 

@@ -161,6 +161,7 @@ data DocumentFilter
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter MinutesTime -- ^ That were modified after given time
   | DocumentFilterByLatestSignTimeBefore MinutesTime  -- ^ With latest sign time before given time
+  | DocumentFilterByLatestSignTimeAfter MinutesTime   -- ^ With latest sign time after given time
   deriving Show
 
 -- | Document security domain.
@@ -342,8 +343,9 @@ documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
             <+> ">=" <?> mtime)
 
 documentFilterToSQL (DocumentFilterByLatestSignTimeBefore time) = do
-  sqlWhere ("(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
-            <+> "<" <?> time)
+  sqlWhere $ documentLatestSignTimeExpression <+> "<" <?> time
+documentFilterToSQL (DocumentFilterByLatestSignTimeAfter time) = do
+  sqlWhere $ documentLatestSignTimeExpression <+> ">" <?> time
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
   sqlWhere $ raw $ unsafeFromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
@@ -557,6 +559,9 @@ fetchDocuments = kFold decoder []
        , documentobjectversion = objectversion
        , documentsealstatus = seal_status
        } : acc
+
+documentLatestSignTimeExpression :: SQL
+documentLatestSignTimeExpression = "(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
 
 documentStatusClassExpression :: SQL
 documentStatusClassExpression =
