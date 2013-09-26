@@ -217,7 +217,7 @@ testSealMissingSignatures = do
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  randomUpdate $ \t -> AttachSealedFile (documentid doc) (fileid file) Missing (systemActor t)
+  randomUpdate $ \t -> AttachSealedFile (documentid doc) file Missing (systemActor t)
   runScheduler $ sealMissingSignaturesNewerThan Nothing
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   case documentsealstatus doc' of
