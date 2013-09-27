@@ -140,11 +140,12 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       cssClass: 'grey',
       title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
-      onRender: function() {document.takeSigningScreenshot(function() {
-        self.screenshotDone = true;
-      });},
+      onRender: function() {
+        document.takeSigningScreenshot(function() {
+          self.screenshotDone = true;
+        });},
       rejectText: localization.cancel,
-      width: signatory.elegAuthentication() ? 800 : 520,
+      width: signatory.elegAuthentication() ? (800) : (BrowserInfo.isSmallScreen() ? 650 : 520),
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
       textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
       content: this.createContentElems
@@ -186,11 +187,23 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         'margin-top': '40px',
         'line-height': '105px',
         'padding-bottom': '55px',
-        'padding-top': '50px'
+        'padding-top': '50px',
+        'float': 'none',
+        'display': 'block',
+        'margin': '0px auto',
+        'margin-bottom': '20px',
+        'margin-top': '10px'
       });
 
-      $('.modal-container').append(signButton);
-      $('.modal-container').append(close);
+      $('.modal-container .modal-body').css({'padding-bottom': '20px'});
+
+      $('.modal-container').css({'border-bottom': '0px',
+                                'margin': '0px auto',
+                                'position': 'relative',
+                                'margin-top': '150px'});
+
+      $('.modal-container .modal-body').append(signButton);
+      // $('.modal-container').append(close);
     }
   }
 });
