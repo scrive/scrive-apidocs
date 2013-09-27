@@ -11,7 +11,7 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         signviewlogo: new CompanyBrandingLogo({
           customised: companyui.signviewlogo().trim() != '',
           logo: companyui.signviewlogo(),
-          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo_email.png",
+          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo.png",
           label: localization.companyBranding.customiseLogo,
           url: ''
         }),
@@ -28,13 +28,13 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         }),
         signviewbarscolour: new CompanyBrandingColour({
           customised: companyui.signviewbarscolour().trim() != '',
-          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#FFFFFF",
+          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#495259",
           colour: companyui.signviewbarscolour(),
           label: localization.companyBranding.barsColour
         }),
         signviewbarstextcolour: new CompanyBrandingColour({
           customised: companyui.signviewbarstextcolour().trim() != '',
-          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#333333",
+          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#d9d9d9",
           colour: companyui.signviewbarstextcolour(),
           label: localization.companyBranding.barsTextColour
         }),
