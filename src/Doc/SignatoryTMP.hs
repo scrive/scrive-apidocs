@@ -44,6 +44,7 @@ import Doc.DocStateData
 import Doc.DocUtils
 --import Data.Foldable hiding (concat, elem)
 import Data.Maybe
+import Control.Monad
 import Utils.Monoid
 import Utils.Prelude
 import Text.JSON.FromJSValue
@@ -245,18 +246,79 @@ instance FromJSValue SignatoryTMP where
                   })
           _ -> return Nothing
 
+
+
+instance FromJSValueWithUpdate Signatory where
+    fromJSValueWithUpdate msf = do
+        mid'    <- fromJSValueField "id"
+        author <- fromJSValueField "author"
+        signs  <- fromJSValueField "signs"
+        mfields <- fromJSValueWithUpdate (signatoryfields <$> signatorydetails <$>) "fields"
+        signorder <- fromJSValueField "signorder"
+        attachments <- fromMaybe [] <$> fromJSValueField "attachments"
+        csv <- fromJSValueField "csv"
+        sredirecturl <- fromJSValueField "signsuccessredirect"
+        authentication' <-  fromJSValueField "authentication"
+        delivery' <-  fromJSValueField "delivery"
+        case (mfields) of
+          (Just fields) ->
+            return $ Just $
+                (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
+                (makeAuthor  <| joinB author |> id) $
+                (makePartner <| joinB signs  |> id) $
+                (setCSV $ csv) $
+                (setSignredirecturl $ sredirecturl) $
+                (map replaceField fields) $^^
+                (map addAttachment attachments) $^^
+                (defaultValue {
+                    mid = maybeRead =<< mid'
+                  , details = SignatoryDetails {
+                      signatorysignorder = updateWithDefaultAndField SignOrder 1
+                    , signatoryfields   = []
+                    , signatoryispartner = False
+                    , signatoryisauthor = False
+                    }
+                  , attachments = []
+                  , csvupload = Nothing
+                  , signredirecturl = Nothing
+                  , authentication = fromMaybe StandardAuthentication authentication'
+                  , delivery = fromMaybe EmailDelivery delivery'
+                  })
+          _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (Signatory -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+
+
+
+
+
 instance FromJSValue SignatoryField where
-    fromJSValue = do
-        ftype <- fromJSValue -- We read field type at this from two different fields, so we can't use fromJSValueField
+    fromJSValue = fromJSValueWithUpdate Nothing
+
+
+instance FromJSValueWithUpdate SignatoryField where
+    fromJSValueWithUpdate msf =  do
+        ftype <- fromJSValue
         value  <- fromJSValueField "value"
-        obligatory <- fromMaybe True <$> fromJSValueField "obligatory"
-        filledbysender <- fromMaybe False <$> fromJSValueField "shouldbefilledbysender"
-        placements <- fromMaybe [] <$> fromJSValueField "placements"
+        obligatory <- updateWithDefaultAndField True sfObligatory <$> fromJSValueField "obligatory"
+        filledbysender <- updateWithDefaultAndField False sfObligatory <$> fromJSValueField "shouldbefilledbysender"
+        placements <- updateWithDefaultAndField [] sfPlacements <$> fromJSValueField "placements"
         case (ftype,value) of
           (Just ft, Just v) -> do
               return $ Just $ SignatoryField ft (v <| ft /= EmailFT|> strip v) obligatory filledbysender placements
           _ -> return Nothing
+      where
+       updateWithDefaultAndField :: a -> (SignatoryField -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
 
+
+
+-- | Structures that can be matched with JSValue
+instance MatchWithJSValue SignatoryField where
+    matchesWithJSValue sf = do
+      ftype <- fromJSValue
+      return (ftype ==  Just(sfType sf))
 
 instance FromJSValue SignatoryAttachment where
     fromJSValue = do
