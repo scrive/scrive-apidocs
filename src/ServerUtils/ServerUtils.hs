@@ -102,7 +102,7 @@ handleTextToImage = do
     case mfcontent of
          Just fcontent -> if base64
                              then ok $ toResponseBS (BSUTF8.fromString "text/plain") $ BSL.fromChunks [BSUTF8.fromString "data:image/png;base64,", B64.encode $ concatChunks fcontent]
-                             else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "img/png") $ fcontent
+                             else ok $ setHeaderBS "Cache-Control" "max-age=60" $ toResponseBS (BSUTF8.fromString "image/png") $ fcontent
          Nothing -> internalError
 
 -- Point scale - some heuristic for pointsize, based on size of image, type of font and lenght of text.
