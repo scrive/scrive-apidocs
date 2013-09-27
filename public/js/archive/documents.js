@@ -25,6 +25,9 @@ window.DocumentCellsDefinition = function(archive) { return  [
                          else return $("<div/>");
         }}),
         new Cell({width:"5px" }),
+        new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
+        new Cell({width:"5px" }),
+        new Cell({name: localization.archive.documents.columns.party, width:"210px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({name: localization.archive.documents.columns.title, width:"230px", substyle: "", field:"id",special: "rendered",
                  rendering: function(value,idx,listobject) {
                     if (idx == undefined)
@@ -72,10 +75,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                         return actionIcon;
                      }
 
-                 }}),
-        new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
-        new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.party, width:"210px", field:"party", special: "expandable", subfield : "name"})
+                 }})
         ];
 };
 
