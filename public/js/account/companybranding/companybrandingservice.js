@@ -104,7 +104,6 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header.append(this.header1).append(this.header6).append(this.header5).append(this.header4).append(this.header3).append(this.header2).append($('<div style="clear:both;"/>'));
     this.header.append("<style>"
                           + ".sample-custom-view-header .hoverable {display:block;margin-top:-30px;padding-top:30px; padding-left:8px;padding-right:8px;}"
-                          + ".sample-custom-view-header .hoverable:hover {color: }"
                         +"</style>");
 
     this.stylepeace = $("<style></style>");

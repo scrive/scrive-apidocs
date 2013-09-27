@@ -2244,7 +2244,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsForSigning () w
                    sqlWhereAny $ do
                        sqlWhereAll $ do
                          sqlWhereEq "value" (""::String)
-                         sqlWhereIn "type" [CustomFT undefined undefined, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT]
+                         sqlWhereIn "type" [CustomFT undefined undefined, FirstNameFT,LastNameFT,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
                        sqlWhereIn "type" [CheckboxFT undefined,SignatureFT undefined]
                    sqlWhereExists $ sqlSelect "documents" $ do
                      sqlWhere "signatory_links.id = signatory_link_id"

@@ -178,7 +178,7 @@ $endif$
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api"> $_pageFooterAPI()$</a></li>
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs"> $_pageFooterWork()$</a></li>
           <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
-
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a></li>
         </ul>
       </div>
     </nav>
@@ -352,9 +352,6 @@ $endif$
       </li>
       <li class="float-right" >
           <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a>
-      </li>
-      <li class="float-right" >
-          <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a>
       </li>
       <li class="float-right" >
           <a class="page"  href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a>

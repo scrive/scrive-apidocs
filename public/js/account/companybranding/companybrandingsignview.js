@@ -11,7 +11,7 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         signviewlogo: new CompanyBrandingLogo({
           customised: companyui.signviewlogo().trim() != '',
           logo: companyui.signviewlogo(),
-          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo_email.png",
+          defaultlogo : companyui.domaincustomlogo()!= "" ? companyui.domaincustomlogo() : "/img/logo.png",
           label: localization.companyBranding.customiseLogo,
           url: ''
         }),
@@ -28,13 +28,13 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         }),
         signviewbarscolour: new CompanyBrandingColour({
           customised: companyui.signviewbarscolour().trim() != '',
-          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#FFFFFF",
+          defaultcolour: companyui.domainbarscolour() != "" ? companyui.domainbarscolour() : "#495259",
           colour: companyui.signviewbarscolour(),
           label: localization.companyBranding.barsColour
         }),
         signviewbarstextcolour: new CompanyBrandingColour({
           customised: companyui.signviewbarstextcolour().trim() != '',
-          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#333333",
+          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#d9d9d9",
           colour: companyui.signviewbarstextcolour(),
           label: localization.companyBranding.barsTextColour
         }),
@@ -97,7 +97,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
                         .css("width","480px");
 
     var document = $("<div/>").css("border", "1px dashed #cccccc")
-      .css("padding", "10px").css("text-align","center");
+      .css("padding", "10px").css("text-align","center").css("background", "#e9e9e9");
     document.append(this.contentheader);
     document.append(documentpic);
     var rejectbuttoncontainer = $('<div style="float: left;padding:10px;"/>');
@@ -120,7 +120,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     buttonsdiv.append(rejectbuttoncontainer).append(signbuttoncontainer);
     var contentcontent = $('<div/>').css("width","500px").css("margin","auto")
       .css("padding-bottom", "10px").css("padding-top", "15px");
-    
+
     document.append(buttonsdiv);
     contentcontent.append(document);
     this.content = $('<div style="padding-bottom:20px;"/>');

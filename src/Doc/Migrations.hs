@@ -1004,8 +1004,8 @@ migrateSeparateDeliveryStatuses =
       mgrTable = tableSignatoryLinks
     , mgrFrom = 21
     , mgrDo = do
-       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN mail_invitation_delivery_status SMALLINT NULL DEFAULT 3"
-       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sms_invitation_delivery_status  SMALLINT NULL DEFAULT 3"
+       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN mail_invitation_delivery_status SMALLINT NOT NULL DEFAULT 3"
+       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sms_invitation_delivery_status  SMALLINT NOT NULL DEFAULT 3"
        _ <- kRunRaw $ "UPDATE signatory_links "
              <> "      SET mail_invitation_delivery_status = invitation_delivery_status "
              <> "      WHERE delivery_method = 1 OR delivery_method = 5"
