@@ -10,7 +10,7 @@ import Control.Monad.Trans.Maybe
 import Doc.SignatoryTMP
 import Doc.DocStateData
 import Utils.Monad
-import Utils.Prelude
+--import Utils.Prelude
 import Data.Maybe
 import Kontra
 import Util.SignatoryLinkUtils
@@ -29,6 +29,7 @@ import Control.Monad
 import InputValidation
 import Doc.SignatoryLinkID
 import Data.Functor
+import Utils.Default
 
 data DraftData = DraftData {
       title :: String
@@ -60,6 +61,8 @@ instance FromJSValue Lang where
       Just "gb"    -> Just LANG_EN
       _            -> Nothing
 
+
+{-
 instance FromJSValue DraftData where
    fromJSValue = do
         title' <- fromJSValueField "title"
@@ -92,8 +95,46 @@ instance FromJSValue DraftData where
                                     , authorattachments = authorattachments'
                                  }
             _ -> return Nothing
+            -}
 
-applyDraftDataToDocument :: Kontrakcja m =>  Document -> DraftData -> Actor -> m (Either String Document)
+
+instance FromJSValueWithUpdate Document where
+    fromJSValueWithUpdate mdoc = do
+        title' <- fromJSValueField "title"
+        invitationmessage <-  fromJSValueField "invitationmessage"
+        daystosign' <- fromJSValueField "daystosign"
+        authentication' <-  fromJSValueField "authentication"
+        delivery' <-  fromJSValueField "delivery"
+        signatories' <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
+        lang' <- fromJSValueField "lang"
+        type' <- fmap (\t -> if t then Template else Signable) <$> fromJSValueField "template"
+        tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
+        apicallbackurl' <- fromJSValueField "apicallbackurl"
+        authorattachments' <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
+        return $ Just defaultValue {
+            documenttitle = updateWithDefaultAndField "" documenttitle title',
+            documentlang  = updateWithDefaultAndField LANG_SV documentlang lang',
+            documentinvitetext = updateWithDefaultAndField "" documentinvitetext invitationmessage,
+            documentdaystosign   = min 90 $ min 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign',
+            documentsignatorylinks = mapAuth authentication' $ mapDL delivery' $ updateWithDefaultAndField [] documentsignatorylinks signatories',
+            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments'),
+            documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags'),
+            documenttype = updateWithDefaultAndField Signable documenttype type',
+            documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl'
+          }
+      where
+       updateWithDefaultAndField :: a -> (Document -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf mdoc))
+       mapDL :: Maybe DeliveryMethod -> [SignatoryLink] -> [SignatoryLink]
+       mapDL Nothing sls = sls
+       mapDL (Just dl) sls = map (\sl -> sl {signatorylinkdeliverymethod = dl}) sls
+       mapAuth :: Maybe AuthenticationMethod -> [SignatoryLink] -> [SignatoryLink]
+       mapAuth Nothing sls = sls
+       mapAuth (Just au) sls = map (\sl -> sl {signatorylinkauthenticationmethod = au}) sls
+
+
+
+applyDraftDataToDocument :: Kontrakcja m =>  Document -> Document -> Actor -> m (Either String Document)
 applyDraftDataToDocument doc draft actor = do
     if (documentstatus doc /= Preparation)
      then do
@@ -101,21 +142,18 @@ applyDraftDataToDocument doc draft actor = do
        return $ Left $ "applyDraftDataToDocument failed"
      else do
       _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
-                                    documenttitle = title draft
-                                  , documentinvitetext = case (invitationmessage draft) of
-                                                              Nothing -> documentinvitetext doc
-                                                              Just s -> fromMaybe "" (resultToMaybe $ asValidInviteText s)
-                                  , documentdaystosign = daystosign draft
-                                  , documentlang = fromMaybe (documentlang doc) (lang draft)
-                                  , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
-                                  , documentapicallbackurl = (apicallbackurl draft)
+                                    documenttitle = documenttitle draft
+                                  , documentinvitetext = documentinvitetext draft
+                                  , documentdaystosign = documentdaystosign draft
+                                  , documentlang = documentlang draft
+                                  , documenttags = documenttags draft
+                                  , documentapicallbackurl = documentapicallbackurl draft
                               }) actor
-      when_ (template draft && (not $ isTemplate doc)) $ do
+      when_ (isTemplate draft && (not $ isTemplate doc)) $ do
            dbUpdate $ TemplateFromDocument (documentid doc) actor
-      when_ (isJust $ authorattachments draft) $ do
-           forM_ (documentauthorattachments doc) $ \att -> do
-              when_ (not $ (authorattachmentfile att) `elem` (fromJust $ authorattachments draft)) $ do
-                dbUpdate $ RemoveDocumentAttachment (documentid doc) (authorattachmentfile att) actor
+      forM_ (documentauthorattachments doc) $ \att -> do
+              when_ (not $ att `elem` (documentauthorattachments draft)) $ do
+                dbUpdate $ RemoveDocumentAttachment (documentid doc) att actor
 
       case (mergeSignatories draft (documentsignatorylinks doc) (sort $ signatories draft)) of
            Nothing   -> return $ Left "Problem with author details while sending draft"
@@ -164,20 +202,28 @@ mergeSignatories docdraft sigs tmps =
 
 
 
-draftIsChangingDocument :: DraftData -> Document -> Bool
-draftIsChangingDocument DraftData{..} doc@Document{..}  =
-        (title /= documenttitle)
-     || ((isJust invitationmessage) && (fromJust invitationmessage) /= documentinvitetext)
-     || ((isJust lang) && (fromJust lang) /= documentlang)
-     || ((isJust tags) && (Set.fromList $ fromJust tags) /= documenttags)
-     || (apicallbackurl /= documentapicallbackurl)
-     || (template /= isTemplate doc)
-     || (daystosign /= documentdaystosign)
-     || (isJust authentication && all ((/=) (fromJust authentication)) (fmap signatorylinkauthenticationmethod documentsignatorylinks))
-     || (isJust delivery && all ((/=) (fromJust delivery)) (fmap signatorylinkdeliverymethod documentsignatorylinks))
-     || (draftIsChangingDocumentSignatories signatories documentsignatorylinks)
+draftIsChangingDocument :: Document -> Document -> Bool
+draftIsChangingDocument draft doc =
+        (documenttitle draft /= documenttitle doc)
+     || (documentinvitetext draft /= documentinvitetext doc)
+     || (documentlang draft /= documentlang doc)
+     || (documenttags draft /= documenttags doc)
+     || (documentapicallbackurl draft /= documentapicallbackurl doc)
+     || (isTemplate draft /= isTemplate doc)
+     || (documentdaystosign draft /= documentdaystosign draf)
+     || (draftIsChangingDocumentSignatories (documentsignatorylinks draf) (documentsignatorylinks doc))
 
-draftIsChangingDocumentSignatories :: [SignatoryTMP] -> [SignatoryLink] -> Bool
-draftIsChangingDocumentSignatories (stmp:stmps) (sl:sls) = (signatoryTMPIsChangingSignatoryLink stmp sl) || (draftIsChangingDocumentSignatories stmps sls)
+draftIsChangingDocumentSignatories :: [SignatoryLink] -> [SignatoryLink] -> Bool
+draftIsChangingDocumentSignatories (sl':sls') (sl:sls) = (newSignatorySignatoryLinkIsChangingSignatoryLink sl' sl) || (draftIsChangingDocumentSignatories sls' sls)
 draftIsChangingDocumentSignatories [] [] = False
 draftIsChangingDocumentSignatories _ _ = True
+
+
+newSignatorySignatoryLinkIsChangingSignatoryLink :: SignatoryDetails -> SignatoryLink -> Bool
+newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
+        (signatorydetails newsl /= signatorydetails sl)
+     || (signatoryattachments newsl /= signatoryattachments sl)
+     || (signatorylinkcsvupload newsl /= signatorylinkcsvupload sl)
+     || (signatorylinksignredirecturl newsl /= signatorylinksignredirecturl sl)
+     || (signatorylinkauthenticationmethod newsl /= signatorylinkauthenticationmethod sl)
+     || (signatorylinkdeliverymethod newsl /= signatorylinkdeliverymethod sl)

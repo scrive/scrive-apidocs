@@ -234,7 +234,7 @@ apiCallUpdate did = api $ do
                                                                                J.Ok js -> Just js
                                                                                _ -> Nothing
   Log.debug $ "Document " ++ show did ++ " updated with JSON:\n" ++ show (pp_value json)
-  draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValue json
+  draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValueWithUpdate doc json
   when (draftIsChangingDocument draftData doc) (checkObjectVersionIfProvided did) -- If we will change document, then we want to be sure that object version is ok.
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
   triggerAPICallbackIfThereIsOne newdocument

@@ -34,7 +34,6 @@ module Doc.SignatoryTMP (
     , isAuthorTMP
     , isSignatoryTMP
     , getAttachments
-    , signatoryTMPIsChangingSignatoryLink
 ) where
 
 import Control.Logic
@@ -51,6 +50,7 @@ import Text.JSON.FromJSValue
 import Control.Applicative
 import Data.String.Utils
 import Doc.SignatoryLinkID
+import Utils.Default
 
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
@@ -247,47 +247,41 @@ instance FromJSValue SignatoryTMP where
           _ -> return Nothing
 
 
+instance MatchWithJSValue SignatoryLink where
+    matchesWithJSValue s = do
+      mid    <- fromJSValueField "id"
+      return (Just (signatorylinkid s) == (maybeRead =<< mid))
 
-instance FromJSValueWithUpdate Signatory where
-    fromJSValueWithUpdate msf = do
-        mid'    <- fromJSValueField "id"
+instance FromJSValueWithUpdate SignatoryLink where
+    fromJSValueWithUpdate ms = do
         author <- fromJSValueField "author"
         signs  <- fromJSValueField "signs"
-        mfields <- fromJSValueWithUpdate (signatoryfields <$> signatorydetails <$>) "fields"
+        mfields <- fromJSValueFieldCustom "fields" (fromJSValueManyWithUpdate $ fromMaybe [] (signatoryfields <$> signatorydetails <$> ms))
         signorder <- fromJSValueField "signorder"
-        attachments <- fromMaybe [] <$> fromJSValueField "attachments"
+        attachments <- fromJSValueField "attachments"
         csv <- fromJSValueField "csv"
         sredirecturl <- fromJSValueField "signsuccessredirect"
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         case (mfields) of
-          (Just fields) ->
-            return $ Just $
-                (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
-                (makeAuthor  <| joinB author |> id) $
-                (makePartner <| joinB signs  |> id) $
-                (setCSV $ csv) $
-                (setSignredirecturl $ sredirecturl) $
-                (map replaceField fields) $^^
-                (map addAttachment attachments) $^^
-                (defaultValue {
-                    mid = maybeRead =<< mid'
-                  , details = SignatoryDetails {
-                      signatorysignorder = updateWithDefaultAndField SignOrder 1
-                    , signatoryfields   = []
-                    , signatoryispartner = False
-                    , signatoryisauthor = False
-                    }
-                  , attachments = []
-                  , csvupload = Nothing
-                  , signredirecturl = Nothing
-                  , authentication = fromMaybe StandardAuthentication authentication'
-                  , delivery = fromMaybe EmailDelivery delivery'
-                  })
-          _ -> return Nothing
+             (Just fields) -> return $ Just $ defaultValue {
+                    signatorylinkid            = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
+                  , signatorydetails           = defaultValue {
+                        signatorysignorder     = updateWithDefaultAndField (SignOrder 1) (signatorysignorder . signatorydetails) (SignOrder <$> signorder)
+                      , signatoryfields        = fields
+                      , signatoryisauthor      = updateWithDefaultAndField False (signatoryisauthor . signatorydetails) author
+                      , signatoryispartner     = updateWithDefaultAndField False (signatoryispartner . signatorydetails) signs
+                                                 }
+                  , signatorylinkcsvupload       = updateWithDefaultAndField Nothing signatorylinkcsvupload csv
+                  , signatoryattachments         = updateWithDefaultAndField [] signatoryattachments attachments
+                  , signatorylinksignredirecturl = updateWithDefaultAndField Nothing signatorylinksignredirecturl sredirecturl
+                  , signatorylinkauthenticationmethod = updateWithDefaultAndField StandardAuthentication signatorylinkauthenticationmethod authentication'
+                  , signatorylinkdeliverymethod       = updateWithDefaultAndField EmailDelivery signatorylinkdeliverymethod delivery'
+                }
+             _ -> return Nothing
       where
-       updateWithDefaultAndField :: a -> (Signatory -> a) -> Maybe a -> a
-       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
+       updateWithDefaultAndField :: a -> (SignatoryLink -> a) -> Maybe a -> a
+       updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf ms))
 
 
 
@@ -313,8 +307,6 @@ instance FromJSValueWithUpdate SignatoryField where
        updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf msf))
 
 
-
--- | Structures that can be matched with JSValue
 instance MatchWithJSValue SignatoryField where
     matchesWithJSValue sf = do
       ftype <- fromJSValue
@@ -358,15 +350,3 @@ instance FromJSValue CSVUpload  where
                         , csvcontents = rs
                         }
              _ -> return Nothing
-
-
-
-signatoryTMPIsChangingSignatoryLink :: SignatoryTMP -> SignatoryLink -> Bool
-signatoryTMPIsChangingSignatoryLink SignatoryTMP{..} SignatoryLink{..} =
-        (details /= signatorydetails)
-     || (attachments /= signatoryattachments)
-     || (csvupload /= signatorylinkcsvupload)
-     || (signredirecturl /= signatorylinksignredirecturl)
-     || (rejectredirecturl /= signatorylinkrejectredirecturl)
-     || (authentication /= signatorylinkauthenticationmethod)
-     || (delivery /= signatorylinkdeliverymethod)
