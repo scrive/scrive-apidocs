@@ -645,6 +645,7 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.deleted"
   sqlResult "signatory_links.really_deleted"
   sqlResult "signatory_links.sign_redirect_url"
+  sqlResult "signatory_links.reject_redirect_url"
   sqlResult "signatory_links.rejection_time"
   sqlResult "signatory_links.rejection_reason"
   sqlResult "signatory_links.authentication_method"
@@ -677,7 +678,7 @@ fetchSignatoryLinks = do
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified signinfo_ocsp_response
      is_author is_partner csv_title csv_contents
-     deleted really_deleted signredirecturl
+     deleted really_deleted signredirecturl rejectredirecturl
      rejection_time rejection_reason
      authentication_method
      eleg_data_mismatch_message
@@ -738,6 +739,7 @@ fetchSignatoryLinks = do
           , signatoryattachments = sigAtt
           , signatorylinkstatusclass = status_class
           , signatorylinksignredirecturl = signredirecturl
+          , signatorylinkrejectredirecturl = rejectredirecturl
           , signatorylinkrejectionreason = rejection_reason
           , signatorylinkrejectiontime = rejection_time
           , signatorylinkauthenticationmethod = authentication_method
@@ -778,6 +780,7 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
            sqlSetList "signinfo_ocsp_response" $ fmap signatureinfoocspresponse <$> signatorysignatureinfo <$> links
            sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
+           sqlSetList "reject_redirect_url" $ signatorylinkrejectredirecturl <$> links
            sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
            sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
            sqlSetList "authentication_method" $ signatorylinkauthenticationmethod <$> links
@@ -2042,9 +2045,9 @@ instance (MonadDB m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories actor) =
-    update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing, StandardAuthentication, EmailDelivery)) signatories) actor)
+    update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing,Nothing, StandardAuthentication, EmailDelivery)) signatories) actor)
 
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
+data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories _actor) = do
     document <- query $ GetDocumentByDocumentID documentid
@@ -2053,11 +2056,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             kRun_ $ "DELETE FROM signatory_links WHERE document_id = " <?> documentid
 
             let mauthorsiglink = getAuthorSigLink document
-            siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl, authmethod, deliverymethod) -> do
+            siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl, mrejectredirecturl, authmethod, deliverymethod) -> do
                      magichash <- random
                      let link' = (signLinkFromDetails' details atts magichash)
                                  {  signatorylinkcsvupload = mcsvupload
                                   , signatorylinksignredirecturl= msignredirecturl
+                                  , signatorylinkrejectredirecturl = mrejectredirecturl
                                   , signatorylinkauthenticationmethod = authmethod
                                   , signatorylinkdeliverymethod = deliverymethod
                                  }
@@ -2069,7 +2073,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             _r1 <- insertSignatoryLinksAsAre documentid siglinks
 
             newdocument <- query $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,a,_,_,_) -> a) signatories)
+            let moldcvsupload = msum (map (\(_,_,a,_,_,_,_) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 
             when (moldcvsupload /= mnewcsvupload) $ do

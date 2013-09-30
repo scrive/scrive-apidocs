@@ -76,7 +76,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 22
+  , tblVersion = 23
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -121,6 +121,8 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "delivery_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "mail_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     , tblColumn { colName = "sms_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
+    , tblColumn { colName = "reject_redirect_url", colType = TextT }
+
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [

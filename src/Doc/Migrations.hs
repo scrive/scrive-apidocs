@@ -1036,3 +1036,13 @@ migrateDocumentsAddPurgedTime =
                   <+> "ADD COLUMN purged_time TIMESTAMPTZ"
        return ()
     }
+
+addRejectRedirectURL :: MonadDB m => Migration m
+addRejectRedirectURL =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 22
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN reject_redirect_url VARCHAR NULL DEFAULT NULL"
+  }
+

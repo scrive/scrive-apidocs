@@ -129,21 +129,21 @@ applyDraftDataToDocument doc draft actor = do
 mergeSignatories :: DraftData
                  -> SignatoryLink
                  -> [SignatoryTMP]
-                 -> Maybe [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)]
+                 -> Maybe [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,Maybe String, AuthenticationMethod, DeliveryMethod)]
 mergeSignatories docdraft docAuthor tmps =
         let
             (atmp, notatmps) = partition isAuthorTMP tmps
             setAuthorConstantDetails =  setFstname (getFirstName docAuthor) .
                                         setSndname (getLastName docAuthor) .
                                         setEmail   (getEmail docAuthor)
-            mapAuthenticationMethod (a,b,c,d,e,f) =
+            mapAuthenticationMethod (a,b,c,d,e,f,g) =
               case authentication docdraft of
-                Just x -> (a,b,c,d,x,f)
-                _ -> (a,b,c,d,e,f)
-            mapDeliveryMethod (a,b,c,d,e,f) =
+                Just x -> (a,b,c,d,e,x,g)
+                _ -> (a,b,c,d,e,f,g)
+            mapDeliveryMethod (a,b,c,d,e,f,g) =
               case delivery docdraft of
-                Just x -> (a,b,c,d,e,x)
-                _ -> (a,b,c,d,e,f)
+                Just x -> (a,b,c,d,e,f,x)
+                _ -> (a,b,c,d,e,f,g)
 
         in case (atmp) of
                 ([authorTMP]) -> Just $ map (mapDeliveryMethod .

@@ -153,6 +153,7 @@ kontraMigrations = [
   , removeCSVStuffFromDocuments
   , addPurgedTimeToFiles
   , migrateDocumentsAddPurgedTime
+  , addRejectRedirectURL
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

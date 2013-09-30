@@ -54,6 +54,7 @@ data SignatoryTMP = SignatoryTMP {
         attachments :: [SignatoryAttachment], -- Do not expose it as durring runtime this does not have email set
         csvupload :: Maybe CSVUpload,
         signredirecturl :: Maybe String,
+        rejectredirecturl :: Maybe String,
         authentication :: AuthenticationMethod,
         delivery :: DeliveryMethod
     } deriving (Show)
@@ -73,6 +74,7 @@ emptySignatoryTMP = SignatoryTMP {
   , attachments = []
   , csvupload = Nothing
   , signredirecturl = Nothing
+  , rejectredirecturl = Nothing
   , authentication = StandardAuthentication
   , delivery = EmailDelivery
   }
@@ -162,15 +164,20 @@ getAttachments s = attachments s
 setSignredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
 setSignredirecturl rurl s = s {signredirecturl = rurl}
 
+setRejectredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
+setRejectredirecturl rurl s = s {rejectredirecturl = rurl}
+
+
 toSignatoryDetails1 :: SignatoryTMP -> SignatoryDetails
-toSignatoryDetails1 sTMP = (\(x,_,_,_,_,_) -> x) (toSignatoryDetails2 sTMP)
+toSignatoryDetails1 sTMP = (\(x,_,_,_,_,_,_) -> x) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, AuthenticationMethod, DeliveryMethod)
+toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,Maybe String, AuthenticationMethod, DeliveryMethod)
 toSignatoryDetails2 sTMP  =
   ( details sTMP
   , attachments $ sTMP
   , csvupload $ sTMP
   , signredirecturl $ sTMP
+  , rejectredirecturl $ sTMP
   , authentication $ sTMP
   , delivery $ sTMP)
 
@@ -183,6 +190,7 @@ instance FromJSValue SignatoryTMP where
         attachments <- fromMaybe [] <$> fromJSValueField "attachments"
         csv <- fromJSValueField "csv"
         sredirecturl <- fromJSValueField "signsuccessredirect"
+        rredirecturl <- fromJSValueField "rejectredirect"
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         case (mfields) of
@@ -193,6 +201,7 @@ instance FromJSValue SignatoryTMP where
                 (makePartner <| joinB signs  |> id) $
                 (setCSV $ csv) $
                 (setSignredirecturl $ sredirecturl) $
+                (setRejectredirecturl $ rredirecturl) $
                 (map replaceField fields) $^^
                 (map addAttachment attachments) $^^
                 (emptySignatoryTMP { authentication = fromMaybe StandardAuthentication authentication'
@@ -259,5 +268,6 @@ signatoryTMPIsChangingSignatoryLink SignatoryTMP{..} SignatoryLink{..} =
      || (attachments /= signatoryattachments)
      || (csvupload /= signatorylinkcsvupload)
      || (signredirecturl /= signatorylinksignredirecturl)
+     || (rejectredirecturl /= signatorylinkrejectredirecturl)
      || (authentication /= signatorylinkauthenticationmethod)
      || (delivery /= signatorylinkdeliverymethod)
