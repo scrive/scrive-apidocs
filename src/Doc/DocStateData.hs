@@ -218,6 +218,7 @@ data SignatoryLink = SignatoryLink {
   , signatoryattachments       :: [SignatoryAttachment]
   , signatorylinkstatusclass   :: StatusClass
   , signatorylinksignredirecturl :: Maybe String
+  , signatorylinkrejectredirecturl :: Maybe String
   , signatorylinkrejectiontime   :: Maybe MinutesTime
   , signatorylinkrejectionreason :: Maybe String
   , signatorylinkauthenticationmethod   :: AuthenticationMethod
@@ -246,6 +247,7 @@ instance HasDefaultValue SignatoryLink where
                   , signatoryattachments         = []
                   , signatorylinkstatusclass     = SCDraft
                   , signatorylinksignredirecturl = Nothing
+                  , signatorylinkrejectredirecturl = Nothing
                   , signatorylinkrejectiontime   = Nothing
                   , signatorylinkrejectionreason = Nothing
                   , signatorylinkauthenticationmethod = StandardAuthentication

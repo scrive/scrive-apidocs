@@ -300,6 +300,9 @@ window.Signatory = Backbone.Model.extend({
     signsuccessredirect : function() {
           return this.get("signsuccessredirect");
     },
+    rejectredirect : function() {
+          return this.get("rejectredirect");
+    },
     makeSignatory: function() {
       var isAuthor = this.author();
       var authorNotSignsMode = this.document().authorNotSignsMode();
@@ -527,9 +530,6 @@ window.Signatory = Backbone.Model.extend({
     setCsv : function(csv) {
         this.set({"csv" : csv});
     },
-    signsuccessredirect : function() {
-        return this.get("signsuccessredirect");
-    },
     inpadqueue : function() {
        return this.get("inpadqueue");
     },
@@ -554,6 +554,7 @@ window.Signatory = Backbone.Model.extend({
               }),
               csv: this.csv(),
               signsuccessredirect : this.signsuccessredirect(),
+              rejectredirect : this.rejectredirect(),
               authentication: this.authentication(),
               delivery: this.delivery()
 

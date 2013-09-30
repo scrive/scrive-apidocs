@@ -274,7 +274,14 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                                              {'Accept' : 'reject document'},
                                                              function() {
                                                                  document.currentSignatory().reject(customtext).sendAjax(
-                                                                   function() {window.location.reload();},
+                                                                   function() {
+                                                                    if (document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
+                                                                      window.location = document.currentSignatory().rejectredirect();
+                                                                     }
+                                                                     else {
+                                                                      window.location.reload();
+                                                                     }
+                                                                  },
                                                                    rejectErrorCallback
                                                                 );
                                                              });

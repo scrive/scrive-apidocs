@@ -142,6 +142,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
+    J.value "rejectredirect" $ signatorylinkrejectredirecturl siglink
     J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink
 
     when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
