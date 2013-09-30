@@ -22,7 +22,6 @@ module User.UserControl(
   , handlePasswordReminderGet
   , handlePasswordReminderPost
   , handleContactUs
-  , getUsersAndStatsInv
   , getDaysStats   -- Exported for admin section
   , getMonthsStats -- Exported for admin section
 ) where
@@ -261,8 +260,6 @@ createNewUserByAdmin email names custommessage companyandrole lang = do
     case muser of
          Just user -> do
              let fullname = composeFullName names
-             now <- getMinutesTime
-             _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newUserAccountRequestLink (ctxlang ctx) (userid user) ByAdmin
              mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
@@ -486,17 +483,3 @@ handleContactUs = do
     Just partnerEmail -> sendEmailTo partnerEmail
 
   return $ LoopBack
-
--- For User Admin tab in adminonly
-getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Company, InviteType)]
-getUsersAndStatsInv filters sorting pagination = do
-  list <- dbQuery $ GetUsersAndStatsAndInviteInfo filters sorting pagination
-  return $ convert' list
-  where
-    convert' list = map (\(u,c,iv) ->
-                                   ( u
-                                   , c
-                                   , case iv of
-                                       Nothing                     -> Admin
-                                       Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
-                                   )) list

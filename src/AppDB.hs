@@ -159,7 +159,6 @@ kontraMigrations = [
 kontraTables :: [Table]
 kontraTables = [
     tableUsers
-  , tableUserInviteInfos
   , tableUsersHistory
   , tableCompanies
   , tableCompanyInvites

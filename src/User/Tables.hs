@@ -37,20 +37,3 @@ tableUsers = tblTable {
     kRunRaw "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
     kRunRaw "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
   }
-
-tableUserInviteInfos :: Table
-tableUserInviteInfos = tblTable {
-    tblName = "user_invite_infos"
-  , tblVersion = 1
-  , tblColumns = [
-      tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "inviter_id", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "invite_time", colType = TimestampWithZoneT }
-    , tblColumn { colName = "invite_type", colType = SmallIntT }
-    ]
-  , tblPrimaryKey = ["user_id"]
-  , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "inviter_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    ]
-  }
