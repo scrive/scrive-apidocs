@@ -7,245 +7,32 @@
 -}
 
 module Doc.SignatoryTMP (
-      SignatoryTMP -- do not expose attachments, there is a getter for that
-    , maybeSignatoryTMPid
-    , setSignatoryTMPid
-    , fstname
-    , setFstname
-    , sndname
-    , setSndname
-    , company
-    , setCompany
-    , personalnumber
-    , setPersonalnumber
-    , companynumber
-    , setCompanynumber
-    , email
-    , setEmail
-    , mobile
-    , setMobile
-    , makeAuthor
-    , makePartner
-    , customField
-    , setCustomField
-    , signatoryDetails
-    , setSignatoryDetails
-    , toSignatoryDetails
-    , isAuthorTMP
-    , isSignatoryTMP
-    , getAttachments
+      toSignatoryDetails
 ) where
 
 import Control.Logic
-import Util.HasSomeUserInfo
-import Util.HasSomeCompanyInfo
 import Doc.DocStateData
-import Doc.DocUtils
---import Data.Foldable hiding (concat, elem)
 import Data.Maybe
 import Control.Monad
-import Utils.Monoid
-import Utils.Prelude
 import Text.JSON.FromJSValue
 import Control.Applicative
 import Data.String.Utils
 import Doc.SignatoryLinkID
 import Utils.Default
 
--- Structure definition + pointed
-data SignatoryTMP = SignatoryTMP {
-        mid :: Maybe SignatoryLinkID,
-        details :: SignatoryDetails,
-        attachments :: [SignatoryAttachment], -- Do not expose it as durring runtime this does not have email set
-        csvupload :: Maybe CSVUpload,
-        signredirecturl :: Maybe String,
-        rejectredirecturl :: Maybe String,
-        authentication :: AuthenticationMethod,
-        delivery :: DeliveryMethod
-    } deriving (Show,Eq)
-
-
-instance Ord SignatoryTMP where
-  compare s1 s2 | isAuthorTMP s1 = LT
-                | isAuthorTMP s2 = GT
-                | mid s2 == Nothing = LT
-                | mid s1 == Nothing = GT
-                | otherwise = compare (mid s1) (mid s2)
-
-instance HasFields SignatoryTMP where
-    replaceField f s = s {details = replaceField f (details s)}
-    getAllFields = getAllFields . details
-
-emptySignatoryTMP :: SignatoryTMP
-emptySignatoryTMP = SignatoryTMP {
-    mid = Nothing,
-    details = SignatoryDetails {
-      signatorysignorder = SignOrder 1
-    , signatoryfields   = []
-    , signatoryispartner = False
-    , signatoryisauthor = False
-    }
-  , attachments = []
-  , csvupload = Nothing
-  , signredirecturl = Nothing
-  , rejectredirecturl = Nothing
-  , authentication = StandardAuthentication
-  , delivery = EmailDelivery
-  }
-
--- Basic operations
-
-liftTMP ::  (SignatoryDetails -> SignatoryDetails) -> SignatoryTMP -> SignatoryTMP
-liftTMP f s = s {details  =  f $ details s}
-
-maybeSignatoryTMPid :: SignatoryTMP -> Maybe SignatoryLinkID
-maybeSignatoryTMPid = mid
-
-setSignatoryTMPid :: SignatoryLinkID -> SignatoryTMP -> SignatoryTMP
-setSignatoryTMPid sid stmp = stmp {mid = Just sid}
-
-fstname:: SignatoryTMP -> Maybe String
-fstname = nothingIfEmpty . getFirstName . details
-
-setFstname:: String -> SignatoryTMP -> SignatoryTMP
-setFstname = replaceFieldValue FirstNameFT
-
-sndname::SignatoryTMP -> Maybe String
-sndname = nothingIfEmpty . getLastName . details
-
-setSndname:: String -> SignatoryTMP -> SignatoryTMP
-setSndname = replaceFieldValue LastNameFT
-
-company::SignatoryTMP -> Maybe String
-company = nothingIfEmpty . getCompanyName . details
-
-setCompany:: String -> SignatoryTMP -> SignatoryTMP
-setCompany = replaceFieldValue CompanyFT
-
-mobile::SignatoryTMP -> Maybe String
-mobile = nothingIfEmpty . getMobile . details
-
-setMobile:: String -> SignatoryTMP -> SignatoryTMP
-setMobile = replaceFieldValue MobileFT
-
-personalnumber::SignatoryTMP -> Maybe String
-personalnumber = nothingIfEmpty . getPersonalNumber . details
-
-setPersonalnumber:: String -> SignatoryTMP -> SignatoryTMP
-setPersonalnumber =  replaceFieldValue PersonalNumberFT
-
-companynumber::SignatoryTMP -> Maybe String
-companynumber = nothingIfEmpty . getCompanyNumber . details
-
-setCompanynumber:: String -> SignatoryTMP -> SignatoryTMP
-setCompanynumber =  replaceFieldValue CompanyNumberFT
-
-customField :: String  -> SignatoryTMP -> Maybe String
-customField name = (fmap sfValue) . (findCustomField name) . details
-
-setCustomField :: String -> String -> SignatoryTMP -> SignatoryTMP
-setCustomField name = replaceFieldValue (CustomFT name False)
-
-email::SignatoryTMP -> Maybe String
-email = nothingIfEmpty . getEmail . details
-
-setEmail:: String -> SignatoryTMP -> SignatoryTMP
-setEmail =  replaceFieldValue EmailFT
-
-setCSV :: (Maybe CSVUpload) -> SignatoryTMP -> SignatoryTMP
-setCSV mcsv s = s {csvupload = mcsv}
-
-makeAuthor :: SignatoryTMP -> SignatoryTMP
-makeAuthor s =  s {details = (details s) { signatoryisauthor = True }}
-
-makePartner :: SignatoryTMP -> SignatoryTMP
-makePartner s = s {details = (details s) { signatoryispartner = True }}
-
-isAuthorTMP :: SignatoryTMP -> Bool
-isAuthorTMP = signatoryisauthor . details
-
-isSignatoryTMP :: SignatoryTMP -> Bool
-isSignatoryTMP = signatoryispartner . details
-
-setSignOrder :: SignOrder -> SignatoryTMP -> SignatoryTMP
-setSignOrder i =  liftTMP $  \s -> s {signatorysignorder = i}
-
-signatoryDetails :: SignatoryTMP -> SignatoryDetails
-signatoryDetails = details
-
-setSignatoryDetails :: SignatoryDetails -> SignatoryTMP -> SignatoryTMP
-setSignatoryDetails d = liftTMP $  \_ -> d
-
---signOrder :: SignatoryTMP -> SignOrder
---signOrder = signatorysignorder . details
-
-addAttachment :: SignatoryAttachment -> SignatoryTMP -> SignatoryTMP
-addAttachment a s = if (signatoryattachmentname a `elem `(signatoryattachmentname <$> attachments s))
-                       then s
-                       else s {attachments = a : (attachments s)}
-
-getAttachments :: SignatoryTMP -> [SignatoryAttachment]
-getAttachments s = attachments s
-
-setSignredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
-setSignredirecturl rurl s = s {signredirecturl = rurl}
-
-setRejectredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
-setRejectredirecturl rurl s = s {rejectredirecturl = rurl}
 
  -- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails :: SignatoryTMP -> (Maybe SignatoryLinkID, SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload,Maybe String, Maybe String, AuthenticationMethod, DeliveryMethod)
-toSignatoryDetails sTMP  =
-  ( maybeSignatoryTMPid sTMP
-  , details sTMP
-  , attachments $ sTMP
-  , csvupload $ sTMP
-  , signredirecturl $ sTMP
-  , rejectredirecturl $ sTMP
-  , authentication $ sTMP
-  , delivery $ sTMP)
-
-instance FromJSValue SignatoryTMP where
-    fromJSValue = do
-        mid'    <- fromJSValueField "id"
-        author <- fromJSValueField "author"
-        signs  <- fromJSValueField "signs"
-        mfields <- fromJSValueField "fields"
-        signorder <- fromJSValueField "signorder"
-        attachments <- fromMaybe [] <$> fromJSValueField "attachments"
-        csv <- fromJSValueField "csv"
-        sredirecturl <- fromJSValueField "signsuccessredirect"
-        rredirecturl <- fromJSValueField "rejectredirect"
-        authentication' <-  fromJSValueField "authentication"
-        delivery' <-  fromJSValueField "delivery"
-        case (mfields) of
-          (Just fields) ->
-            return $ Just $
-                (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
-                (makeAuthor  <| joinB author |> id) $
-                (makePartner <| joinB signs  |> id) $
-                (setCSV $ csv) $
-                (setSignredirecturl $ sredirecturl) $
-                (setRejectredirecturl $ rredirecturl) $
-                (map replaceField fields) $^^
-                (map addAttachment attachments) $^^
-                (SignatoryTMP {
-                    mid = maybeRead =<< mid'
-                  , details = SignatoryDetails {
-                      signatorysignorder = SignOrder 1
-                    , signatoryfields   = []
-                    , signatoryispartner = False
-                    , signatoryisauthor = False
-                    }
-                  , attachments = []
-                  , csvupload = Nothing
-                  , signredirecturl = Nothing
-                  , rejectredirecturl = Nothing
-                  , authentication = fromMaybe StandardAuthentication authentication'
-                  , delivery = fromMaybe EmailDelivery delivery'
-                  })
-          _ -> return Nothing
-
+toSignatoryDetails :: SignatoryLink -> (Maybe SignatoryLinkID, SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload,Maybe String, Maybe String, AuthenticationMethod, DeliveryMethod)
+toSignatoryDetails sig  =
+  (  Just $ signatorylinkid sig
+   , signatorydetails sig
+   , signatoryattachments  sig
+   , signatorylinkcsvupload  sig
+   , signatorylinksignredirecturl  sig
+   , signatorylinkrejectredirecturl sig
+   , signatorylinkauthenticationmethod  sig
+   , signatorylinkdeliverymethod  sig
+  )
 
 instance MatchWithJSValue SignatoryLink where
     matchesWithJSValue s = do
@@ -261,6 +48,7 @@ instance FromJSValueWithUpdate SignatoryLink where
         attachments <- fromJSValueField "attachments"
         csv <- fromJSValueField "csv"
         sredirecturl <- fromJSValueField "signsuccessredirect"
+        rredirecturl <- fromJSValueField "rejectredirect"
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         case (mfields) of
@@ -275,6 +63,7 @@ instance FromJSValueWithUpdate SignatoryLink where
                   , signatorylinkcsvupload       = updateWithDefaultAndField Nothing signatorylinkcsvupload csv
                   , signatoryattachments         = updateWithDefaultAndField [] signatoryattachments attachments
                   , signatorylinksignredirecturl = updateWithDefaultAndField Nothing signatorylinksignredirecturl sredirecturl
+                  , signatorylinkrejectredirecturl = updateWithDefaultAndField Nothing signatorylinkrejectredirecturl rredirecturl
                   , signatorylinkauthenticationmethod = updateWithDefaultAndField StandardAuthentication signatorylinkauthenticationmethod authentication'
                   , signatorylinkdeliverymethod       = updateWithDefaultAndField EmailDelivery signatorylinkdeliverymethod delivery'
                 }

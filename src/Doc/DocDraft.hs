@@ -1,7 +1,6 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocDraft (
-    DraftData,
     applyDraftDataToDocument,
     draftIsChangingDocument
   ) where
@@ -24,26 +23,12 @@ import Text.JSON.FromJSValue
 import qualified Data.Set as Set
 import Utils.Read
 import qualified Log
-import File.FileID
 import Control.Monad
 import InputValidation
 import Doc.SignatoryLinkID
 import Data.Functor
 import Utils.Default
-
-data DraftData = DraftData {
-      title :: String
-    , invitationmessage :: Maybe String
-    , daystosign :: Int
-    , authentication :: Maybe AuthenticationMethod
-    , delivery :: Maybe DeliveryMethod
-    , signatories :: [SignatoryTMP]
-    , lang :: Maybe Lang
-    , template :: Bool
-    , tags :: Maybe [DocumentTag]
-    , apicallbackurl :: Maybe String
-    , authorattachments :: Maybe [FileID]
-    } deriving Show
+import Doc.DocUtils
 
 instance FromJSValue DocumentTag where
     fromJSValue = do
@@ -114,8 +99,10 @@ instance FromJSValueWithUpdate Document where
         return $ Just defaultValue {
             documenttitle = updateWithDefaultAndField "" documenttitle title',
             documentlang  = updateWithDefaultAndField LANG_SV documentlang lang',
-            documentinvitetext = updateWithDefaultAndField "" documentinvitetext invitationmessage,
-            documentdaystosign   = min 90 $ min 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign',
+            documentinvitetext = case (invitationmessage) of
+                                     Nothing -> fromMaybe "" $ documentinvitetext <$> mdoc
+                                     Just s -> fromMaybe "" (resultToMaybe $ asValidInviteText s),
+            documentdaystosign   = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign',
             documentsignatorylinks = mapAuth authentication' $ mapDL delivery' $ updateWithDefaultAndField [] documentsignatorylinks signatories',
             documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments'),
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags'),
@@ -153,9 +140,9 @@ applyDraftDataToDocument doc draft actor = do
            dbUpdate $ TemplateFromDocument (documentid doc) actor
       forM_ (documentauthorattachments doc) $ \att -> do
               when_ (not $ att `elem` (documentauthorattachments draft)) $ do
-                dbUpdate $ RemoveDocumentAttachment (documentid doc) att actor
+                dbUpdate $ RemoveDocumentAttachment (documentid doc) (authorattachmentfile att) actor
 
-      case (mergeSignatories draft (documentsignatorylinks doc) (sort $ signatories draft)) of
+      case (mergeSignatories (documentsignatorylinks doc) (sort $ documentsignatorylinks draft)) of
            Nothing   -> return $ Left "Problem with author details while sending draft"
            Just sigs -> do
              mdoc <- runMaybeT $ do
@@ -167,38 +154,27 @@ applyDraftDataToDocument doc draft actor = do
                Just newdoc -> Right newdoc
 
 
-matchSignatoriesAndSignatoriesTMPAndFixAuthor :: [SignatoryLink] -> [SignatoryTMP] -> Maybe [(Maybe SignatoryLink,SignatoryTMP)]
-matchSignatoriesAndSignatoriesTMPAndFixAuthor sigs tmps =
+mergeAuthorDetails :: [SignatoryLink] ->[SignatoryLink] -> Maybe [SignatoryLink]
+mergeAuthorDetails sigs nsigs =
           let
-            (atmp, notatmps) = partition isAuthorTMP tmps
-            (asig, notasigs) = partition isAuthor sigs
-            matchSigs (s:ss) (t:ts) = if (Just (signatorylinkid s) == maybeSignatoryTMPid t)
-                                          then (Just s,t) : matchSigs ss ts
-                                          else matchSigs ss (t:ts)
-            matchSigs [] (t:ts) = (Nothing,t) : matchSigs [] ts
-            matchSigs _ _ = []
-            setConstantDetails a =  setFstname (getFirstName a) .
-                                    setSndname (getLastName a) .
-                                    setEmail   (getEmail a) .
-                                    setSignatoryTMPid (signatorylinkid a)
-          in case (asig, atmp) of
-               ([asig'], [atmp']) ->
-                 if (Just (signatorylinkid asig') == maybeSignatoryTMPid atmp')
-                   then Just $ (Just asig',setConstantDetails asig' atmp') : (matchSigs notasigs notatmps)
-                   else Just $ (Nothing,setConstantDetails asig' atmp') : (matchSigs notasigs notatmps)
+            (nasig', nsigs') = partition isAuthor nsigs
+            (asig, _) = partition isAuthor sigs
+            setConstantDetails a =  replaceFieldValue FirstNameFT (getFirstName a) .
+                                    replaceFieldValue LastNameFT (getLastName a) .
+                                    replaceFieldValue EmailFT   (getEmail a) .
+                                    (\s -> s {signatorylinkid = signatorylinkid a})
+          in case (asig, nasig') of
+               ([asig'], [nasig'']) -> Just $ (setConstantDetails asig' nasig'') : nsigs'
                _ -> Nothing
 
-mergeSignatoryAndSignatoryTMP :: Maybe SignatoryLink -> SignatoryTMP -> SignatoryTMP
-mergeSignatoryAndSignatoryTMP _  t = t
 
-mergeSignatories :: DraftData
+mergeSignatories :: [SignatoryLink]
                  -> [SignatoryLink]
-                 -> [SignatoryTMP]
                  -> Maybe [(Maybe SignatoryLinkID , SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,  Maybe String, AuthenticationMethod, DeliveryMethod)]
-mergeSignatories docdraft sigs tmps =
+mergeSignatories sigs nsigs =
         let
-            tmps' = map (\(s,t) -> mergeSignatoryAndSignatoryTMP s t) <$> matchSignatoriesAndSignatoriesTMPAndFixAuthor sigs tmps
-        in map toSignatoryDetails <$> tmps'
+            nsigs' =  mergeAuthorDetails sigs nsigs
+        in map toSignatoryDetails <$> nsigs'
 
 
 
@@ -210,8 +186,8 @@ draftIsChangingDocument draft doc =
      || (documenttags draft /= documenttags doc)
      || (documentapicallbackurl draft /= documentapicallbackurl doc)
      || (isTemplate draft /= isTemplate doc)
-     || (documentdaystosign draft /= documentdaystosign draf)
-     || (draftIsChangingDocumentSignatories (documentsignatorylinks draf) (documentsignatorylinks doc))
+     || (documentdaystosign draft /= documentdaystosign doc)
+     || (draftIsChangingDocumentSignatories (documentsignatorylinks draft) (documentsignatorylinks doc))
 
 draftIsChangingDocumentSignatories :: [SignatoryLink] -> [SignatoryLink] -> Bool
 draftIsChangingDocumentSignatories (sl':sls') (sl:sls) = (newSignatorySignatoryLinkIsChangingSignatoryLink sl' sl) || (draftIsChangingDocumentSignatories sls' sls)
@@ -219,9 +195,10 @@ draftIsChangingDocumentSignatories [] [] = False
 draftIsChangingDocumentSignatories _ _ = True
 
 
-newSignatorySignatoryLinkIsChangingSignatoryLink :: SignatoryDetails -> SignatoryLink -> Bool
+newSignatorySignatoryLinkIsChangingSignatoryLink :: SignatoryLink -> SignatoryLink -> Bool
 newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
-        (signatorydetails newsl /= signatorydetails sl)
+        (signatorylinkid newsl /= signatorylinkid sl)
+     || (signatorydetails newsl /= signatorydetails sl)
      || (signatoryattachments newsl /= signatoryattachments sl)
      || (signatorylinkcsvupload newsl /= signatorylinkcsvupload sl)
      || (signatorylinksignredirecturl newsl /= signatorylinksignredirecturl sl)

@@ -2085,7 +2085,7 @@ instance (MonadDB m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories actor) =
-    update (ResetSignatoryDetails2 documentid (map (\a -> (Nothing,a,[],Nothing, Nothing, Nothing StandardAuthentication, EmailDelivery)) signatories) actor)
+    update (ResetSignatoryDetails2 documentid (map (\a -> (Nothing,a,[],Nothing, Nothing, Nothing, StandardAuthentication, EmailDelivery)) signatories) actor)
 
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(Maybe SignatoryLinkID, SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
