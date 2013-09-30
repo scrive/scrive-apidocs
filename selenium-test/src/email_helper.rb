@@ -12,6 +12,16 @@ class EmailHelper
     @loginhelper = LoginHelper.new(@ctx, @driver, @h)
   end
 
+  def random_email(random_chars=10)
+    email = ""
+    for i in 0..random_chars
+      email += rand(10).to_s
+    end
+    email += "-test@mailinator.com"
+    puts "using random email : " + email
+    return email
+  end
+
   def follow_link_in_latest_mail_for email
 
     link = ""

@@ -16,8 +16,7 @@ describe "sign up after signing a document" do
 
   it "sign up after signing a document" do
 
-    random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
-    puts "using random email : " + random_email
+    random_email = @h.emailhelper.random_email()
 
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     begin

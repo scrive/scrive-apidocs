@@ -15,8 +15,7 @@ describe "subscribe with a credit card" do
   end
 
   it "new user can pay with credit card on outside" do
-    random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
-    puts "using random email : " + random_email
+    random_email = @h.emailhelper.random_email()
 
     puts "go to price plan page"
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
@@ -44,8 +43,7 @@ describe "subscribe with a credit card" do
   end
 
   it "new user can pay with credit card on outside after typing stuff in wrong" do
-    random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
-    puts "using random email : " + random_email
+    random_email = @h.emailhelper.random_email()
 
     puts "go to price plan page"
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
@@ -85,8 +83,7 @@ describe "subscribe with a credit card" do
   end
 
   it "new user can pay on the inside with popup" do
-    random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
-    puts "using random email : " + random_email
+    random_email = @h.emailhelper.random_email()
 
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
 
@@ -142,8 +139,7 @@ describe "subscribe with a credit card" do
   end
 
   it "new user can pay on the inside with subscription tab" do
-    random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
-    puts "using random email : " + random_email
+    random_email = @h.emailhelper.random_email()
 
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
 

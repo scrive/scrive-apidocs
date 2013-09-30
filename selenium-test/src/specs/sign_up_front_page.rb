@@ -32,8 +32,7 @@ describe "sign up on front page and modify account settings" do
 
   it "can be requested on front page and ensures users click the tos and enter their name and a password to activate" do
 
-    random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
-    puts "using random email : " + random_email
+    random_email = @h.emailhelper.random_email()
 
     @h.driver.get(@h.ctx.createKontrakcjaURL "/signup")
 
