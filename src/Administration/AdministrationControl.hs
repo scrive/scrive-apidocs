@@ -279,7 +279,7 @@ jsonUsersList = onlySalesOrAdmin $ do
         sorting = userSortingFromParams params
         pagination = ((listParamsOffset params),(usersPageSize * 4))
         usersPageSize = 100
-    allUsers <- getUsersAndStatsInv filters sorting pagination
+    allUsers <- dbQuery $ GetUsersWithCompanies filters sorting pagination
     let users = PagedList { list       = allUsers
                           , params     = params
                           , pageSize   = usersPageSize
@@ -287,7 +287,7 @@ jsonUsersList = onlySalesOrAdmin $ do
                           }
 
     runJSONGenT $ do
-            valueM "list" $ forM (take usersPageSize $ list users) $ \(user,mcompany,itype) -> runJSONGenT $ do
+            valueM "list" $ forM (take usersPageSize $ list users) $ \(user,mcompany) -> runJSONGenT $ do
                 object "fields" $ do
                     value "id" $ show $ userid user
                     value "username" $ getFullName user
@@ -296,8 +296,6 @@ jsonUsersList = onlySalesOrAdmin $ do
                     value "company"  $ getCompanyName mcompany
                     value "phone"    $ userphone $ userinfo user
                     value "tos"      $ formatMinutesTimeRealISO <$> (userhasacceptedtermsofservice user)
-                    value "viral_invites" $ itype == Viral
-                    value "admin_invites" $ itype == Admin
                 value "link" $ show $ LinkUserAdmin $ userid user
             value "paging" $ pagingParamsJSON users
 

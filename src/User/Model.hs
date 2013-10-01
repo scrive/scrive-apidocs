@@ -7,7 +7,6 @@ module User.Model (
   , Email(..)
   , InviteType(..)
   , SignupMethod(..)
-  , InviteInfo(..)
   , User(..)
   , UserInfo(..)
   , UserSettings(..)
@@ -16,10 +15,9 @@ module User.Model (
   , GetUserByID(..)
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
-  , GetUsersAndStatsAndInviteInfo(..)
+  , GetUsersWithCompanies(..)
   , GetCompanyAccounts(..)
   , GetCompanyAdmins(..)
-  , GetInviteInfo(..)
   , GetUsageStats(..)
   , SetUserCompany(..)
   , DeleteUser(..)
@@ -27,7 +25,6 @@ module User.Model (
   , AddUser(..)
   , SetUserEmail(..)
   , SetUserPassword(..)
-  , SetInviteInfo(..)
   , SetUserInfo(..)
   , SetUserSettings(..)
   , AcceptTermsOfService(..)
@@ -89,12 +86,6 @@ data UserUsageStats = UserUsageStats
                     } deriving (Eq, Ord, Show)
 
 -- data structures
-data InviteInfo = InviteInfo {
-    userinviter :: UserID
-  , invitetime  :: Maybe MinutesTime
-  , invitetype  :: Maybe InviteType
-  } deriving (Eq, Ord, Show)
-
 data User = User {
     userid                        :: UserID
   , userpassword                  :: Maybe Password
@@ -201,19 +192,6 @@ instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
     kRun_ $ selectUsersSQL <+> "WHERE is_company_admin AND company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email DESC"
     fetchUsers
 
-data GetInviteInfo = GetInviteInfo UserID
-instance MonadDB m => DBQuery m GetInviteInfo (Maybe InviteInfo) where
-  query (GetInviteInfo uid) = do
-    kRun_ $ SQL "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
-            [toSql uid]
-    kFold fetchInviteInfos [] >>= oneObjectReturnedGuard
-    where
-      fetchInviteInfos acc inviter_id invite_time invite_type = InviteInfo {
-          userinviter = inviter_id
-        , invitetime = invite_time
-        , invitetype = invite_type
-        } : acc
-
 data SetUserCompany = SetUserCompany UserID CompanyID
 instance MonadDB m => DBUpdate m SetUserCompany Bool where
   update (SetUserCompany uid cid) =
@@ -296,44 +274,6 @@ instance MonadDB m => DBUpdate m SetUserPassword Bool where
                   <> ", salt = ?"
                   <> "  WHERE id = ? AND deleted IS NULL")
              [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
-
-data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
-instance MonadDB m => DBUpdate m SetInviteInfo Bool where
-  update (SetInviteInfo minviterid invitetime invitetype uid) = do
-    exists <- checkIfUserExists uid
-    if exists
-      then do
-        case minviterid of
-          Just inviterid -> do
-            _ <- kRunRaw "LOCK TABLE user_invite_infos IN ACCESS EXCLUSIVE MODE"
-            rec_exists <- checkIfAnyReturned $ SQL "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
-            if rec_exists
-              then do
-                kRun01 $ SQL ("UPDATE user_invite_infos SET"
-                              <> "  inviter_id = ?"
-                              <> ", invite_time = ?"
-                              <> ", invite_type = ?"
-                              <> "  WHERE user_id = ?")
-                         [ toSql inviterid
-                         , toSql invitetime
-                         , toSql invitetype
-                         , toSql uid
-                         ]
-              else do
-                kRun01 $ SQL ("INSERT INTO user_invite_infos ("
-                              <> "  user_id"
-                              <> ", inviter_id"
-                              <> ", invite_time"
-                              <> ", invite_type) VALUES (?, ?, ?, ?)")
-                              [ toSql uid
-                              , toSql inviterid
-                              , toSql invitetime
-                              , toSql invitetype
-                              ]
-          Nothing -> do
-            kRun01 $ SQL ("DELETE FROM user_invite_infos WHERE user_id = ?")
-                     [toSql uid]
-      else return False
 
 data SetUserInfo = SetUserInfo UserID UserInfo
 instance MonadDB m => DBUpdate m SetUserInfo Bool where
@@ -474,10 +414,6 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-checkIfUserExists :: MonadDB m => UserID -> m Bool
-checkIfUserExists uid = checkIfAnyReturned
-  $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted IS NULL" [toSql uid]
-
 selectUsersSQL :: SQL
 selectUsersSQL = "SELECT" <+> selectUsersSelectors <+> "FROM users"
 
@@ -534,9 +470,8 @@ fetchUsers = kFold decoder []
         , userassociateddomain = associated_domain
         } : acc
 
-
-selectUsersAndCompaniesAndInviteInfoSQL :: SQL
-selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
+selectUsersWithCompaniesSQL :: SQL
+selectUsersWithCompaniesSQL = SQL ("SELECT "
   -- User:
   <> "  users.id AS user_id"
   <> ", users.password"
@@ -554,7 +489,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", users.email"
   <> ", users.lang"
   <> ", users.associated_domain"
-
   -- Company:
   <> ", c.id AS company_id"
   <> ", c.name"
@@ -565,26 +499,19 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.country"
   <> ", c.ip_address_mask_list"
   <> ", c.sms_originator"
-  -- InviteInfo:
-  <> ", user_invite_infos.inviter_id"
-  <> ", user_invite_infos.invite_time"
-  <> ", user_invite_infos.invite_type"
   <> "  FROM users"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
-  <> "  LEFT JOIN user_invite_infos ON users.id = user_invite_infos.user_id"
   <> "  WHERE users.deleted IS NULL")
   []
 
-
-fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => m [(User, Company, Maybe InviteInfo)]
-fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
+fetchUsersWithCompanies :: MonadDB m => m [(User, Company)]
+fetchUsersWithCompanies = reverse `liftM` kFold decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone
      email lang associated_domain cid
-     name number address zip' city country ip_address_mask sms_originator inviter_id
-     invite_time invite_type
+     name number address zip' city country ip_address_mask sms_originator
      = (
        User {
            userid = uid
@@ -620,16 +547,14 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companysmsoriginator = fromJust sms_originator
                 }
               }
-        , InviteInfo <$> inviter_id <*> invite_time <*> invite_type
         ) : acc
 
-
-data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] (Int,Int)
-instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
-  [(User, Company, Maybe InviteInfo)] where
-  query (GetUsersAndStatsAndInviteInfo filters sorting (offset,limit)) = do
+data GetUsersWithCompanies = GetUsersWithCompanies [UserFilter] [AscDesc UserOrderBy] (Int,Int)
+instance MonadDB m => DBQuery m GetUsersWithCompanies
+  [(User, Company)] where
+  query (GetUsersWithCompanies filters sorting (offset,limit)) = do
     _ <- kRun $ mconcat
-         [ selectUsersAndCompaniesAndInviteInfoSQL
+         [ selectUsersWithCompaniesSQL
          , if null filters
              then SQL "" []
              else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
@@ -638,5 +563,4 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
            else SQL " ORDER BY " [] <> sqlConcatComma (map userOrderByAscDescToSQL sorting)
          , " OFFSET" <?> offset <+> "LIMIT" <?> limit
          ]
-    fetchUsersAndCompaniesAndInviteInfo
-
+    fetchUsersWithCompanies

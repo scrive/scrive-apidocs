@@ -105,7 +105,6 @@ instance InspectXML DeliveryMethod where
 instance InspectXML CancelationReason where
 instance InspectXML SignatureProvider where
 instance InspectXML SignatureInfo where
-instance InspectXML InviteInfo where
 instance InspectXML Company where
 instance InspectXML CompanyID where
 instance InspectXML DocumentSharing where

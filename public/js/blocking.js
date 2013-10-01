@@ -61,7 +61,6 @@
             return this.get('dunning');
         },
         hasUsedAll: function() {
-            return false;
             return !this.isEnterprise()  &&
                    !this.isTrial()       &&
                    !this.isFree()        &&

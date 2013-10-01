@@ -45,7 +45,6 @@ userStateTests env = testGroup "UserState" [
       testThat "can fetch statistics by company id" env test_userUsageStatisticsByCompany
     ]
   , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" env test_getCompanyAccounts
-  , testThat "GetInviteInfo/SetInviteInfo works" env test_getInviteInfo
   , testThat "SetUserCompany works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
   , testGroup "SetUserInfo" [
@@ -171,29 +170,6 @@ test_userUsageStatisticsByCompany = do
   forM_ res $ \r ->
      assertEqual "Stats were for the proper company" (Just cid) ((\(a,_) -> a) <$> uusCompany r)
   assertEqual "Stats were returned for all periods requested times users" (4*2) (length res)
-
-
-test_getInviteInfo :: TestEnv ()
-test_getInviteInfo = do
-  Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  now <- getMinutesTime
-  let ii = InviteInfo {
-      userinviter = userid
-    , invitetime = Just now
-    , invitetype = Just Viral
-  }
-  res1 <- dbUpdate $ SetInviteInfo (Just userid) now Viral userid
-  assertBool "InviteInfo created correctly" res1
-  Just ii2 <- dbQuery $ GetInviteInfo userid
-  assertBool "Correct InviteInfo returned" $ ii == ii2
-  res2 <- dbUpdate $ SetInviteInfo (Just userid) now Admin userid
-  assertBool "InviteInfo updated correctly" res2
-  Just ii3 <- dbQuery $ GetInviteInfo userid
-  assertBool "Correct updated InviteInfo returned" $ ii { invitetype = Just Admin } == ii3
-  res3 <- dbUpdate $ SetInviteInfo Nothing undefined undefined userid
-  assertBool "InviteInfo erased correctly" res3
-  noii <- dbQuery $ GetInviteInfo userid
-  assertBool "No InviteInfo returned" $ isNothing noii
 
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
