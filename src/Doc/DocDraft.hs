@@ -6,7 +6,7 @@ module Doc.DocDraft (
   ) where
 
 import Control.Monad.Trans.Maybe
-import Doc.SignatoryTMP
+import Doc.SignatoryTMP()
 import Doc.DocStateData
 import Utils.Monad
 --import Utils.Prelude
@@ -25,7 +25,6 @@ import Utils.Read
 import qualified Log
 import Control.Monad
 import InputValidation
-import Doc.SignatoryLinkID
 import Data.Functor
 import Utils.Default
 import Doc.DocUtils
@@ -142,11 +141,11 @@ applyDraftDataToDocument doc draft actor = do
               when_ (not $ att `elem` (documentauthorattachments draft)) $ do
                 dbUpdate $ RemoveDocumentAttachment (documentid doc) (authorattachmentfile att) actor
 
-      case (mergeSignatories (documentsignatorylinks doc) (sort $ documentsignatorylinks draft)) of
+      case (mergeAuthorDetails (documentsignatorylinks doc) (sort $ documentsignatorylinks draft)) of
            Nothing   -> return $ Left "Problem with author details while sending draft"
            Just sigs -> do
              mdoc <- runMaybeT $ do
-               True <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
+               True <- dbUpdate $ ResetSignatoryDetails (documentid doc) sigs actor
                newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
                return newdoc
              return $ case mdoc of
@@ -166,16 +165,6 @@ mergeAuthorDetails sigs nsigs =
           in case (asig, nasig') of
                ([asig'], [nasig'']) -> Just $ (setConstantDetails asig' nasig'') : nsigs'
                _ -> Nothing
-
-
-mergeSignatories :: [SignatoryLink]
-                 -> [SignatoryLink]
-                 -> Maybe [(Maybe SignatoryLinkID , SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,  Maybe String, AuthenticationMethod, DeliveryMethod)]
-mergeSignatories sigs nsigs =
-        let
-            nsigs' =  mergeAuthorDetails sigs nsigs
-        in map toSignatoryDetails <$> nsigs'
-
 
 
 draftIsChangingDocument :: Document -> Document -> Bool

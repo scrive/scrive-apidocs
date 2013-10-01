@@ -41,7 +41,6 @@ module Doc.Model
   , RejectDocument(..)
   , RemoveDocumentAttachment(..)
   , ResetSignatoryDetails(..)
-  , ResetSignatoryDetails2(..)
   , RestartDocument(..)
   , ProlongDocument(..)
   , RestoreArchivedDocument(..)
@@ -742,6 +741,7 @@ insertSignatoryLinksAsAre _documentid [] = return []
 insertSignatoryLinksAsAre documentid links = do
   _ <- kRun $ sqlInsert "signatory_links" $ do
            sqlSet "document_id" documentid
+           sqlSetList "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then (raw $ unsafeFromString "DEFAULT") else (signatorylinkid sl)) links
            sqlSetList "user_id" $ maybesignatory <$> links
            sqlSetList "is_author" $ signatoryisauthor <$> signatorydetails <$> links
            sqlSetList "is_partner" $ signatoryispartner <$> signatorydetails <$> links
@@ -2082,44 +2082,19 @@ instance (MonadDB m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m
             updateMTimeAndObjectVersion docid (actorTime actor)
             return ()
 
-data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
+data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryLink] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
-  update (ResetSignatoryDetails documentid signatories actor) =
-    update (ResetSignatoryDetails2 documentid (map (\a -> (Nothing,a,[],Nothing, Nothing, Nothing, StandardAuthentication, EmailDelivery)) signatories) actor)
-
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(Maybe SignatoryLinkID, SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String, Maybe String, AuthenticationMethod, DeliveryMethod)] Actor
-instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
-  update (ResetSignatoryDetails2 documentid signatories _actor) = do
+  update (ResetSignatoryDetails documentid signatories _actor) = do
     document <- query $ GetDocumentByDocumentID documentid
     case checkResetSignatoryData document signatories of
           [] -> do
             kRun_ $ "DELETE FROM signatory_links WHERE document_id = " <?> documentid
-
-            let mauthorsiglink = getAuthorSigLink document
-            siglinks <- forM signatories $ \(_mid, details, atts, mcsvupload, msignredirecturl, mrejectredirecturl, authmethod, deliverymethod) -> do
+            siglinks <- forM signatories $ \sl -> do
                      magichash <- random
-                     let link' = (signLinkFromDetails' details atts magichash)
-                                 {  signatorylinkcsvupload = mcsvupload
-                                  , signatorylinksignredirecturl= msignredirecturl
-                                  , signatorylinkrejectredirecturl = mrejectredirecturl
-                                  , signatorylinkauthenticationmethod = authmethod
-                                  , signatorylinkdeliverymethod = deliverymethod
+                     return $ sl {  signatorymagichash = magichash,
+                                    maybesignatory = if (isAuthor sl) then (maybesignatory sl) else Nothing
                                  }
-                         link = if isAuthor link'
-                                then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
-                                           }
-                                else link'
-                     return link
             _r1 <- insertSignatoryLinksAsAre documentid siglinks
-
-            newdocument <- query $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,_,a,_,_,_,_) -> a) signatories)
-            let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
-
-            when (moldcvsupload /= mnewcsvupload) $ do
-                     Log.error $ "ResetSignatoryDetails2 csvupload differs: " ++ show moldcvsupload ++ " vs " ++ show mnewcsvupload
-                     error $ "error in ResetSignatoryDetails2"
-
             return True
 
           s -> do

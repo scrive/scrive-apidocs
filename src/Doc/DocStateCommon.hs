@@ -10,6 +10,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Company.Model
 import Utils.Default
+import Util.SignatoryLinkUtils
 
 trueOrMessage :: Bool -> String -> Maybe String
 trueOrMessage False s = Just s
@@ -61,12 +62,11 @@ emptySignatoryFields = [
         , SignatoryField EmailFT     "" True  True  []
         ]
 
-checkResetSignatoryData :: Document -> [(Maybe SignatoryLinkID, SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String,Maybe String, AuthenticationMethod, DeliveryMethod)] -> [String]
+checkResetSignatoryData :: Document -> [SignatoryLink] -> [String]
 checkResetSignatoryData doc sigs =
-  let authors = length $ filter (\(_,d, _, _, _, _, _ , _) -> signatoryisauthor d) sigs
-  in catMaybes $
+  catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
-      , trueOrMessage (authors == 1) $ "Should have exactly one author, had " ++ show authors
+      , trueOrMessage (1 == (length $ filter isAuthor sigs)) $ "Should have exactly one author, had " ++ show (length $ filter isAuthor sigs)
       ]
 
 {- |
