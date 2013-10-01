@@ -203,7 +203,7 @@ window.SignatureDrawOrTypeModal = function(args){
         var self = this;
         var width = BrowserInfo.isSmallScreen() ? 980 : 900;
         var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
-        var modal = $("<div class='modal'></div>").css("height", $(document).height());
+        var modal = $("<div class='modal'></div>").css("height", $(document).height()).css("min-width", "1018px");
         var container = $("<div class='modal-container drawing-modal grey'/>").css("width",width);
 
         if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
