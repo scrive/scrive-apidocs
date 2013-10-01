@@ -1590,7 +1590,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen () where
               sqlWhereDocumentTypeIs (Signable)
               sqlWhere "signatory_links.seen_time IS NULL"
               sqlWhere "signatory_links.sign_time IS NULL"
-              sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError undefined, Rejected]
+              sqlWhereNotEq "status" Preparation
+              sqlWhereNotEq "status" Closed
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool where
