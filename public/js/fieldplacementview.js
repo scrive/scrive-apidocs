@@ -645,8 +645,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                  "line-height: " + (this.fontSize() + 1) +  "px;" +
                  "height:"+ (this.fontSize() + 2) +"px;" +
                  "border-radius: 2px;",
-          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 1) + "px; height:"+ (this.fontSize() + 4) +"px",
-          textWidth: width,
+          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 1) + "px; height:"+ (this.fontSize() + 4) +"px; width: " + width +"px;",
           onEnter : accept,
           onTab : accept,
           onBlur : accept,
