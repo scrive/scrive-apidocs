@@ -298,22 +298,25 @@ window.DocumentsListDefinition = function(archive) { return {
               ]
     }),
     bottomExtras : function() {
-                        var box = $("<div class='table-statuses'/>");
-                        var description = function(cssClass,text) {
-                            var icon = $("<div class='icon status float-left'></div>").addClass(cssClass);
-                            var text = $("<div class='float-left'/>").text(text);
-                            return $.merge(icon,text);
-                        };
-                        box.append(description("draft",localization.archive.documents.statusDescription.draft).addClass('first'));
-                        box.append(description("problem",localization.archive.documents.statusDescription.cancelled));
-                        box.append(description("sent",localization.archive.documents.statusDescription.sent));
-                        box.append(description("delivered",localization.archive.documents.statusDescription.delivered));
-                        box.append(description("read",localization.archive.documents.statusDescription.read));
-                        box.append(description("opened",localization.archive.documents.statusDescription.opened));
-                        box.append(description("signed",localization.archive.documents.statusDescription.signed));
-                        return box;
-                    }()
-};};
+        // The new users will be presented with a welcoming message and 
+        // not see the table status footer in the document tab.
+        if (archive.forNewUser()) { return; } 
 
+        var box = $("<div class='table-statuses'/>");
+        var description = function(cssClass,text) {
+            var icon = $("<div class='icon status float-left'></div>").addClass(cssClass);
+            var text = $("<div class='float-left'/>").text(text);
+            return $.merge(icon,text);
+        };
+        box.append(description("draft",localization.archive.documents.statusDescription.draft).addClass('first'));
+        box.append(description("problem",localization.archive.documents.statusDescription.cancelled));
+        box.append(description("sent",localization.archive.documents.statusDescription.sent));
+        box.append(description("delivered",localization.archive.documents.statusDescription.delivered));
+        box.append(description("read",localization.archive.documents.statusDescription.read));
+        box.append(description("opened",localization.archive.documents.statusDescription.opened));
+        box.append(description("signed",localization.archive.documents.statusDescription.signed));
+        return box;
+    }()
+};};
 
 })(window);

@@ -1,0 +1,39 @@
+.progressbar {
+    /* generic positioning of progress bar */
+    position: absolute;
+    left: 50%;
+    top: 30px;
+    z-index: 44500;
+
+    .inner {
+        @width: 262px;
+        left: -(@width/2);
+        width: @width;
+        position: absolute;
+    }
+
+
+    &.four-circle-progress-bar {
+        /* 
+           when more progress bars are added, think about putting them in
+           less/progressbars/ and importing them here.
+        */
+        .inner {
+            background-image: url("../../img/sprite-progress-bar.png");
+
+            @height: 32px;
+            height: @height;
+
+            .step-X (@step) {
+                background-position: 0px -1*(@step - 1)*@height;
+            }
+
+            &.step-1 { .step-X(1) }
+            &.step-2 { .step-X(2) }
+            &.step-3 { .step-X(3) }
+            &.step-4 { .step-X(4) }
+        }
+    }
+}
+
+

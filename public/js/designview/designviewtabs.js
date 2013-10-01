@@ -79,7 +79,10 @@ window.DesignViewTabsView = function(args) {
               else {
                 var updateOnReady = function() {
                   if (document.mainfile().ready()) {
-                     setTimeout(function() { tabs.activate(tabs.activeTab() || tab1); }, 800);
+                     setTimeout(function() { 
+                        tabs.activate(tabs.activeTab() || tab1);
+                        model.trigger('visibility:designviewtab');
+                    }, 800);
                   }
                 };
                 document.mainfile().bind('change', updateOnReady);

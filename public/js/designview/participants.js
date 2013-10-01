@@ -344,6 +344,7 @@
                 onClick: function() {
                     mixpanel.track('Close participant');
                     model.setParticipantDetail(null);
+                    model.trigger('visibility:participantclosed');
                 }
             });
 
@@ -1110,6 +1111,8 @@
                         complete: function() {
                             view.innerDiv.css({overflow:'visible',
                                                'z-index': 500});
+
+                            view.viewmodel.trigger('visibility:participantopen');
                             $(window).resize();
                             view.opened = true;
                             view.active = false;
