@@ -630,7 +630,7 @@
 "_paymentsDeclinedEmailCheck","<a href='$ctxhostpart$/account#subscription'>För att säkerställa att ditt abonnemang fortsatt ska vara aktivt, vänligen uppdatera din konto- och faktureringsinformation.</a> Om du har några frågor, vänligen kontakta oss på <a href='accounting@scrive.com'>accounting@scrive.com</a>.","<a href='$ctxhostpart$/account#subscription'>Please update your billing information to ensure the continuation of your subscription.</a> If you have any questions, please contact <a href='mailto:accounting@scrive.com'>accounting@scrive.com</a>."
 "_paymentsEmailExpiredSubject","Kontot har gått ut","Account Expired"
 "_paymentsEmailExpiredQuestions","Tack för ditt köp! Var vänlig och spara detta mail för din bokföring. Om du har några frågor, vänligen kontakta <a href='accounting@scrive.com'>accounting@scrive.com</a>.","Thanks for your purchase! Please keep this email for your records. If you have any questions, please contact <a href='accounting@scrive.com'>accounting@scrive.com</a>."
-"_paymentsSubscribeHeader","Ingen bindning. Alla features ingår.","All features included in your monthly subscription."
+"_paymentsSubscribeHeader","Ingen bindningtid. Alla features ingår.","All features included in your monthly subscription."
 "_paymentsSubheader"," "," "
 "_paymentsChoosePlan","Välj betalningsplan","Choose payment plan"
 "_paymentPlanTeamTag","Team med normal månatlig användning.","Teams with normal monthly usage."
