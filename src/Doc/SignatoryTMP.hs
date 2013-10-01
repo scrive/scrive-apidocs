@@ -10,7 +10,6 @@ module Doc.SignatoryTMP (
       toSignatoryDetails
 ) where
 
-import Control.Logic
 import Doc.DocStateData
 import Data.Maybe
 import Control.Monad
@@ -89,7 +88,11 @@ instance FromJSValueWithUpdate SignatoryField where
         placements <- updateWithDefaultAndField [] sfPlacements <$> fromJSValueField "placements"
         case (ftype,value) of
           (Just ft, Just v) -> do
-              return $ Just $ SignatoryField ft (v <| ft /= EmailFT|> strip v) obligatory filledbysender placements
+              let v' = case ft of
+                        EmailFT -> strip v
+                        SignatureFT _ -> ""
+                        _ -> v
+              return $ Just $ SignatoryField ft v' obligatory filledbysender placements
           _ -> return Nothing
       where
        updateWithDefaultAndField :: a -> (SignatoryField -> a) -> Maybe a -> a

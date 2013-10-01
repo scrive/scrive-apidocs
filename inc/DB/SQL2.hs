@@ -135,6 +135,7 @@ module DB.SQL2
   , sqlSet
   , sqlSetInc
   , sqlSetList
+  , sqlSetListWithDefaults
   , sqlSetCmd
   , sqlSetCmdList
   , sqlCopyColumn
@@ -684,6 +685,9 @@ sqlSetInc name = sqlSetCmd name $ raw name <+> "+ 1"
 
 sqlSetList :: (MonadState SqlInsert m, Convertible a SqlValue) => RawSQL -> [a] -> m ()
 sqlSetList name as = sqlSetCmdList name (map sqlParam as)
+
+sqlSetListWithDefaults :: (MonadState SqlInsert m, Convertible a SqlValue) => RawSQL -> [Maybe a] -> m ()
+sqlSetListWithDefaults name as = sqlSetCmdList name (map (maybe (SQL "DEFAULT" []) sqlParam) as)
 
 sqlCopyColumn :: (MonadState v m, SqlSet v) => RawSQL -> m ()
 sqlCopyColumn column = sqlSetCmd column (raw column)

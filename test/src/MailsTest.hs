@@ -93,7 +93,7 @@ sendDocumentMails mailTo author = do
         isl <- rand 10 arbitrary
 
         now <- getMinutesTime
-        let sigs = [authordetails, isl]
+        let sigs = [defaultValue {signatorydetails = authordetails} , defaultValue {signatorydetails = isl}]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
         randomUpdate $ PreparationToPending docid (systemActor now) Nothing
         d2 <- dbQuery $ GetDocumentByDocumentID docid

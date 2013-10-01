@@ -840,7 +840,7 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   sd <- signatoryDetailsFromUser author (False, False)
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [sd] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatorydetails = sd}] (systemActor mt)
   --assert
   assert $ not success
 
@@ -851,7 +851,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatoryisauthor = True }] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }}] (systemActor mt)
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
   assert success
@@ -864,15 +864,15 @@ testPreparationResetSignatoryDetails2Works = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  let newData1 = (Nothing,defaultValue { signatoryisauthor = True },[],Nothing, Nothing,Nothing, StandardAuthentication, EmailDelivery)
-  success1 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData1] (systemActor mt)
+  let newData1 = defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }}
+  success1 <- dbUpdate $ ResetSignatoryDetails (documentid doc) [newData1] (systemActor mt)
   assert success1
   ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc1))
   assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc1))
 
-  let newData2 = (Nothing,defaultValue { signatoryisauthor = True },[],Nothing,Nothing,Nothing, ELegAuthentication, PadDelivery)
-  success2 <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) [newData2] (systemActor mt)
+  let newData2 =  defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
+  success2 <- dbUpdate $ ResetSignatoryDetails (documentid doc) [newData2] (systemActor mt)
   assert success2
   ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   assertEqual "Proper delivery method set" [PadDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc2))
@@ -892,7 +892,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   -- non-existent docid
 
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    dbUpdate $ ResetSignatoryDetails a [defaultValue { signatoryisauthor = True }] (systemActor mt)
+    dbUpdate $ ResetSignatoryDetails a [defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }} ] (systemActor mt)
 
 
 

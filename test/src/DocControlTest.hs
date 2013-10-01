@@ -105,8 +105,8 @@ testLastPersonSigningADocumentClosesIt = do
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                   (authorOnly $ signatorydetails . fromJust $ getAuthorSigLink doc')
-                 , (mkSigDetails "Fred" "Frog" "fred@frog.com" False True)
+                    (defaultValue { signatorydetails = (authorOnly $ signatorydetails . fromJust $ getAuthorSigLink doc') })
+                  , (defaultValue { signatorydetails = mkSigDetails "Fred" "Frog" "fred@frog.com" False True })
                ]) (systemActor $ documentctime doc')
 
 

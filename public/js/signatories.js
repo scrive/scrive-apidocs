@@ -543,6 +543,7 @@ window.Signatory = Backbone.Model.extend({
     },
     draftData : function() {
         return {
+              id : this.signatoryid(),
               fields: _.map(this.readyFields(), function(field) {
                   return field.draftData();
               }),

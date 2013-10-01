@@ -161,6 +161,7 @@ mergeAuthorDetails sigs nsigs =
             setConstantDetails a =  replaceFieldValue FirstNameFT (getFirstName a) .
                                     replaceFieldValue LastNameFT (getLastName a) .
                                     replaceFieldValue EmailFT   (getEmail a) .
+                                    (\s -> s {maybesignatory = maybesignatory a}) .
                                     (\s -> s {signatorylinkid = signatorylinkid a})
           in case (asig, nasig') of
                ([asig'], [nasig'']) -> Just $ (setConstantDetails asig' nasig'') : nsigs'

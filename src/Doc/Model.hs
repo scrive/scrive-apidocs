@@ -741,7 +741,7 @@ insertSignatoryLinksAsAre _documentid [] = return []
 insertSignatoryLinksAsAre documentid links = do
   _ <- kRun $ sqlInsert "signatory_links" $ do
            sqlSet "document_id" documentid
-           sqlSetList "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then (raw $ unsafeFromString "DEFAULT") else (signatorylinkid sl)) links
+           sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
            sqlSetList "user_id" $ maybesignatory <$> links
            sqlSetList "is_author" $ signatoryisauthor <$> signatorydetails <$> links
            sqlSetList "is_partner" $ signatoryispartner <$> signatorydetails <$> links
