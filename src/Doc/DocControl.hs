@@ -205,7 +205,8 @@ handleSignShow documentid
       document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
       invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
       switchLangWhenNeeded  (Just invitedlink) document
-      _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
+      when (not (isTemplate document) && (not (isPreparation document)) && (not (isClosed document))) $
+        dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
            (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
       document' <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
 
