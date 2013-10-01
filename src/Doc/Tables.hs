@@ -5,11 +5,9 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 28
+  , tblVersion = 29
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
-    , tblColumn { colName = "file_id", colType = BigIntT }
-    , tblColumn { colName = "sealed_file_id", colType = BigIntT }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
     , tblColumn { colName = "status", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "error_text", colType = TextT }
@@ -26,13 +24,27 @@ tableDocuments = tblTable {
     , tblColumn { colName = "api_callback_url", colType = TextT }
     , tblColumn { colName = "unsaved_draft", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "object_version", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "seal_status", colType = SmallIntT }
     , tblColumn { colName = "purged_time", colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey = ["id"]
+  }
+
+tableMainFiles :: Table
+tableMainFiles = tblTable {
+    tblName = "main_files"
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "document_status", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "seal_status", colType = SmallIntT }
+    ]
+  , tblPrimaryKey = ["document_id", "file_id"]
   , tblForeignKeys = [
-      tblForeignKeyColumn "file_id" "files" "id"
-    , tblForeignKeyColumn "sealed_file_id" "files" "id"
+      (tblForeignKeyColumn "document_id" "documents" "id") {
+        fkOnDelete = ForeignKeyCascade
+      }
+    , tblForeignKeyColumn "file_id" "files" "id"
     ]
   }
 

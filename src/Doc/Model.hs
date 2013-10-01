@@ -13,8 +13,8 @@ module Doc.Model
   , ArchiveDocument(..)
   , AttachFile(..)
   , DetachFile(..)
-  , AttachSealedFile(..)
-  , AttachExtendedSealedFile(..)
+  , AppendFirstSealedFile(..)
+  , AppendSealedFile(..)
   , CancelDocument(..)
   , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
@@ -98,6 +98,7 @@ import OurPrelude
 import Control.Logic
 import Doc.DocStateData
 import Data.Maybe hiding (fromJust)
+import Data.Ord (comparing)
 import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
 import Utils.Default
@@ -501,8 +502,6 @@ documentsSelectors :: [SQL]
 documentsSelectors =
   [ "documents.id"
   , "documents.title"
-  , "documents.file_id"
-  , "documents.sealed_file_id"
   , "documents.status"
   , "documents.error_text"
   , "documents.type"
@@ -517,7 +516,6 @@ documentsSelectors =
   , "documents.sharing"
   , "documents.api_callback_url"
   , "documents.object_version"
-  , "documents.seal_status"
   , documentStatusClassExpression
   ]
 
@@ -527,16 +525,15 @@ fetchDocuments = kFold decoder []
   where
     -- Note: this function gets documents in reversed order, but all queries
     -- use reversed order too, so in the end everything is properly ordered.
-    decoder acc did title file_id sealed_file_id status error_text doc_type
+    decoder acc did title status error_text doc_type
       ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text
-     lang sharing apicallback objectversion seal_status status_class
+     lang sharing apicallback objectversion status_class
        = Document {
          documentid = did
        , documenttitle = title
        , documentsignatorylinks = []
-       , documentfile = file_id
-       , documentsealedfile = sealed_file_id
+       , documentmainfiles = []
        , documentstatus = case (status, error_text) of
            (DocumentError{}, Just text) -> DocumentError text
            (DocumentError{}, Nothing) -> DocumentError "document error"
@@ -557,7 +554,6 @@ fetchDocuments = kFold decoder []
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
        , documentobjectversion = objectversion
-       , documentsealstatus = seal_status
        } : acc
 
 documentLatestSignTimeExpression :: SQL
@@ -897,6 +893,39 @@ insertAuthorAttachmentsAsAre documentid attachments = do
   fetchAuthorAttachments
     >>= return . concatMap snd . M.toList
 
+mainFilesSelectors :: [SQL]
+mainFilesSelectors =
+  [ "document_id"
+  , "file_id"
+  , "document_status"
+  , "seal_status"
+  ]
+
+selectMainFilesSQL :: SQL
+selectMainFilesSQL = "SELECT" <+> sqlConcatComma mainFilesSelectors <+> "FROM main_files "
+
+fetchMainFiles :: MonadDB m => m (M.Map DocumentID [MainFile])
+fetchMainFiles = kFold decoder M.empty
+  where
+    decoder acc document_id file_id document_status seal_status =
+      M.insertWith' (++) document_id [MainFile {
+        mainfileid = file_id
+      , mainfiledocumentstatus = document_status
+      , mainfilesealstatus = seal_status
+      }] acc
+
+insertMainFilesAsAre :: MonadDB m => DocumentID -> [MainFile] -> m [MainFile]
+insertMainFilesAsAre _documentid [] = return []
+insertMainFilesAsAre documentid files = do
+  _ <- kRun $ sqlInsert "main_files" $ do
+        sqlSet "document_id" documentid
+        sqlSetList "file_id" $ mainfileid <$> files
+        sqlSetList "document_status" $ mainfiledocumentstatus <$> files
+        sqlSetList "seal_status" $ mainfilesealstatus <$> files
+        mapM_ sqlResult mainFilesSelectors
+  fetchMainFiles
+    >>= return . concatMap snd . M.toList
+
 insertSignatoryAttachmentsAsAre :: MonadDB m
                                 => [(SignatoryLinkID,[SignatoryAttachment])]
                                 -> m (M.Map SignatoryLinkID [SignatoryAttachment])
@@ -1026,8 +1055,7 @@ insertDocumentAsIs document@(Document
                    _documentid
                    documenttitle
                    documentsignatorylinks
-                   documentfile
-                   documentsealedfile
+                   documentmainfiles
                    documentstatus
                    documenttype
                    documentctime
@@ -1043,12 +1071,9 @@ insertDocumentAsIs document@(Document
                    _documentstatusclass
                    documentapicallbackurl
                    documentobjectversion
-                   documentsealstatus
                  ) = do
     _ <- kRun $ sqlInsert "documents" $ do
         sqlSet "title" documenttitle
-        sqlSet "file_id" $ documentfile
-        sqlSet "sealed_file_id" $ documentsealedfile
         sqlSet "status" documentstatus
         sqlSet "error_text" $ case documentstatus of
           DocumentError msg -> toSql msg
@@ -1065,7 +1090,6 @@ insertDocumentAsIs document@(Document
         sqlSet "sharing" documentsharing
         sqlSet "object_version" documentobjectversion
         sqlSet "api_callback_url" documentapicallbackurl
-        sqlSet "seal_status" documentsealstatus
         mapM_ (sqlResult) documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
@@ -1075,9 +1099,11 @@ insertDocumentAsIs document@(Document
         links <- insertSignatoryLinksAsAre (documentid doc) documentsignatorylinks
         authorattachments <- insertAuthorAttachmentsAsAre (documentid doc) documentauthorattachments
         newtags <- S.fromList <$> insertDocumentTagsAsAre (documentid doc) (S.toList documenttags)
+        mainfiles <- insertMainFilesAsAre (documentid doc) documentmainfiles
         let newdocument = doc { documentsignatorylinks    = links
                               , documentauthorattachments = authorattachments
                               , documenttags              = newtags
+                              , documentmainfiles         = mainfiles
                               }
         assertEqualDocuments document newdocument
         return (Just newdocument)
@@ -1122,12 +1148,23 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
 
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
 
-
+-- | Attach a main file to a document associating it with preparation
+-- status.  Any old main file in preparation status will be removed.
+-- Can only be done on documents in preparation.
 data AttachFile = AttachFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where
   update (AttachFile did fid a) = do
-    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+    kRun_ $ sqlDelete "main_files" $ do
+      sqlWhereEq "document_id" did
+      sqlWhereEq "document_status" Preparation
+    kRun1OrThrowWhyNot $ sqlInsertSelect "main_files" "" $ do
       sqlSet "file_id" fid
+      sqlSet "document_id" did
+      sqlSet "document_status" Preparation
+      sqlSetCmd "seal_status" "NULL"
+      sqlWhereExists $ sqlSelect "documents" $ do
+        sqlWhereDocumentIDIs did
+        sqlWhereDocumentStatusIs Preparation
       -- FIXME:
       --
       -- We do not need to check if the file really exists because if
@@ -1142,44 +1179,52 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where
       --
       -- Some magic needs to be invented to prevent that from
       -- happening.
-      sqlWhereDocumentIDIs did
-      sqlWhereDocumentStatusIs Preparation
     updateMTimeAndObjectVersion did (actorTime a)
     return ()
 
+-- | Detach main files in Preparation status.  Document must be in Preparation.
 data DetachFile = DetachFile DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
   update (DetachFile did a) = do
-    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-      sqlSet "file_id" SqlNull
-      sqlWhereDocumentIDIs did
-      sqlWhereDocumentStatusIs Preparation
+    kRunManyOrThrowWhyNot $ sqlDelete "main_files" $ do
+      sqlWhereEq "document_id" did
+      sqlWhereEq "document_status" Preparation
+      sqlWhereExists $ sqlSelect "documents" $ do
+        sqlWhereDocumentIDIs did
+        sqlWhereDocumentStatusIs Preparation
     updateMTimeAndObjectVersion did (actorTime a)
 
-data AttachSealedFile = AttachSealedFile DocumentID FileID SealStatus Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
-  update (AttachSealedFile did fid status actor) = do
-    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-      sqlSet "sealed_file_id" fid
-      sqlSet "seal_status" status
-      sqlWhereDocumentIDIs did
-      sqlWhereDocumentStatusIs Closed
-    _ <- update $ InsertEvidenceEvent
-        AttachSealedFileEvidence
-        (value "actor"(actorWho actor))
-        (Just did)
-        actor
-    updateMTimeAndObjectVersion did (actorTime actor)
-    return ()
+-- | Append the first version of the set of sealed files to a
+-- document, inserting evidence event and updating modification time.
+data AppendFirstSealedFile = AppendFirstSealedFile DocumentID FileID SealStatus Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AppendFirstSealedFile () where
+  update (AppendFirstSealedFile did fid status actor) = appendSealedFile did fid status (Just actor)
 
-data AttachExtendedSealedFile = AttachExtendedSealedFile DocumentID FileID SealStatus
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachExtendedSealedFile () where
-  update (AttachExtendedSealedFile did fid status) = do
-    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-      sqlSet "sealed_file_id" fid
+-- | Append another sealed file to a document, as a result of fixing or
+-- improving an already sealed document.
+data AppendSealedFile = AppendSealedFile DocumentID FileID SealStatus
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AppendSealedFile () where
+  update (AppendSealedFile did fid status) = appendSealedFile did fid status Nothing
+
+appendSealedFile :: (MonadDB m, TemplatesMonad m) => DocumentID -> FileID -> SealStatus -> Maybe Actor -> m ()
+appendSealedFile did fid status mactor = do
+    kRun1OrThrowWhyNot $ sqlInsertSelect "main_files" "" $ do
+      sqlSet "document_id" did
+      sqlSet "file_id" fid
+      sqlSet "document_status" Closed
       sqlSet "seal_status" status
-      sqlWhereDocumentIDIs did
-      sqlWhereDocumentStatusIs Closed
+      sqlWhereExists $ sqlSelect "documents" $ do
+        sqlWhereDocumentIDIs did
+        sqlWhereDocumentStatusIs Closed
+    case mactor of
+      Nothing -> return ()
+      Just actor -> do
+        _ <- update $ InsertEvidenceEvent
+            AttachSealedFileEvidence
+            (value "actor"(actorWho actor))
+            (Just did)
+            actor
+        updateMTimeAndObjectVersion did (actorTime actor)
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument () where
@@ -1460,6 +1505,9 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
     kRun_ $ selectDocumentTagsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE document_tags.document_id = docs.id)" []
     tags <- fetchDocumentTags
 
+    kRun_ $ selectMainFilesSQL <> "WHERE EXISTS (SELECT 1 FROM docs WHERE main_files.document_id = docs.id) ORDER BY document_id DESC"
+    mainfiles <- fetchMainFiles
+
     kRunRaw "DROP TABLE docs"
     kRunRaw "DROP TABLE links"
 
@@ -1472,6 +1520,7 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
                    { documentsignatorylinks    = extendSignatoryLinkWithFields <$> M.findWithDefault [] (documentid doc) sls
                    , documentauthorattachments = M.findWithDefault [] (documentid doc) ats
                    , documenttags              = M.findWithDefault S.empty (documentid doc) tags
+                   , documentmainfiles         = sortBy (flip (comparing mainfileid)) $ M.findWithDefault [] (documentid doc) mainfiles
                    }
 
     return (allDocumentsCount, map fill docs)

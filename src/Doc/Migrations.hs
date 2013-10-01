@@ -1046,3 +1046,49 @@ addRejectRedirectURL =
       kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN reject_redirect_url VARCHAR NULL DEFAULT NULL"
   }
 
+migrateDocumentsMoveFilesToMainFilesTable :: MonadDB m => Migration m
+migrateDocumentsMoveFilesToMainFilesTable =
+  Migration
+    { mgrTable = tableDocuments
+    , mgrFrom = 28
+    , mgrDo = do
+        docsWithFile <- kRun $ sqlInsertSelect "main_files" "documents" $ do
+          sqlSetCmd "document_id" "id"
+          sqlSetCmd "file_id" "file_id"
+          sqlSet "document_status" Preparation
+          sqlSetCmd "seal_status" "NULL"
+          sqlWhere "file_id IS NOT NULL"
+        docsWithSealedFile <- kRun $ sqlInsertSelect "main_files" "documents" $ do
+          sqlSetCmd "document_id" "id"
+          sqlSetCmd "file_id" "sealed_file_id"
+          sqlSet "document_status" Closed
+          sqlSetCmd "seal_status" "seal_status"
+          sqlWhere "sealed_file_id IS NOT NULL"
+
+        -- Sanity checks: for each documents.file_id, there should be
+        -- a matching element in main_files, and similar for documents.sealed_file_id
+
+        Just migratedFiles <- getOne $ sqlSelect "main_files" $ do
+          sqlResult "count(*)"
+          sqlWhereEq "document_status" Preparation
+          sqlWhereExists $ sqlSelect "documents" $ do
+            sqlWhere "documents.id = main_files.document_id"
+            sqlWhere "documents.file_id = main_files.file_id"
+        Just migratedSealedFiles <- getOne $ sqlSelect "main_files" $ do
+          sqlResult "count(*)"
+          sqlWhereEq "document_status" Closed
+          sqlWhereExists $ sqlSelect "documents" $ do
+            sqlWhere "documents.id = main_files.document_id"
+            sqlWhere "documents.sealed_file_id = main_files.file_id"
+            sqlWhere "documents.seal_status = main_files.seal_status"
+        when (migratedFiles /= docsWithFile) $ do
+          fail $ "Doc.Migrations.migrateDocumentsRemoveFiles: #migratedFiles is not #docsWithFile: " ++ show (migratedFiles, docsWithFile)
+        when (migratedSealedFiles /= docsWithSealedFile) $ do
+          fail $ "Doc.Migrations.migrateDocumentsRemoveFiles: #migratedSealedFiles is not #docsWithSealedFile: " ++ show (migratedSealedFiles, docsWithSealedFile)
+
+        -- Drop redundant columns
+
+        kRun_ $ "ALTER TABLE documents DROP COLUMN file_id"
+        kRun_ $ "ALTER TABLE documents DROP COLUMN sealed_file_id"
+        kRun_ $ "ALTER TABLE documents DROP COLUMN seal_status"
+    }

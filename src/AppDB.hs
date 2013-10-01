@@ -154,6 +154,7 @@ kontraMigrations = [
   , addPurgedTimeToFiles
   , migrateDocumentsAddPurgedTime
   , addRejectRedirectURL
+  , migrateDocumentsMoveFilesToMainFilesTable
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -163,6 +164,7 @@ kontraTables = [
   , tableCompanies
   , tableCompanyInvites
   , tableFiles
+  , tableMainFiles
   , tableDocuments
   , tableSignatoryLinks
   , tableAuthorAttachments

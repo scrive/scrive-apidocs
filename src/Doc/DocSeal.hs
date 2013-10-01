@@ -611,7 +611,7 @@ digitallySealDocument forceAttach ctxtime ctxgtconf documentid pdfpath pdfname =
     Log.debug $ "Adding new sealed file to DB"
     sealedfileid <- dbUpdate $ NewFile pdfname newfilepdf
     Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-    dbUpdate $ AttachSealedFile documentid sealedfileid status $ systemActor ctxtime
+    dbUpdate $ AppendFirstSealedFile documentid sealedfileid status $ systemActor ctxtime
     return (Just sealedfileid)
    else do
     return Nothing
@@ -641,8 +641,7 @@ digitallyExtendDocument _ctxtime ctxgtconf documentid pdfpath pdfname = do
       Log.debug $ "Adding new extended file to DB"
       sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
       Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-      -- TODO: keep old sealed file, or delete?
-      dbUpdate $ AttachExtendedSealedFile documentid sealedfileid status
+      dbUpdate $ AppendSealedFile documentid sealedfileid status
       return True
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.

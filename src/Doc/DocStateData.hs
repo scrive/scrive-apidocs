@@ -4,6 +4,7 @@ module Doc.DocStateData (
     CSVUpload(..)
   , CancelationReason(..)
   , Document(..)
+  , MainFile(..)
   , DocumentSharing(..)
   , DocumentStatus(..)
   , DocumentTag(..)
@@ -26,6 +27,9 @@ module Doc.DocStateData (
   , StatusClass(..)
   , getFieldOfType
   , getValueOfType
+  , documentfile
+  , documentsealedfile
+  , documentsealstatus
   ) where
 
 import Data.Data
@@ -373,8 +377,7 @@ data Document = Document {
     documentid                     :: DocumentID
   , documenttitle                  :: String
   , documentsignatorylinks         :: [SignatoryLink]
-  , documentfile                   :: Maybe FileID
-  , documentsealedfile             :: Maybe FileID
+  , documentmainfiles              :: [MainFile] -- sorted in descending order w.r.t. FileID
   , documentstatus                 :: DocumentStatus
   , documenttype                   :: DocumentType
   , documentctime                  :: MinutesTime
@@ -390,7 +393,6 @@ data Document = Document {
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
   , documentobjectversion          :: Int
-  , documentsealstatus             :: Maybe SealStatus
   } deriving (Eq, Ord, Show)
 
 
@@ -399,7 +401,7 @@ instance HasDefaultValue Document where
           { documentid                   = unsafeDocumentID 0
           , documenttitle                = ""
           , documentsignatorylinks       = []
-          , documentfile                 = Nothing
+          , documentmainfiles            = []
           , documentstatus               = Preparation
           , documenttype                 = Signable
           , documentctime                = fromSeconds 0
@@ -407,7 +409,6 @@ instance HasDefaultValue Document where
           , documentdaystosign           = 14
           , documenttimeouttime          = Nothing
           , documentinvitetext           = ""
-          , documentsealedfile           = Nothing
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documenttags                 = S.empty
@@ -416,11 +417,29 @@ instance HasDefaultValue Document where
           , documentstatusclass          = SCDraft
           , documentapicallbackurl       = Nothing
           , documentobjectversion        = 0
-          , documentsealstatus           = Nothing
           }
 
 instance HasLang Document where
   getLang = documentlang
+
+data MainFile = MainFile
+  { mainfileid             :: FileID           -- ^ pointer to the actual file
+  , mainfiledocumentstatus :: DocumentStatus   -- ^ Preparation if and only if this is not a sealed file
+  , mainfilesealstatus     :: Maybe SealStatus -- ^ for files in Preparation and sealed files with unknown status: Nothing
+  } deriving (Eq, Ord, Show)
+
+documentfile :: Document -> Maybe FileID
+documentfile = fmap mainfileid . find ((==Preparation) . mainfiledocumentstatus) . documentmainfiles
+
+-- Here, we assume that the most recently sealed file is closed to the head of the list
+documentsealedfile' :: Document -> Maybe MainFile
+documentsealedfile' = find ((/=Preparation) . mainfiledocumentstatus) . documentmainfiles
+
+documentsealedfile :: Document -> Maybe FileID
+documentsealedfile = fmap mainfileid . documentsealedfile'
+
+documentsealstatus :: Document -> Maybe SealStatus
+documentsealstatus = (>>=mainfilesealstatus) . documentsealedfile'
 
 data CancelationReason = ManualCancel
                         -- The data returned by ELeg server

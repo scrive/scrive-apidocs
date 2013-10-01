@@ -7,7 +7,7 @@ module Doc.EvidenceAttachments
 import Control.Applicative((<$>))
 import DB (MonadDB)
 import Data.Maybe (listToMaybe, fromMaybe)
-import Doc.DocStateData (Document(..))
+import Doc.DocStateData (Document(..), documentsealedfile)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import File.Storage (getFileIDContents)

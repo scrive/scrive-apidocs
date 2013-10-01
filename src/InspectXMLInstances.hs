@@ -39,6 +39,7 @@ instance (InspectXML a, Show a) => InspectXML (Maybe a) where
 instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => InspectXML (a, b, c) where
     inspectXML (a, b, c) = "(" ++ inspectXML a ++"," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
 
+$(deriveInspectXML ''MainFile)
 $(deriveInspectXML ''Document)
 $(deriveInspectXML ''AuthorAttachment)
 $(deriveInspectXML ''SignatoryAttachment)
