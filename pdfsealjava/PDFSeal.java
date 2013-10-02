@@ -863,20 +863,24 @@ public class PDFSeal {
         throws DocumentException, IOException
     {
         Font font = null;
+        /*
+         * At this point we do not support Chinese, but should it be
+         * needed it can be added as in the below code. Just get a
+         * proper font and use it for chinese like strings.
+        */
+        /*
         if( font==null && hasCJK(text)) {
             if(baseFontKochiMincho==null ) {
-                URL url = PDFSeal.class.getResource("/kochi-mincho-subst.ttf");
-
-                baseFontKochiMincho = BaseFont.createFont(url.toString(),  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                baseFontKochiMincho = BaseFont.createFont("public/fonts/kochi-mincho-subst.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 baseFontKochiMincho.setSubset(true);
             }
             font = new Font(baseFontKochiMincho, size, style, color);
         }
+        */
         if( font==null ) {
             if(baseFontHelvetica==null ) {
-                URL url = PDFSeal.class.getResource("/Helvetica.ttf");
 
-                baseFontHelvetica = BaseFont.createFont(url.toString(),  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                baseFontHelvetica = BaseFont.createFont("public/fonts/SourceSansPro-Light.ttf",  BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 baseFontHelvetica.setSubset(true);
             }
             font = new Font(baseFontHelvetica, size, style, color);

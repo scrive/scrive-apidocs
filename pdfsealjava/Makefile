@@ -18,8 +18,8 @@ open : output.pdf
 
 jar : pdfseal.jar
 
-pdfseal.jar : PDFSeal.class Manifest.txt Helvetica.ttf kochi-mincho-subst.ttf sealmarker.pdf
-	jar cfm $@ Manifest.txt *.class Helvetica.ttf kochi-mincho-subst.ttf sealmarker.pdf
+pdfseal.jar : PDFSeal.class Manifest.txt sealmarker.pdf
+	jar cfm $@ Manifest.txt *.class sealmarker.pdf
 
 #
 # We need to make jar dependent on all .java file in
