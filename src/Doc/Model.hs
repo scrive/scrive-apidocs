@@ -454,9 +454,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
     sl1 = documentsignatorylinks d1
     sl2 = documentsignatorylinks d2
     checkSigLink s1 s2 = map (\f -> f s1 s2)
-                         [ checkEqualBy "signatorydetails" signatorydetails
-                         , checkEqualBy "signatorymagichash" signatorymagichash
-                         , checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
+                         [
+                           checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
                          , checkEqualBy "maybesigninfo" maybesigninfo
                          , checkEqualBy "maybeseeninfo" maybeseeninfo
                          , checkEqualBy "maybereadinvite" maybereadinvite
@@ -467,6 +466,9 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
                          , checkEqualBy "signatoryfields" (sort . signatoryfields . signatorydetails)
+                         , checkEqualBy "signatoryisauthor" (signatoryisauthor . signatorydetails)
+                         , checkEqualBy "signatoryispartner" (signatoryispartner. signatorydetails)
+                         , checkEqualBy "signatorysignorder" (signatorysignorder. signatorydetails)
                          , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
                          , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
                          , checkEqualBy "signatorylinkauthenticationmethod" signatorylinkauthenticationmethod
@@ -736,6 +738,7 @@ fetchSignatoryLinks = do
           , signatorylinkdeliverymethod = delivery_method
           }
 
+-- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> m [SignatoryLink]
 insertSignatoryLinksAsAre _documentid [] = return []
 insertSignatoryLinksAsAre documentid links = do
@@ -1363,6 +1366,11 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
                 sqlWhereDocumentTypeIs Signable
                 sqlWhereDocumentStatusIs Preparation
 
+              kRun_ $ sqlUpdate "signatory_links" $ do
+                sqlSet "csv_title" (Nothing :: Maybe String)
+                sqlSet "csv_contents" (Nothing :: Maybe String)
+                sqlWhereEq "document_id" docid
+
               Just tot <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
               _ <- update $ InsertEvidenceEvent
                 PreparationToPendingEvidence
@@ -1819,23 +1827,23 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
              return $ Right doc'
 
     clearSignInfofromDoc = do
-      let signatoriesDetails = map (\x -> (signatorydetails x, signatorylinkid x, signatoryattachments x, signatorylinkauthenticationmethod x, signatorylinkdeliverymethod x)) $ documentsignatorylinks doc
-          Just asl = getAuthorSigLink doc
-      newSignLinks <- forM signatoriesDetails $ \(details, linkid, atts, auth, delivery) -> do
+      newSignLinks <- forM (documentsignatorylinks doc) $ \sl -> do
                            magichash <- random
-                           return $ (signLinkFromDetails' details atts magichash) { signatorylinkid = linkid
-                                                                                  , signatorylinkdeliverymethod = delivery
-                                                                                  , signatorylinkauthenticationmethod = auth
-                                                                                  }
-      let Just authorsiglink0 = find isAuthor newSignLinks
-          authorsiglink = authorsiglink0 {
-                            maybesignatory = maybesignatory asl
+                           return $ defaultValue {
+                                signatorylinkid            = (unsafeSignatoryLinkID 0)
+                              , signatorymagichash = magichash
+                              , signatorydetails           = signatorydetails sl
+                              , signatorylinkcsvupload       = signatorylinkcsvupload sl
+                              , signatoryattachments         = signatoryattachments sl
+                              , signatorylinksignredirecturl = signatorylinksignredirecturl sl
+                              , signatorylinkrejectredirecturl = signatorylinkrejectredirecturl sl
+                              , signatorylinkauthenticationmethod = signatorylinkauthenticationmethod sl
+                              , signatorylinkdeliverymethod       = signatorylinkdeliverymethod sl
+                              , maybesignatory = if (isAuthor sl) then maybesignatory sl else Nothing
                           }
-          othersiglinks = filter (not . isAuthor) newSignLinks
-          newsiglinks = authorsiglink : othersiglinks
       return doc {documentstatus = Preparation,
                   documenttimeouttime = Nothing,
-                  documentsignatorylinks = newsiglinks
+                  documentsignatorylinks = newSignLinks
                  }
 
 data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID Actor
@@ -2082,6 +2090,8 @@ instance (MonadDB m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m
             updateMTimeAndObjectVersion docid (actorTime actor)
             return ()
 
+
+-- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryLink] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories _actor) = do
@@ -2113,27 +2123,27 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 
 
 
-data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User DocumentID Actor
-instance (MonadDB m, TemplatesMonad m, MonadIO m)=> DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
-  update (CloneDocumentWithUpdatedAuthor user docid actor) = do
+data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
+instance (MonadDB m, TemplatesMonad m, MonadIO m,CryptoRNG m)=> DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
+  update (CloneDocumentWithUpdatedAuthor user document actor) = do
           company <- query $ GetCompanyByUserID (userid user)
-          let replaceAuthorSigLink sl
-                | isAuthor sl = replaceSignatoryUser sl user company
-                | otherwise = sl
-          let time = actorTime actor
-          res <- (flip newFromDocumentID) docid $ \doc ->
+          siglinks <- forM (documentsignatorylinks document) $ \sl -> do
+                magichash <- random
+                let sl' = if (isAuthor sl) then (replaceSignatoryUser sl user company) else sl
+                return sl' {signatorylinkid = unsafeSignatoryLinkID 0, signatorymagichash = magichash}
+          res <- (flip newFromDocumentID) (documentid document) $ \doc ->
             doc {
                 documentstatus = Preparation
               , documentsharing = Private
-              , documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
+              , documentsignatorylinks = siglinks
                                        -- FIXME: Need to remove authorfields?
-              , documentctime = time
-              , documentmtime = time
+              , documentctime = actorTime actor
+              , documentmtime = actorTime actor
               }
           case res of
             Nothing -> return Nothing
             Just d -> do
-              copyEvidenceLogToNewDocument docid $ documentid d
+              copyEvidenceLogToNewDocument (documentid document) $ documentid d
               return $ Just $ documentid d
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document

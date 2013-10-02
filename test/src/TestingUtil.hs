@@ -155,7 +155,7 @@ instance Arbitrary SignatoryActor where
     return $ SignatoryActor $ signatoryActor time ip uid eml slid
 
 instance Arbitrary SignatoryLinkID where
-  arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
+  arbitrary = return $ unsafeSignatoryLinkID 0
 
 instance Arbitrary SignatoryLink where
   arbitrary = do

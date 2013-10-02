@@ -193,7 +193,7 @@ apiCallCreateFromTemplate did =  api $ do
                       (usercompany auser == usercompany user &&  isDocumentShared template)
   newdoc <- if (isTemplate template && haspermission)
                     then do
-                      mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
+                      mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor
                       when (isNothing mndid) $
                           throwIO . SomeKontraException $ serverError "Can't clone given document"
                       dbUpdate $ DocumentFromTemplate (fromJust mndid) actor
@@ -209,7 +209,7 @@ apiCallClone did =  api $ do
   doc <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc,user)
      then do
-         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user did actor
+         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
          when (isNothing mndid) $
              throwIO . SomeKontraException $ serverError "Can't clone given document"
          newdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)

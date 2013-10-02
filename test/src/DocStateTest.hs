@@ -172,7 +172,7 @@ docStateTests env = testGroup "DocState" [
   testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" env testNoDocumentResetSignatoryDetailsAlwaysLeft,
   testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" env testNotPreparationResetSignatoryDetailsAlwaysLeft,
   testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" env testPreparationResetSignatoryDetailsAlwaysRight,
-  testThat "ResetSignatoryDetails2 works as expected" env testPreparationResetSignatoryDetails2Works,
+  testThat "ResetSignatoryDetails works as expected" env testPreparationResetSignatoryDetails2Works,
 
   testThat "addDocumentAttachment fails if not in preparation" env testAddDocumentAttachmentFailsIfNotPreparation,
   testThat "addDocumentAttachment doesn't fail if there's no attachments" env testAddDocumentAttachmentOk,
@@ -851,7 +851,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }}] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, maybesignatory = Just $ userid author}] (systemActor mt)
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
   assert success
@@ -864,14 +864,14 @@ testPreparationResetSignatoryDetails2Works = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  let newData1 = defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }}
+  let newData1 = defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, maybesignatory = Just $ userid author}
   success1 <- dbUpdate $ ResetSignatoryDetails (documentid doc) [newData1] (systemActor mt)
   assert success1
   ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc1))
   assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc1))
 
-  let newData2 =  defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
+  let newData2 =  defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
   success2 <- dbUpdate $ ResetSignatoryDetails (documentid doc) [newData2] (systemActor mt)
   assert success2
   ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -1040,7 +1040,7 @@ testCreateFromSharedTemplate = do
            dbQuery $ GetDocumentByDocumentID docid
   newuser <- addNewRandomUser
 
-  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor newuser (documentid doc) (systemActor mt))
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor newuser doc (systemActor mt))
   _ <- dbUpdate $ DocumentFromTemplate docid'  (systemActor mt)
 
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -1068,7 +1068,7 @@ testCreateFromTemplateCompanyField = doTimes 10 $ do
            _ <- dbUpdate $ TemplateFromDocument docid (systemActor mt)
            dbQuery $ GetDocumentByDocumentID docid
   user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
-  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor user' (documentid doc) (systemActor mt))
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor user' doc (systemActor mt))
   _ <- dbUpdate $ DocumentFromTemplate docid'  (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'

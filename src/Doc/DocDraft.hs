@@ -145,7 +145,7 @@ applyDraftDataToDocument doc draft actor = do
            Nothing   -> return $ Left "Problem with author details while sending draft"
            Just sigs -> do
              mdoc <- runMaybeT $ do
-               True <- dbUpdate $ ResetSignatoryDetails (documentid doc) sigs actor
+               True <- dbUpdate $ ResetSignatoryDetails (documentid doc) (sort sigs) actor
                newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
                return newdoc
              return $ case mdoc of
