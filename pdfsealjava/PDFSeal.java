@@ -526,7 +526,15 @@ public class PDFSeal {
 
                         PdfPCell cell2 = new PdfPCell(image, true);
                         cell2.setBorder(Rectangle.BOTTOM);
-                        cell2.setBorderWidth(0.6f);
+                        /*
+                         * For some reason bottom line below signature
+                         * image is not visible in some magnification
+                         * zooms. Something is overlapping something
+                         * else and rounding errors obscure the
+                         * line. We need to make it more than 1.0 in
+                         * width to cover up for this crap.
+                         */
+                        cell2.setBorderWidth(1.6f);
                         cell2.setBorderColor(lightTextColor);
 
                         table2.addCell(cell2);
