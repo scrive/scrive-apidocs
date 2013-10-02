@@ -81,7 +81,7 @@ docStateTests env = testGroup "DocState" [
   testThat "CancelDocument adds to the log" env testCancelDocumentEvidenceLog,
   testThat "ELegAbortDocument adds to the log" env testELegAbortDocumentDocumentEvidenceLog,
 
-  testThat "AttachSealedFile adds to the log" env testAttachSealedFileEvidenceLog,
+  testThat "AppendFirstSealedFile adds to the log" env testAppendFirstSealedFileEvidenceLog,
   testThat "AddInvitationEvidence adds to the log" env testAddInvitationEvidenceLog,
   testThat "GetDocumentsByCompanyWithFiltering filters" env testGetDocumentsByCompanyWithFilteringFilters,
   testThat "GetDocumentsByCompanyWithFiltering finds" env testGetDocumentsByCompanyWithFilteringFinds,
@@ -159,8 +159,8 @@ docStateTests env = testGroup "DocState" [
   testThat "when I attach a file to a bad docid, it ALWAYS returns Left" env testNoDocumentAttachAlwaysLeft,
   testThat "when I attach a file, the file is attached" env testDocumentAttachHasAttachment,
 
-  testThat "when I attach a sealed file to a bad docid, it always returns left" env testNoDocumentAttachSealedAlwaysLeft,
-  testThat "when I attach a sealed file to a real doc, it always returns Right" env testDocumentAttachSealedPendingRight,
+  testThat "when I attach a sealed file to a bad docid, it always returns left" env testNoDocumentAppendSealedAlwaysLeft,
+  testThat "when I attach a sealed file to a real doc, it always returns Right" env testDocumentAppendSealedPendingRight,
 
   --testThat "when I call updateDocument, it fails when the doc doesn't exist" env testNoDocumentUpdateDocumentAlwaysLeft,
   --testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" env testNotPreparationUpdateDocumentAlwaysLeft,
@@ -216,8 +216,9 @@ testSealMissingSignatures = do
   let filename = "test/pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
+  file2 <- addNewFile filename filecontent
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  randomUpdate $ \t -> AttachSealedFile (documentid doc) file Missing (systemActor t)
+  randomUpdate $ AppendSealedFile (documentid doc) file2 Missing
   runScheduler $ sealMissingSignaturesNewerThan Nothing
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   case documentsealstatus doc' of
@@ -230,9 +231,13 @@ testExtendSignatures = do
   let filename = "test/pdfs/extensible.pdf"
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
-  doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
+  file1 <- addNewFile filename filecontent
+  file2 <- addNewFile filename filecontent
+  doc <- addRandomDocumentWithAuthorAndConditionAndFile author (isSignable &&^ isClosed) file
   now <- getMinutesTime
-  dbUpdate $ AttachSealedFile (documentid doc) file Guardtime{ extended = False, private = False } (systemActor (2 `monthsBefore` now))
+  let actor = systemActor (2 `monthsBefore` now)
+  dbUpdate $ AppendFirstSealedFile (documentid doc) file1 Guardtime{ extended = False, private = False } actor
+  dbUpdate $ AppendSealedFile (documentid doc) file2 Guardtime{ extended = False, private = False }
   runScheduler extendSignatures
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   case documentsealstatus doc' of
@@ -437,12 +442,12 @@ testAddInvitationEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == InvitationEvidence) lg
 
-testAttachSealedFileEvidenceLog :: TestEnv ()
-testAttachSealedFileEvidenceLog = do
+testAppendFirstSealedFileEvidenceLog :: TestEnv ()
+testAppendFirstSealedFileEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isClosed
   file <- addNewRandomFile
-  randomUpdate $ \t->AttachSealedFile (documentid doc) file Missing (systemActor t)
+  randomUpdate $ \t -> AppendFirstSealedFile (documentid doc) file Missing (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == AttachSealedFileEvidence) lg
@@ -779,27 +784,27 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
   -- assertJust $ find ((== a) . filename) (documentfiles $ fromRight edoc)
   assertInvariants ndoc
 
-testNoDocumentAttachSealedAlwaysLeft :: TestEnv ()
-testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
+testNoDocumentAppendSealedAlwaysLeft :: TestEnv ()
+testNoDocumentAppendSealedAlwaysLeft = doTimes 10 $ do
   -- setup
   file <- addNewRandomFile
   --execute
   -- non-existent docid
   time <- rand 10 arbitrary
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    randomUpdate $ (\docid -> AttachSealedFile docid file Missing (systemActor time))
+    randomUpdate $ (\docid -> AppendFirstSealedFile docid file Missing (systemActor time))
 
-testDocumentAttachSealedPendingRight :: TestEnv ()
-testDocumentAttachSealedPendingRight = doTimes 10 $ do
+testDocumentAppendSealedPendingRight :: TestEnv ()
+testDocumentAppendSealedPendingRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   doc <- addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedStatuses = [Closed]
                                                                  })
   file <- addNewRandomFile
-  time <- rand 10 arbitrary
+
   --execute
 
-  success <- randomUpdate $ AttachSealedFile (documentid doc) file Missing (systemActor time)
+  success <- randomUpdate $ AppendSealedFile (documentid doc) file Missing
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   --assert

@@ -34,12 +34,13 @@ tableMainFiles = tblTable {
     tblName = "main_files"
   , tblVersion = 1
   , tblColumns = [
-      tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "document_status", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "seal_status", colType = SmallIntT }
     ]
-  , tblPrimaryKey = ["document_id", "file_id"]
+  , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
       (tblForeignKeyColumn "document_id" "documents" "id") {
         fkOnDelete = ForeignKeyCascade

@@ -98,7 +98,6 @@ import OurPrelude
 import Control.Logic
 import Doc.DocStateData
 import Data.Maybe hiding (fromJust)
-import Data.Ord (comparing)
 import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
 import Utils.Default
@@ -326,7 +325,11 @@ documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
   sqlWhereIn "documents.status" statuses
 documentFilterToSQL (DocumentFilterBySealStatus statuses) = do
-  sqlWhereIn "documents.seal_status" statuses
+  sqlWhereExists $ sqlSelect "main_files" $ do
+    sqlWhere "main_files.document_id = documents.id"
+    sqlWhere "main_files.id = (SELECT (max(id)) FROM main_files where document_id = documents.id)"
+    sqlWhereEq "main_files.document_status" Closed
+    sqlWhereIn "main_files.seal_status" statuses
 documentFilterToSQL (DocumentFilterByStatusClass statuses) = do
   -- I think here we can use the result that we define on select
   -- check this one out later
@@ -1505,7 +1508,7 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
     kRun_ $ selectDocumentTagsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE document_tags.document_id = docs.id)" []
     tags <- fetchDocumentTags
 
-    kRun_ $ selectMainFilesSQL <> "WHERE EXISTS (SELECT 1 FROM docs WHERE main_files.document_id = docs.id) ORDER BY document_id DESC"
+    kRun_ $ selectMainFilesSQL <> "WHERE EXISTS (SELECT 1 FROM docs WHERE main_files.document_id = docs.id) ORDER BY document_id DESC, id ASC"
     mainfiles <- fetchMainFiles
 
     kRunRaw "DROP TABLE docs"
@@ -1520,7 +1523,7 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
                    { documentsignatorylinks    = extendSignatoryLinkWithFields <$> M.findWithDefault [] (documentid doc) sls
                    , documentauthorattachments = M.findWithDefault [] (documentid doc) ats
                    , documenttags              = M.findWithDefault S.empty (documentid doc) tags
-                   , documentmainfiles         = sortBy (flip (comparing mainfileid)) $ M.findWithDefault [] (documentid doc) mainfiles
+                   , documentmainfiles         = M.findWithDefault [] (documentid doc) mainfiles
                    }
 
     return (allDocumentsCount, map fill docs)

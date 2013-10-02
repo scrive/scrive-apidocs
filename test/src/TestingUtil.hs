@@ -12,6 +12,7 @@ import Data.Word
 import Test.QuickCheck
 import Happstack.Server
 import Doc.DocUtils
+import Doc.SealStatus (SealStatus(..))
 import Test.QuickCheck.Gen
 import Control.Monad (unless)
 import Control.Monad.Trans
@@ -612,12 +613,12 @@ addRandomDocumentWithFile file rda = do
       let alllinks = asl : siglinks
 
 
+      let closedfile = if documentstatus doc == Closed
+                       then [MainFile file Closed (Just Missing)]
+                       else []
       let adoc = doc { documentsignatorylinks = alllinks
                      , documentlang = getLang user
-                     , documentfile = Just file
-                     , documentsealedfile = if documentstatus doc == Closed
-                                               then Just file
-                                               else Nothing
+                     , documentmainfiles = closedfile ++ [MainFile file Preparation Nothing]
                      }
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc
