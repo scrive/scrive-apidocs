@@ -29,7 +29,6 @@ module Doc.DocStateQuery
     , getDocsByDocIDs
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
-    , getDocByDocIDSigLinkIDAndMagicHash
     , getMagicHashForDocumentSignatoryWithUser
     ) where
 
@@ -126,24 +125,6 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
           Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocIDForAuthorOrAuthorsCompanyAdmin)"
           return $ Left DBResourceNotAvailable
 
-
-{- |
-   Get a document using docid, siglink, and magichash.
-   ALWAYS FAILS THE SAME WAY FOR SECURITY PURPOSES (Left DBResourceNotAvailable).
-   Document must exist.
-   SignatoryLinkID must correspond to a siglink in document.
-   MagicHash must match.
- -}
-getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
-                                   => DocumentID
-                                   -> SignatoryLinkID
-                                   -> MagicHash
-                                   -> m (Either DBError Document)
-getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
-  mdoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid sigid mh
-  case mdoc of
-    Just doc -> return $ Right doc
-    _        -> return $ Left DBResourceNotAvailable
 
 {- |
    Get a magichash for given signatory. Only possible if give user is author

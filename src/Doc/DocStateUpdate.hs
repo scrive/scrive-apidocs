@@ -12,7 +12,6 @@ import Doc.Model
 import Doc.DocStateData
 import Kontra
 import Util.SignatoryLinkUtils
-import Doc.DocStateQuery
 import Doc.SignatoryLinkID
 import Control.Applicative
 import Doc.DocumentID
@@ -57,10 +56,8 @@ prolongDocument doc = withUser $ \user -> do
 signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots
                            -> m (Either DBError (Document, Document))
 signDocumentWithEmailOrPad did slid mh fields screenshots = do
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
-  case edoc of
-    Left err -> return $ Left err
-    Right olddoc -> do
+  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+  do
      switchLang (getLang olddoc)
      let Just sl' = getSigLinkFor olddoc slid
      case signatorylinkauthenticationmethod sl' == ELegAuthentication of
@@ -82,10 +79,8 @@ signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHa
                      -> m (Either DBError (Document, Document))
 signDocumentWithEleg did slid mh fields sinfo screenshots = do
   Context{ ctxtime, ctxipnumber } <- getContext
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
-  case edoc of
-    Left err -> return $ Left err
-    Right olddoc -> do
+  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+  do
      switchLang (getLang olddoc)
      let Just sl' = getSigLinkFor olddoc slid
      case signatorylinkauthenticationmethod sl' == ELegAuthentication of

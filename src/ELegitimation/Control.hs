@@ -24,6 +24,7 @@ import Doc.Tokens.Model
 import ELegitimation.ELegTransaction.Model
 import Happstack.Server
 import Doc.SignatoryLinkID
+import Doc.Model
 import Kontra
 import Doc.DocumentID
 import MagicHash (MagicHash)
@@ -68,7 +69,7 @@ generateBankIDTransaction docid signid = do
   let seconds = toSeconds ctxtime
 
   -- sanity check
-  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
+  document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid signid magic
 
   nonceresponse <- liftIO $ generateChallenge ctxlogicaconf provider
   case nonceresponse of
@@ -169,7 +170,7 @@ verifySignatureAndGetSignInfo ::  Kontrakcja m =>
                                    -> m VerifySignatureResult
 verifySignatureAndGetSignInfo docid signid magic fields provider signature transactionid = do
     ELegTransaction{..} <- guardJustM  $ dbQuery $ GetELegTransaction transactionid
-    document            <- guardRightM    $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
+    document            <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid signid magic
     siglink             <- guardJust   $ getSigLinkFor document signid
     logicaconf          <-               ctxlogicaconf <$> getContext
 
@@ -313,7 +314,7 @@ initiateMobileBankID docid slid = do
     logicaconf <- ctxlogicaconf <$> getContext
 
     -- sanity check
-    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
+    document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid slid magic
 
     mpn <- getField "personnummer"
 
@@ -375,7 +376,7 @@ collectMobileBankID docid slid = do
   tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
   -- sanity check
-  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
+  document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid slid magic
 
   trans@ELegTransaction {transactionsignatorylinkid
                         ,transactionmagichash
@@ -481,7 +482,7 @@ verifySignatureAndGetSignInfoMobile :: Kontrakcja m
                                        -> String
                                        -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
-    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
+    document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid signid magic
     siglink <- guardJust $ getSigLinkFor document signid
     -- valid transaction?
     ELegTransaction { transactionsignatorylinkid = mtsignid

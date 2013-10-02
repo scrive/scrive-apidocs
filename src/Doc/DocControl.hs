@@ -132,7 +132,7 @@ handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> 
 handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
-  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+  document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   muser <- User.Action.handleAccountSetupFromSign document signatorylink
   case muser of
@@ -184,7 +184,7 @@ handleSignShowSaveMagicHash did sid mh = do
 
   -- Getting some evidence
   ctx <- getContext
-  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+  document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
   invitedlink <- guardJust $ getSigLinkFor document sid
   dbUpdate $ AddSignatoryLinkVisitedEvidence did invitedlink (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory invitedlink) (getEmail invitedlink) sid)
 
@@ -201,13 +201,13 @@ handleSignShow documentid
 
   case mmagichash of
     Just magichash -> do
-      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
       invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
       switchLangWhenNeeded  (Just invitedlink) document
       when (not (isTemplate document) && (not (isPreparation document)) && (not (isClosed document))) $
         dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
            (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
-      document' <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      document' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
 
 
       ctx <- getContext
@@ -496,7 +496,7 @@ checkFileAccessWith :: Kontrakcja m =>
 checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
-       doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+       doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
        when (not $ fileInDocument doc fid) $ internalError
     (_,_,Just did,_) -> do
        guardLoggedIn
@@ -521,7 +521,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
 handleDeleteSigAttach docid siglinkid = do
   mh <- guardJustM $ dbQuery $ GetDocumentSessionToken siglinkid
-  doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   fid <- read <$> getCriticalField asValidID "deletesigattachment"
   Context{ctxtime, ctxipnumber} <- getContext
@@ -534,7 +534,7 @@ handleDeleteSigAttach docid siglinkid = do
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleSigAttach docid siglinkid = do
   mh <- guardJustM $ dbQuery $ GetDocumentSessionToken siglinkid
-  doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   attachname <- getCriticalField asValidFieldValue "attachname"
   let email = getEmail siglink

@@ -83,7 +83,6 @@ import Doc.DocControl
 import Utils.Either
 import Doc.SignatoryScreenshots
 import Doc.Conditions
-import Util.MonadUtils
 import Company.Model
 import Company.CompanyUI
 import User.Utils
@@ -302,10 +301,8 @@ apiCallReject did slid = api $ do
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Magic hash for signatory was not provided"
            Just mh''' -> return (mh''',Just $ userid user)
-  edoc <- lift $ getDocByDocIDSigLinkIDAndMagicHash did slid mh
-  case edoc of
-    Left _ -> throwIO . SomeKontraException $ serverError "Can't find a document that matches signatory"
-    Right doc ->  do
+  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+  do
       ctx <- getContext
       let Just sll = getSigLinkFor doc slid
           actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sll) (getEmail sll) slid
@@ -388,7 +385,7 @@ handleSignWithEleg documentid signatorylinkid magichash fields screenshots provi
   case esigninfo of
     BankID.Problem msg -> return $ Left msg
     BankID.Mismatch msg sfn sln spn -> do
-      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
       handleMismatch document signatorylinkid msg sfn sln spn
       return $ Left msg
     BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
@@ -524,7 +521,7 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
 
   doc <- do
            case (msid, mmh) of
-            (Just sid, Just mh) -> apiGuardL  (forbidden "Access to file is forbiden") $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+            (Just sid, Just mh) -> lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)
@@ -557,7 +554,7 @@ apiCallDownloadFile did fileid _nameForBrowser = api $ do
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
   doc <- do
            case (msid, mmh) of
-            (Just sid, Just mh) -> apiGuardL  (forbidden "Access to document is forbiden.") $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+            (Just sid, Just mh) -> lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)
@@ -656,7 +653,7 @@ documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLink
 documentUploadSignatoryAttachment did sid aname = api $ do
   Log.debug $ "sigattachment ajax"
   (slid, magichash) <- getSigLinkID
-  doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
+  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
   sl  <- apiGuard (forbidden "There is no signatory by that id.") $ getSigLinkFor doc sid
   let email = getEmail sl
 
@@ -695,7 +692,7 @@ documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLink
 documentDeleteSignatoryAttachment did sid aname = api $ do
   Context{ctxtime, ctxipnumber} <- getContext
   (slid, magichash) <- getSigLinkID
-  doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
+  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
 
   sl <- apiGuard (forbidden "The signatory does not exist.") $ getSigLinkFor doc sid
   let email = getEmail sl
