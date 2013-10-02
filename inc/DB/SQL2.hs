@@ -849,8 +849,7 @@ sqlTurnIntoWhyNotSelect sel = sqlSelect "" $ do
                                mapM_ (sqlResult . pivotAroundCondition) [0..c]
     where sel2 = sqlTurnIntoSelect sel
           c = countExplainableConditions sel2
-          maybeCommaAppend sql1 sql2 | sql2 == "" = sql1
-          maybeCommaAppend sql1 sql2 = sql1 <> "," <> sql2
+          maybeCommaAppend sql1 sql2 = sqlConcatComma $ filter (/="") [sql1, sql2]
           -- c is index of condition that is currently in focus
           -- (starting with 1) that means this condition itselft will
           -- be removed and whole statement will be converted into
