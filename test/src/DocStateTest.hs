@@ -763,6 +763,8 @@ testDocumentAttachPreparationRight = doTimes 10 $ do
 testNoDocumentAttachAlwaysLeft :: TestEnv ()
 testNoDocumentAttachAlwaysLeft = doTimes 10 $ do
   -- setup
+  author <- addNewRandomUser
+  _doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
   --execute
   -- non-existent docid
@@ -787,6 +789,8 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
 testNoDocumentAppendSealedAlwaysLeft :: TestEnv ()
 testNoDocumentAppendSealedAlwaysLeft = doTimes 10 $ do
   -- setup
+  author <- addNewRandomUser
+  _doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
   --execute
   -- non-existent docid
