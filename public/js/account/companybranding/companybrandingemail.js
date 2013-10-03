@@ -47,7 +47,7 @@ window.CompanyBrandingEmailModel = Backbone.Model.extend({
         }),
         emailbuttoncolour: new CompanyBrandingColour({
           customised: companyui.emailbuttoncolour() != '',
-          defaultcolour: companyui.domainmailsbuttoncolor()!= "" ? companyui.domainmailsbuttoncolor() : '#3E5474',
+          defaultcolour: companyui.domainmailsbuttoncolor()!= "" ? companyui.domainmailsbuttoncolor() : '#53b688',
           colour: companyui.emailbuttoncolour(),
           label: localization.companyBranding.customiseButtonColourLabel
         })
@@ -204,8 +204,8 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
                            .css('-o-box-shadow','inset ' +this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
                            .css('box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px');
     } else {
-    this.emailpreviewbutton.css({'background': '#3E5474',
-                                 'border': '2px solid #3E5474',
+    this.emailpreviewbutton.css({'background': '#53b688',
+                                 'border': '2px solid #53b688',
                                  '-webkit-box-shadow': 'inset #CCCCCC 0 0 0 1px',
                                  '-moz-box-shadow': 'inset #CCCCCC 0 0 0 1px',
                                  '-ms-box-shadow': 'inset #CCCCCC 0 0 0 1px',
