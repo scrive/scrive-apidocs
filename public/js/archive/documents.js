@@ -35,13 +35,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                             return $("<a class='s-archive-document-title'/>").text(listobject.field("title")).attr("href",listobject.link());
                        }
                     //For pad we show extra icon
-                    if (listobject.field("delivery") == "pad" &&
-                          (listobject.field("status") == "sent" ||
-                           listobject.field("status") == "delivered" ||
-                           listobject.field("status") == "read" ||
-                           listobject.field("status") == "opened" ||
-                           listobject.field("status") == "signed"
-                          ))
+                    if (idx != undefined && listobject.subfield(idx,"delivery") == "pad")
                       {
                         var actionIcon = $("<a class='actionIcon'/>");
                         if (listobject.field("inpadqueue") && listobject.subfield(idx,"inpadqueue"))

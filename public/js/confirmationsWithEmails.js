@@ -293,7 +293,18 @@ window.ConfirmationWithEmail = {
           overlay.height($(document).height());
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
           $("body").append(overlay);
-          setTimeout(function() {overlay.addClass("active");},100);
+          setTimeout(function() {
+            overlay.addClass("active");
+            // wait for a second so the browser has the time to
+            // render everything and display the animation
+            // animation takes 600ms, but waiting for a shorter period
+            // results in not fully rendered modals sometimes
+            setTimeout(function() {
+              // Sometimes when the overlay pushes the document down,
+              // we have to make sure that the overlay covers the whole doc.
+              overlay.height($(document).height());
+            }, 1000);
+          },100);
           return model;
    }
 

@@ -645,8 +645,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                  "line-height: " + (this.fontSize() + 1) +  "px;" +
                  "height:"+ (this.fontSize() + 2) +"px;" +
                  "border-radius: 2px;",
-          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 1) + "px; height:"+ (this.fontSize() + 4) +"px",
-          textWidth: width,
+          inputStyle : "font-size:" + this.fontSize() + "px ; line-height: " + (this.fontSize() + 1) + "px; height:"+ (this.fontSize() + 4) +"px; width: " + width +"px;",
           onEnter : accept,
           onTab : accept,
           onBlur : accept,
@@ -1362,13 +1361,18 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 console.log("Place for drawing - rendering with value");
                 box.addClass('withImage');
                 var img = $("<img alt=''/>");
-                img.css("width",width);
-                img.attr("width",width);
-                img.css("height",height);
-                img.attr("height",height);
                 box.css("width",width);
                 box.css("height",height);
-                img.attr('src',image);
+                if(BrowserInfo.isIE7orLower() && image.substring(0, 'data:'.length) == 'data:') {
+                  // IE 7 cannot handle data uris
+                  img.attr('src', '/img/img-signature-saved-' + localization.code + '.png');
+                } else {
+                  img.css("width",width);
+                  img.attr("width",width);
+                  img.css("height",height);
+                  img.attr("height",height);
+                  img.attr('src', image);
+                }
                 box.append(img);
             }
             box.click(function() {new SignatureDrawOrTypeModal({field: field, width: width, height: height})});
