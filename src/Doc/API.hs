@@ -371,7 +371,10 @@ apiCallSign  did slid = api $ do
       udoc' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON muid False True True Nothing Nothing udoc'
     Right (Left err) -> throwIO . SomeKontraException $ serverError  $ "Error: DB action " ++ show err
-    Left msg ->  throwIO . SomeKontraException $ serverError  $ "Error: " ++ msg
+    Left msg -> do -- On eleg error we return document, but it will have status cancelled instead of closed.
+      Log.error $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
+      doc' <- dbQuery $ GetDocumentByDocumentID did
+      Accepted <$> documentJSON muid False True True Nothing Nothing doc'
 
 
 {- | Utils for signing with eleg -}
