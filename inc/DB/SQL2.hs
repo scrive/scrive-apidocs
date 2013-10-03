@@ -205,14 +205,14 @@ import DB.Functions
 import DB.Fetcher
 import DB.Exception
 import Control.Monad.State
-import Data.List (transpose)
+import Data.List (transpose, findIndex)
 import Data.Monoid
+import Data.Maybe
 import Database.HDBC hiding (run)
 import Data.Convertible
 import Data.Typeable
 import Control.Exception.Lifted
 import Control.Applicative
-import Data.Maybe
 import qualified Text.JSON.Gen as JSON
 import Control.Monad.Trans.Control
 
@@ -426,6 +426,10 @@ instance IsSQL SqlAll where
 sqlSelect :: RawSQL -> State SqlSelect () -> SqlSelect
 sqlSelect table refine =
   execState refine (SqlSelect (SQL table []) False [] [] [] [] [] 0 (-1) [])
+
+sqlSelect2 :: SQL -> State SqlSelect () -> SqlSelect
+sqlSelect2 from refine =
+  execState refine (SqlSelect from False [] [] [] [] [] 0 (-1) [])
 
 sqlInsert :: RawSQL -> State SqlInsert () -> SqlInsert
 sqlInsert table refine =
@@ -790,46 +794,45 @@ instance SqlTurnIntoSelect SqlSelect where
 --
 -- > UPDATE t1
 -- >    SET a = 1
--- >  WHERE baselineA
--- >    AND cond1                       -- with value2
+-- >  WHERE cond1
+-- >    AND cond2                       -- with value2
 -- >    AND EXISTS (SELECT TRUE
 -- >                  FROM t2
--- >                 WHERE baselineB
--- >                   AND cond3        -- with value4 and value5
+-- >                 WHERE cond3        -- with value3a and value3b
 -- >                   AND EXISTS (SELECT TRUE
 -- >                                 FROM t3
--- >                                WHERE baselineC
--- >                                  AND cond6))
+-- >                                WHERE cond4))
 --
 -- sqlTurnIntoWhyNotSelect will produce a SELECT of the form:
 --
 -- > SELECT
--- >   EXISTS (SELECT TRUE ... WHERE baseline),
--- >   EXISTS (SELECT TRUE ... WHERE baseline AND cond1),
--- >   (SELECT value2 ... WHERE baseline),
--- >   EXISTS (SELECT TRUE ... WHERE baseline AND cond1 AND cond3),
--- >   (SELECT value4 ... WHERE baseline AND cond1),
--- >   (SELECT value5 ... WHERE baseline AND cond1),
--- >   EXISTS (SELECT TRUE ... WHERE baseline AND cond1 AND cond3 AND cond6);
+-- >   EXISTS (SELECT TRUE ... WHERE cond1),
+-- >   EXISTS (SELECT TRUE ... WHERE cond1 AND cond2),
+-- >   EXISTS (SELECT TRUE ... WHERE cond1 AND cond2 AND cond3),
+-- >   EXISTS (SELECT TRUE ... WHERE cond1 AND cond2 AND cond3 AND cond4);
 --
--- Where baseline = baselineA AND baselineB AND baselineC.
+-- Now, after this statement is executed we see which of these
+-- returned FALSE as the first one. This is the condition that failed
+-- the whole query.
+--
+-- We can get more information at this point. If failed condition was
+-- cond2, then value2 can be extracted by this statement:
+--
+-- > SELECT value2 ... WHERE cond1;
+--
+-- If failed condition was cond3, then statement executed can be:
+--
+-- > SELECT value3a, value3b ... WHERE cond1 AND cond2;
 --
 -- Rationale: EXISTS clauses should pinpoint which condX was the first
 -- one to produce zero rows.  SELECT clauses after EXISTS should
 -- explain why condX filtered out all rows.
---
--- Baseline conditions are treated as definitional: they have to be
--- there all the time because they represent relations between tables.
 --
 -- 'DB.WhyNot.kWhyNot1' looks for first EXISTS clause that is FALSE
 -- and then tries to construct Exception object with values that come
 -- after. If values that comes after cannot be sensibly parsed
 -- (usually they are NULL when a value is expected), this exception is
 -- skipped and next one is tried.
---
--- First EXISTS clause tests only baseline conditions and if is FALSE
--- then DBBaseLineConditionIsFalse is thrown. There is nothing more
--- that can be explained in this query.
 --
 -- If first EXISTS clause is TRUE but no other exception was properly
 -- generated then DBExceptionCouldNotParseValues is thrown with pair
@@ -849,73 +852,36 @@ instance SqlTurnIntoSelect SqlSelect where
 --
 -- and it can be used recursivelly.
 sqlTurnIntoWhyNotSelect :: (SqlTurnIntoSelect a) => a -> SqlSelect
-sqlTurnIntoWhyNotSelect sel = sqlSelect "" $ do
-                               mapM_ (sqlResult . pivotAroundCondition) [0..c]
-    where sel2 = sqlTurnIntoSelect sel
-          c = countExplainableConditions sel2
-          maybeCommaAppend sql1 sql2 = sqlConcatComma $ filter (/="") [sql1, sql2]
-          -- c is index of condition that is currently in focus
-          -- (starting with 1) that means this condition itselft will
-          -- be removed and whole statement will be converted into
-          -- EXISTS clause or value clause
-          pivotAroundCondition cx =
-            case runState (run cx sel2) (0,(Nothing :: Maybe (SQL,SQL))) of
-              (s, (_,Nothing)) -> if null (sqlSelectWhere s)
-                                  then
-                                    -- we treat SELECT without WHERE
-                                    -- as always having results
-                                    "TRUE"
-                                  else "EXISTS (" <> (toSQLCommand $ s { sqlSelectResult = [ "TRUE" ]}) <> ")"
-              (s, (_,Just (f,e))) -> "(" <> (toSQLCommand $ s { sqlSelectFrom = maybeCommaAppend (sqlSelectFrom s) f
-                                                              , sqlSelectResult = [ e ]
-                                                              , sqlSelectLimit = 1
-                                                              }) <> ")"
-          run cx selx = do
-            new <- mapM (around cx) (sqlSelectWhere selx)
-            return (selx { sqlSelectWhere = concat new })
+sqlTurnIntoWhyNotSelect command =
+     sqlSelect "" $ mapM_ (sqlResult . emitExists) [0..count]
+    where select = sqlTurnIntoSelect command
+          count :: Int
+          count = sum (map count' (sqlSelectWhere select))
+          count' (SqlPlainCondition {}) = 1
+          count' (SqlExistsCondition select') = sum (map count' (sqlSelectWhere select'))
 
-          around cx a@(SqlPlainCondition _ (SqlWhyNot _ e)) = do
-            idx <- fmap (+1) $ gets fst
-            modify (\(cidx,b) -> (cidx+1+length e,b))
-            case True of
-              _ | cx > idx + length e -> do
-                -- we passed past this particular condition and its
-                -- explanations, treat it as mandatory one
-                return [a]
-              _ | cx == idx -> do
-                return [a]
-              _ | cx > idx -> do
-                -- we are exactly at this point, that means we should
-                -- emit explanation here condition goes away, but the
-                -- explanation comes to life
-                modify (\(cidx,_) -> (cidx,Just ("",e !! (cx- idx -1))))
-                return []
-              _ | otherwise -> do
-                -- we haven't come to this part yet
-                return []
-          around cx (SqlExistsCondition subSelect) = do
-            m <- get
-            subSelect' <- run cx subSelect
-            -- so we have run this subexists condition and there was a
-            -- value of interest we need to concatenate where clauses,
-            -- concatenate from caluses, use value as return statement
-            k <- get
-            case k of
-              (s, Just (f,g)) | isNothing (snd m)-> do
-                -- append FROM clauses using the theorem described above
-                put (s, Just (maybeCommaAppend (sqlSelectFrom subSelect') f, g))
-                return (sqlSelectWhere subSelect')
-              _ -> do
-                return [SqlExistsCondition subSelect']
+          emitExists :: Int -> SQL
+          emitExists current =
+            case runState (run current select) 0 of
+              (s, _) -> if null (sqlSelectWhere s)
+                        then "TRUE"
+                        else "EXISTS (" <> (toSQLCommand $ s { sqlSelectResult = [ "TRUE" ]}) <> ")"
 
+          run :: (Monad m,MonadState Int m) => Int -> SqlSelect -> m SqlSelect
+          run current select' = do
+            new <- mapM (around current) (sqlSelectWhere select')
+            return (select' { sqlSelectWhere = concat new })
 
-countExplainableConditions :: SqlSelect -> Int
-countExplainableConditions sel = execState (myRun sel) 0
-  where
-    myRun select = do
-      mapM_ worker (sqlSelectWhere select)
-    worker (SqlPlainCondition _ (SqlWhyNot _ x)) = modify (\w -> w+1+length x)
-    worker (SqlExistsCondition select) = myRun select
+          around :: (Monad m,MonadState Int m) => Int -> SqlCondition -> m [SqlCondition]
+          around current cond@(SqlPlainCondition{}) = do
+            modify (+1)
+            index <- get
+            if current >= index
+              then return [cond]
+              else return []
+          around current (SqlExistsCondition subSelect) = do
+            subSelect' <- run current subSelect
+            return [SqlExistsCondition subSelect']
 
 
 instance SqlTurnIntoSelect SqlUpdate where
@@ -1055,34 +1021,52 @@ instance Show SomeKontraException where
 -- returns a list of exceptions describing why a row could not be
 -- returned or affected by a query.
 --
--- If kWhyNot1 returns empty list then it can be interpreted twofold:
--- either baseline conditions weren't met and therefore explainable
--- conditions could not be executed or in fact all explainable
--- conditions succeeded.
+-- If kWhyNot1 returns empty list of exception when none of EXISTS
+-- clauses generated by sqlTurnIntoWhyNotSelect was FALSE. Should not
+-- happen in real life, file a bug report if you see such a case.
 --
--- (In the second case your original query should have succedded
--- also. File a bug report if this is not the case.)
-kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> m [SomeKontraException]
+kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> m SomeKontraException
 kWhyNot1 cmd = do
-  let newSelect = sqlTurnIntoWhyNotSelect cmd
-  case sqlSelectResult newSelect of
-    [] -> do
-      -- this should not actually happen due to DBBaseLineConditionIsFalse
-      return []
-    (h:_) -> do
-       kRun_ (newSelect { sqlSelectLimit = 1 })
-       result <- kFold2 (decodeListOfExceptionsFromWhere h (sqlGetWhereConditions cmd)) []
+  let newSelect = sqlTurnIntoSelect cmd
+      newWhyNotSelect = sqlTurnIntoWhyNotSelect newSelect
+  let findFirstFalse :: Int -> [SqlValue] -> Either SQLError Int
+      findFirstFalse _acc row = return (fromMaybe 0 (findIndex (== (SqlBool False)) row))
+  kRun_ (newWhyNotSelect { sqlSelectLimit = 1 })
+  indexOfFirstFailedCondition <- kFold2 findFirstFalse 0
 
-       case result of
-         [] -> return []
-         [e] -> return e
-         _ -> error "Number of results in kWhyNot1 should be limited to 1, returned more"
+  let fromRight ~(Right x) = x
+  let logics = enumerateWhyNotExceptions (sqlSelectFrom newSelect) (sqlGetWhereConditions newSelect)
+  --when (length logics <= indexOfFirstFailedCondition) $ do
+  --  error ("length logics = " ++ show (length logics) ++ ", indexOfFirstFailedCondition = " ++ show indexOfFirstFailedCondition
+  --         ++ "\n" ++ show newSelect)
+  let condition = logics !! (indexOfFirstFailedCondition - 1)
 
-enumerateWhyNotExceptions :: [SqlCondition] -> [SqlWhyNot]
-enumerateWhyNotExceptions conds = concatMap worker conds
+  case condition of
+    (exception, _from, []) -> return (fromRight $ exception [])
+    (exception, from, sqls) -> do
+       kRun_ $ sqlSelect2 from $ do
+         mapM_ sqlResult sqls
+       result <- kFold2 (\_acc row -> return row) []
+       return (fromRight $ exception result)
+
+enumerateWhyNotExceptions :: SQL
+                          -> [SqlCondition]
+                          -> [( [SqlValue] -> Either ConvertError SomeKontraException
+                              , SQL
+                              , [SQL]
+                              )]
+enumerateWhyNotExceptions from conds = concatMap worker conds
   where
-    worker (SqlPlainCondition _ x) = [x]
-    worker (SqlExistsCondition s) = enumerateWhyNotExceptions (sqlGetWhereConditions s)
+    worker (SqlPlainCondition _ (SqlWhyNot f s)) = [(fmap SomeKontraException . f, from, s)]
+    worker (SqlExistsCondition s) = enumerateWhyNotExceptions newFrom (sqlGetWhereConditions s)
+      where
+        newFrom = if from == mempty
+                  then sqlSelectFrom s
+                  else if sqlSelectFrom s == mempty
+                       then from
+                       else from <> ", " <> sqlSelectFrom s
+
+{-
 
 matchUpExceptionWithValues :: [SqlWhyNot] -> [SqlValue] -> [SomeKontraException]
 matchUpExceptionWithValues [] [] = []
@@ -1107,15 +1091,15 @@ decodeListOfExceptionsFromWhere fullquery conds excepts sqlvalues =
            [matchUpExceptionWithValues (SqlWhyNot (\_ -> return (DBBaseLineConditionIsFalse fullquery)) []
                                                     : enumerateWhyNotExceptions conds) sqlvalues]
 
+-}
+
 kRunManyOrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
                    => s -> m ()
 kRunManyOrThrowWhyNot sqlcommand = do
   success <- kRun sqlcommand
   when (success == 0) $ do
-    listOfExceptions <- kWhyNot1 sqlcommand
-    case listOfExceptions of
-      [] -> kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
-      (ex:_) -> kThrow ex
+    exception <- kWhyNot1 sqlcommand
+    kThrow exception
 
 
 kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
@@ -1123,18 +1107,8 @@ kRun1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
 kRun1OrThrowWhyNot sqlcommand = do
   success <- kRun01 sqlcommand
   when (not success) $ do
-    listOfExceptions <- kWhyNot1 sqlcommand
-
-    case listOfExceptions of
-      [] -> do
-        -- This case should not really happen due to how we handle
-        -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
-        -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-        kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
-      (ex:_) -> do
-        -- Lets throw first exception on the list. It should be the
-        -- most generic one.
-        kThrow ex
+    exception <- kWhyNot1 sqlcommand
+    kThrow $ exception
 
 isBaseLineException :: (Exception ex) => ex -> Bool
 isBaseLineException ex =
@@ -1148,18 +1122,13 @@ isBaseLineException ex =
           _ -> False
 
 kRun1OrThrowWhyNotAllowBaseLine :: (SqlTurnIntoSelect s, MonadDB m)
-                   => s -> m ()
+                                => s -> m ()
 kRun1OrThrowWhyNotAllowBaseLine sqlcommand = do
   success <- kRun01 sqlcommand
   when (not success) $ do
-    listOfExceptions <- kWhyNot1 sqlcommand
-
-    case listOfExceptions of
-      [] -> do
-        return ()
-      (ex:_) -> do
-        when (not (isBaseLineException ex)) $
-           kThrow ex
+    exception <- kWhyNot1 sqlcommand
+    when (not (isBaseLineException exception)) $
+      kThrow exception
 
 kRunAndFetch1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, Fetcher v [a])
                            => ([a] -> v) -> s -> m a
@@ -1168,18 +1137,9 @@ kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
   results <- kFold decoder []
   case results of
     [] -> do
-      listOfExceptions <- kWhyNot1 sqlcommand
+      exception <- kWhyNot1 sqlcommand
 
-      case listOfExceptions of
-        [] -> do
-            -- This case should not really happen due to how we handle
-            -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
-            -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-            kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
-        (ex:_) -> do
-            -- Lets throw first exception on the list. It should be the
-            -- most generic one.
-            kThrow ex
+      kThrow $ exception
     [r] -> return r
     _ -> kThrow TooManyObjects { originalQuery = toSQLCommand sqlcommand
                                , tmoExpected = 1
