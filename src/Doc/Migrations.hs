@@ -1053,17 +1053,17 @@ migrateDocumentsMoveFilesToMainFilesTable =
     , mgrFrom = 28
     , mgrDo = do
         docsWithFile <- kRun $ sqlInsertSelect "main_files" "documents" $ do
-          sqlSetCmd "document_id" "id"
-          sqlSetCmd "file_id" "file_id"
+          sqlSetCmd "document_id" "documents.id"
+          sqlSetCmd "file_id" "documents.file_id"
           sqlSet "document_status" Preparation
-          sqlSetCmd "seal_status" "NULL"
-          sqlWhere "file_id IS NOT NULL"
+          --sqlSetCmd "seal_status" "NULL"
+          sqlWhere "documents.file_id IS NOT NULL"
         docsWithSealedFile <- kRun $ sqlInsertSelect "main_files" "documents" $ do
-          sqlSetCmd "document_id" "id"
-          sqlSetCmd "file_id" "sealed_file_id"
+          sqlSetCmd "document_id" "documents.id"
+          sqlSetCmd "file_id" "documents.sealed_file_id"
           sqlSet "document_status" Closed
-          sqlSetCmd "seal_status" "seal_status"
-          sqlWhere "sealed_file_id IS NOT NULL"
+          sqlSetCmd "seal_status" "documents.seal_status"
+          sqlWhere "documents.sealed_file_id IS NOT NULL"
 
         -- Sanity checks: for each documents.file_id, there should be
         -- a matching element in main_files, and similar for documents.sealed_file_id
@@ -1080,7 +1080,7 @@ migrateDocumentsMoveFilesToMainFilesTable =
           sqlWhereExists $ sqlSelect "documents" $ do
             sqlWhere "documents.id = main_files.document_id"
             sqlWhere "documents.sealed_file_id = main_files.file_id"
-            sqlWhere "documents.seal_status = main_files.seal_status"
+            sqlWhere "documents.seal_status IS NOT DISTINCT FROM main_files.seal_status"
         when (migratedFiles /= docsWithFile) $ do
           fail $ "Doc.Migrations.migrateDocumentsRemoveFiles: #migratedFiles is not #docsWithFile: " ++ show (migratedFiles, docsWithFile)
         when (migratedSealedFiles /= docsWithSealedFile) $ do
