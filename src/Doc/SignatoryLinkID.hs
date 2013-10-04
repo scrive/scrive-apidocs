@@ -17,14 +17,9 @@ import Utils.Read
 -- | 'SignatoryLinkID' is and integer that identifies
 -- a signatory inside a document scope.
 newtype SignatoryLinkID = SignatoryLinkID Int64
-  deriving (Eq, Data, Typeable)
+  deriving (Eq, Ord,  Data, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
 $(newtypeDeriveConvertible ''SignatoryLinkID)
-
-
-instance Ord SignatoryLinkID where
-  _ <= SignatoryLinkID 0 = True
-  SignatoryLinkID i <= SignatoryLinkID i' = i <= i'
 
 instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead

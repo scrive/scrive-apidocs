@@ -78,7 +78,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields mdid actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid Nothing Nothing actor)
-      
+
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyDocuments () where
   update (InsertEvidenceEventForManyDocuments event textFields dids actor) = do
    texts <- forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)

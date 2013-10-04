@@ -231,12 +231,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkelegdatamismatchlastname       :: Maybe String
   , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
   , signatorylinkdeliverymethod         :: DeliveryMethod
-  } deriving (Eq, Show)
-
-instance Ord SignatoryLink where
-  s1 <= s2 | signatoryisauthor (signatorydetails s1) = True
-           | signatoryisauthor (signatorydetails s1) = False
-           | otherwise = signatorylinkid s1 <= signatorylinkid s2
+  } deriving (Eq, Ord, Show)
 
 
 instance HasDefaultValue SignatoryLink where

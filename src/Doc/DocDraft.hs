@@ -28,7 +28,6 @@ import Utils.Default
 import Doc.DocUtils
 import Data.String.Utils (strip)
 import Doc.SignatoryLinkID
-
 -- JSON instances
 
 
@@ -217,16 +216,25 @@ applyDraftDataToDocument doc draft actor = do
               when_ (not $ att `elem` (documentauthorattachments draft)) $ do
                 dbUpdate $ RemoveDocumentAttachment (documentid doc) (authorattachmentfile att) actor
 
-      case (mergeAuthorDetails (documentsignatorylinks doc) (sort $ documentsignatorylinks draft)) of
+      case (mergeAuthorDetails (documentsignatorylinks doc) (sortBy compareSL $ documentsignatorylinks draft)) of
            Nothing   -> return $ Left "Problem with author details while sending draft"
            Just sigs -> do
              mdoc <- runMaybeT $ do
-               True <- dbUpdate $ ResetSignatoryDetails (documentid doc) (sort sigs) actor
+               True <- dbUpdate $ ResetSignatoryDetails (documentid doc) (sortBy compareSL $ sigs) actor
                newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
                return newdoc
              return $ case mdoc of
                Nothing  -> Left "applyDraftDataToDocument failed"
                Just newdoc -> Right newdoc
+
+compareSL :: SignatoryLink -> SignatoryLink -> Ordering
+compareSL s1 s2 | signatoryisauthor (signatorydetails s1) = LT
+                | signatoryisauthor (signatorydetails s2) = GT
+                | signatorylinkid s2 == unsafeSignatoryLinkID 0 = LT
+                | signatorylinkid s1 == unsafeSignatoryLinkID 0 = GT
+                | otherwise = compare (signatorylinkid s1) (signatorylinkid s2)
+
+
 
 
 mergeAuthorDetails :: [SignatoryLink] ->[SignatoryLink] -> Maybe [SignatoryLink]

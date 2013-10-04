@@ -155,18 +155,18 @@ instance Arbitrary SignatoryActor where
     return $ SignatoryActor $ signatoryActor time ip uid eml slid
 
 instance Arbitrary SignatoryLinkID where
-  arbitrary = return $ unsafeSignatoryLinkID 0
+  arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
-    (slid, sd, mh) <- arbitrary
+    (sd, mh) <- arbitrary
     seeninfo <- arbitrary
     signinfo <- if isJust seeninfo
                 then arbitrary
                 else return Nothing
 
     delivery <- arbitrary
-    return $ defaultValue { signatorylinkid            = slid
+    return $ defaultValue { signatorylinkid            = unsafeSignatoryLinkID 0
                           , signatorydetails           = sd
                           , signatorymagichash         = mh
                           , maybesigninfo              = signinfo
