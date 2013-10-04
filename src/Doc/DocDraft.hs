@@ -44,9 +44,9 @@ instance FromJSValueWithUpdate SignatoryLink where
         mfields <- fromJSValueFieldCustom "fields" (fromJSValueManyWithUpdate $ fromMaybe [] (signatoryfields <$> signatorydetails <$> ms))
         signorder <- fromJSValueField "signorder"
         attachments <- fromJSValueField "attachments"
-        csv <- fromJSValueField "csv"
-        sredirecturl <- fromJSValueField "signsuccessredirect"
-        rredirecturl <- fromJSValueField "rejectredirect"
+        (csv :: Maybe (Maybe CSVUpload)) <- fromJSValueField "csv"
+        (sredirecturl :: Maybe (Maybe String)) <- fromJSValueField "signsuccessredirect"
+        (rredirecturl :: Maybe (Maybe String)) <- fromJSValueField "rejectredirect"
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         case (mfields) of
@@ -160,29 +160,30 @@ instance FromJSValue Lang where
 
 instance FromJSValueWithUpdate Document where
     fromJSValueWithUpdate mdoc = do
-        title' <- fromJSValueField "title"
-        invitationmessage <-  fromJSValueField "invitationmessage"
-        daystosign' <- fromJSValueField "daystosign"
-        authentication' <-  fromJSValueField "authentication"
-        delivery' <-  fromJSValueField "delivery"
-        signatories' <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
-        lang' <- fromJSValueField "lang"
-        type' <- fmap (\t -> if t then Template else Signable) <$> fromJSValueField "template"
-        tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
-        apicallbackurl' <- fromJSValueField "apicallbackurl"
-        authorattachments' <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
+        title <- fromJSValueField "title"
+        (invitationmessage :: Maybe (Maybe String)) <-  fromJSValueField "invitationmessage"
+        daystosign <- fromJSValueField "daystosign"
+        authentication <-  fromJSValueField "authentication"
+        delivery <-  fromJSValueField "delivery"
+        signatories <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
+        lang <- fromJSValueField "lang"
+        doctype <- fmap (\t -> if t then Template else Signable) <$> fromJSValueField "template"
+        tags <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
+        (apicallbackurl :: Maybe (Maybe String)) <- fromJSValueField "apicallbackurl"
+        authorattachments <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
         return $ Just defaultValue {
-            documenttitle = updateWithDefaultAndField "" documenttitle title',
-            documentlang  = updateWithDefaultAndField LANG_SV documentlang lang',
+            documenttitle = updateWithDefaultAndField "" documenttitle title,
+            documentlang  = updateWithDefaultAndField LANG_SV documentlang lang,
             documentinvitetext = case (invitationmessage) of
                                      Nothing -> fromMaybe "" $ documentinvitetext <$> mdoc
-                                     Just s -> fromMaybe "" (resultToMaybe $ asValidInviteText s),
-            documentdaystosign   = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign',
-            documentsignatorylinks = mapAuth authentication' $ mapDL delivery' $ updateWithDefaultAndField [] documentsignatorylinks signatories',
-            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments'),
-            documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags'),
-            documenttype = updateWithDefaultAndField Signable documenttype type',
-            documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl'
+                                     Just Nothing -> ""
+                                     Just (Just s) -> fromMaybe "" (resultToMaybe $ asValidInviteText s),
+            documentdaystosign   = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign,
+            documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,
+            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments),
+            documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
+            documenttype = updateWithDefaultAndField Signable documenttype doctype,
+            documentapicallbackurl = updateWithDefaultAndField Nothing documentapicallbackurl apicallbackurl
           }
       where
        updateWithDefaultAndField :: a -> (Document -> a) -> Maybe a -> a
