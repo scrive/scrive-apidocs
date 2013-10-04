@@ -1,5 +1,5 @@
 /*
- * $Id: PdfVerifier.java 302 2013-09-19 13:07:41Z ahto.truu $
+ * $Id: PdfVerifier.java 318 2013-10-03 22:50:16Z ahto.truu $
  *
  * Copyright 2008-2013 Guardtime AS
  *
@@ -40,7 +40,7 @@ public abstract class PdfVerifier {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "Guardtime PDF Verification Tool v.0.3.3";
+	private static final String TITLE = "Guardtime PDF Verification Tool v.0.3.4";
 
 	/**
 	 * Usage message for the CLI.
@@ -49,16 +49,18 @@ public abstract class PdfVerifier {
 			"Usage: java -jar PdfVerifier.jar [-x url] [-p url] [-j] [-f file] [-L] ...\n" +
 			"\t-x - location of the extending (online verification) service\n" +
 			"\t     default is " + ServiceConfiguration.DEFAULT_EXTENDER + "\n" +
+			"\t     specify '-x -' for no extending service access\n" +
 			"\t-p - location of the control publications (Integrity Codes)\n" +
 			"\t     default is " + ServiceConfiguration.DEFAULT_PUBLICATIONS + "\n" +
-			"\t-f - name of the file to be verified\n" +
-			"\t     all Guardtime signatures in the file will be verified\n" +
 			"\t-j - verification result will be printed in JSON\n" +
 			"\t     only the last Guardtime signature will be verified in JSON mode\n" +
+			"\t-f - name of the file to be verified\n" +
+			"\t     all Guardtime signatures in the file will be verified\n" +
 			"\t-L - display license information and acknowledgements\n" +
 			"The command line is scanned left to right\n" +
 			"Each option takes effect as it is encountered\n" +
 			"All options can be repeated as many times as desired\n" +
+			"Each use of -x, -p overrides the previous one\n" +
 			"A simple GUI will be launched when no command line is given\n" +
 			"The GUI only verifies the last Guardtime signature in the file";
 
@@ -166,13 +168,17 @@ public abstract class PdfVerifier {
 				}
 			} else if ("-x".equals(args[i])) {
 				if (++i < args.length) {
-					try {
-						svc.setExtender(new URL(args[i]));
-					} catch (Exception x) {
-						System.err.println(x);
+					if ("-".equals(args[i])) {
+						svc.setExtender(null);
+					} else {
+						try {
+							svc.setExtender(new URL(args[i]));
+						} catch (Exception x) {
+							System.err.println(x);
+						}
 					}
 				} else {
-					System.err.println("-x must be followed by service URL");
+					System.err.println("-x must be followed by service URL or '-'");
 				}
 			} else if ("-j".equals(args[i])) {
 				json = true;
@@ -216,23 +222,65 @@ public abstract class PdfVerifier {
 			String time = PdfUtil.toLocalString(ts.getRegisteredTime());
 			String gwid = PdfUtil.formatGwId(ts.getProperty(GTTimestamp.LOCATION_ID));
 			String gwname = ts.getProperty(GTTimestamp.LOCATION_NAME);
-			res.append("\n\tsigned at ").append(time);
+			res.append("\n\t").append(si.getName()).append(" verified:");
+			res.append("\n\t\tsigned at ").append(time);
 			if (gwname == null) {
-				res.append("\n\tby ").append(gwid);
+				res.append("\n\t\tby ").append(gwid);
 			} else {
-				res.append("\n\tby ").append(gwname).append(" (").append(gwid).append(")");
+				res.append("\n\t\tby ").append(gwname).append(" (").append(gwid).append(")");
 			}
 			if (si.isWhole()) {
-				res.append("\n\tand has not been modified since");
+				res.append("\n\t\tand has not been modified since");
 			} else {
-				res.append("\n\tbut has been revised since");
+				res.append("\n\t\tbut has been revised since");
 			}
 		} else {
-			res.append("\n\tNOT verified: ");
+			res.append("\n\t").append(si.getName()).append(" NOT verified:");
+			boolean first = true;
+			if (ver.hasError(GTVerificationResult.SYNTACTIC_CHECK_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("SYNTACTIC_CHECK_FAILURE");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.HASHCHAIN_VERIFICATION_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("HASHCHAIN_VERIFICATION_FAILURE");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBLIC_KEY_SIGNATURE_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("PUBLIC_KEY_SIGNATURE_FAILURE");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBLIC_KEY_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("PUBLIC_KEY_FAILURE");
+				first = false;
+			}
 			if (ver.hasError(GTVerificationResult.WRONG_DOCUMENT_FAILURE)) {
-				res.append("the document has been modified");
-			} else {
-				res.append("the signature is invalid");
+				res.append(first ? " " : ", ");
+				res.append("WRONG_DOCUMENT_FAILURE");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBLICATION_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("PUBLICATION_FAILURE");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.CERTIFICATE_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("CERTIFICATE_FAILURE");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.TECH_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("TECH_FAILURE");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBFILE_SIGNATURE_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("PUBFILE_SIGNATURE_FAILURE");
+				first = false;
 			}
 		}
 		return res.toString();
@@ -260,33 +308,75 @@ public abstract class PdfVerifier {
 			return "{\n  \"invalid\" : {\n    \"reason\": \"no Guardtime signatures in the document\"\n  }\n}\n";
 		}
 		StringBuffer res = new StringBuffer();
-                boolean extended = si.getTimestamp().isExtended();
+		boolean extended = si.getTimestamp().isExtended();
 		VerificationResult ver = doc.verifyTimestamp(si, svc);
 		if (ver.isValid()) {
 			GTTimestamp ts = si.getTimestamp();
 			String time = PdfUtil.toUtcString(ts.getRegisteredTime());
 			String gwid = PdfUtil.formatGwId(ts.getProperty(GTTimestamp.LOCATION_ID));
 			String gwname = ts.getProperty(GTTimestamp.LOCATION_NAME);
-                        String publication_time = ts.getProperty(GTTimestamp.PUBLICATION_TIME);
+			String pubtime = ts.getProperty(GTTimestamp.PUBLICATION_TIME);
 			res.append("{\n  \"valid\": {\n");
 			res.append("    \"time\": \"").append(time).append("\",\n");
 			res.append("    \"gateway_id\": \"").append(gwid).append("\",\n");
-			res.append("    \"extended\": ").append(extended ? "true" : "false").append(",\n");
-			res.append("    \"extensible\": ").append(!extended && ts.isExtended() ? "true" : "false").append(",\n");
-                        if (extended && publication_time != null) {
-                                res.append("    \"publication_time\": \"").append(publication_time).append("\",\n");
-                        }
 			if (gwname != null) {
 				res.append("    \"gateway_name\": \"").append(gwname).append("\",\n");
+			}
+			res.append("    \"extended\": ").append(extended).append(",\n");
+			res.append("    \"extensible\": ").append(!extended && ts.isExtended()).append(",\n");
+			if (extended && pubtime != null) {
+				res.append("    \"publication_time\": \"").append(pubtime).append("\",\n");
 			}
 			res.append("    \"last_revision\": \"").append(si.isWhole()).append("\"");
 			res.append("\n  }\n}\n");
 		} else {
 			res.append("{\n  \"invalid\" : {");
+			res.append("\n    \"reason\":");
+			boolean first = true;
+			if (ver.hasError(GTVerificationResult.SYNTACTIC_CHECK_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"SYNTACTIC_CHECK_FAILURE\"");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.HASHCHAIN_VERIFICATION_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"HASHCHAIN_VERIFICATION_FAILURE\"");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBLIC_KEY_SIGNATURE_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"PUBLIC_KEY_SIGNATURE_FAILURE\"");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBLIC_KEY_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"PUBLIC_KEY_FAILURE\"");
+				first = false;
+			}
 			if (ver.hasError(GTVerificationResult.WRONG_DOCUMENT_FAILURE)) {
-				res.append("\n    \"reason\": \"the document has been modified\"");
-			} else {
-				res.append("\n    \"reason\": \"the signature is invalid\"");
+				res.append(first ? " " : ", ");
+				res.append("\"WRONG_DOCUMENT_FAILURE\"");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBLICATION_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"PUBLICATION_FAILURE\"");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.CERTIFICATE_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"CERTIFICATE_FAILURE\"");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.TECH_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"TECH_FAILURE\"");
+				first = false;
+			}
+			if (ver.hasError(GTVerificationResult.PUBFILE_SIGNATURE_FAILURE)) {
+				res.append(first ? " " : ", ");
+				res.append("\"PUBFILE_SIGNATURE_FAILURE\"");
+				first = false;
 			}
 			res.append("\n  }\n}\n");
 		}

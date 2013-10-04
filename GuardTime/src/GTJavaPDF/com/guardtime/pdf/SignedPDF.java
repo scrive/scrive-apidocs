@@ -1,5 +1,5 @@
 /*
- * $Id: SignedPDF.java 301 2013-09-19 13:00:29Z ahto.truu $
+ * $Id: SignedPDF.java 315 2013-10-03 22:26:30Z ahto.truu $
  *
  * Copyright 2008-2013 Guardtime AS
  *
@@ -37,6 +37,7 @@ import com.guardtime.transport.SimpleHttpStamper;
 import com.guardtime.tsp.GTDataHash;
 import com.guardtime.tsp.GTException;
 import com.guardtime.tsp.GTTimestamp;
+import com.guardtime.tsp.GTVerificationResult;
 import com.guardtime.tsp.VerificationResult;
 import com.guardtime.util.Util;
 import com.lowagie.text.DocumentException;
@@ -149,8 +150,15 @@ public class SignedPDF {
 	throws IOException, GTException {
 		GTTimestamp ts = si.getTimestamp();
 		GTDataHash dh = new GTDataHash(ts.getHashAlgorithm());
-		dh.update(doc, si.range[0], si.range[1]);
-		dh.update(doc, si.range[2], si.range[3]);
+		if (si.range[0] >= 0 && si.range[1] >= 0 && si.range[0] + si.range[1] <= doc.length &&
+				si.range[2] >= 0 && si.range[3] >= 0 && si.range[2] + si.range[3] <= doc.length) {
+			dh.update(doc, si.range[0], si.range[1]);
+			dh.update(doc, si.range[2], si.range[3]);
+		} else {
+			GTVerificationResult res = new GTVerificationResult();
+			res.updateErrors(GTVerificationResult.WRONG_DOCUMENT_FAILURE);
+			return res;
+		}
 		return SimpleHttpStamper.verify(ts, dh, svc.getExtender(), null, svc.getPublications()).getGtResult();
 	}
 	
@@ -228,7 +236,7 @@ public class SignedPDF {
 		if (si == null) {
 			throw new DocumentException("No Guardtime signatures in the document");
 		}
-		if (!si.isLast()) {
+		if (!si.isWhole()) {
 			throw new DocumentException("The Guardtime signature has been signed over and can't be updated");
 		}
 
@@ -285,11 +293,11 @@ public class SignedPDF {
 			String name = (String) it.next();
 			PdfDictionary dict = flds.getSignatureDictionary(name);
 			boolean whole = flds.signatureCoversWholeDocument(name);
-			sig.add(new SignatureInfo(name, dict, whole));
+			int rev = flds.getRevision(name);
+			sig.add(new SignatureInfo(name, dict, whole, rev));
 		}
 		if (!sig.isEmpty()) {
 			Collections.sort(sig);
-			sig.get(0).markLast();
 		}
 
 	}
@@ -397,12 +405,9 @@ public class SignedPDF {
 		private boolean whole;
 
 		/**
-		 * Whether this is the last signature in the document.
-		 * 
-		 * @see #markLast()
-		 * @see #isLast()
+		 * Which revision of the document is signed by the signature.
 		 */
-		private boolean last;
+		private int revision;
 
 		/**
 		 * Constructs a new signature info object.
@@ -413,12 +418,14 @@ public class SignedPDF {
 		 *            the dictionary object containing the signature data.
 		 * @param whole
 		 *            whether the signature is over the whole document.
+		 * @param revision
+		 *            which revision of the document is signed by the signature.
 		 * 
 		 * @throws FormatException
 		 *             when the {@code PdfDictionary} does not represent a
 		 *             correctly formatted signature.
 		 */
-		protected SignatureInfo(String name, PdfDictionary dict, boolean whole)
+		protected SignatureInfo(String name, PdfDictionary dict, boolean whole, int revision)
 		throws FormatException {
 
 			// this.name
@@ -464,8 +471,8 @@ public class SignedPDF {
 			// this.whole
 			this.whole = whole;
 
-			// this.last will be set after the list of signatures is sorted
-			this.last = false;
+			// this.revision
+			this.revision = revision;
 
 		}
 
@@ -530,35 +537,20 @@ public class SignedPDF {
 		}
 
 		/**
-		 * Marks this as the last signature (whether Guardtime or other) in the
-		 * document.
-		 * 
-		 * @see #isLast()
-		 */
-		protected void markLast() {
-			last = true;
-		}
-
-		/**
-		 * Returns whether this is the last signature (either Guardtime or
-		 * other) in the document.
-		 * 
-		 * @return whether this is the last signature in the document.
-		 * 
-		 * @see #markLast()
-		 */
-		public boolean isLast() {
-			return last;
-		}
-
-		/**
 		 * This is for ordering the signatures in reverse order of the revisions
 		 * of the document.
 		 */
 		public int compareTo(SignatureInfo that) {
-			int thisEnd = this.range[TS_RANGE_START_2] + this.range[TS_RANGE_LENGTH_2];
-			int thatEnd = that.range[TS_RANGE_START_2] + that.range[TS_RANGE_LENGTH_2];
-			return thatEnd - thisEnd;
+			// for protection against certain kinds of broken documents, the
+			// fact that a signature covers the whole document takes priority
+			// over any other revision information
+			if (this.whole && !that.whole) {
+				return -1;
+			}
+			if (!this.whole && that.whole) {
+				return +1;
+			}
+			return that.revision - this.revision;
 		}
 
 	} // class SignatureInfo

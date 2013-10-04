@@ -1,5 +1,5 @@
 /*
- * $Id: PdfExtender.java 302 2013-09-19 13:07:41Z ahto.truu $
+ * $Id: PdfExtender.java 318 2013-10-03 22:50:16Z ahto.truu $
  *
  * Copyright 2008-2013 Guardtime AS
  *
@@ -35,7 +35,7 @@ public abstract class PdfExtender {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "Guardtime PDF Extending Tool v.0.3.3";
+	private static final String TITLE = "Guardtime PDF Extending Tool v.0.3.4";
 
 	/**
 	 * Usage message for the CLI.
@@ -50,6 +50,7 @@ public abstract class PdfExtender {
 			"The command line is scanned left to right\n" +
 			"Each option takes effect as it is encountered\n" +
 			"All options can be repeated as many times as desired\n" +
+			"Each use of -x overrides the previous one\n" +
 			"A simple GUI will be launched when no command line is given";
 
 	/**

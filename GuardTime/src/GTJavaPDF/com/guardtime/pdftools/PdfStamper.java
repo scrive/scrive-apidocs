@@ -1,5 +1,5 @@
 /*
- * $Id: PdfStamper.java 302 2013-09-19 13:07:41Z ahto.truu $
+ * $Id: PdfStamper.java 318 2013-10-03 22:50:16Z ahto.truu $
  *
  * Copyright 2008-2013 Guardtime AS
  *
@@ -36,25 +36,26 @@ public abstract class PdfStamper {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "Guardtime PDF Signing Tool v.0.3.3";
+	private static final String TITLE = "Guardtime PDF Signing Tool v.0.3.4";
 
 	/**
 	 * Usage message for the CLI.
 	 */
 	private static final String USAGE = TITLE + "\n" +
-			"Usage: java -jar PdfStamper.jar [-i] [-s url] [-f file] [-n name] [-L] ...\n" +
+			"Usage: java -jar PdfStamper.jar [-r] [-i] [-n name] [-s url] [-f file] [-L] ...\n" +
 			"\t-r - remove all existing signatures from the file\n" +
 			"\t-i - create invisible signature\n" +
+			"\t-n - the signer name to be added to the document metadata\n" +
+			"\t     only plain text supported; should be enclosed in quotes\n" +
 			"\t-s - location of the signing service\n" +
 			"\t     default is " + ServiceConfiguration.DEFAULT_STAMPER + "\n" +
 			"\t-f - name of the file to be signed\n" +
 			"\t     a new signature will be appended to the file\n" +
-			"\t-n - the signer name to be added to the document metadata\n" +
-			"\t     only plain text supported; should be enclosed in quotes\n" +
 			"\t-L - display license information and acknowledgements\n" +
 			"The command line is scanned left to right\n" +
 			"Each option takes effect as it is encountered\n" +
 			"All options can be repeated as many times as desired\n" +
+			"Each use of -n, -s overrides the previous one\n" +
 			"A simple GUI will be launched when no command line is given";
 
 	/**
