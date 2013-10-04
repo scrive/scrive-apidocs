@@ -1,5 +1,5 @@
 /*
- * $Id: PdfBundler.java 302 2013-09-19 13:07:41Z ahto.truu $
+ * $Id: PdfBundler.java 318 2013-10-03 22:50:16Z ahto.truu $
  *
  * Copyright 2008-2013 Guardtime AS
  *
@@ -49,7 +49,7 @@ public abstract class PdfBundler {
 	/**
 	 * The program title.
 	 */
-	private static final String TITLE = "Guardtime PDF Bundling Tool v.0.3.3";
+	private static final String TITLE = "Guardtime PDF Bundling Tool v.0.3.4";
 
 	/**
 	 * Default output file name.
@@ -67,15 +67,15 @@ public abstract class PdfBundler {
 			"\t     PDF, WMF, PNG, GIF, TIFF, JPEG formats supported\n" +
 			"\t-t title - title to be shown on the cover page under the logo\n" +
 			"\t     basic HTML formatting supported; should be enclosed in quotes\n" +
+			"\t-i - create invisible signature\n" +
 			"\t-n name - the signer name to be added to the document metadata\n" +
 			"\t     only plain text supported; should be enclosed in quotes\n" +
-			"\t-o pdf - name of the PDF file to produce as output\n" +
-			"\t     default is " + DEFAULT_OUTPUT + "\n" +
 			"\t-s svc - location of the signing service\n" +
 			"\t     default is " + ServiceConfiguration.DEFAULT_STAMPER + "\n" +
-			"\t-i - create invisible signature\n" +
+			"\t-o pdf - name of the PDF file to produce as output\n" +
+			"\t     default is " + DEFAULT_OUTPUT + "\n" +
 			"\t-L - display license information and acknowledgements\n" +
-			"Each option should be given at most once";
+			"Each use of -l, -t, -n, -s, -o overrides the previous one\n";
 
 	/**
 	 * Usage message for the GUI.

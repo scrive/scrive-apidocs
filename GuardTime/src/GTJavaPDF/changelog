@@ -1,3 +1,8 @@
+2013-10-04 release (0.3.4)
+* More detailed error messages in verification.
+* Option to force verification as-is, with no extending service access.
+* More robust handling of malformed documents, including hardening of iText 2.1.7.
+
 2013-09-19 release (0.3.3)
 * Option to remove all existing signatures before signing.
 
