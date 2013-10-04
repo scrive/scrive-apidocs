@@ -40,7 +40,7 @@ instance FromJSValueWithUpdate SignatoryLink where
     fromJSValueWithUpdate ms = do
         author <- fromJSValueField "author"
         signs  <- fromJSValueField "signs"
-        mfields <- fromJSValueFieldCustom "fields" (fromJSValueManyWithUpdate $ fromMaybe [] (signatoryfields <$> signatorydetails <$> ms))
+        mfields <- fromJSValueFieldCustom "fields" (fromJSValueManyWithUpdate $ fromMaybe [] (signatoryfields <$> ms))
         signorder <- fromJSValueField "signorder"
         attachments <- fromJSValueField "attachments"
         (csv :: Maybe (Maybe CSVUpload)) <- fromJSValueField "csv"
@@ -51,12 +51,10 @@ instance FromJSValueWithUpdate SignatoryLink where
         case (mfields) of
              (Just fields) -> return $ Just $ defaultValue {
                     signatorylinkid            = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
-                  , signatorydetails           = defaultValue {
-                        signatorysignorder     = updateWithDefaultAndField (SignOrder 1) (signatorysignorder . signatorydetails) (SignOrder <$> signorder)
-                      , signatoryfields        = fields
-                      , signatoryisauthor      = updateWithDefaultAndField False (signatoryisauthor . signatorydetails) author
-                      , signatoryispartner     = updateWithDefaultAndField False (signatoryispartner . signatorydetails) signs
-                                                 }
+                  , signatorysignorder     = updateWithDefaultAndField (SignOrder 1) signatorysignorder (SignOrder <$> signorder)
+                  , signatoryfields        = fields
+                  , signatoryisauthor      = updateWithDefaultAndField False signatoryisauthor author
+                  , signatoryispartner     = updateWithDefaultAndField False signatoryispartner signs
                   , signatorylinkcsvupload       = updateWithDefaultAndField Nothing signatorylinkcsvupload csv
                   , signatoryattachments         = updateWithDefaultAndField [] signatoryattachments attachments
                   , signatorylinksignredirecturl = updateWithDefaultAndField Nothing signatorylinksignredirecturl sredirecturl
@@ -228,8 +226,8 @@ applyDraftDataToDocument doc draft actor = do
                Just newdoc -> Right newdoc
 
 compareSL :: SignatoryLink -> SignatoryLink -> Ordering
-compareSL s1 s2 | signatoryisauthor (signatorydetails s1) = LT
-                | signatoryisauthor (signatorydetails s2) = GT
+compareSL s1 s2 | signatoryisauthor s1 = LT
+                | signatoryisauthor s2 = GT
                 | signatorylinkid s2 == unsafeSignatoryLinkID 0 = LT
                 | signatorylinkid s1 == unsafeSignatoryLinkID 0 = GT
                 | otherwise = compare (signatorylinkid s1) (signatorylinkid s2)
@@ -272,7 +270,10 @@ draftIsChangingDocumentSignatories _ _ = True
 newSignatorySignatoryLinkIsChangingSignatoryLink :: SignatoryLink -> SignatoryLink -> Bool
 newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
         (signatorylinkid newsl /= signatorylinkid sl)
-     || (signatorydetails newsl /= signatorydetails sl)
+     || (signatoryfields newsl /= signatoryfields sl)
+     || (signatoryisauthor newsl /= signatoryisauthor sl)
+     || (signatoryispartner newsl /= signatoryispartner sl)
+     || (signatorysignorder newsl /= signatorysignorder sl)
      || (signatoryattachments newsl /= signatoryattachments sl)
      || (signatorylinkcsvupload newsl /= signatorylinkcsvupload sl)
      || (signatorylinksignredirecturl newsl /= signatorylinksignredirecturl sl)

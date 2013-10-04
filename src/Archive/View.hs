@@ -150,7 +150,7 @@ signatoryForListCSV _agr doc msl = [
             ] ++ (map fieldValue $ sortBy fieldNameSort customFieldsOrCheckbox)
     where
         csvTime = formatMinutesTime "%Y-%m-%d %H:%M"
-        customFieldsOrCheckbox = filter isCustomOrCheckbox  $ concat $ maybeToList $ signatoryfields <$> signatorydetails <$> msl
+        customFieldsOrCheckbox = filter isCustomOrCheckbox  $ concat $ maybeToList $ signatoryfields <$> msl
         fieldNameSort sf1 sf2 = case (sfType sf1, sfType sf2) of
                                   (CustomFT n1 _, CustomFT n2 _) -> compare n1 n2
                                   (CustomFT _ _,_) -> GT

@@ -612,7 +612,7 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
         F.value "daveBody" $ inspectXML siglink
         F.value "docid" $ show documentid
         F.value "slid" $ show siglinkid
-        F.objects "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
+        F.objects "fields" $ for (signatoryfields $ siglink) $ \sf -> do
             F.value "fieldname" $ fieldTypeToString (sfType sf)
             F.value "fieldvalue" $ sfValue sf
             F.value "obligatory" $ sfObligatory sf

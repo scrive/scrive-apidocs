@@ -30,13 +30,9 @@ instance HasSomeCompanyInfo (Maybe Company) where
   getCompanyName   = maybe "" getCompanyName
   getCompanyNumber = maybe "" getCompanyNumber
 
-instance HasSomeCompanyInfo SignatoryDetails where
+instance HasSomeCompanyInfo SignatoryLink where
   getCompanyName   = getValueOfType CompanyFT
   getCompanyNumber = getValueOfType CompanyNumberFT
-
-instance HasSomeCompanyInfo SignatoryLink where
-  getCompanyName   = getCompanyName   . signatorydetails
-  getCompanyNumber = getCompanyNumber . signatorydetails
 
 instance HasSomeCompanyInfo Document where
   getCompanyName   doc = maybe "" getCompanyName   $ getAuthorSigLink doc

@@ -132,8 +132,6 @@ class ExtendWithRandomnes a where
           stdgen <- random
           return $ unGen (moreRandom a) stdgen 10
 
-instance ExtendWithRandomnes SignatoryDetails where
-    moreRandom sl = return sl
 
 newtype AuthorActor    = AuthorActor    { unAuthorActor    :: Actor }
 newtype SystemActor    = SystemActor    { unSystemActor    :: Actor }
@@ -159,15 +157,19 @@ instance Arbitrary SignatoryLinkID where
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
-    (sd, mh) <- arbitrary
+    mh <- arbitrary
+    fields <- arbitrary
     seeninfo <- arbitrary
     signinfo <- if isJust seeninfo
                 then arbitrary
                 else return Nothing
 
     delivery <- arbitrary
-    return $ defaultValue { signatorylinkid            = unsafeSignatoryLinkID 0
-                          , signatorydetails           = sd
+    return $ defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
+                          , signatoryfields = fields
+                          , signatoryisauthor = False
+                          , signatoryispartner = True
+                          , signatorysignorder = SignOrder 1
                           , signatorymagichash         = mh
                           , maybesigninfo              = signinfo
                           , maybeseeninfo              = seeninfo
@@ -272,19 +274,16 @@ filterSingleFieldType :: [SignatoryField] -> [SignatoryField]
 filterSingleFieldType [] = []
 filterSingleFieldType (f:fs) = f : filterSingleFieldType (filter (\h-> sfType f /= sfType h) fs)
 
-instance Arbitrary SignatoryDetails where
+instance Arbitrary [SignatoryField] where
   arbitrary = do
     fn <- arbString 1 20
     ln <- arbString 1 20
     em <- arbEmail
-    fields <- filterSingleFieldType <$> arbitrary
-    return $ SignatoryDetails { signatorysignorder = SignOrder 1
-                              , signatoryisauthor = False
-                              , signatoryispartner = True
-                              , signatoryfields = filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) fields
+    (f1,f2,f3,f4,f5) <-  arbitrary
+    return $ filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) (filterSingleFieldType [f1,f2,f3,f4,f5])
                                                   ++ [ SignatoryField FirstNameFT fn True False []
                                                      , SignatoryField LastNameFT  ln True False []
-                                                     , SignatoryField EmailFT     em True False []]}
+                                                     , SignatoryField EmailFT     em True False []]
 
 instance Arbitrary FieldPlacement where
   arbitrary = do  -- We loose precision with conversion, so please watch out for this
@@ -411,11 +410,10 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorysignatureinfo = Nothing
                                       , signatorylinkdeleted = Nothing
                                       , signatorylinkreallydeleted = Nothing
-                                      , signatorydetails = SignatoryDetails
-                                        { signatoryisauthor = False
-                                        , signatoryispartner = True
-                                        , signatorysignorder = SignOrder 1
-                                        , signatoryfields = [ SignatoryField FirstNameFT "Eric" True False []
+                                      , signatoryisauthor = False
+                                      , signatoryispartner = True
+                                      , signatorysignorder = SignOrder 1
+                                      , signatoryfields = [ SignatoryField FirstNameFT "Eric" True False []
                                                             , SignatoryField LastNameFT "Normand" True False []
                                                             , SignatoryField EmailFT "eric@scrive.com" True False []
                                                             , SignatoryField CompanyFT "Scrive" True False []
@@ -423,8 +421,6 @@ signatoryLinkExample1 = defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                                                             , SignatoryField PersonalNumberFT "9101112" True False []
                                                             , SignatoryField (CustomFT "phone" True) "504-302-3742" True False []
                                                             ]
-
-                                        }
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
                                       , signatorylinkstatusclass = SCDraft
@@ -557,13 +553,13 @@ randomSigLinkByStatus _ = arbitrary
 randomAuthorLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomAuthorLinkByStatus Closed = do
   (sl, sign, seen) <- arbitrary
-  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatorydetails = (signatorydetails sl) { signatoryisauthor = True } }
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryisauthor = True  }
 randomAuthorLinkByStatus Preparation = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatorydetails = (signatorydetails sl) { signatoryisauthor = True } }
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryisauthor = True  }
 randomAuthorLinkByStatus Pending = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatorydetails = (signatorydetails sl) { signatoryisauthor = True } }
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryisauthor = True  }
 randomAuthorLinkByStatus _ = arbitrary
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
@@ -603,11 +599,12 @@ addRandomDocumentWithFile file rda = do
 
       let doc = doc' { documenttype = xtype, documentstatus = status }
 
-      roles <- rand 10 arbitrary
+      partner <- rand 10 arbitrary
       asl' <- rand 10 $ randomAuthorLinkByStatus status
-      userDetails <- signatoryDetailsFromUser user roles
-      let asl = asl' { maybesignatory = Just (userid user)
-                     , signatorydetails = userDetails
+      userDetails <- signatoryFieldsFromUser user
+      let asl = asl' {   maybesignatory = Just (userid user)
+                       , signatoryfields = userDetails
+                       , signatoryispartner = partner
                      }
 
       let alllinks = asl : siglinks

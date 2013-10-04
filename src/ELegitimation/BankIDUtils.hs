@@ -52,16 +52,16 @@ getTBS doc = renderTemplate "tbs" $ do
 
 getSigEntries :: TemplatesMonad m => D.Document -> m String
 getSigEntries doc = do
-    s <- mapM (getSigEntry . signatorydetails) $ filter (signatoryispartner . signatorydetails) $ documentsignatorylinks doc
+    s <- mapM getSigEntry $ filter signatoryispartner $ documentsignatorylinks doc
     return $ intercalate "\n" s
 
-getSigEntry :: TemplatesMonad m => SignatoryDetails -> m String
-getSigEntry signatorydetails =
+getSigEntry :: TemplatesMonad m => SignatoryLink -> m String
+getSigEntry signatory =
     renderTemplate "tbssig" $ do
-        F.value "firstname" $ getFirstName signatorydetails
-        F.value "lastname"  $ getLastName signatorydetails
-        F.value "company"   $ getCompanyName signatorydetails
-        F.value "number"    $ getPersonalNumber signatorydetails
+        F.value "firstname" $ getFirstName signatory
+        F.value "lastname"  $ getLastName signatory
+        F.value "company"   $ getCompanyName signatory
+        F.value "number"    $ getPersonalNumber signatory
 
 fieldvaluebyid :: String -> [(String, String)] -> String
 fieldvaluebyid _ [] = ""

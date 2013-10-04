@@ -121,7 +121,7 @@ signatoryJSON :: (TemplatesMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Do
 signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
-    J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
+    J.value "signorder" $ unSignOrder $ signatorysignorder siglink
     J.value "undeliveredInvitation" $ Undelivered == mailinvitationdeliverystatus siglink || Undelivered == smsinvitationdeliverystatus siglink
     J.value "undeliveredMailInvitation" $ Undelivered == mailinvitationdeliverystatus siglink
     J.value "undeliveredSMSInvitation" $  Undelivered == smsinvitationdeliverystatus siglink
@@ -161,7 +161,7 @@ signatoryAttachmentJSON sa = do
   J.value "file" $ fileJSON <$> mfile
 
 signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
-signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
+signatoryFieldsJSON doc sl = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements, sfShouldBeFilledBySender, sfObligatory} -> do
 
     case sfType of
@@ -200,7 +200,7 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
-    orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
+    orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) (signatoryfields sl)
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
     ftOrder EmailFT _ = LT

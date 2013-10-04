@@ -203,8 +203,8 @@ getDocAuthor doc = do
     by linking the signatory to the user's account.
 -}
 saveDocumentForSignatories :: Kontrakcja m => Document -> m (Either String Document)
-saveDocumentForSignatories doc@Document{documentsignatorylinks} =
-  foldM foldSaveForSig (Right doc) . filter (not . isAuthor) $ documentsignatorylinks
+saveDocumentForSignatories doc =
+  foldM foldSaveForSig (Right doc) . filter (not . isAuthor) $ (documentsignatorylinks doc)
   where
     {- |
         Wraps up the saveDocumentForSignatory so we can use it in a fold
@@ -218,9 +218,8 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
         link to that user.
     -}
     saveDocumentForSignatory :: Kontrakcja m => Document -> SignatoryLink -> m (Either String Document)
-    saveDocumentForSignatory doc'@Document{documentid}
-                             SignatoryLink{signatorylinkid,signatorydetails} = do
-      let sigemail = getEmail signatorydetails
+    saveDocumentForSignatory doc' sl = do
+      let sigemail = getEmail sl
       muser <- case (sigemail) of
                 "" -> return Nothing
                 _  -> dbQuery $ GetUserByEmail (Email sigemail)
@@ -228,11 +227,11 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
         Nothing -> return $ Right doc'
         Just user -> do
           Context{ctxtime, ctxipnumber} <- getContext
-          let actor = signatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail signatorylinkid
+          let actor = signatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail (signatorylinkid sl)
           udoc <- do
             mdoc <- runMaybeT $ do
-              True <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
-              newdoc <- dbQuery $ GetDocumentByDocumentID documentid
+              True <- dbUpdate $ SaveDocumentForUser (documentid  doc') user (signatorylinkid sl) actor
+              newdoc <- dbQuery $ GetDocumentByDocumentID (documentid  doc')
               return newdoc
             return $ maybe (Left "saveDocumentForSignatory failed") Right mdoc
           return udoc
@@ -253,8 +252,7 @@ sendElegDataMismatchEmails ctx document author = do
 
 sendDataMismatchEmailSignatory :: Kontrakcja m => Context -> Document -> SignatoryLinkID -> String -> String -> SignatoryLink -> m ()
 sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
-    let SignatoryLink { signatorylinkid, signatorydetails = sigdets } = signatorylink
-        isbad = badid == signatorylinkid
+    let isbad = badid == signatorylinkid signatorylink
     case getAuthorSigLink document of
       Nothing -> error "No author in Document"
       Just authorsl -> do
@@ -270,7 +268,7 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
                     badname
                     msg
                     isbad
-            scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress sigdets]})
+            scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress signatorylink]})
           (scheduleSMS =<<  smsMismatchSignatory document signatorylink)
 
 sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> [String] -> String -> String -> m ()
@@ -311,15 +309,12 @@ sendDocumentErrorEmail document author = do
     -- ??: Should this be in DocControl or in an email-specific file?
     sendDocumentErrorEmailToSignatory signatorylink = do
       ctx <- getContext
-      let SignatoryLink { signatorylinkid
-                        , signatorydetails } = signatorylink
-          Document { documentid } = document
       sendNotifications signatorylink
         (do
           mail <- mailDocumentErrorForSignatory ctx document
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
-                                   to = [getMailAddress signatorydetails]
-                                 , mailInfo = Invitation documentid  signatorylinkid
+                                   to = [getMailAddress signatorylink]
+                                 , mailInfo = Invitation (documentid document) (signatorylinkid signatorylink)
                                  })
          (scheduleSMS =<<  smsDocumentErrorSignatory document signatorylink)
 
@@ -355,9 +350,6 @@ sendInvitationEmailsToViewers ctx document = do
 sendInvitationEmail1 :: Kontrakcja m => Context -> Document -> SignatoryLink -> m (Either String Document)
 sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) = do
   -- send invitation to sign to invited person
-  let SignatoryLink { signatorylinkid
-                    , signatorydetails } = signatorylink
-      Document { documentid } = document
   sendNotifications signatorylink
 
     (do
@@ -365,14 +357,14 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
       scheduleEmailSendout (ctxmailsconfig ctx) $
-                           mail { to = [getMailAddress signatorydetails]
-                                , mailInfo = Invitation documentid signatorylinkid
+                           mail { to = [getMailAddress signatorylink]
+                                , mailInfo = Invitation (documentid document) (signatorylinkid signatorylink)
                                 })
      (scheduleSMS =<< smsInvitation document signatorylink)
 
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
-    doc <- dbQuery $ GetDocumentByDocumentID documentid
+    True <- dbUpdate $ AddInvitationEvidence (documentid document) (signatorylinkid signatorylink) (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
+    doc <- dbQuery $ GetDocumentByDocumentID (documentid document)
     return doc
   return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
 

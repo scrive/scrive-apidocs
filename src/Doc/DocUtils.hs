@@ -18,7 +18,7 @@ module Doc.DocUtils(
   , renderLocalListTemplate
   , replaceFieldValue
   , documentcurrentsignorder
-  , signatoryDetailsFromUser
+  , signatoryFieldsFromUser
   , isEligibleForReminder
   , canAuthorSignNow
   , canSignatorySignNow
@@ -61,23 +61,23 @@ import File.File
 import Control.Applicative
 
 {- |
-   Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
+   Given a Document, return all signatories (exclude viewers but include author if he must sign).
    See also: partyListButAuthor to exclude the author.
  -}
-partyList :: Document -> [SignatoryDetails]
-partyList document = [signatorydetails sl | sl <- documentsignatorylinks document
+partyList :: Document -> [SignatoryLink]
+partyList document = [sl | sl <- documentsignatorylinks document
                                           , isSignatory sl]
 
-partyListButAuthor :: Document -> [SignatoryDetails]
-partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
+partyListButAuthor :: Document -> [SignatoryLink]
+partyListButAuthor document = [sl | sl <- documentsignatorylinks document
                                           , isSignatory sl
                                           , not $ isAuthor sl
                                           ]
 {- |
-   Given a Document, return all of the signatory details for all signatories who have signed.
+   Given a Document, return all of the signatories who have signed.
  -}
-partySignedList :: Document -> [SignatoryDetails]
-partySignedList document = [signatorydetails sl | sl <- documentsignatorylinks document
+partySignedList :: Document -> [SignatoryLink]
+partySignedList document = [sl | sl <- documentsignatorylinks document
                                                 , isSignatory sl
                                                 ,  hasSigned sl]
 
@@ -171,13 +171,9 @@ instance HasFields  [SignatoryField] where
                                 then map (\f' ->  f <| (matchingFieldType f f') |> f' )  fs
                                 else fs  ++ [f]
 
-instance HasFields SignatoryDetails where
-    getAllFields = getAllFields . signatoryfields
-    replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) }
-
 instance HasFields SignatoryLink where
-    getAllFields =  getAllFields . signatorydetails
-    replaceField f s = s {signatorydetails = replaceField f (signatorydetails s) }
+    getAllFields =  signatoryfields
+    replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) }
 
 replaceFieldValue :: HasFields a =>  FieldType -> String -> a -> a
 replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
@@ -196,20 +192,18 @@ documentcurrentsignorder doc =
          [] -> maximum $ map signorder sigs
          xs -> minimum $ map signorder xs
     where
-        signorder = signatorysignorder . signatorydetails
+        signorder = signatorysignorder
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
-          && signatoryispartner (signatorydetails siglnk) -- we exclude non-signatories
+          && signatoryispartner siglnk -- we exclude non-signatories
 
 {- |
-   Build a SignatoryDetails from a User with no fields
+   Build signatory fields from user
  -}
-signatoryDetailsFromUser :: (MonadDB m) => User -> (Bool, Bool) -> m SignatoryDetails
-signatoryDetailsFromUser user (is_author, is_partner) = do
+signatoryFieldsFromUser :: (MonadDB m) => User -> m [SignatoryField]
+signatoryFieldsFromUser user = do
   company <- dbQuery $ GetCompanyByUserID (userid user)
-  return $ SignatoryDetails
-    { signatorysignorder = SignOrder 1
-    , signatoryfields =
+  return $
         [ SignatoryField FirstNameFT (getFirstName user) True True []
         , SignatoryField LastNameFT (getLastName user) True True []
         , SignatoryField EmailFT (getEmail user) True True []
@@ -220,10 +214,6 @@ signatoryDetailsFromUser user (is_author, is_partner) = do
         (if (not $ null $ getMobile user) then [SignatoryField MobileFT (getMobile user) False False []] else [])
           ++
         (if (not $ null $ getCompanyNumber company) then [SignatoryField CompanyNumberFT (getCompanyNumber company) False False []] else [])
-    , signatoryispartner = is_partner
-    , signatoryisauthor = is_author
-    }
-
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
@@ -245,12 +235,12 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
                                       || (smsinvitationdeliverystatus siglink /= Undelivered && smsinvitationdeliverystatus siglink /= Deferred)
                                       )
     && wasNotSigned
-    && signatoryispartner (signatorydetails siglink)
+    && signatoryispartner siglink
   where
     userIsAuthor = isAuthor (document, user)
     isUserSignator = isSigLinkFor user siglink
     wasNotSigned = isNothing (maybesigninfo siglink)
-    signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
+    signatoryActivated = documentcurrentsignorder document >= signatorysignorder siglink
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     documentDeliverableTosignatory =  signatorylinkdeliverymethod siglink `elem` [EmailDelivery, MobileDelivery, EmailAndMobileDelivery]
 
@@ -258,7 +248,7 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
 canAuthorSignNow :: Document -> Bool
 canAuthorSignNow doc =
      isPending doc
-  && documentcurrentsignorder doc >= signatorysignorder (signatorydetails author)
+  && documentcurrentsignorder doc >= signatorysignorder author
   && (not . hasSigned $ author)
   && isSignatory author
   where author = case getAuthorSigLink doc of
@@ -270,7 +260,7 @@ canAuthorSignNow doc =
 canSignatorySignNow :: Document -> SignatoryLink -> Bool
 canSignatorySignNow doc sl =
   isPending doc
-  && documentcurrentsignorder doc >= signatorysignorder (signatorydetails sl)
+  && documentcurrentsignorder doc >= signatorysignorder sl
   && (not . hasSigned $ sl)
   && isSignatory sl
 
@@ -281,7 +271,7 @@ canSignatorySignNow doc sl =
  -}
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink =
-  signorder >= signatorysignorder (signatorydetails siglink)
+  signorder >= signatorysignorder siglink
 
 {- |
    Given a SignOrder and a SignatoryLink, determine whether the
@@ -289,7 +279,7 @@ isActivatedSignatory signorder siglink =
  -}
 isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
 isCurrentSignatory signorder siglink =
-  signorder == signatorysignorder (signatorydetails siglink)
+  signorder == signatorysignorder siglink
 
 isFieldCustom :: SignatoryField -> Bool
 isFieldCustom SignatoryField{sfType = CustomFT{}} = True

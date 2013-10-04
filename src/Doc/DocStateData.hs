@@ -1,4 +1,4 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules, OverlappingInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData (
     CSVUpload(..)
@@ -19,7 +19,6 @@ module Doc.DocStateData (
   , SignatoryField(..)
   , FieldType(..)
   , TipSide(..)
-  , SignatoryDetails(..)
   , SignatoryLink(..)
   , SignatureInfo(..)
   , AuthorAttachment(..)
@@ -185,29 +184,12 @@ instance Eq FieldPlacement where
 data TipSide = LeftTip | RightTip
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
-data SignatoryDetails = SignatoryDetails {
-    signatorysignorder :: SignOrder
-  , signatoryfields    :: [SignatoryField]
-  , signatoryisauthor  :: Bool -- ^ True if signatory is an author of the document
-  , signatoryispartner :: Bool -- ^ True if signatory participates in signing process
-  } deriving (Ord, Show)
-
-instance Eq SignatoryDetails where
-  SignatoryDetails {signatorysignorder=so1, signatoryfields=sf1, signatoryisauthor = isauthor1, signatoryispartner = ispartner1} ==
-    SignatoryDetails {signatorysignorder=so2, signatoryfields=sf2, signatoryisauthor = isauthor2, signatoryispartner = ispartner2} =
-      so1 == so2 && (sort sf2) == (sort sf1) && isauthor1 == isauthor2 && ispartner1 == ispartner2
-
-instance HasDefaultValue SignatoryDetails where
-  defaultValue = SignatoryDetails
-                 { signatorysignorder = SignOrder 1
-                 , signatoryfields    = []
-                 , signatoryisauthor  = False
-                 , signatoryispartner = False
-                 }
-
 data SignatoryLink = SignatoryLink {
     signatorylinkid            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
-  , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
+  , signatoryfields            :: [SignatoryField]
+  , signatoryisauthor          :: Bool -- ^ True if signatory is an author of the document
+  , signatoryispartner         :: Bool -- ^ True if signatory participates in signing process
+  , signatorysignorder         :: SignOrder
   , signatorymagichash         :: MagicHash           -- ^ authentication code
   , maybesignatory             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
   , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
@@ -231,13 +213,46 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkelegdatamismatchlastname       :: Maybe String
   , signatorylinkelegdatamismatchpersonalnumber :: Maybe String
   , signatorylinkdeliverymethod         :: DeliveryMethod
-  } deriving (Eq, Ord, Show)
+  } deriving (Ord, Show)
 
+-- | Drop this instance when we introduce Set SignatoryFields intead of list
+instance Eq SignatoryLink where
+  s1 == s2 =
+    signatorylinkid s1 == signatorylinkid s2 &&
+    sort (signatoryfields s1) == sort (signatoryfields s2) &&
+    signatoryisauthor s1 == signatoryisauthor s2 &&
+    signatoryispartner s1 == signatoryispartner s2 &&
+    signatorysignorder s1 == signatorysignorder s2 &&
+    signatorymagichash s1 == signatorymagichash s2 &&
+    maybesignatory s1 == maybesignatory s2 &&
+    maybesigninfo s1 == maybesigninfo s2 &&
+    maybeseeninfo s1 == maybeseeninfo s2 &&
+    maybereadinvite s1 == maybereadinvite s2 &&
+    mailinvitationdeliverystatus s1 == mailinvitationdeliverystatus s2 &&
+    smsinvitationdeliverystatus s1 == smsinvitationdeliverystatus s2 &&
+    signatorysignatureinfo s1 == signatorysignatureinfo s2 &&
+    signatorylinkdeleted s1 == signatorylinkdeleted s2 &&
+    signatorylinkreallydeleted s1 == signatorylinkreallydeleted s2 &&
+    signatorylinkcsvupload s1 == signatorylinkcsvupload s2 &&
+    signatoryattachments s1 == signatoryattachments s2 &&
+    signatorylinkstatusclass s1 == signatorylinkstatusclass s2 &&
+    signatorylinksignredirecturl s1 == signatorylinksignredirecturl s2 &&
+    signatorylinkrejectiontime s1 == signatorylinkrejectiontime s2 &&
+    signatorylinkrejectionreason s1 == signatorylinkrejectionreason s2 &&
+    signatorylinkauthenticationmethod s1 == signatorylinkauthenticationmethod s2 &&
+    signatorylinkelegdatamismatchmessage s1 == signatorylinkelegdatamismatchmessage s2 &&
+    signatorylinkelegdatamismatchfirstname s1 == signatorylinkelegdatamismatchfirstname s2 &&
+    signatorylinkelegdatamismatchlastname s1 == signatorylinkelegdatamismatchlastname s2 &&
+    signatorylinkelegdatamismatchpersonalnumber s1 == signatorylinkelegdatamismatchpersonalnumber s2 &&
+    signatorylinkdeliverymethod s1 == signatorylinkdeliverymethod s2
 
 instance HasDefaultValue SignatoryLink where
   defaultValue =  SignatoryLink
                   { signatorylinkid              = unsafeSignatoryLinkID 0
-                  , signatorydetails             = defaultValue
+                  , signatoryfields              = []
+                  , signatoryisauthor            = False
+                  , signatoryispartner           = False
+                  , signatorysignorder           = SignOrder 1
                   , signatorymagichash           = unsafeMagicHash 0
                   , maybesignatory               = Nothing
                   , maybesigninfo                = Nothing
@@ -371,7 +386,7 @@ getFieldOfType _ [] = Nothing
 getFieldOfType t (sf:rest) =
   if sfType sf == t then Just sf else getFieldOfType t rest
 
-getValueOfType :: FieldType -> SignatoryDetails -> String
+getValueOfType :: FieldType -> SignatoryLink -> String
 getValueOfType t = fromMaybe "" . fmap sfValue . getFieldOfType t . signatoryfields
 
 data Document = Document {

@@ -76,20 +76,20 @@ import Utils.Prelude
 import qualified Amazon as AWS
 import Doc.API.Callback.Model
 
-personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
-personFromSignatoryDetails boxImages details =
-    Seal.Person { Seal.fullname = getFullName details
-                , Seal.company = getCompanyName details
-                , Seal.email = getEmail details
-                , Seal.phone = getMobile details
-                , Seal.personalnumber = getPersonalNumber details
-                , Seal.companynumber = getCompanyNumber details
+personFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> Seal.Person
+personFromSignatory boxImages signatory =
+    Seal.Person { Seal.fullname = getFullName signatory
+                , Seal.company = getCompanyName signatory
+                , Seal.email = getEmail signatory
+                , Seal.phone = getMobile signatory
+                , Seal.personalnumber = getPersonalNumber signatory
+                , Seal.companynumber = getCompanyNumber signatory
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
                 , Seal.emailverified = True
                 , Seal.phoneverified = False
-                , Seal.fields = fieldsFromSignatory False [] boxImages details
+                , Seal.fields = fieldsFromSignatory False [] boxImages signatory
                 }
 
 personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String) -> Fields m ()
@@ -110,13 +110,12 @@ personFields _doc (person, signinfo,_seeninfo, _ , mprovider, delivery, _initial
 personExFromSignatoryLink :: (BS.ByteString,BS.ByteString)
                           -> SignatoryLink
                           -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String)
-personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
-                                                      , maybesigninfo = Just signinfo
+personExFromSignatoryLink boxImages (sl@SignatoryLink { maybesigninfo = Just signinfo
                                                       , maybeseeninfo
                                                       , signatorysignatureinfo
                                                       , signatorylinkdeliverymethod
                                                       }) =
-  ((personFromSignatoryDetails boxImages signatorydetails)
+  ((personFromSignatory boxImages sl)
      { Seal.emailverified    = signatorylinkdeliverymethod `elem` [EmailDelivery, EmailAndMobileDelivery]
      , Seal.fullnameverified = fullnameverified
      , Seal.companyverified  = False
@@ -128,21 +127,21 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorydetails
     , isAuthor sl
     , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
     , signatorylinkdeliverymethod
-    , map head $ words $ getFullName signatorydetails
+    , map head $ words $ getFullName sl
     )
   where fullnameverified = maybe False (\s -> signaturefstnameverified s
                                               && signaturelstnameverified s)
                            signatorysignatureinfo
         numberverified = maybe False signaturepersnumverified signatorysignatureinfo
 
-personExFromSignatoryLink _ (SignatoryLink { signatorydetails
-                                           , maybesigninfo = Nothing
+personExFromSignatoryLink _ sl@(SignatoryLink {
+                                            maybesigninfo = Nothing
                                            }) =
- error $ "Person '" ++ getFullName signatorydetails ++ "' hasn't signed yet. Cannot personExFromSignatoryLink for him/her."
+ error $ "Person '" ++ getFullName sl ++ "' hasn't signed yet. Cannot personExFromSignatoryLink for him/her."
 
 
-fieldsFromSignatory :: Bool -> [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> SignatoryDetails -> [Seal.Field]
-fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signatoryfields} =
+fieldsFromSignatory :: Bool -> [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> [Seal.Field]
+fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature $ concatMap makeSealField  signatoryfields
   where
     silenceJPEGFieldsToTheEnd [] = []
@@ -339,15 +338,14 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
 
-      authordetails = signatorydetails authorsiglink
       signatories = [ personExFromSignatoryLink boxImages s
                         | s <- documentsignatorylinks document
-                        , signatoryispartner $ signatorydetails s
+                        , signatoryispartner $ s
                     ]
 
-      secretaries = [ personFromSignatoryDetails boxImages $ signatorydetails s
+      secretaries = [ personFromSignatory boxImages $ s
                         | s <- documentsignatorylinks document
-                        , not . signatoryispartner $ signatorydetails s
+                        , not . signatoryispartner $ s
                     ]
 
       persons = map (\(a,_,_,_,_,_,_) -> a) signatories
@@ -385,10 +383,10 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                     let groupOn f = groupBy (\a b -> f a == f b)
                     let sortOn f = sortBy (\a b -> compare (f a) (f b))
                     let sortedPeople =
-                          groupOn (signatorysignorder . signatorydetails) .
-                          sortOn (signatorysignorder . signatorydetails) .
-                          filter (not . signatoryisauthor . signatorydetails ||^ (/= SignOrder 1) . signatorysignorder . signatorydetails) .
-                          filter (signatoryispartner . signatorydetails) .
+                          groupOn (signatorysignorder) .
+                          sortOn (signatorysignorder) .
+                          filter (not . signatoryisauthor ||^ (/= SignOrder 1) . signatorysignorder) .
+                          filter (signatoryispartner) .
                           documentsignatorylinks $
                           document
 
@@ -482,7 +480,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
              F.value "pages" numberOfPages
 
       attachedByText <- renderLocalTemplate document "_documentSentBy" $ do
-        F.value "author" (getSmartName authordetails)
+        F.value "author" (getSmartName authorsiglink)
 
       mainDocumentText <- renderLocalTemplate document "_mainDocument"
                           $ (return ())
@@ -511,7 +509,7 @@ presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath 
        Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
-            , Seal.pssFields         = concatMap (fieldsFromSignatory True emptyFieldsText boxImages . signatorydetails) (documentsignatorylinks document)
+            , Seal.pssFields         = concatMap (fieldsFromSignatory True emptyFieldsText boxImages) (documentsignatorylinks document)
             }
 
 
