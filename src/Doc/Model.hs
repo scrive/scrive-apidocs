@@ -565,10 +565,10 @@ documentLatestSignTimeExpression = "(SELECT max(signatory_links.sign_time) FROM 
 
 documentStatusClassExpression :: SQL
 documentStatusClassExpression =
-    "(SELECT COALESCE((SELECT min(" <> statusClassCaseExpressionForSignatoryLink <> ")"
-                  <> "FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner),"
- <> "(SELECT " <> statusClassCaseExpressionForDocument <> "), "
- <?> SCDraft <> "))"
+    "(SELECT COALESCE((SELECT min(" <> statusClassCaseExpression <> ")"
+                     <> "FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner),"
+                  <> "(SELECT " <> statusClassCaseExpressionForDocument <> "), "
+                  <?> SCDraft <> "))"
 
 documentSignorderExpression :: SQL
 documentSignorderExpression =
@@ -601,18 +601,6 @@ statusClassCaseExpressionForDocument =
    <+> "WHEN documents.status = " <?> Canceled           <+> "THEN" <?> SCCancelled
    <+> "WHEN documents.status = " <?> Timedout           <+> "THEN" <?> SCTimedout
    <+> "WHEN documents.status = " <?> Rejected           <+> "THEN" <?> SCRejected
-  <+> "END :: INTEGER)"
-
-statusClassCaseExpressionForSignatoryLink :: SQL
-statusClassCaseExpressionForSignatoryLink =
-  "(CASE"
-   <+> "WHEN signatory_links.sign_time IS NOT NULL THEN"         <?> SCSigned
-   <+> "WHEN signatory_links.seen_time IS NOT NULL THEN"         <?> SCOpened
-   <+> "WHEN signatory_links.read_invitation IS NOT NULL THEN"   <?> SCRead
-   <+> "WHEN signatory_links.mail_invitation_delivery_status = " <?> Undelivered <+> "THEN" <?> SCDeliveryProblem
-   <+> "WHEN signatory_links.sms_invitation_delivery_status = "  <?> Undelivered <+> "THEN" <?> SCDeliveryProblem
-   <+> "WHEN signatory_links.mail_invitation_delivery_status = " <?> Delivered   <+> "THEN" <?> SCDelivered
-   <+> "WHEN signatory_links.sms_invitation_delivery_status = "  <?> Delivered   <+> "THEN" <?> SCDelivered
   <+> "END :: INTEGER)"
 
 
