@@ -18,7 +18,6 @@ priceplanPageWithBranding=
 $doctype()$
 $htmlopentag()$
   <head>
-    <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
   </head>

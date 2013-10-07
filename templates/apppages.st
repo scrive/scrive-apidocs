@@ -49,7 +49,6 @@ wholePage=
     $doctype()$
     $htmlopentag()$
       <head>
-        <script src="//cdn.optimizely.com/js/158965942.js"></script>
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
@@ -77,7 +76,7 @@ htmlopentag=
     <!--[if IE 8]>     <html class="ie ie8 lte9 lte8"> <![endif]-->
     <!--[if IE 9]>     <html class="ie ie9 lte9"> <![endif]-->
     <!--[if gt IE 9]>  <html> <![endif]-->
-    <!--[if !IE]> -->  <html><!-- <![endif]-->	
+    <!--[if !IE]> -->  <html><!-- <![endif]-->
 ####
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -145,7 +144,7 @@ $endif$
 </style>
 
 <!-- Styling of the design view footer -->
-<style> 
+<style>
 $if(custombarscolour)$
   .design-view-button-bar {
       background: $custombarscolour$ !important;
