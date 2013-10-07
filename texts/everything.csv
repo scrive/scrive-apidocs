@@ -400,7 +400,7 @@
 "_createCompanyFormPreamble","För att skapa ett företag vänligen fyll i följande information:","To create a company please complete the following information:"
 "_modalUserSignupDoneHeader","Ditt konto har skapats!  Kolla din email för att gå vidare.","Your account has been created!  Please check your email to continue."
 "_modalAddCompanyAccountTitle","Nytt konto","New account"
-"_modalAddCompanyAccountBody","Bjud in någon ny eller be en befintlig Scrive-användare att ansluta ditt företag.","Invite someone new or ask an existing Scrive user to join your company."
+"_modalAddCompanyAccountBody","Bjud in någon ny eller be en befintlig Scrive-användare att ansluta sig till ditt företag.","Invite someone new or ask an existing Scrive user to join your company."
 "_modalAddCompanyAccountInviteButtonText","Bjud in","Invite"
 "_newCompanyAccountButtonText","Nytt konto","New account"
 "_onlyFileWithTypeAllowed1","Beklagar, vi accepterar endast ","Sorry, only "
