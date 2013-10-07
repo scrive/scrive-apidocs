@@ -276,9 +276,11 @@ window.Arrow = {
                     var el = $(view.el);
                     if (i <= 0 ) return;
                     else if (i % 2 == 0 )
-                         el.hide();
+                         el.css({opacity: '0',
+                                 filter: 'alpha(opacity=0)'});
                     else
-                         el.show();
+                         el.css({opacity: '1',
+                                 filter: 'alpha(opacity=1)'});
                     setTimeout(function() {arrow.blink(i - 1)},200);
               },
               /* We need to recalculate width after appending arrow to page */
