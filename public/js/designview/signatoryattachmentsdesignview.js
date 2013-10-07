@@ -115,30 +115,35 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         td2.append(editDesc);
 
         var td3 = $("<td class='editSignatoryAttachmentTDSelect'>");
-        var selectSignatory = $("<select class='editSignatoryAttachmentSelect'/>");
-        if (attachment.signatory()== undefined)
-            selectSignatory.append("<option value='' selected=''>");
-
+        var nameFromSignatory = function(sig) {
+          var text = sig.nameOrEmail();
+          if (sig.isCsv())
+            text = localization.csv.title;
+          if (text == "")
+            text = sig.nameInDocument();
+          return text;
+        };
+        var options = [];
         _.each(attachments.document.signatories(), function(sig)  {
-           if (sig.signs() && !sig.author()) {
-                var text = sig.nameOrEmail();
-                if (sig.isCsv())
-                  text = localization.csv.title;
-                if (text == "")
-                  text = sig.nameInDocument();
-                var option = $("<option>").text(text);
-                if (attachment.signatory() == sig)
-                    option.attr("selected","yes");
-                option.data("signatory",sig);
-                selectSignatory.append(option);
-                }
-            });
-        selectSignatory.change(function(){
-            var signatory = $("option:selected",selectSignatory).data("signatory");
-            attachment.setSignatory(signatory);
-            mixpanel.track('Set signatory (in attachment)');
+          if (sig.signs() && !sig.author()) {
+            var text = nameFromSignatory(sig);
+            var option = {name: text, value: sig};
+            options.push(option);
+          }
         });
-        td3.append(selectSignatory);
+        var sig = attachment.signatory();
+        var selectSignatory = new Select({
+          name: sig ? nameFromSignatory(sig) : '',
+          style: 'width: 190px;',
+          options: options,
+          onSelect: function(sig) {
+            attachment.setSignatory(sig);
+            mixpanel.track('Set signatory (in attachment)');
+            selectSignatory.setName(nameFromSignatory(sig));
+            return true;
+          }
+        });
+        td3.append(selectSignatory.el());
 
         var td4 = $("<td class='editSignatoryAttachmentTDRemove'>");
         var removeIcon = $("<div class='removeSignatoryAttachmentIcon'>X</div>");

@@ -85,7 +85,9 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                 maxlength: 2,
                 onAppend : function(input,title,multifile) {
                     mixpanel.track('Upload attachment');
-                    title = title.split("\\").reverse()[0].split(".")[0];
+                    var name_parts = title.split("\\").reverse()[0].split(".");
+                    name_parts.pop(); // drop the extension
+                    title = name_parts.join('.');
                     attachmentsList.addAttachment(
                                               new DesignAuthorAttachment({
                                                     name : title,
