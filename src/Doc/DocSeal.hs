@@ -454,7 +454,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
       -- Log.debug ("read texts: " ++ show readtexts)
 
       -- Creating HTML Evidence Log
-      htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog ces
+      htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "EvidenceLog.html"
                                                    , Seal.mimeType = Nothing
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }

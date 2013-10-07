@@ -1,6 +1,7 @@
 module EvidenceLog.View (
       eventsJSListFromEvidenceLog
     , htmlDocFromEvidenceLog
+    , suppressRepeatedEvents
     , htmlSkipedEvidenceType
     , evidenceOfIntentHTML
   ) where
@@ -25,6 +26,7 @@ import Util.SignatoryLinkUtils
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.Char8 as BS
 import Data.Decimal (realFracToDecimal)
+import qualified Data.Map as Map
 import Data.Maybe
 import Data.List
 import Data.Word (Word8)
@@ -179,6 +181,18 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"
+
+-- | Suppress repeated events stemming from mail delivery systems
+-- reporting that an email was opened.  This is done by ignoring each
+-- such event for five minutes after its last occurrence with the same
+-- text.
+suppressRepeatedEvents :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
+suppressRepeatedEvents = go Map.empty where
+  go _ [] = []
+  go levs (ev:evs) | evType ev == MarkInvitationReadEvidence = if Just (evTime ev) < ((5 `minutesAfter`) <$> Map.lookup (evText ev) levs)
+                                                               then go levs evs
+                                                               else ev : go (Map.insert (evText ev) (evTime ev) levs) evs
+                  | otherwise = ev : go levs evs
 
 -- | Generating text of Evidence log that is attachmed to PDF. It should be complete
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> HC.ClockErrorStatistics -> m String
