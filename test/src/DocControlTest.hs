@@ -103,10 +103,19 @@ testLastPersonSigningADocumentClosesIt = do
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
             file
 
-  let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                    (defaultValue { signatorydetails = (authorOnly $ signatorydetails . fromJust $ getAuthorSigLink doc') , maybesignatory = Just $ userid user })
-                  , (defaultValue { signatorydetails = mkSigDetails "Fred" "Frog" "fred@frog.com" False True })
+                    (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink doc')
+                                    , signatoryisauthor = True
+                                    , signatoryispartner = False
+                                    , maybesignatory = Just $ userid user })
+                  , (defaultValue {   signatorysignorder = SignOrder 1
+                                    , signatoryisauthor = False
+                                    , signatoryispartner = True
+                                    , signatoryfields = [
+                                        SignatoryField FirstNameFT "Fred" True False []
+                                      , SignatoryField LastNameFT "Frog"  True False []
+                                      , SignatoryField EmailFT "fred@frog.com" True False []
+                                      ]})
                ]) (systemActor $ documentctime doc')
 
 
@@ -324,25 +333,3 @@ testGetBadHeader = do
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
   assertEqual "Response code is 403" 403 (rsCode res)
-
-
-
-mkSigDetails :: String -> String -> String -> Bool -> Bool -> SignatoryDetails
-mkSigDetails fstname sndname email isauthor ispartner = SignatoryDetails {
-    signatorysignorder = SignOrder 1
-  , signatoryfields = [
-      toSF FirstNameFT fstname
-    , toSF LastNameFT sndname
-    , toSF EmailFT email
-    ]
-  , signatoryisauthor = isauthor
-  , signatoryispartner = ispartner
-  }
-  where
-    toSF t v = SignatoryField {
-        sfType = t
-      , sfValue = v
-      , sfPlacements = []
-      , sfShouldBeFilledBySender = False
-      , sfObligatory = True
-    }

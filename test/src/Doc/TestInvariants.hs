@@ -161,7 +161,7 @@ maxLengthOnFields _ document =
       lengths :: [Int]
       -- signature field can be longer than max
       lengths = [length $ sfValue f | s <- documentsignatorylinks document
-                                    , f <- signatoryfields $ signatorydetails s
+                                    , f <- signatoryfields $ s
                                     , case sfType f of
                                         SignatureFT {} -> False -- filter our signatures, they might be long
                                         _ -> True ]
@@ -175,7 +175,7 @@ maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
 maxNumberOfPlacements _ document =
   let maxlength = 25 :: Int
       lengths :: [Int]
-      lengths = concatMap (map (length . sfPlacements) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      lengths = concatMap (map (length . sfPlacements) . signatoryfields) (documentsignatorylinks document)
       m = maximum (0 : lengths) in
   assertInvariant ("document had too many placements: " ++ show m ++ ". max is " ++ show maxlength ++ " (25 * number of fields)") $ m <= maxlength
 
@@ -203,7 +203,7 @@ notSignatoryNotSigned _ document =
 maxCustomFields :: MinutesTime -> Document -> Maybe String
 maxCustomFields _ document =
   let maxfields = 250 :: Int
-      fields = map (length . filter isFieldCustom . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      fields = map (length . filter isFieldCustom . signatoryfields) (documentsignatorylinks document)
       m = maximum (0 : fields) in
   assertInvariant ("there are signatories with too many custom fields: " ++ show m ++ ". maximum is " ++ show maxfields) $
     m <= maxfields
@@ -240,7 +240,7 @@ hasAtMostOneOfEachTypeOfField _ document =
  nothingIfEmpty $ intercalate ";" $ catMaybes $
    for [FirstNameFT, LastNameFT, CompanyFT, PersonalNumberFT, CompanyNumberFT, EmailFT] $ \t ->
     assertInvariant ("signatory with more than one " ++ show t) $
-      all (\sl -> 1 >= length (filter (fieldIsOfType t) (signatoryfields $ signatorydetails sl)))
+      all (\sl -> 1 >= length (filter (fieldIsOfType t) (signatoryfields sl)))
         (documentsignatorylinks document)
 
 -- some helpers

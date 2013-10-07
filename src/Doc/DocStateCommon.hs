@@ -17,13 +17,19 @@ trueOrMessage False s = Just s
 trueOrMessage True  _ = Nothing
 
 
-signLinkFromDetails' :: SignatoryDetails
+signLinkFromDetails' :: [SignatoryField]
+                     -> Bool
+                     -> Bool
+                     -> SignOrder
                      -> [SignatoryAttachment]
                      -> MagicHash
                      -> SignatoryLink
-signLinkFromDetails' details attachments magichash =
-  defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
-                , signatorydetails = signatoryLinkClearDetails details
+signLinkFromDetails' fields author partner sorder attachments magichash =
+  defaultValue {  signatorylinkid = unsafeSignatoryLinkID 0
+                , signatoryfields = map signatoryLinkClearField fields -- | Clean signatures
+                , signatoryisauthor  = author
+                , signatoryispartner = partner
+                , signatorysignorder  = sorder
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
                 , maybesigninfo  = Nothing
@@ -46,9 +52,6 @@ signLinkFromDetails' details attachments magichash =
                 , signatorylinkelegdatamismatchlastname = Nothing
                 , signatorylinkelegdatamismatchpersonalnumber = Nothing
                 }
-
-signatoryLinkClearDetails :: SignatoryDetails -> SignatoryDetails
-signatoryLinkClearDetails sd = sd {signatoryfields = map signatoryLinkClearField $ signatoryfields sd}
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField
 signatoryLinkClearField field =  case sfType field of
@@ -82,8 +85,8 @@ replaceSignatoryData :: SignatoryLink
                         -> String
                         -> [String]
                         -> SignatoryLink
-replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname email mobile company personalnumber companynumber fieldvalues =
-  siglink { signatorydetails = signatorydetails { signatoryfields = pumpData (signatoryfields signatorydetails) fieldvalues } }
+replaceSignatoryData siglink fstname sndname email mobile company personalnumber companynumber fieldvalues =
+  siglink { signatoryfields = pumpData (signatoryfields siglink) fieldvalues }
   where
     pumpData [] _ = []
     pumpData (sf:rest) vs = (case sfType sf of
@@ -123,5 +126,5 @@ replaceSignatoryUser siglink user company=
                        (getCompanyName    company)
                        (getPersonalNumber user)
                        (getCompanyNumber  company)
-                       (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
+                       (map sfValue $ filter isFieldCustom $ signatoryfields $ siglink) in
   newsl { maybesignatory = Just $ userid user }

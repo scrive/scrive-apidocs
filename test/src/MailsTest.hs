@@ -86,14 +86,13 @@ sendDocumentMails mailTo author = do
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
-        let authordetails = signatorydetails asl
         file <- addNewRandomFile
         randomUpdate $ AttachFile docid file (systemActor $ ctxtime ctx)
 
-        isl <- rand 10 arbitrary
+        islf <- rand 10 arbitrary
 
         now <- getMinutesTime
-        let sigs = [defaultValue {signatorydetails = authordetails} , defaultValue {signatorydetails = isl}]
+        let sigs = [defaultValue {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True} , defaultValue {signatoryfields = islf, signatoryispartner = True}]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
         randomUpdate $ PreparationToPending docid (systemActor now) Nothing
         d2 <- dbQuery $ GetDocumentByDocumentID docid

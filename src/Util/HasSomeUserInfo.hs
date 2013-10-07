@@ -46,19 +46,14 @@ instance HasSomeUserInfo User where
   getPersonalNumber = userpersonalnumber  . userinfo
   getMobile         = userphone          . userinfo
 
-instance HasSomeUserInfo SignatoryDetails where
+
+instance HasSomeUserInfo SignatoryLink where
   getEmail          = strip . getValueOfType EmailFT
   getFirstName      = getValueOfType FirstNameFT
   getLastName       = getValueOfType LastNameFT
   getPersonalNumber = getValueOfType PersonalNumberFT
   getMobile         = getValueOfType MobileFT
 
-instance HasSomeUserInfo SignatoryLink where
-  getEmail          = strip . getEmail          . signatorydetails
-  getFirstName      = getFirstName      . signatorydetails
-  getLastName       = getLastName       . signatorydetails
-  getPersonalNumber = getPersonalNumber . signatorydetails
-  getMobile         = getMobile         . signatorydetails
 
 {- |
    Given a SignatoryLink, returns a tuple containing the name and the email address.

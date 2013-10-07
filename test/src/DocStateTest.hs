@@ -205,9 +205,9 @@ docStateTests env = testGroup "DocState" [
 
 dataStructureProperties :: Test
 dataStructureProperties = testGroup "data structure properties" [
-  testProperty "signatories are equal with same fields" propSignatoryDetailsEq,
+  testCase "given example" testSignatories1,
   testProperty "signatories are different with different fields" propSignatoryDetailsNEq,
-  testCase "given example" testSignatories1
+  testProperty "signatories are equal with same fields" propSignatoryDetailsEq
   ]
 
 testSealMissingSignatures :: TestEnv ()
@@ -521,7 +521,7 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
     let siglink = head $ documentsignatorylinks doc
     assertBool "link is author and possibly signer" $
-      (signatoryisauthor $ signatorydetails siglink)
+      (signatoryisauthor $ siglink)
     assertEqual "link first name matches author's" (getFirstName user) (getFirstName siglink)
     assertEqual "link last name matches author's" (getLastName user) (getLastName siglink)
     assertEqual "link email matches author's" (getEmail user) (getEmail siglink)
@@ -559,27 +559,21 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
 
 testSignatories1 :: Assertion
 testSignatories1 =
-  let s1 = SignatoryDetails {signatorysignorder = SignOrder 0,
-                             signatoryfields = [SignatoryField FirstNameFT "Eric" True False []
-                                               ,SignatoryField LastNameFT "Normand" True False []
-                                                ],
-                             signatoryisauthor = True,
-                             signatoryispartner = True
-                            }
-      s2 = SignatoryDetails {signatorysignorder = SignOrder 0,
-                             signatoryfields = [SignatoryField LastNameFT "Normand" True False []
-                                               ,SignatoryField FirstNameFT "Eric" True False []
-                                                ],
-                             signatoryisauthor = True,
-                             signatoryispartner = True
-                            }
-  in assertBool "Signatories should be equal" (s1 == s2)
+  let s1 = defaultValue { signatoryfields =
+              [ SignatoryField FirstNameFT "Eric" True False []
+                ,SignatoryField LastNameFT "Normand" True False []
+                ]}
+      s2 = defaultValue { signatoryfields =
+              [SignatoryField LastNameFT "Normand" True False []
+              ,SignatoryField FirstNameFT "Eric" True False []
+              ]}
+  in assertBool "Signatories fields should be equal" (s1 == s2)
 
-propSignatoryDetailsEq :: SignOrder -> SignatoryDetails -> Property
+propSignatoryDetailsEq :: SignOrder -> SignatoryLink -> Property
 propSignatoryDetailsEq o1 sd =
    (o1 == o1) ==> sd{signatorysignorder = o1} == sd{signatorysignorder = o1}
 
-propSignatoryDetailsNEq :: SignOrder -> SignOrder -> SignatoryDetails -> Property
+propSignatoryDetailsNEq :: SignOrder -> SignOrder -> SignatoryLink -> Property
 propSignatoryDetailsNEq o1 o2 sd =
   (o1 /= o2) ==> sd{signatorysignorder = o1} /= sd{signatorysignorder = o2}
 
@@ -838,9 +832,9 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   mt <- rand 10 arbitrary
-  sd <- signatoryDetailsFromUser author (False, False)
+  sf <- signatoryFieldsFromUser author
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatorydetails = sd}] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatoryfields = sf}] (systemActor mt)
   --assert
   assert $ not success
 
@@ -851,7 +845,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, maybesignatory = Just $ userid author}] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [defaultValue { signatoryisauthor = True , maybesignatory = Just $ userid author}] (systemActor mt)
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
   assert success
@@ -864,14 +858,14 @@ testPreparationResetSignatoryDetails2Works = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  let newData1 = defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, maybesignatory = Just $ userid author}
+  let newData1 = defaultValue {   signatoryisauthor = True , maybesignatory = Just $ userid author}
   success1 <- dbUpdate $ ResetSignatoryDetails (documentid doc) [newData1] (systemActor mt)
   assert success1
   ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod (documentsignatorylinks ndoc1))
   assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod (documentsignatorylinks ndoc1))
 
-  let newData2 =  defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
+  let newData2 =  defaultValue { signatoryisauthor = True, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
   success2 <- dbUpdate $ ResetSignatoryDetails (documentid doc) [newData2] (systemActor mt)
   assert success2
   ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -892,7 +886,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   -- non-existent docid
 
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    dbUpdate $ ResetSignatoryDetails a [defaultValue { signatorydetails = defaultValue { signatoryisauthor = True }} ] (systemActor mt)
+    dbUpdate $ ResetSignatoryDetails a [defaultValue { signatoryisauthor = True } ] (systemActor mt)
 
 
 
@@ -1048,8 +1042,8 @@ testCreateFromSharedTemplate = do
   let [author2] = filter isAuthor $ documentsignatorylinks ndoc
   let isCustom (SignatoryField { sfType = CustomFT _ _ }) = True
       isCustom _ = False
-  if (fmap sfValue $ filter isCustom $ signatoryfields $ signatorydetails author1)
-     == (fmap sfValue $ filter isCustom $ signatoryfields $ signatorydetails author2)
+  if (fmap sfValue $ filter isCustom $ signatoryfields $ author1)
+     == (fmap sfValue $ filter isCustom $ signatoryfields $ author2)
     then assertSuccess
     else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294"
 
@@ -1299,7 +1293,7 @@ testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  slid <- rand 10 $ elements (map signatorylinkid . filter (signatoryispartner . signatorydetails) $ documentsignatorylinks doc)
+  slid <- rand 10 $ elements (map signatorylinkid . filter (signatoryispartner) $ documentsignatorylinks doc)
   let Just sl = getSigLinkFor doc slid
   time <- rand 10 arbitrary
   let sa = signatoryActor time noIP Nothing (getEmail sl) slid

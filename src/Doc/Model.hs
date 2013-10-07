@@ -57,7 +57,6 @@ module Doc.Model
   , SetSMSInvitationDeliveryStatus(..)
   , SetInviteText(..)
   , SignDocument(..)
-  , SignLinkFromDetailsForTest(..)
   , CloneDocumentWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
@@ -465,10 +464,10 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
-                         , checkEqualBy "signatoryfields" (sort . signatoryfields . signatorydetails)
-                         , checkEqualBy "signatoryisauthor" (signatoryisauthor . signatorydetails)
-                         , checkEqualBy "signatoryispartner" (signatoryispartner. signatorydetails)
-                         , checkEqualBy "signatorysignorder" (signatorysignorder. signatorydetails)
+                         , checkEqualBy "signatoryfields" (sort . signatoryfields)
+                         , checkEqualBy "signatoryisauthor" (signatoryisauthor)
+                         , checkEqualBy "signatoryispartner" (signatoryispartner)
+                         , checkEqualBy "signatorysignorder" (signatorysignorder)
                          , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
                          , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
                          , checkEqualBy "signatorylinkauthenticationmethod" signatorylinkauthenticationmethod
@@ -689,12 +688,10 @@ fetchSignatoryLinks = do
           }]) saname
         link = SignatoryLink {
             signatorylinkid = slid
-          , signatorydetails = SignatoryDetails {
-              signatorysignorder = sign_order
-            , signatoryfields = []
-            , signatoryisauthor = is_author
-            , signatoryispartner = is_partner
-          }
+          , signatorysignorder = sign_order
+          , signatoryfields = []
+          , signatoryisauthor = is_author
+          , signatoryispartner = is_partner
           , signatorymagichash = token
           , maybesignatory = user_id
           , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
@@ -746,10 +743,10 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSet "document_id" documentid
            sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
            sqlSetList "user_id" $ maybesignatory <$> links
-           sqlSetList "is_author" $ signatoryisauthor <$> signatorydetails <$> links
-           sqlSetList "is_partner" $ signatoryispartner <$> signatorydetails <$> links
+           sqlSetList "is_author" $ signatoryisauthor <$> links
+           sqlSetList "is_partner" $ signatoryispartner <$> links
            sqlSetList "token" $ signatorymagichash <$> links
-           sqlSetList "sign_order"$ signatorysignorder <$> signatorydetails <$> links
+           sqlSetList "sign_order"$ signatorysignorder <$> links
            sqlSetList "sign_time" $ fmap signtime <$> maybesigninfo <$> links
            sqlSetList "sign_ip" $ fmap signipnumber <$> maybesigninfo <$> links
            sqlSetList "seen_time" $ fmap signtime <$> maybeseeninfo <$> links
@@ -795,15 +792,14 @@ insertSignatoryLinksAsAre documentid links = do
   let replaceAttachments newlink oldlink = (signatorylinkid newlink, signatoryattachments oldlink)
   sigattaches <- insertSignatoryAttachmentsAsAre $ zipWith replaceAttachments newLinksAsList links
 
-  let replaceFields newlink oldlink = (signatorylinkid newlink, (signatoryfields . signatorydetails) oldlink)
+  let replaceFields newlink oldlink = (signatorylinkid newlink, (signatoryfields) oldlink)
 
   fields <- insertSignatoryLinkFieldsAsAre $ zipWith replaceFields newLinksAsList links
 
   forM newLinksAsList $ \newlink -> do
       let newlinkid = signatorylinkid newlink
       let newlinkfull = newlink { signatoryattachments = M.findWithDefault [] newlinkid sigattaches
-                                , signatorydetails = (signatorydetails newlink)
-                                                     { signatoryfields = M.findWithDefault [] newlinkid fields }
+                                , signatoryfields = M.findWithDefault [] newlinkid fields
                                 }
       return newlinkfull
 
@@ -1511,8 +1507,7 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
     kRunRaw "DROP TABLE links"
 
     let extendSignatoryLinkWithFields sl =
-           sl { signatorydetails = (signatorydetails sl)
-                      { signatoryfields = M.findWithDefault [] (signatorylinkid sl) fields }}
+           sl{ signatoryfields = M.findWithDefault [] (signatorylinkid sl) fields }
 
 
     let fill doc = doc
@@ -1550,9 +1545,7 @@ instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
                <> SQL "WHERE signatory_link_id = ?" [toSql slid]
          fields <- fetchSignatoryLinkFields
                >>= return . concatMap snd . M.toList
-         return $ link { signatorydetails = (signatorydetails link) {
-                                              signatoryfields = fields
-                                            }}
+         return $ link { signatoryfields = fields }
       Nothing -> do
          listOfExceptions <- kWhyNot1 queryx
 
@@ -1726,22 +1719,15 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
   update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
   magichash <- random
-  authorDetails <- signatoryDetailsFromUser user (True, True)
-  let authorlink0 = signLinkFromDetails' authorDetails [] magichash
+  authorFields <- signatoryFieldsFromUser user
+  let authorlink0 = signLinkFromDetails' authorFields True True (SignOrder 1) [] magichash
 
   let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user }
 
   othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
                         mh <- random
-                        return $ signLinkFromDetails'
-                                SignatoryDetails
-                                                { signatorysignorder = SignOrder 2
-                                                , signatoryfields    = emptySignatoryFields
-                                                , signatoryisauthor  = False
-                                                , signatoryispartner = True
-                                                }
-                                [] mh
+                        return $ signLinkFromDetails' emptySignatoryFields False True (SignOrder 2) [] mh
 
   let doc = defaultValue
                 { documenttitle                = title
@@ -1832,7 +1818,10 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
                            return $ defaultValue {
                                 signatorylinkid            = (unsafeSignatoryLinkID 0)
                               , signatorymagichash = magichash
-                              , signatorydetails           = signatorydetails sl
+                              , signatoryfields            = signatoryfields sl
+                              , signatoryisauthor          = signatoryisauthor sl
+                              , signatoryispartner         = signatoryispartner sl
+                              , signatorysignorder         = signatorysignorder sl
                               , signatorylinkcsvupload       = signatorylinkcsvupload sl
                               , signatoryattachments         = signatoryattachments sl
                               , signatorylinksignredirecturl = signatorylinksignredirecturl sl
@@ -2110,18 +2099,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
           s -> do
             Log.error $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
             return False
-
-data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails
-instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDetailsForTest SignatoryLink where
-  update (SignLinkFromDetailsForTest details) = do
-      magichash <- random
-
-      let link = signLinkFromDetails' details
-                        [] magichash
-
-      return link
-
-
 
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
 instance (MonadDB m, TemplatesMonad m, MonadIO m,CryptoRNG m)=> DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
