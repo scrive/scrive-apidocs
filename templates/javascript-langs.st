@@ -855,8 +855,8 @@ javascriptLocalisation =
               , newpassword1    : "$_NewPassword()$"
               , newpassword2    : "$_RepeatNewPassword()$"
               , lang            : "$_UserLanguage()$"
-              , langSV          : "$_Swedish()$"
-              , langEN          : "$_English()$"
+              , langSV          : "$_SwedishInSwedish()$"
+              , langEN          : "$_EnglishInEnglish()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {
