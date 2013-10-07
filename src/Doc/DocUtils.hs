@@ -10,10 +10,7 @@
 -----------------------------------------------------------------------------
 
 module Doc.DocUtils(
-    partyList
-  , partyListButAuthor
-  , partySignedList
-  , renderListTemplateNormal
+    renderListTemplateNormal
   , renderListTemplate
   , renderLocalListTemplate
   , replaceFieldValue
@@ -59,28 +56,6 @@ import Data.Maybe
 import File.Model
 import File.File
 import Control.Applicative
-
-{- |
-   Given a Document, return all signatories (exclude viewers but include author if he must sign).
-   See also: partyListButAuthor to exclude the author.
- -}
-partyList :: Document -> [SignatoryLink]
-partyList document = [sl | sl <- documentsignatorylinks document
-                                          , isSignatory sl]
-
-partyListButAuthor :: Document -> [SignatoryLink]
-partyListButAuthor document = [sl | sl <- documentsignatorylinks document
-                                          , isSignatory sl
-                                          , not $ isAuthor sl
-                                          ]
-{- |
-   Given a Document, return all of the signatories who have signed.
- -}
-partySignedList :: Document -> [SignatoryLink]
-partySignedList document = [sl | sl <- documentsignatorylinks document
-                                                , isSignatory sl
-                                                ,  hasSigned sl]
-
 
 renderListTemplateNormal :: TemplatesMonad m => [String] -> m String
 renderListTemplateNormal = renderListTemplateNormalHelper renderTemplate

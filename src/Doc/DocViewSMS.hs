@@ -92,7 +92,7 @@ smsFields document siglink = do
 
 smsFields' :: (TemplatesMonad m, HasMailContext c) => c -> Document -> SignatoryLink -> Fields m ()
 smsFields' ctx document siglink = do
-    partylist <- lift $ renderListTemplateNormal $ map getSmartName $ partyList document
+    partylist <- lift $ renderListTemplateNormal $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
     F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
