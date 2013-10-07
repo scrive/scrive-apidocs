@@ -541,6 +541,7 @@ asValidInviteText input =
           fixContent :: Content Posn -> Maybe (Content Posn)
           fixContent (CElem (Elem (N name) atts cs) i) = Just (CElem (Elem (N $ validName name) (catMaybes $ map validAttribute atts) (catMaybes $ map fixContent cs) ) i)
           fixContent x@(CString _ _ _) = Just x
+          fixContent x@(CRef _ _) = Just x
           fixContent _ = Nothing
           validName :: Name -> Name
           validName n = if ((map toLower n) `elem` ["br", "em", "li", "ol", "p", "span", "strong", "ul", "div"])
