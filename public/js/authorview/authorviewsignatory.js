@@ -344,10 +344,6 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     addToPadQueueOption : function() {
                  var self = this;
                  var signatory = this.model.signatory();
-                 var button = $("<label  class='clickable addToPad'/>");
-                 var icon = $("<div class='addToPadIcon'/>");
-                 var text = localization.pad.addToPadQueue;
-                 var textbox = $("<span/>").text(text);
                  var button = new Button({
                     color: "black",
                     text: localization.pad.addToPadQueue,
