@@ -1,4 +1,4 @@
-{-# LANGUAGE ExtendedDefaultRules, OverlappingInstances #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData (
     CSVUpload(..)

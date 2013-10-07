@@ -92,7 +92,7 @@ sendDocumentMails mailTo author = do
         islf <- rand 10 arbitrary
 
         now <- getMinutesTime
-        let sigs = [defaultValue {signatoryfields = signatoryfields asl, signatoryisauthor = True} , defaultValue {signatoryfields = islf}]
+        let sigs = [defaultValue {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True} , defaultValue {signatoryfields = islf, signatoryispartner = True}]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
         randomUpdate $ PreparationToPending docid (systemActor now) Nothing
         d2 <- dbQuery $ GetDocumentByDocumentID docid
