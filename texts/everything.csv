@@ -732,7 +732,7 @@
 "_simpliefiedTextReminderSend","En påminnelse skickas till $affectedsignatory$$if(text)$ via $_delivery_method()$ med meddelandet: <BR/><i>$text:noescape()$</i>$else$.$endif$","A reminder is sent to $affectedsignatory$$if(text)$ via $_delivery_method()$ with message: <BR/> <i>$text:noescape()$</i>$else$.$endif$"
 "_simpliefiedTextResealedPDF","På grund av ett problem med den automatiska förseglingen så återförseglas dokumentet av en behörig administratör på Scrive.","Because of a problem with the automated sealing procedure the document is resealed by a specially authorized Scrive admin."
 "_simpliefiedTextCancelDocumenElegEvidence","Inbjudan att signera återkallas automatiskt då personuppgifterna för $if(affectedsignatory)$$affectedsignatory$$else$en part$endif$ inte stämde överens med uppgifterna i den e-legitimation som användes vid signering.","The invitation to sign was withdrawn automatically as $if(affectedsignatory)$$affectedsignatory$$else$one party$endif$'s personal details did not match the details in the eID that was used at signing."
-"_simpliefiedTextProlongDocumentEvidence","Dokumentets förfallodag förlängs","The document signing deadline is extended"
+"_simpliefiedTextProlongDocumentEvidence","Dokumentets förfallodag förlängs.","The document signing deadline is extended."
 "_delivery_method","$if(pad)$pad$elseif(email)$e-post$elseif(mobile)$SMS$elseif(emailmobile)$e-post och SMS$endif$","$if(pad)$pad$elseif(email)$email$elseif(mobile)$SMS$elseif(emailmobile)$email and SMS$endif$"
 "_authorviewGoToSignview","Gå till signeringsvyn","Go to the sign view"
 "_authorviewSignatoriesTitle","Parter","Parties"
