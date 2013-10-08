@@ -134,8 +134,8 @@ class DocHelper
       @driver.execute_script("$('.modal.active input.editSignatoryAttachmentName').change()");
       (@h.wait_until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       @driver.execute_script("$('.modal.active  textarea.editSignatoryAttachmentDescription').change()");
-      @driver.execute_script("$(\".modal.active option:contains('" + counterpart + "')\").last().attr('selected','true')");
-      @driver.execute_script("$('.modal.active  select').change()");
+      (@h.wait_until { @driver.find_element :xpath => "(//td[contains(@class,'editSignatoryAttachmentTDSelect')])[last()]//div[contains(@class,'select-button')]"}).click
+      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'select-exp')]//ul[contains(@class,'select-opts')]//span[contains(text(),'" + counterpart + "')]"}).click
     end
      @driver.execute_script("$('.modal.active .modal-footer .button.button-green').click()")
      sleep 2
