@@ -136,7 +136,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var self = this;
     self.screenshotDone = false;
 
-    Confirmation.popup({
+    var confirmation = Confirmation.popup({
       cssClass: 'grey',
       title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
@@ -155,15 +155,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (BrowserInfo.isSmallScreen()) {
       // Remove the modal header but keep the close button
       var modalHeader = $('.modal-container .modal-header');
-      var close = modalHeader.find('.modal-close').detach();
       modalHeader.remove();
-      close.css('margin', '45px 475px 30px 30px');
-      close.css('background', 'none');
-      close.css('font-size', '55px');
-      close.css('color', 'red');
-      close.css('width', '420px');
-      close.css('height', '90px');
-      close.text(localization.goBack);
+      var close = $('<img src="/img/mobile-modal-x.png" />');
+      close.css('padding-left', '600px');
+      close.css('padding-top', '50px');
+      close.click(function() { confirmation.close(); });
 
       // Remove the modal footer but keep the button
       var modalFooter = $('.modal-container .modal-footer');
@@ -176,6 +172,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       modalFooter.remove();
 
       $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
+      $('.modal-container .modal-body .modal-content').prepend(close);
 
       signButton.css({
         'font-size': '100px',
@@ -203,7 +200,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
                                 'margin-top': '150px'});
 
       $('.modal-container .modal-body').append(signButton);
-      // $('.modal-container').append(close);
     }
   }
 });
