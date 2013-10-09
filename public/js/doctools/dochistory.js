@@ -31,7 +31,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
                 new Cell({name: localization.history.time,  width:"150px",  field:"time",
                   rendering: function(time) {
                          if (time != undefined && time != "")
-                           return $("<div/>").text(new Date(Date.parse(time)).fullTime());
+                           return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
                          else return $("<div/>");
                   }
                 }),

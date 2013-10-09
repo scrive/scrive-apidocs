@@ -125,8 +125,8 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
   bindChanges : function() {
       var self = this;
       this.model.custombackgroundcolour().onChange(function(colour,customised) {self.changeBackground(colour,customised);});
-      this.model.custombarscolour().onChange(function(colour) {self.changeBarsColor(colour);});
-      this.model.custombarstextcolour().onChange(function(colour) {self.changeBarsTextColor(colour);});
+      this.model.custombarscolour().onChange(function(colour,customised) {self.changeBarsColor(colour,customised);});
+      this.model.custombarstextcolour().onChange(function(colour,customised) {self.changeBarsTextColor(colour,customised);});
       this.model.custombarssecondarycolour().onChange(function(colour) {self.changeBarsSecondaryColour(colour);});
       this.model.customlogo().onChange(function(logo) {self.changeLogo(logo);});
   },
@@ -145,15 +145,23 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     submit.add('logo', logo);
     submit.send();
   },
-  changeBarsColor : function(color) {
+  changeBarsColor : function(color,customized) {
     this.header.css('background-color', color);
-    this.footer.css('background-color', color);
+    if (customized || this.model.companyui().domainbarscolour() != "")
+      this.footer.css('background-color', color);
+    else
+      this.footer.css('background-color', "#ffffff")
   },
-  changeBarsTextColor : function(color) {
-    this.footercontent.css('color', color);
+  changeBarsTextColor : function(color,customized) {
+
     this.header4.css('color', color);
     this.header5.css('color', color);
     this.header6.css('color', color);
+    if (customized || this.model.companyui().domainbarstextcolour() != "")
+      this.footer.css('color',color);
+    else
+      this.footer.css('color',"#333333");
+
   },
   changeBackground : function(custombackgroundcolour,customized) {
     if (customized || this.model.companyui().domainbackgroundcolour() != "")
@@ -180,8 +188,8 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
   render: function() {
 
     this.changeLogo(this.model.customlogo().logo());
-    this.changeBarsColor(this.model.custombarscolour().colour());
-    this.changeBarsTextColor(this.model.custombarstextcolour().colour());
+    this.changeBarsColor(this.model.custombarscolour().colour(),this.model.custombarscolour().customised());
+    this.changeBarsTextColor(this.model.custombarstextcolour().colour(),this.model.custombarstextcolour().customised());
     this.changeBarsSecondaryColour(this.model.custombarssecondarycolour().colour());
     this.changeBackground(this.model.custombackgroundcolour().colour(),this.model.custombackgroundcolour().customised());
   }

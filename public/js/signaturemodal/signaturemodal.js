@@ -61,7 +61,7 @@ var SignatureDrawOrTypeModel= Backbone.Model.extend({
        if (this.drawingMode()) {
           tod  = new SignatureDrawer({field : this.field(), height: this.height(), width: this.width(), modal : this.modal()});
         } else {
-          tod = new SignatureTyper({field: this.field(), text : this.field().signatory().nameOrEmail(), height: this.height(), width: this.width()});
+          tod = new SignatureTyper({field: this.field(), text : "", height: this.height(), width: this.width()});
         }
        this.set({"typerOrDrawer" : tod});
      }

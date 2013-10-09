@@ -243,12 +243,18 @@ fileJSON file = runJSONGen $ do
     J.value "name" $ filename file
 
 
-pageDocumentDesign :: TemplatesMonad m
-                   => Document
+pageDocumentDesign :: Kontrakcja m
+                   => Context
+                   -> Document
+                   -> AnalyticsData
                    -> m String
-pageDocumentDesign document = do
+pageDocumentDesign ctx document ad = do
+     let  mbd = currentBrandedDomain ctx
+     mcompany <- companyUIForPage
      renderTemplate "pageDocumentDesign" $ do
          F.value "documentid" $ show $ documentid document
+         standardPageFields ctx kontrakcja ad
+         brandingFields mbd mcompany
 
 pageDocumentView :: TemplatesMonad m
                     => Document
