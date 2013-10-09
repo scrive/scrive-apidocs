@@ -150,7 +150,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     if (customized || this.model.companyui().domainbarscolour() != "")
       this.footer.css('background-color', color);
     else
-      this.footer.css('background-color', "#ffffff")
+      this.footer.css('background-color', "#ffffff");
   },
   changeBarsTextColor : function(color,customized) {
 
