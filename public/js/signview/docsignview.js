@@ -442,7 +442,7 @@ var DocumentSignViewView = Backbone.View.extend({
         
      this.subcontainer = $("<div class='subcontainer'></div>").appendTo(subcontainerWrapper);
 
-     this.subcontainer.append(this.model.instructionssection().el);
+     subcontainerWrapper.prepend(this.model.instructionssection().el);
 
      if (this.model.hasCreateAccountSection())
          this.subcontainer.append(this.model.createaccountsection().el);
