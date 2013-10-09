@@ -201,7 +201,7 @@ data EvidenceEventType =
   RemoveSigAttachmentsEvidence                    | -- not used anymore
   RemoveDocumentAttachmentEvidence                | -- not used anymore
   AddDocumentAttachmentEvidence                   | -- not used anymore
-  PendingToAwaitingAuthorEvidence                 |
+  PendingToAwaitingAuthorEvidence                 | -- not used anymore
   UpdateFieldsEvidence                            | -- not used anymore
   SetElegitimationIdentificationEvidence          | -- not used anymore
   SetEmailIdentificationEvidence                  | -- not used anymore

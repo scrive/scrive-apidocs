@@ -1665,10 +1665,10 @@ data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID (M
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool where
   update (AddInvitationEvidence docid slid mmsg actor) = do
         sig <- query $ GetSignatoryLinkByID docid slid Nothing
-        let eml = getEmail sig
+        let signame = getIdentifier sig
         _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           InvitationEvidence
-          (value "email" eml >> value "actor" (actorWho actor))
+          (value "signatory" signame >> value "actor" (actorWho actor))
           (Just docid)
           (Just slid)
           mmsg
@@ -1844,9 +1844,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument () 
       \2. a signer creates an account after signing to save their document
       \3. the email of a signatory is corrected to that of an existing user
 -}
-data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID Actor
+data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser Bool where
-  update (SaveDocumentForUser did User{userid} slid _actor) = do
+  update (SaveDocumentForUser did User{userid} slid) = do
     kRun01 $ sqlUpdate "signatory_links" $ do
         sqlSet "user_id" userid
         sqlWhereEq "document_id" did
@@ -2182,7 +2182,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddSignatoryLinkVisitedEvid
    update (AddSignatoryLinkVisitedEvidence did sl actor) = do
         _ <-update $ InsertEvidenceEvent
           SignatoryLinkVisited
-          (value "name" (getSmartName sl))
+          (value "name" (getIdentifier sl))
           (Just $ did)
           actor
         return ()
@@ -2204,7 +2204,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
 
      _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           ReminderSend
-          (value "name" (getSmartName sl))
+          (value "name" (getIdentifier sl))
           (Just $ documentid doc)
           (Just $ signatorylinkid sl)
           mmsg

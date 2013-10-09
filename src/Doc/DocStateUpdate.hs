@@ -19,7 +19,6 @@ import User.Model
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import DB
 import Util.Actor
-import Util.HasSomeUserInfo
 import Util.MonadUtils
 
 
@@ -64,7 +63,7 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
       True -> return $ Left (DBActionNotAvailable "This document does not allow signing using email authentication.")
       False  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
-        let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
+        let actor = signatoryActor ctxtime ctxipnumber sl'
         mdoc <- runMaybeT $ do
           dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh Nothing screenshots actor
@@ -86,7 +85,7 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
      case signatorylinkauthenticationmethod sl' == ELegAuthentication of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using eleg authentication.")
       True  -> do
-        let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
+        let actor = signatoryActor ctxtime ctxipnumber sl'
         mdoc <- runMaybeT $ do
           dbUpdate $ UpdateFieldsForSigning did slid fields actor
           dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor

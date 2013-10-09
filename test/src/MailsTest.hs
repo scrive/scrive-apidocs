@@ -80,7 +80,7 @@ sendDocumentMails mailTo author = do
         -- make  the context, user and document all use the same lang
         ctx <- mailingContext l
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
-        let aa = authorActor (ctxtime ctx) noIP (userid author) (getEmail author)
+        let aa = authorActor (ctxtime ctx) noIP author
         Just d <- randomUpdate $ NewDocument author "Document title" Signable 0 aa
         True <- dbUpdate $ SetDocumentLang (documentid d) l (systemActor $ ctxtime ctx)
 
@@ -98,7 +98,7 @@ sendDocumentMails mailTo author = do
         d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
         randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
-             (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
+             (signatoryActor now noIP asl2)
         randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
         doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
@@ -122,7 +122,7 @@ sendDocumentMails mailTo author = do
         checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
         randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
-                                   (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
+                                   (signatoryActor (10 `minutesAfter` now) ip sl)
         sdoc <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl False

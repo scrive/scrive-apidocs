@@ -30,14 +30,14 @@ data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
   update (AddToPadQueue uid did slid a) = do
     doc <- query $ GetDocumentByDocumentID did
-    let memail = getEmail <$> getSigLinkFor doc slid
+    let signame = getIdentifier <$> getSigLinkFor doc slid
     update $ ClearPadQueue uid a
     r <- kRun $ SQL "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
                 [toSql uid, toSql did, toSql slid]
     when_ (r == 1) $
                 update $ InsertEvidenceEvent
                 SendToPadDevice
-                (value "email" memail >> value "actor" (actorWho a))
+                (value "signatory" signame >> value "actor" (actorWho a))
                 (Just did)
                 a
     return ()
@@ -52,13 +52,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
        Nothing -> return ()
        Just (did, slid) -> do
          doc <- query $ GetDocumentByDocumentID did
-         let memail = getEmail <$> getSigLinkFor doc slid
+         let signame = getIdentifier <$> getSigLinkFor doc slid
          r <- kRun $ SQL "DELETE FROM padqueue WHERE user_id = ?"
                    [toSql uid]
          when_ ((r == 1) && isJust pq ) $ do
          _ <- update $ InsertEvidenceEvent
               RemovedFromPadDevice
-              (value "email" memail >> value "actor"  (actorWho a))
+              (value "signatory" signame >> value "actor"  (actorWho a))
               (fst <$> pq)
               a
          return ()

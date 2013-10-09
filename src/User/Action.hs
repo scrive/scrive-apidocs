@@ -28,7 +28,6 @@ import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import qualified Log
 import Util.MonadUtils
-import Util.Actor
 import User.History.Model
 import ThirdPartyStats.Core
 import Payments.Model
@@ -40,7 +39,6 @@ import Company.Model
 
 handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign document signatorylink = do
-  ctx <- getContext
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
       cname = getCompanyName signatorylink
@@ -63,8 +61,7 @@ handleAccountSetupFromSign document signatorylink = do
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
   case mactivateduser of
     Just activateduser -> do
-      let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
-      _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
+      _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink)
 
       return $ Just activateduser
     Nothing -> return Nothing
@@ -109,8 +106,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
               ds <- dbQuery $ GetSignatoriesByEmail (Email $ getEmail actvuser) (14 `daysBefore` ctxtime ctx)
 
               forM_ ds $ \(d, s) -> do
-                let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (Just $ userid actvuser) (getEmail actvuser) s
-                dbUpdate $ SaveDocumentForUser d actvuser s actor
+                dbUpdate $ SaveDocumentForUser d actvuser s
 
               when (haspassword) $ do
                 mpassword <- getOptionalField asValidPassword "password"

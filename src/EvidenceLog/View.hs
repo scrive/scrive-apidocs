@@ -241,7 +241,7 @@ evidenceOfIntentHTML title l = do
           F.value "image" $ RFC2397.encode (detectImageMimeType (unBinary (Screenshot.image s)))
                                            (unBinary (Screenshot.image s))
     F.objects "entries" $ for l $ \(sl, entry) -> do
-      F.value "signatory"  $ getSmartName sl
+      F.value "signatory"  $ getIdentifier sl
       F.value "ip"         $ show . signipnumber <$> maybesigninfo sl
       F.object "first"     $ values (SignatoryScreenshots.first entry)
       F.object "signing"   $ values (SignatoryScreenshots.signing entry)

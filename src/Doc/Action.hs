@@ -226,11 +226,9 @@ saveDocumentForSignatories doc =
       case muser of
         Nothing -> return $ Right doc'
         Just user -> do
-          Context{ctxtime, ctxipnumber} <- getContext
-          let actor = signatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail (signatorylinkid sl)
           udoc <- do
             mdoc <- runMaybeT $ do
-              True <- dbUpdate $ SaveDocumentForUser (documentid  doc') user (signatorylinkid sl) actor
+              True <- dbUpdate $ SaveDocumentForUser (documentid  doc') user (signatorylinkid sl)
               newdoc <- dbQuery $ GetDocumentByDocumentID (documentid  doc')
               return newdoc
             return $ maybe (Left "saveDocumentForSignatory failed") Right mdoc

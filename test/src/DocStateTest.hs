@@ -517,13 +517,13 @@ performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> T
 performNewDocumentWithRandomUser Nothing doctype title = do
   user <- addNewRandomUser
   time <- getMinutesTime
-  let aa = authorActor time noIP (userid user) (getEmail user)
+  let aa = authorActor time noIP user
   mdoc <- randomUpdate $ NewDocument user title doctype 0 aa
   return (user, time, maybe (Left "no document") Right mdoc)
 performNewDocumentWithRandomUser (Just company) doctype title = do
   user <- addNewRandomCompanyUser (companyid company) False
   time <- getMinutesTime
-  let aa = authorActor time noIP (userid user) (getEmail user)
+  let aa = authorActor time noIP user
   mdoc <- randomUpdate $ NewDocument user title doctype 0 aa
   return (user, time, maybe (Left "no document") Right mdoc)
 
@@ -558,7 +558,7 @@ testCancelDocumentCancelsDocument = doTimes 10 $ do
   user <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ isPending)
   time <- getMinutesTime
-  randomUpdate $ CancelDocument (documentid doc) (authorActor time noIP (userid user) (getEmail user))
+  randomUpdate $ CancelDocument (documentid doc) (authorActor time noIP user)
 
   canceleddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   let doNotCompareStatusClass x = x { signatorylinkstatusclass = SCDraft }
@@ -577,7 +577,7 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
   time <- getMinutesTime
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $
                randomUpdate $ CancelDocument (documentid doc)
-                              (authorActor time noIP (userid user) (getEmail user))
+                              (authorActor time noIP user)
 
 testSignatories1 :: Assertion
 testSignatories1 =
@@ -729,7 +729,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   author <- addNewRandomUser
   -- execute
   now <- getMinutesTime
-  let aa = authorActor now noIP (userid author) (getEmail author)
+  let aa = authorActor now noIP author
   mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
   -- assert
   assertJust mdoc
@@ -740,7 +740,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   now <- getMinutesTime
-  let aa = authorActor now noIP (userid author) (getEmail author)
+  let aa = authorActor now noIP author
   mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
   let doc = case mdoc of
           Nothing -> error "No document"
@@ -1144,8 +1144,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   file1 <- addNewRandomFile
   file2 <- addNewRandomFile
   --execute
-  let email1 = "g1@g.com"
-      name1 = "att1"
+  let name1 = "att1"
   let att1 = SignatoryAttachment { signatoryattachmentfile = Just file1
                                  , signatoryattachmentname = name1
                                  , signatoryattachmentdescription = "att1 description"
@@ -1155,7 +1154,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
                                  , signatoryattachmentdescription = "att2 description"
                                  }
   (time, sl) <- rand 10 arbitrary
-  let sa = signatoryActor time noIP Nothing email1 sl
+  let sa = signatoryActor time noIP sl
   randomUpdate $ SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) [att1, att2] sa
 
   doc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
@@ -1292,7 +1291,7 @@ testRejectDocumentNotSignableLeft = doTimes 10 $ do
   time <- rand 10 arbitrary
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
     randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
-           (authorActor time noIP (userid author) (getEmail author))
+           (authorActor time noIP author)
 
 testRejectDocumentSignableNotPendingLeft :: TestEnv ()
 testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
@@ -1302,14 +1301,14 @@ testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
   time <- rand 10 arbitrary
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
     randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
-           (authorActor time noIP (userid author) (getEmail author))
+           (authorActor time noIP author)
 
 testRejectDocumentNotLeft :: TestEnv ()
 testRejectDocumentNotLeft = doTimes 10 $ do
-  (did, time, slid) <- rand 10 arbitrary
-  let sa = signatoryActor time noIP Nothing "hello@hello.com" slid
+  (did, time, sl) <- rand 10 arbitrary
+  let sa = signatoryActor time noIP sl
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    randomUpdate $ RejectDocument did slid Nothing sa
+    randomUpdate $ RejectDocument did (signatorylinkid sl) Nothing sa
 
 testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
@@ -1318,7 +1317,7 @@ testRejectDocumentSignablePendingRight = doTimes 10 $ do
   slid <- rand 10 $ elements (map signatorylinkid . filter (signatoryispartner) $ documentsignatorylinks doc)
   let Just sl = getSigLinkFor doc slid
   time <- rand 10 arbitrary
-  let sa = signatoryActor time noIP Nothing (getEmail sl) slid
+  let sa = signatoryActor time noIP sl
   randomUpdate $ RejectDocument (documentid doc) slid Nothing sa
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
@@ -1334,7 +1333,7 @@ testMarkInvitationRead = doTimes 10 $ do
   let slid = signatorylinkid sl'
   time <- getMinutesTime
   success <- dbUpdate $ MarkInvitationRead (documentid doc) slid
-          (signatoryActor time noIP (maybesignatory sl') (getEmail sl') slid)
+          (signatoryActor time noIP sl')
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   assert success
@@ -1343,10 +1342,10 @@ testMarkInvitationRead = doTimes 10 $ do
 
 testMarkInvitationReadDocDoesntExist :: TestEnv ()
 testMarkInvitationReadDocDoesntExist = doTimes 10 $ do
-  (did, slid, time, ip, eml) <- rand 10 arbitrary
+  (did, sl, time, ip) <- rand 10 arbitrary
   assertRaisesKontra (\DocumentDoesNotExist{} -> True) $ do
-    _ <- randomUpdate $ MarkInvitationRead did slid
-            (signatoryActor time ip Nothing eml slid)
+    _ <- randomUpdate $ MarkInvitationRead did (signatorylinkid sl)
+            (signatoryActor time ip sl)
     return ()
   return ()
 
@@ -1360,7 +1359,7 @@ testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
   forEachSignatoryLink doc $ \sl ->
     when (isNothing $ maybeseeninfo sl) $ do
       (time, ip) <- rand 10 arbitrary
-      let sa = signatoryActor time ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl)
+      let sa = signatoryActor time ip sl
       assertRaisesKontra (\DocumentTypeShouldBe{} -> True) $ do
         randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) sa
 
@@ -1374,7 +1373,7 @@ testMarkDocumentSeenClosedOrPreparationLeft = doTimes 10 $ do
   forEachSignatoryLink doc $ \sl ->
     when (isNothing $ maybeseeninfo sl) $ do
       (time, ip) <- rand 10 arbitrary
-      let sa = signatoryActor time ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl)
+      let sa = signatoryActor time ip sl
       assertRaisesKontra (\DocumentStatusShouldBe{} -> True) $ do
         randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) sa
 
@@ -1401,7 +1400,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTi
   (forEachSignatoryLink doc $ \sl ->
               when (not $ hasSeen sl) $ do
                 (time, ip) <- rand 10 arbitrary
-                let sa = signatoryActor time ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl)
+                let sa = signatoryActor time ip sl
                 randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) sa
                 ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
                 let Just  tsl  = getSigLinkFor ndoc (signatorylinkid sl)
@@ -1415,7 +1414,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
     when (not $ hasSeen sl) $ do
       mh <- untilCondition (\a -> a /= (signatorymagichash sl)) $ rand 1000 arbitrary
       (time, ip) <- rand 10 arbitrary
-      let sa = signatoryActor time ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl)
+      let sa = signatoryActor time ip sl
       assertRaisesKontra (\SignatoryTokenDoesNotMatch {} -> True) $ do
         randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh sa
 
@@ -1452,7 +1451,7 @@ testSetDocumentTagsRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthor' author
   (tags, time) <- first S.fromList <$> rand 10 arbitrary
-  let actor = authorActor time noIP (userid author) (getEmail author)
+  let actor = authorActor time noIP author
   success <- randomUpdate $ SetDocumentTags (documentid doc) tags actor
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
@@ -1501,7 +1500,7 @@ testCancelDocumentNotSignableNothing = doTimes 10 $ do
 
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $
                randomUpdate $ CancelDocument (documentid doc)
-                              (authorActor time noIP (userid author) (getEmail author))
+                              (authorActor time noIP author)
 
 testCancelDocumentNotNothing :: TestEnv ()
 testCancelDocumentNotNothing = doTimes 10 $ do

@@ -22,7 +22,6 @@ import Happstack.Server hiding (simpleHTTP)
 
 import Control.Applicative
 import Util.Actor
-import Util.HasSomeUserInfo
 import Text.JSON
 import ListUtil
 import MinutesTime
@@ -65,7 +64,7 @@ handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     ids <- getCriticalField asValidAttachmentIDList "attachmentids"
-    let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
+    let actor = userActor ctxtime ctxipnumber user
     dbUpdate $ DeleteAttachments (userid user) ids actor
     J.runJSONGenT $ return ()
 

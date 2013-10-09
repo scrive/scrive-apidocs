@@ -17,12 +17,13 @@ import IPAddress
 import MinutesTime
 import User.Model
 import Doc.SignatoryLinkID
+import Doc.DocStateData (SignatoryLink(..))
 import Data.Typeable
 import Control.Monad
 
 mkAuthorActor :: Context -> Maybe Actor
 mkAuthorActor ctx = case (ctxmaybeuser ctx) `mplus` (ctxmaybepaduser ctx) of
-  Just user -> Just $ authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
+  Just user -> Just $ authorActor (ctxtime ctx) (ctxipnumber ctx) user
   Nothing   -> Nothing
 
 mkAdminActor :: Context -> Maybe Actor
@@ -61,27 +62,27 @@ systemActor time = Actor {
 
 -- | For an action that requires an operation on a document and an
 -- author to be logged in
-authorActor :: MinutesTime -> IPAddress -> UserID -> String -> Actor
-authorActor time ip uid email = Actor {
+authorActor :: MinutesTime -> IPAddress -> User -> Actor
+authorActor time ip u = Actor {
     actorTime = time
   , actorIP = Just ip
-  , actorUserID = Just uid
-  , actorEmail = Just email
+  , actorUserID = Just (userid u)
+  , actorEmail = Just (getEmail u)
   , actorSigLinkID = Nothing
   , actorAPIString = Nothing
-  , actorWho = "the author" ++ if not (null email) then " (" ++ email ++ ")" else ""
+  , actorWho = "the author (" ++ getIdentifier u ++ ")"
 }
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
-signatoryActor :: MinutesTime -> IPAddress -> Maybe UserID -> String -> SignatoryLinkID -> Actor
-signatoryActor time ip muid email slid = Actor {
+signatoryActor :: MinutesTime -> IPAddress -> SignatoryLink -> Actor
+signatoryActor time ip s = Actor {
     actorTime = time
   , actorIP = Just ip
-  , actorUserID = muid
-  , actorEmail = Just email
-  , actorSigLinkID = Just slid
+  , actorUserID = maybesignatory s
+  , actorEmail = Just (getEmail s)
+  , actorSigLinkID = Just (signatorylinkid s)
   , actorAPIString = Nothing
-  , actorWho = "the signatory (" ++ email ++ ")"
+  , actorWho = "the signatory (" ++ getIdentifier s ++ ")"
 }
 
 -- | For delivery/reading notifications from the mail system
@@ -97,15 +98,15 @@ mailSystemActor time muid email slid = Actor {
 }
 
 -- | For actions performed by logged in user
-userActor :: MinutesTime -> IPAddress -> UserID -> String -> Actor
-userActor time ip uid email = Actor {
+userActor :: MinutesTime -> IPAddress -> User -> Actor
+userActor time ip u = Actor {
     actorTime = time
   , actorIP = Just ip
-  , actorUserID = Just uid
-  , actorEmail = Just email
+  , actorUserID = Just (userid u)
+  , actorEmail = Just (getEmail u)
   , actorSigLinkID = Nothing
   , actorAPIString = Nothing
-  , actorWho = "the user (" ++ email ++ ")"
+  , actorWho = "the user (" ++ getIdentifier u ++ ")"
 }
 
 -- | For actions performed by an admin

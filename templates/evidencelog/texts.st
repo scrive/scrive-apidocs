@@ -7,7 +7,7 @@ RemoveDocumentAttachmentEvidenceText=
 ###
 AddDocumentAttachmentEvidenceText=
 ###
-PendingToAwaitingAuthorEvidenceText=Scrive emailed a notification to the author of the signing process ($email$) that all other parties have signed and the author is next to sign.
+PendingToAwaitingAuthorEvidenceText=
 ###
 UpdateFieldsEvidenceText=
 ###
@@ -108,7 +108,7 @@ SetDocumentTimeoutTimeEvidenceText=
 ###
 RestoreArchivedDocumentEvidenceText=
 ###
-InvitationEvidenceText=The invitation to sign was sent to $email$ by Scrive. The invitation includes a clickable link that when clicked leads to the online signing page powered by Scrive.
+InvitationEvidenceText=The invitation to sign was sent to $signatory$ by Scrive. The invitation includes a clickable link that when clicked leads to the online signing page powered by Scrive.
 ###
 SignableFromDocumentIDWithUpdatedAuthorEvidenceText=
 ###
@@ -134,9 +134,9 @@ TemplateFromDocumentEvidenceText=
 ###
 AttachCSVUploadEvidenceText=
 ###
-SendToPadDeviceText=The signing invitation for signatory ($email$) was set to "in person signing". In person signing does not prompt any signing invitation to be sent.
+SendToPadDeviceText=The signing invitation for signatory ($signatory$) was set to "in person signing". In person signing does not prompt any signing invitation to be sent.
 ####
-RemovedFromPadDeviceText=In person signing for signatory ($email$) was withdrawn by $actor$.
+RemovedFromPadDeviceText=In person signing for signatory ($signatory$) was withdrawn by $actor$.
 ###
 SetStandardAuthenticationMethodEvidenceText=No additional authentication method for signatories to sign was required by $actor$.
 ###
