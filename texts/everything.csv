@@ -463,7 +463,7 @@
 "_modalAccountSetupPhone","Telefon","Phone"
 "_modalAccountSetupPosition","Befattning","Position"
 "_waitingForSignature","Väntar på signatur","Waiting for signature"
-"_followArrowToSign","Följ den <span class='highlight-green'>gröna pilen</span> för att e-signera","Follow the <span class='highlight-green'>green arrow</span> to e-sign"
+"_followArrowToSign","Följ den <span class='highlight-green'>gröna pilen</span> för instruktioner","Follow the <span class='highlight-green'>green arrow</span> for instructions"
 "_goBack","Gå tillbaka","Go back"
 "_reviewDocument","Dokument för granskning","Document for review"
 "_signedNotClosed","Du har signerat","You have signed"
