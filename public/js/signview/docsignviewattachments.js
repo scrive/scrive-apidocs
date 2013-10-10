@@ -9,6 +9,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.model.bind('change', this.render);
     this.model.view = this;
+    this.signview = args.signview;
     this.labelstyle = '';
     for (var key in args.labelCss) {
       this.labelstyle += key + ': ' + args.labelCss[key] + ' !important; ';
@@ -135,7 +136,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
 
       $(this.el).empty();
       $(this.el).append(container);
-
+      this.signview.updateArrowPosition();
       return this;
   }
 });
@@ -163,7 +164,8 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     var upl = new SignatoryAttachmentUploadView({
       model: attachment,
       el: $("<div/>"),
-      labelCss: labelCss
+      labelCss: labelCss,
+      signview: this.model
     });
     this.uploadElems.push($(upl.el));
     return upl.el;
@@ -174,11 +176,11 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     $(this.el).empty();
     var self = this;
 
-    if (!this.model.currentSignatory().attachments().length > 0) {
+    if (!this.model.document().currentSignatory().attachments().length > 0) {
       return this;
     }
 
-    var document = this.model.signatories()[0].document();
+    var document = this.model.document().signatories()[0].document();
 
     var labelCss = {};
 
@@ -197,7 +199,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     var table = $("<table class='list'/>");
     var tbody = $("<tbody/>");
     table.append(tbody);
-    _.each(this.model.currentSignatory().attachments(), function(attachment) {
+    _.each(this.model.document().currentSignatory().attachments(), function(attachment) {
       var tr = $("<tr/>");
       tr.append($("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment, labelCss)));
       tr.append($("<td class='file'>").append(self.signatoryAttachmentFile(attachment, labelCss)));
