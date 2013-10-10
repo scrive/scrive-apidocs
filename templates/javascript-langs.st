@@ -221,14 +221,34 @@ javascriptLocalisation =
              , placeYourTip : "$_signaturePlaceYourTip()$"
              , confirmSignature : "$_signatureConfirm()$"
            }
-         , welcomemodal : {
+         , welcomenewuser : {
                title: "$_welcomeTitle()$"
-             , subtitle: "$_welcomeSubtitle()$"
-             , subtitlelink: "$_welcomeSubtitleLink()$"
-             , trybutton: "$_welcomeTryButton()$"
-             , trytext: "$_welcomeScriveTry()$"
-             , whatIsScrive: "$_welcomeWhatIsScrive()$"
-             , possibleWithScrive: "$_welcomeScrivePossible()$"
+             , subtitle1: "$_welcomeSubtitle1()$"
+             , subtitle2: "$_welcomeSubtitle2()$"
+             , subtitle3: {
+                   injustafewminutes: "$_welcomeSubtitle3InJustAFewMinutes()$"
+                 , reviewed: "$_welcomeSubtitle3Reviewed()$"
+                 , returned: "$_welcomeSubtitle3Returned()$"
+                 , saved: "$_welcomeSubtitle3Saved()$"
+                 , isntthishowsimple: "$_welcomeSubtitle3IsntThisHowSimple()$"
+               }
+             , button: "$_welcomeButton()$"
+             , documentTitle: "$_welcomeDocumentTitle()$"
+           }
+         , ftue : {
+               step1: "$_FTUEstep1()$"
+             , step2: "$_FTUEstep2()$"
+             , step3: "$_FTUEstep3()$"
+             , step4: "$_FTUEstep4()$"
+             , step1description: "$_FTUEstep1description()$"
+             , step2description: "$_FTUEstep2description()$"
+             , step3description: "$_FTUEstep3description()$"
+             , step3descriptionScriver: "$_FTUEstep3descriptionScriver()$"
+             , step3descriptionYourself: "$_FTUEstep3descriptionYourself()$"
+             , step4description: "$_FTUEstep4description()$"
+             , useSampleDocument: "$_FTUEuseSampleDocument()$"
+             , addYourself: "$_FTUEaddYourself()$"
+             , addAScriver: "$_FTUEaddAScriver()$"
            }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
@@ -243,12 +263,6 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
-             , exampledocument : {
-                      wantHelp: "$_exampleDocumentWantHelp()$"
-                    , uploadIt : "$_exampleDocumentUploadIt()$"
-                    , documentTitle : "$_exampleDocumentTitle()$"
-                    , documentInvitationMessage : "$_exampleDocumentInvitationMessage()$"
-             }
              , sign : "$_sign()$"
              , textFields : {
                       textField: "$_textField()$"
