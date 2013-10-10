@@ -281,7 +281,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   ctx <- getContext
   case (ispreparation, msiglink) of
     (True,  _)                       -> do
-       Right <$> pageDocumentDesign document
+       Left <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad)
     (False, _) | isauthororincompany -> do
        Right <$> pageDocumentView document msiglink (isincompany)
     (False, Just siglink)            -> do

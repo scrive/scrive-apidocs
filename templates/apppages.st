@@ -152,19 +152,22 @@ $if(custombarscolour)$
 $endif$
 </style>
 
-<footer class="site $if(thin)$thin$endif$ $if(logged)$logged-in$endif$ $if(!logged)$thin$endif$">
-  <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+$if(logged)$
 
-    $if(logged)$
-      <div class="poweredbyscrive" style="text-align: center; width: 100%;">
+<footer class="site $if(thin)$thin$endif$ logged-in">
+    <div class="poweredbyscrive">
         $if(!custombarscolour)$
         <div class='text'>Powered by <div class='logo'/></div>
         $else$
         <div class='text'>Powered by Scrive</div>
         $endif$
       </div>
+  $postPageCode()$
+</footer>
 
-    $else$
+$else$
+<footer class="site thin">
+  <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
     <div class="visions">
       <p>E-sign with peace of mind.</p>
@@ -248,33 +251,36 @@ $endif$
         </ul>
       </div>
     </nav>
-  $endif$
   </div>
-
-<!-- Google Code for Tagg f&ouml;r ommarknadsf&ouml;ring -->
-<!-- Remarketing tags may not be associated with personally identifiable information or placed on pages related to sensitive categories. For instructions on adding this tag and more information on the above requirements, read the setup guide: google.com/ads/remarketingsetup -->
-<script type="text/javascript">
-/* <![CDATA[ */
-var google_conversion_id = 1009530676;
-var google_conversion_label = "bYPcCKyX6QMQtO6w4QM";
-var google_custom_params = window.google_tag_params;
-var google_remarketing_only = true;
-/* ]]> */
-</script>
-<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
-<script>
-var container = jQuery('.mainContainer');
-// Fill the whole page
-if ($if(logged)$true$else$false$endif$ && container.find('.short-input-section').length > 0)
-  container.height(jQuery(window).height() - jQuery('header').height() - jQuery('footer').height());
-</script>
-<noscript>
-<div style="display:inline;">
-<img height="1" width="1" style="border-style:none;" alt="" src="//googleads.g.doubleclick.net/pagead/viewthroughconversion/1009530676/?value=0&amp;label=bYPcCKyX6QMQtO6w4QM&amp;guid=ON&amp;script=0"/>
-</div>
-</noscript>
-
+  $postPageCode()$
 </footer>
+$endif$
+####
+postPageCode=
+
+  <!-- Google Code for Tagg f&ouml;r ommarknadsf&ouml;ring -->
+  <!-- Remarketing tags may not be associated with personally identifiable information or placed on pages related to sensitive categories. For instructions on adding this tag and more information on the above requirements, read the setup guide: google.com/ads/remarketingsetup -->
+  <script type="text/javascript">
+  /* <![CDATA[ */
+  var google_conversion_id = 1009530676;
+  var google_conversion_label = "bYPcCKyX6QMQtO6w4QM";
+  var google_custom_params = window.google_tag_params;
+  var google_remarketing_only = true;
+  /* ]]> */
+  </script>
+  <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
+  <script>
+  var container = jQuery('.mainContainer');
+  // Fill the whole page
+  if ($if(logged)$true$else$false$endif$ && container.find('.short-input-section').length > 0)
+    container.height(jQuery(window).height() - jQuery('header').height() - jQuery('footer').height());
+  </script>
+  <noscript>
+  <div style="display:inline;">
+  <img height="1" width="1" style="border-style:none;" alt="" src="//googleads.g.doubleclick.net/pagead/viewthroughconversion/1009530676/?value=0&amp;label=bYPcCKyX6QMQtO6w4QM&amp;guid=ON&amp;script=0"/>
+  </div>
+  </noscript>
+
 ####
 header=
 $if(logged)$
