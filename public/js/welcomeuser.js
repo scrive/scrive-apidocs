@@ -46,7 +46,7 @@ window.WelcomeUser = {
      * Returns an element welcoming the user, telling them that their document
      * has been saved and that they can try sending a sample document.
      *
-     * @param option Which of the possible subtitles that will be rendered. [1,3].
+     * @param {object} option Which of the possible subtitles that will be rendered. [1,3].
      */
     fromPostSignViewWelcomeContent: function(option) {
         var container = $('<div class="new-post-sign-view-user"></div>');    
