@@ -40,10 +40,11 @@ var HighlightModel = Backbone.Model.extend({
 });
 
 var HighlightView = Backbone.View.extend({
-    boxClassName: "highlight", // applied to all boxes
+    boxClassName: "element-highlight", // applied to all boxes
     initialize: function(args) {
         _.bindAll(this, 'render', 'getBoundaryBox', 'getOrCreateBox', 'renderBoxes', 'renderExplanation', 'hide');
         this.model.bind('change:el', this.render);
+        this.model.bind('destroy', this.hide);
         $(window).resize(this.render);
         $(window).scroll(this.render);
 
@@ -139,8 +140,7 @@ var HighlightView = Backbone.View.extend({
      * Hide all highlights
      */
     hide: function() {
-        // Hide the over, under, leftof and rightof box.
-        _.map(this.model.boxes(), function(element) { element.hide(); } )
+        $('.' + this.boxClassName).hide();
         $('.highlight-explanation').hide();
     }
 });
@@ -205,7 +205,7 @@ window.Highlight = function(args) {
     var model = new HighlightModel(args);
     var view = new HighlightView({model: model});
     this.moveTo = function(args) { model.set(args); };
-    this.hide = function(args) { model.set({'el': null}); };
+    this.hide = function(args) { model.destroy(); };
 };
 
 })(window);
