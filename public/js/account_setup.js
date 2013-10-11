@@ -64,7 +64,7 @@
       return this.get('validators');
     },
     cleanValidators : function() {
-      this.set({'vaidators' : [] })
+      this.set({'vaidators' : [] });
     },
     addValidator: function(validator) {
       this.validators().push(validator);
