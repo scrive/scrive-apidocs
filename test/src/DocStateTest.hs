@@ -56,6 +56,7 @@ docStateTests env = testGroup "DocState" [
   dataStructureProperties,
   testThat "Document with seal status Missing gets sealed" env testSealMissingSignatures,
   testThat "Document with extensible seal can be extended" env testExtendSignatures,
+  testThat "Document with extensible but broken seal seal can be extended by special Guardtime tools" env testExtendSignaturesCore1,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
@@ -238,6 +239,28 @@ testExtendSignatures = do
   case documentsealstatus doc' of
     Just (Guardtime{ extended = True }) -> assertSuccess
     s -> assertFailure $ "Unexpected extension status: " ++ show s
+
+testExtendSignaturesCore1 :: TestEnv ()
+testExtendSignaturesCore1 = do
+  author <- addNewRandomUser
+  let filename = "GuardTime/fix-incorrect-core/broken.pdf"
+  filecontent <- liftIO $ BS.readFile filename
+  file <- addNewFile filename filecontent
+  doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
+  now <- getMinutesTime
+  dbUpdate $ AttachSealedFile (documentid doc) file Guardtime{ extended = False, private = False } (systemActor (2 `monthsBefore` now))
+  runScheduler extendSignatures
+  return ()
+{-
+
+Expected output before October 15th:
+
+Verification failed with SYNTACTIC_CHECK_FAILURE - trying temporary Guardtime extension tool
+GuardTime verification after extension failed for document #x: Invalid "PUBLICATION_FAILURE"
+
+After October 20th: verification should pass, and this test should be tweaked.
+
+-}
 
 testNewDocumentForNonCompanyUser :: TestEnv ()
 testNewDocumentForNonCompanyUser = doTimes 10 $ do
