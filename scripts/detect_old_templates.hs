@@ -211,7 +211,6 @@ expTemplateName (App (Var (UnQual (Ident funName))) (Lit (String template)))
     | funName `elem` [ "renderTemplate"
                      , "renderTemplate_"
                      , "renderTemplateI"
-                     , "kontramail"
                      , "flashMessage"
                      , "flashMessageWithFieldName"
                      ] = Just template
@@ -219,15 +218,18 @@ expTemplateName (App (Var (UnQual (Ident funName))) (Lit (String template)))
 expTemplateName (App (App (Var (UnQual (Ident funName))) _) (Lit (String template)))
     | funName `elem` [ "renderLocalTemplate"
                      , "renderLocalTemplate_"
-                     , "kontramaillocal"
                      , "flashMessageWithFieldName"
                      , "renderTemplateAsPage"] = Just template
     | otherwise = Nothing
 expTemplateName (App (App (App (Var (UnQual (Ident funName))) _) _) (Lit (String template)))
-    | funName `elem` ["documentMailWithDocLang"] = Just template
+    | funName `elem` [ "documentMailWithDocLang"
+                     , "kontramail"
+                     ] = Just template
     | otherwise = Nothing
 expTemplateName (App (App (App (App (Var (UnQual (Ident funName))) _) _) _) (Lit (String template)))
-    | funName `elem` ["documentMail"] = Just template
+    | funName `elem` [ "documentMail"
+                     , "kontramaillocal"
+                     ] = Just template
     | otherwise = Nothing
 expTemplateName _ = Nothing
 

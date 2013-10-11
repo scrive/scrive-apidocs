@@ -15,29 +15,6 @@ SealingTexts
       , verificationFooter="$_verificationFooter()$"
     }
 #####
-signMethod=
-        $if(!provider)$
-          $if(email)$
-            $_signMethodEmail()$
-          $elseif(pad)$
-            $_signMethodPad()$
-          $elseif(api)$
-            $_signMethodAPI()$
-          $elseif(mobile)$
-            $_signMethodMobile()$
-          $elseif(email_mobile)$
-            $_signMethodEmailAndMobile()$
-          $endif$
-        $elseif(bankid)$
-            $_signMethodElegBankID()$
-        $elseif(norder)$
-            $_signMethodElegNordea()$
-        $elseif(telia)$
-            $_signMethodElegTelia()$
-        $else$
-            $_signMethodEleg()$
-        $endif$
-###
 fstnameEmptyFieldsText=$_firstname()$
 ####
 sndnameEmptyFieldsText=$_lastname()$

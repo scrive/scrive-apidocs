@@ -20,8 +20,6 @@ flashMessagePasswordsDontMatch=
 ###
 flashMessageContractRestarted=$_flashMessageContractRestarted()$
 ###
-flashMessageContractProlonged=$_flashMessageContractProlonged()$
-###
 flashMessageUserPasswordChanged=
 	$_flashMessageUserPasswordChanged()$
 
