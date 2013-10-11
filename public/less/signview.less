@@ -691,4 +691,30 @@
       margin-top: 5px;
   }
 
+
+  .document-pages {
+    .placedfield {
+
+       .placedcheckbox,
+       .placedcheckbox.checked {
+            background-position : center;
+            padding: 10px;
+            margin-left: -10px;
+            margin-top: -10px;
+
+       }
+
+
+       &.to-fill-now {
+          border: 2px solid #33B1DD;
+          .placedcheckbox {
+              padding: 9px;
+          }
+          &.obligatory {
+            border: 2px solid #53B688;
+        }
+      }
+    }
+  }
+
 }

@@ -947,10 +947,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
             });
         }
         if (field && signatory.canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
-            place.css('border', '1px solid black'); // Only optional fields?
-            place.click(function() {
+         place.addClass("to-fill-now");
+         if (field.obligatory())
+            place.addClass("obligatory");
+
+          place.click(function() {
                 return view.startInlineEditing();
-            });
+          });
         }
 
         if (placement.withTypeSetter()) {
@@ -1208,8 +1211,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
             place.css({
                 left: Math.floor(placement.xrel() * parentWidth + 0.5),
                 top: Math.floor(placement.yrel() * parentHeight + 0.5),
-                width: Math.ceil(placement.wrel() * parentWidth),
-                height: Math.ceil(placement.hrel() * parentHeight),
+                width: Math.round(placement.wrel() * parentWidth),
+                height: Math.round(placement.hrel() * parentHeight),
                 fontSize: placement.fsrel() * parentWidth
             });
         }
@@ -1252,8 +1255,12 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
 
         place.addClass('placedfield');
-        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation())
-              place.css('cursor','pointer');
+        if ((field.signatory() == document.currentSignatory() && document.currentSignatoryCanSign()) || document.preparation()) {
+              place.css("cursor", "pointer");
+              place.addClass("to-fill-now");
+              if (field.obligatory())
+                place.addClass("obligatory");
+        }
         this.updatePosition();
 
         place.empty();
@@ -1343,7 +1350,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
 
                 var textholder = $("<span class='text'/>");
 
-                var button = $("<div class='button button-green'/>");
+                var button = $("<div class='button'/>").addClass(field.obligatory() ? "button-green" : "button-blue");
                 var document = field.signatory().document();
 
                 button.append(textholder.text(localization.signature.placeYour));
