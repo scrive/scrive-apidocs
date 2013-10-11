@@ -84,13 +84,13 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
   phone <-  fromMaybe (getMobile actvuser) <$> getField "phone"
   companyname <- fromMaybe (getCompanyName company) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
-  case (mtos, mfstname, msndname) of
-    (Just tos, Just fstname, Just sndname) -> do
+  case mtos of
+    (Just tos) -> do
           if tos
             then do
               _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
-                  userfstname = fstname
-                , usersndname = sndname
+                  userfstname = fromMaybe "" mfstname
+                , usersndname = fromMaybe "" msndname
                 , userphone = phone
                 , usercompanyposition = position
               }
@@ -99,7 +99,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
               }
               _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
                 (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
-                ((userinfo actvuser) { userfstname = fstname , usersndname = sndname })
+                ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
                 (userid <$> ctxmaybeuser ctx)
               _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
