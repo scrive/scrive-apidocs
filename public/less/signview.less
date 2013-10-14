@@ -97,8 +97,6 @@
     margin-right: auto;
     border: 1px solid #cccccc;
     border-bottom-width: 0;
-    width: 956px !important;
-    .box-shadow(none) !important;
 
     .highlight-green {
 	text-transform: uppercase;
@@ -155,7 +153,7 @@
         .duedate {
           margin-right:20px;
           font-weight:normal;
-	  margin-bottom:20px;
+	        margin-bottom:20px;
         }
         .download  {
           background: url(../img/senddoc.png) no-repeat;
@@ -316,10 +314,15 @@
     width: 883px;
     margin-left: auto;
     margin-right: auto;
+
+    &.instructions {
+      .box-shadow(none);
+      width: 956px;
+    }
     &.highlight {
-	border: 2px solid @green;
-	box-shadow:none;
-	width: 880px;
+    	border: 2px solid @green;
+    	box-shadow:none;
+    	width: 880px;
     }
   }
 
