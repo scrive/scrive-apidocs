@@ -330,8 +330,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
         box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
         if (BrowserInfo.isSmallScreen()) {
           box.css("padding", "0px");
-          box.css("margin", "0px");
-          box.css("margin-top", "10px");
+          box.css("margin", "10px auto auto");
           box.css("width", "939px");
         }
       }
