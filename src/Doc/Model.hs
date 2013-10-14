@@ -1467,19 +1467,9 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
 
     when (allDocumentsCount==0 && not allowzeroresults) $ do
       kRunRaw "DROP TABLE docs"
-      listOfExceptions <- kWhyNot1 sqlquery
+      exception <- kWhyNot1 sqlquery
 
-      case listOfExceptions of
-        [] -> do
-          -- This case should not really happen due to how we handle
-          -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
-          -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-          kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlquery)
-        (ex:_) -> do
-          -- Lets throw first exception on the list. It should be the
-          -- most generic one.
-          kThrow ex
-
+      kThrow $ exception
 
     kRun_ $ SQL "SELECT * FROM docs" []
     docs <- reverse `liftM` fetchDocuments
@@ -1547,18 +1537,9 @@ instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
                >>= return . concatMap snd . M.toList
          return $ link { signatoryfields = fields }
       Nothing -> do
-         listOfExceptions <- kWhyNot1 queryx
+         exception <- kWhyNot1 queryx
 
-         case listOfExceptions of
-           [] -> do
-              -- This case should not really happen due to how we handle
-              -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
-              -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-              kThrow $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand queryx)
-           (ex:_) -> do
-              -- Lets throw first exception on the list. It should be the
-              -- most generic one.
-              kThrow ex
+         kThrow $ exception
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID Document where
@@ -2366,12 +2347,10 @@ instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLin
 data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int
 instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
   query (CheckDocumentObjectVersionIs did ov) = do
-    res <- kWhyNot1 $ sqlSelect "documents" $ do
-       sqlResult "1"
+    _ <- kRunAndFetch1OrThrowWhyNot (\acc (v::Bool) -> v : acc) $ sqlSelect "documents" $ do
+       sqlResult "TRUE"
        sqlWhereDocumentObjectVersionIs did ov
-    case res of
-         [] -> return ()
-         (e:_) -> kThrow e
+    return ()
 
 
 -- Update utilities

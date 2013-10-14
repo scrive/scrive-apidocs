@@ -26,8 +26,6 @@ signupTests :: TestEnvSt -> Test
 signupTests env = testGroup "Signup" [
       testThat "can self signup and activate an account" env testSignupAndActivate
     , testThat "must accept tos to activate an account" env testAcceptTOSToActivate
-    , testThat "must enter first name to activate an account" env testNeedFirstNameToActivate
-    , testThat "must enter last name to activate an account" env testNeedLastNameToActivate
     , testThat "login event recorded when logged in after activation" env testLoginEventRecordedWhenLoggedInAfterActivation
     ]
 
@@ -73,30 +71,6 @@ testAcceptTOSToActivate = do
 
   -- activate the account without accepting the tos
   ctx3 <- activateAccount ctx1 uarUserID uarToken False "Andrzej" "Rybczak" "password12" "password12" Nothing
-  assertAccountActivationFailed ctx3
-
-testNeedFirstNameToActivate :: TestEnv ()
-testNeedFirstNameToActivate = do
-  ctx <- mkContext defaultValue
-
-  -- enter the email to signup
-  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful ctx1
-
-  -- activate the account without entering passwords
-  ctx3 <- activateAccount ctx1 uarUserID uarToken True "" "Rybczak" "" "" Nothing
-  assertAccountActivationFailed ctx3
-
-testNeedLastNameToActivate :: TestEnv ()
-testNeedLastNameToActivate = do
-  ctx <- mkContext defaultValue
-
-  -- enter the email to signup
-  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful ctx1
-
-  -- activate the account without entering passwords
-  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "" "" "" Nothing
   assertAccountActivationFailed ctx3
 
 signupForAccount :: Context -> String -> TestEnv Context

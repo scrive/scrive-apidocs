@@ -161,7 +161,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         if (this.get("signatoryattachmentsection") == undefined)
             this.set({'signatoryattachmentsection' :
                             new DocumentSignatoryAttachmentsView({
-                                model: this.document(),
+                                model: this,
                                 el: $("<div class='section spacing'/>"),
                                 title:  this.document().currentSignatory().hasSigned() ?
                                         (localization.requestedAttachments) :
@@ -388,6 +388,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
         }, {silent : true} );
       return this.get('arrow');
   },
+  updateArrowPosition : function() {
+      if (this.get("arrow") != undefined)
+        this.get("arrow").updatePosition();
+  },
   recall : function(f) {
       this.document().recall(f);
   }
@@ -439,7 +443,7 @@ var DocumentSignViewView = Backbone.View.extend({
      if (this.subcontainer != undefined) this.subcontainer.detach();
 
      var subcontainerWrapper = $("<div class='subcontainerWrapper'/>").appendTo(this.container);
-        
+
      this.subcontainer = $("<div class='subcontainer'></div>").appendTo(subcontainerWrapper);
 
      subcontainerWrapper.prepend(this.model.instructionssection().el);

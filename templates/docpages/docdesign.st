@@ -9,7 +9,6 @@ $htmlopentag()$
   </head>
   <body $if(custombackground)$style="background:$custombackground$;"$endif$ class='designview'>
     $header()$
-
     <div class="mainContainer" >
     <div class="body-container">
     <script>
@@ -18,15 +17,23 @@ $htmlopentag()$
                             id:"$documentid$"
                       });
 
+      mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
+      mixpanel.track('View Design View');
+
       jQuery(".body-container").replaceWith(
         jQuery('<div />').append(BlockingInfo.el())
                         .append(dv.el())
                         .children()
       );
       dv.afterInsert();
+
+      if (FirstTimeUserExperience.isActive()) {
+        FirstTimeUserExperience.reset();
+        new DesignViewTour({
+            model: dv.model()
+        })
+      }
     });
-      mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
-      mixpanel.track('View Design View');
 
     </script>
     </div>

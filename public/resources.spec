@@ -33,6 +33,7 @@ set systemPage
  css css/jquery.mCustomScrollbar.css
  less less/tinymce.less
  less less/utils.less
+ less less/highlight.less
  less less/branding/index.less
  less less/document-pages.less
  less less/payments.less
@@ -57,13 +58,14 @@ set systemPage
  less less/signview.less
  less less/attachmentview.less
  less less/verification.less
+ less less/progressbar.less
  less less/designview/frame.less
  less less/designview/participants.less
  less less/designview/editdocument.less
  less less/designview/documentview.less
  less less/designview/process.less
- less less/designview/welcomemodal.less
  less less/designview/modals.less
+ less less/designview/firsttimeuserexperience.less
  less less/terms.less
  js   libs/jquery.min.js
  js   libs/jquery-migrate.min.js
@@ -92,6 +94,9 @@ set systemPage
  js   js/utils/language.js
  js   js/utils/time.js
  js   js/utils/cookie.js
+ js   js/utils/highlight.js
+ js   js/utils/experiment.js
+ js   js/utils/sampledocumentuploader.js
  js   js/loading.js
  js   js/arrows.js
  js   js/flashmessages.js
@@ -109,6 +114,7 @@ set systemPage
  js   js/account_setup.js
  js   js/accept_tos.js
  js   js/new_signup.js
+ js   js/welcomeuser.js
  js   js/lists/action.js
  js   js/lists/sorting.js
  js   js/lists/filtering.js
@@ -118,6 +124,7 @@ set systemPage
  js   js/tabs.js
  js   js/files.js
  js   js/doclang.js
+ js   js/progressbar.js
  js   js/placements.js
  js   js/fields.js
  js   js/signatories.js
@@ -155,8 +162,7 @@ set systemPage
  js   js/designview/process.js
  js   js/designview/designviewtabs.js
  js   js/designview/csvsignatorydesign.js
- js   js/designview/uploadexampledocument.js
- js   js/designview/welcomemodal.js
+ js   js/designview/firsttimeuserexperience.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js

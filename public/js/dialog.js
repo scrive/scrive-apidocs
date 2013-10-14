@@ -80,6 +80,8 @@ window.ScreenBlockingDialog = {
          dialog.removeClass("active");
          if (BrowserInfo.isIE())
            dialog.css('display','none');
+         else // We need to hide this dialog, else it will cause screen to expand if size changed.
+           setTimeout(function() { if (!dialog.hasClass('active')) dialog.css('display','none');}, 500);
       }
     }
 };

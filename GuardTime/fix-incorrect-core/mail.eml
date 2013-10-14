@@ -1,0 +1,942 @@
+Delivered-To: magnus@scrive.com
+Received: by 10.70.19.142 with SMTP id f14csp186972pde;
+        Tue, 8 Oct 2013 07:43:55 -0700 (PDT)
+X-Received: by 10.68.234.73 with SMTP id uc9mr2402359pbc.142.1381243434840;
+        Tue, 08 Oct 2013 07:43:54 -0700 (PDT)
+Return-Path: <ahto.truu@guardtime.com>
+Received: from exprod7og108.obsmtp.com (exprod7og108.obsmtp.com [64.18.2.169])
+        by mx.google.com with SMTP id rq5si26710676pbc.333.1969.12.31.16.00.00
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Tue, 08 Oct 2013 07:43:52 -0700 (PDT)
+Received-SPF: neutral (google.com: 64.18.2.169 is neither permitted nor denied by best guess record for domain of ahto.truu@guardtime.com) client-ip=64.18.2.169;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: 64.18.2.169 is neither permitted nor denied by best guess record for domain of ahto.truu@guardtime.com) smtp.mail=ahto.truu@guardtime.com
+Received: from mail-la0-f54.google.com ([209.85.215.54]) (using TLSv1) by exprod7ob108.postini.com ([64.18.6.12]) with SMTP
+	ID DSNKUlQaJlOmirlpaOoYgmOR4qjYC5jbkNm9@postini.com; Tue, 08 Oct 2013 07:43:51 PDT
+Received: by mail-la0-f54.google.com with SMTP id ea20so7049125lab.13
+        for <magnus@scrive.com>; Tue, 08 Oct 2013 07:43:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20130820;
+        h=x-gm-message-state:from:to:cc:references:in-reply-to:subject:date
+         :organization:message-id:mime-version:content-type:thread-index
+         :content-language;
+        bh=U4XTxMmvUEcb+MrWpTmdDwXqfjg7p6hEEO4Qb1xTpVc=;
+        b=Nd9TyS2X7jrGsTG79Uc8rkC7VMg9s63zCiFET1vwUmdjWvVt21fQ/FmlXaVnP4I6mO
+         Z+AbyTSA21of9yv20BtciZ41aK2u3sB9AxQkeaz28PDDM/YDHz5ci96BmJ88o3gzDawc
+         Zv+ukVeN0odlGDm/0OaSHPcpdS8gVczMqR5EDHs/dfmvNTyl6+Sanw5rmwI1T6GU3eyo
+         HPoMhfODOBRIlxxZ2riZsC80OSeHzrUF+itOkMhJnD7Na3QWFBG+/0t92RG8dnyv7zbF
+         KxDX6gxZOGOSRTgwthX86g9G+wzvyrpUg+1qNiofR/ZkP/rDoy3GYzf3UGDnmO7sTV39
+         xR5g==
+X-Received: by 10.152.228.130 with SMTP id si2mr1670673lac.32.1381243428606;
+        Tue, 08 Oct 2013 07:43:48 -0700 (PDT)
+X-Gm-Message-State: ALoCoQmlhraZtJ0x/IC0bSqmuXdY0UBimtVfWUqpzck24e+VzHcJ7FGLU+EFHIvLhLVZCOypNPqFDETtoIQyZk+dV/jbI1iJR1G7GGuRmQSoopTb2GdT5AJvwt+r/TYdEfL8VtI0DRtZXkvrdLIhSqqZO3weP0wieA==
+X-Received: by 10.152.228.130 with SMTP id si2mr1670654lac.32.1381243428415;
+        Tue, 08 Oct 2013 07:43:48 -0700 (PDT)
+Return-Path: <ahto.truu@guardtime.com>
+Received: from THINK ([194.204.60.165])
+        by mx.google.com with ESMTPSA id b6sm30536830lae.0.1969.12.31.16.00.00
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Tue, 08 Oct 2013 07:43:47 -0700 (PDT)
+From: "Ahto Truu" <ahto.truu@guardtime.com>
+To: "'Magnus Carlsson'" <magnus@scrive.com>
+Cc: "'Mariusz Rak'" <mariusz@scrive.com>,
+	"'Gracjan Polak'" <gracjan@scrive.com>,
+	<poc_support@guardtime.com>
+References: <CADUn4_DqTfN9SD58UpVMwudVvnDhLmeLj+Xj_DEAfx2JG_c9Xg@mail.gmail.com>	<003a01cebb74$9fce2210$df6a6630$@guardtime.com>	<CADUn4_Cz2T9yGVpQA=TLjbjjbO0Ofu0D7=c0J=W-7rzqB3bjAQ@mail.gmail.com>	<CADUn4_DKkiy2S_7vmNswcjRMSUODY2_vQ7Q=PQNU9i=FNZ_HZw@mail.gmail.com>	<002101cebfa8$3ebba960$bc32fc20$@guardtime.com> <CADUn4_DkBhJwspdmDvAC7qHrP-_WMs4LZuv+W5sdYDGvABvWsA@mail.gmail.com>
+In-Reply-To: <CADUn4_DkBhJwspdmDvAC7qHrP-_WMs4LZuv+W5sdYDGvABvWsA@mail.gmail.com>
+Subject: RE: Problems with verifying/extending GT signatures
+Date: Tue, 8 Oct 2013 17:43:49 +0300
+Organization: GuardTime AS
+Message-ID: <003e01cec434$cdaec6d0$690c5470$@guardtime.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_003F_01CEC44D.F300B9C0"
+X-Mailer: Microsoft Outlook 14.0
+Thread-Index: AQDro68sIN4jsqbqM1CtqGBY4zsUPwF4wE1pAdi/5HEBo6yvWQIZ9MpKAeeqFTqbaVWNkA==
+Content-Language: et
+
+This is a multipart message in MIME format.
+
+------=_NextPart_000_003F_01CEC44D.F300B9C0
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+=20
+
+I fully agree that a completely server-side fix would be more =
+convenient. Unfortunately, that is not possible, as the extending =
+request from client to gateway only contains the time value from the =
+original signature and the gateway just returns the calendar hash chain =
+from that time to the latest newspaper publication. Thus, there is not =
+enough information in the request for the server to know if the client =
+has a signature from the correct core. (And normally there=E2=80=99s =
+only one core, so this is not really a question under normal =
+circumstances.)
+
+=20
+
+As for the mitigation steps for the wrongly issued signatures:
+
+-          a special publication appeared in the Financial Times today =
+and we have verified that it was printed correctly
+
+-          a temporary publications file that contains only the special =
+publication is available from =
+http://special.verifier.guardtime.net/alt-publications.bin
+
+-          an alternative extending service based on the calendar =
+database from the old core is available at =
+http://special.verifier.guardtime.net/alt-ext
+
+-          the alternative extending service should be used to extend =
+only the wrongly issued signatures
+
+-          there is a special tool available for detecting the status =
+of, and optionally extending, signatures:
+
+o   the tool for checking PDF files is available from =
+http://download.guardtime.com/Core1-CheckPDF.jar
+
+o   to check the status of a set of files, use a command along the lines =
+of
+java -jar Core1-CheckPDF.jar chk *.pdf
+this will check all the PDF files in the current directory and report on =
+the status of each one
+
+o   to extend all the wrongly issued signatures (but leave all others =
+alone), use a command along the lines of
+java -jar Core1-CheckPDF.jar ext *.pdf
+
+o   to extend all signatures (each one with the appropriate extender), =
+use a command along the lines of
+java -jar Core1-CheckPDF.jar all *.pdf
+
+o   a similar tool for checking standalone signatures is available from =
+http://download.guardtime.com/Core1-CheckSig.jar
+
+-          the alternative extending service and publications file will =
+be available until end of year, please use the tools to extend all =
+affected signatures by that time;
+
+-          as already mentioned below, we will include the special =
+publication in our regular publications file together with the October =
+15 regular publication (the special publication should not be the most =
+recent one in the file) and after that the signatures extended with the =
+alternative extending service will verify as valid using regular client =
+tools and regular publications file.
+
+=20
+
+Sorry about the inconvenience, this was the best we could do under the =
+circumstances. And please don=E2=80=99t hesitate to ask if you have any =
+questions or need any help with the tools.
+
+=20
+
+Best,
+
+Ahto
+
+=20
+
+From: Magnus Carlsson [mailto:magnus@scrive.com]=20
+Sent: 2. oktoober 2013. a. 23:01
+To: Ahto Truu
+Cc: Mariusz Rak; Gracjan Polak; poc_support@guardtime.com
+Subject: Re: Problems with verifying/extending GT signatures
+
+=20
+
+Thank you for the update, Ahto.  We appreciate that a fix is in the =
+works, although we would have preferred to have the special treatment of =
+extending the problematic signatures to be implemented on the Guardtime =
+server side so that no special tools would need to be distributed and =
+integrated.
+
+=20
+
+On Wed, Oct 2, 2013 at 12:47 PM, Ahto Truu <ahto.truu@guardtime.com> =
+wrote:
+
+Hello,
+
+=20
+
+As a status update: we have created a special publication from the =
+calendar database of the old core and are now waiting on newspapers to =
+get it published. We have also created tools to extend the affected =
+signatures to this special publication. When the publication has =
+appeared and we have tested the tools with it, we can send them out with =
+the usage instructions.
+
+=20
+
+We can include this special publication in our regular publications file =
+together with the regular October 15 publication and after that the =
+wrongly issued signatures extended to connect to the special publication =
+will verify using all standard verification tools.
+
+=20
+
+Best,
+
+Ahto
+
+=20
+
+From: Magnus Carlsson [mailto:magnus@scrive.com]=20
+Sent: 30. september 2013. a. 18:03
+To: Ahto Truu
+Cc: Mariusz Rak; Gracjan Polak; poc_support@guardtime.com
+Subject: Re: Problems with verifying/extending GT signatures
+
+=20
+
+Ahto, unfortunately we do have a large number of documents affected on =
+production.  Please keep us posted about your remediation plan.  Thank =
+you!
+
+=20
+
+On Fri, Sep 27, 2013 at 9:46 AM, Magnus Carlsson <magnus@scrive.com> =
+wrote:
+
+Ahto, we will know this weekend if any production documents are affected =
+and let you know.  Thank you!
+
+=20
+
+On Fri, Sep 27, 2013 at 4:27 AM, Ahto Truu <ahto.truu@guardtime.com> =
+wrote:
+
+Hello,
+
+=20
+
+The reason this signature fails to extend is that it was accidentally =
+issued by the old core infrastructure.
+
+=20
+
+When we switched to the new core in August, all connections from the =
+live service were re-routed to the new core, but the old core was left =
+running idle to facilitate fast rollback should any major problems =
+appear with the new core.
+
+=20
+
+However, one aggregator's connection was accidentally reverted to the =
+old core and this is where your broken signature comes from. Our infra =
+team is going through the logs now looking for other customers who may =
+be affected and putting together a remediation plan. A more public =
+notice will be issued when we have the plan in place.
+
+=20
+
+However, in your case the sample document you sent appears to be a test =
+file. Do you have any production documents affected? The invalid =
+connection was active from 2013-09-04 09:05:40 UTC to 2013-09-13 =
+12:13:37 UTC.
+
+=20
+
+I=E2=80=99ll also look into the extending and on-line verification code =
+in the PDF Toolkit and Java API to make the error message more clear =
+(though I sincerely hope we won=E2=80=99t need it ever again).
+
+=20
+
+Best,
+
+Ahto
+
+=20
+
+From: Magnus Carlsson [ <mailto:magnus@scrive.com> =
+mailto:magnus@scrive.com]=20
+Sent: 26. september 2013. a. 21:46
+To: Ahto Truu
+Cc: Mariusz Rak; Gracjan Polak
+Subject: Problems with verifying/extending GT signatures
+
+=20
+
+Hello Ahto.
+
+We are seeing problems with a number of sealed documents for which we =
+are unable to verify their signature using PdfVerifier.jar.  I have one =
+example attached.  Looking in our logs, it appears that the document was =
+sealed and successfully verified by PdfVerifier.jar on September 10.
+
+Now, when we run PdfVerifier.jar on these files, we get the response =
+"the signature is invalid".
+
+If we extract the signature from the PDF and run gtime-test on it, we =
+get:
+
+$ gtime-test -v -i /tmp/signature
+GT_PUBLIC_KEY_SIGNATURE_PRESENT: The PKI signature is present in the =
+timesignature.
+Timesignature looks fine, signed by "GT : GT : Scrive" at 2013-09-10 =
+07:26:40 PDT.
+
+However, if we try and extend the document, we get
+
+$ gtime-test -x -v -i /tmp/signature
+verifyTimestamp() failed: 521 (Cannot extend timestamp).
+$ echo $?
+16
+
+and so it appears that gtime-test exits with an internal error.  The =
+gtime-test version: "GuardTime command-line test-tool 1.0-9, using API =
+3.10"
+
+Can you help us understand what is going on?
+
+Thank you!
+
+
+--=20
+
+Sincerely,
+
+Magnus Carlsson
+
+Partner
+
+=20
+
+Sign with peace of mind
+
+www.scrive.com
+
+
+
+
+--=20
+
+Sincerely,
+
+Magnus Carlsson
+
+Partner
+
+=20
+
+Sign with peace of mind
+
+www.scrive.com
+
+
+
+
+--=20
+
+Sincerely,
+
+Magnus Carlsson
+
+Partner
+
+=20
+
+Sign with peace of mind
+
+www.scrive.com
+
+
+
+
+--=20
+
+Sincerely,
+
+Magnus Carlsson
+
+Partner
+
+=20
+
+Sign with peace of mind
+
+www.scrive.com
+
+
+------=_NextPart_000_003F_01CEC44D.F300B9C0
+Content-Type: text/html;
+	charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
+xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
+xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
+xmlns=3D"http://www.w3.org/TR/REC-html40"><head><meta =
+http-equiv=3DContent-Type content=3D"text/html; charset=3Dutf-8"><meta =
+name=3DGenerator content=3D"Microsoft Word 14 (filtered =
+medium)"><style><!--
+/* Font Definitions */
+@font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;}
+@font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman","serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:purple;
+	text-decoration:underline;}
+p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
+	{mso-style-priority:99;
+	mso-style-link:"Balloon Text Char";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:8.0pt;
+	font-family:"Tahoma","sans-serif";}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{mso-style-priority:34;
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:0cm;
+	margin-left:36.0pt;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman","serif";}
+span.EmailStyle17
+	{mso-style-type:personal-reply;
+	font-family:"Calibri","sans-serif";
+	color:#1F497D;}
+span.BalloonTextChar
+	{mso-style-name:"Balloon Text Char";
+	mso-style-priority:99;
+	mso-style-link:"Balloon Text";
+	font-family:"Tahoma","sans-serif";}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri","sans-serif";}
+@page WordSection1
+	{size:612.0pt 792.0pt;
+	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+	{page:WordSection1;}
+/* List Definitions */
+@list l0
+	{mso-list-id:2004353578;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1941490794 271215534 67698691 67698693 67698689 =
+67698691 67698693 67698689 67698691 67698693;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:-;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Calibri","sans-serif";
+	mso-fareast-font-family:Calibri;
+	mso-bidi-font-family:"Times New Roman";}
+@list l0:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:=EF=82=A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:=EF=82=B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l0:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:=EF=82=A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:=EF=82=B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l0:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:=EF=82=A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+ol
+	{margin-bottom:0cm;}
+ul
+	{margin-bottom:0cm;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]--></head><body lang=3DEN-US link=3Dblue =
+vlink=3Dpurple><div class=3DWordSection1><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Hello,<o:p></o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><o:p>&nbsp;</o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>I fully agree that a completely server-side fix would be more =
+convenient. Unfortunately, that is not possible, as the extending =
+request from client to gateway only contains the time value from the =
+original signature and the gateway just returns the calendar hash chain =
+from that time to the latest newspaper publication. Thus, there is not =
+enough information in the request for the server to know if the client =
+has a signature from the correct core. (And normally there=E2=80=99s =
+only one core, so this is not really a question under normal =
+circumstances.)<o:p></o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><o:p>&nbsp;</o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>As for the mitigation steps for the wrongly issued =
+signatures:<o:p></o:p></span></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo1'><![if =
+!supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><span style=3D'mso-list:Ignore'>-<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>a special publication appeared in the Financial Times today and we =
+have verified that it was printed correctly<o:p></o:p></span></p><p =
+class=3DMsoListParagraph style=3D'text-indent:-18.0pt;mso-list:l0 level1 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><span style=3D'mso-list:Ignore'>-<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>a temporary publications file that contains only the special =
+publication is available from =
+http://special.verifier.guardtime.net/alt-publications.bin<o:p></o:p></sp=
+an></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo1'><![if =
+!supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><span style=3D'mso-list:Ignore'>-<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>an alternative extending service based on the calendar database from =
+the old core is available at =
+http://special.verifier.guardtime.net/alt-ext<o:p></o:p></span></p><p =
+class=3DMsoListParagraph style=3D'text-indent:-18.0pt;mso-list:l0 level1 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><span style=3D'mso-list:Ignore'>-<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>the alternative extending service should be used to extend only the =
+wrongly issued signatures<o:p></o:p></span></p><p =
+class=3DMsoListParagraph style=3D'text-indent:-18.0pt;mso-list:l0 level1 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><span style=3D'mso-list:Ignore'>-<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>there is a special tool available for detecting the status of, and =
+optionally extending, signatures:<o:p></o:p></span></p><p =
+class=3DMsoListParagraph =
+style=3D'margin-left:72.0pt;text-indent:-18.0pt;mso-list:l0 level2 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Courier New";color:#1F497D'><span =
+style=3D'mso-list:Ignore'>o<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>the tool for checking PDF files is available from <a =
+href=3D"http://download.guardtime.com/Core1-CheckPDF.jar">http://download=
+.guardtime.com/Core1-CheckPDF.jar</a><o:p></o:p></span></p><p =
+class=3DMsoListParagraph =
+style=3D'margin-left:72.0pt;text-indent:-18.0pt;mso-list:l0 level2 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Courier New";color:#1F497D'><span =
+style=3D'mso-list:Ignore'>o<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>to check the status of a set of files, use a command along the lines =
+of<br>java -jar Core1-CheckPDF.jar chk *.pdf<br>this will check all the =
+PDF files in the current directory and report on the status of each =
+one<o:p></o:p></span></p><p class=3DMsoListParagraph =
+style=3D'margin-left:72.0pt;text-indent:-18.0pt;mso-list:l0 level2 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Courier New";color:#1F497D'><span =
+style=3D'mso-list:Ignore'>o<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>to extend all the wrongly issued signatures (but leave all others =
+alone), use a command along the lines of<br>java -jar Core1-CheckPDF.jar =
+ext *.pdf<o:p></o:p></span></p><p class=3DMsoListParagraph =
+style=3D'margin-left:72.0pt;text-indent:-18.0pt;mso-list:l0 level2 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Courier New";color:#1F497D'><span =
+style=3D'mso-list:Ignore'>o<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>to extend all signatures (each one with the appropriate extender), =
+use a command along the lines of<br>java -jar Core1-CheckPDF.jar all =
+*.pdf<o:p></o:p></span></p><p class=3DMsoListParagraph =
+style=3D'margin-left:72.0pt;text-indent:-18.0pt;mso-list:l0 level2 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Courier New";color:#1F497D'><span =
+style=3D'mso-list:Ignore'>o<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>a similar tool for checking standalone signatures is available from =
+<a =
+href=3D"http://download.guardtime.com/Core1-CheckSig.jar">http://download=
+.guardtime.com/Core1-CheckSig.jar</a><o:p></o:p></span></p><p =
+class=3DMsoListParagraph style=3D'text-indent:-18.0pt;mso-list:l0 level1 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><span style=3D'mso-list:Ignore'>-<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>the alternative extending service and publications file will be =
+available until end of year, please use the tools to extend all affected =
+signatures by that time;<o:p></o:p></span></p><p =
+class=3DMsoListParagraph style=3D'text-indent:-18.0pt;mso-list:l0 level1 =
+lfo1'><![if !supportLists]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><span style=3D'mso-list:Ignore'>-<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span></span><![endif]><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>as already mentioned below, we will include the special publication =
+in our regular publications file together with the October 15 regular =
+publication (the special publication should not be the most recent one =
+in the file) and after that the signatures extended with the alternative =
+extending service will verify as valid using regular client tools and =
+regular publications file.<o:p></o:p></span></p><p =
+class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><o:p>&nbsp;</o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Sorry about the inconvenience, this was the best we could do under =
+the circumstances. And please don=E2=80=99t hesitate to ask if you have =
+any questions or need any help with the tools.<o:p></o:p></span></p><p =
+class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><o:p>&nbsp;</o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Best,<o:p></o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Ahto<o:p></o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'><o:p>&nbsp;</o:p></span></p><div =
+style=3D'border:none;border-left:solid blue 1.5pt;padding:0cm 0cm 0cm =
+4.0pt'><div><div style=3D'border:none;border-top:solid #B5C4DF =
+1.0pt;padding:3.0pt 0cm 0cm 0cm'><p class=3DMsoNormal><b><span =
+style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'>From:</span>=
+</b><span style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'> =
+Magnus Carlsson [mailto:magnus@scrive.com] <br><b>Sent:</b> 2. oktoober =
+2013. a. 23:01<br><b>To:</b> Ahto Truu<br><b>Cc:</b> Mariusz Rak; =
+Gracjan Polak; poc_support@guardtime.com<br><b>Subject:</b> Re: Problems =
+with verifying/extending GT =
+signatures<o:p></o:p></span></p></div></div><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><div><div><p =
+class=3DMsoNormal>Thank you for the update, Ahto.&nbsp; We appreciate =
+that a fix is in the works, although we would have preferred to have the =
+special treatment of extending the problematic signatures to be =
+implemented on the Guardtime server side so that no special tools would =
+need to be distributed and integrated.<o:p></o:p></p></div></div><div><p =
+class=3DMsoNormal =
+style=3D'margin-bottom:12.0pt'><o:p>&nbsp;</o:p></p><div><p =
+class=3DMsoNormal>On Wed, Oct 2, 2013 at 12:47 PM, Ahto Truu &lt;<a =
+href=3D"mailto:ahto.truu@guardtime.com" =
+target=3D"_blank">ahto.truu@guardtime.com</a>&gt; =
+wrote:<o:p></o:p></p><div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Hello,</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>As a status update: we have created a special publication from the =
+calendar database of the old core and are now waiting on newspapers to =
+get it published. We have also created tools to extend the affected =
+signatures to this special publication. When the publication has =
+appeared and we have tested the tools with it, we can send them out with =
+the usage instructions.</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>We can include this special publication in our regular publications =
+file together with the regular October 15 publication and after that the =
+wrongly issued signatures extended to connect to the special publication =
+will verify using all standard verification =
+tools.</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Best,</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Ahto</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><div =
+style=3D'border:none;border-left:solid blue 1.5pt;padding:0cm 0cm 0cm =
+4.0pt'><div><div style=3D'border:none;border-top:solid #B5C4DF =
+1.0pt;padding:3.0pt 0cm 0cm 0cm'><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><b><span =
+style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'>From:</span>=
+</b><span style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'> =
+Magnus Carlsson [mailto:<a href=3D"mailto:magnus@scrive.com" =
+target=3D"_blank">magnus@scrive.com</a>] <br><b>Sent:</b> 30. september =
+2013. a. 18:03<br><b>To:</b> Ahto Truu<br><b>Cc:</b> Mariusz Rak; =
+Gracjan Polak; <a href=3D"mailto:poc_support@guardtime.com" =
+target=3D"_blank">poc_support@guardtime.com</a><br><b>Subject:</b> Re: =
+Problems with verifying/extending GT =
+signatures</span><o:p></o:p></p></div></div><div><div><p =
+class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>&nbsp;<o:p><=
+/o:p></p><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Ahto, =
+unfortunately we do have a large number of documents affected on =
+production.&nbsp; Please keep us posted about your remediation =
+plan.&nbsp; Thank you!<o:p></o:p></p><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>&nbsp;<o:p></o:p><=
+/p><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>On Fri, Sep =
+27, 2013 at 9:46 AM, Magnus Carlsson &lt;<a =
+href=3D"mailto:magnus@scrive.com" =
+target=3D"_blank">magnus@scrive.com</a>&gt; =
+wrote:<o:p></o:p></p><div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>Ahto, we will =
+know this weekend if any production documents are affected and let you =
+know.&nbsp; Thank you!<o:p></o:p></p></div></div><div><div><div><p =
+class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>&nbsp;<o:p></o:p><=
+/p><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>On Fri, Sep =
+27, 2013 at 4:27 AM, Ahto Truu &lt;<a =
+href=3D"mailto:ahto.truu@guardtime.com" =
+target=3D"_blank">ahto.truu@guardtime.com</a>&gt; =
+wrote:<o:p></o:p></p><div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Hello,</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>The reason this signature fails to extend is that it was accidentally =
+issued by the old core infrastructure.</span><o:p></o:p></p><p =
+class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>When we switched to the new core in August, all connections from the =
+live service were re-routed to the new core, but the old core was left =
+running idle to facilitate fast rollback should any major problems =
+appear with the new core.</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>However, one aggregator's connection was accidentally reverted to the =
+old core and this is where your broken signature comes from. Our infra =
+team is going through the logs now looking for other customers who may =
+be affected and putting together a remediation plan. A more public =
+notice will be issued when we have the plan in =
+place.</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>However, in your case the sample document you sent appears to be a =
+test file. Do you have any production documents affected? The invalid =
+connection was active from 2013-09-04 09:05:40 UTC to 2013-09-13 =
+12:13:37 UTC.</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>I=E2=80=99ll also look into the extending and on-line verification =
+code in the PDF Toolkit and Java API to make the error message more =
+clear (though I sincerely hope we won=E2=80=99t need it ever =
+again).</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Best,</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>Ahto</span><o:p></o:p></p><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><span =
+style=3D'font-size:11.0pt;font-family:"Calibri","sans-serif";color:#1F497=
+D'>&nbsp;</span><o:p></o:p></p><div =
+style=3D'border:none;border-left:solid blue 1.5pt;padding:0cm 0cm 0cm =
+4.0pt'><div><div style=3D'border:none;border-top:solid #B5C4DF =
+1.0pt;padding:3.0pt 0cm 0cm 0cm'><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><b><span =
+style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'>From:</span>=
+</b><span style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'> =
+Magnus Carlsson [</span><a href=3D"mailto:magnus@scrive.com" =
+target=3D"_blank"><span =
+style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'>mailto:magnu=
+s@scrive.com</span></a><span =
+style=3D'font-size:10.0pt;font-family:"Tahoma","sans-serif"'>] =
+<br><b>Sent:</b> 26. september 2013. a. 21:46<br><b>To:</b> Ahto =
+Truu<br><b>Cc:</b> Mariusz Rak; Gracjan Polak<br><b>Subject:</b> =
+Problems with verifying/extending GT =
+signatures</span><o:p></o:p></p></div></div><div><div><p =
+class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>&nbsp;<o:p><=
+/o:p></p><div><div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>Hello =
+Ahto.<o:p></o:p></p></div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>We are seeing =
+problems with a number of sealed documents for which we are unable to =
+verify their signature using PdfVerifier.jar.&nbsp; I have one example =
+attached.&nbsp; Looking in our logs, it appears that the document was =
+sealed and successfully verified by PdfVerifier.jar on September =
+10.<o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>Now, when we run =
+PdfVerifier.jar on these files, we get the response &quot;the signature =
+is invalid&quot;.<br><br>If we extract the signature from the PDF and =
+run gtime-test on it, we get:<o:p></o:p></p></div><div><p =
+class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>$ gtime-test -v =
+-i /tmp/signature<br>GT_PUBLIC_KEY_SIGNATURE_PRESENT: The PKI signature =
+is present in the timesignature.<br>Timesignature looks fine, signed by =
+&quot;GT : GT : Scrive&quot; at 2013-09-10 07:26:40 =
+PDT.<o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>However, if we =
+try and extend the document, we get<br><br>$ gtime-test -x -v -i =
+/tmp/signature<br>verifyTimestamp() failed: 521 (Cannot extend =
+timestamp).<br>$ echo $?<br>16<o:p></o:p></p></div><div><p =
+class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;margin-bottom:12.0pt'>and so it appears =
+that gtime-test exits with an internal error.&nbsp; The gtime-test =
+version: &quot;GuardTime command-line test-tool 1.0-9, using API =
+3.10&quot;<o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Can you =
+help us understand what is going on?<br><br>Thank =
+you!<o:p></o:p></p></div><div><div><div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><br>-- =
+<o:p></o:p></p><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Sincerely,<o=
+:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Magnus =
+Carlsson<o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Partner<o:p>=
+</o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>&nbsp;<o:p><=
+/o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><i>Sign =
+with peace of mind</i><o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><a =
+href=3D"http://www.scrive.com" =
+target=3D"_blank">www.scrive.com</a><o:p></o:p></p></div></div></div></di=
+v></div></div></div></div></div></div></div></div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><br><br =
+clear=3Dall><br>-- <o:p></o:p></p><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Sincerely,<o=
+:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Magnus =
+Carlsson<o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Partner<o:p>=
+</o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>&nbsp;<o:p><=
+/o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><i>Sign =
+with peace of mind</i><o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><a =
+href=3D"http://www.scrive.com" =
+target=3D"_blank">www.scrive.com</a><o:p></o:p></p></div></div></div></di=
+v></div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><br><br =
+clear=3Dall><br>-- <o:p></o:p></p><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Sincerely,<o=
+:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Magnus =
+Carlsson<o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>Partner<o:p>=
+</o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'>&nbsp;<o:p><=
+/o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><i>Sign =
+with peace of mind</i><o:p></o:p></p></div><div><p class=3DMsoNormal =
+style=3D'mso-margin-top-alt:auto;mso-margin-bottom-alt:auto'><a =
+href=3D"http://www.scrive.com" =
+target=3D"_blank">www.scrive.com</a><o:p></o:p></p></div></div></div></di=
+v></div></div></div></div></div><p class=3DMsoNormal><br><br =
+clear=3Dall><br>-- <o:p></o:p></p><div><p =
+class=3DMsoNormal>Sincerely,<o:p></o:p></p></div><div><p =
+class=3DMsoNormal>Magnus Carlsson<o:p></o:p></p></div><div><p =
+class=3DMsoNormal>Partner<o:p></o:p></p></div><div><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p></div><div><p =
+class=3DMsoNormal><i>Sign with peace of =
+mind</i><o:p></o:p></p></div><div><p class=3DMsoNormal><a =
+href=3D"http://www.scrive.com" =
+target=3D"_blank">www.scrive.com</a><o:p></o:p></p></div></div></div></di=
+v></body></html>
+------=_NextPart_000_003F_01CEC44D.F300B9C0--
+

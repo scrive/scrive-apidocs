@@ -331,6 +331,9 @@
                 rejectText: localization.cancel,
                 content  : content
             });
+
+            // Let the system know that the sign confirmation is visible.
+            model.trigger('visibility:signconfirmation');
         },
         sendConfirmation : function() {
             var view = this;
@@ -513,14 +516,6 @@
     });
 
     window.DesignView = function(args) {
-        // Greet users who came from "Save a safety copy" in post sign view
-        if (SessionStorage.get('postsignview', 'documentid') != null) {
-            var modal = new WelcomeModal({
-                documentId: SessionStorage.get('postsignview', 'documentid')
-            });
-            SessionStorage.del('postsignview', 'documentid');
-        }
-
         var document = new Document({
             id : args.id
         });
@@ -530,16 +525,18 @@
         var view = new DesignViewView({
             model: model
         });
+
         document.recall();
+
         this.el = function() {
             return $(view.el);
         };
-
-
         this.afterInsert = function() {
             view.afterInsert();
         };
-
+        this.model = function() {
+            return model;
+        };
     };
 
 })(window);

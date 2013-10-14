@@ -156,9 +156,10 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       // Remove the modal header but keep the close button
       var modalHeader = $('.modal-container .modal-header');
       modalHeader.remove();
-      var close = $('<img src="/img/mobile-modal-x.png" />');
-      close.css('padding-left', '600px');
-      close.css('padding-top', '50px');
+      var close = $('<div style="padding: 19px;" />');
+      close.append($('<img src="/img/mobile-modal-x.png" />'));
+      close.css('margin-left', '562px');
+      close.css('margin-top', '31px');
       close.click(function() { confirmation.close(); });
 
       // Remove the modal footer but keep the button

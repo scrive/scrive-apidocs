@@ -117,13 +117,8 @@ var PointRightArrowView = Backbone.View.extend({
        else
         container.width(desiredWidth);
     },
-    render: function () {
+    updatePosition: function() {
        var container = $(this.el);
-       container.addClass('action-arrow').addClass('right');
-       container.append($("<div class='front' />"));
-       container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
-       container.append($("<div class='back' />"));
-
        if (this.model.point() != undefined) {
           var p = this.model.point();
           var top = this.model.point().offset().top;
@@ -136,6 +131,15 @@ var PointRightArrowView = Backbone.View.extend({
           container.css("top", (top + (height / 2) - 19) + "px");
           container.css("left", this.left + "px");
        }
+    },
+    render: function () {
+       var container = $(this.el);
+       container.addClass('action-arrow').addClass('right');
+       container.append($("<div class='front' />"));
+       container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
+       container.append($("<div class='back' />"));
+
+       this.updatePosition();
        return this;
     }
 });
@@ -154,6 +158,7 @@ var ScrollUpArrowView = Backbone.View.extend({
         $(window).unbind('resize',this.updateRightMarginFunction);
         $(this.el).remove();
     },
+    updatePosition: function() {},
     render: function () {
         var view = this;
         $(this.el).addClass("up").addClass("arrow").css("cursor", "pointer");
@@ -203,6 +208,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         this.model.view = this;
         this.render();
     },
+    updatePosition: function() {},
     render: function () {
         var view = this;
         $(this.el).addClass("down").addClass("arrow").css("cursor", "pointer");
@@ -270,6 +276,9 @@ window.Arrow = {
               clear  : function() {
                   view.clear();
                   model.destroy();
+              },
+              updatePosition : function() {
+                  view.updatePosition();
               },
               blink : function(i) {
                     var arrow = this;

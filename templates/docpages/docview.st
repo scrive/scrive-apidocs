@@ -2,6 +2,8 @@
 pageDocumentView=
 <div class="mainContainer authorview" >
 <div class="body-container">
+<div class='place-for-authorview'>
+</div>
 <script>
 jQuery(function(){
   var authorView = new AuthorView({
@@ -16,7 +18,7 @@ jQuery(function(){
         })
     $endif$
   });
-  jQuery(".body-container").replaceWith(authorView.el());
+  jQuery(".place-for-authorview").replaceWith(authorView.el());
 });
 mixpanel.register({DocumentID : "$documentid$"
                    $if(siglinkid)$

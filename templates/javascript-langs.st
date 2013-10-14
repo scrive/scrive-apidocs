@@ -55,8 +55,6 @@ javascriptLocalisation =
              , listand : "$_listand()$"
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
-             , writeHere : "$_writeHere()$"
-             , checkHere : "$_checkHere()$"
              , downloadPDF : "$_DownloadPDF()$"
              , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
@@ -142,7 +140,6 @@ javascriptLocalisation =
               }
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
-            , goBack: "$_goBack()$"
             , process : {
                sendbuttontext: "$_contractsendbuttontext()$",
                confirmsendtext: "$_contractconfirmsendtext()$",
@@ -190,11 +187,8 @@ javascriptLocalisation =
            , authorattachments: {
                   selectAttachments: "$_updateAttachmentsDialogHead()$"
                 , selectAttachment : "$_updateAttachmentsDialogUpLoadChooseAttachment()$"
-                , selectAttachmentsDescription: "$_updateAttachmentsDialogChooseAttachment()$"
-                , storedInScrive: "$_updateAttachmentsDialogUpLoadSaved()$"
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
                 , selectFromScrive : "$_updateAttachmentsDialogChooseFromScrive()$"
-                , selectedAttachments : "$_selectedAttachments()$"
                 , invalidAttachments : "$_invalidAttachments()$"
             }
           , signatoryAttachments : {
@@ -213,26 +207,43 @@ javascriptLocalisation =
                 title : "$_dialogCsvupload1Head()$"
               , subtitle : "$_dialogCsvupload1Subtitle()$"
               , selectFile :  "$_dialogCsvupload2CSVMultiChooseFile()$"
-              , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }
          , signature : {
                placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
              , placeYour : "$_signaturePlaceYour()$"
-             , placeYourTip : "$_signaturePlaceYourTip()$"
              , confirmSignature : "$_signatureConfirm()$"
            }
-         , welcomemodal : {
+         , welcomenewuser : {
                title: "$_welcomeTitle()$"
-             , subtitle: "$_welcomeSubtitle()$"
-             , subtitlelink: "$_welcomeSubtitleLink()$"
-             , trybutton: "$_welcomeTryButton()$"
-             , trytext: "$_welcomeScriveTry()$"
-             , whatIsScrive: "$_welcomeWhatIsScrive()$"
-             , possibleWithScrive: "$_welcomeScrivePossible()$"
+             , subtitle1: "$_welcomeSubtitle1()$"
+             , subtitle2: "$_welcomeSubtitle2()$"
+             , subtitle3: {
+                   injustafewminutes: "$_welcomeSubtitle3InJustAFewMinutes()$"
+                 , reviewed: "$_welcomeSubtitle3Reviewed()$"
+                 , returned: "$_welcomeSubtitle3Returned()$"
+                 , saved: "$_welcomeSubtitle3Saved()$"
+                 , isntthishowsimple: "$_welcomeSubtitle3IsntThisHowSimple()$"
+               }
+             , button: "$_welcomeButton()$"
+             , documentTitle: "$_welcomeDocumentTitle()$"
+           }
+         , ftue : {
+               step1: "$_FTUEstep1()$"
+             , step2: "$_FTUEstep2()$"
+             , step3: "$_FTUEstep3()$"
+             , step4: "$_FTUEstep4()$"
+             , step1description: "$_FTUEstep1description()$"
+             , step2description: "$_FTUEstep2description()$"
+             , step3description: "$_FTUEstep3description()$"
+             , step3descriptionScriver: "$_FTUEstep3descriptionScriver()$"
+             , step3descriptionYourself: "$_FTUEstep3descriptionYourself()$"
+             , step4description: "$_FTUEstep4description()$"
+             , useSampleDocument: "$_FTUEuseSampleDocument()$"
+             , addYourself: "$_FTUEaddYourself()$"
+             , addAScriver: "$_FTUEaddAScriver()$"
            }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
-	      editInvitationMessage: "$_editInvitationMessage()$",
               chooseParticipant: "$_designViewChooseParticipant()$",
               selectField: "$_selectField()$",
               validation : {
@@ -243,12 +254,6 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , pleaseSelectField : "$_validationPleaseSelectField()$"
                 }
-             , exampledocument : {
-                      wantHelp: "$_exampleDocumentWantHelp()$"
-                    , uploadIt : "$_exampleDocumentUploadIt()$"
-                    , documentTitle : "$_exampleDocumentTitle()$"
-                    , documentInvitationMessage : "$_exampleDocumentInvitationMessage()$"
-             }
              , sign : "$_sign()$"
              , textFields : {
                       textField: "$_textField()$"
@@ -355,7 +360,6 @@ javascriptLocalisation =
         }
          , changeEmail : "$_changeEmail()$"
          , changePhone : "$_changePhone()$"
-         , onlyPDF : "$_onlyPDF()$"
          , accessNewAccountModal: {
              header: "$_accessNewAccountHeader()$"
            , body: "$_accessNewAccountBody()$"
@@ -430,8 +434,6 @@ javascriptLocalisation =
              , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
              , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
-	     , signOrRejectTitle: "$_signOrRejectTitle()$"
-	     , onlySignTitle: "$_onlySignTitle()$"
              , newAccountTitle: "$_signViewCreateAccountTitle()$"
              , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
              , emailLabel: "$_email()$"
@@ -471,7 +473,6 @@ javascriptLocalisation =
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
            , vat: "$_paymentsVat()$"
-           , maxUsers: "$_paymentsMaxUsers()$"
            , vat25: "$_paymentsVat25()$"
            , expires: "$_paymentsExpires()$"
            , creditcardnumber: "$_paymentsCreditCardNumber()$"
@@ -514,9 +515,6 @@ javascriptLocalisation =
                     , nextpayment : "$_paymentPlanNextPayment()$"
                     , previouspayments : "$_paymentPlanPreviousPayments()$"
                     , changebilling: "$_paymentPlanChangeBilling()$"
-		    , changecard: "$_paymentChangeCard()$"
-		    , cardinformation: "$_cardInformation()$"
-		    , billinginformation: "$_billingInformation()$"
                     , none: "$_paymentPlanNone()$"
                     }
             , subscribe: "$_paymentPlanSubscribe()$"
@@ -664,13 +662,6 @@ javascriptLocalisation =
                 }
             ,  bin: {
                        name :  "$_docListTabsBin()$"
-                    ,  remove : {
-                              action: "$_delete()$"
-                            , head : "$_listReallyDeleteDialogHead()$"
-                            , body : "$_listReallyDeleteDialogBody()$"
-                            , successMessage : "$_flashMessageRubbishHardDeleteDone()$"
-                            , emptyMessage : "$_noDocumentChosen()$"
-                        }
                     ,  restore : {
                               action: "$_restore()$"
                             , head : "$_listRestoreDialogHead()$"
@@ -709,7 +700,6 @@ javascriptLocalisation =
             },
             has : {
               headline : "$_blockingFreeHasHeadline()$",
-              subtext1 : "$_blockingFreeHasSubtext1()$"
             },
             hasNot : {
               headline : "$_blockingFreeHasNotHeadline()$",
@@ -832,9 +822,6 @@ javascriptLocalisation =
               , changeEmailExplaination : "$_changeEmailRequestExplanation()$"
               , changeEmailTitle : "$_changeEmailRequestTitle()$"
               , changeEmailAccept : "$_changeEmailRequestAcceptText()$"
-              , createCompany : "$_createCompany()$"
-              , createCompanyExplanation : "$_createCompanyExplanation()$"
-              , createCompanyPreambule :   "$_createCompanyFormPreamble()$"
               , save : "$_SaveChanges()$"
               , detailSaved : "$_flashMessageUserDetailsSaved()$"
               , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
@@ -842,7 +829,6 @@ javascriptLocalisation =
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent1 : "$_flashMessageChangeEmailMailSent1()$"
               , changeEmailMailSent2 : "$_flashMessageChangeEmailMailSent2()$"
-              , companyCreated : "$_flashMessageCompanyCreated()$"
               , smsOriginator : "$_smsOriginator()$"
               , smsOriginatorDescription : "$_smsOriginatorDescription()$"
             }
@@ -866,7 +852,6 @@ javascriptLocalisation =
               , createNewModalTitle:"$_modalAddCompanyAccountTitle()$"
               , createNewModalAcceptButton: "$_modalAddCompanyAccountInviteButtonText()$"
               , search : "$_SearchCompanyAccount()$"
-              , list : "$_list()$"
               , roleAdmin : "$_admin()$"
               , roleStandard : "$_standard()$"
               , rolePending : "$_pendingcompanyaccount()$"
@@ -918,7 +903,6 @@ javascriptLocalisation =
              , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
              , customiseTextColour: "$_CustomiseTextColour()$"
              , selectImageLabel: "$_SelectImageLabel()$"
-             , sampleEmailHeader: "$_SampleEmailHeader()$"
              , sampleEmailContent: "$_SampleEmailContent()$"
              , customize : "$_companyBrandingCustomize()$"
       }

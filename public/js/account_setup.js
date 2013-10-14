@@ -63,6 +63,9 @@
     validators: function() {
       return this.get('validators');
     },
+    cleanValidators : function() {
+      this.set({'vaidators' : [] });
+    },
     addValidator: function(validator) {
       this.validators().push(validator);
     },
@@ -165,7 +168,8 @@
     render: function () {
       var model = this.model;
       var view = this;
-      //$(this.el).append(header);
+      model.cleanValidators();
+      $(this.el).empty();
 
       var content = $("<div class='short-input-container'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
