@@ -699,7 +699,7 @@ javascriptLocalisation =
               title : "$_blockingFreeClickTitle()$"
             },
             has : {
-              headline : "$_blockingFreeHasHeadline()$",
+              headline : "$_blockingFreeHasHeadline()$"
             },
             hasNot : {
               headline : "$_blockingFreeHasNotHeadline()$",
