@@ -236,7 +236,7 @@ var LoginView = Backbone.View.extend({
 
       var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
-              value : "",
+              value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
               name : "email",
@@ -389,7 +389,7 @@ var LoginBrandedView = Backbone.View.extend({
 
       var emailinput = new InfoTextInput({
               infotext: localization.loginModal.email,
-              value : "",
+              value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
               name : "email",
