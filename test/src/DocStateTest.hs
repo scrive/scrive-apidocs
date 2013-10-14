@@ -252,8 +252,7 @@ testExtendSignaturesCore1 = do
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  now <- getMinutesTime
-  dbUpdate $ AttachSealedFile (documentid doc) file Guardtime{ extended = False, private = False } (systemActor (2 `monthsBefore` now))
+  dbUpdate $ AppendSealedFile (documentid doc) file Guardtime{ extended = False, private = False }
   runScheduler extendSignatures
   return ()
 {-
