@@ -141,7 +141,6 @@ set systemPage
  js   js/tasks.js
  js   js/docsignviewframes.js
  js   js/doctools/dochistory.js
- js   js/doctools/docdownload.js
  js   js/doctools/docauthorattachments.js
  js   js/doctools/docevidenceattachments.js
  js   js/signview/docsignviewbranding.js
