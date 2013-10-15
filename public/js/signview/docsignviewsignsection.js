@@ -310,15 +310,16 @@ window.DocumentSignSignSection = Backbone.View.extend({
       var signButton = this.signButton.el();
       if (BrowserInfo.isSmallScreen()) {
         signButton.css({
-          'padding-left': '33%',
-          'padding-right': '33%',
+          'padding-left': '0px',
+          'padding-right': '0px',
           'font-size': '100px',
           'height': '100px',
           'max-height': '120px',
           'line-height': '85px',
           'padding-top': '55px',
           'padding-bottom': '55px',
-          'margin': '0px'
+          'margin': '0px',
+          'width': '100%'
         });
       }
 
