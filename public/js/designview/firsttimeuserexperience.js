@@ -130,12 +130,23 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
 
             content.append($('<h3></h3>').html(subtitle)); 
 
+            $('.design-view-action-participant:eq(1) .design-view-action-participant-details-participation').hide(0);
+
             this.model.highlight().moveTo({
                 el: $('.design-view-action-participant:eq(1)'), 
                 margins: {top: -60, left: 0, bottom: 80, right: -10},
                 explanation: {placement: 'above', content: content, height: '100', width: '795'}
             });
-            that.model.progressbar().setStep(3);
+            this.model.progressbar().setStep(3);
+
+            // Force a scroll to have the custom scroll bar inside participants
+            // update and hilight to re-align properly. 
+            // When the hiding of participants details goes, so does this.
+            // 350 is synced well with the expansion of the participant details.
+            _.delay(function() {
+                $(window).scroll();
+            }, 350);
+
         }
     },
     instructToSign: function() {
