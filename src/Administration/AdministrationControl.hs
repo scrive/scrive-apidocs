@@ -561,11 +561,6 @@ resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   ctx <- getContext
   actor <- guardJust $ mkAdminActor ctx
-  _ <- dbUpdate $ InsertEvidenceEvent
-          ResealedPDF
-          (F.value "actor" (actorWho actor))
-          (Just docid)
-          actor
   doc <- do
     doc' <- dbQuery $ GetDocumentByDocumentID docid
     when_ (isDocumentError doc') $ do
@@ -574,7 +569,14 @@ resealFile docid = onlyAdmin $ do
   res <- sealDocument doc
   case res of
       Left  _ -> Log.debug "We failed to reseal the document"
-      Right _ -> Log.debug "Ok, so the document has been resealed"
+      Right _ -> do
+        Log.debug "Ok, so the document has been resealed"
+        _ <- dbUpdate $ InsertEvidenceEvent
+                ResealedPDF
+                (F.value "actor" (actorWho actor))
+                (Just docid)
+                actor
+        return ()
   return LoopBack
 
 
