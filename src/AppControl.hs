@@ -252,9 +252,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     createContext session = do
       -- rqPeer hostname comes always from showHostAddress
       -- so it is a bunch of numbers, just read them out
-      -- getAddrInfo is strange that it can throw exceptions
-      -- if exception is thrown, whole page load fails with
-      -- error notification
       peerip <- do
         rq <- askRq
         -- First, we look for x-forwarded-for, which a proxy might insert
@@ -265,10 +262,11 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
                          |  h <- ["x-forwarded-for", "x-real-ip"]
                          ] ++ [Just (fst (rqPeer rq))]
             hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
-        addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
-        return $ case addrAddress $ head addrs of
-          SockAddrInet _ hostip -> unsafeIPAddress hostip
-          _                     -> noIP
+        (do addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
+            return $ case addrAddress $ head addrs of
+              SockAddrInet _ hostip -> unsafeIPAddress hostip
+              _                     -> noIP)
+           `E.catch` \ (_ :: E.SomeException) -> return noIP
 
       currhostpart <- getHostpart
       reshostpart <- getResourceHostpart
