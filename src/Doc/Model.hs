@@ -2,8 +2,6 @@
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( isTemplate -- fromUtils
-  , insertDocumentAsIs
-
   , DocumentFilter(..)
   , DocumentDomain(..)
   , DocumentOrderBy(..)
@@ -14,7 +12,7 @@ module Doc.Model
   , AttachFile(..)
   , DetachFile(..)
   , AppendFirstSealedFile(..)
-  , AppendSealedFile(..)
+  , AppendExtendedSealedFile(..)
   , CancelDocument(..)
   , ELegAbortDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
@@ -129,6 +127,7 @@ import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
 import Control.Monad.State.Class
 import Company.Model
+import Doc.SealStatus (SealStatus(..))
 
 
 -- | Document filtering options
@@ -909,7 +908,8 @@ fetchMainFiles = kFold decoder M.empty
 
 insertMainFilesAsAre :: MonadDB m => DocumentID -> [MainFile] -> m [MainFile]
 insertMainFilesAsAre _documentid [] = return []
-insertMainFilesAsAre documentid files = do
+insertMainFilesAsAre documentid rfiles = do
+  let files = reverse rfiles -- rfiles should be inserted with descending id: newer files come first in rfiles
   _ <- kRun $ sqlInsert "main_files" $ do
         sqlSet "document_id" documentid
         sqlSetList "file_id" $ mainfileid <$> files
@@ -1189,19 +1189,37 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
     updateMTimeAndObjectVersion did (actorTime a)
 
 -- | Append the first version of the set of sealed files to a
--- document, inserting evidence event and updating modification time.
+-- document, updating modification time.
 data AppendFirstSealedFile = AppendFirstSealedFile DocumentID FileID SealStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AppendFirstSealedFile () where
-  update (AppendFirstSealedFile did fid status actor) = appendSealedFile did fid status (Just actor)
+  update (AppendFirstSealedFile did fid status actor) = do
+    appendSealedFile did fid status
+    case status of
+      Guardtime{} -> do
+        _ <- update $ InsertEvidenceEvent
+            AttachGuardtimeSealedFileEvidence
+            (return ())
+            (Just did)
+            actor
+        return ()
+      _ -> return ()
+    updateMTimeAndObjectVersion did (actorTime actor)
 
--- | Append another sealed file to a document, as a result of fixing or
+-- | Append an extended sealed file to a document, as a result of
 -- improving an already sealed document.
-data AppendSealedFile = AppendSealedFile DocumentID FileID SealStatus
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AppendSealedFile () where
-  update (AppendSealedFile did fid status) = appendSealedFile did fid status Nothing
+data AppendExtendedSealedFile = AppendExtendedSealedFile DocumentID FileID SealStatus Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AppendExtendedSealedFile () where
+  update (AppendExtendedSealedFile did fid status actor) = do
+    appendSealedFile did fid status
+    _ <- update $ InsertEvidenceEvent
+      AttachExtendedSealedFileEvidence
+      (return ())
+      (Just did)
+      actor
+    return ()
 
-appendSealedFile :: (MonadDB m, TemplatesMonad m) => DocumentID -> FileID -> SealStatus -> Maybe Actor -> m ()
-appendSealedFile did fid status mactor = do
+appendSealedFile :: (MonadDB m, TemplatesMonad m) => DocumentID -> FileID -> SealStatus -> m ()
+appendSealedFile did fid status = do
     kRun1OrThrowWhyNot $ sqlInsertSelect "main_files" "" $ do
       sqlSet "document_id" did
       sqlSet "file_id" fid
@@ -1210,15 +1228,6 @@ appendSealedFile did fid status mactor = do
       sqlWhereExists $ sqlSelect "documents" $ do
         sqlWhereDocumentIDIs did
         sqlWhereDocumentStatusIs Closed
-    case mactor of
-      Nothing -> return ()
-      Just actor -> do
-        _ <- update $ InsertEvidenceEvent
-            AttachSealedFileEvidence
-            (value "actor"(actorWho actor))
-            (Just did)
-            actor
-        updateMTimeAndObjectVersion did (actorTime actor)
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument () where

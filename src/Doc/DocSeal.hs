@@ -561,6 +561,11 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
+        _ <- update $ InsertEvidenceEvent
+            AttachSealedFileEvidence
+            (return ())
+            (Just documentid)
+            (systemActor ctxtime)
         Just _sealedfileid <- digitallySealDocument True ctxtime ctxgtconf documentid tmpout filename
         triggerAPICallbackIfThereIsOne document -- Callback does not depend on sealed file
         res <- dbQuery $ GetDocumentByDocumentID documentid
@@ -616,7 +621,7 @@ digitallySealDocument forceAttach ctxtime ctxgtconf documentid pdfpath pdfname =
 
 digitallyExtendDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
                       => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m Bool
-digitallyExtendDocument _ctxtime ctxgtconf documentid pdfpath pdfname = do
+digitallyExtendDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
   code <- liftIO $ GT.digitallyExtend ctxgtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
@@ -645,7 +650,7 @@ digitallyExtendDocument _ctxtime ctxgtconf documentid pdfpath pdfname = do
       Log.debug $ "Adding new extended file to DB"
       sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
       Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-      dbUpdate $ AppendSealedFile documentid sealedfileid status
+      dbUpdate $ AppendExtendedSealedFile documentid sealedfileid status $ systemActor ctxtime
       return True
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.

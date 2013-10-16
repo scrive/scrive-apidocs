@@ -81,7 +81,7 @@ window.DocumentSelectsDefinition = function(archive) { return  _.flatten([
                                        {name: localization.filterByStatus.showDraft,     value: "[draft]"},
                                        {name: localization.filterByStatus.showCancelled, value: "[cancelled,rejected,timeouted,deliveryproblem,problem]"},
                                        {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
-                                       {name: localization.filterByStatus.showSigned,    value: "[signed]"}
+                                       {name: localization.filterByStatus.showSigned,    value: "[signed,sealed,extended]"}
                                       ]}),
             archive.forCompanyAdmin() ?
               [new SelectAjaxFiltering({

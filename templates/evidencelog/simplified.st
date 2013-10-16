@@ -36,6 +36,10 @@ simpliefiedTextResealedPDF                  = $_simpliefiedTextResealedPDF()$
 simpliefiedTextCancelDocumenElegEvidence    = $_simpliefiedTextCancelDocumenElegEvidence()$
 #####
 simpliefiedTextProlongDocumentEvidence      = $_simpliefiedTextProlongDocumentEvidence()$
+#####
+simpliefiedTextAttachGuardtimeSealedFileEvidence      = $_simpliefiedTextAttachGuardtimeSealedFileEvidence()$
+#####
+simpliefiedTextAttachExtendedSealedFileEvidence       = $_simpliefiedTextAttachExtendedSealedFileEvidence()$
 ##### UTILS
 #####
 notNamedParty = $_notNamedParty()$

@@ -76,6 +76,8 @@ data StatusClass = SCDraft
                   | SCOpened
                   | SCSigned
                   | SCProlonged
+                  | SCSealed -- has a digital seal
+                  | SCExtended -- has an extended digital seal
                   deriving (Eq, Ord, Enum, Bounded)
 
 instance Show StatusClass where
@@ -91,6 +93,8 @@ instance Show StatusClass where
   show SCOpened = "opened"
   show SCSigned = "signed"
   show SCProlonged = "prolonged"
+  show SCSealed = "sealed"
+  show SCExtended = "extended"
 
 instance Read StatusClass where
   readsPrec _ str =

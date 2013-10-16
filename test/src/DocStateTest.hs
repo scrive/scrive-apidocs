@@ -221,9 +221,7 @@ testSealMissingSignatures = do
   let filename = "test/pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
-  file2 <- addNewFile filename filecontent
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  randomUpdate $ AppendSealedFile (documentid doc) file2 Missing
   runScheduler $ sealMissingSignaturesNewerThan Nothing
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   case documentsealstatus doc' of
@@ -241,8 +239,9 @@ testExtendSignatures = do
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author (isSignable &&^ isClosed) file
   now <- getMinutesTime
   let actor = systemActor (2 `monthsBefore` now)
+  -- Append a file to tweak the modification time
   dbUpdate $ AppendFirstSealedFile (documentid doc) file1 Guardtime{ extended = False, private = False } actor
-  dbUpdate $ AppendSealedFile (documentid doc) file2 Guardtime{ extended = False, private = False }
+  dbUpdate $ AppendExtendedSealedFile (documentid doc) file2 Guardtime{ extended = False, private = False } actor
   runScheduler extendSignatures
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   case documentsealstatus doc' of
@@ -256,7 +255,8 @@ testExtendSignaturesCore1 = do
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  dbUpdate $ AppendSealedFile (documentid doc) file Guardtime{ extended = False, private = False }
+  now <- getMinutesTime
+  dbUpdate $ AppendExtendedSealedFile (documentid doc) file Guardtime{ extended = False, private = False } $ systemActor now
   runScheduler extendSignatures
   return ()
 {-
@@ -472,10 +472,11 @@ testAppendFirstSealedFileEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isClosed
   file <- addNewRandomFile
-  randomUpdate $ \t -> AppendFirstSealedFile (documentid doc) file Missing (systemActor t)
+  randomUpdate $ \t -> AppendFirstSealedFile (documentid doc) file
+                         Guardtime{ extended = False, private = False } (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == AttachSealedFileEvidence) lg
+  assertJust $ find (\e -> evType e == AttachGuardtimeSealedFileEvidence) lg
 
 testCancelDocumentEvidenceLog :: TestEnv ()
 testCancelDocumentEvidenceLog = do
@@ -863,7 +864,8 @@ testDocumentAppendSealedPendingRight = doTimes 10 $ do
 
   --execute
 
-  success <- randomUpdate $ AppendSealedFile (documentid doc) file Missing
+  now <- getMinutesTime
+  success <- randomUpdate $ AppendExtendedSealedFile (documentid doc) file Missing $ systemActor now
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   --assert

@@ -273,7 +273,9 @@ data EvidenceEventType =
   ProlongDocumentEvidence                         |
   ChangeSignatoryPhoneWhenUndeliveredEvidence     |
   InvitationDeliveredBySMS                        |
-  InvitationUndeliveredBySMS
+  InvitationUndeliveredBySMS                      |
+  AttachGuardtimeSealedFileEvidence               |
+  AttachExtendedSealedFileEvidence
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -354,6 +356,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert ChangeSignatoryPhoneWhenUndeliveredEvidence     = return 75
   safeConvert InvitationDeliveredBySMS                        = return 76
   safeConvert InvitationUndeliveredBySMS                      = return 77
+  safeConvert AttachGuardtimeSealedFileEvidence               = return 78
+  safeConvert AttachExtendedSealedFileEvidence                = return 79
 
 
 instance Convertible Int EvidenceEventType where
@@ -434,6 +438,8 @@ instance Convertible Int EvidenceEventType where
     safeConvert 75 = return ChangeSignatoryPhoneWhenUndeliveredEvidence
     safeConvert 76 = return InvitationDeliveredBySMS
     safeConvert 77 = return InvitationUndeliveredBySMS
+    safeConvert 78 = return AttachGuardtimeSealedFileEvidence
+    safeConvert 79 = return AttachExtendedSealedFileEvidence
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

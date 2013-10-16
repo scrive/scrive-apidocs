@@ -73,7 +73,7 @@ NewDocumentEvidenceText=
 ###
 MarkInvitationReadEvidenceText=Scrive´s notification system reported that the invitation to sign (sent to $email$) was opened.
 ###
-CloseDocumentEvidenceText=After all signatories signed, Scrive closed the signing process to further modifications.
+CloseDocumentEvidenceText=Scrive closed the signing process to further modifications before sealing the document with a digital signature.
 ###
 ChangeSignatoryEmailWhenUndeliveredEvidenceText=The email address for signatory was changed from $oldemail$ to $newemail$ by $actor$.
 ###
@@ -87,7 +87,11 @@ CancelDocumentEvidenceText=The signing process was cancelled by $actor$.
 ###
 AttachFileEvidenceText=
 ###
-AttachSealedFileEvidenceText=The verification page, evidence log, evidence of intent, evidence documentation and digital signature documentation were appended to the document by Scrive (before digitally signing the document with a Guardtime digital signature).
+AttachSealedFileEvidenceText=The verification page, evidence log, evidence of intent, evidence documentation and digital signature documentation were appended to the document by Scrive.
+###
+AttachGuardtimeSealedFileEvidenceText=Scrive sealed the document with a Guardtime digital signature.
+###
+AttachExtendedSealedFileEvidenceText=Scrive extended the document´s digital signature, and the document is now sealed by a Guardtime keyless signature.
 ###
 PreparationToPendingEvidenceText=The editing of the signing process was finalised by $actor$. Scrive locked the signing process from editing, the language was set to $lang$, and the signing due date was set to $timeouttime$ UTC.
 $if(timezone)$ The time zone $timezone$ was provided by $actor$.$endif$
