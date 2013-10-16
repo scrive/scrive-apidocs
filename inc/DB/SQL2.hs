@@ -1036,9 +1036,7 @@ kWhyNot1 cmd = do
 
   let fromRight ~(Right x) = x
   let logics = enumerateWhyNotExceptions (sqlSelectFrom newSelect) (sqlGetWhereConditions newSelect)
-  --when (length logics <= indexOfFirstFailedCondition) $ do
-  --  error ("length logics = " ++ show (length logics) ++ ", indexOfFirstFailedCondition = " ++ show indexOfFirstFailedCondition
-  --         ++ "\n" ++ show newSelect)
+
   let condition = logics !! (indexOfFirstFailedCondition - 1)
 
   case condition of
@@ -1066,32 +1064,6 @@ enumerateWhyNotExceptions from conds = concatMap worker conds
                        then from
                        else from <> ", " <> sqlSelectFrom s
 
-{-
-
-matchUpExceptionWithValues :: [SqlWhyNot] -> [SqlValue] -> [SomeKontraException]
-matchUpExceptionWithValues [] [] = []
-matchUpExceptionWithValues (SqlWhyNot e qs : es) (b : vs) =
-  if b == SqlBool False
-    then [exc] ++ matchUpExceptionWithValues es vs2
-    else matchUpExceptionWithValues es vs2
-  where
-    vs1 = take (length qs) vs
-    vs2 = drop (length qs) vs
-    exc = case e vs1 of
-            Right x -> toKontraException x
-            Left l -> toKontraException (DBExceptionCouldNotParseValues (typeOf (fromRight (e vs1))) l vs1)
-    fromRight ~(Right x) = x
-
-matchUpExceptionWithValues (_ : _) [] = error "There were not enough values from SQL to fill in all needs for SqlWhyNotException in matchUpExceptionWithValues"
-matchUpExceptionWithValues [] (_ : _) = error "There were not enough SqlWhyNotException's to use up all give SQL values in matchUpExceptionWithValues"
-
-decodeListOfExceptionsFromWhere :: SQL -> [SqlCondition] -> [[SomeKontraException]] -> [SqlValue] -> Either SQLError [[SomeKontraException]]
-decodeListOfExceptionsFromWhere fullquery conds excepts sqlvalues =
-  return $ excepts ++
-           [matchUpExceptionWithValues (SqlWhyNot (\_ -> return (DBBaseLineConditionIsFalse fullquery)) []
-                                                    : enumerateWhyNotExceptions conds) sqlvalues]
-
--}
 
 kRunManyOrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
                    => s -> m ()
