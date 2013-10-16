@@ -119,7 +119,6 @@ sealDocument doc = do
         runTemplatesT (getLang doc', templates) $ sendClosedEmails mctx doc' True
       s -> Log.error $ "Still failing to seal document # " ++ show (documentid doc') ++ ": " ++ show s
     return ()
-    -- TODO: re-send the document to signatories saying that this is a corrected version
 
 extendDocumentSeal :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, MonadDB m, AmazonMonad m)
                    => Document -> m Bool
