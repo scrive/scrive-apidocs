@@ -301,7 +301,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     return placement.field().readyForSign();
                     },
                     el: elem,
-                    hasDirectArrow : !placement.field().isSignature(),
+                    pointSelector : (placement.field().isSignature() ? ".button" : undefined),
                     onActivate: function() {
                         if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign())
                         {

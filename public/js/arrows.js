@@ -9,10 +9,17 @@ var ArrowModel = Backbone.Model.extend({
       type : undefined,
       text  : undefined,
       labelCss: undefined,
-      point : undefined
+      point : undefined,
+      blinks : 0 // Persistent blinking. If > 0 then arrow is in middle of blinking.
   },
   type : function(){
        return this.get("type");
+  },
+  blinks : function() {
+      return this.get("blinks");
+  },
+  setBlinks : function(i) {
+      return this.set({"blinks" : i});
   },
   text : function(){
        return this.get("text");
@@ -280,17 +287,24 @@ window.Arrow = {
               updatePosition : function() {
                   view.updatePosition();
               },
-              blink : function(i) {
+              blink : function(count) {
                     var arrow = this;
                     var el = $(view.el);
-                    if (i <= 0 ) return;
-                    else if (i % 2 == 0 )
-                         el.css({opacity: '0',
-                                 filter: 'alpha(opacity=0)'});
-                    else
-                         el.css({opacity: '1',
-                                 filter: 'alpha(opacity=1)'});
-                    setTimeout(function() {arrow.blink(i - 1)},200);
+                    model.setBlinks(count);
+                    var startBlinking = function() {
+                      var i = model.blinks();
+                      if (i <= 0 ) return;
+                      else if (i % 2 == 0 )
+                          el.css({opacity: '0',
+                                  filter: 'alpha(opacity=0)'});
+                      else
+                          el.css({opacity: '1',
+                                  filter: 'alpha(opacity=1)'});
+                      model.setBlinks(i-1);
+                      setTimeout(startBlinking,200);
+                      }
+                    startBlinking();
+
               },
               /* We need to recalculate width after appending arrow to page */
               fixWidth: function() {
