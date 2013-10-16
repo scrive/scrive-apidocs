@@ -130,15 +130,16 @@ showNamedInput (name,input) = name ++ ": " ++
              Right value -> show (BSL.toString value)
 
 showRequest :: Request -> Maybe [(String, Input)] -> String
-showRequest rq maybeInputsBody =
-    show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq ++ "\n" ++
-    (unlinesIndented "post variables" . map showNamedInput) (fromMaybe [] maybeInputsBody) ++
-    (unlinesIndented "http headers" . concatMap showNamedHeader) (Map.toList $ rqHeaders rq) ++
-    (unlinesIndented "http cookies" . map showNamedCookie) (rqCookies rq)
+showRequest rq maybeInputsBody = unlines $
+    [show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq] ++
+    (indented "post variables" . map showNamedInput) (fromMaybe [] maybeInputsBody) ++
+    (indented "http headers" . concatMap showNamedHeader) (Map.toList $ rqHeaders rq) ++
+    (indented "http cookies" . map showNamedCookie) (rqCookies rq)
   where
-    unlinesIndented _title [] = ""
-    unlinesIndented title list = "  " ++ title ++ ":\n" ++
-        concatMap (\line -> "    " ++ line ++ "\n") list
+    indented _title [] = []
+    indented title list =
+        ["  " ++ title ++ ":"] ++
+        map (\line -> "    " ++ line) list
 
 
 -- | Long polling implementation.
