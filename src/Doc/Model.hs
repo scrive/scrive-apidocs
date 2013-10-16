@@ -1647,7 +1647,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen () where
   update (MarkDocumentSeen did slid mh actor) = do
         let time = actorTime actor
             ipnumber = fromMaybe noIP $ actorIP actor
-        kRun1OrThrowWhyNotAllowBaseLine $ sqlUpdate "signatory_links" $ do
+        kRun1OrThrowWhyNotAllowIgnore $ sqlUpdate "signatory_links" $ do
             sqlSet "seen_time" time
             sqlSet "seen_ip" ipnumber
 
@@ -1657,8 +1657,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen () where
               sqlWhereSignatoryLinkIDIs slid
               sqlWhereSignatoryLinkMagicHashIs mh
               sqlWhereDocumentTypeIs (Signable)
-              sqlWhere "signatory_links.seen_time IS NULL"
-              sqlWhere "signatory_links.sign_time IS NULL"
+              sqlIgnore $ sqlWhere "signatory_links.seen_time IS NULL"
+              sqlIgnore $ sqlWhere "signatory_links.sign_time IS NULL"
               sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError undefined, Rejected]
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID (Maybe String) Actor
