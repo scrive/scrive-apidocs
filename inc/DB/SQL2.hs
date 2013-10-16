@@ -853,7 +853,7 @@ instance SqlTurnIntoSelect SqlSelect where
 -- and it can be used recursivelly.
 sqlTurnIntoWhyNotSelect :: (SqlTurnIntoSelect a) => a -> SqlSelect
 sqlTurnIntoWhyNotSelect command =
-     sqlSelect "" $ mapM_ (sqlResult . emitExists) [0..count]
+     sqlSelect "" $ mapM_ (sqlResult . emitExists) [0..(count-1)]
     where select = sqlTurnIntoSelect command
           count :: Int
           count = sum (map count' (sqlSelectWhere select))
@@ -874,8 +874,8 @@ sqlTurnIntoWhyNotSelect command =
 
           around :: (Monad m,MonadState Int m) => Int -> SqlCondition -> m [SqlCondition]
           around current cond@(SqlPlainCondition{}) = do
-            modify (+1)
             index <- get
+            modify (+1)
             if current >= index
               then return [cond]
               else return []
@@ -1037,7 +1037,7 @@ kWhyNot1 cmd = do
   let fromRight ~(Right x) = x
   let logics = enumerateWhyNotExceptions (sqlSelectFrom newSelect) (sqlGetWhereConditions newSelect)
 
-  let condition = logics !! (indexOfFirstFailedCondition - 1)
+  let condition = logics !! (indexOfFirstFailedCondition)
 
   case condition of
     (exception, _from, []) -> return (fromRight $ exception [])
