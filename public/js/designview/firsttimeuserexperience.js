@@ -202,7 +202,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             color: 'green',
             size: 'big',
             text: localization.ftue.useSampleDocument,
-            labelstyle: 'width: 252px',
+            labelstyle: 'width: 202px',
             onClick: function() {
                 mixpanel.track('Sample document accept');
                 that.previewSampleDocument.hide();
@@ -213,7 +213,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
 
         var sampleDocumentExperiment = new Experiment({namespace: 'welcome', name: 'sampledocument'});
 
-        var img = $('<img class="document-preview" width="300" />');
+        var img = $('<img class="document-preview" width="250" />');
         img.attr('src', '/img/sample_document_' + sampleDocumentExperiment.value() + '_' + localization.code + '.png'); 
 
         this.previewSampleDocument.append(button.el()).append(img);
