@@ -871,7 +871,7 @@
 "_signviewSigningFailed","Något gick fel vid signeringen. Vänligen försök igen.","Sorry, something went wrong while signing the document. Please try again."
 "_apiSettings","API-inställningar","Integration settings"
 "_apiOauthReveal","Visa","Reveal"
-"_welcomeButton","Skicka ett exempel-dokument","Try sending a sample document"
+"_welcomeButton","Skicka ett exempeldokument","Try sending a sample document"
 "_welcomeTitle","Ditt signerade dokument har sparats i ditt personliga e-arkiv","Your signed document has now been safely stored in your own e-archive"
 "_welcomeSubtitle1","Pröva hur enkelt det är att skicka ett dokument","See how simple it is to send a document!"
 "_welcomeSubtitle2","Att skicka ett dokument är säkert, enkelt och snabbt!","Sending a document is safe, simple & fast!"

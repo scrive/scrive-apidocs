@@ -11,6 +11,30 @@ $htmlopentag()$
         src: url("/fonts/HelveticaNeue.eot");
       }
     </style>
+
+    <script type="text/javascript">
+      var browser = navigator.userAgent;
+    </script>
+
+    <!--[if lte IE 7]>
+      <script type="text/javascript">
+        browser = 'Internet Explorer 7';
+      </script>
+    <![endif]-->
+
+    <!--[if lte IE 6]>
+      <script type="text/javascript">
+        browser = 'Internet Explorer 6';
+      </script>
+    <![endif]-->
+
+    <script type="text/javascript">
+      window.onload = function() {
+        var browser_name_div = document.getElementById('browser_name');
+        browser_name_div.appendChild(browser_name_div.ownerDocument.createTextNode(browser));
+      };
+    </script>
+
   </head>
   <body style="background-color: #F7F7F7; font-family: 'Helvetica Neue';">
 
@@ -29,8 +53,7 @@ $htmlopentag()$
       <div style="text-align: center; font-size: 14.5pt; letter-spacing: -20; color: #4D4D4D;">
         $_unsupportedBrowserHeader()$
       </div>
-      <div style="text-align: center; font-size: 18pt; letter-spacing: -20; color: #4D4D4D; margin-bottom: 14px;">
-        Internet Explorer 6
+      <div id="browser_name" style="text-align: center; font-size: 18pt; letter-spacing: -20; color: #4D4D4D; margin-bottom: 14px;">
       </div>
       <div style="margin-bottom: 50px;">
         <center>

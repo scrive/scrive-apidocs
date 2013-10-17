@@ -142,6 +142,8 @@ var HighlightView = Backbone.View.extend({
     hide: function() {
         $('.' + this.boxClassName).hide();
         $('.highlight-explanation').hide();
+        $(window).unbind('resize', this.render);
+        $(window).unbind('scroll', this.render);
     }
 });
 
