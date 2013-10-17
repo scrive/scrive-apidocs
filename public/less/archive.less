@@ -50,26 +50,26 @@
 }
 
 .table-statuses {
-      background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 3px;
-      color: @text-medium;
-      font-size: 13px;
-      margin-top: 10px;
-      padding: 10px 10px;
-      height: 13px;
-      line-height: 13px;
-      -moz-border-radius: 3px;
-      -webkit-border-radius: 3px;
- }
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 3px;
+    color: @text-medium;
+    font-size: 13px;
+    margin-top: 10px;
+    padding: 10px 10px;
+    height: 13px;
+    line-height: 13px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
 
 .table-statuses .icon {
-      margin-top: -4px;
-      margin-left: 30px;
-      &.first { margin-left: 4px }
- }
+    margin-top: -4px;
+    margin-left: 30px;
+    &.first { margin-left: 4px }
+}
 
- .new-post-sign-view-user {
+.new-post-sign-view-user {
     text-align: center;
 
     .grey-arrow {
@@ -100,7 +100,7 @@
         }
 
         h5.great-thing {
-            margin-left: 15px; 
+            margin-left: 15px;
             font-weight: 300;
             &:before {
                 content: url(/img/arrow-list.png);
@@ -111,7 +111,82 @@
     }
 }
 
+/* Welcome new user in document archive view - EXPERIMENT */
 .new-post-sign-view-user-first-row-highlighted .archive .list-container .table tbody tr:first-child { border: 2px #53B688 solid; } 
 .new-post-sign-view-user-first-row-highlighted .archive .list-container .option-top-box { display: none; } 
 .new-post-sign-view-user-first-row-highlighted .archive .list-container { margin-top: 50px; } 
 .new-post-sign-view-user-first-row-highlighted .archive .tab-viewer-header { display: none; }
+
+.new-post-sign-view-user-first-row-highlighted .archive {
+
+    .mark-document-overlay {
+        width: 1015px;
+        height: 41px;
+        background-color: rgba(83, 182, 136, 0.24);
+        position: absolute;
+    }
+
+    .inner-container.experiment4 {
+	.subtitle {
+	    width: 489px;
+	}
+        margin-top: 40px;
+        margin-bottom: 400px;
+        background-color: #FAFAFA;
+        border: 2px solid #F2F2F2;
+        -webkit-border-radius: 10px 10px;
+        border-radius: 10px 10px;
+        padding: 46px 20px 53px 100px;
+        display: inline-block;
+        .subtitle {
+            margin-top:0px !important;
+        }
+
+        .explanation {
+            font-weight: 400;
+            color: #4A4949;
+            font-size: 20px;
+            margin-bottom: 3px;
+            &.second-h5 {
+                font-size: 17px;
+                margin-top: 9px;
+            }
+        }
+
+        .design-view-document-buttons-upload-button {
+            float:left;
+        }
+    }
+
+    .document-description {
+
+        position: relative;
+        top: -39px;
+        left: -37px;
+
+        img, h3 {
+            display: inline-block;
+        }
+
+        h3 {
+            top: 32px;
+            left: 6px;
+            font-size: 25px;
+            font-weight: 400;
+            position: relative;
+            color: @green;
+            span {
+                color: #4A4949;
+                font-size: 17px;
+                font-weight: 300;
+                line-height: 28px;
+                margin-left: 5px;
+            }
+        }
+
+        img {
+            width: 29px;
+        }
+    }
+}
+/* END - Welcome new user in document archive view - EXPERIMENT */

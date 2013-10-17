@@ -215,6 +215,7 @@ javascriptLocalisation =
            }
          , welcomenewuser : {
                title: "$_welcomeTitle()$"
+             , button: "$_welcomeButton()$"
              , subtitle1: "$_welcomeSubtitle1()$"
              , subtitle2: "$_welcomeSubtitle2()$"
              , subtitle3: {
@@ -224,7 +225,11 @@ javascriptLocalisation =
                  , saved: "$_welcomeSubtitle3Saved()$"
                  , isntthishowsimple: "$_welcomeSubtitle3IsntThisHowSimple()$"
                }
-             , button: "$_welcomeButton()$"
+             , subtitle4: {
+                   buttonText: "$_buttonText4()$"
+                 , explainDocument: "$_explainDocument4()$"
+                 , isntthishowsimple: "$_welcomeSubtitle4IsntThisHowSimple()$"
+             }
              , documentTitle: "$_welcomeDocumentTitle()$"
            }
          , ftue : {
