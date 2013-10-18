@@ -883,7 +883,7 @@
             var fstnameField = sig.fstnameField();
             var sndnameField = sig.sndnameField();
 
-            var csvfield = fstnameField.isCsvField() && sndnameField.isCsvField();
+            var csvfield = fstnameField.isCsvField();
             var csvname = localization.designview.fullName + "(" + localization.designview.fromCSV + ")";
 
             var input = new InfoTextInput({
@@ -907,10 +907,15 @@
                      * broadcast the info about changes to the world.
                      * Otherwise the hard link to full name breaks.
                      */
-                    fstnameField.setValueSilent(f);
-                    sndnameField.setValueSilent(s);
-                    fstnameField.setValue(f);
-                    sndnameField.setValue(s);
+                    if (sndnameField != undefined) {
+                      fstnameField.setValueSilent(f);
+                      sndnameField.setValueSilent(s);
+                      fstnameField.setValue(f);
+                      sndnameField.setValue(s);
+                    } else {
+                      fstnameField.setValueSilent(str);
+                      fstnameField.setValue(str);
+                    }
                 }
             });
 
@@ -921,14 +926,15 @@
                     input.el().removeClass('redborder');
                 input.setValue(sig.name());
             });
-
-            sndnameField.bind('change', function() {
-                if(!fstnameField.isValid(true) )
-                    input.el().addClass('redborder');
-                else
-                    input.el().removeClass('redborder');
-                input.setValue(sig.name());
-            });
+            if (sndnameField != undefined) {
+              sndnameField.bind('change', function() {
+                  if(!fstnameField.isValid(true) )
+                      input.el().addClass('redborder');
+                  else
+                      input.el().removeClass('redborder');
+                  input.setValue(sig.name());
+              });
+            }
             if(!fstnameField.isValid(true))
                     input.el().addClass('redborder');
             else

@@ -172,7 +172,7 @@ window.Signatory = Backbone.Model.extend({
         return this.fstnameField().value();
     },
     sndname: function() {
-        return this.sndnameField().value();
+        return this.sndnameField() != undefined ? (this.sndnameField().value() != undefined ? this.sndnameField().value() : "") : "";
     },
     personalnumber : function() {
         return this.personalnumberField() != undefined ? (this.personalnumberField().value() != undefined ? this.personalnumberField().value() : "") : "";
