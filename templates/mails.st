@@ -300,7 +300,6 @@ mailDocumentError=
         mailheader=_mailDocumentErrorTitle();
         mailp1=_mailDocumentErrorContentBodyFirst();
         mailp2=_mailDocumentErrorContentBodySecond();
-        mailp3=_mailDocumentErrorContentBodyThird();
         mailspacing3=''
     )$
 ####
@@ -384,7 +383,7 @@ mailTakeoverPrivateUserInviteP=
   <ol>
     $_mailTakeoverPrivateUserInviteContentInstructionSecond()$
   </ol>
-  $_mailTakeoverPrivateUserInviteContentLink()$ $_mailTakeoverPrivateUserInviteContentInstructionThird()$
+  $_mailTakeoverPrivateUserInviteContentInstructionThird()$
   $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailTakeoverPrivateUserInviteAcceptButton())$
 ####
 mailRequestChangeEmail=
