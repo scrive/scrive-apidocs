@@ -40,13 +40,18 @@
     }
 }
 
-.archive .scrolled .option-top-box{
-    position: fixed;
-    top: -57px;
-    height: 113px;
-    width: 1018px;
-    background: @grey-background;
-    border-bottom: 1px solid #e0e0e0;
+.archive .scrolled {
+  .option-top-box {
+    height: 121px;
+    .subbox {
+      position: fixed;
+      top: 0px;
+      padding-top: 5px;
+      width: 1018px;
+      background: @grey-background;
+      border-bottom: 1px solid #e0e0e0;
+    }
+  }
 }
 
 .table-statuses {
@@ -100,7 +105,7 @@
         }
 
         h5.great-thing {
-            margin-left: 15px; 
+            margin-left: 15px;
             font-weight: 300;
             &:before {
                 content: url(/img/arrow-list.png);
@@ -111,7 +116,7 @@
     }
 }
 
-.new-post-sign-view-user-first-row-highlighted .archive .list-container .table tbody tr:first-child { border: 2px #53B688 solid; } 
-.new-post-sign-view-user-first-row-highlighted .archive .list-container .option-top-box { display: none; } 
-.new-post-sign-view-user-first-row-highlighted .archive .list-container { margin-top: 50px; } 
+.new-post-sign-view-user-first-row-highlighted .archive .list-container .table tbody tr:first-child { border: 2px #53B688 solid; }
+.new-post-sign-view-user-first-row-highlighted .archive .list-container .option-top-box { display: none; }
+.new-post-sign-view-user-first-row-highlighted .archive .list-container { margin-top: 50px; }
 .new-post-sign-view-user-first-row-highlighted .archive .tab-viewer-header { display: none; }
