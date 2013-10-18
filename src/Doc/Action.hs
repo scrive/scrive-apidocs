@@ -99,9 +99,12 @@ postDocumentPreparationChange doc@Document{documenttitle} skipauthorinvitation =
   -- Stat logging
   now <- getMinutesTime
   author <- getDocAuthor doc
+  docssent <- getDocsSent (userid author)
   -- Log the current time as the last doc sent time
   asyncLogEvent SetUserProps [UserIDProp (userid author),
-                              someProp "Last Doc Sent" now]
+                              someProp "Last Doc Sent" now,
+                              numProp "Docs sent" (fromIntegral $ docssent)
+                              ]
   json <- documentJSON Nothing False True False Nothing Nothing doc
   asyncLogEvent (UploadDocInfo json) [UserIDProp (userid author),
                                       DocIDProp (documentid doc)]
@@ -197,6 +200,10 @@ getDocAuthor :: Kontrakcja m => Document -> m User
 getDocAuthor doc = do
   authorid <- guardJust $ getAuthorSigLink doc >>= maybesignatory
   guardJustM $ dbQuery $ GetUserByID authorid
+
+getDocsSent :: Kontrakcja m => UserID -> m Int
+getDocsSent uid = do
+   dbQuery $ GetDocsSent uid
 
 {- |
     Goes through each signatory, and if a user exists this saves it for that user

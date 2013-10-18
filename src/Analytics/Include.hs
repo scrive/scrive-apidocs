@@ -13,14 +13,11 @@ import Text.JSON
 import Text.JSON.Gen
 import qualified Text.JSON.Gen as J
 
-import Data.Maybe
-
 import Kontra
 
 import User.Model
 
 import Company.Model
-import Company.CompanyUI
 
 import Control.Monad
 import Control.Applicative
@@ -34,15 +31,12 @@ import MinutesTime
 import DB
 
 import Payments.Model
-import Doc.Model
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
-                                   , aCompanyUI      :: Maybe CompanyUI
                                    , aToken          :: String
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
-                                   , aDocsSent       :: Int
                                    }
 
 getAnalyticsData :: Kontrakcja m => m AnalyticsData
@@ -51,25 +45,17 @@ getAnalyticsData = do
   mcompany <- case muser of
     Just user -> dbQuery $ GetCompany $ usercompany user
     _ -> return Nothing
-  mcompanyui <- case mcompany of
-    Just comp -> Just <$> (dbQuery $ GetCompanyUI (companyid comp))
-    Nothing -> return Nothing
   token <- ctxmixpaneltoken <$> getContext
   mplan <- case muser of
     Just user -> dbQuery $ GetPaymentPlan (usercompany user)
     Nothing -> return Nothing
   lang <- ctxlang <$> getContext
-  docssent <- case muser of
-    Just User{userid} -> dbQuery $ GetDocsSent userid
-    Nothing -> return 0
-
+ 
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
-                         , aCompanyUI    = mcompanyui
                          , aToken        = token
                          , aPaymentPlan  = mplan
                          , aLanguage     = lang
-                         , aDocsSent     = docssent
                          }
 
 mnop :: Monad m => (a -> m ()) -> Maybe a -> m ()
@@ -98,14 +84,14 @@ instance ToJSValue AnalyticsData where
 
     mnop (J.value "Company Status") $ escapeString <$> (\u -> if (useriscompanyadmin u) then "admin" else "sub") <$> aUser
     mnop (J.value "Company Name") $ maybeS $ escapeString <$> getCompanyName  <$> aCompany
-    mnop (J.value "Company Branding") $ isJust <$> companysignviewlogo <$> aCompanyUI
 
     mnop (J.value "Signup Method") $ maybeS $ escapeString <$> show <$> usersignupmethod <$> aUser
 
     J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage
-    J.value "Docs sent" aDocsSent
 
+    -- Set these values so we can A/B/C test within mixpanel,
+    -- for example with emails.
     case unUserID <$> userid <$> aUser of
       Nothing -> return ()
       Just uid -> do
