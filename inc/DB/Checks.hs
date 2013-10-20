@@ -99,9 +99,10 @@ checkUnknownTables logger tables = do
 
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
+checkDBConsistency :: forall m. MonadDB m
+                   => (String -> m ()) -> [Table] -> [Migration m]
+                   -> m ()
 checkDBConsistency logger tables migrations = do
-
   (created, to_migration) <- checkTables
   when (not $ null to_migration) $ do
     logger "Running migrations..."
@@ -116,59 +117,62 @@ checkDBConsistency logger tables migrations = do
 
   forM_ tables $ \table -> do
     checkIndexes table
-
     checkForeignKeys table
 
   where
+    tblNameString :: Table -> String
     tblNameString = unRawSQL . tblName
+
+    descNotMigrated :: (Table, Int) -> String
     descNotMigrated (t, from) = "\n * " ++ tblNameString t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 
-    checkTables = (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
+    checkTables :: m ([Table], [(Table, Int)])
+    checkTables = do
+      logger "Tables:"
+      (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
+
+    checkTable :: Table -> m (Either Table (Maybe (Table, Int)))
     checkTable table@Table{..} = do
-      ver <- checkVersion table
-      if ver < 0
-        then do
-          logger $ "Creating table '" ++ tblNameString table ++ "' at version " ++ show tblVersion ++ "..."
+      mver <- checkVersion table
+      case mver of
+        Nothing -> do
+          logger $ "Creating '" ++ tblNameString table ++ "'..."
           kRun_ (createStatement table)
           kRun_ . sqlInsert "table_versions" $ do
             sqlSet "name" (tblNameString table)
             sqlSet "version" tblVersion
           _ <- checkTable table
           return $ Left table
-        else if ver == tblVersion
-              then do
-                validation <- checkTableStructure table
-                case validation of
-                  ValidationError errmsg -> do
-                                   logger errmsg
-                                   error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
-                  ValidationOk sqls -> do
-                                   if null sqls
-                                     then do
-                                       logger $ "Table '" ++ tblNameString table ++ "' version " ++ show tblVersion
-                                     else do
-                                       logger $ "Table '" ++ tblNameString table ++ "' version " ++ show tblVersion ++ ", structure corrected..."
-                                       mapM_ kRun_ sqls
-                                   return $ Right $ Nothing
-        else do
-          logger $ "Table '" ++ tblNameString table ++ "' scheduled for migration " ++ show ver ++ "=>" ++ show tblVersion ++"..."
-          return $ Right $ Just (table, ver)
+        Just ver | ver == tblVersion -> do
+          validation <- checkTableStructure table
+          case validation of
+            ValidationError errmsg -> do
+              logger errmsg
+              error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
+            ValidationOk _ -> do
+              logger $ " * " ++ tblNameString table ++ " - version " ++ show ver
+              return $ Right Nothing
+        Just ver -> do
+          logger $ " * " ++ tblNameString table ++ " - version " ++ show ver ++ " (outdated, scheduled for migration to version " ++ show tblVersion ++ ")"
+          return . Right . Just $ (table, ver)
 
+    createStatement :: Table -> SQL
     createStatement table@Table{..} = mconcat [
-            raw $ "CREATE TABLE" <+> tblName <+> "("
-          , intersperse ", " $ map columnToSQL tblColumns
-          , if primaryKeyToSQL table == mempty then "" else ", "
-          , primaryKeyToSQL table
-          , if uniquesToSQL == mempty then "" else ", "
-          , uniquesToSQL
-          , if checksToSQL == mempty then "" else ", "
-          , checksToSQL
-          , ")"
-          ]
-          where
-            uniquesToSQL = intersperse ", " $ map (uniqueToSQL table) tblUniques
-            checksToSQL = intersperse ", " $ map (checkToSQL table) tblChecks
+        raw $ "CREATE TABLE" <+> tblName <+> "("
+      , intersperse ", " $ map columnToSQL tblColumns
+      , if primaryKeyToSQL table == mempty then "" else ", "
+      , primaryKeyToSQL table
+      , if uniquesToSQL == mempty then "" else ", "
+      , uniquesToSQL
+      , if checksToSQL == mempty then "" else ", "
+      , checksToSQL
+      , ")"
+      ]
+      where
+        uniquesToSQL = intersperse ", " $ map (uniqueToSQL table) tblUniques
+        checksToSQL = intersperse ", " $ map (checkToSQL table) tblChecks
 
+    colTypeToSQL :: ColumnType -> SQL
     colTypeToSQL BigIntT = "BIGINT"
     colTypeToSQL BigSerialT = "BIGSERIAL"
     colTypeToSQL BinaryT = "BYTEA"
@@ -180,40 +184,50 @@ checkDBConsistency logger tables migrations = do
     colTypeToSQL TextT = "TEXT"
     colTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
 
+    colTypeToSQLForAlter :: ColumnType -> SQL
     colTypeToSQLForAlter BigSerialT = colTypeToSQL BigIntT
     colTypeToSQLForAlter x = colTypeToSQL x
 
-
+    primaryKeyToSQL :: Table -> SQL
     primaryKeyToSQL table@Table{..} =
-       if null tblPrimaryKey
-          then ""
-          else "CONSTRAINT"
-            <+> genPrimaryKeyName table
-            <+> "PRIMARY KEY ("
-            <+> intersperse ", " (map raw tblPrimaryKey)
-            <+> ")"
+      if null tblPrimaryKey
+        then ""
+        else "CONSTRAINT"
+          <+> genPrimaryKeyName table
+          <+> "PRIMARY KEY ("
+          <+> intersperse ", " (map raw tblPrimaryKey)
+          <+> ")"
 
+    uniqueToSQL :: Table -> [RawSQL] -> SQL
     uniqueToSQL table unique = "CONSTRAINT"
-            <+> genUniqueName table unique
-            <+> "UNIQUE ("
-            <+> intersperse ", " (map raw unique)
-            <+> ")"
+      <+> genUniqueName table unique
+      <+> "UNIQUE ("
+      <+> intersperse ", " (map raw unique)
+      <+> ")"
 
+    checkToSQL :: Table -> TableCheck -> SQL
     checkToSQL table@Table{..} chk@TableCheck{..} = "CONSTRAINT"
-            <+> genCheckName table chk
-            <+> "CHECK ("
-            <+> raw chkCondition
-            <+> ")"
+      <+> genCheckName table chk
+      <+> "CHECK ("
+      <+> raw chkCondition
+      <+> ")"
 
+    genPrimaryKeyName :: Table -> SQL
     genPrimaryKeyName Table{..} = "pk_" <> raw tblName
+
+    genUniqueName :: Table -> [RawSQL] -> SQL
     genUniqueName Table{..} cols = "unique_" <> raw tblName <> "_" <> intersperseNoWhitespace "_" (map raw cols)
+
+    genCheckName :: Table -> TableCheck -> SQL
     genCheckName Table{..} TableCheck{chkName} = "check_" <> raw tblName <> "_" <> raw chkName
 
-    columnToSQL TableColumn{..} = raw $ colName
-          <+> colTypeToSQL colType
-          <+> if colNullable then "NULL" else "NOT NULL"
-          <+> maybe "" ("DEFAULT" <+>) colDefault
+    columnToSQL :: TableColumn -> SQL
+    columnToSQL TableColumn{..} = raw colName
+      <+> colTypeToSQL colType
+      <+> if colNullable then "NULL" else "NOT NULL"
+      <+> raw (maybe "" ("DEFAULT" <+>) colDefault)
 
+    checkTableStructure :: Table -> m ValidationResult
     checkTableStructure table@Table{..} = do
       -- get table description from pg_catalog as describeTable
       -- mechanism from HDBC doesn't give accurate results
@@ -232,7 +246,6 @@ checkDBConsistency logger tables migrations = do
         sqlWhereEqSql "a.attrelid" sqlGetTableID
         sqlOrderBy "a.attnum"
       desc <- reverse `liftM` kFold fetchTableColumn []
-
       -- get info about constraints from pg_catalog
       kRun_ $ sqlGetConstraintOfType 'p' -- primary key
       pk <- kFold fetchTablePrimaryKey Nothing
@@ -240,14 +253,14 @@ checkDBConsistency logger tables migrations = do
       uniques <- kFold fetchTableUniques []
       kRun_ $ sqlGetConstraintOfType 'c' -- checks
       checks <- kFold fetchTableChecks []
-      let validation = mconcat [
-                  checkColumns 0 tblColumns desc
-                , checkPrimaryKey tblPrimaryKey pk
-                , checkUniques tblUniques uniques
-                , checkChecks tblChecks checks
-                ]
-      return validation
+      return $ mconcat [
+          checkColumns 0 tblColumns desc
+        , checkPrimaryKey tblPrimaryKey pk
+        , checkUniques tblUniques uniques
+        , checkChecks tblChecks checks
+        ]
       where
+        sqlGetTableID :: SQL
         sqlGetTableID = parenthesize . toSQLCommand $
           sqlSelect "pg_catalog.pg_class c" $ do
             sqlResult "c.oid"
@@ -255,6 +268,7 @@ checkDBConsistency logger tables migrations = do
             sqlWhereEq "c.relname" $ tblNameString table
             sqlWhere "pg_catalog.pg_table_is_visible(c.oid)"
 
+        fetchTableColumn :: [TableColumn] -> String -> ColumnType -> Bool -> Maybe String -> [TableColumn]
         fetchTableColumn acc name ctype nullable mdefault = TableColumn {
             colName = unsafeFromString name
           , colType = ctype
@@ -273,8 +287,6 @@ checkDBConsistency logger tables migrations = do
 
         fetchTableChecks :: [(RawSQL, RawSQL)] -> String -> String -> [(RawSQL, RawSQL)]
         fetchTableChecks acc name condition = (unsafeFromString condition, unsafeFromString name) : acc
-
-
 
         sqlGetConstraintOfType :: Char -> SQL
         sqlGetConstraintOfType ctype = toSQLCommand $
@@ -371,6 +383,7 @@ checkDBConsistency logger tables migrations = do
         deleteFirst :: (a -> Bool) -> [a] -> [a]
         deleteFirst f xs = let (a, b) = break f xs in a ++ drop 1 b
 
+    checkVersion :: Table -> m (Maybe Int)
     checkVersion table = do
       doesExist <- getOne $ sqlSelect "pg_catalog.pg_class c" $ do
             sqlResult "TRUE"
@@ -381,14 +394,14 @@ checkDBConsistency logger tables migrations = do
         Just (_::Bool) -> do
           mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
           case mver of
-            Just ver -> return ver
-            Nothing  -> return (-1)
-        Nothing -> return (-1)
+            Just ver -> return $ Just ver
+            Nothing  -> return Nothing
+        Nothing -> return Nothing
 
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
       if tblName (mgrTable m) == tblName t && mgrFrom m >= from
          then do
-           ver <- checkVersion $ mgrTable m
+           Just ver <- checkVersion $ mgrTable m
            logger $ "Migrating table '" ++ tblNameString t ++ "' " ++ show ver ++ "=>" ++ show (mgrFrom m + 1) ++ "..."
            when (ver /= mgrFrom m) $
              error $ "Migrations are in wrong order in migrations list."
