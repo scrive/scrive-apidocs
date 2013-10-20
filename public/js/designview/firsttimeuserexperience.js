@@ -74,7 +74,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
                     var newEmail = capitaliseFirstLetter(document.signatories()[0].email()); 
                     var name = document.signatories()[0].name();
 
-                    mixpanel.track('FTUE Add participant click', {'button': 'Add yourself'});
+                    mixpanel.track('Click add signatory', {'ftuebutton': 'Add yourself'});
                     that.userAddedSelf = true;
                     addParticipant(name, newEmail);
                 }
@@ -84,7 +84,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
                 color: 'green',
                 text: localization.ftue.addAScriver,
                 onClick: function() {
-                    mixpanel.track('FTUE Add participant click', {'button': 'Add someone at Scrive'});
+                    mixpanel.track('Click add signatory', {'ftuebutton': 'Add someone at Scrive'});
                     that.userAddedScriver = true;
                     addParticipant('Viktor Wrede', 'viktor@scrive.com', '+46708884749', 'Scrive AB');
                 }

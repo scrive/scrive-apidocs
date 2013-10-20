@@ -136,6 +136,9 @@ window.WelcomeUser = {
                     'Sample document test group': sampleDocumentExperiment.value(),
                     'Welcome modal accepted': true
                 });
+                mixpanel.people.set({
+                    'Welcome modal accepted': true
+                });
 
                 mixpanel.track("Welcome modal accept");
 
