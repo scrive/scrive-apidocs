@@ -214,6 +214,7 @@ checkDBConsistency logger tables migrations = do
         sqlWhere "a.attnum > 0"
         sqlWhere "NOT a.attisdropped"
         sqlWhereEqSql "a.attrelid" sqlGetTableID
+        sqlOrderBy "a.attnum"
       desc <- reverse `liftM` kFold fetchTableColumn []
 
       -- get info about constraints from pg_catalog
