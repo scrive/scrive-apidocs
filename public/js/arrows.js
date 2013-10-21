@@ -295,11 +295,9 @@ window.Arrow = {
                       var i = model.blinks();
                       if (i <= 0 ) return;
                       else if (i % 2 == 0 )
-                          el.css({opacity: '0',
-                                  filter: 'alpha(opacity=0)'});
+                          el.addClass('hidden');
                       else
-                          el.css({opacity: '1',
-                                  filter: 'alpha(opacity=1)'});
+                          el.removeClass('hidden');
                       model.setBlinks(i-1);
                       setTimeout(startBlinking,200);
                       }

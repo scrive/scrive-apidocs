@@ -211,7 +211,7 @@ var PageTasksArrowView = Backbone.View.extend({
   },
   updateArrow : function() {
      var view = this;
-     var oldarrow = view.arrow;
+     var oldArrow = view.arrow;
      if (view.arrow == undefined || view.arrowShouldChange(this.model.active()))
      {
       if (view.arrow != undefined)
@@ -225,7 +225,7 @@ var PageTasksArrowView = Backbone.View.extend({
               if (this.arrow != undefined) {
                   view.arrow.fixWidth();
                   setTimeout(function() {view.arrow.fixWidth();},100);
-                  if (this.shouldBinkOnUpdate(oldarrow,view.arrow)) {
+                  if (this.shouldBinkOnUpdate(oldArrow,view.arrow)) {
                     this.blink();
                   }
               }
