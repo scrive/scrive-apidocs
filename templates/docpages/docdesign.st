@@ -9,6 +9,8 @@ $htmlopentag()$
   </head>
   <body $if(custombackground)$style="background:$custombackground$;"$endif$ class='designview'>
     $header()$
+    $flashmessages()$
+
     <div class="mainContainer" >
     <div class="body-container">
     <script>

@@ -4,6 +4,7 @@
  *                       content: "Text to be displayed"
  *                       withReload: true/false})
  *
+ * If you need to redirect user to different page, and then he should see a flash message, user parameters withRedirect = true and  redirect = new_url
  */
 
 $(function(){
@@ -62,7 +63,6 @@ var FlashMessageView = Backbone.View.extend({
 
 window.FlashMessage = function(args) {
         if (args.withReload != undefined && args.withReload == true) {
-          console.log("Adding flash message to server and reloading page");
           new Submit({
             method : "POST",
             url : "/api/frontend/addflash",
@@ -71,6 +71,18 @@ window.FlashMessage = function(args) {
             content : args.content,
             ajaxsuccess : function() {window.location.reload();},
             ajaxerror   : function() {window.location.reload();}
+          }).send();
+          return;
+        }
+        if (args.withRedirect != undefined && args.withRedirect == true && args.redirect != undefined) {
+          new Submit({
+            method : "POST",
+            url : "/api/frontend/addflash",
+            ajax : true,
+            color : args.color,
+            content : args.content,
+            ajaxsuccess : function() {window.location = args.redirect;},
+            ajaxerror   : function() {window.location = args.redirect;}
           }).send();
           return;
         }

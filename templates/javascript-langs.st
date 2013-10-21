@@ -140,6 +140,7 @@ javascriptLocalisation =
               }
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
+            , flashDocumentRestarted : "$_flashMessageContractRestarted()$"
             , process : {
                sendbuttontext: "$_contractsendbuttontext()$",
                confirmsendtext: "$_contractconfirmsendtext()$",

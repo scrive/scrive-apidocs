@@ -20,8 +20,8 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   canBeProlonged : function() {
     return (this.document().canbeprolonged() && this.document().currentViewerIsAuthor());
   },
-  restart : function() {
-    this.document().restart().send();
+  restart : function(success) {
+    this.document().restart().sendAjax(success);
   },
   prolong : function() {
     var self = this;
@@ -96,7 +96,10 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       oneClick : true,
       onClick: function() {
         mixpanel.track('Click restart button');
-        model.restart();
+        model.restart(function(resp) {
+           var newdocdata = JSON.parse(resp);
+           new FlashMessage({color: 'green', content : localization.flashDocumentRestarted, withRedirect : true, redirect : '/d/'+ newdocdata.id});
+        });
       }
     }).el();
   },

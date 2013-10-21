@@ -22,8 +22,6 @@ module Doc.DocControl(
     , handleResend
     , handleChangeSignatoryEmail
     , handleChangeSignatoryPhone
-    , handleRestart
-    , handleProlong
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -41,7 +39,6 @@ import Doc.Action
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery
-import Doc.DocStateUpdate
 import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
@@ -70,7 +67,6 @@ import Util.CSVUtil
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
-import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Util.MonadUtils
 import User.Utils
 import Control.Applicative
@@ -393,20 +389,6 @@ showPage' fileid pageno = do
     _ -> do
       Log.debug $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
       notFound (toResponse "temporarily unavailable (document has files pending for process)")
-
-handleRestart :: Kontrakcja m => DocumentID -> m KontraLink
-handleRestart docid = withUserPost $ do
-  doc <- guardRightM $ getDocByDocID docid
-  doc2 <- guardRightM $ restartDocument doc
-  addFlashM $ flashDocumentRestarted doc2
-  return $ LinkIssueDoc (documentid doc2)
-
-handleProlong :: Kontrakcja m => DocumentID -> m KontraLink
-handleProlong docid = withUserPost $ do
-  doc <- guardRightM $ getDocByDocID docid
-  guardRightM $ prolongDocument doc
-  triggerAPICallbackIfThereIsOne doc
-  return $ LinkIssueDoc (documentid doc)
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
