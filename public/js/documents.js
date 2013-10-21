@@ -157,13 +157,13 @@ window.Document = Backbone.Model.extend({
     },
     restart: function() {
           return new Submit({
-              url: "/restart/" + this.documentid(),
+              url: "/api/frontend/restart/" + this.documentid(),
               method: "POST"
           });
     },
     prolong: function() {
           return new Submit({
-              url: "/prolong/" + this.documentid(),
+              url: "/api/frontend/prolong/" + this.documentid(),
               method: "POST"
           });
     },

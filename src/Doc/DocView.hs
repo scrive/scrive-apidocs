@@ -2,7 +2,6 @@
 module Doc.DocView (
     pageCreateFromTemplate
   , documentInfoFields
-  , flashDocumentRestarted
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -20,7 +19,6 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
-import FlashMessage
 import Kontra
 import KontraLink
 import MinutesTime
@@ -49,10 +47,6 @@ import Happstack.Server.SimpleHTTP
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
-
-flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
-flashDocumentRestarted document = do
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageContractRestarted" $ documentInfoFields document)
 
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do

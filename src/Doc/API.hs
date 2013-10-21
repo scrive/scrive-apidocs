@@ -107,6 +107,10 @@ versionedAPI _version = choice [
   dir "reject"             $ hPost $ toK2 $ apiCallReject,
   dir "sign"               $ hPost $ toK2 $ apiCallSign,
 
+  dir "restart"            $ hPost $ toK1 $ apiCallRestart,
+  dir "prolong"            $ hPost $ toK1 $ apiCallProlong,
+
+
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
@@ -406,6 +410,36 @@ handleMismatch doc sid msg sfn sln spn = do
         postDocumentCanceledChange newdoc
 
 {- End of utils-}
+
+
+apiCallRestart :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallRestart did =  api $ do
+    checkObjectVersionIfProvided did
+    (user, actor, _) <- getAPIUser APIDocSend
+    doc <- dbQuery $ GetDocumentByDocumentID $ did
+    auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+    when (not $ (auid == userid user)) $ do
+          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+    when (documentstatus doc `elem` [Pending,Preparation, Closed] ) $ do
+          throwIO . SomeKontraException $ (conflictError "Document can not be restarted")
+    newdocument <- apiGuardJustM (serverError "Document can't be restarted") $ dbUpdate $ RestartDocument doc actor
+    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+
+apiCallProlong :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallProlong did =  api $ do
+    checkObjectVersionIfProvided did
+    (user, actor, _) <- getAPIUser APIDocSend
+    doc <- dbQuery $ GetDocumentByDocumentID $ did
+    auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+    when (not $ (auid == userid user)) $ do
+          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+    when (documentstatus doc /= Timedout ) $ do
+          throwIO . SomeKontraException $ (conflictError "Document is not timedout")
+    dbUpdate $ ProlongDocument (documentid doc) actor
+    triggerAPICallbackIfThereIsOne doc
+    newdocument <- dbQuery $ GetDocumentByDocumentID $ did
+    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
 apiCallRemind did =  api $ do

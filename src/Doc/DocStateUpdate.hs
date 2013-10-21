@@ -1,7 +1,5 @@
 module Doc.DocStateUpdate
-    ( restartDocument
-    , prolongDocument
-    , signDocumentWithEmailOrPad
+    ( signDocumentWithEmailOrPad
     , signDocumentWithEleg
     ) where
 
@@ -13,44 +11,12 @@ import Doc.DocStateData
 import Kontra
 import Util.SignatoryLinkUtils
 import Doc.SignatoryLinkID
-import Control.Applicative
 import Doc.DocumentID
 import User.Model
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import DB
 import Util.Actor
-import Util.MonadUtils
 
-
-{- |
-   Securely
- -}
-restartDocument :: Kontrakcja m => Document -> m (Either DBError Document)
-restartDocument doc = withUser $ \user -> do
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  if isSigLinkFor user $ getAuthorSigLink doc
-    then do
-      mnewdoc <- dbUpdate $ RestartDocument doc actor
-      case mnewdoc of
-        Nothing -> return $ Left DBResourceNotAvailable
-        Just doc' -> return $ Right doc'
-    else return $ Left DBResourceNotAvailable
-
-{- |
-   Securely
- -}
-prolongDocument :: Kontrakcja m => Document -> m (Either DBError ())
-prolongDocument doc = withUser $ \user -> do
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  if isSigLinkFor user $ getAuthorSigLink doc
-    then do
-      dbUpdate $ ProlongDocument (documentid doc) actor
-      return (Right ())
-    else return $ Left DBResourceNotAvailable
-
-{- |
-   Sign a document with email identification (typical, non-eleg).
- -}
 
 signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots
                            -> m (Either DBError (Document, Document))
@@ -94,8 +60,3 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
         return $ case mdoc of
           Nothing -> Left $ DBActionNotAvailable "Signing with Eleg failed"
           Just doc -> Right (doc, olddoc)
-
-withUser :: Kontrakcja m => (User -> m (Either DBError a)) -> m (Either DBError a)
-withUser action = do
-  Context{ ctxmaybeuser } <- getContext
-  maybe (return $ Left DBNotLoggedIn) action ctxmaybeuser
