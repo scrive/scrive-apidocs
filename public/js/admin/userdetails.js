@@ -152,7 +152,7 @@ var AdminUserDetailsModel = Backbone.Model.extend({
         userphone : this.phone(),
         useremail : this.email(),
         usercompanyposition : this.companyposition(),
-        userlang :this.user().lang() != "sv" ?  "LANG_EN" : "LANG_SV",
+        userlang :this.lang() != "sv" ?  "LANG_EN" : "LANG_SV",
         useraccounttype : this.get("accountType")
     });
   },
