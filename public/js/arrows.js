@@ -300,7 +300,7 @@ window.Arrow = {
                           el.removeClass('hidden');
                       model.setBlinks(i-1);
                       setTimeout(startBlinking,200);
-                      }
+                      };
                     startBlinking();
 
               },

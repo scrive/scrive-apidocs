@@ -51,7 +51,7 @@ window.PageTask = Backbone.Model.extend({
     tipSide : "right",
     label:"",
     labelCss: {},
-    pointSelector : undefined,
+    pointSelector : undefined
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
