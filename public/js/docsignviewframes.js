@@ -54,17 +54,11 @@ window.DocumentSignViewHeader = Backbone.View.extend({
 
     // Setting logo
 
-    if(model.signviewlogo() == undefined) {
-        maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
-        this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
-    }
-    else {
-        maindiv.removeClass('withstandardlogo').addClass('withcustomlogo');
-        var img = $("<img class='logo'></img>");
-        img.load(function(){  view.refresh();  });
-        img.attr('src',model.signviewlogo());
-        this.logowrapper.empty().append(img);
-    }
+    var img = $("<img class='logo'></img>");
+    img.load(function(){  view.refresh();  });
+
+    img.attr('src', (model.signviewlogo() != undefined && model.signviewlogo() != "") ? model.signviewlogo() : '/img/logo.png');
+    this.logowrapper.empty().append(img);
 
     // Background color of top bar
     if( model.signviewbarscolour() == undefined) {

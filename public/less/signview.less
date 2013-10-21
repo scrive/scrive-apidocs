@@ -63,28 +63,19 @@
       }
     }
     .logowrapper {
-      	float:left;
-      	display:inline-block;
-      	// IE7 hack - http://stackoverflow.com/a/6545033/337587
-      	*display: inline;
-      	zoom: 1;
-      	// END - hack
-      	margin-top: 45px;
-        margin-bottom: 10px;
-        margin-left: 38px;
+        float:left;
+        display:inline-block;
+        // IE7 hack - http://stackoverflow.com/a/6545033/337587
+        *display: inline;
+        zoom: 1;
+        // END - hack
+        line-height : 120px;
+
+        .logo {
+            margin-left: 38px;
+        }
+        }
     }
-    div.logo {
-      background: url(../img/logo.png);
-      height: 24px;
-      width: 120px;
-      background-repeat: no-repeat;
-      margin-left: 0;
-      background-size: cover;
-    }
-    .logo {
-      margin-left: 30px;
-    }
-  }
 
 
   .instructions {
@@ -720,6 +711,32 @@
       padding-top: 2px;
       padding-bottom: 4px;
       margin-top: 5px;
+  }
+
+
+  .document-pages {
+    .placedfield {
+
+       .placedcheckbox,
+       .placedcheckbox.checked {
+            background-position: center;
+            padding: 10px;
+            margin-left: -10px;
+            margin-top: -10px;
+
+       }
+
+
+       &.to-fill-now {
+          border: 2px solid @signview-blue;
+          .placedcheckbox {
+              padding: 9px;
+          }
+          &.obligatory {
+            border: 2px solid @green;
+        }
+      }
+    }
   }
 
 }

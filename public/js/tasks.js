@@ -51,7 +51,7 @@ window.PageTask = Backbone.Model.extend({
     tipSide : "right",
     label:"",
     labelCss: {},
-    hasDirectArrow : true
+    pointSelector : undefined
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
@@ -59,7 +59,12 @@ window.PageTask = Backbone.Model.extend({
     this.update();
   },
   el: function() {
+    if (this.pointSelector() != undefined && $(this.pointSelector(),this.get("el")).size() > 0)
+      return $(this.pointSelector(), this.get("el"));
     return this.get("el");
+  },
+  pointSelector : function() {
+    return this.get("pointSelector");
   },
   onActivate: function() {
     return this.get("onActivate")();
@@ -78,9 +83,6 @@ window.PageTask = Backbone.Model.extend({
   },
   tipSide : function() {
     return this.get("tipSide");
-  },
-  hasDirectArrow : function() {
-    return this.get("hasDirectArrow");
   },
   update: function() {
     this.set({ complete: this.get("isComplete")()});
@@ -164,9 +166,8 @@ var PageTasksArrowView = Backbone.View.extend({
            return;
         }
         else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
-           if (task.hasDirectArrow())
-            return Arrow.init({       type: task.tipSide() != "right" ? 'point-left' : 'point-right'
-                                    , point : $(task.el())
+            return Arrow.init({      type: task.tipSide() != "right" ? 'point-left' : 'point-right'
+                                   , point : $(task.el())
                                    , text : task.label()
                                    , labelCss: task.labelCss()
                               });
@@ -184,7 +185,7 @@ var PageTasksArrowView = Backbone.View.extend({
         var scrollbottom = scrolltop +  (window.innerHeight ? window.innerHeight : $(window).height());
         var eltop = task.el().offset().top;
         var elleft = task.el().offset().left;
-        var elwidth = task.el().width();
+        var elwidth = task.el().outerWidth();
         var elbottom = eltop +task.el().height();
         var bottommargin = 0;
         var topmargin = 0;
@@ -202,8 +203,15 @@ var PageTasksArrowView = Backbone.View.extend({
 
         return (arrow.model().type() != 'scroll-up');
   },
+  shouldBinkOnUpdate : function(oldarrow,newarrow) {
+    var oldArrowIsUpOrDown = oldarrow != undefined && (oldarrow.model().type() == 'scroll-up' || oldarrow.model().type() == 'scroll-down');
+    var newArrowIsPoint = newarrow.model().type() == 'point-left' || newarrow.model().type() == 'point-right';
+    var newUpArrow = newarrow.model().type() == 'scroll-up' && (oldarrow == undefined || oldarrow.model().type() != 'scroll-up');
+    return (oldArrowIsUpOrDown && newArrowIsPoint) || newUpArrow;
+  },
   updateArrow : function() {
      var view = this;
+     var oldArrow = view.arrow;
      if (view.arrow == undefined || view.arrowShouldChange(this.model.active()))
      {
       if (view.arrow != undefined)
@@ -217,6 +225,9 @@ var PageTasksArrowView = Backbone.View.extend({
               if (this.arrow != undefined) {
                   view.arrow.fixWidth();
                   setTimeout(function() {view.arrow.fixWidth();},100);
+                  if (this.shouldBinkOnUpdate(oldArrow,view.arrow)) {
+                    this.blink();
+                  }
               }
           }
      }
