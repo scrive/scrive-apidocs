@@ -13,6 +13,7 @@ module Util.HasSomeUserInfo (
   getMailAddress,
   getFullName,
   getSmartName,
+  getIdentifier,
   HasSomeUserInfo(..)
   ) where
 
@@ -20,7 +21,6 @@ module Util.HasSomeUserInfo (
 import Doc.DocStateData
 import User.Model
 import Mails.MailsData
-import Data.Char
 import Data.String.Utils
 
 
@@ -69,12 +69,15 @@ getFullName :: (HasSomeUserInfo a) => a -> String
 getFullName a = strip $ (strip $ getFirstName a) ++ " " ++ (strip $ getLastName  a)
 
 
--- | If the full name is empty, return the email
--- (no check if email is empty)
+-- | Return the first non-empty of full name, email or mobile number,
+-- for use in frontend.  May not be unique.
 getSmartName :: (HasSomeUserInfo a) => a -> String
-getSmartName a = if (all isSpace (getFullName a))
-                    then strip $ getEmail a
-                    else strip $ getFullName a
+getSmartName a = firstNonEmpty $ [getFullName a, getEmail a, getMobile a]
+
+-- | Return the first non-empty of person number, email or mobile
+-- number.  Should be unique, suitable for use in event log.
+getIdentifier :: HasSomeUserInfo a => a -> String
+getIdentifier a = firstNonEmpty $ [getPersonalNumber a, getEmail a, getMobile a]
 
 -- | Get a MailAddress
 getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress
@@ -82,3 +85,11 @@ getMailAddress a = MailAddress {
     fullname = getFullName a
   , email    = getEmail a
   }
+
+-- | Pick first non-empty element or return empty list
+firstNonEmpty :: [String] -> String
+firstNonEmpty = f . map strip where
+  f [a]                = a
+  f (a:as) | null a    = firstNonEmpty as
+           | otherwise = a
+  f []                 = error "firstNonEmpty"

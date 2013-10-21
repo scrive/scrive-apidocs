@@ -19,6 +19,7 @@ describe "sign up on front page and modify account settings" do
     @h.driver.navigate().to(@h.ctx.createKontrakcjaURL "/login")
     (@h.wait_until { @h.driver.find_element :css => "a.s-forgot-password" }).click
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).click
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).clear
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body .big-input input" }).send_keys email
     (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
     @h.emailhelper.follow_link_in_latest_mail_for email

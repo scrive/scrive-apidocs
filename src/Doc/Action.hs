@@ -99,9 +99,12 @@ postDocumentPreparationChange doc@Document{documenttitle} skipauthorinvitation =
   -- Stat logging
   now <- getMinutesTime
   author <- getDocAuthor doc
+  docssent <- dbQuery $ GetDocsSent (userid author)
   -- Log the current time as the last doc sent time
   asyncLogEvent SetUserProps [UserIDProp (userid author),
-                              someProp "Last Doc Sent" now]
+                              someProp "Last Doc Sent" now,
+                              numProp "Docs sent" (fromIntegral $ docssent)
+                              ]
   json <- documentJSON Nothing False True False Nothing Nothing doc
   asyncLogEvent (UploadDocInfo json) [UserIDProp (userid author),
                                       DocIDProp (documentid doc)]
@@ -226,11 +229,9 @@ saveDocumentForSignatories doc =
       case muser of
         Nothing -> return $ Right doc'
         Just user -> do
-          Context{ctxtime, ctxipnumber} <- getContext
-          let actor = signatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail (signatorylinkid sl)
           udoc <- do
             mdoc <- runMaybeT $ do
-              True <- dbUpdate $ SaveDocumentForUser (documentid  doc') user (signatorylinkid sl) actor
+              True <- dbUpdate $ SaveDocumentForUser (documentid  doc') user (signatorylinkid sl)
               newdoc <- dbQuery $ GetDocumentByDocumentID (documentid  doc')
               return newdoc
             return $ maybe (Left "saveDocumentForSignatory failed") Right mdoc

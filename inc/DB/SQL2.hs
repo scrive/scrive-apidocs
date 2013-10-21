@@ -125,6 +125,7 @@ module DB.SQL2
   , sqlWhereIsNULL
   , sqlWhereIsNULLE
 
+  , sqlIgnore
 
   , sqlFrom
   , sqlJoin
@@ -187,7 +188,7 @@ module DB.SQL2
   , kWhyNot1
   , DBExceptionCouldNotParseValues(..)
   , kRun1OrThrowWhyNot
-  , kRun1OrThrowWhyNotAllowBaseLine
+  , kRun1OrThrowWhyNotAllowIgnore
   , kRunManyOrThrowWhyNot
   , kRunAndFetch1OrThrowWhyNot
 
@@ -235,7 +236,7 @@ data SqlCondition = SqlPlainCondition SQL SqlWhyNot
 -- @mkException@ should take as input same lenth list as there are
 -- queries. Each query will be run in a JOIN context with all
 -- referenced tables, so it can extract values from there.
-data SqlWhyNot = forall e. (KontraException e) => SqlWhyNot ([SqlValue] -> Either ConvertError e) [SQL]
+data SqlWhyNot = forall e. (KontraException e) => SqlWhyNot Bool ([SqlValue] -> Either ConvertError e) [SQL]
 
 instance Eq SqlCondition where
   (SqlPlainCondition a _) == (SqlPlainCondition b _) = a == b
@@ -243,7 +244,7 @@ instance Eq SqlCondition where
   _ == _ = False
 
 instance Show SqlWhyNot where
-  show (SqlWhyNot exc expr) = "SqlWhyNot " ++ show (typeOf (fromRight (exc undefined))) ++ " " ++ show expr
+  show (SqlWhyNot _important exc expr) = "SqlWhyNot " ++ show (typeOf (fromRight (exc undefined))) ++ " " ++ show expr
     where fromRight ~(Right x) = x
 
 instance IsSQL SqlCondition where
@@ -514,29 +515,49 @@ instance SqlWhere SqlAll where
   sqlWhere1 cmd cond = cmd { sqlAllWhere = sqlAllWhere cmd ++ [cond] }
   sqlGetWhereConditions = sqlAllWhere
 
+newtype SqlWhereIgnore a = SqlWhereIgnore { unSqlWhereIgnore :: a }
+
+
+ignoreWhereClause :: SqlCondition -> SqlCondition
+ignoreWhereClause (SqlPlainCondition sql (SqlWhyNot _b f s)) =
+  SqlPlainCondition sql (SqlWhyNot False f s)
+ignoreWhereClause (SqlExistsCondition sql) =
+  SqlExistsCondition (sql { sqlSelectWhere = map ignoreWhereClause (sqlSelectWhere sql)})
+
+instance (SqlWhere a) => SqlWhere (SqlWhereIgnore a) where
+  sqlWhere1 (SqlWhereIgnore cmd) cond =
+        SqlWhereIgnore (sqlWhere1 cmd (ignoreWhereClause cond))
+  sqlGetWhereConditions (SqlWhereIgnore cmd) = sqlGetWhereConditions cmd
+
+
+sqlIgnore :: (MonadState s m)
+          => State (SqlWhereIgnore s) a
+          -> m ()
+sqlIgnore clauses = modify (\cmd -> unSqlWhereIgnore (execState clauses (SqlWhereIgnore cmd)))
+
 sqlWhere :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhere sql = sqlWhereE (DBBaseLineConditionIsFalse sql) sql
 
 sqlWhereE :: (MonadState v m, SqlWhere v, KontraException e) => e -> SQL -> m ()
-sqlWhereE exc sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [])))
+sqlWhereE exc sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [])))
   where
     exc2 [] = return exc
     exc2 vs = error $ "sqlWhereE.exc2  should be given 0 values, got " ++ show vs
 
 sqlWhereEV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a) => (a -> e,SQL) -> SQL -> m ()
-sqlWhereEV (exc,vsql) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [vsql])))
+sqlWhereEV (exc,vsql) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [vsql])))
   where
     exc2 [v1] = exc <$> safeFromSql v1
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 1 values, got " ++ show vs
 
 sqlWhereEVV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a, Convertible SqlValue b) => (a -> b -> e,SQL,SQL) -> SQL -> m ()
-sqlWhereEVV (exc,vsql1,vsql2) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [vsql1,vsql2])))
+sqlWhereEVV (exc,vsql1,vsql2) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [vsql1,vsql2])))
   where
     exc2 [v1,v2] = exc <$> safeFromSql v1 <*> safeFromSql v2
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 2 values, got " ++ show vs
 
 sqlWhereEVVV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a, Convertible SqlValue b, Convertible SqlValue c) => (a -> b -> c -> e,SQL,SQL,SQL) -> SQL -> m ()
-sqlWhereEVVV (exc,vsql1,vsql2,vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot exc2 [vsql1, vsql2, vsql3])))
+sqlWhereEVVV (exc,vsql1,vsql2,vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (SqlWhyNot True exc2 [vsql1, vsql2, vsql3])))
   where
     exc2 [v1,v2,v3] = exc <$> safeFromSql v1 <*> safeFromSql v2 <*> safeFromSql v3
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 3 values, got " ++ show vs
@@ -853,7 +874,7 @@ instance SqlTurnIntoSelect SqlSelect where
 -- and it can be used recursivelly.
 sqlTurnIntoWhyNotSelect :: (SqlTurnIntoSelect a) => a -> SqlSelect
 sqlTurnIntoWhyNotSelect command =
-     sqlSelect "" $ mapM_ (sqlResult . emitExists) [0..count]
+     sqlSelect "" $ mapM_ (sqlResult . emitExists) [0..(count-1)]
     where select = sqlTurnIntoSelect command
           count :: Int
           count = sum (map count' (sqlSelectWhere select))
@@ -874,8 +895,8 @@ sqlTurnIntoWhyNotSelect command =
 
           around :: (Monad m,MonadState Int m) => Int -> SqlCondition -> m [SqlCondition]
           around current cond@(SqlPlainCondition{}) = do
-            modify (+1)
             index <- get
+            modify (+1)
             if current >= index
               then return [cond]
               else return []
@@ -1025,8 +1046,8 @@ instance Show SomeKontraException where
 -- clauses generated by sqlTurnIntoWhyNotSelect was FALSE. Should not
 -- happen in real life, file a bug report if you see such a case.
 --
-kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> m SomeKontraException
-kWhyNot1 cmd = do
+kWhyNot1Ex :: (SqlTurnIntoSelect s, MonadDB m) => s -> m (Bool, SomeKontraException)
+kWhyNot1Ex cmd = do
   let newSelect = sqlTurnIntoSelect cmd
       newWhyNotSelect = sqlTurnIntoWhyNotSelect newSelect
   let findFirstFalse :: Int -> [SqlValue] -> Either SQLError Int
@@ -1036,28 +1057,30 @@ kWhyNot1 cmd = do
 
   let fromRight ~(Right x) = x
   let logics = enumerateWhyNotExceptions (sqlSelectFrom newSelect) (sqlGetWhereConditions newSelect)
-  --when (length logics <= indexOfFirstFailedCondition) $ do
-  --  error ("length logics = " ++ show (length logics) ++ ", indexOfFirstFailedCondition = " ++ show indexOfFirstFailedCondition
-  --         ++ "\n" ++ show newSelect)
-  let condition = logics !! (indexOfFirstFailedCondition - 1)
+
+  let condition = logics !! (indexOfFirstFailedCondition)
 
   case condition of
-    (exception, _from, []) -> return (fromRight $ exception [])
-    (exception, from, sqls) -> do
+    (important, exception, _from, []) -> return (important, fromRight $ exception [])
+    (important, exception, from, sqls) -> do
        kRun_ $ sqlSelect2 from $ do
          mapM_ sqlResult sqls
        result <- kFold2 (\_acc row -> return row) []
-       return (fromRight $ exception result)
+       return (important, fromRight $ exception result)
+
+kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> m SomeKontraException
+kWhyNot1 cmd = snd `fmap` kWhyNot1Ex cmd
 
 enumerateWhyNotExceptions :: SQL
                           -> [SqlCondition]
-                          -> [( [SqlValue] -> Either ConvertError SomeKontraException
+                          -> [( Bool
+                              , [SqlValue] -> Either ConvertError SomeKontraException
                               , SQL
                               , [SQL]
                               )]
 enumerateWhyNotExceptions from conds = concatMap worker conds
   where
-    worker (SqlPlainCondition _ (SqlWhyNot f s)) = [(fmap SomeKontraException . f, from, s)]
+    worker (SqlPlainCondition _ (SqlWhyNot b f s)) = [(b, fmap SomeKontraException . f, from, s)]
     worker (SqlExistsCondition s) = enumerateWhyNotExceptions newFrom (sqlGetWhereConditions s)
       where
         newFrom = if from == mempty
@@ -1066,32 +1089,6 @@ enumerateWhyNotExceptions from conds = concatMap worker conds
                        then from
                        else from <> ", " <> sqlSelectFrom s
 
-{-
-
-matchUpExceptionWithValues :: [SqlWhyNot] -> [SqlValue] -> [SomeKontraException]
-matchUpExceptionWithValues [] [] = []
-matchUpExceptionWithValues (SqlWhyNot e qs : es) (b : vs) =
-  if b == SqlBool False
-    then [exc] ++ matchUpExceptionWithValues es vs2
-    else matchUpExceptionWithValues es vs2
-  where
-    vs1 = take (length qs) vs
-    vs2 = drop (length qs) vs
-    exc = case e vs1 of
-            Right x -> toKontraException x
-            Left l -> toKontraException (DBExceptionCouldNotParseValues (typeOf (fromRight (e vs1))) l vs1)
-    fromRight ~(Right x) = x
-
-matchUpExceptionWithValues (_ : _) [] = error "There were not enough values from SQL to fill in all needs for SqlWhyNotException in matchUpExceptionWithValues"
-matchUpExceptionWithValues [] (_ : _) = error "There were not enough SqlWhyNotException's to use up all give SQL values in matchUpExceptionWithValues"
-
-decodeListOfExceptionsFromWhere :: SQL -> [SqlCondition] -> [[SomeKontraException]] -> [SqlValue] -> Either SQLError [[SomeKontraException]]
-decodeListOfExceptionsFromWhere fullquery conds excepts sqlvalues =
-  return $ excepts ++
-           [matchUpExceptionWithValues (SqlWhyNot (\_ -> return (DBBaseLineConditionIsFalse fullquery)) []
-                                                    : enumerateWhyNotExceptions conds) sqlvalues]
-
--}
 
 kRunManyOrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m)
                    => s -> m ()
@@ -1110,24 +1107,14 @@ kRun1OrThrowWhyNot sqlcommand = do
     exception <- kWhyNot1 sqlcommand
     kThrow $ exception
 
-isBaseLineException :: (Exception ex) => ex -> Bool
-isBaseLineException ex =
-  case cast ex of
-    Just (SomeKontraException ex') ->
-      case cast ex' of
-        Just (DBBaseLineConditionIsFalse{}) -> True
-        _ -> False
-    _ -> case cast ex of
-          Just (DBBaseLineConditionIsFalse{}) -> True
-          _ -> False
 
-kRun1OrThrowWhyNotAllowBaseLine :: (SqlTurnIntoSelect s, MonadDB m)
+kRun1OrThrowWhyNotAllowIgnore :: (SqlTurnIntoSelect s, MonadDB m)
                                 => s -> m ()
-kRun1OrThrowWhyNotAllowBaseLine sqlcommand = do
+kRun1OrThrowWhyNotAllowIgnore sqlcommand = do
   success <- kRun01 sqlcommand
   when (not success) $ do
-    exception <- kWhyNot1 sqlcommand
-    when (not (isBaseLineException exception)) $
+    (important, exception) <- kWhyNot1Ex sqlcommand
+    when (important) $
       kThrow exception
 
 kRunAndFetch1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, Fetcher v [a])

@@ -139,8 +139,11 @@ newtype SignatoryActor = SignatoryActor { unSignatoryActor :: Actor }
 
 instance Arbitrary AuthorActor where
   arbitrary = do
-    (time, ip, uid, eml) <- arbitrary
-    return $ AuthorActor $ authorActor time ip uid eml
+    (time, ip, uid, uinfo) <- arbitrary
+    let user = undefined { userid = uid
+                         , userinfo = uinfo
+                         }
+    return $ AuthorActor $ authorActor time ip user
 
 instance Arbitrary SystemActor where
   arbitrary = do
@@ -149,8 +152,8 @@ instance Arbitrary SystemActor where
 
 instance Arbitrary SignatoryActor where
   arbitrary = do
-    (time, ip, uid, eml, slid) <- arbitrary
-    return $ SignatoryActor $ signatoryActor time ip uid eml slid
+    (time, ip, sl) <- arbitrary
+    return $ SignatoryActor $ signatoryActor time ip sl
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary

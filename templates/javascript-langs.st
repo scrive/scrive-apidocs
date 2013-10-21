@@ -477,7 +477,6 @@ javascriptLocalisation =
            , vat25: "$_paymentsVat25()$"
            , expires: "$_paymentsExpires()$"
            , creditcardnumber: "$_paymentsCreditCardNumber()$"
-           , subheader: "$_paymentsSubheader()$"
            , contact: "$_paymentPlanContact()$"
            , already: "$_paymentPlanAlreadySubscribed()$"
            , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
@@ -521,7 +520,6 @@ javascriptLocalisation =
             , subscribe: "$_paymentPlanSubscribe()$"
             , purchase: "$_paymentPlanPurchase()$"
             , subscribeheader : "$_paymentsSubscribeHeader()$"
-            , chooseplan : "$_paymentsChoosePlan()$"
             , savechanges : "$_SaveChanges()$"
             , permonth: "$_paymentPlanPerMonth()$"
             , savingsubscription : "$_paymentPlanSavingSubscription()$"
@@ -700,7 +698,7 @@ javascriptLocalisation =
               title : "$_blockingFreeClickTitle()$"
             },
             has : {
-              headline : "$_blockingFreeHasHeadline()$",
+              headline : "$_blockingFreeHasHeadline()$"
             },
             hasNot : {
               headline : "$_blockingFreeHasNotHeadline()$",

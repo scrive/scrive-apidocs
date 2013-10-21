@@ -11,7 +11,6 @@
 
 module DBError
     ( DBError (..)
-    , transActionNotAvailable
     ) where
 
 import Control.Exception
@@ -32,9 +31,4 @@ data DBError = DBResourceNotAvailable -- ^ The queried for resource does not exi
              | DBNotLoggedIn -- ^ There is no user logged in (in Context) and access control requires log in
              | DBActionNotAvailable String -- ^ An error when an action is not available on a given record
              deriving (Show, Eq, Typeable)
-
-transActionNotAvailable :: Either String b -> Either DBError b
-transActionNotAvailable (Left s) = Left $ DBActionNotAvailable s
-transActionNotAvailable (Right d) = Right d
-
 instance Exception DBError

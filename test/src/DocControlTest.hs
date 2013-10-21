@@ -30,7 +30,6 @@ import Company.Model
 import User.Model
 import Util.SignatoryLinkUtils
 import Util.Actor
-import Util.HasSomeUserInfo
 import Doc.API
 import ELegitimation.BankIDUtils
 
@@ -126,7 +125,7 @@ testLastPersonSigningADocumentClosesIt = do
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
   randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
-               (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
+               (signatoryActor (documentctime doc') (ctxipnumber ctx) siglink)
   doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))

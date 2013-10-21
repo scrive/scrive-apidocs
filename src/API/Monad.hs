@@ -320,14 +320,14 @@ getSessionUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
+    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) user)
 
 getSessionUserWithPad :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
 getSessionUserWithPad = do
   ctx <- getContext
   case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
+    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) user)
 
 getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (Either String (User, Actor)))
 getOAuthUser priv = do

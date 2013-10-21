@@ -147,13 +147,11 @@ handleAcceptAccountFromSign documentid
 -}
 handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m ()
 handleAfterSigning document@Document{documentid} signatorylinkid = do
-  ctx <- getContext
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   maybeuser <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
   case maybeuser of
     Just user | isJust $ userhasacceptedtermsofservice user-> do
-      let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink) (getEmail signatorylink) (signatorylinkid)
-      _ <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
+      _ <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid
       return ()
     _ -> return ()
 
@@ -186,7 +184,7 @@ handleSignShowSaveMagicHash did sid mh = do
   ctx <- getContext
   document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
   invitedlink <- guardJust $ getSigLinkFor document sid
-  dbUpdate $ AddSignatoryLinkVisitedEvidence did invitedlink (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory invitedlink) (getEmail invitedlink) sid)
+  dbUpdate $ AddSignatoryLinkVisitedEvidence did invitedlink (signatoryActor (ctxtime ctx) (ctxipnumber ctx) invitedlink)
 
   -- Redirect to propper page
   return $ LinkSignDocNoMagicHash did sid
@@ -206,7 +204,7 @@ handleSignShow documentid
       switchLangWhenNeeded  (Just invitedlink) document
       when (not (isTemplate document) && (not (isPreparation document)) && (not (isClosed document))) $
         dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
-           (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
+           (signatoryActor ctxtime ctxipnumber invitedlink)
       document' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
 
 
@@ -528,7 +526,7 @@ handleDeleteSigAttach docid siglinkid = do
   let email = getEmail siglink
   Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ email
   _ <- dbUpdate $ DeleteSigAttachment docid siglinkid fid
-       (signatoryActor ctxtime ctxipnumber (maybesignatory siglink) email siglinkid)
+       (signatoryActor ctxtime ctxipnumber siglink)
   return $ LinkSignDoc doc siglink
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
@@ -537,7 +535,6 @@ handleSigAttach docid siglinkid = do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   attachname <- getCriticalField asValidFieldValue "attachname"
-  let email = getEmail siglink
   _ <- guardJust $  find (\sa -> signatoryattachmentname sa == attachname) (signatoryattachments siglink)
   (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
   content1 <- case contentspec of
@@ -548,7 +545,7 @@ handleSigAttach docid siglinkid = do
   ctx <- getContext
   content <- guardRightM $ liftIO $ preCheckPDF (concatChunks content1)
   fileid' <- dbUpdate $ NewFile attachname content
-  let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
+  let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) siglink
   dbUpdate $ SaveSigAttachment docid siglinkid attachname fileid' actor
   newdoc <- dbQuery $ GetDocumentByDocumentID docid
   return $ LinkSignDoc newdoc siglink

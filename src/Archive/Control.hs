@@ -26,7 +26,6 @@ import Util.MonadUtils
 import Control.Applicative
 import Util.SignatoryLinkUtils
 import Util.Actor
-import Util.HasSomeUserInfo
 import Text.JSON
 import Util.CSVUtil
 import ListUtil
@@ -56,7 +55,7 @@ handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalField asValidDocIDList "documentids"
-    let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
+    let actor = userActor ctxtime ctxipnumber user
     docs <- guardRightM $ getDocsByDocIDs docids
     forM_ docs $ \doc -> do
               let usl = getSigLinkFor doc user

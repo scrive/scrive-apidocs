@@ -130,12 +130,23 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
 
             content.append($('<h3></h3>').html(subtitle)); 
 
+            $('.design-view-action-participant:eq(1) .design-view-action-participant-details-participation').hide(0);
+
             this.model.highlight().moveTo({
                 el: $('.design-view-action-participant:eq(1)'), 
                 margins: {top: -60, left: 0, bottom: 80, right: -10},
                 explanation: {placement: 'above', content: content, height: '100', width: '795'}
             });
-            that.model.progressbar().setStep(3);
+            this.model.progressbar().setStep(3);
+
+            // Force a scroll to have the custom scroll bar inside participants
+            // update and hilight to re-align properly. 
+            // When the hiding of participants details goes, so does this.
+            // 350 is synced well with the expansion of the participant details.
+            _.delay(function() {
+                $(window).scroll();
+            }, 350);
+
         }
     },
     instructToSign: function() {
@@ -202,7 +213,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             color: 'green',
             size: 'big',
             text: localization.ftue.useSampleDocument,
-            labelstyle: 'width: 252px',
+            labelstyle: 'width: 202px',
             onClick: function() {
                 mixpanel.track('Sample document accept');
                 that.previewSampleDocument.hide();
@@ -213,7 +224,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
 
         var sampleDocumentExperiment = new Experiment({namespace: 'welcome', name: 'sampledocument'});
 
-        var img = $('<img class="document-preview" width="300" />');
+        var img = $('<img class="document-preview" width="250" />');
         img.attr('src', '/img/sample_document_' + sampleDocumentExperiment.value() + '_' + localization.code + '.png'); 
 
         this.previewSampleDocument.append(button.el()).append(img);
