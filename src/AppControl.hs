@@ -184,6 +184,8 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     -- refresh the page will fail, because they will try to
     -- access/update session from a row that was previously locked.
     kCommit
+    rq <- askRq
+    Log.debug $ "Handling routes for : " ++ rqUri rq ++ rqQuery rq
 
     (res, ctx') <- routeHandlers ctx
 
@@ -206,7 +208,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     -- application control. That is good because we want to stress
     -- places that can be fixed.
 
-    rq <- askRq
     stats <- getNexusStats =<< getNexus
     finishTime <- liftIO getClockTime
     let TOD ss sp = startTime
