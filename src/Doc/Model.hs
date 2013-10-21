@@ -1593,12 +1593,12 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash 
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetDocuments [Document] where
   query (GetDocuments domains filters orderbys (offset,limit)) =
-    snd <$> query (GetDocuments2 domains filters orderbys (offset,limit,Nothing))
+    snd <$> query (GetDocuments2 True domains filters orderbys (offset,limit,Nothing))
 
-data GetDocuments2 = GetDocuments2 [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int,Maybe Int)
+data GetDocuments2 = GetDocuments2 Bool [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int,Maybe Int)
 instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
-  query (GetDocuments2 domains filters orderbys (offset,limit,softlimit)) = do
-    selectDocumentsWithSoftLimit True softlimit $ sqlSelect "documents" $ do
+  query (GetDocuments2 allowZeroResults domains filters orderbys (offset,limit,softlimit)) = do
+    selectDocumentsWithSoftLimit allowZeroResults softlimit $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
       sqlOffset $ fromIntegral offset

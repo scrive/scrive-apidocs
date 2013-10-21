@@ -194,7 +194,7 @@ jsonDocumentsList = do
                               , csvContent = docsCSVs
                               }
        _ -> do
-          (allDocsCount,allDocs) <- dbQuery $ GetDocuments2 domain (searching ++ filters) sorting pagination2
+          (allDocsCount,allDocs) <- dbQuery $ GetDocuments2 True domain (searching ++ filters) sorting pagination2
           let docs = PagedList {  list       = allDocs
                                 , params     = params
                                 , pageSize   = docsPageSize
