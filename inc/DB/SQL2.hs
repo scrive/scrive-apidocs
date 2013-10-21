@@ -1046,6 +1046,8 @@ kWhyNot1 cmd = do
     (exception, from, sqls) -> do
        kRun_ $ sqlSelect2 from $ do
          mapM_ sqlResult sqls
+         sqlLimit 1
+         sqlOffset 0
        result <- kFold2 (\_acc row -> return row) []
        return (fromRight $ exception result)
 
