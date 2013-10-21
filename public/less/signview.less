@@ -160,9 +160,9 @@
           padding-left:20px;
           font-weight:normal;
           display:inline-block;
-	  background-position:0px 2px;
-	  position:relative;
-	  left:-10px;
+      	  background-position:0px 2px;
+      	  position:relative;
+      	  left:-10px;
           .docname {
               text-align: left;
               text-decoration: underline;
@@ -171,6 +171,41 @@
               width: auto;
           }
         }
+      }
+    }
+
+    .arrow-legend {
+      margin: auto;
+      display: inline-block;
+      text-align: left;
+      margin-top: 13px;
+      margin-bottom: -20px;
+
+      .row {
+        float: left;
+        clear: left;
+        margin-bottom: -1px;
+      }
+      .icon-arrow {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        float: left;
+        margin-right: 3px;
+
+        &.mandatory {
+          background-image: url(../img/icon-arrow-mandatory.png);
+          background-repeat: no-repeat;
+        }
+        &.optional {
+          background-image: url(../img/icon-arrow-optional.png);
+          background-repeat: no-repeat;
+        }
+      }
+      .copy {
+        display: inline-block;
+        float: left;
+        margin-top: 3px;
       }
     }
   }
@@ -586,8 +621,10 @@
       margin-top: 0px;
   }
 
-  .section.spacing {
+  .section {
+    &.spacing {
       padding: 30px;
+    }
   }
 
 

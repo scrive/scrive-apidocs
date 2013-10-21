@@ -457,7 +457,8 @@ javascriptLocalisation =
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
              , welcome : "$_welcome()$"
-
+             , mandatoryAction: "$_mandatoryAction()$"
+             , optionalAction: "$_optionalAction()$"
         }
         , verification : {
                 success: "$_verificationSuccess()$"
