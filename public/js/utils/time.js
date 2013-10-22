@@ -1,6 +1,6 @@
 (function(window) {
 
-var monthName = function (v) {
+var monthShortName = function (v) {
  switch(v)
   {
   case 0:
@@ -27,6 +27,38 @@ var monthName = function (v) {
     return localization.dates.nov;
   case 11:
     return localization.dates.dec;
+  default:
+    return "";
+  }
+};
+
+var monthFullName = function (v) {
+ switch(v)
+  {
+  case 0:
+    return localization.dates.january;
+  case 1:
+    return localization.dates.february;
+  case 2:
+    return localization.dates.march;
+  case 3:
+    return localization.dates.april;
+  case 4:
+    return localization.dates.mayy;
+  case 5:
+    return localization.dates.june;
+  case 6:
+    return localization.dates.july;
+  case 7:
+    return localization.dates.august;
+  case 8:
+    return localization.dates.september;
+  case 9:
+    return localization.dates.october;
+  case 10:
+    return localization.dates.november;
+  case 11:
+    return localization.dates.december;
   default:
     return "";
   }
@@ -61,7 +93,7 @@ if (!Date.prototype.toTimeAbrev) {
         if (this.getUTCFullYear() == curr.getUTCFullYear() && this.getUTCMonth() == curr.getUTCMonth() && this.getUTCDate() == curr.getUTCDate())
           return pad(this.getHours()) + ":" + pad(this.getMinutes());
         if (this.getUTCFullYear() == curr.getFullYear())
-          return this.getDate() + " " + monthName(this.getMonth());
+          return this.getDate() + " " + monthShortName(this.getMonth());
         else
           return this.getFullYear() + "-" + pad(this.getMonth() + 1) + "-" + pad(this.getDate());
     };
@@ -70,7 +102,7 @@ if (!Date.prototype.toTimeAbrev) {
 if (!Date.prototype.fullTime) {
     Date.prototype.fullTime = function() {
         function pad(n) { return n < 10 ? '0' + n : n }
-        return this.getFullYear() + "-" + pad(this.getMonth() + 1) + "-" + pad(this.getDate()) + " " + pad(this.getHours()) + ":" + pad(this.getMinutes()) + ":" + pad(this.getSeconds());
+        return this.getDate() + " " + monthFullName(this.getMonth()) + " " +  this.getFullYear() + " " + pad(this.getHours()) + ":" + pad(this.getMinutes());
 
     };
 }

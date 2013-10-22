@@ -18,7 +18,7 @@ window.TemplatesListDefinition = function(archive) { return {
 
         new Cell({name: localization.archive.templates.columns.time, width:"105px", field:"time", special: "rendered",
                   rendering: function(time) {
-                         return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
+                         return $("<span/>").text(new Date(Date.parse(time)).toYMDString()).attr("title",new Date(Date.parse(time)).fullTime());
                   }}),
         new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
                   rendering: function(value, idx, model) {

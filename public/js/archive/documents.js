@@ -21,8 +21,8 @@ window.DocumentCellsDefinition = function(archive) { return  [
         new Cell({name: localization.archive.documents.columns.time, width:"105px", field:"time", special: "rendered",
                   rendering: function(time) {
                          if (time != undefined && time != "")
-                           return $("<div/>").text(new Date(Date.parse(time)).toTimeAbrev());
-                         else return $("<div/>");
+                           return $("<span/>").text(new Date(Date.parse(time)).toTimeAbrev()).attr("title",new Date(Date.parse(time)).fullTime());
+                         else return $("<span/>");
         }}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
@@ -298,9 +298,9 @@ window.DocumentsListDefinition = function(archive) { return {
               ]
     }),
     bottomExtras : function() {
-        // The new users will be presented with a welcoming message and 
+        // The new users will be presented with a welcoming message and
         // not see the table status footer in the document tab.
-        if (archive.forNewUser()) { return; } 
+        if (archive.forNewUser()) { return; }
 
         var box = $("<div class='table-statuses'/>");
         var description = function(cssClass,text) {

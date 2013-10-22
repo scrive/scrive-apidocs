@@ -15,7 +15,7 @@ window.AttachmentsListDefinition = function(archive) {
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.attachments.columns.time, width:"105px", field:"time", special: "rendered",
                   rendering: function(time) {
-                         return $("<div/>").text(new Date(Date.parse(time)).toYMDString());
+                         return $("<span/>").text(new Date(Date.parse(time)).toYMDString()).attr("title",new Date(Date.parse(time)).fullTime());
                   }}),
         new Cell({name: localization.archive.attachments.columns.attachment, width:"680px", field:"title",  special: "link"}),
         new Cell({name: localization.archive.attachments.columns.shared, width:"50px", field:"shared", special: "rendered",
