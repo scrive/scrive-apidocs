@@ -44,7 +44,6 @@ import Network.HTTP (urlEncodeVars)
 import Crypto.RNG
 import DB
 import Kontra
-import DBError
 import User.Model
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
@@ -222,24 +221,8 @@ api :: (Kontrakcja m, ToAPIResponse v) => APIMonad m v -> m Response
 api acc = (toAPIResponse <$> runAPIMonad acc)
           `catches` [ Handler $ \ex@(SomeKontraException e) ->
                         return $ ((toAPIResponse $ toJSValue e) { rsCode = httpCodeFromSomeKontraException ex })
-                    , Handler $ \e ->
-                        case e of
-                          DBResourceNotAvailable ->
-                            return (toAPIResponse $ jsonError $ do
-                                       value "message" "The resource you are trying to access does not exist or you do not have permission to access it.") { rsCode = 403 }
-                          DBNotLoggedIn ->
-                            return (toAPIResponse $ jsonError $ do
-                                       value "message" "You must identify yourself to access this resource."
-                                       value "url" "https://scrive.com/login") { rsCode = 404 }
-                          DBActionNotAvailable msg ->
-                            return (toAPIResponse $ jsonError $ do
-                                      value "message" msg) { rsCode = 500 }
                     ]
 
-apiErrorFromDBError :: DBError -> APIError
-apiErrorFromDBError DBResourceNotAvailable     = forbidden "The resource you are trying to access does not exist or you do not have permission to access it."
-apiErrorFromDBError DBNotLoggedIn              = notLoggedIn "You must identify yourself to access this resource."
-apiErrorFromDBError (DBActionNotAvailable x)   = actionNotAvailable x
 
 apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> APIMonad m b
 apiGuardL' acc = apiGuard' =<< lift acc
@@ -260,10 +243,6 @@ apiGuardJustM e a = a >>= maybe ((throwIO . SomeKontraException) e) return
 -- | Unify the different types of guards with this class
 class MonadBase IO m => APIGuard m a b | a -> b where
   guardEither :: a -> APIMonad m (Either APIError b)
-
-instance MonadBase IO m => APIGuard m (Either DBError b) b where
-  guardEither (Left e) = return $ Left $ apiErrorFromDBError e
-  guardEither (Right v) = return $ Right v
 
 instance MonadBase IO m => APIGuard m (Maybe b) b where
   guardEither Nothing = return $ Left $ forbidden "The resource you are trying to access does not exist or you do not have permission to access it."

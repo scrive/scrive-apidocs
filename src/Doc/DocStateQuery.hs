@@ -33,10 +33,7 @@ module Doc.DocStateQuery
     ) where
 
 import Control.Monad
-import Control.Monad.IO.Class
-import Control.Exception
 import DB
-import DBError
 import Doc.Model
 import Doc.DocStateData
 import Doc.SignatoryLinkID
@@ -47,17 +44,14 @@ import User.Model
 import Data.List
 import Util.SignatoryLinkUtils
 
-{- |
-   Securely find a document by documentid for the author or within their company.
-   User must be logged in (otherwise Left DBNotLoggedIn).
-   Document must exist (otherwise Left DBNotAvailable).
-   Logged in user is author OR logged in user is in the company of the author (otherwise LeftDBNotAvailable).
- -}
 getDocByDocID :: Kontrakcja m => DocumentID -> m Document
 getDocByDocID docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> liftIO $ throwIO DBNotLoggedIn
+    Nothing -> do
+      -- we should never come to this place as user being loggen in is
+      -- guarded up in the call stack
+      internalError
     Just user -> do
       (_,mdoc) <- dbQuery (GetDocuments2 False
                                     [ DocumentsVisibleToUser (userid user) ]
@@ -72,7 +66,10 @@ getDocsByDocIDs :: Kontrakcja m => [DocumentID] -> m [Document]
 getDocsByDocIDs docids = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> liftIO $ throwIO DBNotLoggedIn
+    Nothing -> do
+      -- we should never come to this place as user being loggen in is
+      -- guarded up in the call stack
+      internalError
     Just user -> do
       (_,docs) <- dbQuery (GetDocuments2 True [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentIDs docids
@@ -97,7 +94,10 @@ getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> liftIO $ throwIO DBNotLoggedIn
+    Nothing -> do
+      -- we should never come to this place as user being loggen in is
+      -- guarded up in the call stack
+      internalError
     Just user -> do
       (_,mdoc) <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
@@ -114,7 +114,10 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m D
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> liftIO $ throwIO DBNotLoggedIn
+    Nothing -> do
+      -- we should never come to this place as user being loggen in is
+      -- guarded up in the call stack
+      internalError
     Just user -> do
       (_,mdoc) <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
