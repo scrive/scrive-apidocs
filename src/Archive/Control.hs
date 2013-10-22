@@ -56,7 +56,7 @@ handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalField asValidDocIDList "documentids"
     let actor = userActor ctxtime ctxipnumber user
-    docs <- guardRightM $ getDocsByDocIDs docids
+    docs <- getDocsByDocIDs docids
     forM_ docs $ \doc -> do
               let usl = getSigLinkFor doc user
                   csl = (getAuthorSigLink $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing

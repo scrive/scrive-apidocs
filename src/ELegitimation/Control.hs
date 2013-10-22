@@ -344,7 +344,7 @@ initiateMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 initiateMobileBankIDForAuthor docid = do
     logicaconf <- ctxlogicaconf <$> getContext
     -- sanity check
-    document <- guardRightM $ getDocByDocIDForAuthor docid
+    document <- getDocByDocIDForAuthor docid
 
     tbs <-getTBS document
     sl <- guardJust $ getAuthorSigLink document
@@ -429,7 +429,7 @@ collectMobileBankIDForAuthor docid = do
   tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
   -- sanity check
-  document <- guardRightM $ getDocByDocIDForAuthor docid
+  document <- getDocByDocIDForAuthor docid
 
   trans@ELegTransaction {transactionoref
                         ,transactionstatus
@@ -531,7 +531,7 @@ verifySignatureAndGetSignInfoMobileForAuthor :: Kontrakcja m
                                              -> String
                                              -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
-    document <- guardRightM $ getDocByDocIDForAuthor docid
+    document <- getDocByDocIDForAuthor docid
     siglink <- guardJust $ getAuthorSigLink document
     -- valid transaction?
     ELegTransaction { transactiondocumentid      = tdocid

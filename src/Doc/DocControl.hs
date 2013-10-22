@@ -228,7 +228,7 @@ handleSignShow documentid
 handleIssueAuthorGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueAuthorGoToSignview docid = do
   guardLoggedIn
-  doc <- guardRightM $ getDocByDocIDForAuthor docid
+  doc <- getDocByDocIDForAuthor docid
   user <- guardJustM $ ctxmaybeuser <$> getContext
   case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
     Just True -> return $ LinkSignDoc doc $ fromJust $ getMaybeSignatoryLink (doc,user)
@@ -393,7 +393,7 @@ showPage' fileid pageno = do
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
   ctx <- getContext
-  doc <- guardRightM $ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid
+  doc <- getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getOptionalField  asValidInviteText "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
@@ -406,20 +406,17 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Just email -> do
-      edoc <- getDocByDocIDForAuthor docid
-      case edoc of
-        Left _ -> return LoopBack
-        Right _ -> do
-          muser <- dbQuery $ GetUserByEmail (Email email)
-          actor <- guardJustM $ mkAuthorActor <$> getContext
-          dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
-          newdoc <- dbQuery $ GetDocumentByDocumentID docid
+      _ <- getDocByDocIDForAuthor docid
+      muser <- dbQuery $ GetUserByEmail (Email email)
+      actor <- guardJustM $ mkAuthorActor <$> getContext
+      dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
+      newdoc <- dbQuery $ GetDocumentByDocumentID docid
 
-          -- get (updated) siglink from updated document
-          sl <- guardJust (getSigLinkFor newdoc slid)
-          ctx <- getContext
-          _ <- sendInvitationEmail1 ctx newdoc sl
-          return $ LoopBack
+      -- get (updated) siglink from updated document
+      sl <- guardJust (getSigLinkFor newdoc slid)
+      ctx <- getContext
+      _ <- sendInvitationEmail1 ctx newdoc sl
+      return $ LoopBack
     _ -> return LoopBack
 
 --This only works for undelivered mails. We shoulkd check if current user is author
@@ -428,19 +425,16 @@ handleChangeSignatoryPhone docid slid = withUserPost $ do
   mphone <- getOptionalField asValidPhone "phone"
   case mphone of
     Just phone -> do
-      edoc <- getDocByDocIDForAuthor docid
-      case edoc of
-        Left _ -> return LoopBack
-        Right _ -> do
-          actor <- guardJustM $ mkAuthorActor <$> getContext
-          dbUpdate $ ChangeSignatoryPhoneWhenUndelivered docid slid phone actor
-          newdoc <- dbQuery $ GetDocumentByDocumentID docid
+      _ <- getDocByDocIDForAuthor docid
+      actor <- guardJustM $ mkAuthorActor <$> getContext
+      dbUpdate $ ChangeSignatoryPhoneWhenUndelivered docid slid phone actor
+      newdoc <- dbQuery $ GetDocumentByDocumentID docid
 
-          -- get (updated) siglink from updated document
-          sl <- guardJust (getSigLinkFor newdoc slid)
-          ctx <- getContext
-          _ <- sendInvitationEmail1 ctx newdoc sl
-          return $ LoopBack
+      -- get (updated) siglink from updated document
+      sl <- guardJust (getSigLinkFor newdoc slid)
+      ctx <- getContext
+      _ <- sendInvitationEmail1 ctx newdoc sl
+      return $ LoopBack
     _ -> return LoopBack
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
@@ -556,7 +550,7 @@ prepareEmailPreview docid slid = do
 handleSetAttachments :: Kontrakcja m => DocumentID -> m JSValue
 handleSetAttachments did = do
     guardLoggedIn
-    doc <- guardRightM $ getDocByDocIDForAuthor did
+    doc <- getDocByDocIDForAuthor did
     attachments <- getAttachments doc 0
     Log.debug $ "Setting attachments to " ++ show attachments
     actor <- guardJustM $ mkAuthorActor <$> getContext
@@ -662,4 +656,3 @@ handleMarkAsSaved docid = do
   doc <- getDocByDocID docid
   when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
   runJSONGenT $ return ()
-

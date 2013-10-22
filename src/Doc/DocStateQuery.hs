@@ -67,64 +67,60 @@ getDocByDocID docid = do
       case mdoc of
         [doc] -> do
           return doc
-        _ -> error "This will nver happen due to allowzeroresults=False in statement above"
+        _ -> error "This will never happen due to allowzeroresults=False in statement above"
 
-getDocsByDocIDs :: Kontrakcja m => [DocumentID] -> m (Either DBError [Document])
+getDocsByDocIDs :: Kontrakcja m => [DocumentID] -> m [Document]
 getDocsByDocIDs docids = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> return $ Left DBNotLoggedIn
+    Nothing -> liftIO $ throwIO DBNotLoggedIn
     Just user -> do
-      docs <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
+      (_,docs) <- dbQuery (GetDocuments2 True [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentIDs docids
                                       ]
-                                    [] (0,-1))
+                                    [] (0,-1, Nothing))
       -- lets see if all requested documents were found
       let documentsThatWereNotFound = docids \\ (map documentid docs)
       if null documentsThatWereNotFound
         then do
-          return $ Right docs
+          return $ docs
         else do
           Log.debug $ "Documents " ++ show documentsThatWereNotFound ++ " do not exist (in getDocsByDocIDs)"
-          return $ Left DBResourceNotAvailable
+          liftIO $ throwIO DBResourceNotAvailable
 
 {- | Same as getDocByDocID, but works only for author -}
-getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m (Either DBError Document)
+getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> return $ Left DBNotLoggedIn
+    Nothing -> liftIO $ throwIO DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
+      (_,mdoc) <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
                                       , DocumentFilterByAuthor (userid user)
                                       ]
-                                    [] (0,1))
+                                    [] (0,1, Nothing))
       case mdoc of
         [doc] -> do
-          return $ Right doc
-        _ -> do
-          Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocIDForAuthor)"
-          return $ Left DBResourceNotAvailable
+          return $ doc
+        _ -> error "This will never happen due to allowzeroresults=False in statement above"
 
 {- | Same as getDocByDocID, but works only for author or authors company admin-}
-getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m (Either DBError Document)
+getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> return $ Left DBNotLoggedIn
+    Nothing -> liftIO $ throwIO DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
+      (_,mdoc) <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
                                       , DocumentFilterLinkIsAuthor True
                                       ]
-                                    [] (0,1))
+                                    [] (0,1, Nothing))
       case mdoc of
         [doc] -> do
-          return $ Right doc
-        _ -> do
-          Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocIDForAuthorOrAuthorsCompanyAdmin)"
-          return $ Left DBResourceNotAvailable
+          return $ doc
+        _ -> error "This will never happen due to allowzeroresults=False in statement above"
 
 
 {- |
