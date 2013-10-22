@@ -68,11 +68,11 @@ handleDelete = do
                   Pending -> if (isAuthor msl)
                                 then do
                                    dbUpdate $ CancelDocument (documentid doc) actor
-                                   doc' <- guardRightM $ getDocByDocID (documentid doc)
+                                   doc' <- getDocByDocID (documentid doc)
                                    postDocumentCanceledChange doc'
                                 else do
                                    dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
-                                   doc' <- guardRightM $ getDocByDocID (documentid doc)
+                                   doc' <- getDocByDocID (documentid doc)
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl)
                   _ -> return ()
               dbUpdate $ ArchiveDocument (userid user) (documentid doc) actor
@@ -95,12 +95,12 @@ handleCancel :: Kontrakcja m =>  m JSValue
 handleCancel = do
   docids <- getCriticalField asValidDocIDList "documentids"
   forM_ docids $ \docid -> do
-      doc <- guardRightM $ getDocByDocID docid
+      doc <- getDocByDocID docid
       actor <- guardJustM $ mkAuthorActor <$> getContext
       if (documentstatus doc == Pending)
         then do
            dbUpdate $ CancelDocument (documentid doc) actor
-           doc' <- guardRightM $ getDocByDocID $ docid
+           doc' <- getDocByDocID $ docid
            postDocumentCanceledChange doc'
         else internalError
   J.runJSONGenT $ return ()
@@ -126,7 +126,7 @@ handleZip = do
   docids <- take 100 <$> getCriticalField asValidDocIDList "documentids"
   mentries <- forM docids $ \did -> do
                 Log.debug "Getting file for zip download"
-                doc <- guardRightM $ getDocByDocID did
+                doc <- getDocByDocID did
                 docToEntry doc
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
 {- |

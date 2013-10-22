@@ -237,7 +237,7 @@ handleIssueAuthorGoToSignview docid = do
 handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m Response
 handleEvidenceAttachment docid file = do
   guardLoggedIn
-  doc <- guardRightM $ getDocByDocID docid
+  doc <- getDocByDocID docid
   es <- EvidenceAttachments.fetch doc
   e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
   let mimetype = fromMaybe "text/html" (EvidenceAttachments.mimetype e)
@@ -254,7 +254,7 @@ handleEvidenceAttachment docid file = do
  -}
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either Response String))
 handleIssueShowGet docid = checkUserTOSGet $ do
-  document <- guardRightM $ getDocByDocID docid
+  document <- getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
 
   let mMismatchMessage = msum (map signatorylinkelegdatamismatchmessage (documentsignatorylinks document))
@@ -335,7 +335,7 @@ showPage fileid pageno = do
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = do
    guardLoggedIn
-   _ <- guardRightM $ getDocByDocID docid
+   _ <- getDocByDocID docid
    if (fileid == (unsafeFileID 0))
     then do
         emptyPreview <- liftIO $ BS.readFile "public/img/empty-preview.jpg"
@@ -480,7 +480,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
        when (not $ fileInDocument doc fid) $ internalError
     (_,_,Just did,_) -> do
        guardLoggedIn
-       doc <- guardRightM $ getDocByDocID did
+       doc <- getDocByDocID did
        when (not $ fileInDocument doc fid) $ internalError
     (_,_,_,Just attid) -> do
        guardLoggedIn
@@ -538,7 +538,7 @@ prepareEmailPreview docid slid = do
     ctx <- getContext
     content <- flip E.catch (\(E.SomeException _) -> return "") $ case mailtype of
          "remind" -> do
-             Right doc <- getDocByDocID docid
+             doc <- getDocByDocID docid
              Just sl <- return $ getSigLinkFor doc slid
              mailDocumentRemindContent  Nothing ctx doc sl True
          "reject" -> do
@@ -548,7 +548,7 @@ prepareEmailPreview docid slid = do
              x :: String <- mailDocumentRejectedContent Nothing ctx  doc sl True
              return x
          "invite" -> do
-             Right doc <- getDocByDocID docid
+             doc <- getDocByDocID docid
              mailInvitationContent False ctx Sign doc Nothing True
          _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
@@ -659,7 +659,7 @@ handleVerify = do
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do
   guardLoggedIn
-  doc <- guardRightM $ getDocByDocID docid
+  doc <- getDocByDocID docid
   when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
   runJSONGenT $ return ()
 

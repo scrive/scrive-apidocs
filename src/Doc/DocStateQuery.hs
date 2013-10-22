@@ -33,6 +33,8 @@ module Doc.DocStateQuery
     ) where
 
 import Control.Monad
+import Control.Monad.IO.Class
+import Control.Exception
 import DB
 import DBError
 import Doc.Model
@@ -45,28 +47,27 @@ import qualified Log
 import User.Model
 import Data.List
 import Util.SignatoryLinkUtils
+
 {- |
    Securely find a document by documentid for the author or within their company.
    User must be logged in (otherwise Left DBNotLoggedIn).
    Document must exist (otherwise Left DBNotAvailable).
    Logged in user is author OR logged in user is in the company of the author (otherwise LeftDBNotAvailable).
  -}
-getDocByDocID :: Kontrakcja m => DocumentID -> m (Either DBError Document)
+getDocByDocID :: Kontrakcja m => DocumentID -> m Document
 getDocByDocID docid = do
   Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
-    Nothing -> return $ Left DBNotLoggedIn
+    Nothing -> liftIO $ throwIO DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
-                                    ] [ DocumentFilterByDocumentID docid
-                                      ]
-                                    [] (0,1))
+      (_,mdoc) <- dbQuery (GetDocuments2 False
+                                    [ DocumentsVisibleToUser (userid user) ]
+                                    [ DocumentFilterByDocumentID docid ]
+                                    [] (0,1, Nothing))
       case mdoc of
         [doc] -> do
-          return $ Right doc
-        _ -> do
-          Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocID)"
-          return $ Left DBResourceNotAvailable
+          return doc
+        _ -> error "This will nver happen due to allowzeroresults=False in statement above"
 
 getDocsByDocIDs :: Kontrakcja m => [DocumentID] -> m (Either DBError [Document])
 getDocsByDocIDs docids = do

@@ -560,10 +560,10 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
                     then do
                       ctx <- getContext
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-                      res <- apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID did
+                      res <- lift $ getDocByDocID did
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
                       return res;
-                    else apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID did
+                    else lift $ getDocByDocID did
 
   content <- case documentstatus doc of
                 Closed -> do
@@ -593,10 +593,10 @@ apiCallDownloadFile did fileid _nameForBrowser = api $ do
                     then do
                       ctx <- getContext
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-                      res <- apiGuardL  (forbidden "Access to document is forbiden.")  $ getDocByDocID did
+                      res <- lift $ getDocByDocID did
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
                       return res;
-                    else apiGuardL  (forbidden "Access to document is forbiden.")  $ getDocByDocID did
+                    else lift $ getDocByDocID did
   let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
                       (catMaybes $ Prelude.map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)

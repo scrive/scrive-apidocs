@@ -9,7 +9,6 @@ import Kontra
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
-import Util.MonadUtils
 
 import Text.JSON
 import Text.JSON.Gen
@@ -22,7 +21,7 @@ import EvidenceLog.Model
 
 jsonDocumentEvidenceLog ::  Kontrakcja m => DocumentID -> m JSValue
 jsonDocumentEvidenceLog did = do
-  doc <- guardRightM $ getDocByDocID did
+  doc <- getDocByDocID did
   evidenceLog <- dbQuery $ GetEvidenceLog $ documentid doc
   events <- eventsJSListFromEvidenceLog  doc (reverse evidenceLog)
   runJSONGenT $ do

@@ -106,8 +106,8 @@ generateBankIDTransactionForAuthor  docid = do
     provider   <- guardJustM $ readField "provider"
     author     <- guardJustM $ ctxmaybeuser <$> getContext
     time       <- ctxtime <$> getContext
-    logicaconf <-ctxlogicaconf <$> getContext
-    document   <- guardRightM $ getDocByDocID docid
+    logicaconf <- ctxlogicaconf <$> getContext
+    document   <- getDocByDocID docid
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
         _              -> internalError
@@ -256,7 +256,7 @@ verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> Signatur
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
-    doc <- guardRightM $ getDocByDocID docid
+    doc <- getDocByDocID docid
     logicaconf <- ctxlogicaconf <$> getContext
 
     unless (isAuthor (doc, author)) internalError -- necessary because someone other than author cannot initiate eleg
