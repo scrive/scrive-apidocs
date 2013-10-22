@@ -45,7 +45,6 @@ import Doc.Rendering
 import DB
 import DB.SQL2
 import DB.TimeZoneName (mkTimeZoneName)
-import DBError
 import MagicHash (MagicHash)
 import Kontra
 import Doc.DocUtils
@@ -365,13 +364,12 @@ apiCallSign  did slid = api $ do
               `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
   Log.debug $ "Signing done, result is " ++ show (isRight edoc)
   case edoc of
-    Right (Right (doc, olddoc)) -> do
+    Right (doc, olddoc) -> do
       lift $ postDocumentPendingChange doc olddoc
       udoc <- dbQuery $ GetDocumentByDocumentID did
       lift $ handleAfterSigning udoc slid
       udoc' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON muid False True True Nothing Nothing udoc'
-    Right (Left err) -> throwIO . SomeKontraException $ serverError  $ "Error: DB action " ++ show err
     Left msg -> do -- On eleg error we return document, but it will have status cancelled instead of closed.
       Log.error $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
       doc' <- dbQuery $ GetDocumentByDocumentID did
@@ -381,7 +379,7 @@ apiCallSign  did slid = api $ do
 {- | Utils for signing with eleg -}
 
 handleSignWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots -> SignatureProvider
-                     -> m (Either String (Either DBError (Document, Document)))
+                     -> m (Either String (Document, Document))
 handleSignWithEleg documentid signatorylinkid magichash fields screenshots provider = do
   transactionid <- getDataFnM $ look "transactionid"
   esigninfo <- case provider of
