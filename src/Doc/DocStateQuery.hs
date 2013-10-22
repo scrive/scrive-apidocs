@@ -43,7 +43,6 @@ import Doc.SignatoryLinkID
 import Doc.DocumentID
 import Kontra
 import MagicHash
-import qualified Log
 import User.Model
 import Data.List
 import Util.SignatoryLinkUtils
@@ -81,12 +80,17 @@ getDocsByDocIDs docids = do
                                     [] (0,-1, Nothing))
       -- lets see if all requested documents were found
       let documentsThatWereNotFound = docids \\ (map documentid docs)
-      if null documentsThatWereNotFound
-        then do
-          return $ docs
-        else do
-          Log.debug $ "Documents " ++ show documentsThatWereNotFound ++ " do not exist (in getDocsByDocIDs)"
-          liftIO $ throwIO DBResourceNotAvailable
+      -- if some documents weren't found we are going to report error
+      -- for the first one one the list
+      case documentsThatWereNotFound of
+        (d:_) -> do
+          -- the following should throw an exception
+          _ <- dbQuery (GetDocuments2 False [ DocumentsVisibleToUser (userid user)
+                                    ] [ DocumentFilterByDocumentIDs [d]
+                                      ]
+                                    [] (0,1, Nothing))
+          error "GetDocuments2 should have thrown an error in getDocsByDocIDs"
+        _ -> return docs
 
 {- | Same as getDocByDocID, but works only for author -}
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document

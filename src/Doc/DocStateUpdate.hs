@@ -19,7 +19,12 @@ import DB
 import Util.Actor
 
 
-signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots
+signDocumentWithEmailOrPad :: Kontrakcja m
+                           => DocumentID
+                           -> SignatoryLinkID
+                           -> MagicHash
+                           -> [(FieldType, String)]
+                           -> SignatoryScreenshots.SignatoryScreenshots
                            -> m (Document, Document)
 signDocumentWithEmailOrPad did slid mh fields screenshots = do
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
@@ -36,7 +41,13 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
         doc <- dbQuery $ GetDocumentByDocumentID did
         return $ (doc, olddoc)
 
-signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatureInfo -> SignatoryScreenshots.SignatoryScreenshots
+signDocumentWithEleg :: Kontrakcja m
+                     => DocumentID
+                     -> SignatoryLinkID
+                     -> MagicHash
+                     -> [(FieldType, String)]
+                     -> SignatureInfo
+                     -> SignatoryScreenshots.SignatoryScreenshots
                      -> m (Document, Document)
 signDocumentWithEleg did slid mh fields sinfo screenshots = do
   Context{ ctxtime, ctxipnumber } <- getContext
