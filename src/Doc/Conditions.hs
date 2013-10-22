@@ -273,3 +273,26 @@ sqlWhereDocumentWasNotPurged :: (MonadState v m, SqlWhere v)
 sqlWhereDocumentWasNotPurged = sqlWhereEVVV (DocumentWasPurged,
                                              "documents.id", "documents.title","documents.purged_time")
                                "documents.purged_time IS NULL"
+
+
+data SignatoryAuthenticationDoesNotMatch = SignatoryAuthenticationDoesNotMatch DocumentID SignatoryLinkID AuthenticationMethod AuthenticationMethod
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryAuthenticationDoesNotMatch where
+  toJSValue (SignatoryAuthenticationDoesNotMatch did slid expected actual) = runJSONGen $ do
+    value "message" ("Signatory authentication method does not match" :: String)
+    value "document_id" (show did)
+    value "signatory_link_id" (show slid)
+    value "expected" (show expected)
+    value "actual" (show actual)
+
+instance KontraException SignatoryAuthenticationDoesNotMatch
+
+sqlWhereSignatoryAuthenticationMethodIs :: (MonadState v m, SqlWhere v)
+                                        => AuthenticationMethod -> m ()
+sqlWhereSignatoryAuthenticationMethodIs am =
+  sqlWhereEVVV (\did slid amact -> SignatoryAuthenticationDoesNotMatch did slid am amact,
+                "signatory_links.document_id",
+                "signatory_links.id",
+                "signatory_links.authentication_method")
+                ("signatory_links.authentication_method = " <?> am)

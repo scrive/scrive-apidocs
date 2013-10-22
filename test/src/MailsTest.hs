@@ -99,7 +99,7 @@ sendDocumentMails mailTo author = do
         let asl2 = head $ documentsignatorylinks d2
         randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor now noIP asl2)
-        randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
+        randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
         doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []

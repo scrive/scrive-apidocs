@@ -2031,6 +2031,9 @@ instance (MonadDB m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m
                  sqlWhereDocumentStatusIs Pending
                  sqlWhereSignatoryIsPartner
                  sqlWhereSignatoryHasNotSigned
+                 sqlWhereSignatoryAuthenticationMethodIs (if isJust msiginfo
+                                                             then ELegAuthentication
+                                                             else StandardAuthentication)
                  sqlWhereSignatoryLinkMagicHashIs mh
             let signatureFields = case msiginfo of
                     Nothing -> return ()

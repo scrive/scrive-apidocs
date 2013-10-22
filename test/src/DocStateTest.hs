@@ -142,7 +142,8 @@ docStateTests env = testGroup "DocState" [
   testThat "PreparationToPending fails when not signable" env testPreparationToPendingNotSignableLeft,
 
   testThat "SignDocument fails when doc doesn't exist" env testSignDocumentNotLeft,
-  testThat "SignDocument succeeds when doc is Signable and Pending" env testSignDocumentSignablePendingRight,
+  testThat "SignDocument succeeds when doc is Signable and Pending (standard mode)" env testSignDocumentSignablePendingRight,
+  --testThat "SignDocument succeeds when doc is Signable and Pending (eleg mode)" env testSignDocumentSignablePendingElegRight,
   testThat "SignDocument fails when the document is Signable but not in Pending" env testSignDocumentSignableNotPendingLeft,
   testThat "SignDocument fails when document is not signable" env testSignDocumentNonSignableLeft,
 
@@ -1226,11 +1227,22 @@ testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
 testSignDocumentSignablePendingRight :: TestEnv ()
 testSignDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  let Just sl = find (isSignatory &&^ (not . hasSigned)) (documentsignatorylinks doc)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^
+           any ((== StandardAuthentication) . signatorylinkauthenticationmethod &&^ isSignatory &&^ (not . hasSigned)) . documentsignatorylinks)
+  let Just sl = find ((== StandardAuthentication) . signatorylinkauthenticationmethod &&^ isSignatory &&^ (not . hasSigned)) (documentsignatorylinks doc)
   time <- rand 10 arbitrary
   randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
-  randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
+  randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
+
+_testSignDocumentSignablePendingElegRight :: TestEnv ()
+_testSignDocumentSignablePendingElegRight = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^
+           any ((== ELegAuthentication) . signatorylinkauthenticationmethod &&^ isSignatory &&^ (not . hasSigned)) . documentsignatorylinks)
+  let Just sl = find ((== ELegAuthentication) . signatorylinkauthenticationmethod &&^ isSignatory &&^ (not . hasSigned)) (documentsignatorylinks doc)
+  time <- rand 10 arbitrary
+  randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
+  randomUpdate $ \signinfo -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (Just signinfo) SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentNotLeft :: TestEnv ()
 testSignDocumentNotLeft = doTimes 10 $ do
