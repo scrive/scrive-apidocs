@@ -156,9 +156,9 @@ window.PadQueueView = Backbone.View.extend({
                 container.append(this.logToPadDevice());
 
             if (padqueue.loggedToPad())
-               $('.mainContainer').append(this.padLogoutIcon());
+               $('.pageheader').append(this.padLogoutIcon());
             if (padqueue.loggedToSystem())
-               $('.mainContainer').append(this.backToSystemIcon());
+               $('.pageheader').append(this.backToSystemIcon());
 
         }
         return this;

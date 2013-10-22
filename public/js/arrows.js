@@ -66,11 +66,13 @@ var ArrowView =  function (args) {
  */
 var PointLeftArrowView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render','updatePosition');
         this.model.view = this;
+        $(window).resize( this.updatePosition);
         this.render();
     },
     clear : function() {
+        $(window).unbind('resize',this.updatePosition);
         $(this.el).remove();
     },
     fixWidth : function() {
@@ -86,18 +88,21 @@ var PointLeftArrowView = Backbone.View.extend({
         container.width(desiredWidth);
 
     },
+    updatePosition: function() {
+       var container = $(this.el);
+       if (this.model.point() != undefined) {
+          this.right = ($(document).width() - this.model.point().offset().left );
+          container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 19) + "px");
+          container.css("right", this.right + "px");
+       }
+    },
     render: function () {
        var container = $(this.el);
        container.addClass('action-arrow').addClass('left');
        container.append($("<div class='front' />"));
        container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
        container.append($("<div class='back' />"));
-
-       if (this.model.point() != undefined) {
-          this.right = ($(document).width() - this.model.point().offset().left );
-          container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 19) + "px");
-          container.css("right", this.right + "px");
-       }
+       this.updatePosition();
        return this;
     }
 });
@@ -105,11 +110,13 @@ var PointLeftArrowView = Backbone.View.extend({
 
 var PointRightArrowView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'updatePosition');
         this.model.view = this;
+        $(window).resize( this.updatePosition);
         this.render();
     },
     clear : function() {
+        $(window).unbind('resize',this.updatePosition);
         $(this.el).remove();
     },
     fixWidth : function() {
@@ -145,7 +152,6 @@ var PointRightArrowView = Backbone.View.extend({
        container.append($("<div class='front' />"));
        container.append($("<div class='label' />").text(this.model.text() || "" ).css(this.model.labelCss() || {}));
        container.append($("<div class='back' />"));
-
        this.updatePosition();
        return this;
     }
@@ -157,20 +163,19 @@ var ScrollUpArrowView = Backbone.View.extend({
         "click"  :  "scroll"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'scroll');
+        _.bindAll(this, 'render', 'scroll', 'updateRightMargin');
         this.model.view = this;
+        $(window).resize( this.updateRightMargin);
         this.render();
     },
     clear : function() {
-        $(window).unbind('resize',this.updateRightMarginFunction);
+        $(window).unbind('resize',this.updateRightMargin);
         $(this.el).remove();
     },
     updatePosition: function() {},
     render: function () {
         var view = this;
         $(this.el).addClass("up").addClass("arrow").css("cursor", "pointer");
-        this.updateRightMarginFunction = function() {view.updateRightMargin();};
-        $(window).resize( this.updateRightMarginFunction);
         this.updateRightMargin();
         return this;
     },
@@ -205,14 +210,17 @@ var ScrollDownArrowView = Backbone.View.extend({
         "click"  :  "scroll"
     },
     clear : function() {
-        $(window).unbind('resize',this.checkIfDownArrowInFooterFunction);
-        $(window).unbind('scroll',this.checkIfDownArrowInFooterFunction);
-        $(window).unbind('resize',this.updateRightMarginFunction);
+        $(window).unbind('resize',this.checkIfDownArrowInFooter);
+        $(window).unbind('scroll',this.checkIfDownArrowInFooter);
+        $(window).unbind('resize',this.updateRightMargin);
         $(this.el).remove();
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'scroll');
+        _.bindAll(this, 'render', 'scroll', 'checkIfDownArrowInFooter', 'updateRightMargin');
         this.model.view = this;
+        $(window).resize(this.checkIfDownArrowInFooter);
+        $(window).scroll(this.checkIfDownArrowInFooter);
+        $(window).resize(this.updateRightMarginFunction);
         this.render();
     },
     updatePosition: function() {},
@@ -220,11 +228,6 @@ var ScrollDownArrowView = Backbone.View.extend({
         var view = this;
         $(this.el).addClass("down").addClass("arrow").css("cursor", "pointer");
         this.updateRightMargin();
-        this.checkIfDownArrowInFooterFunction = function() {view.checkIfDownArrowInFooter();};
-        this.updateRightMarginFunction = function() {view.updateRightMargin();};
-        $(window).resize(this.checkIfDownArrowInFooterFunction);
-        $(window).scroll(this.checkIfDownArrowInFooterFunction);
-        $(window).resize(this.updateRightMarginFunction);
         return this;
     },
     updateRightMargin : function() {

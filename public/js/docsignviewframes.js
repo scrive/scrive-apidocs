@@ -27,14 +27,6 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       var tbd = $("<span/>");
       $(this.el).append(tbd);
       setTimeout(function() {tbd.remove();},1);
-      if (!$.browser.msie) {
-        var width = Math.max($('body').width(),$(document).width());
-        if (width > 1020)
-          el.css("min-width",width + "px");
-        var pti = $(".padTopIcon");
-        if (pti.size() > 0)
-            pti.css("left", width - pti.width() - 2);
-      }
   },
   render: function() {
     var view = this;
