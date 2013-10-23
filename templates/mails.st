@@ -27,6 +27,9 @@ mailClosedSignup=
 
 $if(confirmationlink)$
 $_mailClosedSignup()$
+<br/>
+<br/>
+$nicebutton(link=confirmationlink; text=_mailClosedButton())$
 $else$
 $_mailClosedLogin()$
 $endif$
@@ -47,7 +50,8 @@ mailContractClosedMainP =
     $if(sealFixed)$ $_mailDocumentCorrectionBody()$ $else$ $_mailContractClosedContentSignedBy()$ $endif$
     <br/>
     <br/>
-    $_mailContractClosedContentAttached()$ $mailClosedSignup()$
+    $_mailContractClosedContentAttached()$
+    $mailClosedSignup()$
 ####
 #### REJECTED MAIL
 ####
@@ -199,8 +203,10 @@ mailNewCompanyUserInviteMainP=
  $_mailNewCompanyUserInviteContentBodyUserName()$ $invitedemail$
  <br/>
  <br/>
- $_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a>
-
+ $_mailNewCompanyUserInviteContentClickLink()$
+ <br/>
+ <br/>
+ $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailNewCompanyUserInviteContentButton())$
 ###
 ### NEW ACCOUNT BY ADMIN
 ###
@@ -227,7 +233,10 @@ mailNewAccountCreatedByAdminMainP=
     $_mailNewAccountCreatedByAdminContentUserName()$ $email$
     <br/>
     <br/>
-    $_mailNewAccountCreatedByAdminContentBody()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
+    $_mailNewAccountCreatedByAdminContentBody()$
+    <br/>
+    <br/>
+    $nicebutton(link=concat(a1=ctxhostpart;a2=passwordlink); text=_mailNewAccountCreatedByAdminButton())$
 ####
 ####
 invitationMailDeferred=
@@ -242,7 +251,10 @@ invitationMailDeferredMainP=
       $_invitationMailDeferredContentBodyFirst()$
       <br/>
       <br/>
-      $_invitationMailDeferredContentBodySecond()$ <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a>
+      $_invitationMailDeferredContentBodySecond()$
+      <br/>
+      <br/>
+      $nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailDeferredContentButton())$
 ###
 ###
 invitationMailDeliveredAfterDeferred=
@@ -398,9 +410,7 @@ mailRequestChangeEmailP=
   $_mailRequestChangeEmailExplanation()$
   <br/>
   <br/>
-  <a href="$ctxhostpart$$link$">
-    $ctxhostpart$$link$
-  </a>
+  $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailRequestChangeEmailButton())$
 ####
 ####   UTILS
 ####
