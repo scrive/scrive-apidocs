@@ -17,6 +17,8 @@ window.ApiCall = Backbone.Model.extend({
         isReady : function() {return false;},
         isSendReminder : function() {return false;},
         isCancel : function() {return false;},
+        isRestart : function() {return false;},
+        isProlong : function() {return false;},
         isDelete : function() {return false;},
         isGet : function() {return false;},
         isGetHistory : function() {return false;},
@@ -58,6 +60,10 @@ window.ApiCallView = function(args) {
            return new SendReminderApiCallView(args);
         else if (args.model.isCancel())
            return new CancelApiCallView(args);
+        else if (args.model.isRestart())
+           return new RestartApiCallView(args);
+        else if (args.model.isProlong())
+           return new ProlongApiCallView(args);
         else if (args.model.isDelete())
            return new DeleteApiCallView(args);
         else if (args.model.isGet())
