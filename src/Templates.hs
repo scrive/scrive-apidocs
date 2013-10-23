@@ -51,7 +51,7 @@ getTemplatesModTime :: IO UTCTime
 getTemplatesModTime = TL.getTemplatesModTime textsDirectory templateFilesDir
 
 instance (Functor m, Monad m) => T.TemplatesMonad (ReaderT KontrakcjaGlobalTemplates m) where
-  getTemplates = T.getTextTemplatesByColumn $ show (defaultValue :: Lang)
+  getTemplates = T.getTextTemplatesByColumn $ codeFromLang defaultValue
   getTextTemplatesByColumn lang = do
       globaltemplates <- ask
       return $ TL.localizedVersion lang globaltemplates
