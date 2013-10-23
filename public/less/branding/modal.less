@@ -54,15 +54,21 @@
 }
 
 .modal-container:after {
-    border: 20px solid #000000;
+    border: 10px solid #000000;
     border-radius: 8px 8px 8px 8px;
     bottom: -10px;
     content: "";
     left: -10px;
     position: absolute;
+    opacity: 0.4;
     right: -10px;
     top: -10px;
     z-index: -1;
+}
+
+.modal-container.small-device:after {
+    border: 20px solid #000000;
+    opacity: 1;
 }
 
 .modal-container {
