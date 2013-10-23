@@ -206,7 +206,7 @@ import DB.Functions
 import DB.Fetcher
 import DB.Exception
 import Control.Monad.State
-import Data.List (transpose, findIndex)
+import Data.List (transpose, findIndex, inits)
 import Data.Monoid
 import Data.Maybe
 import Database.HDBC hiding (run)
@@ -216,6 +216,7 @@ import Control.Exception.Lifted
 import Control.Applicative
 import qualified Text.JSON.Gen as JSON
 import Control.Monad.Trans.Control
+--import qualified Log
 
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)
@@ -1056,34 +1057,40 @@ kWhyNot1Ex cmd = do
   indexOfFirstFailedCondition <- kFold2 findFirstFalse 0
 
   let fromRight ~(Right x) = x
-  let logics = enumerateWhyNotExceptions (sqlSelectFrom newSelect) (sqlGetWhereConditions newSelect)
+  let logics = enumerateWhyNotExceptions ((sqlSelectFrom newSelect),[]) (sqlGetWhereConditions newSelect)
 
   let condition = logics !! (indexOfFirstFailedCondition)
 
   case condition of
     (important, exception, _from, []) -> return (important, fromRight $ exception [])
-    (important, exception, from, sqls) -> do
-       kRun_ $ sqlSelect2 from $ do
-         mapM_ sqlResult sqls
-         sqlLimit 1
-         sqlOffset 0
+    (important, exception, (from, conds), sqls) -> do
+       let statement' = sqlSelect2 from $ do
+             mapM_ sqlResult sqls
+             sqlLimit 1
+             sqlOffset 0
+           statement = statement' { sqlSelectWhere = conds }
+       --Log.debug $ "Explanation SQL:\n" ++ show statement
+       kRun_ $ statement
        result <- kFold2 (\_acc row -> return row) []
        return (important, fromRight $ exception result)
 
 kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> m SomeKontraException
 kWhyNot1 cmd = snd `fmap` kWhyNot1Ex cmd
 
-enumerateWhyNotExceptions :: SQL
+enumerateWhyNotExceptions :: (SQL, [SqlCondition])
                           -> [SqlCondition]
                           -> [( Bool
                               , [SqlValue] -> Either ConvertError SomeKontraException
-                              , SQL
+                              , (SQL, [SqlCondition])
                               , [SQL]
                               )]
-enumerateWhyNotExceptions from conds = concatMap worker conds
+enumerateWhyNotExceptions (from,condsUpTillNow) conds = concatMap worker (zip conds (inits conds))
   where
-    worker (SqlPlainCondition _ (SqlWhyNot b f s)) = [(b, fmap SomeKontraException . f, from, s)]
-    worker (SqlExistsCondition s) = enumerateWhyNotExceptions newFrom (sqlGetWhereConditions s)
+    worker (SqlPlainCondition _ (SqlWhyNot b f s), condsUpTillNow2) =
+      [(b, fmap SomeKontraException . f, (from, condsUpTillNow ++ condsUpTillNow2), s)]
+    worker (SqlExistsCondition s, condsUpTillNow2) =
+      enumerateWhyNotExceptions (newFrom, condsUpTillNow ++ condsUpTillNow2)
+                                  (sqlGetWhereConditions s)
       where
         newFrom = if from == mempty
                   then sqlSelectFrom s
