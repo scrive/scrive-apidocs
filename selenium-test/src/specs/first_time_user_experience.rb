@@ -39,7 +39,7 @@ describe "sign up from post sign view and take the first time user experience to
 
     puts "XXX we should now be in archive and click the large green button to accept an offer to send a sample document"
     # can't use the same selector as above, selenium gets sad about "stale element in cache"
-    sleep 2
+    sleep 8
     @h.wait_until { @h.driver.find_element :css => "a.button-large" }.click
 
     puts "ZZZ we got to design view and we're previewing the document"
