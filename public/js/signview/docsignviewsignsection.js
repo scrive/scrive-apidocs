@@ -145,7 +145,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
           self.screenshotDone = true;
         });},
       rejectText: localization.cancel,
-      width: signatory.elegAuthentication() ? (800) : (BrowserInfo.isSmallScreen() ? 750 : 520),
+      width: signatory.elegAuthentication() ? (800) : (BrowserInfo.isSmallScreen() ? 825 : 520),
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
       textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
       content: this.createContentElems
@@ -158,7 +158,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       modalHeader.remove();
       var close = $('<div style="padding: 19px;" />');
       close.append($('<img src="/img/mobile-modal-x.png" />'));
-      close.css('margin-left', '632px');
+      close.css('margin-left', '712px');
       close.css('margin-top', '31px');
       close.click(function() { confirmation.close(); });
 
@@ -176,7 +176,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       $('.modal-container .modal-body .modal-content').prepend(close);
 
       signButton.css({
-        'font-size': '100px',
+        'font-size': '80px',
         'height': '100px',
         'width': '80%',
         'max-height': '120px',
