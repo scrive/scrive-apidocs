@@ -46,7 +46,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
 import Doc.Conditions
-
 import qualified Data.Set as S
 import Util.Actor
 import EvidenceLog.Model
@@ -143,7 +142,7 @@ docStateTests env = testGroup "DocState" [
 
   testThat "SignDocument fails when doc doesn't exist" env testSignDocumentNotLeft,
   testThat "SignDocument succeeds when doc is Signable and Pending (standard mode)" env testSignDocumentSignablePendingRight,
-  --testThat "SignDocument succeeds when doc is Signable and Pending (eleg mode)" env testSignDocumentSignablePendingElegRight,
+  testThat "SignDocument succeeds when doc is Signable and Pending (eleg mode)" env testSignDocumentSignablePendingElegRight,
   testThat "SignDocument fails when the document is Signable but not in Pending" env testSignDocumentSignableNotPendingLeft,
   testThat "SignDocument fails when document is not signable" env testSignDocumentNonSignableLeft,
 
@@ -352,7 +351,7 @@ testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
   author <- addNewRandomUser
   screenshots <- getScreenshots
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks))
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks) &&^ (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks))
   let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
   randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing screenshots (systemActor t)
@@ -420,7 +419,7 @@ testDeleteSigAttachmentAlreadySigned = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author $ (    isSignable
                                                            &&^ isPreparation
-                                                           &&^ ((all isSignatory) . documentsignatorylinks)
+                                                           &&^ ((all (isSignatory &&^ not .hasSigned &&^ (==) StandardAuthentication . signatorylinkauthenticationmethod)) . documentsignatorylinks)
                                                            &&^ (((==) 2) . length .documentsignatorylinks))
   file <- addNewRandomFile
   let sl = (documentsignatorylinks doc) !! 1
@@ -434,7 +433,6 @@ testDeleteSigAttachmentAlreadySigned = do
 
   randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) file (systemActor t)
   randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" file (systemActor t)
-
   randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
@@ -505,7 +503,7 @@ testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do
 testCloseDocumentEvidenceLog :: TestEnv ()
 testCloseDocumentEvidenceLog = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks))
   forM_ (documentsignatorylinks doc) $ \sl -> when (isSignatory sl) $ do
     randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
     randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
@@ -1234,8 +1232,8 @@ testSignDocumentSignablePendingRight = doTimes 10 $ do
   randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
   randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
-_testSignDocumentSignablePendingElegRight :: TestEnv ()
-_testSignDocumentSignablePendingElegRight = doTimes 10 $ do
+testSignDocumentSignablePendingElegRight :: TestEnv ()
+testSignDocumentSignablePendingElegRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^
            any ((== ELegAuthentication) . signatorylinkauthenticationmethod &&^ isSignatory &&^ (not . hasSigned)) . documentsignatorylinks)

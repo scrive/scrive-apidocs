@@ -168,6 +168,7 @@ instance Arbitrary SignatoryLink where
                 else return Nothing
 
     delivery <- arbitrary
+    authentication <- arbitrary
     return $ defaultValue { signatorylinkid = unsafeSignatoryLinkID 0
                           , signatoryfields = fields
                           , signatoryisauthor = False
@@ -177,6 +178,7 @@ instance Arbitrary SignatoryLink where
                           , maybesigninfo              = signinfo
                           , maybeseeninfo              = seeninfo
                           , signatorylinkdeliverymethod = delivery
+                          , signatorylinkauthenticationmethod = authentication
                           }
 
 instance Arbitrary SignatureProvider where
