@@ -22,7 +22,7 @@ apiURL :: String
 apiURL = "http://www.transifex.com/api/2/"
 
 project :: String
-project = "scrive"
+project = "kontrakcja"
 
 resourceslug :: String
 resourceslug = "textsjson"

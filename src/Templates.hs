@@ -58,7 +58,7 @@ instance (Functor m, Monad m) => T.TemplatesMonad (ReaderT KontrakcjaGlobalTempl
 
 renderLocalTemplate :: (HasLang a, T.TemplatesMonad m) => a -> String -> F.Fields m () -> m String
 renderLocalTemplate haslang name fields = do
-  ts <- T.getTextTemplatesByColumn $ show $ getLang haslang
+  ts <- T.getTextTemplatesByColumn $ codeFromLang $ getLang haslang
   T.renderHelper ts name fields
 
 instance CryptoRNG m => CryptoRNG (T.TemplatesT m) where
