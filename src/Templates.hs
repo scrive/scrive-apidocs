@@ -45,7 +45,7 @@ readGlobalTemplates :: MonadIO m => m KontrakcjaGlobalTemplates
 readGlobalTemplates = TL.readGlobalTemplates textsDirectory templateFilesDir
 
 localizedVersion :: Lang -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
-localizedVersion lang = TL.localizedVersion $ show lang
+localizedVersion lang = TL.localizedVersion $ codeFromLang lang
 
 getTemplatesModTime :: IO UTCTime
 getTemplatesModTime = TL.getTemplatesModTime textsDirectory templateFilesDir
@@ -67,4 +67,4 @@ instance CryptoRNG m => CryptoRNG (T.TemplatesT m) where
 deriving instance (MonadBase IO m) => MonadBase IO (T.TemplatesT m)
 
 runTemplatesT :: (Functor m, Monad m) => (Lang, TL.GlobalTemplates) -> T.TemplatesT m a -> m a
-runTemplatesT (lang, ts) action = runReaderT (T.unTT action) (show lang, ts)
+runTemplatesT (lang, ts) action = runReaderT (T.unTT action) (codeFromLang lang, ts)

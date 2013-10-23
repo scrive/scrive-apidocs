@@ -38,6 +38,7 @@ import DocAPITest
 import DocStateQueryTest
 import EvidenceAttachmentsTest
 import HtmlTest
+import LocalizationTest
 import InputValidationTest
 import LoginTest
 import SignupTest
@@ -74,6 +75,7 @@ allTests = tail tests
       , ("docstatequery", const $ const docStateQueryTests)
       , ("evidenceattachments", const $ const evidenceAttachmentsTest)
       , ("html", const $ const htmlTests)
+      , ("localization", const $ const localizationTest)
       , ("inputvalidation", const $ const inputValidationTests)
       , ("login", const loginTests)
       , ("signup", const signupTests)
