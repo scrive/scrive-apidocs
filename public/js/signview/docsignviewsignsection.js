@@ -153,6 +153,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     // Re-adjust the signing modal for small screen devices.
     if (BrowserInfo.isSmallScreen()) {
+      $('.modal-container').addClass('small-device');
       // Remove the modal header but keep the close button
       var modalHeader = $('.modal-container .modal-header');
       modalHeader.remove();
