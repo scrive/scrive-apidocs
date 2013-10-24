@@ -5,6 +5,7 @@
     HStringTemplate
     filemanip
     haskell-src-exts
+    kontrakcja-templates
 -}
 import qualified Data.Set as S
 import Data.Maybe
@@ -72,16 +73,26 @@ fileExps path = do
       hPutStrLn stderr $ path ++ ":" ++ show line ++ ": " ++ e
       return S.empty
   where mode' = defaultParseMode{ fixities   = Just []
-                                , extensions = [ MultiParamTypeClasses
-                                               , RecordWildCards
+                                , extensions = map EnableExtension
+                                               [ BangPatterns
+                                               , DeriveDataTypeable
                                                , FlexibleContexts
-                                               , TypeFamilies
-                                               , ScopedTypeVariables
+                                               , FlexibleInstances
+                                               , GeneralizedNewtypeDeriving
+                                               , MultiParamTypeClasses
                                                , NamedFieldPuns
-                                               , TupleSections
+                                               , OverloadedStrings
+                                               , PatternGuards
+                                               , RankNTypes
+                                               , RecordWildCards
+                                               , ScopedTypeVariables
+                                               , StandaloneDeriving
                                                , TemplateHaskell
-                                               , QuasiQuotes
-                                               , BangPatterns
+                                               , TupleSections
+                                               , TypeFamilies
+                                               , TypeOperators
+                                               , TypeSynonymInstances
+                                               , UndecidableInstances
                                                ]
                                 }
 
@@ -120,8 +131,8 @@ expExps e = e `S.insert`
       Case e' alts -> expExps e' `S.union` S.unions (map altExps alts)
       Do stmts -> S.unions $ map stmtExps stmts
       MDo stmts -> S.unions $ map stmtExps stmts
-      Tuple exps -> S.unions $ map expExps exps
-      TupleSection mexps -> S.unions $ map expExps $ catMaybes mexps
+      Tuple _ exps -> S.unions $ map expExps exps
+      TupleSection _ mexps -> S.unions $ map expExps $ catMaybes mexps
       List exps -> S.unions $ map expExps exps
       Paren e' -> expExps e'
       LeftSection e' _ -> expExps e'
@@ -213,6 +224,7 @@ expTemplateName (App (Var (UnQual (Ident funName))) (Lit (String template)))
                      , "renderTemplateI"
                      , "flashMessage"
                      , "flashMessageWithFieldName"
+                     , "templateName"
                      ] = Just template
     | otherwise = Nothing
 expTemplateName (App (App (Var (UnQual (Ident funName))) _) (Lit (String template)))
@@ -271,7 +283,7 @@ main = do
   exps <- S.unions <$> mapM fileExps files
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents
-  let elogTemplates = S.map (++"Text") events `S.union` S.map ("simpliefiedText"++) events
+  let elogTemplates = S.map (++"Text") events
   let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, whiteList]
   translationsLines <- tail <$> basicCSVParser "texts/everything.csv"
   let translations = map (\fields -> (fields !! 0, fields !! 1)) translationsLines

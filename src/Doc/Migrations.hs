@@ -427,8 +427,8 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
                                                       then p
                                                       else p {placementwrel = 12 / 943, placementhrel = 12 / 1335 }  )
                  kRun_ $ sqlUpdate "signatory_link_fields" $ do
-                 sqlSet "placements" placements'
-                 sqlWhereEq "id" fid
+                   sqlSet "placements" placements'
+                   sqlWhereEq "id" fid
 
     -- Now clean images
     kRun_ $ sqlSelect "signatory_link_fields" $ do
@@ -444,9 +444,9 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
                                                       then p
                                                       else p {placementwrel = fromIntegral w / 943, placementhrel = fromIntegral h / 1335 }  )
                  kRun_ $ sqlUpdate "signatory_link_fields" $ do
-                 sqlSet "placements" placements'
-                 sqlSet "value" content
-                 sqlWhereEq "id" fid
+                   sqlSet "placements" placements'
+                   sqlSet "value" content
+                   sqlWhereEq "id" fid
                _ ->  kRun_ $ sqlUpdate "signatory_link_fields" $ do
                         sqlSet "value" content
                         sqlWhereEq "id" fid

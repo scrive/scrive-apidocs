@@ -31,6 +31,7 @@ class DocHelper
     p = partno(part)
     (@h.wait_until { @driver.find_element :xpath => p + "//input[@placeholder='Full name']" }).send_keys(fstname + " " + sndname)
     (@h.wait_until { @driver.find_element :xpath => p + "//input[@placeholder='Email']" }).send_keys email
+    (@h.wait_until { @driver.find_element :css => ".design-view-action-participant-done a.button" }).click
   end
 
   def switchtab(n)

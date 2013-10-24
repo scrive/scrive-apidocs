@@ -65,7 +65,8 @@ smsDocumentErrorSignatory doc sl = do
 
 smsInvitation :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsInvitation doc sl = do
-  mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc ("_smsInvitationToSign" <| isSignatory sl |> "_smsInvitationToView") (smsFields doc sl)
+  mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<<
+    renderLocalTemplate doc (templateName "_smsInvitationToSign" <| isSignatory sl |> templateName "_smsInvitationToView") (smsFields doc sl)
 
 smsInvitationToAuthor :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsInvitationToAuthor doc sl = do
@@ -77,7 +78,7 @@ smsReminder doc sl = do
 
 smsClosedNotification :: (HasMailContext c,MonadDB m, TemplatesMonad m) => c -> Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification ctx doc sl withEmail sealFixed = do
-  mkSMS' ctx doc sl None =<< (renderLocalTemplate doc (if sealFixed then "_smsCorrectedNotification" else "_smsClosedNotification") $ do
+  mkSMS' ctx doc sl None =<< (renderLocalTemplate doc (if sealFixed then templateName "_smsCorrectedNotification" else templateName "_smsClosedNotification") $ do
     smsFields' ctx doc sl
     F.value "withEmail" withEmail)
 

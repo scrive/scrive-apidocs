@@ -7,6 +7,7 @@ module Templates ( getAllTemplates
                  , getTemplatesModTime
                  , renderLocalTemplate
                  , runTemplatesT
+                 , templateName
                  ) where
 
 import Data.List (isSuffixOf)
@@ -68,3 +69,7 @@ deriving instance (MonadBase IO m) => MonadBase IO (T.TemplatesT m)
 
 runTemplatesT :: (Functor m, Monad m) => (Lang, TL.GlobalTemplates) -> T.TemplatesT m a -> m a
 runTemplatesT (lang, ts) action = runReaderT (T.unTT action) (codeFromLang lang, ts)
+
+-- | use 'templateName' to flag that a string literal is a template name (for detect_old_templates)
+templateName :: String -> String
+templateName = id

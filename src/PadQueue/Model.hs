@@ -37,7 +37,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
     when_ (r == 1) $
                 update $ InsertEvidenceEvent
                 SendToPadDevice
-                (value "signatory" signame >> value "actor" (actorWho a))
+                (value "signatory" signame)
                 (Just did)
                 a
     return ()
@@ -56,12 +56,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
          r <- kRun $ SQL "DELETE FROM padqueue WHERE user_id = ?"
                    [toSql uid]
          when_ ((r == 1) && isJust pq ) $ do
-         _ <- update $ InsertEvidenceEvent
-              RemovedFromPadDevice
-              (value "signatory" signame >> value "actor"  (actorWho a))
-              (fst <$> pq)
-              a
-         return ()
+           _ <- update $ InsertEvidenceEvent
+                RemovedFromPadDevice
+                (value "signatory" signame)
+                (fst <$> pq)
+                a
+           return ()
 
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where

@@ -65,41 +65,41 @@ fetchAttachments = kFold decoder []
 data NewAttachment = NewAttachment UserID String String Binary Actor
 instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m NewAttachment (Either String Attachment) where
   update (NewAttachment uid title filename filecontents actor) = do
-  let ctime = actorTime actor
-  fileid <- update $ NewFile filename filecontents
-  kRun_ $ sqlInsert "attachments" $ do
-    sqlSet "user_id" uid
-    sqlSet "title" title
-    sqlSet "ctime" ctime
-    sqlSet "mtime" ctime
-    sqlSet "shared" False
-    sqlSet "deleted" False
-    sqlSet "file_id" fileid
-    sqlAttachmentResults
-  atts <- fetchAttachments
-  case atts of
-    [att] -> return (Right att)
-    _ -> return (Left $ "NewAttachment of file " ++ title ++ " failed")
+    let ctime = actorTime actor
+    fileid <- update $ NewFile filename filecontents
+    kRun_ $ sqlInsert "attachments" $ do
+      sqlSet "user_id" uid
+      sqlSet "title" title
+      sqlSet "ctime" ctime
+      sqlSet "mtime" ctime
+      sqlSet "shared" False
+      sqlSet "deleted" False
+      sqlSet "file_id" fileid
+      sqlAttachmentResults
+    atts <- fetchAttachments
+    case atts of
+      [att] -> return (Right att)
+      _ -> return (Left $ "NewAttachment of file " ++ title ++ " failed")
 
 data DeleteAttachments = DeleteAttachments UserID [AttachmentID] Actor
 instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments () where
   update (DeleteAttachments uid attids actor) = do
-  let atime = actorTime actor
-  kRun_ $ sqlUpdate "attachments" $ do
-    sqlSet "mtime" atime
-    sqlSet "deleted" True
-    sqlWhereIn "id" attids
-    sqlWhereEq "user_id" uid
-    sqlWhereEq "deleted" False
+    let atime = actorTime actor
+    kRun_ $ sqlUpdate "attachments" $ do
+      sqlSet "mtime" atime
+      sqlSet "deleted" True
+      sqlWhereIn "id" attids
+      sqlWhereEq "user_id" uid
+      sqlWhereEq "deleted" False
 
 data SetAttachmentTitle = SetAttachmentTitle AttachmentID String Actor
 instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m SetAttachmentTitle () where
   update (SetAttachmentTitle attid title actor) = do
-  let atime = actorTime actor
-  kRun_ $ sqlUpdate "attachments" $ do
-    sqlSet "mtime" atime
-    sqlSet "title" title
-    sqlWhereEq "id" attid
+    let atime = actorTime actor
+    kRun_ $ sqlUpdate "attachments" $ do
+      sqlSet "mtime" atime
+      sqlSet "title" title
+      sqlWhereEq "id" attid
 
 data AttachmentFilter
   = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere

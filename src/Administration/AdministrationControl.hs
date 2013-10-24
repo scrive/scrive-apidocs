@@ -573,7 +573,7 @@ resealFile docid = onlyAdmin $ do
         Log.debug "Ok, so the document has been resealed"
         _ <- dbUpdate $ InsertEvidenceEvent
                 ResealedPDF
-                (F.value "actor" (actorWho actor))
+                (return ())
                 (Just docid)
                 actor
         return ()

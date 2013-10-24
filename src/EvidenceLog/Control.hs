@@ -23,7 +23,7 @@ jsonDocumentEvidenceLog ::  Kontrakcja m => DocumentID -> m JSValue
 jsonDocumentEvidenceLog did = do
   doc <- getDocByDocID did
   evidenceLog <- dbQuery $ GetEvidenceLog $ documentid doc
-  events <- eventsJSListFromEvidenceLog  doc (reverse evidenceLog)
+  events <- eventsJSListFromEvidenceLog  doc evidenceLog
   runJSONGenT $ do
-      value "list" $ for events $ runJSONGen . (value "fields")
+      value "list" $ for (reverse events) $ runJSONGen . (value "fields")
       value "paging" $ pagingParamsJSON (PagedList events 1000 emptyListParams (length events))

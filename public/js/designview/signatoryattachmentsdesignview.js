@@ -190,7 +190,7 @@ window.DesignSignatoryAttachmentsPopup = {
          var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
-              subtitle  : localization.selectFiles,
+              subtitle  : localization.signatoryAttachments.defineRequests,
               icon : '/img/modal-icons/attachments.png',
               acceptText: localization.save,
               width: 800,

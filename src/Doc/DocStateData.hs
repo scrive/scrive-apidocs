@@ -397,7 +397,7 @@ data Document = Document {
     documentid                     :: DocumentID
   , documenttitle                  :: String
   , documentsignatorylinks         :: [SignatoryLink]
-  , documentmainfiles              :: [MainFile] -- sorted in descending order w.r.t. FileID
+  , documentmainfiles              :: [MainFile] -- order: most recently added files first
   , documentstatus                 :: DocumentStatus
   , documenttype                   :: DocumentType
   , documentctime                  :: MinutesTime

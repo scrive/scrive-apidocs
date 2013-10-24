@@ -4,11 +4,12 @@ module EvidenceLog.Model (
   , apiActor
   , InsertEvidenceEvent(..)
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
-  , InsertEvidenceEventForManyDocuments(..)
   , GetEvidenceLog(..)
-  , DocumentEvidenceEvent(..)
+  , DocumentEvidenceEvent
+  , DocumentEvidenceEvent'(..)
   , copyEvidenceLogToNewDocument
   , copyEvidenceLogToNewDocuments
+  , signatoryLinkTemplateFields
   ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -17,11 +18,12 @@ import DB.SQL2
 import qualified HostClock.Model as HC
 import IPAddress
 import MinutesTime
-import Data.Char (isSpace)
 import Data.Typeable
 import User.Model
 import Util.Actor
+import Util.HasSomeUserInfo (getIdentifier)
 import Doc.SignatoryLinkID
+import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Version
 import Doc.DocumentID
 import Text.StringTemplates.Templates
@@ -32,8 +34,8 @@ data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAff
                            EvidenceEventType      -- A code for the event
                            (F.Fields Identity ()) -- Text for evidence
                            (Maybe DocumentID)     -- The documentid if this event is about a document
-                           (Maybe SignatoryLinkID) -- Affected signatory
-                           (Maybe String)          -- Message text
+                           (Maybe SignatoryLink)  -- Affected signatory
+                           (Maybe String)         -- Message text
                            Actor                  -- Actor
     deriving (Typeable)
 
@@ -44,22 +46,34 @@ data InsertEvidenceEvent = InsertEvidenceEvent
                            Actor                  -- Actor
     deriving (Typeable)
 
-data InsertEvidenceEventForManyDocuments = InsertEvidenceEventForManyDocuments
-                           EvidenceEventType      -- A code for the event
-                           (F.Fields Identity ()) -- Text for evidence
-                           [DocumentID]           -- The list of document ids this event is about
-                           Actor                  -- Actor
-    deriving (Typeable)
-
 eventTextTemplateName :: EvidenceEventType -> String
-eventTextTemplateName e =  (show e) ++ "Text"
+eventTextTemplateName e =  "_" ++ show e ++ "Text"
 
 includeEventText :: String -> Bool
-includeEventText = not . all isSpace
+includeEventText = (/="-")
+
+signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
+signatoryLinkTemplateFields sl = do
+  F.value "eleg"        $ signatorylinkauthenticationmethod sl == ELegAuthentication
+  F.value "pad"         $ signatorylinkdeliverymethod sl == PadDelivery
+  F.value "email"       $ signatorylinkdeliverymethod sl == EmailDelivery
+  F.value "mobile"      $ signatorylinkdeliverymethod sl == MobileDelivery
+  F.value "emailmobile" $ signatorylinkdeliverymethod sl == EmailAndMobileDelivery
+  F.value "viewing"     $ not $ signatoryispartner sl
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
-  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid maslid mmsg actor) = do
-   text <- renderTemplateI (eventTextTemplateName event) $ textFields
+  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid masl mmsg actor) = do
+   ts <- getTextTemplatesByColumn $ show LANG_EN
+   let fields = do
+         F.value "full" True
+         F.value "actor" $ actorWho actor
+         case masl of
+           Nothing -> return ()
+           Just sl -> do
+             F.value "signatory" $ getIdentifier sl
+             signatoryLinkTemplateFields sl
+         textFields
+   let text = runIdentity $ renderHelper ts (eventTextTemplateName event) fields
    if includeEventText text then
      kRun01 $ sqlInsert "evidence_log" $ do
         sqlSet "document_id" mdid
@@ -72,30 +86,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
         sqlSet "request_ip_v4" $ actorIP actor
         sqlSet "signatory_link_id" $ actorSigLinkID actor
         sqlSet "api_user" $ actorAPIString actor
-        sqlSet "affected_signatory_link_id" $ maslid
+        sqlSet "affected_signatory_link_id" $ signatorylinkid <$> masl
         sqlSet "message_text" $ mmsg
      else return True
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields mdid actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid Nothing Nothing actor)
 
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyDocuments () where
-  update (InsertEvidenceEventForManyDocuments event textFields dids actor) = do
-   texts <- forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
-   when (any includeEventText texts) $
-     kRun_ $ sqlInsert "evidence_log" $ do
-        sqlSetList "document_id" dids
-        sqlSet "time" $ actorTime actor
-        sqlSetList "text" texts
-        sqlSet "event_type" event
-        sqlSet "version_id" versionID
-        sqlSet "user_id" $ actorUserID actor
-        sqlSet "email" $ actorEmail actor
-        sqlSet "request_ip_v4" $ actorIP actor
-        sqlSet "signatory_link_id" $ actorSigLinkID actor
-        sqlSet "api_user" $ actorAPIString actor
-
-data DocumentEvidenceEvent = DocumentEvidenceEvent {
+type DocumentEvidenceEvent = DocumentEvidenceEvent' SignatoryLinkID
+data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
   , evTime       :: MinutesTime
   , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
@@ -106,9 +105,9 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evUserID     :: Maybe UserID
   , evIP4        :: Maybe IPAddress
   , evIP6        :: Maybe IPAddress
-  , evSigLinkID  :: Maybe SignatoryLinkID
+  , evSigLink    :: Maybe s
   , evAPI        :: Maybe String
-  , evAffectedSigLinkID :: Maybe SignatoryLinkID -- Some events affect only one signatory, but actor is out system or author. We express it here, since we can't with evType.
+  , evAffectedSigLink :: Maybe s -- Some events affect only one signatory, but actor is out system or author. We express it here, since we can't with evType.
   , evMessageText :: Maybe String -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
   }
   deriving (Eq, Ord, Show, Typeable)
@@ -135,10 +134,11 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", host_clock.clock_frequency"
       <> "  FROM evidence_log LEFT JOIN host_clock ON host_clock.time = (SELECT max(host_clock.time) FROM host_clock WHERE host_clock.time <= evidence_log.time)"
       <> "  WHERE document_id = ?"
-      <> "  ORDER BY id DESC") [
+      <> "  ORDER BY evidence_log.time DESC, id DESC") [
         toSql docid
       ]
-    kFold fetchEvidenceLog []
+    evs  <- kFold fetchEvidenceLog []
+    return evs
     where
       fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg hctime offset frequency =
         DocumentEvidenceEvent {
@@ -152,9 +152,9 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
           , evEmail      = eml
           , evIP4        = ip4
           , evIP6        = ip6
-          , evSigLinkID  = slid
+          , evSigLink    = slid
           , evAPI        = api
-          , evAffectedSigLinkID = aslid
+          , evAffectedSigLink = aslid
           , evMessageText = emsg
           } : acc
 
@@ -178,7 +178,7 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", api_user"
     <> ", affected_signatory_link_id"
     <> ", message_text"
-    <> ") SELECT "
+    <> ") (SELECT "
     <> "  todocs.id :: BIGINT"
     <> ", time"
     <> ", text"
@@ -193,7 +193,7 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", affected_signatory_link_id"
     <> ", message_text"
     <> " FROM evidence_log, (VALUES" <+> sqlConcatComma (map (parenthesize . sqlParam) todocs) <+> ") AS todocs(id)"
-    <> " WHERE evidence_log.document_id =" <?> fromdoc
+    <> " WHERE evidence_log.document_id =" <?> fromdoc <+> ") ORDER BY evidence_log.id"
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType =

@@ -198,6 +198,7 @@ javascriptLocalisation =
               , attachment:         "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$"
               , from :              "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$"
               , requestAttachments : "$_pageDocumentForAuthorHelpersLocalDialogsHead()$"
+              , defineRequests :     "$_pageDocumentForAuthorHelpersLocalDialogsDefineRequests()$"
             }
           , save : "$_save()$"
           , languages : {

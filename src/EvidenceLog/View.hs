@@ -1,5 +1,9 @@
 module EvidenceLog.View (
       eventsJSListFromEvidenceLog
+    , eventsForLog
+    , getSignatoryLinks
+    , simplyfiedEventText
+    , approximateActor
     , htmlDocFromEvidenceLog
     , suppressRepeatedEvents
     , htmlSkipedEvidenceType
@@ -7,7 +11,10 @@ module EvidenceLog.View (
   ) where
 
 
+import qualified Data.Set as Set
 import Doc.DocStateData
+import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
+import Doc.SignatoryLinkID (SignatoryLinkID)
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified Doc.Screenshot as Screenshot
 import Text.StringTemplates.Templates
@@ -28,58 +35,63 @@ import qualified Data.ByteString.Char8 as BS
 import Data.Decimal (realFracToDecimal)
 import qualified Data.Map as Map
 import Data.Maybe
-import Data.List
 import Data.Word (Word8)
 import qualified HostClock.Model as HC
 import User.Model
 import DB
 import Control.Logic
-import qualified Log
 
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
-eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) $ eventsForLog doc dees
+eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) =<< getSignatoryLinks (eventsForLog dees)
 
+-- | Lookup signatory links in events
+getSignatoryLinks :: MonadDB m => [DocumentEvidenceEvent' SignatoryLinkID] -> m [DocumentEvidenceEvent' SignatoryLink]
+getSignatoryLinks evs = do
+  let docids = Set.fromList $ catMaybes $ map evSigLink evs ++ map evAffectedSigLink evs
+  docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList docids
+  let slmap = Map.fromList [(signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d]
+      findsiglink s = flip Map.lookup slmap =<< s
+  return $ for evs $ \ev -> ev { evSigLink = findsiglink (evSigLink ev)
+                               , evAffectedSigLink = findsiglink (evAffectedSigLink ev)
+                               }
 
-eventsForLog :: Document -> [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-eventsForLog _doc events =
-    let
-        sevents = filter ((simpleEvents . evType) &&^ (not . emptyEvent))  events
-        (es, es') = break (endOfHistoryEvent . evType) sevents
-        separatedLog = es ++ (take 1 es')
-        cleanerLog  = cleanUnimportantAfterSigning separatedLog
-    in cleanerLog
+-- | Keep only simple events, remove some redundant signatory events after signing
+eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
+eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&^ (not . emptyEvent))
 
+-- TODO: Consider saving actor name in event instead
+approximateActor :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent' SignatoryLink -> m String
+approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
+                         | otherwise =
+  case evSigLink dee of
+    Just sl -> if (isAuthor sl)
+             then authorName
+             else case (getSmartName sl) of
+                    "" -> renderTemplate_ "_notNamedParty"
+                    name -> return name
+    Nothing -> case (evUserID dee) of
+               Just uid -> if (isAuthor (doc,uid))
+                            then authorName
+                            else do
+                              muser <- dbQuery $ GetUserByID uid
+                              case muser of
+                                Just user -> return $ getSmartName user
+                                _ -> return "Scrive" -- This should not happend
+               _ ->  if (authorEvents $ evType dee)
+                        then authorName
+                        else return "Scrive"
 
-eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent -> JSONGenT m ()
+  where authorName = case (getAuthorSigLink doc) of
+                        Just sl -> return $ getSmartName sl
+                        Nothing -> renderTemplate_ "_authorParty"
+
+eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent' SignatoryLink -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"  $ formatMinutesTimeRealISO (evTime dee)
-    J.valueM "party" $ if (systemEvents $ evType dee)
-                          then return "Scrive"
-                          else case (getSigLinkFor doc $ evSigLinkID dee) of
-                                Just sl -> if (isAuthor sl)
-                                         then authorName
-                                         else case (getSmartName sl) of
-                                                "" -> renderTemplate_ "notNamedParty"
-                                                name -> return name
-                                Nothing -> case (evUserID dee) of
-                                           Just uid -> if (isAuthor (doc,uid))
-                                                        then authorName
-                                                        else do
-                                                          muser <- dbQuery $ GetUserByID uid
-                                                          case muser of
-                                                            Just user -> return $ getSmartName user
-                                                            _ -> return "Scrive" -- This should not happend
-                                           _ ->  if (authorEvents $ evType dee)
-                                                    then authorName
-                                                    else return "Scrive"
-    J.valueM "text"  $ (simplyfiedEventText doc dee)
-  where authorName = case (getAuthorSigLink doc) of
-                        Just sl -> return $ getSmartName sl
-                        Nothing -> renderTemplate_ "authorParty"
-
-
+    J.valueM "party" $ approximateActor doc dee
+    J.valueM "text"  $ simplyfiedEventText Nothing dee
 
 -- Removes events that seam to be duplicated
 simpleEvents :: EvidenceEventType -> Bool
@@ -130,33 +142,27 @@ getEvidenceEventStatusClass AttachGuardtimeSealedFileEvidence = SCSealed
 getEvidenceEventStatusClass AttachExtendedSealedFileEvidence  = SCExtended
 getEvidenceEventStatusClass _                                 = SCError
 
--- Clean some events that should not be shown. Like reading after signing.
+-- Remove signatory events that happen after signing (link visited, invitation read)
 cleanUnimportantAfterSigning :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-cleanUnimportantAfterSigning [] = []
-cleanUnimportantAfterSigning (e:es) = if ((     (evType e == SignatoryLinkVisited)
-                                           || (evType e == MarkInvitationReadEvidence))
-                                        && wasSigned (evUserID e, evSigLinkID e) es)
-                                        then cleanUnimportantAfterSigning es
-                                        else (e:cleanUnimportantAfterSigning es)
-  where wasSigned (muid,mslid) es' =
-          isJust (find (\e' ->     evType e' == SignDocumentEvidence
-                                && ((isJust muid && evUserID e' == muid)
-                                     || (isJust mslid && evSigLinkID e' == mslid)
-                                    )) es')
-
-
-endOfHistoryEvent :: EvidenceEventType -> Bool
-endOfHistoryEvent  PreparationToPendingEvidence = True
-endOfHistoryEvent  NewDocumentEvidence          = True
-endOfHistoryEvent  RestartDocumentEvidence      = True
-endOfHistoryEvent _                             = False
+cleanUnimportantAfterSigning = go Set.empty
+  where go _ [] = []
+        go m (e:es) | evType e `elem` [SignatoryLinkVisited, MarkInvitationReadEvidence]
+                       && any (`Set.member` m) (ids e)
+                    = go m es
+                    | evType e == SignDocumentEvidence
+                    = e : go (m `Set.union` Set.fromList (ids e)) es
+                    | evType e == PreparationToPendingEvidence
+                    = e : go Set.empty es
+                    | otherwise
+                    = e : go m es
+        ids e = catMaybes [Left <$> evUserID e, Right <$> evSigLink e]
 
 -- Events that should be considered as performed as author even is actor states different.
 authorEvents  :: EvidenceEventType -> Bool
 authorEvents PreparationToPendingEvidence = True
 authorEvents _ = False
 
--- Events that should be considered as performed as author even is actor states different.
+-- Events that should be considered as performed by the system even if actor states different.
 systemEvents  :: EvidenceEventType -> Bool
 systemEvents InvitationDeliveredByEmail = True
 systemEvents InvitationUndeliveredByEmail = True
@@ -166,22 +172,19 @@ systemEvents _ = False
 
 -- Empty events - they should be skipped, as they don't provide enought information to show to user
 emptyEvent :: DocumentEvidenceEvent -> Bool
-emptyEvent (DocumentEvidenceEvent {evType = InvitationEvidence, evAffectedSigLinkID = Nothing }) = True
-emptyEvent (DocumentEvidenceEvent {evType = ReminderSend,       evAffectedSigLinkID = Nothing }) = True
+emptyEvent (DocumentEvidenceEvent {evType = InvitationEvidence, evAffectedSigLink = Nothing }) = True
+emptyEvent (DocumentEvidenceEvent {evType = ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
 
-simplyfiedEventText :: (TemplatesMonad m, Log.MonadLog m) => Document -> DocumentEvidenceEvent -> m String
-simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evType dee)) $ do
-    let siglink = (getSigLinkFor doc =<< evAffectedSigLinkID dee)
-    F.value "documenttitle" $ (documenttitle doc)
-    F.value "affectedsignatory" $ getSmartName <$> siglink
+simplyfiedEventText :: TemplatesMonad m => Maybe String -> DocumentEvidenceEvent' SignatoryLink -> m String
+simplyfiedEventText mactor dee = renderTemplateI (eventTextTemplateName (evType dee)) $ do
+    let siglink = evAffectedSigLink dee
     F.value "text" $ filterTags <$> evMessageText dee
-    F.value "eleg"   $ (\sl -> signatorylinkauthenticationmethod sl == ELegAuthentication) <$> siglink
-    F.value "pad"    $ (\sl -> signatorylinkdeliverymethod sl == PadDelivery) <$> siglink
-    F.value "email"  $ (\sl -> signatorylinkdeliverymethod sl == EmailDelivery) <$> siglink
-    F.value "mobile" $ (\sl -> signatorylinkdeliverymethod sl == MobileDelivery) <$> siglink
-    F.value "emailmobile" $ (\sl -> signatorylinkdeliverymethod sl == EmailAndMobileDelivery) <$> siglink
-    F.value "viewing" $ (not . signatoryispartner) <$> siglink
+    F.value "signatory" $ getSmartName <$> siglink
+    case mactor of
+      Nothing    -> F.value "archive" True
+      Just actor -> F.value "actor" actor
+    maybe (return ()) signatoryLinkTemplateFields siglink
 
 showClockError :: Word8 -> Double -> String
 showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms"

@@ -161,9 +161,9 @@ instance HTypeable LogInResponse where
 instance XmlContent LogInResponse where
   toContents LogInResponse = error "Please do not serialize LogInResponse"
   parseContents = do
-  { _e <- elementNS "LogInResponse"
-  ; return LogInResponse
-  } `adjustErr` ("in <LogInResponse>, " ++)
+    { _e <- elementNS "LogInResponse"
+    ; return LogInResponse
+    } `adjustErr` ("in <LogInResponse>, " ++)
 
 data LogOut = LogOut
   deriving (Eq,Ord,Show,Read)
@@ -185,9 +185,9 @@ instance HTypeable LogOutResponse where
 instance XmlContent LogOutResponse where
   toContents LogOutResponse = error "Please do not serialize LogOutResponse"
   parseContents = do
-  { _e <- elementNS "LogOutResponse"
-  ; return LogOutResponse
-  } `adjustErr` ("in <LogOutResponse>, " ++)
+    { _e <- elementNS "LogOutResponse"
+    ; return LogOutResponse
+    } `adjustErr` ("in <LogOutResponse>, " ++)
 
 data SetLocalTemplate = SetLocalTemplate BS.ByteString FileFormat
   deriving (Eq,Ord,Show,Read)
@@ -213,9 +213,9 @@ instance HTypeable SetLocalTemplateResponse where
 instance XmlContent SetLocalTemplateResponse where
   toContents SetLocalTemplateResponse = error "Please do not serialize SetLocalTemplateResponse"
   parseContents = do
-  { _e <- elementNS "SetLocalTemplateResponse"
-  ; return SetLocalTemplateResponse
-  } `adjustErr` ("in <SetLocalTemplateResponse>, " ++)
+    { _e <- elementNS "SetLocalTemplateResponse"
+    ; return SetLocalTemplateResponse
+    } `adjustErr` ("in <SetLocalTemplateResponse>, " ++)
 
 data CreateDocument = CreateDocument
   deriving (Eq,Ord,Show,Read)
@@ -237,9 +237,9 @@ instance HTypeable CreateDocumentResponse where
 instance XmlContent CreateDocumentResponse where
   toContents CreateDocumentResponse = error "Please do not serialize CreateDocumentResponse"
   parseContents = do
-  { _e <- elementNS "CreateDocumentResponse"
-  ; return CreateDocumentResponse
-  } `adjustErr` ("in <CreateDocumentResponse>, " ++)
+    { _e <- elementNS "CreateDocumentResponse"
+    ; return CreateDocumentResponse
+    } `adjustErr` ("in <CreateDocumentResponse>, " ++)
 
 data RetrieveDocument = RetrieveDocument String
   deriving (Eq,Ord,Show,Read)

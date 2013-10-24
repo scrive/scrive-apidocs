@@ -21,7 +21,6 @@ import Control.Monad.Reader
 import Data.Function (on)
 import Data.Maybe
 import Data.List
-import Data.Ord
 import Doc.DocStateData
 import Doc.DocumentID (DocumentID)
 import Doc.Model
@@ -33,11 +32,9 @@ import Doc.DocView
 import Doc.DocUtils
 import GuardTime (GuardTimeConf)
 import qualified HostClock.Model as HC
-import IPAddress
 import MinutesTime (MinutesTime, daysBefore, toCalendarTime)
 import Utils.Directory
 import Utils.Read
-import Utils.String
 import Utils.IO
 import System.Directory
 import System.Exit
@@ -92,27 +89,8 @@ personFromSignatory boxImages signatory =
                 , Seal.fields = fieldsFromSignatory False [] boxImages signatory
                 }
 
-personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String) -> Fields m ()
-personFields _doc (person, signinfo,_seeninfo, _ , mprovider, delivery, _initials) = do
-   F.value "personname" $ Seal.fullname person
-   F.value "signip" $  formatIP (signipnumber signinfo)
-   F.value "seenip" $  formatIP (signipnumber signinfo)
-   F.value "provider" $ isJust mprovider
-   F.value "bankid"       $ mprovider == Just BankIDProvider
-   F.value "nordea"       $ mprovider == Just NordeaProvider
-   F.value "telia"        $ mprovider == Just TeliaProvider
-   F.value "email"        $ delivery == EmailDelivery
-   F.value "pad"          $ delivery == PadDelivery
-   F.value "api"          $ delivery == APIDelivery
-   F.value "mobile"       $ delivery == MobileDelivery
-   F.value "email_mobile" $ delivery == EmailAndMobileDelivery
-
-personExFromSignatoryLink :: (BS.ByteString,BS.ByteString)
-                          -> SignatoryLink
-                          -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, DeliveryMethod, String)
-personExFromSignatoryLink boxImages (sl@SignatoryLink { maybesigninfo = Just signinfo
-                                                      , maybeseeninfo
-                                                      , signatorysignatureinfo
+personExFromSignatoryLink :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> (Seal.Person, String)
+personExFromSignatoryLink boxImages (sl@SignatoryLink { signatorysignatureinfo
                                                       , signatorylinkdeliverymethod
                                                       }) =
   ((personFromSignatory boxImages sl)
@@ -122,23 +100,12 @@ personExFromSignatoryLink boxImages (sl@SignatoryLink { maybesigninfo = Just sig
      , Seal.numberverified   = numberverified
      , Seal.phoneverified    = signatorylinkdeliverymethod `elem` [MobileDelivery, EmailAndMobileDelivery]
      }
-    , maybe signinfo id maybeseeninfo -- some old broken documents do not have seeninfo before signinfo
-    , signinfo
-    , isAuthor sl
-    , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
-    , signatorylinkdeliverymethod
     , map head $ words $ getFullName sl
     )
   where fullnameverified = maybe False (\s -> signaturefstnameverified s
                                               && signaturelstnameverified s)
                            signatorysignatureinfo
         numberverified = maybe False signaturepersnumverified signatorysignatureinfo
-
-personExFromSignatoryLink _ sl@(SignatoryLink {
-                                            maybesigninfo = Nothing
-                                           }) =
- error $ "Person '" ++ getFullName sl ++ "' hasn't signed yet. Cannot personExFromSignatoryLink for him/her."
-
 
 fieldsFromSignatory :: Bool -> [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> [Seal.Field]
 fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
@@ -348,99 +315,22 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                         , not . signatoryispartner $ s
                     ]
 
-      persons = map (\(a,_,_,_,_,_,_) -> a) signatories
-      initialsx = map (\(_,_,_,_,_,_,a) -> a) signatories
+      (persons, initialsx) = unzip signatories
       paddeddocid = pad0 20 (show docid)
 
       initials = intercalate ", " initialsx
-      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _, _)  = do
-          seenDesc <- renderLocalTemplate document "_seenHistEntry" $ do
-                        personFields document personInfo
-                        documentInfoFields document
-          let seenEvent = Seal.HistEntry
-                            { Seal.histdate = formatMinutesTimeForVerificationPage (signtime seen)
-                            , Seal.histcomment = pureString seenDesc
-                            , Seal.histaddress = "IP: " ++ show (signipnumber seen)
-                            }
-          signDesc <- renderLocalTemplate document "_signHistEntry" $ do
-                        personFields document personInfo
-                        documentInfoFields document
-          let signEvent = Seal.HistEntry
-                            { Seal.histdate = formatMinutesTimeForVerificationPage (signtime signed)
-                            , Seal.histcomment = pureString signDesc
-                            , Seal.histaddress = "IP: " ++ show (signipnumber signed)
-                            }
-          return $ if (isauthor)
-                    then [signEvent]
-                    else [seenEvent,signEvent]
-      invitationSentEntry =
-        case documentinvitetime document of
-                  Just (SignInfo time ipnumber) -> do
-                    -- Here we need to sort signing signatories according to sign order,
-                    -- then group them by sign order. Invitation to next group is sent
-                    -- when the previous group is done signing, so maxSignTime of prev.
 
-                    let groupOn f = groupBy (\a b -> f a == f b)
-                    let sortOn f = sortBy (\a b -> compare (f a) (f b))
-                    let sortedPeople =
-                          groupOn (signatorysignorder) .
-                          sortOn (signatorysignorder) .
-                          filter (not . signatoryisauthor ||^ (/= SignOrder 1) . signatorysignorder) .
-                          filter (signatoryispartner) .
-                          documentsignatorylinks $
-                          document
-
-                    descs <- flip mapM sortedPeople $ \people -> do
-                      let filterByDelivery delivery =
-                            filter (\p -> signatorylinkdeliverymethod p == delivery)
-                      let entry delivery templateName =
-                            case filterByDelivery delivery people of
-                              [] -> do
-                                  -- everybody in this signatory order was Pad delivery or API delivery
-                                  return []
-                              them -> do
-                                 tmpl <- renderLocalTemplate document templateName $ do
-                                     F.valueM "partyList" $ renderListTemplateNormal $ map getSmartName $ them
-                                 return [tmpl]
-                      concat <$> sequence [ entry EmailDelivery "_invitationEmailSentEntry"
-                                          , entry MobileDelivery "_invitationSMSSentEntry"
-                                          , entry EmailAndMobileDelivery "_invitationEmailAndSMSSentEntry"
-                                          ]
-
-                    -- times is offset by one in position wrt
-                    -- sortedPeople last element of times is actually
-                    -- ignored here
-                    let times = time : map (maximum . map (signtime . fromJust . maybesigninfo)) sortedPeople
-                    let mkEntry time' descsx = [Seal.HistEntry
-                                                      { Seal.histdate = formatMinutesTimeForVerificationPage time'
-                                                      , Seal.histcomment = pureString desc
-                                                      , Seal.histaddress = "IP: " ++ show ipnumber
-                                                      } | desc <- descsx]
-                    return $ concat $ zipWith mkEntry times descs
-                  _ -> do
-                    -- document does not have documentinvitetime, what
-                    -- does it mean really?
-                    return []
-      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_,_) -> c)) signatories)
-      -- document fields
-      lastHistEntry = do
-                       desc <- renderLocalTemplate document "_lastHistEntry" (documentInfoFields document)
-                       return $ [Seal.HistEntry
-                                { Seal.histdate = formatMinutesTimeForVerificationPage maxsigntime
-                                , Seal.histcomment = pureString desc
-                                , Seal.histaddress = ""
-                                }]
+      mkHistEntry ev = do
+        actor <- approximateActor document ev
+        comment <- simplyfiedEventText (Just actor) ev
+        return $ Seal.HistEntry{ Seal.histdate = formatMinutesTimeForVerificationPage $ evTime ev
+                               , Seal.histcomment = comment
+                               , Seal.histaddress = maybe "" show $ evIP4 ev
+                               }
 
   in do
       -- Log.debug "Creating seal spec from file."
-      events <- fmap concat $ sequence $
-                    (map makeHistoryEntryFromSignatory signatories) ++
-                    [invitationSentEntry] ++
-                    [lastHistEntry]
-      -- Log.debug ("events created: " ++ show events)
-      -- here we use Data.List.sort that is *stable*, so it puts
-      -- signatories actions before what happened with a document
-      let history = sortBy (comparing Seal.histdate) events
+      history <- mapM mkHistEntry =<< getSignatoryLinks (eventsForLog elog)
       -- Log.debug ("about to render staticTexts")
       staticTexts <- renderLocalTemplate document "contractsealingtexts" $ do
                         documentInfoFields document
@@ -687,12 +577,12 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
 
 emptyFieldsTextT :: (TemplatesMonad m) => m [(FieldType,String)]
 emptyFieldsTextT = do
-  fstname <- renderTemplate_ "fstnameEmptyFieldsText"
-  sndname <- renderTemplate_ "sndnameEmptyFieldsText"
-  email <- renderTemplate_ "emailEmptyFieldsText"
-  company <- renderTemplate_ "companyEmptyFieldsText"
-  companynumber <- renderTemplate_ "companynumberEmptyFieldsText"
-  personalnumber <- renderTemplate_  "personalnumberEmptyFieldsText"
+  fstname <- renderTemplate_ "_firstname"
+  sndname <- renderTemplate_ "_lastname"
+  email <- renderTemplate_ "_email"
+  company <- renderTemplate_ "_company"
+  companynumber <- renderTemplate_ "_orgnumber"
+  personalnumber <- renderTemplate_  "_personnumber"
   return [(FirstNameFT, fstname),
           (LastNameFT, sndname),
           (CompanyFT, company),

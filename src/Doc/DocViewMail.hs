@@ -353,12 +353,12 @@ documentMail haslang ctx doc mailname otherfields = do
                     Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
                     Nothing -> return Nothing
     let allfields = do
-        F.value "ctxhostpart" (mctxhostpart mctx)
-        F.value "ctxlang" (codeFromLang $ mctxlang mctx)
-        F.value "documenttitle" $ documenttitle doc
-        F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
-        brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
-        otherfields
+          F.value "ctxhostpart" (mctxhostpart mctx)
+          F.value "ctxlang" (codeFromLang $ mctxlang mctx)
+          F.value "documenttitle" $ documenttitle doc
+          F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
+          brandingMailFields (mctxcurrentBrandedDomain mctx) mcompanyui
+          otherfields
     kontramaillocal (mctxmailsconfig mctx) (mctxcurrentBrandedDomain mctx) haslang mailname allfields
 
 brandingMailFields :: Monad m => Maybe BrandedDomain -> Maybe CompanyUI -> Fields m ()

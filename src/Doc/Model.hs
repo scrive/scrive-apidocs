@@ -26,6 +26,7 @@ module Doc.Model
   , GetDocumentByDocumentID(..)
   , GetDocumentsByDocumentIDs(..)
   , GetDocumentBySignatoryLinkID(..)
+  , GetDocumentsBySignatoryLinkIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentsByAuthor(..)
   , GetSignatoryScreenshots(..)
@@ -1266,9 +1267,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ELegAbortDocument () where
         msg2 = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                     CancelDocumenElegEvidence
-                    (value "actor" (actorWho actor) >> value "msg" msg2 )
+                    (value "msg" msg2)
                     (Just did)
-                    (Just slid)
+                    (Just sl)
                     Nothing
                     actor
     updateMTimeAndObjectVersion did (actorTime actor)
@@ -1282,12 +1283,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument () where
                  sqlWhereDocumentIDIs did
                  sqlWhereDocumentTypeIs Signable
                  sqlWhereDocumentStatusIs Pending
-    _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    _ <- update $ InsertEvidenceEvent
                   CancelDocumentEvidence
-                  (value "actor" (actorWho actor))
+                  (return ())
                   (Just did)
-                  Nothing
-                  Nothing
                   actor
     updateMTimeAndObjectVersion did (actorTime actor)
     return ()
@@ -1311,7 +1310,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
               sqlWhereDocumentStatusIs Pending
       _ <- update $ InsertEvidenceEvent
           ChangeSignatoryEmailWhenUndeliveredEvidence
-          (value "oldemail" oldemail >> value "newemail" email >> value "actor" (actorWho actor))
+          (value "oldemail" oldemail >> value "newemail" email)
           (Just did)
           actor
       updateMTimeAndObjectVersion did (actorTime actor)
@@ -1336,7 +1335,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneWhenUnd
               sqlWhereDocumentStatusIs Pending
       _ <- update $ InsertEvidenceEvent
           ChangeSignatoryPhoneWhenUndeliveredEvidence
-          (value "oldphone" oldphone >> value "newphone" phone >> value "actor" (actorWho actor))
+          (value "oldphone" oldphone >> value "newphone" phone)
           (Just did)
           actor
       updateMTimeAndObjectVersion did (actorTime actor)
@@ -1383,8 +1382,7 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
               Just tot <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
               _ <- update $ InsertEvidenceEvent
                 PreparationToPendingEvidence
-                (  value "actor" (actorWho actor)
-                >> value "timezone" (maybe "" TimeZoneName.toString mtzn)
+                (  value "timezone" (maybe "" TimeZoneName.toString mtzn)
                 >> value "lang" (show lang)
                 >> value "timeouttime" (formatMinutesTimeUTC tot))
                 (Just docid)
@@ -1403,7 +1401,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
                  sqlWhereAllSignatoriesHaveSigned
     _ <- update $ InsertEvidenceEvent
                 CloseDocumentEvidence
-                (value "actor" (actorWho actor))
+                (return ())
                 (Just docid)
                 actor
     updateMTimeAndObjectVersion docid (actorTime actor)
@@ -1428,7 +1426,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () wher
       sqlWhereSignatoryHasNotSigned
     _ <- update $ InsertEvidenceEvent
                     DeleteSigAttachmentEvidence
-                    (value "actor" (actorWho actor) >> value "name" saname >> value "email" email)
+                    (value "name" saname >> value "email" email)
                     (Just did)
                     actor
     return ()
@@ -1444,7 +1442,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
 
     _ <- update $ InsertEvidenceEvent
                 ErrorDocumentEvidence
-                (value "errmsg" errmsg >> value "actor" (actorWho actor))
+                (value "errmsg" errmsg)
                 (Just docid)
                 actor
     return ()
@@ -1577,6 +1575,15 @@ instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) wh
          sqlWhereEq "signatory_links.id" slid
          sqlWhere "signatory_links.document_id = documents.id"))
 
+data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
+instance MonadDB m => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
+  query (GetDocumentsBySignatoryLinkIDs slids) =
+     selectDocuments $ sqlSelect "documents" $ do
+       mapM_ sqlResult documentsSelectors
+       sqlWhereExists $ sqlSelect "signatory_links" $ do
+         sqlWhereIn "signatory_links.id" slids
+         sqlWhere "signatory_links.document_id = documents.id"
+
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
@@ -1678,12 +1685,11 @@ data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID (M
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool where
   update (AddInvitationEvidence docid slid mmsg actor) = do
         sig <- query $ GetSignatoryLinkByID docid slid Nothing
-        let signame = getIdentifier sig
         _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           InvitationEvidence
-          (value "signatory" signame >> value "actor" (actorWho actor))
+          (return ())
           (Just docid)
-          (Just slid)
+          (Just sig)
           mmsg
           actor
         return True
@@ -1701,9 +1707,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
                       sqlWhere "read_invitation IS NULL"
         _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
             MarkInvitationReadEvidence
-            (value "email" eml >> value "actor" (actorWho actor))
+            (value "email" eml)
             (Just did)
-            (Just slid)
+            (Just sig)
             Nothing
             actor
         return success
@@ -1711,41 +1717,40 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
 data NewDocument = NewDocument User String DocumentType Int Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (Maybe Document) where
   update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
-  let ctime = actorTime actor
-  magichash <- random
-  authorFields <- signatoryFieldsFromUser user
-  let authorlink0 = signLinkFromDetails' authorFields True True (SignOrder 1) [] magichash
+    let ctime = actorTime actor
+    magichash <- random
+    authorFields <- signatoryFieldsFromUser user
+    let authorlink0 = signLinkFromDetails' authorFields True True (SignOrder 1) [] magichash
 
-  let authorlink = authorlink0 {
-                         maybesignatory = Just $ userid user }
+    let authorlink = authorlink0 {
+                           maybesignatory = Just $ userid user }
 
-  othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
-                        mh <- random
-                        return $ signLinkFromDetails' emptySignatoryFields False True (SignOrder 2) [] mh
+    othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
+                          mh <- random
+                          return $ signLinkFromDetails' emptySignatoryFields False True (SignOrder 2) [] mh
 
-  let doc = defaultValue
-                { documenttitle                = title
-                , documentsignatorylinks       = authorlink : othersignatories
-                , documenttype                 = documenttype
-                , documentlang                 = getLang user
-                , documentctime                = ctime
-                , documentmtime                = ctime
-                , documentauthorattachments    = []
-                }
+    let doc = defaultValue
+                  { documenttitle                = title
+                  , documentsignatorylinks       = authorlink : othersignatories
+                  , documenttype                 = documenttype
+                  , documentlang                 = getLang user
+                  , documentctime                = ctime
+                  , documentmtime                = ctime
+                  , documentauthorattachments    = []
+                  }
 
-  midoc <- insertDocumentAsIs doc
-  case midoc of
-      Just _ -> return midoc
-      Nothing -> do
-        Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-        return Nothing
+    midoc <- insertDocumentAsIs doc
+    case midoc of
+        Just _ -> return midoc
+        Nothing -> do
+          Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+          return Nothing
 
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where
   update (RejectDocument docid slid customtext actor) = do
     let time = actorTime actor
-    sig <- query $ GetSignatoryLinkByID docid slid Nothing
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                                      sqlSet "status" Rejected
                                      sqlFrom "signatory_links"
@@ -1769,7 +1774,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument () where
 
     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   RejectDocumentEvidence
-                  (value "email" (getEmail sig) >> value "actor" (actorWho actor))
+                  (return ())
                   (Just docid)
                   Nothing
                   customtext
@@ -1790,7 +1795,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
             copyEvidenceLogToNewDocument (documentid doc) (documentid d)
             _ <- update $ InsertEvidenceEvent
               RestartDocumentEvidence
-              (value "did" (show $ documentid doc) >> value "actor" (actorWho actor))
+              (return ())
               (Just $ documentid d)
               actor
             return $ Just d
@@ -1883,7 +1888,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment () where
 
     _ <- update $ InsertEvidenceEvent
         SaveSigAttachmentEvidence
-        (value "name" name  >> value "actor" (actorWho actor))
+        (value "name" name)
         (Just did)
         actor
     return ()
@@ -1918,7 +1923,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime () wh
     when (old_tm /= Just invitetime || old_ip /= Just ipaddress) $ do
       void $ update $ InsertEvidenceEvent
         SetDocumentInviteTimeEvidence
-        (value "time" (formatMinutesTimeUTC invitetime) >> value "actor" (actorWho actor))
+        (return ())
         (Just did)
         actor
 
@@ -1956,17 +1961,17 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetEmailInvitationDeliveryS
     when_ (changed && status == Delivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         InvitationDeliveredByEmail
-        (value "email" (getEmail sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (return ())
         (Just did)
-        (Just slid)
+        (Just nsig)
         Nothing
         actor
     when_ (changed && status == Undelivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         InvitationUndeliveredByEmail
-        (value "email" (getEmail sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (return ())
         (Just did)
-        (Just slid)
+        (Just nsig)
         Nothing
         actor
     return True
@@ -1988,17 +1993,17 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetSMSInvitationDeliverySta
     when_ (changed && status == Delivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         InvitationDeliveredBySMS
-        (value "phone" (getMobile sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (return ())
         (Just did)
-        (Just slid)
+        (Just nsig)
         Nothing
         actor
     when_ (changed && status == Undelivered) $
       update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
         InvitationUndeliveredBySMS
-        (value "phone" (getMobile sig) >> value "status" (show status) >> value "actor" (actorWho actor))
+        (return ())
         (Just did)
-        (Just slid)
+        (Just nsig)
         Nothing
         actor
     return True
@@ -2065,11 +2070,12 @@ instance (MonadDB m, TemplatesMonad m, Applicative m, CryptoRNG m) => DBUpdate m
                               value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
                               value "ocsp" $ signatureinfoocspresponse si
                               value "infotext" $ signatureinfotext si
+            sl <- query $ GetSignatoryLinkByID docid slid Nothing
             _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 SignDocumentEvidence
-                (signatureFields >> value "actor" (actorWho actor))
+                signatureFields
                 (Just docid)
-                (Just slid)
+                (Just sl)
                 Nothing
                 actor
             _ <- insertSignatoryScreenshots [(slid, screenshots)]
@@ -2160,7 +2166,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
        sqlWhereDocumentStatusIs Pending
     _ <- update $ InsertEvidenceEvent
         TimeoutDocumentEvidence
-        (value "actor" (actorWho actor))
+        (return ())
         (Just did)
         actor
     updateMTimeAndObjectVersion did (actorTime actor)
@@ -2179,7 +2185,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
        sqlWhereDocumentStatusIs Timedout
     _ <- update $ InsertEvidenceEvent
         ProlongDocumentEvidence
-        (value "actor" (actorWho actor))
+        (return ())
         (Just did)
         actor
     return ()
@@ -2193,12 +2199,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL B
                sqlWhereEq "id" did
 
 
-data AddSignatoryLinkVisitedEvidence = AddSignatoryLinkVisitedEvidence DocumentID SignatoryLink Actor
+data AddSignatoryLinkVisitedEvidence = AddSignatoryLinkVisitedEvidence DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddSignatoryLinkVisitedEvidence () where
-   update (AddSignatoryLinkVisitedEvidence did sl actor) = do
+   update (AddSignatoryLinkVisitedEvidence did actor) = do
         _ <-update $ InsertEvidenceEvent
           SignatoryLinkVisited
-          (value "name" (getIdentifier sl))
+          (return ())
           (Just $ did)
           actor
         return ()
@@ -2220,9 +2226,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
 
      _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           ReminderSend
-          (value "name" (getIdentifier sl))
+          (return ())
           (Just $ documentid doc)
-          (Just $ signatorylinkid sl)
+          (Just sl)
           mmsg
           actor
      updateMTimeAndObjectVersion (documentid doc) (actorTime actor)

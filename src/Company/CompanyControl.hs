@@ -125,31 +125,31 @@ handleGetCompanyJSON mcid = do
   withCompanyUserOrAdminOnly mcid $ \(editable, company) -> do
     companyui <- dbQuery $ GetCompanyUI (companyid company)
     runJSONGenT $ do
-    value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
-    value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui
-    value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui
-    value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui
-    value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui
-    value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui
-    value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui)
-    value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
-    value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
-    value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
-    value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
-    value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
-    value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
-    value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
-    value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui
-    value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
-    value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
-    value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
-    value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
-    value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
-    value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
-    value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
-    value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
-    value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
-    value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
-    value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
-    value "editable" editable
-    value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)
+      value "companyemailfont" $ fromMaybe "" $ companyemailfont $ companyui
+      value "companyemailbordercolour" $ fromMaybe "" $ companyemailbordercolour $ companyui
+      value "companyemailbuttoncolour" $ fromMaybe "" $ companyemailbuttoncolour $ companyui
+      value "companyemailemailbackgroundcolour" $ fromMaybe "" $ companyemailemailbackgroundcolour $ companyui
+      value "companyemailbackgroundcolour" $ fromMaybe "" $ companyemailbackgroundcolour $ companyui
+      value "companyemailtextcolour" $ fromMaybe "" $ companyemailtextcolour $ companyui
+      value "companyemaillogo" $ fromMaybe "" $ ((++) "data:image/png;base64,")  <$> BS.toString . B64.encode . unBinary <$> (companyemaillogo $ companyui)
+      value "companysignviewlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companysignviewlogo $ companyui)
+      value "companysignviewtextcolour" $ fromMaybe "" $ companysignviewtextcolour $ companyui
+      value "companysignviewtextfont" $ fromMaybe "" $ companysignviewtextfont $ companyui
+      value "companysignviewbarscolour" $ fromMaybe "" $ companysignviewbarscolour $ companyui
+      value "companysignviewbarstextcolour" $ fromMaybe "" $ companysignviewbarstextcolour $ companyui
+      value "companysignviewbackgroundcolour" $ fromMaybe "" $ companysignviewbackgroundcolour $ companyui
+      value "companycustomlogo" $ fromMaybe ""  $ ((++) "data:image/png;base64,")  <$> BS.toString .  B64.encode . unBinary <$> (companycustomlogo $ companyui)
+      value "companycustombarscolour" $ fromMaybe "" $ companycustombarscolour $ companyui
+      value "companycustombarstextcolour" $ fromMaybe "" $ companycustombarstextcolour $ companyui
+      value "companycustombarssecondarycolour" $ fromMaybe "" $ companycustombarssecondarycolour $ companyui
+      value "companycustombackgroundcolour" $ fromMaybe "" $ companycustombackgroundcolour $ companyui
+      value "domaincustomlogo" $ fromMaybe "" $ bdlogolink <$> currentBrandedDomain ctx
+      value "domainbarscolour" $ fromMaybe "" $ bdbarscolour <$> currentBrandedDomain ctx
+      value "domainbarstextcolour" $ fromMaybe "" $ bdbarstextcolour <$> currentBrandedDomain ctx
+      value "domainbarssecondarycolour" $ fromMaybe "" $ bdbarssecondarycolour <$> currentBrandedDomain ctx
+      value "domainbackgroundcolour" $ fromMaybe "" $ bdbackgroundcolour <$> currentBrandedDomain ctx
+      value "domainmailsbackgroundcolor" $ fromMaybe "" $ bdmailsbackgroundcolor <$> currentBrandedDomain ctx
+      value "domainmailsbuttoncolor" $ fromMaybe "" $ bdmailsbuttoncolor <$> currentBrandedDomain ctx
+      value "domainmailstextcolor" $ fromMaybe "" $ bdmailstextcolor <$> currentBrandedDomain ctx
+      value "editable" editable
+      value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)

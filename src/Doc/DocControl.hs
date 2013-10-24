@@ -180,7 +180,7 @@ handleSignShowSaveMagicHash did sid mh = do
   ctx <- getContext
   document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
   invitedlink <- guardJust $ getSigLinkFor document sid
-  dbUpdate $ AddSignatoryLinkVisitedEvidence did invitedlink (signatoryActor (ctxtime ctx) (ctxipnumber ctx) invitedlink)
+  dbUpdate $ AddSignatoryLinkVisitedEvidence did (signatoryActor (ctxtime ctx) (ctxipnumber ctx) invitedlink)
 
   -- Redirect to propper page
   return $ LinkSignDocNoMagicHash did sid
