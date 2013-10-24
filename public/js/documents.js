@@ -244,6 +244,7 @@ window.Document = Backbone.Model.extend({
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
             ajax: true,
+            expectedType : "text",
             ajaxsuccess : function(docdata) {
               var docjson = JSON.parse(docdata);
               var newdoc = new Document(new Document({}).parse(docjson));
