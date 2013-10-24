@@ -245,14 +245,16 @@ window.Document = Backbone.Model.extend({
             fields: JSON.stringify(fields),
             ajax: true,
             ajaxsuccess : function(docdata) {
-              var newdoc = new Document(new Document({}).parse(docdata));
+              var docjson = JSON.parse(docdata);
+              var newdoc = new Document(new Document({}).parse(docjson));
               var success = _.any(newdoc.signatories(), function(s) { return s.signatoryid() == document.currentSignatory().signatoryid() && s.hasSigned() });
               if (success &&  document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "") {
                 window.location = document.currentSignatory().signsuccessredirect();
               }
-              if (!success &&  document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
+              else if (!success &&  document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
                 window.location = document.currentSignatory().rejectredirect();
-              } else {
+              }
+              else {
                 window.scroll(0,0);
                 window.location.reload();
               }
