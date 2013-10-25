@@ -126,7 +126,7 @@ unescapeHTML [] = []
 unescapeHTML ('&':xs) =
   let (b, a) = break (== ';') xs in
   case lookupEntity b of
-    Just c | listToMaybe a == Just ';' ->  c  : unescapeHTML (tail a)
+    Just c | listToMaybe a == Just ';' ->  c ++ unescapeHTML (tail a)
     _                                  -> '&' : unescapeHTML xs
 unescapeHTML (x:xs) = x : unescapeHTML xs
 

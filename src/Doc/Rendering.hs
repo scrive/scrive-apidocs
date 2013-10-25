@@ -29,7 +29,6 @@ import Kontra
 import Utils.IO
 import Utils.Read
 import Utils.String
-import Prelude hiding (catch)
 import System.Directory
 import System.Exit
 import System.IO

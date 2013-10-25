@@ -32,7 +32,6 @@ import qualified Control.Monad.Writer.Lazy as LW
 import qualified Control.Monad.Writer.Strict as SW
 import qualified Text.StringTemplates.Templates as T
 
-import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB.Nexus
 import Log
