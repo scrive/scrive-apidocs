@@ -93,8 +93,8 @@ instance Show StatusClass where
   show SCOpened = "opened"
   show SCSigned = "signed"
   show SCProlonged = "prolonged"
-  show SCSealed = "sealed"
-  show SCExtended = "extended"
+  show SCSealed = "signed"   -- replace with "sealed" once we have the icons and given them to iPad devs
+  show SCExtended = "signed" -- replace with "extended" once we have the icons and given them to iPad devs
 
 instance Read StatusClass where
   readsPrec _ str =
