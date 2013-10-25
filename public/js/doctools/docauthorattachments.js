@@ -47,8 +47,8 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
   },
   authorAttachmentFile: function(attachment, labelCss) {
     var container = $("<div class='item' />");
-    var buttonSize = BrowserInfo.isSmallScreen() ? 'small' : 'tiny';
-    var button = new Button({color: "black", text: localization.reviewPDF, cssClass: 'float-right', size: buttonSize, onClick: function() {
+    var buttonSize = 'small';
+    var button = new Button({color: "signview-blue", text: localization.reviewPDF, cssClass: 'float-right', size: buttonSize, onClick: function() {
                         window.open(attachment.downloadLink(), '_blank');
                         }});
     container.append(button.el());

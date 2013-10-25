@@ -33,7 +33,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
   },
   evidenceAttachmentFile: function(attachment) {
     var container = $("<div class='item' />");
-    var button = new Button({color: "green", text: localization.reviewAttachment, cssClass: 'float-right', size:'tiny', onClick: function() {
+    var button = new Button({color: "signview-blue", text: localization.reviewAttachment, cssClass: 'float-right', size:'small', onClick: function() {
                         window.open(attachment.downloadLink, '_blank');
                         }});
     container.append(button.el());

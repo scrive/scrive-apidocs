@@ -25,7 +25,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   removeButton: function() {
     var attachment = this.model;
     var deleteurl = this.deleteURL();
-    var button = new Button({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
+    var button = new Button({color: "red", text: localization.deletePDF, size:'small', onClick: function() {
             attachment.loading();
             $.ajax(deleteurl, {
               type: 'DELETE',
@@ -46,8 +46,8 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     var attachment = this.model;
     var uploadurl = this.uploadURL();
     return new UploadButton({
-      width: 120,
-      size : 'tiny',
+      width: 160,
+      size : 'small',
       name: "file",
       text: localization.signatoryAttachmentUploadButton,
       submitOnUpload: true,
@@ -109,7 +109,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   reviewButton: function() {
       var model = this.model;
-      var button = new Button({color: "green", text: localization.reviewPDF, size:'tiny', cssClass : 's-review-sigattachment', onClick: function() {
+      var button = new Button({color: "signview-blue", text: localization.reviewPDF, size:'small', cssClass : 's-review-sigattachment', onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
           }});
       return button;
@@ -130,7 +130,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
             container.append(this.removeButton().el());
 
       } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
-          container.append(this.uploadButton().el().addClass('float-right').css("height","40px").css("overflow","hidden"));
+          container.append(this.uploadButton().el().addClass('float-right').css("overflow","hidden"));
       }
       container.append($("<div class='clearfix' />"));
 
