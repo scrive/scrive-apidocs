@@ -596,7 +596,7 @@
 "_padAddToPadQueueConfirmHeader":"Är du säker på att du vill skicka detta dokument för att signera på en annan enhet?",
 "_padAddToPadQueueConfirmText":"Dokumentet kommer att skickas till den externa enheten för signering.",
 "_padAddToPadQueueNotAdded":"Dokumentet kunde inte skickas till den externa enheten.",
-"_padCleanImage":"Ta bort signatur",
+"_padCleanImage":"Ta bort signatur och försök igen",
 "_padDelivery":"Personligt möte",
 "_padDrawSignature":"rita din signatur",
 "_padDrawSignatureBoxHeader":"Rita din signatur i rutan",

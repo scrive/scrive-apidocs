@@ -79,7 +79,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
     },
     header: function() {
         var self = this;
-        var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 15px 40px;'/>");
+        var header =  $("<div class='header' style='text-align:left;margin-right:20px;margin: 25px 40px;'/>");
         header.append($("<div style='font-size:28px;line-height:32px'>").text(this.model.drawingMode() ? localization.pad.drawSignatureBoxHeader : localization.pad.typeSignatureBoxHeader));
         var row1 = $("<div>");
         header.append(row1);
@@ -89,11 +89,10 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                                                             .click(function() { self.model.toogleMode(); return false;}))
                    );
         }
-        if (this.model.drawingMode()) {
-          row1.append($("<label class='clickable' style='float:right'/>").text(localization.pad.cleanImage).click(function() { self.model.typerOrDrawer().clear(); return false;}));
-        }
-        else {
-          var textInput = new InfoTextInput({
+
+        header.append($("<a class='modal-close'/>").click(function() { self.model.onClose();}));
+        if (!this.model.drawingMode()) {
+          this.textInput = new InfoTextInput({
                                infotext : "Please type your name",
                                cssClass : "float-left",
                                style: "margin-right:10px;border: 1px solid #7A94B8;width:170px;",
@@ -133,17 +132,10 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                                    , onSelect: function() {self.model.typerOrDrawer().setFont('TheOnlyException');self.render();return true;} }
                                 ]
                             });
-          var row2 = $("<div style='margin:4px 0px;height:32px'>");
+          var row2 = $("<div style='margin:4px 0px;height:42px'>");
           header.append(row2);
-          row2.append(textInput.el())
+          row2.append(this.textInput.el())
               .append($("<div style='width:200px;float:left;'/>").append(fontSelect.el()))
-              .append($("<label class='clickable' style='float:right'/>").text(localization.pad.cleanImage).click(
-                  function() {
-                      textInput.setValue("");
-                      textInput.focus();
-                      return false;
-                  })
-          );
         }
         return header;
     },
@@ -159,6 +151,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
         return new Button({
                     color : 'green',
                     size: 'small',
+                    style: "float:right;margin-top:-2px;",
                     text: localization.signature.confirmSignature,
                     onClick : function(){
                         self.model.typerOrDrawer().saveImage();
@@ -167,26 +160,39 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
                     }
             }).el();
     },
+    cleanButton : function() {
+        var self = this;
+        var signatory = this.model.field().signatory();
+        return new Button({
+                    color : 'black',
+                    size: 'small',
+                    style: "float:left;margin-top:-2px;",
+                    text: localization.pad.cleanImage,
+                    onClick : function(){
+                        if (self.model.drawingMode()) {
+                          self.model.typerOrDrawer().clear();
+                        }
+                        else if (self.textInput != undefined) {
+                              self.textInput.setValue("");
+                              self.textInput.focus();
+                        }
+                        return false;
+                    }
+            }).el();
+    },
     footer : function() {
            var self = this;
            var signatory = this.model.field().signatory();
            var abutton = this.acceptButton();
-           abutton.addClass("float-right");
-           abutton.css('margin-top', '-4px');
 
            var canceloption = $("<label class='delete' style='float:left;margin-right:20px;line-height: 40px;'></label>").text(localization.cancel).click(function() {
                                      self.model.onClose();
                                      return false;
                               });
 
-           var detailsBox = $("<div class='details-box float-left' />");
-           var name = signatory.nameOrEmail();
-           var company = signatory.company();
+           var cleanoption = this.cleanButton();
 
-           detailsBox.append($("<div class='header'/>").text(name));
-           detailsBox.append($("<div class='subheader'/>").text(company ));
-
-           return $('<div></div>').append(detailsBox).append($("<div class='modal-footer'/>").append(abutton).append(canceloption));
+           return $('<div></div>').append($("<div class='modal-footer'/>").append(abutton).append(canceloption).append(cleanoption));
     },
     render: function () {
         var box = $(this.el).empty();
@@ -204,7 +210,7 @@ window.SignatureDrawOrTypeModal = function(args){
         var width = BrowserInfo.isSmallScreen() ? 980 : 900;
         var left = Math.floor(((window.innerWidth ? window.innerWidth : $(window).width()) - width) / 2);
         var modal = $("<div class='modal'></div>").css("height", $(document).height()).css("min-width", "1018px");
-        var container = $("<div class='modal-container drawing-modal grey'/>").css("width",width);
+        var container = $("<div class='modal-container drawing-modal'/>").css("width",width);
 
         if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
 

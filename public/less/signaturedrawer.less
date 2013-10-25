@@ -1,13 +1,15 @@
 @import 'designview/util.less';
 
 .drawing-modal {
-  width: 900px;
-  background-color: #FEFEFE;
-  border: 5px solid  #666666;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
   z-index : 5001;
+  .modal-close {
+      background-image: url("/img/sprite-grey-X.png");
+  }
+  .modal-footer {
+    border-top: medium none;
+    margin: 0;
+    padding: 21px 38px;
+  }
 
   .signatureDrawingBoxWrapper {
     margin: 10px auto;
@@ -31,22 +33,4 @@
     color : #000000;
     margin: 20px auto;
   }
-   .details-box {
-      float: none;
-      padding-left: 40px;
-      text-align: left;
-      margin-bottom: 10px;
-      .header {
-        font-size: large;
-        font-style: italic;
-        color : #444444;
-        margin: 0px auto;
-      }
-
-      .subheader {
-        font-size: small;
-        color : #777777;
-        margin: 2px auto;
-      }
-    }
 }

@@ -596,7 +596,7 @@
 "_padAddToPadQueueConfirmHeader":"Are you sure you want to send this document for signing on another device?",
 "_padAddToPadQueueConfirmText":"Document will be send to the external device for signing.",
 "_padAddToPadQueueNotAdded":"Document could not be send to the external device",
-"_padCleanImage":"Clear signature",
+"_padCleanImage":"Clear signature and try again",
 "_padDelivery":"In-person meeting",
 "_padDrawSignature":" draw your signature",
 "_padDrawSignatureBoxHeader":"Draw your signature within the box",
