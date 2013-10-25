@@ -1,4 +1,4 @@
-{-# LANGUAGE DoRec, PatternGuards, CPP, NoOverloadedStrings #-}
+{-# LANGUAGE RecursiveDo, PatternGuards, CPP, NoOverloadedStrings #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where

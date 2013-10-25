@@ -44,7 +44,6 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
 import Crypto.Random
 import Crypto.Random.DRBG
-import Crypto.Types
 import Data.Bits
 import Data.ByteString (ByteString, unpack)
 import Data.Int
@@ -54,8 +53,6 @@ import qualified Control.Monad.State.Lazy as LS
 import qualified Control.Monad.State.Strict as SS
 import qualified Control.Monad.Writer.Lazy as LW
 import qualified Control.Monad.Writer.Strict as SW
-
-import Control.Monad.Trans.Control.Util
 
 -- | The random number generator state.  It sits inside an MVar to
 -- support concurrent thread access.

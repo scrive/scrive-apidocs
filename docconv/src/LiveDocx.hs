@@ -6,8 +6,7 @@ module LiveDocx (
   , convertToPDF
 ) where
 
-import Prelude hiding (catch)
-import Control.Exception (catch)
+import qualified Control.Exception as E (catch)
 
 import Control.Monad()
 import Control.Monad.Reader
@@ -96,7 +95,7 @@ getFileFormatForConversion = maybeRead . map toUpper . dropWhile (== '.') . take
 convertToPDF :: LiveDocxConf -> BS.ByteString -> FileFormat -> IO (Either LiveDocxError BS.ByteString)
 convertToPDF conf filecontents format = do
   start <- getCPUTime
-  res <- catch
+  res <- E.catch
            --withSystemTempFile gives us uniquely named temp file for storing LiveDocx session cookies in for curl
            (withSystemTempFile "livedocx-cookies.txt" $ \cookiefile _cookiefilehandle ->
               liftIO $ runReaderT convertDocument (mkLiveDocxContext conf cookiefile))
