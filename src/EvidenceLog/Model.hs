@@ -63,7 +63,7 @@ signatoryLinkTemplateFields sl = do
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid masl mmsg actor) = do
-   ts <- getTextTemplatesByColumn $ show LANG_EN
+   ts <- getTextTemplatesByColumn $ codeFromLang LANG_EN
    let fields = do
          F.value "full" True
          F.value "actor" $ actorWho actor
