@@ -137,8 +137,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> "  ORDER BY evidence_log.time DESC, id DESC") [
         toSql docid
       ]
-    evs  <- kFold fetchEvidenceLog []
-    return evs
+    kFold fetchEvidenceLog []
     where
       fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg hctime offset frequency =
         DocumentEvidenceEvent {
