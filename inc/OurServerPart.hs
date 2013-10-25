@@ -13,8 +13,6 @@ import Control.Monad.Trans.Control
 import Happstack.Server
 import Log
 
-import Control.Monad.Trans.Control.Util
-
 instance (MonadLog m) => MonadLog (ServerPartT m) where
   logM a b c = lift $ logM a b c
 

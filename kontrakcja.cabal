@@ -157,82 +157,133 @@ Executable kontrakcja-server
 
   ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
-  Build-depends: attoparsec == 0.10.4.0
-  Build-depends: AES == 0.2.8
-  Build-depends: cryptohash == 0.7.5
-  Build-depends: Crypto == 4.2.*
-  Build-depends: DRBG == 0.2.3
-  Build-depends: Decimal == 0.2.3
-  Build-depends: HDBC == 2.3.1.1
-  Build-depends: HDBC-postgresql == 2.3.2.1.2
-  Build-depends: HPDF == 1.4.2
-  Build-depends: HStringTemplate == 0.7.0
-  Build-depends: HTTP == 4000.*
-  Build-depends: HUnit
-  Build-depends: HaXml == 1.22.5
-  Build-depends: MissingH >= 1.2
-  Build-depends: pretty-show == 1.5
-  Build-depends: QuickCheck
-  Build-depends: base >= 4 && < 5
-  Build-depends: base16-bytestring == 0.1.1.5
-  Build-depends: base64-bytestring == 1.0.0.0
-  Build-depends: binary == 0.5.0.2
-  Build-depends: bytestring
-  Build-depends: containers
-  Build-depends: convertible == 1.0.11.0
-  Build-depends: crypto-api == 0.10.1
-  Build-depends: cryptocipher == 0.3.7
-  Build-depends: dataenc == 0.14.0.3
-  Build-depends: directory >= 1.2
-  Build-depends: explicit-exception == 0.1.6
-  Build-depends: extensible-exceptions
-  Build-depends: filepath
-  Build-depends: hS3 == 0.5.6
-  Build-depends: happstack-server==7.1.7.1
-  Build-depends: happstack-static-routing==0.3.1
-  Build-depends: hslogger >= 1.1.4 && < 1.2.2
-  Build-depends: stm == 2.3
-  Build-depends: html == 1.0.1.2
-  Build-depends: iconv == 0.4.1.0
-  Build-depends: json == 0.5
-  Build-depends: list-tries == 0.4.1.1
-  Build-depends: mime == 0.3.3.2
-  Build-depends: mmap==0.5.*
-  Build-depends: mtl == 2.0.*
-  Build-depends: network == 2.3.0.11
-  Build-depends: old-locale
-  Build-depends: old-time
-  Build-depends: parsec == 3.1.1
-  Build-depends: process
-  Build-depends: random
-  Build-depends: regex-tdfa == 1.1.8
-  Build-depends: spreadsheet == 0.1.2
-  Build-depends: tagsoup == 0.12.3
+  Build-depends: base < 6
+  Build-depends: bytestring == 0.10.0.2
   Build-depends: template-haskell
-  Build-depends: temporary == 1.1.2.4
-  Build-depends: test-framework
-  Build-depends: test-framework-hunit
-  Build-depends: test-framework-quickcheck2
-  Build-depends: text == 0.11.2.0
-  Build-depends: monad-control == 0.3.1.1
-  Build-depends: lifted-base == 0.1.0.3
-  Build-depends: transformers-base == 0.4.1
-  Build-depends: time
-  Build-depends: transformers == 0.2.2.0
-  Build-depends: unix
-  Build-depends: utf8-string == 0.3.7
-  Build-depends: zlib == 0.5.3.1
-  Build-depends: zip-archive == 0.1.3.4
-  Build-depends: semigroups == 0.8.2
-  Build-depends: blaze-html == 0.5.0.0
-  Build-depends: tagged == 0.4.1
+  Build-depends: old-time == 1.1.0.1
+  Build-depends: containers == 0.5.0.0
+  Build-depends: unix == 2.6.0.1
+  Build-depends: directory == 1.2.0.1
+  Build-depends: binary == 0.5.1.1
+  Build-depends: old-locale == 1.0.0.5
+  Build-depends: time == 1.4.0.1
+  Build-depends: filepath == 1.3.0.1
+  Build-depends: process == 1.1.0.2
+
+  Build-depends: AES == 0.2.8
+  Build-depends: Crypto == 4.2.5.1
+  Build-depends: DRBG == 0.5.1
+  Build-depends: Decimal == 0.3.1
+  Build-depends: HDBC == 2.3.1.2
+  Build-depends: HDBC-postgresql == 2.3.2.1.2
+  Build-depends: HPDF == 1.4.6
+  Build-depends: HStringTemplate == 0.7.1
+  Build-depends: HTTP == 4000.2.8
+  Build-depends: HUnit == 1.2.5.2
+  Build-depends: HaXml == 1.24
+  Build-depends: MissingH == 1.2.0.2
+  Build-depends: QuickCheck == 2.6
+  Build-depends: ansi-terminal == 0.6
+  Build-depends: ansi-wl-pprint == 0.6.6
+  Build-depends: asn1-data == 0.7.1
+  Build-depends: asn1-types == 0.2.1
+  Build-depends: attoparsec == 0.10.4.0
+  Build-depends: base-unicode-symbols == 0.2.2.4
+  Build-depends: base16-bytestring == 0.1.1.5
+  Build-depends: base64-bytestring == 1.0.0.1
+  Build-depends: blaze-builder == 0.3.1.1
+  Build-depends: blaze-html == 0.6.1.1
+  Build-depends: blaze-markup == 0.5.1.5
+  Build-depends: byteable == 0.1.1
+  Build-depends: cereal == 0.4.0.0
+  Build-depends: certificate == 1.3.9
+  Build-depends: cipher-aes == 0.2.6
+  Build-depends: cipher-aes128 == 0.4.1
+  Build-depends: cipher-blowfish == 0.0.3
+  Build-depends: cipher-camellia == 0.0.2
+  Build-depends: cipher-des == 0.0.5
+  Build-depends: cipher-rc4 == 0.1.4
+  Build-depends: convertible == 1.0.11.1
+  Build-depends: crypto-api == 0.12.2.2
+  Build-depends: crypto-cipher-types == 0.0.7
+  Build-depends: crypto-pubkey-types == 0.4.0
+  Build-depends: cryptocipher == 0.6.1
+  Build-depends: cryptohash == 0.11.1
+  Build-depends: cryptohash-cryptoapi == 0.1.0
+  Build-depends: dataenc == 0.14.0.5
+  Build-depends: digest == 0.0.1.2
+  Build-depends: dlist == 0.5
+  Build-depends: entropy == 0.2.2.4
+  Build-depends: explicit-exception == 0.1.7.1
+  Build-depends: extensible-exceptions == 0.1.1.4
   Build-depends: fields-json == 0.2.2.2
-  Build-depends: static-resources == 0.1.6
-  Build-depends: recurly == 0.0.35
-  Build-depends: threads == 0.5.0.1
-  Build-depends: mixpanel == 0.1.5
-  Build-depends: certificate == 1.3.5
+  Build-depends: hS3 == 0.5.8
+  Build-depends: happstack-server == 7.3.1
+  Build-depends: happstack-static-routing == 0.3.1
+  Build-depends: hashable == 1.2.1.0
+  Build-depends: haskell-lexer == 1.0
+  Build-depends: hostname == 1.0
+  Build-depends: hslogger == 1.2.1
+  Build-depends: html == 1.0.1.2
+  Build-depends: hxt == 9.3.1.1
+  Build-depends: hxt-charproperties == 9.1.1.1
+  Build-depends: hxt-regex-xmlschema == 9.1.0
+  Build-depends: hxt-unicode == 9.0.2.1
+  Build-depends: iconv == 0.4.1.1
+  Build-depends: json == 0.5
   Build-depends: kontrakcja-templates == 0.4
+  Build-depends: lifted-base == 0.2.1.0
+  Build-depends: list-tries == 0.5.1
+  Build-depends: mime == 0.3.4
+  Build-depends: mixpanel == 0.1.5
+  Build-depends: mmap == 0.5.9
+  Build-depends: monad-control == 0.3.2.2
+  --Build-depends: monads-tf == 0.1.0.1
+  Build-depends: mtl == 2.1.2
+  Build-depends: nats == 0.1.2
+  Build-depends: network == 2.4.2.0
+  Build-depends: parallel == 3.2.0.3
+  Build-depends: parsec == 3.1.3
+  Build-depends: pem == 0.2.0
+  Build-depends: polyparse == 1.9
+  Build-depends: pretty-show == 1.6.1
+  Build-depends: prettyclass == 1.0.0.0
+  Build-depends: primitive == 0.5.1.0
+  Build-depends: random == 1.0.1.1
+  Build-depends: recurly == 0.0.35
+  Build-depends: regex-base == 0.93.2
+  Build-depends: regex-compat == 0.95.1
+  Build-depends: regex-posix == 0.95.2
+  Build-depends: regex-tdfa == 1.1.8
+  Build-depends: securemem == 0.1.3
+  Build-depends: semigroups == 0.11
+  Build-depends: sendfile == 0.7.9
+  Build-depends: spreadsheet == 0.1.3.2
+  Build-depends: static-resources == 0.1.6
+  Build-depends: stm == 2.4.2
+  Build-depends: syb == 0.4.1
+  Build-depends: system-filepath == 0.4.8
+  Build-depends: tagged == 0.7
+  Build-depends: tagsoup == 0.13
+  Build-depends: temporary == 1.1.2.4
+  Build-depends: test-framework == 0.8.0.3
+  Build-depends: test-framework-hunit == 0.3.0.1
+  Build-depends: test-framework-quickcheck2 == 0.3.0.2
+  Build-depends: text == 0.11.3.1
+  Build-depends: threads == 0.5.0.2
+  Build-depends: time-compat == 0.1.0.3
+  Build-depends: transformers == 0.3.0.0
+  Build-depends: transformers-base == 0.4.1
+  Build-depends: unordered-containers == 0.2.3.3
+  Build-depends: utf8-string == 0.3.7
+  Build-depends: utility-ht == 0.0.9
+  Build-depends: vector == 0.10.9.1
+  Build-depends: void == 0.6.1
+  Build-depends: xhtml == 3000.2.1
+  Build-depends: xml == 1.3.13
+  Build-depends: zip-archive == 0.1.4
+  Build-depends: zlib == 0.5.4.1
+
   Main-Is: Main.hs
 
   Extensions: BangPatterns,

@@ -15,14 +15,12 @@ import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Util
 import Control.Concurrent
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Maybe
 import Network.AWS.Authentication
 import qualified MemCache
-import Prelude hiding (catch)
 import System.FilePath ((</>))
 import Happstack.Server hiding (result)
 import qualified Network.AWS.AWSConnection as AWS
