@@ -48,6 +48,8 @@ performDBChecks logger tables migrations = do
 
   -- everything is OK, commit changes
   kCommit
+
+  checkUnknownTables logger tables
   return ()
 
 -- | Return SQL fragment of current catalog within quotes
@@ -81,6 +83,20 @@ setByteaOutput logger = do
       kRunRaw $ "ALTER DATABASE " <> dbname <> " SET bytea_output = 'hex'"
       return True
     else return False
+
+
+checkUnknownTables :: MonadDB m => (String -> m ()) -> [Table] -> m ()
+checkUnknownTables logger tables = do
+  kRun_ $ sqlSelect "information_schema.tables" $ do
+        sqlResult "table_name"
+        sqlWhere "table_name <> 'table_versions'"
+        sqlWhere "table_type = 'BASE TABLE'"
+        sqlWhere "table_schema NOT IN ('information_schema','pg_catalog')"
+  desc <- kFold (\acc tn -> tn : acc) []
+  let absent = desc L.\\ map (unRawSQL . tblName) tables
+  when (not (null absent)) $
+    mapM_ (\t -> logger $ "Unknown table '" ++ t ++ "': DROP TABLE " ++ t ++ " CASCADE") absent
+
 
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
