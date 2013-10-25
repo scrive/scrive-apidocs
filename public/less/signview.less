@@ -46,20 +46,19 @@
       display: table;
       overflow: hidden;
       .sender {
-	  float:right;
-	  display:inline-block;
-	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
-	  *display: inline;
-	  zoom: 1;
-	  // END - hack
-	  margin-top:45px;
-
-          text-align: right;
-          vertical-align: middle;
-          color: @text-lighter;
-          .name,.phone  {
+        .ie7 & { /* IE7 has problems with margin top. But this should make it look not too bad. */
+          margin-top:40px;
+          height:auto;
+          display: block;
+        }
+        display:table-cell;
+        height: 100%;
+        text-align: right;
+        vertical-align: middle;
+        color: @text-lighter;
+        .name,.phone  {
             vertical-align: middle;
-          }
+        }
       }
     }
     .logowrapper {
@@ -69,7 +68,9 @@
         *display: inline;
         zoom: 1;
         // END - hack
-        line-height : 120px;
+        margin-top:45px;
+        margin-bottom:45px;
+        line-height : 30px;
 
         .logo {
             margin-left: 38px;
