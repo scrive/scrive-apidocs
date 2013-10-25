@@ -1357,6 +1357,7 @@ testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
 
 testRejectDocumentNotLeft :: TestEnv ()
 testRejectDocumentNotLeft = doTimes 10 $ do
+  _ <- addRandomDocument . randomDocumentAllowsDefault =<< addNewRandomUser
   (did, time, sl) <- rand 10 arbitrary
   let sa = signatoryActor time noIP sl
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
