@@ -290,9 +290,21 @@ window.ConfirmationWithEmail = {
           var overlay = $("<div class='modal'/>");
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
-          overlay.height($(document).height());
+          var overlay_height = null;
+          if (!BrowserInfo.isIE8orLower()) {
+            // IE7 and IE8 don't push the document down,
+            // $(document).height() still reports the old size
+            // but for other browsers make the overlay big asap so it looks good immediately
+            overlay.height($(document).height());
+          }
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
           $("body").append(overlay);
+          if (BrowserInfo.isIE8orLower()) {
+            // for IE7 and IE8 don't make the overlay big, append
+            // it directly and calculate it's real size, so we can increase the
+            // document+overlay size later
+            overlay_height = overlay.height();
+          }
           setTimeout(function() {
             overlay.addClass("active");
             // wait for a second so the browser has the time to
@@ -302,7 +314,12 @@ window.ConfirmationWithEmail = {
             setTimeout(function() {
               // Sometimes when the overlay pushes the document down,
               // we have to make sure that the overlay covers the whole doc.
-              overlay.height($(document).height());
+              if (BrowserInfo.isIE8orLower()) {
+                // increase the overlay size (see prev comments)
+                overlay.height(overlay_height + $(document).height());
+              } else {
+                overlay.height($(document).height());
+              }
             }, 1000);
           },100);
           return model;
