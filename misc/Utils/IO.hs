@@ -98,13 +98,19 @@ checkPathToExecutable filepath = do
     (_code',stdout',_stderr') <- readProcessWithExitCode' "which" [filepath] (BSL.empty)
     return $ BSL.toString stdout'
 
-importantExecutables :: [FilePath]
+checkExecutableVersion :: FilePath -> [String] -> IO String
+checkExecutableVersion path options = do
+    (_code',stdout',stderr') <- readProcessWithExitCode' path options (BSL.empty)
+    return $ BSL.toString stdout' ++ BSL.toString stderr'
+
+
+importantExecutables :: [(FilePath,[String])]
 importantExecutables =
-  [ "java"
-  , "curl"
-  , "mutool"
-  , "mudraw"
-  , "convert"
+  [ ("java", ["-version"])
+  , ("curl", ["-V"])
+  , ("mutool", [])
+  , ("mudraw", [])
+  , ("convert", [])
   ]
 
 checkExecutables :: IO ()
@@ -112,8 +118,13 @@ checkExecutables = do
   Log.debug "Checking paths to executables:"
   mapM_ check (sort importantExecutables)
   where
-    check filepath = do
-      realpath <- checkPathToExecutable filepath
-      if null realpath
+    check (filepath,options) = do
+      realpathlines <- lines `fmap` checkPathToExecutable filepath
+      if null realpathlines
          then Log.debug $ "    " ++ filepath ++ ": *** not found ***"
-         else Log.debug $ "    " ++ filepath ++ ": " ++ head (lines realpath)
+         else do
+            Log.debug $ "    " ++ filepath ++ ": " ++ head (realpathlines)
+            when (options/=[]) $ do
+              ver <- checkExecutableVersion (head realpathlines) options
+              let ver2 = map ("      " ++) $ filter (/="") $ lines ver
+              mapM_ Log.debug ver2
