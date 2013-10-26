@@ -110,9 +110,9 @@ data Migration m = Migration {
   }
 
 data ForeignKey = ForeignKey
-  { fkColumns    :: [RawSQL]
+  { fkColumns    :: S.Set RawSQL
   , fkRefTable   :: RawSQL
-  , fkRefColumns :: [RawSQL]
+  , fkRefColumns :: S.Set RawSQL
   , fkOnUpdate   :: ForeignKeyAction
   , fkOnDelete   :: ForeignKeyAction
   , fkDeferrable :: Bool
@@ -136,9 +136,9 @@ tblForeignKeyColumn column reftable refcolumn =
 tblForeignKeyColumns :: [RawSQL] -> RawSQL -> [RawSQL] -> ForeignKey
 tblForeignKeyColumns columns reftable refcolumns =
   ForeignKey
-  { fkColumns    = columns
+  { fkColumns    = S.fromList columns
   , fkRefTable   = reftable
-  , fkRefColumns = refcolumns
+  , fkRefColumns = S.fromList refcolumns
   , fkOnUpdate   = ForeignKeyCascade
   , fkOnDelete   = ForeignKeyNoAction
   , fkDeferrable = True

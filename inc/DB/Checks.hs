@@ -467,7 +467,7 @@ checkDBConsistency logger tables migrations = do
       kRun_ $ sqlGetIndexes table
       indexes <- kFold fetchTableIndexes []
       -- create indexes on columns marked as foreign keys to speed things up
-      let fk_indexes = map (tblIndexOnColumns . fkColumns) tblForeignKeys
+      let fk_indexes = map (TableIndex . fkColumns) tblForeignKeys
           indexes_definition = L.nub (tblIndexes ++ fk_indexes)
       case validate indexes_definition indexes of
         ValidationError errmsg -> do
@@ -497,7 +497,7 @@ checkDBConsistency logger tables migrations = do
         "fk__"
       , raw tblName
       , "__"
-      , intersperseNoWhitespace "__" (map raw fkColumns)
+      , intersperseNoWhitespace "__" (map raw . S.toAscList $ fkColumns)
       , "__"
       , raw fkRefTable
       ]
@@ -505,9 +505,9 @@ checkDBConsistency logger tables migrations = do
     foreignKeyToSQL :: Table -> ForeignKey -> SQL
     foreignKeyToSQL table fk@ForeignKey{..} = mconcat [
         "ADD CONSTRAINT" <+> genForeignKeyName table fk <+> "FOREIGN KEY ("
-      , intersperseNoWhitespace ", " (map raw fkColumns)
+      , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkColumns)
       , ") REFERENCES" <+> raw fkRefTable <+> "("
-      , intersperseNoWhitespace ", " (map raw fkRefColumns)
+      , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkRefColumns)
       , ") ON UPDATE" <+> foreignKeyActionToSQL fkOnUpdate
       , "  ON DELETE" <+> foreignKeyActionToSQL fkOnDelete
       , " " <> if fkDeferrable then "DEFERRABLE" else "NOT DEFERRABLE"
@@ -536,9 +536,9 @@ checkDBConsistency logger tables migrations = do
 
     fetchForeignKeys :: [(ForeignKey, RawSQL)] -> String -> String -> String -> String -> Char -> Char -> Bool -> Bool -> [(ForeignKey, RawSQL)]
     fetchForeignKeys acc name columns reftable refcolumns on_update on_delete deferrable deferred = (ForeignKey {
-        fkColumns = map unsafeFromString . split "," $ columns
+        fkColumns = S.fromList . map unsafeFromString . split "," $ columns
       , fkRefTable = unsafeFromString reftable
-      , fkRefColumns = map unsafeFromString . split "," $ refcolumns
+      , fkRefColumns = S.fromList . map unsafeFromString . split "," $ refcolumns
       , fkOnUpdate = charToForeignKeyAction on_update
       , fkOnDelete = charToForeignKeyAction on_delete
       , fkDeferrable = deferrable
