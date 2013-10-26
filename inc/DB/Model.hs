@@ -2,6 +2,7 @@ module DB.Model where
 
 import Data.Convertible
 import Database.HDBC.SqlValue
+import qualified Data.Set as S
 
 import DB.Core
 import DB.SQL (RawSQL)
@@ -83,17 +84,17 @@ tblTable = Table
   , tblPutProperties = return ()
   }
 
-data TableIndex = TableIndex { tblIndexColumns :: [RawSQL] }
+data TableIndex = TableIndex { tblIndexColumns :: S.Set RawSQL }
   deriving (Eq, Ord, Show)
 
 tblTableIndex :: TableIndex
-tblTableIndex = TableIndex { tblIndexColumns = [] }
+tblTableIndex = TableIndex { tblIndexColumns = S.empty }
 
 tblIndexOnColumn :: RawSQL -> TableIndex
-tblIndexOnColumn column = TableIndex { tblIndexColumns = [column] }
+tblIndexOnColumn column = TableIndex { tblIndexColumns = S.singleton column }
 
 tblIndexOnColumns :: [RawSQL] -> TableIndex
-tblIndexOnColumns columns = TableIndex { tblIndexColumns = columns }
+tblIndexOnColumns columns = TableIndex { tblIndexColumns = S.fromList columns }
 
 -- | Migration object. Fields description:
 -- * mgrTable is the table you're migrating

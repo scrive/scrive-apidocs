@@ -439,13 +439,13 @@ checkDBConsistency logger tables migrations = do
         "idx__"
       , raw tblName
       , "__"
-      , intersperseNoWhitespace "__" (map raw tblIndexColumns)
+      , intersperseNoWhitespace "__" (map raw . S.toAscList $ tblIndexColumns)
       ]
 
     indexToSQL :: Table -> TableIndex -> SQL
     indexToSQL table@Table{..} idx@TableIndex{..} = mconcat [
         "CREATE INDEX" <+> genIndexName table idx <+> "ON" <+> raw tblName <+> "("
-      , intersperseNoWhitespace ", " (map raw tblIndexColumns)
+      , intersperseNoWhitespace ", " (map raw . S.toAscList $ tblIndexColumns)
       , ")"
       ]
 
@@ -482,16 +482,13 @@ checkDBConsistency logger tables migrations = do
           else ValidationError $ "Table in database has less indexes than definition (missing: " ++ show rest ++ ")"
         validate [] rest = ValidationError $ "Table in database has more indexes than definition (" ++ showProperties rest ++ ")"
         validate (d:defs) indexes = mconcat [
-            case sd `L.lookup` indexes of
+            case tblIndexColumns d `L.lookup` indexes of
               Nothing -> mempty
               Just name -> ValidationOk $ if raw name /= genIndexName table d
                 then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genIndexName table d]
                 else []
-          , validate defs new_indexes
+          , validate defs $ deleteFirst ((== tblIndexColumns d) . fst) indexes
           ]
-          where
-            sd = S.fromList . tblIndexColumns $ d
-            new_indexes = deleteFirst ((== sd) . fst) indexes
 
     -- *** FOREIGN KEYS ***
 
