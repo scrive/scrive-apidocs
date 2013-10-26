@@ -133,6 +133,7 @@ checkDBConsistency logger tables migrations = do
 
     checkTable :: Table -> m (Either Table (Maybe (Table, Int)))
     checkTable table@Table{..} = do
+      logger $ arrListTable table ++ "checking version..."
       mver <- checkVersion table
       case mver of
         Nothing -> do
@@ -156,9 +157,10 @@ checkDBConsistency logger tables migrations = do
                 logger $ "Executing " ++ show sql ++ "..."
                 kRun_ sql
               return $ Right Nothing
-        Just ver -> do
+        Just ver | ver < tblVersion -> do
           logger $ arrListTable table ++ "scheduling for migration " ++ show ver ++ " => " ++ show tblVersion
           return . Right . Just $ (table, ver)
+        Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
 
     checkVersion :: Table -> m (Maybe Int)
     checkVersion table = do
@@ -172,8 +174,14 @@ checkDBConsistency logger tables migrations = do
           mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
           case mver of
             Just ver -> return $ Just ver
-            Nothing  -> return Nothing
-        Nothing -> return Nothing
+            Nothing  -> error $ "Table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."
+        Nothing -> do
+          -- if table is not present, it will be created and version info attempted
+          -- to be written to table_versions, so if it's already there, delete it
+          deleted <- kRun01 $ SQL "DELETE FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
+          when deleted $ do
+            logger $ "Old version info of table '" ++ tblNameString table ++ "' deleted from 'table_versions'."
+          return Nothing
 
     migrate :: [Migration m] -> [(Table, Int)] -> m ()
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
