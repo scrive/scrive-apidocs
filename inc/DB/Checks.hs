@@ -198,6 +198,8 @@ checkDBConsistency logger tables migrations = do
            return ()
          else return ()
 
+    -- *** TABLE STRUCTURE ***
+
     createStatement :: Table -> SQL
     createStatement table@Table{..} = mconcat [
         raw $ "CREATE TABLE" <+> tblName <+> "("
@@ -430,16 +432,39 @@ checkDBConsistency logger tables migrations = do
           where
             new_checks = deleteFirst ((== chkCondition d) . fst) checks
 
+    -- *** INDEXES ***
+
+    genIndexName :: Table -> TableIndex -> SQL
+    genIndexName Table{..} TableIndex{..} = mconcat [
+        "idx__"
+      , raw tblName
+      , "__"
+      , intersperseNoWhitespace "__" (map raw tblIndexColumns)
+      ]
+
+    indexToSQL :: Table -> TableIndex -> SQL
+    indexToSQL table@Table{..} idx@TableIndex{..} = mconcat [
+        "CREATE INDEX" <+> genIndexName table idx <+> "ON" <+> raw tblName <+> "("
+      , intersperseNoWhitespace ", " (map raw tblIndexColumns)
+      , ")"
+      ]
+
+    sqlGetIndexes :: Table -> SQL
+    sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
+      sqlResult "c.relname" -- index name
+      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid), ',')" -- array of affected columns
+      sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
+      sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
+      sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
+      sqlWhereIsNULL "r.contype" -- omit primary keys and column uniques
+
+    fetchTableIndexes :: [(Set RawSQL, RawSQL)] -> String -> String -> [(Set RawSQL, RawSQL)]
+    fetchTableIndexes acc name columns = (S.fromList . map unsafeFromString . split "," $ columns, unsafeFromString name) : acc
+
     checkIndexes :: Table -> Bool -> m ()
     checkIndexes table@Table{..} create_missing = do
       logger $ arrListTable table ++ "checking indexes..."
-      kRun_ . sqlSelect "pg_catalog.pg_class c" $ do
-        sqlResult "c.relname" -- index name
-        sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid), ',')" -- array of affected columns
-        sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
-        sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
-        sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
-        sqlWhereIsNULL "r.contype" -- omit primary keys and column uniques
+      kRun_ $ sqlGetIndexes table
       indexes <- kFold fetchTableIndexes []
       -- create indexes on columns marked as foreign keys to speed things up
       let fk_indexes = map (tblIndexOnColumns . fkColumns) tblForeignKeys
@@ -450,35 +475,17 @@ checkDBConsistency logger tables migrations = do
           error $ "Indexes on table '" ++ tblNameString table ++ "' are invalid."
         ValidationOk sqls -> forM_ sqls $ logged kRun_
       where
-        genIndexName :: TableIndex -> SQL
-        genIndexName TableIndex{..} = mconcat [
-            "idx__"
-          , raw tblName
-          , "__"
-          , intersperseNoWhitespace "__" (map raw tblIndexColumns)
-          ]
-
-        indexToSQL :: TableIndex -> SQL
-        indexToSQL idx@TableIndex{..} = mconcat [
-            "CREATE INDEX" <+> genIndexName idx <+> "ON" <+> raw tblName <+> "("
-          , intersperseNoWhitespace ", " (map raw tblIndexColumns)
-          , ")"
-          ]
-
-        fetchTableIndexes :: [(Set RawSQL, RawSQL)] -> String -> String -> [(Set RawSQL, RawSQL)]
-        fetchTableIndexes acc name columns = (S.fromList . map unsafeFromString . split "," $ columns, unsafeFromString name) : acc
-
         validate :: [TableIndex] -> [(Set RawSQL, RawSQL)] -> ValidationResult
         validate [] [] = mempty
         validate rest [] = if create_missing
-         then ValidationOk $ map indexToSQL rest
-         else ValidationError $ "Table in database has less indexes than definition (missing: " ++ show rest ++ ")"
+          then ValidationOk $ map (indexToSQL table) rest
+          else ValidationError $ "Table in database has less indexes than definition (missing: " ++ show rest ++ ")"
         validate [] rest = ValidationError $ "Table in database has more indexes than definition (" ++ showProperties rest ++ ")"
         validate (d:defs) indexes = mconcat [
             case sd `L.lookup` indexes of
               Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= genIndexName d
-                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genIndexName d]
+              Just name -> ValidationOk $ if raw name /= genIndexName table d
+                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genIndexName table d]
                 else []
           , validate defs new_indexes
           ]
@@ -486,21 +493,73 @@ checkDBConsistency logger tables migrations = do
             sd = S.fromList . tblIndexColumns $ d
             new_indexes = deleteFirst ((== sd) . fst) indexes
 
+    -- *** FOREIGN KEYS ***
+
+    genForeignKeyName :: Table -> ForeignKey -> SQL
+    genForeignKeyName Table{..} ForeignKey{..} = mconcat [
+        "fk__"
+      , raw tblName
+      , "__"
+      , intersperseNoWhitespace "__" (map raw fkColumns)
+      , "__"
+      , raw fkRefTable
+      ]
+
+    foreignKeyToSQL :: Table -> ForeignKey -> SQL
+    foreignKeyToSQL table fk@ForeignKey{..} = mconcat [
+        "ADD CONSTRAINT" <+> genForeignKeyName table fk <+> "FOREIGN KEY ("
+      , intersperseNoWhitespace ", " (map raw fkColumns)
+      , ") REFERENCES" <+> raw fkRefTable <+> "("
+      , intersperseNoWhitespace ", " (map raw fkRefColumns)
+      , ") ON UPDATE" <+> foreignKeyActionToSQL fkOnUpdate
+      , "  ON DELETE" <+> foreignKeyActionToSQL fkOnDelete
+      , " " <> if fkDeferrable then "DEFERRABLE" else "NOT DEFERRABLE"
+      , " INITIALLY" <+> if fkDeferred then "DEFERRED" else "IMMEDIATE"
+      ]
+      where
+        foreignKeyActionToSQL ForeignKeyNoAction = "NO ACTION"
+        foreignKeyActionToSQL ForeignKeyRestrict = "RESTRICT"
+        foreignKeyActionToSQL ForeignKeyCascade = "CASCADE"
+        foreignKeyActionToSQL ForeignKeySetNull = "SET NULL"
+        foreignKeyActionToSQL ForeignKeySetDefault = "SET DEFAULT"
+
+    sqlGetForeignKeys :: Table -> SQL
+    sqlGetForeignKeys table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint r" $ do
+      sqlResult "r.conname" -- fk name
+      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.conrelid AND a.attnum = ANY (r.conkey)), ',') as columns" -- constrained columns
+      sqlResult "c.relname" -- referenced table
+      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.confrelid AND a.attnum = ANY (r.confkey)), ',') as refcolumns" -- referenced columns
+      sqlResult "r.confupdtype" -- on update
+      sqlResult "r.confdeltype" -- on delete
+      sqlResult "r.condeferrable" -- deferrable?
+      sqlResult "r.condeferred" -- initially deferred?
+      sqlJoinOn "pg_catalog.pg_class c" "c.oid = r.confrelid"
+      sqlWhereEqSql "r.conrelid" $ sqlGetTableID table
+      sqlWhereEq "r.contype" 'f'
+
+    fetchForeignKeys :: [(ForeignKey, RawSQL)] -> String -> String -> String -> String -> Char -> Char -> Bool -> Bool -> [(ForeignKey, RawSQL)]
+    fetchForeignKeys acc name columns reftable refcolumns on_update on_delete deferrable deferred = (ForeignKey {
+        fkColumns = map unsafeFromString . split "," $ columns
+      , fkRefTable = unsafeFromString reftable
+      , fkRefColumns = map unsafeFromString . split "," $ refcolumns
+      , fkOnUpdate = charToForeignKeyAction on_update
+      , fkOnDelete = charToForeignKeyAction on_delete
+      , fkDeferrable = deferrable
+      , fkDeferred = deferred
+      }, unsafeFromString name) : acc
+      where
+        charToForeignKeyAction c = case c of
+          'a' -> ForeignKeyNoAction
+          'r' -> ForeignKeyRestrict
+          'c' -> ForeignKeyCascade
+          'n' -> ForeignKeySetNull
+          'd' -> ForeignKeySetDefault
+          _   -> error $ "Invalid foreign key action code: " ++ show c
+
     checkForeignKeys :: Table -> Bool -> m ()
     checkForeignKeys table@Table{..} create_missing = do
       logger $ arrListTable table ++ "checking foreign keys..."
-      kRun_ . sqlSelect "pg_catalog.pg_constraint r" $ do
-        sqlResult "r.conname" -- fk name
-        sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.conrelid AND a.attnum = ANY (r.conkey)), ',') as columns" -- constrained columns
-        sqlResult "c.relname" -- referenced table
-        sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.confrelid AND a.attnum = ANY (r.confkey)), ',') as refcolumns" -- referenced columns
-        sqlResult "r.confupdtype" -- on update
-        sqlResult "r.confdeltype" -- on delete
-        sqlResult "r.condeferrable" -- deferrable?
-        sqlResult "r.condeferred" -- initially deferred?
-        sqlJoinOn "pg_catalog.pg_class c" "c.oid = r.confrelid"
-        sqlWhereEqSql "r.conrelid" $ sqlGetTableID table
-        sqlWhereEq "r.contype" 'f'
+      kRun_ $ sqlGetForeignKeys table
       fks <- kFold fetchForeignKeys []
       case validate tblForeignKeys fks of
         ValidationError errmsg -> do
@@ -508,64 +567,17 @@ checkDBConsistency logger tables migrations = do
           error $ "Foreign keys on table '" ++ tblNameString table ++ "' are invalid."
         ValidationOk sqls -> forM_ sqls $ logged kRun_
       where
-        genForeignKeyName :: ForeignKey -> SQL
-        genForeignKeyName ForeignKey{..} = mconcat [
-            "fk__"
-          , raw tblName
-          , "__"
-          , intersperseNoWhitespace "_" (map raw fkColumns)
-          , "__"
-          , raw fkRefTable
-          ]
-
-        foreignKeyToSQL :: ForeignKey -> SQL
-        foreignKeyToSQL fk@ForeignKey{..} = mconcat [
-            "ADD CONSTRAINT" <+> genForeignKeyName fk <+> "FOREIGN KEY ("
-          , intersperseNoWhitespace ", " (map raw fkColumns)
-          , ") REFERENCES" <+> raw fkRefTable <+> "("
-          , intersperseNoWhitespace ", " (map raw fkRefColumns)
-          , ") ON UPDATE" <+> foreignKeyActionToSQL fkOnUpdate
-          , "  ON DELETE" <+> foreignKeyActionToSQL fkOnDelete
-          , " " <> if fkDeferrable then "DEFERRABLE" else "NOT DEFERRABLE"
-          , " INITIALLY" <+> if fkDeferred then "DEFERRED" else "IMMEDIATE"
-          ]
-          where
-            foreignKeyActionToSQL ForeignKeyNoAction = "NO ACTION"
-            foreignKeyActionToSQL ForeignKeyRestrict = "RESTRICT"
-            foreignKeyActionToSQL ForeignKeyCascade = "CASCADE"
-            foreignKeyActionToSQL ForeignKeySetNull = "SET NULL"
-            foreignKeyActionToSQL ForeignKeySetDefault = "SET DEFAULT"
-
-        fetchForeignKeys :: [(ForeignKey, RawSQL)] -> String -> String -> String -> String -> Char -> Char -> Bool -> Bool -> [(ForeignKey, RawSQL)]
-        fetchForeignKeys acc name columns reftable refcolumns on_update on_delete deferrable deferred = (ForeignKey {
-            fkColumns = map unsafeFromString . split "," $ columns
-          , fkRefTable = unsafeFromString reftable
-          , fkRefColumns = map unsafeFromString . split "," $ refcolumns
-          , fkOnUpdate = charToForeignKeyAction on_update
-          , fkOnDelete = charToForeignKeyAction on_delete
-          , fkDeferrable = deferrable
-          , fkDeferred = deferred
-          }, unsafeFromString name) : acc
-          where
-            charToForeignKeyAction c = case c of
-              'a' -> ForeignKeyNoAction
-              'r' -> ForeignKeyRestrict
-              'c' -> ForeignKeyCascade
-              'n' -> ForeignKeySetNull
-              'd' -> ForeignKeySetDefault
-              _   -> error $ "Invalid foreign key action code: " ++ show c
-
         validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
         validate [] [] = mempty
         validate rest [] = if create_missing
-         then ValidationOk $ ["ALTER TABLE" <+> raw tblName <+> intersperseNoWhitespace ", " (map foreignKeyToSQL rest)]
+         then ValidationOk $ ["ALTER TABLE" <+> raw tblName <+> intersperseNoWhitespace ", " (map (foreignKeyToSQL table) rest)]
          else ValidationError $ "Table in database has less foreign keys than definition (missing: " ++ show rest ++ ")"
         validate [] rest = ValidationError $ "Table in database has more foreign keys than definition (" ++ show rest ++ ")"
         validate (d:defs) fkeys = mconcat [
             case d `L.lookup` fkeys of
               Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= genForeignKeyName d
-                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> foreignKeyToSQL d]
+              Just name -> ValidationOk $ if raw name /= genForeignKeyName table d
+                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> foreignKeyToSQL table d]
                 else []
           , validate defs new_fkeys
           ]
