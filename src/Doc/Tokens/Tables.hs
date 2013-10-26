@@ -46,4 +46,8 @@ tableDocumentSessionTokens = tblTable {
         fkOnDelete = ForeignKeyCascade
       }
     ]
+  , tblIndexes = [
+      tblIndexOnColumn "session_id"
+    , tblIndexOnColumn "signatory_link_id"
+    ]
   }

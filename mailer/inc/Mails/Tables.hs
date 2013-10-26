@@ -49,7 +49,10 @@ tableMailAttachments = tblTable {
       (tblForeignKeyColumn "mail_id" "mails" "id") { fkOnDelete = ForeignKeyCascade }
     , tblForeignKeyColumn "file_id" "files" "id"
     ]
-  , tblIndexes = [tblIndexOnColumn "mail_id"]
+  , tblIndexes = [
+      tblIndexOnColumn "mail_id"
+    , tblIndexOnColumn "file_id"
+    ]
   }
 
 tableMailEvents :: Table

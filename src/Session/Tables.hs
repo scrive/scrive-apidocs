@@ -19,5 +19,8 @@ tableSessions = tblTable {
       (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     , (tblForeignKeyColumn "pad_user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [tblIndexOnColumn "user_id"]
+  , tblIndexes = [
+      tblIndexOnColumn "user_id"
+    , tblIndexOnColumn "pad_user_id"
+    ]
   }

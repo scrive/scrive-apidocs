@@ -21,5 +21,8 @@ tableUsersHistory = tblTable {
         fkOnDelete = ForeignKeySetNull
       }
     ]
-  , tblIndexes = [tblIndexOnColumn "user_id"]
+  , tblIndexes = [
+      tblIndexOnColumn "user_id"
+    , tblIndexOnColumn "performing_user_id"
+    ]
   }

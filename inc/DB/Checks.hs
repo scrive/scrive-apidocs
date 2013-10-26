@@ -112,15 +112,11 @@ checkDBConsistency logger tables migrations = do
     when (not $ null to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap showNotMigrated to_migration_again
   forM_ created $ \table -> do
+    logger $ arrListTable table ++ "creating foreign keys..."
+    createForeignKeys table
     logger $ arrListTable table ++ "putting properties..."
-    -- if table was just created, create missing "outer" constraints
-    checkIndexes table True
-    checkForeignKeys table True
     tblPutProperties table
-  forM_ tables $ \table -> do
-    -- if table is old, check "outer" constraints for consistency (no autocreating)
-    checkIndexes table False
-    checkForeignKeys table False
+  forM_ tables checkForeignKeys
   where
     logged :: (SQL -> m a) -> SQL -> m a
     logged exec sql = do
@@ -143,6 +139,7 @@ checkDBConsistency logger tables migrations = do
       case mver of
         Nothing -> do
           logged kRun_ $ createStatement table
+          forM_ tblIndexes $ logged kRun_ . indexToSQL table
           kRun_ . sqlInsert "table_versions" $ do
             sqlSet "name" (tblNameString table)
             sqlSet "version" tblVersion
@@ -206,14 +203,11 @@ checkDBConsistency logger tables migrations = do
       , intersperseNoWhitespace ", " $ map columnToSQL tblColumns
       , if primaryKeyToSQL table == mempty then "" else ", "
       , primaryKeyToSQL table
-      , if uniquesToSQL == mempty then "" else ", "
-      , uniquesToSQL
       , if checksToSQL == mempty then "" else ", "
       , checksToSQL
       , ")"
       ]
       where
-        uniquesToSQL = intersperseNoWhitespace ", " $ map (uniqueToSQL table) tblUniques
         checksToSQL = intersperseNoWhitespace ", " $ map (checkToSQL table) tblChecks
 
     colTypeToSQL :: ColumnType -> SQL
@@ -241,13 +235,6 @@ checkDBConsistency logger tables migrations = do
         <+> intersperseNoWhitespace ", " (map raw tblPrimaryKey)
         <+> ")"
 
-    uniqueToSQL :: Table -> [RawSQL] -> SQL
-    uniqueToSQL table unique = "CONSTRAINT"
-      <+> genUniqueName table unique
-      <+> "UNIQUE ("
-      <+> intersperseNoWhitespace ", " (map raw unique)
-      <+> ")"
-
     checkToSQL :: Table -> TableCheck -> SQL
     checkToSQL table@Table{..} chk@TableCheck{..} = "CONSTRAINT"
       <+> genCheckName table chk
@@ -257,14 +244,6 @@ checkDBConsistency logger tables migrations = do
 
     genPrimaryKeyName :: Table -> SQL
     genPrimaryKeyName Table{..} = mconcat ["pk__", raw tblName]
-
-    genUniqueName :: Table -> [RawSQL] -> SQL
-    genUniqueName Table{..} cols = mconcat [
-        "unique__"
-      , raw tblName
-      , "__"
-      , intersperseNoWhitespace "_" (map raw cols)
-      ]
 
     genCheckName :: Table -> TableCheck -> SQL
     genCheckName Table{..} TableCheck{chkName} = mconcat [
@@ -310,15 +289,15 @@ checkDBConsistency logger tables migrations = do
       -- get info about constraints from pg_catalog
       kRun_ $ sqlGetConstraintOfType 'p' -- primary key
       pk <- kFold fetchTablePrimaryKey Nothing
-      kRun_ $ sqlGetConstraintOfType 'u' -- uniques
-      uniques <- kFold fetchTableUniques []
       kRun_ $ sqlGetConstraintOfType 'c' -- checks
       checks <- kFold fetchTableChecks []
+      kRun_ $ sqlGetIndexes table
+      indexes <- kFold fetchTableIndexes []
       return $ mconcat [
           checkColumns 0 tblColumns desc
         , checkPrimaryKey tblPrimaryKey pk
-        , checkUniques tblUniques uniques
         , checkChecks tblChecks checks
+        , checkIndexes tblIndexes indexes
         ]
       where
         fetchTableColumn :: [TableColumn] -> String -> ColumnType -> Bool -> Maybe String -> [TableColumn]
@@ -334,9 +313,6 @@ checkDBConsistency logger tables migrations = do
           Just (unsafeFromString name, S.fromList $ map unsafeFromString $ split "," columns)
         fetchTablePrimaryKey _ _ _ =
           error $ "fetchTablePrimaryKey (" ++ tblNameString table ++ "): more than one primary key (shouldn't happen)"
-
-        fetchTableUniques :: [(Set RawSQL, RawSQL)] -> String -> String -> [(Set RawSQL, RawSQL)]
-        fetchTableUniques acc name columns = (S.fromList $ map unsafeFromString $ split "," columns, unsafeFromString name) : acc
 
         fetchTableChecks :: [(RawSQL, RawSQL)] -> String -> String -> [(RawSQL, RawSQL)]
         fetchTableChecks acc name condition = (unsafeFromString condition, unsafeFromString name) : acc
@@ -393,22 +369,6 @@ checkDBConsistency logger tables migrations = do
             else []
           | otherwise = ValidationError $ "Primary key in table definition (" ++ L.intercalate ", " (map unRawSQL def) ++ ") differs from the one in the database (" ++ L.intercalate ", " (map unRawSQL $ S.toList cols) ++ ")"
 
-        checkUniques :: [[RawSQL]] -> [(Set RawSQL, RawSQL)] -> ValidationResult
-        checkUniques [] [] = mempty
-        checkUniques rest [] = ValidationOk $ map (\unique -> "ALTER TABLE" <+> raw tblName <+> "ADD CONTRAINT" <+> uniqueToSQL table unique) rest
-        checkUniques [] rest = ValidationError $ "Table in database has more UNIQUE constraints than definition (" ++ showProperties rest ++ ")"
-        checkUniques (d:defs) uniques = mconcat [
-            case sd `L.lookup` uniques of
-              Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= genUniqueName table d
-                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genUniqueName table d]
-                else []
-          , checkUniques defs new_uniques
-          ]
-          where
-            sd = S.fromList d
-            new_uniques = deleteFirst ((== sd) . fst) uniques
-
         checkChecks :: [TableCheck] -> [(RawSQL, RawSQL)] -> ValidationResult
         checkChecks [] [] = mempty
         checkChecks rest [] = ValidationOk $ map (\chk -> "ALTER TABLE" <+> raw tblName <+> "ADD" <+> checkToSQL table chk) rest
@@ -432,6 +392,19 @@ checkDBConsistency logger tables migrations = do
           where
             new_checks = deleteFirst ((== chkCondition d) . fst) checks
 
+        checkIndexes :: [TableIndex] -> [(TableIndex, RawSQL)] -> ValidationResult
+        checkIndexes [] [] = mempty
+        checkIndexes rest [] = ValidationError $ "Table in database has less indexes than definition (missing: " ++ show rest ++ ")"
+        checkIndexes [] rest = ValidationError $ "Table in database has more indexes than definition (extra: " ++ show rest ++ ")"
+        checkIndexes (d:defs) indexes = mconcat [
+            case d `L.lookup` indexes of
+              Nothing -> mempty
+              Just name -> ValidationOk $ if raw name /= genIndexName table d
+                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genIndexName table d]
+                else []
+          , checkIndexes defs $ deleteFirst ((== d) . fst) indexes
+          ]
+
     -- *** INDEXES ***
 
     genIndexName :: Table -> TableIndex -> SQL
@@ -453,42 +426,17 @@ checkDBConsistency logger tables migrations = do
     sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
       sqlResult "c.relname" -- index name
       sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid), ',')" -- array of affected columns
+      sqlResult "i.indisunique" -- is it unique?
       sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
       sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
       sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
-      sqlWhereIsNULL "r.contype" -- omit primary keys and column uniques
+      sqlWhere "(r.contype IS NULL OR r.contype = 'u')" -- omit primary key
 
-    fetchTableIndexes :: [(Set RawSQL, RawSQL)] -> String -> String -> [(Set RawSQL, RawSQL)]
-    fetchTableIndexes acc name columns = (S.fromList . map unsafeFromString . split "," $ columns, unsafeFromString name) : acc
-
-    checkIndexes :: Table -> Bool -> m ()
-    checkIndexes table@Table{..} create_missing = do
-      logger $ arrListTable table ++ "checking indexes..."
-      kRun_ $ sqlGetIndexes table
-      indexes <- kFold fetchTableIndexes []
-      -- create indexes on columns marked as foreign keys to speed things up
-      let fk_indexes = map (TableIndex . fkColumns) tblForeignKeys
-          indexes_definition = L.nub (tblIndexes ++ fk_indexes)
-      case validate indexes_definition indexes of
-        ValidationError errmsg -> do
-          logger errmsg
-          error $ "Indexes on table '" ++ tblNameString table ++ "' are invalid."
-        ValidationOk sqls -> forM_ sqls $ logged kRun_
-      where
-        validate :: [TableIndex] -> [(Set RawSQL, RawSQL)] -> ValidationResult
-        validate [] [] = mempty
-        validate rest [] = if create_missing
-          then ValidationOk $ map (indexToSQL table) rest
-          else ValidationError $ "Table in database has less indexes than definition (missing: " ++ show rest ++ ")"
-        validate [] rest = ValidationError $ "Table in database has more indexes than definition (" ++ showProperties rest ++ ")"
-        validate (d:defs) indexes = mconcat [
-            case tblIndexColumns d `L.lookup` indexes of
-              Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= genIndexName table d
-                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genIndexName table d]
-                else []
-          , validate defs $ deleteFirst ((== tblIndexColumns d) . fst) indexes
-          ]
+    fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> [(TableIndex, RawSQL)]
+    fetchTableIndexes acc name columns unique = (TableIndex {
+        tblIndexColumns = S.fromList . map unsafeFromString . split "," $ columns
+      , tblIndexUnique = unique
+      }, unsafeFromString name) : acc
 
     -- *** FOREIGN KEYS ***
 
@@ -553,8 +501,13 @@ checkDBConsistency logger tables migrations = do
           'd' -> ForeignKeySetDefault
           _   -> error $ "Invalid foreign key action code: " ++ show c
 
-    checkForeignKeys :: Table -> Bool -> m ()
-    checkForeignKeys table@Table{..} create_missing = do
+    createForeignKeys :: Table -> m ()
+    createForeignKeys table@Table{..} = logged kRun_ $ "ALTER TABLE"
+      <+> raw tblName
+      <+> intersperseNoWhitespace ", " (map (foreignKeyToSQL table) tblForeignKeys)
+
+    checkForeignKeys :: Table -> m ()
+    checkForeignKeys table@Table{..} = do
       logger $ arrListTable table ++ "checking foreign keys..."
       kRun_ $ sqlGetForeignKeys table
       fks <- kFold fetchForeignKeys []
@@ -566,10 +519,8 @@ checkDBConsistency logger tables migrations = do
       where
         validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
         validate [] [] = mempty
-        validate rest [] = if create_missing
-         then ValidationOk $ ["ALTER TABLE" <+> raw tblName <+> intersperseNoWhitespace ", " (map (foreignKeyToSQL table) rest)]
-         else ValidationError $ "Table in database has less foreign keys than definition (missing: " ++ show rest ++ ")"
-        validate [] rest = ValidationError $ "Table in database has more foreign keys than definition (" ++ show rest ++ ")"
+        validate rest [] = ValidationError $ "Table in database has less foreign keys than definition (missing: " ++ show rest ++ ")"
+        validate [] rest = ValidationError $ "Table in database has more foreign keys than definition (extra: " ++ show rest ++ ")"
         validate (d:defs) fkeys = mconcat [
             case d `L.lookup` fkeys of
               Nothing -> mempty

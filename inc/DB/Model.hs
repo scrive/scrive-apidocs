@@ -56,15 +56,16 @@ tblColumn = TableColumn {
   , colDefault = Nothing
   }
 
-data TableCheck = TableCheck { chkName :: RawSQL, chkCondition :: RawSQL }
-  deriving (Ord, Eq, Show)
+data TableCheck = TableCheck {
+  chkName :: RawSQL
+, chkCondition :: RawSQL
+} deriving (Eq, Ord, Show)
 
 data Table = Table {
     tblName             :: RawSQL
   , tblVersion          :: Int
   , tblColumns          :: [TableColumn]
   , tblPrimaryKey       :: [RawSQL]
-  , tblUniques          :: [[RawSQL]]
   , tblChecks           :: [TableCheck]
   , tblForeignKeys      :: [ForeignKey]
   , tblIndexes          :: [TableIndex]
@@ -77,24 +78,37 @@ tblTable = Table
   , tblVersion = error "Table version must be specified"
   , tblColumns = error "Table columns must be specified"
   , tblPrimaryKey = []
-  , tblUniques = []
   , tblChecks = []
   , tblForeignKeys = []
   , tblIndexes = []
   , tblPutProperties = return ()
   }
 
-data TableIndex = TableIndex { tblIndexColumns :: S.Set RawSQL }
-  deriving (Eq, Ord, Show)
+data TableIndex = TableIndex {
+  tblIndexColumns :: S.Set RawSQL
+, tblIndexUnique  :: Bool
+} deriving (Eq, Ord, Show)
 
 tblTableIndex :: TableIndex
-tblTableIndex = TableIndex { tblIndexColumns = S.empty }
+tblTableIndex = TableIndex { tblIndexColumns = S.empty, tblIndexUnique = False }
 
 tblIndexOnColumn :: RawSQL -> TableIndex
-tblIndexOnColumn column = TableIndex { tblIndexColumns = S.singleton column }
+tblIndexOnColumn column = tblTableIndex { tblIndexColumns = S.singleton column }
 
 tblIndexOnColumns :: [RawSQL] -> TableIndex
-tblIndexOnColumns columns = TableIndex { tblIndexColumns = S.fromList columns }
+tblIndexOnColumns columns = tblTableIndex { tblIndexColumns = S.fromList columns }
+
+tblUniqueIndexOnColumn :: RawSQL -> TableIndex
+tblUniqueIndexOnColumn column = TableIndex {
+  tblIndexColumns = S.singleton column
+, tblIndexUnique = True
+}
+
+tblUniqueIndexOnColumns :: [RawSQL] -> TableIndex
+tblUniqueIndexOnColumns columns = TableIndex {
+  tblIndexColumns = S.fromList columns
+, tblIndexUnique = True
+}
 
 -- | Migration object. Fields description:
 -- * mgrTable is the table you're migrating

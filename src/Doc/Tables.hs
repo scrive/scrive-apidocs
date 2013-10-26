@@ -47,6 +47,10 @@ tableMainFiles = tblTable {
       }
     , tblForeignKeyColumn "file_id" "files" "id"
     ]
+  , tblIndexes = [
+      tblIndexOnColumn "document_id"
+    , tblIndexOnColumn "file_id"
+    ]
   }
 
 tableAuthorAttachments :: Table
@@ -63,6 +67,10 @@ tableAuthorAttachments = tblTable {
     , (tblForeignKeyColumn "document_id" "documents" "id") {
         fkOnDelete = ForeignKeyCascade
       }
+    ]
+  , tblIndexes = [
+      tblIndexOnColumn "document_id"
+    , tblIndexOnColumn "file_id"
     ]
   }
 
@@ -83,7 +91,10 @@ tableSignatoryAttachments = tblTable {
         fkOnDelete = ForeignKeyCascade
       }
     ]
-  , tblIndexes = [tblIndexOnColumn "signatory_link_id"]
+  , tblIndexes = [
+      tblIndexOnColumn "file_id"
+    , tblIndexOnColumn "signatory_link_id"
+    ]
   }
 
 tableSignatoryLinks :: Table
@@ -209,5 +220,8 @@ tableSignatoryScreenshots = tblTable {
       },
       (tblForeignKeyColumn "file_id" "files" "id")
     ]
-  , tblIndexes = [tblIndexOnColumn "signatory_link_id"]
+  , tblIndexes = [
+      tblIndexOnColumn "signatory_link_id"
+    , tblIndexOnColumn "file_id"
+    ]
   }

@@ -72,4 +72,9 @@ tableELegTransactions = tblTable {
         fkOnDelete = ForeignKeyCascade
       }
     ]
+  , tblIndexes = [
+      tblIndexOnColumn "session_id"
+    , tblIndexOnColumn "document_id"
+    , tblIndexOnColumn "signatory_link_id"
+    ]
   }

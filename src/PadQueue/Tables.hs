@@ -17,4 +17,9 @@ tablePadQueue = tblTable {
     , (tblForeignKeyColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     , (tblForeignKeyColumn "signatorylink_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
+  , tblIndexes = [
+      tblIndexOnColumn "user_id"
+    , tblIndexOnColumn "document_id"
+    , tblIndexOnColumn "signatorylink_id"
+    ]
   }

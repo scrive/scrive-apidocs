@@ -26,8 +26,7 @@ import DB
 
    These API tokens are used in the first step of the OAuth permission flow.
 
-   Users may add and delete the API Tokens in their account screen, though most users will not 
-   use them.
+   Users may add and delete the API Tokens in their account screen, though most users will not use them.
 -}
 tableAPIToken :: Table
 tableAPIToken = tblTable {
@@ -43,6 +42,7 @@ tableAPIToken = tblTable {
   , tblForeignKeys = [
       (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
+  , tblIndexes = [tblIndexOnColumn "user_id"]
   }
 
 {-
@@ -72,6 +72,10 @@ tableAccessToken = tblTable {
         fkOnDelete = ForeignKeyCascade
       }
     ]
+  , tblIndexes = [
+      tblIndexOnColumn "user_id"
+    , tblIndexOnColumn "api_token_id"
+    ]
   }
 
 {-
@@ -93,6 +97,7 @@ tablePrivilege = tblTable {
         fkOnDelete = ForeignKeyCascade
       }
     ]
+  , tblIndexes = [tblIndexOnColumn "access_token_id"]
   }
 
 migrateTempCredentialRemoveEmail ::  MonadDB m => Migration m
@@ -140,6 +145,10 @@ tableTempCredential = tblTable {
       }
     , (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
+  , tblIndexes = [
+      tblIndexOnColumn "api_token_id"
+    , tblIndexOnColumn "user_id"
+    ]
   }
 
 {- |
@@ -162,4 +171,5 @@ tableTempPrivileges = tblTable {
         fkOnDelete = ForeignKeyCascade
       }
     ]
+  , tblIndexes = [tblIndexOnColumn "temp_token_id"]
   }

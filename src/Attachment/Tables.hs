@@ -21,4 +21,8 @@ tableAttachments = tblTable {
       (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     , (tblForeignKeyColumn "file_id" "files" "id")
     ]
+  , tblIndexes = [
+      tblIndexOnColumn "user_id"
+    , tblIndexOnColumn "file_id"
+    ]
   }
