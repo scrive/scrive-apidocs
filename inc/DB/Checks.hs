@@ -122,6 +122,11 @@ checkDBConsistency logger tables migrations = do
     checkIndexes table False
     checkForeignKeys table False
   where
+    logged :: (SQL -> m a) -> SQL -> m a
+    logged exec sql = do
+      logger $ "Executing " ++ show sql ++ "..."
+      exec sql
+
     tblNameString :: Table -> String
     tblNameString = unRawSQL . tblName
 
@@ -137,9 +142,7 @@ checkDBConsistency logger tables migrations = do
       mver <- checkVersion table
       case mver of
         Nothing -> do
-          let sql = createStatement table
-          logger $ "Executing " ++ show sql ++ "..."
-          kRun_ sql
+          logged kRun_ $ createStatement table
           kRun_ . sqlInsert "table_versions" $ do
             sqlSet "name" (tblNameString table)
             sqlSet "version" tblVersion
@@ -153,9 +156,7 @@ checkDBConsistency logger tables migrations = do
               logger errmsg
               error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
             ValidationOk sqls -> do
-              forM_ sqls $ \sql -> do
-                logger $ "Executing " ++ show sql ++ "..."
-                kRun_ sql
+              forM_ sqls $ logged kRun_
               return $ Right Nothing
         Just ver | ver < tblVersion -> do
           logger $ arrListTable table ++ "scheduling for migration " ++ show ver ++ " => " ++ show tblVersion
@@ -447,9 +448,7 @@ checkDBConsistency logger tables migrations = do
         ValidationError errmsg -> do
           logger errmsg
           error $ "Indexes on table '" ++ tblNameString table ++ "' are invalid."
-        ValidationOk sqls -> forM_ sqls $ \sql -> do
-          logger $ "Executing " ++ show sql ++ "..."
-          kRun_ sql
+        ValidationOk sqls -> forM_ sqls $ logged kRun_
       where
         genIndexName :: TableIndex -> SQL
         genIndexName TableIndex{..} = mconcat [
@@ -507,9 +506,7 @@ checkDBConsistency logger tables migrations = do
         ValidationError errmsg -> do
           logger errmsg
           error $ "Foreign keys on table '" ++ tblNameString table ++ "' are invalid."
-        ValidationOk sqls -> forM_ sqls $ \sql -> do
-          logger $ "Executing " ++ show sql ++ "..."
-          kRun_ sql
+        ValidationOk sqls -> forM_ sqls $ logged kRun_
       where
         genForeignKeyName :: ForeignKey -> SQL
         genForeignKeyName ForeignKey{..} = mconcat [
