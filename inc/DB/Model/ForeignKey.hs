@@ -65,3 +65,6 @@ sqlAddFK tname fk@ForeignKey{..} = mconcat [
     foreignKeyActionToSQL ForeignKeyCascade = "CASCADE"
     foreignKeyActionToSQL ForeignKeySetNull = "SET NULL"
     foreignKeyActionToSQL ForeignKeySetDefault = "SET DEFAULT"
+
+sqlDropFK :: RawSQL -> ForeignKey -> SQL
+sqlDropFK tname fk = "DROP CONSTRAINT" <+> fkName tname fk

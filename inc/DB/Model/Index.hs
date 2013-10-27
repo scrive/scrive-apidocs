@@ -50,3 +50,6 @@ sqlCreateIndex tname idx@TableIndex{..} = mconcat [
   , intersperseNoWhitespace ", " (map raw . S.toAscList $ idxColumns)
   , ")"
   ]
+
+sqlDropIndex :: RawSQL -> TableIndex -> SQL
+sqlDropIndex tname idx = "DROP INDEX" <+> indexName tname idx

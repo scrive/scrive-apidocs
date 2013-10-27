@@ -13,3 +13,6 @@ sqlAddCheck TableCheck{..} = "ADD CONSTRAINT"
   <+> "CHECK ("
   <+> raw chkCondition
   <+> ")"
+
+sqlDropCheck :: TableCheck -> SQL
+sqlDropCheck TableCheck{..} = "DROP CONSTRAINT" <+> raw chkName

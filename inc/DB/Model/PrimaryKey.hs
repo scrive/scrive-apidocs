@@ -1,10 +1,10 @@
 module DB.Model.PrimaryKey (
     PrimaryKey
-  , unsafePrimaryKey
   , pkOnColumn
   , pkOnColumns
   , pkName
   , sqlAddPK
+  , sqlDropPK
   ) where
 
 import Data.Monoid
@@ -14,9 +14,6 @@ import DB.SQL
 
 newtype PrimaryKey = PrimaryKey (S.Set RawSQL)
   deriving (Eq, Ord, Show)
-
-unsafePrimaryKey :: S.Set RawSQL -> PrimaryKey
-unsafePrimaryKey = PrimaryKey
 
 pkOnColumn :: RawSQL -> Maybe PrimaryKey
 pkOnColumn = Just . PrimaryKey . S.singleton
@@ -34,3 +31,6 @@ sqlAddPK tname (PrimaryKey columns) = "ADD CONSTRAINT"
   <+> "PRIMARY KEY ("
   <+> intersperseNoWhitespace ", " (map raw . S.toAscList $ columns)
   <+> ")"
+
+sqlDropPK :: RawSQL -> SQL
+sqlDropPK tname = "DROP CONSTRAINT" <+> pkName tname

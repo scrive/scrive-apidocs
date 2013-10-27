@@ -141,13 +141,14 @@ checkDBConsistency logger tables migrations = do
       mver <- checkVersion table
       case mver of
         Nothing -> do
-          forM_ createStatements $ logged kRun_
+          forM_ createTableSQLs $ logged kRun_
           kRun_ . sqlInsert "table_versions" $ do
             sqlSet "name" (tblNameString table)
             sqlSet "version" tblVersion
           _ <- checkTable table
           return $ Left table
         Just ver | ver == tblVersion -> do
+          normalizePropertyNames
           logger $ arrListTable table ++ "checking structure (v" ++ show ver ++ ")..."
           validation <- checkTableStructure table
           case validation of
@@ -156,11 +157,13 @@ checkDBConsistency logger tables migrations = do
               error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
             ValidationOk -> return $ Right Nothing
         Just ver | ver < tblVersion -> do
+          normalizePropertyNames
           logger $ arrListTable table ++ "scheduling for migration " ++ show ver ++ " => " ++ show tblVersion
           return . Right . Just $ (table, ver)
         Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
       where
-        createStatements = concat [
+        createTableSQLs :: [SQL]
+        createTableSQLs = concat [
             [sqlCreateTable tblName]
           , if null tblColumns
               then []
@@ -173,6 +176,46 @@ checkDBConsistency logger tables migrations = do
             else [sqlAlterTable tblName $ map sqlAddCheck tblChecks]
           , map (sqlCreateIndex tblName) tblIndexes
           ]
+
+        normalizePropertyNames :: m ()
+        normalizePropertyNames = do
+          kRun_ $ sqlGetPrimaryKey table
+          pk <- kFold fetchPrimaryKey Nothing
+          kRun_ $ sqlGetIndexes table
+          indexes <- kFold fetchTableIndexes []
+          kRun_ $ sqlGetForeignKeys table
+          fkeys <- kFold fetchForeignKeys []
+          let renames = concat [
+                  normalizePK pk
+                , concatMap normalizeIndex indexes
+                , concatMap normalizeFK fkeys
+                ]
+          when (not . null $ renames) $ do
+            logger $ arrListTable table ++ "normalizing property names..."
+            forM_ renames $ logged kRun_
+          where
+            normalizePK :: Maybe (PrimaryKey, RawSQL) -> [SQL]
+            normalizePK Nothing = []
+            normalizePK (Just (_, name)) = case pkName tblName of
+              pkname
+                | pkname == raw name -> []
+                | otherwise -> ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> pkname]
+
+            normalizeIndex :: (TableIndex, RawSQL) -> [SQL]
+            normalizeIndex (idx, name) = case indexName tblName idx of
+              idxname
+                | idxname == raw name -> []
+                | otherwise -> ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> idxname]
+
+            normalizeFK :: (ForeignKey, RawSQL) -> [SQL]
+            normalizeFK (fk, name) = case fkName tblName fk of
+              fkname
+                | fkname == raw name -> []
+                | otherwise -> [sqlAlterTable tblName [
+                    "DROP CONSTRAINT" <+> raw name
+                  , sqlAddFK tblName fk
+                  ]
+                ]
 
     checkVersion :: Table -> m (Maybe Int)
     checkVersion table = do
@@ -240,9 +283,9 @@ checkDBConsistency logger tables migrations = do
         sqlOrderBy "a.attnum"
       desc <- reverse `liftM` kFold fetchTableColumn []
       -- get info about constraints from pg_catalog
-      kRun_ $ sqlGetConstraintOfType 'p' -- primary key
+      kRun_ $ sqlGetPrimaryKey table
       pk <- kFold fetchPrimaryKey Nothing
-      kRun_ $ sqlGetConstraintOfType 'c' -- checks
+      kRun_ $ sqlGetChecks table
       checks <- kFold fetchTableChecks []
       kRun_ $ sqlGetIndexes table
       indexes <- kFold fetchTableIndexes []
@@ -260,28 +303,6 @@ checkDBConsistency logger tables migrations = do
           , colNullable = nullable
           , colDefault = unsafeFromString `liftM` mdefault
           } : acc
-
-        fetchPrimaryKey :: Maybe (PrimaryKey, RawSQL) -> String -> String -> Maybe (PrimaryKey, RawSQL)
-        fetchPrimaryKey Nothing name columns =
-          Just (unsafePrimaryKey . S.fromList . map unsafeFromString . split "," $ columns, unsafeFromString name)
-        fetchPrimaryKey _ _ _ =
-          error $ "fetchPrimaryKey (" ++ tblNameString table ++ "): more than one primary key (shouldn't happen)"
-
-        fetchTableChecks :: [TableCheck] -> String -> String -> [TableCheck]
-        fetchTableChecks acc name condition = TableCheck {
-            chkName = unsafeFromString name
-          , chkCondition = unsafeFromString condition
-          } : acc
-
-        sqlGetConstraintOfType :: Char -> SQL
-        sqlGetConstraintOfType ctype = toSQLCommand $
-          sqlSelect "pg_catalog.pg_constraint c" $ do
-            sqlResult "c.conname"
-            sqlResult $ if ctype == 'c'
-              then "regexp_replace(pg_get_constraintdef(c.oid, true), 'CHECK \\((.*)\\)', '\\1')" -- check body
-              else "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)), ',')" -- list of affected columns (unique, primary key)
-            sqlWhereEq "c.contype" ctype
-            sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
 
         checkColumns :: Int -> [TableColumn] -> [TableColumn] -> ValidationResult
         checkColumns _ [] [] = mempty
@@ -326,13 +347,60 @@ checkDBConsistency logger tables migrations = do
         checkChecks :: [TableCheck] -> [TableCheck] -> ValidationResult
         checkChecks defs checks = case checkEquality "CHECKs" defs checks of
           ValidationOk -> ValidationOk
-          ValidationError errmsg -> ValidationError $ errmsg ++ " (HINT: If conditions are equal modulo number of parentheses, just copy and paste expected output into source code)"
+          ValidationError errmsg -> ValidationError $ errmsg ++ " (HINT: If checks are equal modulo number of parentheses/whitespaces used in conditions, just copy and paste expected output into source code)"
 
         checkIndexes :: [TableIndex] -> [(TableIndex, RawSQL)] -> ValidationResult
         checkIndexes defs indexes = mconcat [
             checkEquality "INDEXes" defs (map fst indexes)
           , checkNames (indexName tblName) indexes
           ]
+
+    checkForeignKeys :: Table -> m ()
+    checkForeignKeys table@Table{..} = do
+      logger $ arrListTable table ++ "checking foreign keys..."
+      kRun_ $ sqlGetForeignKeys table
+      fkeys <- kFold fetchForeignKeys []
+      case validate tblForeignKeys fkeys of
+        ValidationError errmsg -> do
+          logger errmsg
+          error $ "Foreign keys on table '" ++ tblNameString table ++ "' are invalid."
+        ValidationOk -> return ()
+      where
+        validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
+        validate defs fkeys = mconcat [
+            checkEquality "FOREIGN KEYs" defs (map fst fkeys)
+          , checkNames (fkName tblName) fkeys
+          ]
+
+    -- *** PRIMARY KEY ***
+
+    sqlGetPrimaryKey :: Table -> SQL
+    sqlGetPrimaryKey table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
+      sqlResult "c.conname"
+      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)), ',') as columns" -- list of affected columns
+      sqlWhereEq "c.contype" 'p'
+      sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
+
+    fetchPrimaryKey :: Maybe (PrimaryKey, RawSQL) -> String -> String -> Maybe (PrimaryKey, RawSQL)
+    fetchPrimaryKey Nothing name columns = (, unsafeFromString name)
+      `liftM` (pkOnColumns . map unsafeFromString . split "," $ columns)
+    fetchPrimaryKey _ _ _ =
+      error $ "fetchPrimaryKey: more than one primary key (shouldn't happen)"
+
+    -- *** CHECKS ***
+
+    sqlGetChecks :: Table -> SQL
+    sqlGetChecks table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
+      sqlResult "c.conname"
+      sqlResult $  "regexp_replace(pg_get_constraintdef(c.oid, true), 'CHECK \\((.*)\\)', '\\1') as body" -- check body
+      sqlWhereEq "c.contype" 'c'
+      sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
+
+    fetchTableChecks :: [TableCheck] -> String -> String -> [TableCheck]
+    fetchTableChecks acc name condition = TableCheck {
+        chkName = unsafeFromString name
+      , chkCondition = unsafeFromString condition
+      } : acc
 
     -- *** INDEXES ***
 
@@ -387,23 +455,6 @@ checkDBConsistency logger tables migrations = do
           'd' -> ForeignKeySetDefault
           _   -> error $ "Invalid foreign key action code: " ++ show c
 
-    checkForeignKeys :: Table -> m ()
-    checkForeignKeys table@Table{..} = do
-      logger $ arrListTable table ++ "checking foreign keys..."
-      kRun_ $ sqlGetForeignKeys table
-      fks <- kFold fetchForeignKeys []
-      case validate tblForeignKeys fks of
-        ValidationError errmsg -> do
-          logger errmsg
-          error $ "Foreign keys on table '" ++ tblNameString table ++ "' are invalid."
-        ValidationOk -> return ()
-      where
-        validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
-        validate defs fkeys = mconcat [
-            checkEquality "FOREIGN KEYs" defs (map fst fkeys)
-          , checkNames (fkName tblName) fkeys
-          ]
-
     -- *** UTILS ***
 
     checkEquality :: (Eq t, Show t) => String -> [t] -> [t] -> ValidationResult
@@ -426,17 +477,18 @@ checkDBConsistency logger tables migrations = do
     checkNames :: Show t => (t -> SQL) -> [(t, RawSQL)] -> ValidationResult
     checkNames prop_name = mconcat . map check
       where
-        check (prop, name)
-          | prop_name prop == raw name = mempty
-          | otherwise = ValidationError $ concat [
-              "Property "
-            , show prop
-            , " has invalid name (expected: "
-            , show $ prop_name prop
-            , ", given: "
-            , show $ raw name
-            , ")."
-            ]
+        check (prop, name) = case prop_name prop of
+          pname
+            | pname == raw name -> mempty
+            | otherwise -> ValidationError $ concat [
+                "Property "
+              , show prop
+              , " has invalid name (expected: "
+              , show pname
+              , ", given: "
+              , show (raw name)
+              , ")."
+              ]
 
     tableHasLess :: Show t => String -> t -> String
     tableHasLess ptype missing = "Table in the database has *less* " ++ ptype ++ " than its definition (missing: " ++ show missing ++ ")"
