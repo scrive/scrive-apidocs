@@ -25,12 +25,12 @@ import DB.Versions
 default (SQL)
 
 data ValidationResult =
-    ValidationOk [SQL] -- ^ possible list of ALTER statements to execute
+    ValidationOk
   | ValidationError String -- ^ error message
 
 instance Monoid ValidationResult where
-  mempty = ValidationOk []
-  mappend (ValidationOk a) (ValidationOk b) = ValidationOk (mappend a b)
+  mempty = ValidationOk
+  mappend ValidationOk ValidationOk = ValidationOk
   mappend err@ValidationError{} _ = err
   mappend _ err@ValidationError{} = err
 
@@ -154,9 +154,7 @@ checkDBConsistency logger tables migrations = do
             ValidationError errmsg -> do
               logger errmsg
               error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
-            ValidationOk sqls -> do
-              forM_ sqls $ logged kRun_
-              return $ Right Nothing
+            ValidationOk -> return $ Right Nothing
         Just ver | ver < tblVersion -> do
           logger $ arrListTable table ++ "scheduling for migration " ++ show ver ++ " => " ++ show tblVersion
           return . Right . Just $ (table, ver)
@@ -172,7 +170,7 @@ checkDBConsistency logger tables migrations = do
               Just pk -> [sqlAlterTable tblName [sqlAddPK tblName pk]]
           , if null tblChecks
             then []
-            else [sqlAlterTable tblName $ map (sqlAddCheck tblName) tblChecks]
+            else [sqlAlterTable tblName $ map sqlAddCheck tblChecks]
           , map (sqlCreateIndex tblName) tblIndexes
           ]
 
@@ -263,14 +261,17 @@ checkDBConsistency logger tables migrations = do
           , colDefault = unsafeFromString `liftM` mdefault
           } : acc
 
-        fetchPrimaryKey :: Maybe (RawSQL, PrimaryKey) -> String -> String -> Maybe (RawSQL, PrimaryKey)
+        fetchPrimaryKey :: Maybe (PrimaryKey, RawSQL) -> String -> String -> Maybe (PrimaryKey, RawSQL)
         fetchPrimaryKey Nothing name columns =
-          Just (unsafeFromString name, unsafePrimaryKey . S.fromList . map unsafeFromString . split "," $ columns)
+          Just (unsafePrimaryKey . S.fromList . map unsafeFromString . split "," $ columns, unsafeFromString name)
         fetchPrimaryKey _ _ _ =
           error $ "fetchPrimaryKey (" ++ tblNameString table ++ "): more than one primary key (shouldn't happen)"
 
-        fetchTableChecks :: [(RawSQL, RawSQL)] -> String -> String -> [(RawSQL, RawSQL)]
-        fetchTableChecks acc name condition = (unsafeFromString condition, unsafeFromString name) : acc
+        fetchTableChecks :: [TableCheck] -> String -> String -> [TableCheck]
+        fetchTableChecks acc name condition = TableCheck {
+            chkName = unsafeFromString name
+          , chkCondition = unsafeFromString condition
+          } : acc
 
         sqlGetConstraintOfType :: Char -> SQL
         sqlGetConstraintOfType ctype = toSQLCommand $
@@ -284,8 +285,8 @@ checkDBConsistency logger tables migrations = do
 
         checkColumns :: Int -> [TableColumn] -> [TableColumn] -> ValidationResult
         checkColumns _ [] [] = mempty
-        checkColumns _ rest [] = ValidationError $ databaseHasLess "columns" rest
-        checkColumns _ [] rest = ValidationError $ databaseHasMore "columns" rest
+        checkColumns _ rest [] = ValidationError $ tableHasLess "columns" rest
+        checkColumns _ [] rest = ValidationError $ tableHasMore "columns" rest
         checkColumns !n (d:defs) (c:cols) = mconcat [
             validateNames $ colName d == colName c
           -- bigserial == bigint + autoincrement and there is no
@@ -311,51 +312,26 @@ checkDBConsistency logger tables migrations = do
             validateDefaults False = ValidationError $ errorMsg cname "defaults" (show . colDefault)
 
             cname = unRawSQL . colName $ d
-            errorMsg ident attr f = "Column " ++ ident ++ " differs in " ++ attr ++ " (definition: " ++ f d ++ ", database: " ++ f c ++ ")"
+            errorMsg ident attr f = "Column " ++ ident ++ " differs in " ++ attr ++ " (table: " ++ f c ++ ", definition: " ++ f d ++ ")"
 
-        checkPrimaryKey :: Maybe PrimaryKey -> Maybe (RawSQL, PrimaryKey) -> ValidationResult
-        checkPrimaryKey Nothing Nothing = mempty
-        checkPrimaryKey pk Nothing = ValidationError $ databaseHasLess "PRIMARY KEYs" pk
-        checkPrimaryKey Nothing (Just (_, pk)) = ValidationError $ databaseHasMore "PRIMARY KEYs" pk
-        checkPrimaryKey (Just def) (Just (name, pk))
-          | def == pk = ValidationOk $ if raw name /= pkName tblName
-            -- rename index that represents primary key
-            then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> pkName tblName]
-            else []
-          | otherwise = ValidationError $ "Primary key in table definition (" ++ show def ++ ") differs from the one in the database (" ++ show pk ++ ")"
-
-        checkChecks :: [TableCheck] -> [(RawSQL, RawSQL)] -> ValidationResult
-        checkChecks [] [] = mempty
-        checkChecks rest [] = ValidationError $ databaseHasLess "CHECKs" rest
-        checkChecks [] rest = ValidationError $ databaseHasMore "CHECKs" rest
-        checkChecks (d:defs) checks = mconcat [
-            case chkCondition d `L.lookup` checks of
-              Just name -> ValidationOk $ if checkName tblName d /= raw name
-                -- remove old check and add new, there is no way to rename it
-                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> sqlAddCheck tblName d]
-                else []
-              -- it may happen that the body is different, but there already is
-              -- a check with that name. so let's check if there exist a check
-              -- with the same name, but different condition and display
-              -- appropriate error message if that's the case.
-              Nothing -> case filter ((== checkName tblName d) . raw . snd) checks of
-                []  -> mempty
-                [(condition, name)] -> ValidationError $ "Check " ++ unRawSQL name ++ " in the database has different condition [" ++ unRawSQL condition ++ "] than the one in the definition [" ++ unRawSQL (chkCondition d) ++ "] (HINT: If the bodies are equal modulo number of parentheses, just copy and paste suggested body into source code)"
-                _ -> error "checkChecks: more that one CHECK with the same name in the definition (shouldn't happen)"
-          , checkChecks defs $ deleteFirst ((== chkCondition d) . fst) checks
+        checkPrimaryKey :: Maybe PrimaryKey -> Maybe (PrimaryKey, RawSQL) -> ValidationResult
+        checkPrimaryKey mdef mpk = mconcat [
+            checkEquality "PRIMARY KEY" def (map fst pk)
+          , checkNames (const (pkName tblName)) pk
           ]
+          where
+            def = maybeToList mdef
+            pk = maybeToList mpk
+
+        checkChecks :: [TableCheck] -> [TableCheck] -> ValidationResult
+        checkChecks defs checks = case checkEquality "CHECKs" defs checks of
+          ValidationOk -> ValidationOk
+          ValidationError errmsg -> ValidationError $ errmsg ++ " (HINT: If conditions are equal modulo number of parentheses, just copy and paste expected output into source code)"
 
         checkIndexes :: [TableIndex] -> [(TableIndex, RawSQL)] -> ValidationResult
-        checkIndexes [] [] = mempty
-        checkIndexes rest [] = ValidationError $ databaseHasLess "INDEXes" rest
-        checkIndexes [] rest = ValidationError $ databaseHasMore "INDEXes" rest
-        checkIndexes (d:defs) indexes = mconcat [
-            case d `L.lookup` indexes of
-              Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= indexName tblName d
-                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> indexName tblName d]
-                else []
-          , checkIndexes defs $ deleteFirst ((== d) . fst) indexes
+        checkIndexes defs indexes = mconcat [
+            checkEquality "INDEXes" defs (map fst indexes)
+          , checkNames (indexName tblName) indexes
           ]
 
     -- *** INDEXES ***
@@ -420,31 +396,53 @@ checkDBConsistency logger tables migrations = do
         ValidationError errmsg -> do
           logger errmsg
           error $ "Foreign keys on table '" ++ tblNameString table ++ "' are invalid."
-        ValidationOk sqls -> forM_ sqls $ logged kRun_
+        ValidationOk -> return ()
       where
         validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
-        validate [] [] = mempty
-        validate rest [] = ValidationError $ databaseHasLess "FOREIGN KEYs" rest
-        validate [] rest = ValidationError $ databaseHasMore "FOREIGN KEYs" rest
-        validate (d:defs) fkeys = mconcat [
-            case d `L.lookup` fkeys of
-              Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= fkName tblName d
-                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> sqlAddFK tblName d]
-                else []
-          , validate defs $ deleteFirst ((== d) . fst) fkeys
+        validate defs fkeys = mconcat [
+            checkEquality "FOREIGN KEYs" defs (map fst fkeys)
+          , checkNames (fkName tblName) fkeys
           ]
 
     -- *** UTILS ***
 
-    databaseHasLess :: Show t => String -> t -> String
-    databaseHasLess ptype missing = "Table in the database has *less* " ++ ptype ++ " than the definition (missing: " ++ show missing ++ ")"
+    checkEquality :: (Eq t, Show t) => String -> [t] -> [t] -> ValidationResult
+    checkEquality pname defs props = case (defs L.\\ props, props L.\\ defs) of
+      ([], []) -> mempty
+      (def_diff, db_diff) -> ValidationError $ concat [
+          "Table and its definition have diverged and have "
+        , show $ length db_diff
+        , " and "
+        , show $ length def_diff
+        , " different "
+        , pname
+        , " each, respectively (table: "
+        , show db_diff
+        , ", definition: "
+        , show def_diff
+        , ")."
+        ]
 
-    databaseHasMore :: Show t => String -> t -> String
-    databaseHasMore ptype extra = "Table in the database has *more* " ++ ptype ++ " than the definition (extra: " ++ show extra ++ ")"
+    checkNames :: Show t => (t -> SQL) -> [(t, RawSQL)] -> ValidationResult
+    checkNames prop_name = mconcat . map check
+      where
+        check (prop, name)
+          | prop_name prop == raw name = mempty
+          | otherwise = ValidationError $ concat [
+              "Property "
+            , show prop
+            , " has invalid name (expected: "
+            , show $ prop_name prop
+            , ", given: "
+            , show $ raw name
+            , ")."
+            ]
+
+    tableHasLess :: Show t => String -> t -> String
+    tableHasLess ptype missing = "Table in the database has *less* " ++ ptype ++ " than its definition (missing: " ++ show missing ++ ")"
+
+    tableHasMore :: Show t => String -> t -> String
+    tableHasMore ptype extra = "Table in the database has *more* " ++ ptype ++ " than its definition (extra: " ++ show extra ++ ")"
 
     arrListTable :: Table -> String
     arrListTable table = " -> " ++ tblNameString table ++ ": "
-
-    deleteFirst :: (a -> Bool) -> [a] -> [a]
-    deleteFirst f xs = let (a, b) = break f xs in a ++ drop 1 b

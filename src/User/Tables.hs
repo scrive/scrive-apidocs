@@ -26,7 +26,7 @@ tableUsers = tblTable {
     , tblColumn { colName = "associated_domain", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
-  , tblChecks = [TableCheck "lowercase_email" "email = lower(email)"]
+  , tblChecks = [TableCheck "check_users_lowercase_email" "email = lower(email)"]
   , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
   , tblIndexes = [
       indexOnColumn "company_id"
