@@ -21,12 +21,12 @@ data ForeignKeyAction
   | ForeignKeySetDefault
   deriving (Eq, Ord, Show)
 
-tblForeignKeyColumn :: RawSQL -> RawSQL -> RawSQL -> ForeignKey
-tblForeignKeyColumn column reftable refcolumn =
-  tblForeignKeyColumns [column] reftable [refcolumn]
+fkOnColumn :: RawSQL -> RawSQL -> RawSQL -> ForeignKey
+fkOnColumn column reftable refcolumn =
+  fkOnColumns [column] reftable [refcolumn]
 
-tblForeignKeyColumns :: [RawSQL] -> RawSQL -> [RawSQL] -> ForeignKey
-tblForeignKeyColumns columns reftable refcolumns = ForeignKey {
+fkOnColumns :: [RawSQL] -> RawSQL -> [RawSQL] -> ForeignKey
+fkOnColumns columns reftable refcolumns = ForeignKey {
   fkColumns    = S.fromList columns
 , fkRefTable   = reftable
 , fkRefColumns = S.fromList refcolumns

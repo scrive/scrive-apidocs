@@ -48,8 +48,6 @@ tableCompanyUIs = tblTable {
     ]
   , tblPrimaryKey = ["company_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "company_id" "companies" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }

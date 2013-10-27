@@ -46,12 +46,12 @@ tableMailAttachments = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "mail_id" "mails" "id") { fkOnDelete = ForeignKeyCascade }
-    , tblForeignKeyColumn "file_id" "files" "id"
+      (fkOnColumn "mail_id" "mails" "id") { fkOnDelete = ForeignKeyCascade }
+    , fkOnColumn "file_id" "files" "id"
     ]
   , tblIndexes = [
-      tblIndexOnColumn "mail_id"
-    , tblIndexOnColumn "file_id"
+      indexOnColumn "mail_id"
+    , indexOnColumn "file_id"
     ]
   }
 
@@ -67,9 +67,9 @@ tableMailEvents = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "mail_id" "mails" "id") {
+      (fkOnColumn "mail_id" "mails" "id") {
         fkOnDelete = ForeignKeyCascade
       }
     ]
-  , tblIndexes = [tblIndexOnColumn "mail_id"]
+  , tblIndexes = [indexOnColumn "mail_id"]
   }

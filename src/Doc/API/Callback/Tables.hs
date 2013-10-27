@@ -14,8 +14,6 @@ tableDocumentApiCallbacks = tblTable {
     ]
   , tblPrimaryKey = ["document_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "document_id" "documents" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }

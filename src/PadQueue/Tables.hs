@@ -13,13 +13,13 @@ tablePadQueue = tblTable {
     ]
   , tblPrimaryKey = ["user_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "signatorylink_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "signatorylink_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "user_id"
-    , tblIndexOnColumn "document_id"
-    , tblIndexOnColumn "signatorylink_id"
+      indexOnColumn "user_id"
+    , indexOnColumn "document_id"
+    , indexOnColumn "signatorylink_id"
     ]
   }

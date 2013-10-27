@@ -64,17 +64,13 @@ tableELegTransactions = tblTable {
     ]
   , tblPrimaryKey = ["id", "session_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "document_id" "documents" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
-    , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "session_id"
-    , tblIndexOnColumn "document_id"
-    , tblIndexOnColumn "signatory_link_id"
+      indexOnColumn "session_id"
+    , indexOnColumn "document_id"
+    , indexOnColumn "signatory_link_id"
     ]
   }

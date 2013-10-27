@@ -27,10 +27,10 @@ tableUsers = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblChecks = [TableCheck "lowercase_email" "email = lower(email)"]
-  , tblForeignKeys = [tblForeignKeyColumn "company_id" "companies" "id"]
+  , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
   , tblIndexes = [
-      tblIndexOnColumn "company_id"
-    , tblIndexOnColumn "email"
+      indexOnColumn "company_id"
+    , indexOnColumn "email"
     ]
   , tblPutProperties = do
     kRunRaw "CREATE SEQUENCE users_id_seq"

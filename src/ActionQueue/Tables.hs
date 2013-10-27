@@ -13,7 +13,7 @@ tableAccessNewAccounts = tblTable {
     ]
   , tblPrimaryKey = ["user_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }
 
@@ -29,7 +29,7 @@ tablePasswordReminders = tblTable {
     ]
   , tblPrimaryKey = ["user_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }
 
@@ -45,7 +45,7 @@ tableEmailChangeRequests = tblTable {
     ]
   , tblPrimaryKey = ["user_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }
 
@@ -59,5 +59,5 @@ tableUserAccountRequests = tblTable {
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     ]
   , tblPrimaryKey = ["user_id"]
-  , tblForeignKeys = [tblForeignKeyColumn "user_id" "users" "id"]
+  , tblForeignKeys = [fkOnColumn "user_id" "users" "id"]
   }

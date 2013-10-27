@@ -12,6 +12,6 @@ tableUsersCallbackScheme = tblTable {
     ]
   , tblPrimaryKey = ["user_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }

@@ -16,13 +16,13 @@ tableUsersHistory = tblTable {
     , tblColumn { colName = "performing_user_id", colType = BigIntT }
     ]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "performing_user_id" "users" "id") {
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "performing_user_id" "users" "id") {
         fkOnDelete = ForeignKeySetNull
       }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "user_id"
-    , tblIndexOnColumn "performing_user_id"
+      indexOnColumn "user_id"
+    , indexOnColumn "performing_user_id"
     ]
   }

@@ -4,27 +4,30 @@ import qualified Data.Set as S
 import DB.SQL
 
 data TableIndex = TableIndex {
-  tblIndexColumns :: S.Set RawSQL
-, tblIndexUnique  :: Bool
+  idxColumns :: S.Set RawSQL
+, idxUnique  :: Bool
 } deriving (Eq, Ord, Show)
 
-tblTableIndex :: TableIndex
-tblTableIndex = TableIndex { tblIndexColumns = S.empty, tblIndexUnique = False }
-
-tblIndexOnColumn :: RawSQL -> TableIndex
-tblIndexOnColumn column = tblTableIndex { tblIndexColumns = S.singleton column }
-
-tblIndexOnColumns :: [RawSQL] -> TableIndex
-tblIndexOnColumns columns = tblTableIndex { tblIndexColumns = S.fromList columns }
-
-tblUniqueIndexOnColumn :: RawSQL -> TableIndex
-tblUniqueIndexOnColumn column = TableIndex {
-  tblIndexColumns = S.singleton column
-, tblIndexUnique = True
+tblIndex :: TableIndex
+tblIndex = TableIndex {
+  idxColumns = S.empty
+, idxUnique = False
 }
 
-tblUniqueIndexOnColumns :: [RawSQL] -> TableIndex
-tblUniqueIndexOnColumns columns = TableIndex {
-  tblIndexColumns = S.fromList columns
-, tblIndexUnique = True
+indexOnColumn :: RawSQL -> TableIndex
+indexOnColumn column = tblIndex { idxColumns = S.singleton column }
+
+indexOnColumns :: [RawSQL] -> TableIndex
+indexOnColumns columns = tblIndex { idxColumns = S.fromList columns }
+
+uniqueIndexOnColumn :: RawSQL -> TableIndex
+uniqueIndexOnColumn column = TableIndex {
+  idxColumns = S.singleton column
+, idxUnique = True
+}
+
+uniqueIndexOnColumns :: [RawSQL] -> TableIndex
+uniqueIndexOnColumns columns = TableIndex {
+  idxColumns = S.fromList columns
+, idxUnique = True
 }

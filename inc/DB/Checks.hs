@@ -407,13 +407,13 @@ checkDBConsistency logger tables migrations = do
         "idx__"
       , raw tblName
       , "__"
-      , intersperseNoWhitespace "__" (map raw . S.toAscList $ tblIndexColumns)
+      , intersperseNoWhitespace "__" (map raw . S.toAscList $ idxColumns)
       ]
 
     indexToSQL :: Table -> TableIndex -> SQL
     indexToSQL table@Table{..} idx@TableIndex{..} = mconcat [
         "CREATE INDEX" <+> genIndexName table idx <+> "ON" <+> raw tblName <+> "("
-      , intersperseNoWhitespace ", " (map raw . S.toAscList $ tblIndexColumns)
+      , intersperseNoWhitespace ", " (map raw . S.toAscList $ idxColumns)
       , ")"
       ]
 
@@ -429,8 +429,8 @@ checkDBConsistency logger tables migrations = do
 
     fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> [(TableIndex, RawSQL)]
     fetchTableIndexes acc name columns unique = (TableIndex {
-        tblIndexColumns = S.fromList . map unsafeFromString . split "," $ columns
-      , tblIndexUnique = unique
+        idxColumns = S.fromList . map unsafeFromString . split "," $ columns
+      , idxUnique = unique
       }, unsafeFromString name) : acc
 
     -- *** FOREIGN KEYS ***

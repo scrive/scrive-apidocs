@@ -40,9 +40,9 @@ tableAPIToken = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [tblIndexOnColumn "user_id"]
+  , tblIndexes = [indexOnColumn "user_id"]
   }
 
 {-
@@ -67,14 +67,12 @@ tableAccessToken = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "user_id"
-    , tblIndexOnColumn "api_token_id"
+      indexOnColumn "user_id"
+    , indexOnColumn "api_token_id"
     ]
   }
 
@@ -93,27 +91,9 @@ tablePrivilege = tblTable {
     ]
   , tblPrimaryKey = ["access_token_id", "privilege"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "access_token_id" "oauth_access_token" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "access_token_id" "oauth_access_token" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [tblIndexOnColumn "access_token_id"]
-  }
-
-migrateTempCredentialRemoveEmail ::  MonadDB m => Migration m
-migrateTempCredentialRemoveEmail = 
-  Migration {
-    mgrTable = tableTempCredential
-  , mgrFrom = 2
-  , mgrDo = do
-      kRunRaw "ALTER TABLE oauth_temp_credential DROP COLUMN email"
-      kRunRaw "ALTER TABLE oauth_temp_credential ADD COLUMN user_id BIGINT NULL"
-      kRunRaw $ "ALTER TABLE oauth_temp_credential"
-        <> " ADD CONSTRAINT fk_oauth_temp_credential_user_id FOREIGN KEY(user_id)"
-        -- we want the temp credentials to disappear when the api_token disappears
-        <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-        <> " DEFERRABLE INITIALLY IMMEDIATE"
-
+  , tblIndexes = [indexOnColumn "access_token_id"]
   }
 
 {- |
@@ -140,14 +120,12 @@ tableTempCredential = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
-    , (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "api_token_id"
-    , tblIndexOnColumn "user_id"
+      indexOnColumn "api_token_id"
+    , indexOnColumn "user_id"
     ]
   }
 
@@ -167,9 +145,7 @@ tableTempPrivileges = tblTable {
     ]
   , tblPrimaryKey = ["temp_token_id", "privilege"]
   , tblForeignKeys = [
-    (tblForeignKeyColumn "temp_token_id" "oauth_temp_credential" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+    (fkOnColumn "temp_token_id" "oauth_temp_credential" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [tblIndexOnColumn "temp_token_id"]
+  , tblIndexes = [indexOnColumn "temp_token_id"]
   }

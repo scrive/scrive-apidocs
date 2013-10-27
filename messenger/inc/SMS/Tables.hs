@@ -40,9 +40,7 @@ tableSMSEvents = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "sms_id" "smses" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "sms_id" "smses" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [tblIndexOnColumn "sms_id"]
+  , tblIndexes = [indexOnColumn "sms_id"]
   }

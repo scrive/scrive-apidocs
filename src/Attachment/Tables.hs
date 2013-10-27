@@ -18,11 +18,11 @@ tableAttachments = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "file_id" "files" "id")
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , fkOnColumn "file_id" "files" "id"
     ]
   , tblIndexes = [
-      tblIndexOnColumn "user_id"
-    , tblIndexOnColumn "file_id"
+      indexOnColumn "user_id"
+    , indexOnColumn "file_id"
     ]
   }

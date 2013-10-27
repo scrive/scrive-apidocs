@@ -51,14 +51,6 @@ data TableColumn = TableColumn {
 , colDefault  :: Maybe RawSQL
 } deriving Show
 
-tblColumn :: TableColumn
-tblColumn = TableColumn {
-  colName = error "Column name must be specified"
-, colType = error "Column type must be specified"
-, colNullable = True
-, colDefault = Nothing
-}
-
 data Table = Table {
   tblName          :: RawSQL
 , tblVersion       :: Int
@@ -68,6 +60,14 @@ data Table = Table {
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
 , tblPutProperties :: MonadDB m => m ()
+}
+
+tblColumn :: TableColumn
+tblColumn = TableColumn {
+  colName = error "Column name must be specified"
+, colType = error "Column type must be specified"
+, colNullable = True
+, colDefault = Nothing
 }
 
 tblTable :: Table

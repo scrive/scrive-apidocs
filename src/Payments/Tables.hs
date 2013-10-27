@@ -26,8 +26,8 @@ tablePaymentPlans = tblTable {
     , tblColumn { colName = "billing_ends", colType = TimestampWithZoneT, colNullable = False }
     ]
   , tblPrimaryKey = ["account_code"]
-  , tblIndexes = [tblUniqueIndexOnColumn "company_id"]
-  , tblForeignKeys = [tblForeignKeyColumn "company_id" "companies" "id"]
+  , tblIndexes = [uniqueIndexOnColumn "company_id"]
+  , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
   }
 
 tablePaymentStats :: Table
@@ -44,7 +44,7 @@ tablePaymentStats = tblTable {
     , tblColumn { colName = "account_code", colType = BigIntT, colNullable = False }
     ]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [tblIndexOnColumn "company_id"]
+  , tblIndexes = [indexOnColumn "company_id"]
   }

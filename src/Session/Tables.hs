@@ -16,11 +16,11 @@ tableSessions = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "pad_user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "pad_user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "user_id"
-    , tblIndexOnColumn "pad_user_id"
+      indexOnColumn "user_id"
+    , indexOnColumn "pad_user_id"
     ]
   }

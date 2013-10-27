@@ -41,13 +41,11 @@ tableDocumentSessionTokens = tblTable {
     ]
   , tblPrimaryKey = ["session_id", "signatory_link_id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
-    , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "session_id"
-    , tblIndexOnColumn "signatory_link_id"
+      indexOnColumn "session_id"
+    , indexOnColumn "signatory_link_id"
     ]
   }

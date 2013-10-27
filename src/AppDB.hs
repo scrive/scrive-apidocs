@@ -29,6 +29,7 @@ import PadQueue.Migrations
 import Session.Tables
 import Mails.Migrations
 import OAuth.Tables
+import OAuth.Migrations
 import ELegitimation.ELegTransaction.Tables
 import EvidenceLog.Tables
 import EvidenceLog.Migrations

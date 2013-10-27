@@ -42,14 +42,12 @@ tableMainFiles = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "document_id" "documents" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
-    , tblForeignKeyColumn "file_id" "files" "id"
+      (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
+    , fkOnColumn "file_id" "files" "id"
     ]
   , tblIndexes = [
-      tblIndexOnColumn "document_id"
-    , tblIndexOnColumn "file_id"
+      indexOnColumn "document_id"
+    , indexOnColumn "file_id"
     ]
   }
 
@@ -63,14 +61,12 @@ tableAuthorAttachments = tblTable {
     ]
   , tblPrimaryKey = ["file_id", "document_id"]
   , tblForeignKeys = [
-      tblForeignKeyColumn "file_id" "files" "id"
-    , (tblForeignKeyColumn "document_id" "documents" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      fkOnColumn "file_id" "files" "id"
+    , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "document_id"
-    , tblIndexOnColumn "file_id"
+      indexOnColumn "document_id"
+    , indexOnColumn "file_id"
     ]
   }
 
@@ -86,14 +82,12 @@ tableSignatoryAttachments = tblTable {
     ]
   , tblPrimaryKey = ["signatory_link_id", "name"]
   , tblForeignKeys = [
-      tblForeignKeyColumn "file_id" "files" "id"
-    , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      fkOnColumn "file_id" "files" "id"
+    , (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
-      tblIndexOnColumn "file_id"
-    , tblIndexOnColumn "signatory_link_id"
+      indexOnColumn "file_id"
+    , indexOnColumn "signatory_link_id"
     ]
   }
 
@@ -150,14 +144,12 @@ tableSignatoryLinks = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "document_id" "documents" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
-    , tblForeignKeyColumn "user_id" "users" "id"
+      (fkOnColumn "document_id" "documents" "id") {fkOnDelete = ForeignKeyCascade }
+    , fkOnColumn "user_id" "users" "id"
     ]
   , tblIndexes = [
-      tblIndexOnColumn "user_id"
-    , tblIndexOnColumn "document_id"
+      indexOnColumn "user_id"
+    , indexOnColumn "document_id"
     ]
   }
 
@@ -171,11 +163,9 @@ tableDocumentTags = tblTable {
     , tblColumn { colName = "value", colType = TextT, colNullable = False }
     ]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "document_id" "documents" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [tblIndexOnColumn "document_id"]
+  , tblIndexes = [indexOnColumn "document_id"]
   }
 
 tableSignatoryLinkFields :: Table
@@ -195,11 +185,9 @@ tableSignatoryLinkFields = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
-        fkOnDelete = ForeignKeyCascade
-      }
+      (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [ tblIndexOnColumn "signatory_link_id" ]
+  , tblIndexes = [ indexOnColumn "signatory_link_id" ]
   }
 
 tableSignatoryScreenshots :: Table
@@ -215,13 +203,11 @@ tableSignatoryScreenshots = tblTable {
     ]
   , tblPrimaryKey = ["id"]
   , tblForeignKeys = [
-      (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") {
-        fkOnDelete = ForeignKeyCascade
-      },
-      (tblForeignKeyColumn "file_id" "files" "id")
+      (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
+    , fkOnColumn "file_id" "files" "id"
     ]
   , tblIndexes = [
-      tblIndexOnColumn "signatory_link_id"
-    , tblIndexOnColumn "file_id"
+      indexOnColumn "signatory_link_id"
+    , indexOnColumn "file_id"
     ]
   }
