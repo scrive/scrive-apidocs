@@ -104,18 +104,22 @@ checkDBConsistency :: forall m. MonadDB m
                    -> m ()
 checkDBConsistency logger tables migrations = do
   (created, to_migration) <- checkTables
-  when (not $ null to_migration) $ do
+  -- run migrations, if necessary
+  when (not . null $ to_migration) $ do
     logger "Running migrations..."
     migrate migrations to_migration
     logger "Done."
     (_, to_migration_again) <- checkTables
-    when (not $ null to_migration_again) $
+    when (not . null $ to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap showNotMigrated to_migration_again
-  forM_ created $ \table -> do
-    logger $ arrListTable table ++ "creating foreign keys..."
-    createForeignKeys table
+  -- add foreign keys and properties to new tables
+  forM_ created $ \table@Table{..} -> do
+    when (not . null $ tblForeignKeys) $ do
+      logger $ arrListTable table ++ "creating foreign keys..."
+      logged kRun_ $ sqlAlterTable tblName $ map (sqlAddFK tblName) tblForeignKeys
     logger $ arrListTable table ++ "putting properties..."
-    tblPutProperties table
+    tblPutProperties
+  -- check foreign key consistency
   forM_ tables checkForeignKeys
   where
     logged :: (SQL -> m a) -> SQL -> m a
@@ -138,9 +142,7 @@ checkDBConsistency logger tables migrations = do
       mver <- checkVersion table
       case mver of
         Nothing -> do
-          logged kRun_ $ createStatement table
-          -- create INDEXes as they're not part of create statement
-          forM_ tblIndexes $ logged kRun_ . indexToSQL table
+          forM_ createStatements $ logged kRun_
           kRun_ . sqlInsert "table_versions" $ do
             sqlSet "name" (tblNameString table)
             sqlSet "version" tblVersion
@@ -160,6 +162,20 @@ checkDBConsistency logger tables migrations = do
           logger $ arrListTable table ++ "scheduling for migration " ++ show ver ++ " => " ++ show tblVersion
           return . Right . Just $ (table, ver)
         Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
+      where
+        createStatements = concat [
+            [sqlCreateTable tblName]
+          , if null tblColumns
+              then []
+              else [sqlAlterTable tblName $ map sqlAddColumn tblColumns]
+          , if null tblPrimaryKey
+            then []
+            else [sqlAlterTable tblName [sqlAddPK tblName tblPrimaryKey]]
+          , if null tblChecks
+            then []
+            else [sqlAlterTable tblName $ map (sqlAddCheck tblName) tblChecks]
+          , map (sqlCreateIndex tblName) tblIndexes
+          ]
 
     checkVersion :: Table -> m (Maybe Int)
     checkVersion table = do
@@ -175,11 +191,12 @@ checkDBConsistency logger tables migrations = do
             Just ver -> return $ Just ver
             Nothing  -> error $ "Table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."
         Nothing -> do
-          -- if table is not present, it will be created and version info attempted
-          -- to be written to table_versions, so if it's already there, delete it
-          deleted <- kRun01 $ SQL "DELETE FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
-          when deleted $ do
-            logger $ "Old version info of table '" ++ tblNameString table ++ "' deleted from 'table_versions'."
+          when (tblName table /= tblName tableVersions) $ do
+            -- if table is not present, it will be created and version info attempted
+            -- to be written to table_versions, so if it's already there, delete it
+            deleted <- kRun01 $ SQL "DELETE FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
+            when deleted $ do
+              logger $ "Old version info of table '" ++ tblNameString table ++ "' deleted from 'table_versions'."
           return Nothing
 
     migrate :: [Migration m] -> [(Table, Int)] -> m ()
@@ -197,64 +214,6 @@ checkDBConsistency logger tables migrations = do
          else return ()
 
     -- *** TABLE STRUCTURE ***
-
-    createStatement :: Table -> SQL
-    createStatement table@Table{..} = mconcat [
-        raw $ "CREATE TABLE" <+> tblName <+> "("
-      , intersperseNoWhitespace ", " $ map columnToSQL tblColumns
-      , if primaryKeyToSQL table == mempty then "" else ", "
-      , primaryKeyToSQL table
-      , if checksToSQL == mempty then "" else ", "
-      , checksToSQL
-      , ")"
-      ]
-      where
-        checksToSQL = intersperseNoWhitespace ", " $ map (checkToSQL table) tblChecks
-
-    colTypeToSQL :: ColumnType -> SQL
-    colTypeToSQL BigIntT = "BIGINT"
-    colTypeToSQL BigSerialT = "BIGSERIAL"
-    colTypeToSQL BinaryT = "BYTEA"
-    colTypeToSQL BoolT = "BOOLEAN"
-    colTypeToSQL DateT = "DATE"
-    colTypeToSQL DoubleT = "DOUBLE PRECISION"
-    colTypeToSQL IntegerT = "INTEGER"
-    colTypeToSQL SmallIntT = "SMALLINT"
-    colTypeToSQL TextT = "TEXT"
-    colTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
-
-    primaryKeyToSQL :: Table -> SQL
-    primaryKeyToSQL table@Table{..} = if null tblPrimaryKey
-      then ""
-      else "CONSTRAINT"
-        <+> genPrimaryKeyName table
-        <+> "PRIMARY KEY ("
-        <+> intersperseNoWhitespace ", " (map raw tblPrimaryKey)
-        <+> ")"
-
-    checkToSQL :: Table -> TableCheck -> SQL
-    checkToSQL table@Table{..} chk@TableCheck{..} = "CONSTRAINT"
-      <+> genCheckName table chk
-      <+> "CHECK ("
-      <+> raw chkCondition
-      <+> ")"
-
-    genPrimaryKeyName :: Table -> SQL
-    genPrimaryKeyName Table{..} = mconcat ["pk__", raw tblName]
-
-    genCheckName :: Table -> TableCheck -> SQL
-    genCheckName Table{..} TableCheck{chkName} = mconcat [
-        "check__"
-      , raw tblName
-      , "__"
-      , raw chkName
-      ]
-
-    columnToSQL :: TableColumn -> SQL
-    columnToSQL TableColumn{..} = raw colName
-      <+> colTypeToSQL colType
-      <+> (if colNullable then "NULL" else "NOT NULL")
-      <+> raw (maybe "" ("DEFAULT" <+>) colDefault)
 
     sqlGetTableID :: Table -> SQL
     sqlGetTableID table = parenthesize . toSQLCommand $
@@ -360,9 +319,9 @@ checkDBConsistency logger tables migrations = do
         checkPrimaryKey pk Nothing = ValidationError $ databaseHasLess "PRIMARY KEYs" pk
         checkPrimaryKey [] (Just (_, cols)) = ValidationError $ databaseHasMore "PRIMARY KEYs" cols
         checkPrimaryKey def (Just (name, cols))
-          | S.fromList def == cols = ValidationOk $ if raw name /= genPrimaryKeyName table
+          | S.fromList def == cols = ValidationOk $ if raw name /= pkName tblName
             -- rename index that represents primary key
-            then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genPrimaryKeyName table]
+            then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> pkName tblName]
             else []
           | otherwise = ValidationError $ "Primary key in table definition (" ++ show def ++ ") differs from the one in the database (" ++ show cols ++ ")"
 
@@ -372,15 +331,15 @@ checkDBConsistency logger tables migrations = do
         checkChecks [] rest = ValidationError $ databaseHasMore "CHECKs" rest
         checkChecks (d:defs) checks = mconcat [
             case chkCondition d `L.lookup` checks of
-              Just name -> ValidationOk $ if genCheckName table d /= raw name
+              Just name -> ValidationOk $ if checkName tblName d /= raw name
                 -- remove old check and add new, there is no way to rename it
-                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> "ADD" <+> checkToSQL table d]
+                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> sqlAddCheck tblName d]
                 else []
               -- it may happen that the body is different, but there already is
               -- a check with that name. so let's check if there exist a check
               -- with the same name, but different condition and display
               -- appropriate error message if that's the case.
-              Nothing -> case filter ((== genCheckName table d) . raw . snd) checks of
+              Nothing -> case filter ((== checkName tblName d) . raw . snd) checks of
                 []  -> mempty
                 [(condition, name)] -> ValidationError $ "Check " ++ unRawSQL name ++ " the in database has different condition [" ++ unRawSQL condition ++ "] than the one in the definition [" ++ unRawSQL (chkCondition d) ++ "] (HINT: If the bodies are equal modulo number of parentheses, just copy and paste suggested body into source code)"
                 _ -> error "checkChecks: more that one CHECK with the same name in the definition (shouldn't happen)"
@@ -394,28 +353,13 @@ checkDBConsistency logger tables migrations = do
         checkIndexes (d:defs) indexes = mconcat [
             case d `L.lookup` indexes of
               Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= genIndexName table d
-                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> genIndexName table d]
+              Just name -> ValidationOk $ if raw name /= indexName tblName d
+                then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> indexName tblName d]
                 else []
           , checkIndexes defs $ deleteFirst ((== d) . fst) indexes
           ]
 
     -- *** INDEXES ***
-
-    genIndexName :: Table -> TableIndex -> SQL
-    genIndexName Table{..} TableIndex{..} = mconcat [
-        "idx__"
-      , raw tblName
-      , "__"
-      , intersperseNoWhitespace "__" (map raw . S.toAscList $ idxColumns)
-      ]
-
-    indexToSQL :: Table -> TableIndex -> SQL
-    indexToSQL table@Table{..} idx@TableIndex{..} = mconcat [
-        "CREATE INDEX" <+> genIndexName table idx <+> "ON" <+> raw tblName <+> "("
-      , intersperseNoWhitespace ", " (map raw . S.toAscList $ idxColumns)
-      , ")"
-      ]
 
     sqlGetIndexes :: Table -> SQL
     sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
@@ -434,34 +378,6 @@ checkDBConsistency logger tables migrations = do
       }, unsafeFromString name) : acc
 
     -- *** FOREIGN KEYS ***
-
-    genForeignKeyName :: Table -> ForeignKey -> SQL
-    genForeignKeyName Table{..} ForeignKey{..} = mconcat [
-        "fk__"
-      , raw tblName
-      , "__"
-      , intersperseNoWhitespace "__" (map raw . S.toAscList $ fkColumns)
-      , "__"
-      , raw fkRefTable
-      ]
-
-    foreignKeyToSQL :: Table -> ForeignKey -> SQL
-    foreignKeyToSQL table fk@ForeignKey{..} = mconcat [
-        "ADD CONSTRAINT" <+> genForeignKeyName table fk <+> "FOREIGN KEY ("
-      , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkColumns)
-      , ") REFERENCES" <+> raw fkRefTable <+> "("
-      , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkRefColumns)
-      , ") ON UPDATE" <+> foreignKeyActionToSQL fkOnUpdate
-      , "  ON DELETE" <+> foreignKeyActionToSQL fkOnDelete
-      , " " <> if fkDeferrable then "DEFERRABLE" else "NOT DEFERRABLE"
-      , " INITIALLY" <+> if fkDeferred then "DEFERRED" else "IMMEDIATE"
-      ]
-      where
-        foreignKeyActionToSQL ForeignKeyNoAction = "NO ACTION"
-        foreignKeyActionToSQL ForeignKeyRestrict = "RESTRICT"
-        foreignKeyActionToSQL ForeignKeyCascade = "CASCADE"
-        foreignKeyActionToSQL ForeignKeySetNull = "SET NULL"
-        foreignKeyActionToSQL ForeignKeySetDefault = "SET DEFAULT"
 
     sqlGetForeignKeys :: Table -> SQL
     sqlGetForeignKeys table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint r" $ do
@@ -496,11 +412,6 @@ checkDBConsistency logger tables migrations = do
           'd' -> ForeignKeySetDefault
           _   -> error $ "Invalid foreign key action code: " ++ show c
 
-    createForeignKeys :: Table -> m ()
-    createForeignKeys table@Table{..} = logged kRun_ $ "ALTER TABLE"
-      <+> raw tblName
-      <+> intersperseNoWhitespace ", " (map (foreignKeyToSQL table) tblForeignKeys)
-
     checkForeignKeys :: Table -> m ()
     checkForeignKeys table@Table{..} = do
       logger $ arrListTable table ++ "checking foreign keys..."
@@ -519,8 +430,8 @@ checkDBConsistency logger tables migrations = do
         validate (d:defs) fkeys = mconcat [
             case d `L.lookup` fkeys of
               Nothing -> mempty
-              Just name -> ValidationOk $ if raw name /= genForeignKeyName table d
-                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> foreignKeyToSQL table d]
+              Just name -> ValidationOk $ if raw name /= fkName tblName d
+                then ["ALTER TABLE" <+> raw tblName <+> "DROP CONSTRAINT" <+> raw name <+> "," <+> sqlAddFK tblName d]
                 else []
           , validate defs $ deleteFirst ((== d) . fst) fkeys
           ]

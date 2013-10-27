@@ -1,6 +1,8 @@
 module DB.Model.ForeignKey where
 
+import Data.Monoid
 import qualified Data.Set as S
+
 import DB.SQL
 
 data ForeignKey = ForeignKey {
@@ -35,3 +37,31 @@ fkOnColumns columns reftable refcolumns = ForeignKey {
 , fkDeferrable = True
 , fkDeferred   = False
 }
+
+fkName :: RawSQL -> ForeignKey -> SQL
+fkName tname ForeignKey{..} = mconcat [
+    "fk__"
+  , raw tname
+  , "__"
+  , intersperseNoWhitespace "__" (map raw . S.toAscList $ fkColumns)
+  , "__"
+  , raw fkRefTable
+  ]
+
+sqlAddFK :: RawSQL -> ForeignKey -> SQL
+sqlAddFK tname fk@ForeignKey{..} = mconcat [
+    "ADD CONSTRAINT" <+> fkName tname fk <+> "FOREIGN KEY ("
+  , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkColumns)
+  , ") REFERENCES" <+> raw fkRefTable <+> "("
+  , intersperseNoWhitespace ", " (map raw . S.toAscList $ fkRefColumns)
+  , ") ON UPDATE" <+> foreignKeyActionToSQL fkOnUpdate
+  , "  ON DELETE" <+> foreignKeyActionToSQL fkOnDelete
+  , " " <> if fkDeferrable then "DEFERRABLE" else "NOT DEFERRABLE"
+  , " INITIALLY" <+> if fkDeferred then "DEFERRED" else "IMMEDIATE"
+  ]
+  where
+    foreignKeyActionToSQL ForeignKeyNoAction = "NO ACTION"
+    foreignKeyActionToSQL ForeignKeyRestrict = "RESTRICT"
+    foreignKeyActionToSQL ForeignKeyCascade = "CASCADE"
+    foreignKeyActionToSQL ForeignKeySetNull = "SET NULL"
+    foreignKeyActionToSQL ForeignKeySetDefault = "SET DEFAULT"

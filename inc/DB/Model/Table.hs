@@ -44,12 +44,43 @@ instance Convertible SqlValue ColumnType where
         , convErrorMessage = "Unknown data type"
         }
 
+columnTypeToSQL :: ColumnType -> SQL
+columnTypeToSQL BigIntT = "BIGINT"
+columnTypeToSQL BigSerialT = "BIGSERIAL"
+columnTypeToSQL BinaryT = "BYTEA"
+columnTypeToSQL BoolT = "BOOLEAN"
+columnTypeToSQL DateT = "DATE"
+columnTypeToSQL DoubleT = "DOUBLE PRECISION"
+columnTypeToSQL IntegerT = "INTEGER"
+columnTypeToSQL SmallIntT = "SMALLINT"
+columnTypeToSQL TextT = "TEXT"
+columnTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
+
+----------------------------------------
+
 data TableColumn = TableColumn {
   colName     :: RawSQL
 , colType     :: ColumnType
 , colNullable :: Bool
 , colDefault  :: Maybe RawSQL
 } deriving Show
+
+tblColumn :: TableColumn
+tblColumn = TableColumn {
+  colName = error "Column name must be specified"
+, colType = error "Column type must be specified"
+, colNullable = True
+, colDefault = Nothing
+}
+
+sqlAddColumn :: TableColumn -> SQL
+sqlAddColumn TableColumn{..} = "ADD COLUMN"
+  <+> raw colName
+  <+> columnTypeToSQL colType
+  <+> (if colNullable then "NULL" else "NOT NULL")
+  <+> raw (maybe "" ("DEFAULT" <+>) colDefault)
+
+----------------------------------------
 
 data Table = Table {
   tblName          :: RawSQL
@@ -60,14 +91,6 @@ data Table = Table {
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
 , tblPutProperties :: MonadDB m => m ()
-}
-
-tblColumn :: TableColumn
-tblColumn = TableColumn {
-  colName = error "Column name must be specified"
-, colType = error "Column type must be specified"
-, colNullable = True
-, colDefault = Nothing
 }
 
 tblTable :: Table
@@ -81,3 +104,11 @@ tblTable = Table {
 , tblIndexes = []
 , tblPutProperties = return ()
 }
+
+sqlCreateTable :: RawSQL -> SQL
+sqlCreateTable tname = "CREATE TABLE" <+> raw tname <+> "()"
+
+sqlAlterTable :: RawSQL -> [SQL] -> SQL
+sqlAlterTable tname alter_statements = "ALTER TABLE"
+  <+> raw tname
+  <+> intersperseNoWhitespace ", " alter_statements

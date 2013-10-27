@@ -1,6 +1,8 @@
 module DB.Model.Index where
 
+import Data.Monoid
 import qualified Data.Set as S
+
 import DB.SQL
 
 data TableIndex = TableIndex {
@@ -31,3 +33,20 @@ uniqueIndexOnColumns columns = TableIndex {
   idxColumns = S.fromList columns
 , idxUnique = True
 }
+
+indexName :: RawSQL -> TableIndex -> SQL
+indexName tname TableIndex{..} = mconcat [
+    if idxUnique then "unique_idx__" else "idx__"
+  , raw tname
+  , "__"
+  , intersperseNoWhitespace "__" (map raw . S.toAscList $ idxColumns)
+  ]
+
+sqlCreateIndex :: RawSQL -> TableIndex -> SQL
+sqlCreateIndex tname idx@TableIndex{..} = mconcat [
+    "CREATE "
+  , if idxUnique then "UNIQUE " else ""
+  , "INDEX" <+> indexName tname idx <+> "ON" <+> raw tname <+> "("
+  , intersperseNoWhitespace ", " (map raw . S.toAscList $ idxColumns)
+  , ")"
+  ]
