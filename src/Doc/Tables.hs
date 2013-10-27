@@ -26,7 +26,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "object_version", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "purged_time", colType = TimestampWithZoneT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   }
 
 tableMainFiles :: Table
@@ -40,7 +40,7 @@ tableMainFiles = tblTable {
     , tblColumn { colName = "document_status", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "seal_status", colType = SmallIntT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     , fkOnColumn "file_id" "files" "id"
@@ -59,7 +59,7 @@ tableAuthorAttachments = tblTable {
       tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["file_id", "document_id"]
+  , tblPrimaryKey = pkOnColumns ["file_id", "document_id"]
   , tblForeignKeys = [
       fkOnColumn "file_id" "files" "id"
     , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
@@ -80,7 +80,7 @@ tableSignatoryAttachments = tblTable {
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False, colDefault = Just "0" }
     ]
-  , tblPrimaryKey = ["signatory_link_id", "name"]
+  , tblPrimaryKey = pkOnColumns ["signatory_link_id", "name"]
   , tblForeignKeys = [
       fkOnColumn "file_id" "files" "id"
     , (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
@@ -142,7 +142,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "reject_redirect_url", colType = TextT }
 
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "document_id" "documents" "id") {fkOnDelete = ForeignKeyCascade }
     , fkOnColumn "user_id" "users" "id"
@@ -183,7 +183,7 @@ tableSignatoryLinkFields = tblTable {
     , tblColumn { colName = "obligatory", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "should_be_filled_by_author", colType = BoolT, colNullable = False, colDefault = Just "false" }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]
@@ -201,7 +201,7 @@ tableSignatoryScreenshots = tblTable {
     , tblColumn { colName = "time",              colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "file_id",           colType = BigIntT,            colNullable = False }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     , fkOnColumn "file_id" "files" "id"

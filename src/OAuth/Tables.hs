@@ -38,7 +38,7 @@ tableAPIToken = tblTable {
     , tblColumn { colName = "api_secret", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
@@ -65,7 +65,7 @@ tableAccessToken = tblTable {
     , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade }
@@ -89,7 +89,7 @@ tablePrivilege = tblTable {
       tblColumn { colName = "access_token_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "privilege", colType = SmallIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["access_token_id", "privilege"]
+  , tblPrimaryKey = pkOnColumns ["access_token_id", "privilege"]
   , tblForeignKeys = [
       (fkOnColumn "access_token_id" "oauth_access_token" "id") { fkOnDelete = ForeignKeyCascade }
     ]
@@ -118,7 +118,7 @@ tableTempCredential = tblTable {
     , tblColumn { colName = "callback", colType = TextT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
@@ -143,7 +143,7 @@ tableTempPrivileges = tblTable {
       tblColumn { colName = "temp_token_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "privilege", colType = SmallIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["temp_token_id", "privilege"]
+  , tblPrimaryKey = pkOnColumns ["temp_token_id", "privilege"]
   , tblForeignKeys = [
     (fkOnColumn "temp_token_id" "oauth_temp_credential" "id") { fkOnDelete = ForeignKeyCascade }
     ]

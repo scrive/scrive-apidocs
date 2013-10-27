@@ -14,7 +14,7 @@ tableSessions = tblTable {
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "csrf_token", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "pad_user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }

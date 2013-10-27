@@ -11,5 +11,5 @@ tableHostClock = tblTable {
     , tblColumn { colName = "clock_offset", colType = DoubleT } -- as reported by ntpdate: difference between host clock and reference servers; NULL if ntpdate failed
     , tblColumn { colName = "clock_frequency", colType = DoubleT, colNullable = False } -- (relative) kernel phase-lock loop frequency
     ]
-  , tblPrimaryKey = ["time"]
+  , tblPrimaryKey = pkOnColumn "time"
   }

@@ -16,7 +16,7 @@ tableAttachments = tblTable {
     , tblColumn { colName = "shared", colType = BoolT, colNullable = False }
     , tblColumn { colName = "deleted", colType = BoolT, colNullable = False }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     , fkOnColumn "file_id" "files" "id"

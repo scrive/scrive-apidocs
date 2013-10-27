@@ -39,7 +39,7 @@ tableDocumentSessionTokens = tblTable {
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["session_id", "signatory_link_id"]
+  , tblPrimaryKey = pkOnColumns ["session_id", "signatory_link_id"]
   , tblForeignKeys = [
       (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }

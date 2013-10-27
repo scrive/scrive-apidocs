@@ -62,7 +62,7 @@ tableELegTransactions = tblTable {
     , tblColumn { colName = "cr_attributes",     colType = TextT                        }
     , tblColumn { colName = "oref",              colType = TextT                        }
     ]
-  , tblPrimaryKey = ["id", "session_id"]
+  , tblPrimaryKey = pkOnColumns ["id", "session_id"]
   , tblForeignKeys = [
       (fkOnColumn "session_id" "sessions" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }

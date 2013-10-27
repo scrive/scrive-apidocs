@@ -8,6 +8,7 @@ import DB.Core
 import DB.Model.Check
 import DB.Model.Index
 import DB.Model.ForeignKey
+import DB.Model.PrimaryKey
 import DB.SQL
 
 data ColumnType
@@ -86,7 +87,7 @@ data Table = Table {
   tblName          :: RawSQL
 , tblVersion       :: Int
 , tblColumns       :: [TableColumn]
-, tblPrimaryKey    :: [RawSQL]
+, tblPrimaryKey    :: Maybe PrimaryKey
 , tblChecks        :: [TableCheck]
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
@@ -98,7 +99,7 @@ tblTable = Table {
   tblName = error "Table name must be specified"
 , tblVersion = error "Table version must be specified"
 , tblColumns = error "Table columns must be specified"
-, tblPrimaryKey = []
+, tblPrimaryKey = Nothing
 , tblChecks = []
 , tblForeignKeys = []
 , tblIndexes = []

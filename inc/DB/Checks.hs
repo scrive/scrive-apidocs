@@ -9,7 +9,6 @@ import Data.Either
 import Data.List.Utils
 import Data.Maybe
 import Data.Monoid
-import Data.Set (Set)
 import Database.HDBC.SqlValue
 import qualified Data.List as L
 import qualified Data.Set as S
@@ -168,9 +167,9 @@ checkDBConsistency logger tables migrations = do
           , if null tblColumns
               then []
               else [sqlAlterTable tblName $ map sqlAddColumn tblColumns]
-          , if null tblPrimaryKey
-            then []
-            else [sqlAlterTable tblName [sqlAddPK tblName tblPrimaryKey]]
+          , case tblPrimaryKey of
+              Nothing -> []
+              Just pk -> [sqlAlterTable tblName [sqlAddPK tblName pk]]
           , if null tblChecks
             then []
             else [sqlAlterTable tblName $ map (sqlAddCheck tblName) tblChecks]
@@ -244,7 +243,7 @@ checkDBConsistency logger tables migrations = do
       desc <- reverse `liftM` kFold fetchTableColumn []
       -- get info about constraints from pg_catalog
       kRun_ $ sqlGetConstraintOfType 'p' -- primary key
-      pk <- kFold fetchTablePrimaryKey Nothing
+      pk <- kFold fetchPrimaryKey Nothing
       kRun_ $ sqlGetConstraintOfType 'c' -- checks
       checks <- kFold fetchTableChecks []
       kRun_ $ sqlGetIndexes table
@@ -264,11 +263,11 @@ checkDBConsistency logger tables migrations = do
           , colDefault = unsafeFromString `liftM` mdefault
           } : acc
 
-        fetchTablePrimaryKey :: Maybe (RawSQL, Set RawSQL) -> String -> String -> Maybe (RawSQL, Set RawSQL)
-        fetchTablePrimaryKey Nothing name columns =
-          Just (unsafeFromString name, S.fromList $ map unsafeFromString $ split "," columns)
-        fetchTablePrimaryKey _ _ _ =
-          error $ "fetchTablePrimaryKey (" ++ tblNameString table ++ "): more than one primary key (shouldn't happen)"
+        fetchPrimaryKey :: Maybe (RawSQL, PrimaryKey) -> String -> String -> Maybe (RawSQL, PrimaryKey)
+        fetchPrimaryKey Nothing name columns =
+          Just (unsafeFromString name, unsafePrimaryKey . S.fromList . map unsafeFromString . split "," $ columns)
+        fetchPrimaryKey _ _ _ =
+          error $ "fetchPrimaryKey (" ++ tblNameString table ++ "): more than one primary key (shouldn't happen)"
 
         fetchTableChecks :: [(RawSQL, RawSQL)] -> String -> String -> [(RawSQL, RawSQL)]
         fetchTableChecks acc name condition = (unsafeFromString condition, unsafeFromString name) : acc
@@ -314,16 +313,16 @@ checkDBConsistency logger tables migrations = do
             cname = unRawSQL . colName $ d
             errorMsg ident attr f = "Column " ++ ident ++ " differs in " ++ attr ++ " (definition: " ++ f d ++ ", database: " ++ f c ++ ")"
 
-        checkPrimaryKey :: [RawSQL] -> Maybe (RawSQL, Set RawSQL) -> ValidationResult
-        checkPrimaryKey [] Nothing = mempty
+        checkPrimaryKey :: Maybe PrimaryKey -> Maybe (RawSQL, PrimaryKey) -> ValidationResult
+        checkPrimaryKey Nothing Nothing = mempty
         checkPrimaryKey pk Nothing = ValidationError $ databaseHasLess "PRIMARY KEYs" pk
-        checkPrimaryKey [] (Just (_, cols)) = ValidationError $ databaseHasMore "PRIMARY KEYs" cols
-        checkPrimaryKey def (Just (name, cols))
-          | S.fromList def == cols = ValidationOk $ if raw name /= pkName tblName
+        checkPrimaryKey Nothing (Just (_, pk)) = ValidationError $ databaseHasMore "PRIMARY KEYs" pk
+        checkPrimaryKey (Just def) (Just (name, pk))
+          | def == pk = ValidationOk $ if raw name /= pkName tblName
             -- rename index that represents primary key
             then ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> pkName tblName]
             else []
-          | otherwise = ValidationError $ "Primary key in table definition (" ++ show def ++ ") differs from the one in the database (" ++ show cols ++ ")"
+          | otherwise = ValidationError $ "Primary key in table definition (" ++ show def ++ ") differs from the one in the database (" ++ show pk ++ ")"
 
         checkChecks :: [TableCheck] -> [(RawSQL, RawSQL)] -> ValidationResult
         checkChecks [] [] = mempty
@@ -341,7 +340,7 @@ checkDBConsistency logger tables migrations = do
               -- appropriate error message if that's the case.
               Nothing -> case filter ((== checkName tblName d) . raw . snd) checks of
                 []  -> mempty
-                [(condition, name)] -> ValidationError $ "Check " ++ unRawSQL name ++ " the in database has different condition [" ++ unRawSQL condition ++ "] than the one in the definition [" ++ unRawSQL (chkCondition d) ++ "] (HINT: If the bodies are equal modulo number of parentheses, just copy and paste suggested body into source code)"
+                [(condition, name)] -> ValidationError $ "Check " ++ unRawSQL name ++ " in the database has different condition [" ++ unRawSQL condition ++ "] than the one in the definition [" ++ unRawSQL (chkCondition d) ++ "] (HINT: If the bodies are equal modulo number of parentheses, just copy and paste suggested body into source code)"
                 _ -> error "checkChecks: more that one CHECK with the same name in the definition (shouldn't happen)"
           , checkChecks defs $ deleteFirst ((== chkCondition d) . fst) checks
           ]

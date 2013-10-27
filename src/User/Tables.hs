@@ -25,7 +25,7 @@ tableUsers = tblTable {
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "associated_domain", colType = TextT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [TableCheck "lowercase_email" "email = lower(email)"]
   , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
   , tblIndexes = [

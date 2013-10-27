@@ -18,5 +18,5 @@ tableFiles = tblTable {
     , tblColumn { colName = "aes_iv",        colType = BinaryT }
     , tblColumn { colName = "purged_time",   colType = TimestampWithZoneT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   }

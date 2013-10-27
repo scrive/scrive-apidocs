@@ -14,7 +14,7 @@ tableCompanyInvites = tblTable {
     , tblColumn { colName = "last_name", colType = TextT, colNullable = False }
     , tblColumn { colName = "company_id", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["email", "company_id"]
+  , tblPrimaryKey = pkOnColumns ["email", "company_id"]
   , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
   , tblIndexes = [
       indexOnColumn "company_id"

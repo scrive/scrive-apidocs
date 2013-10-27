@@ -12,7 +12,7 @@ tableDocumentApiCallbacks = tblTable {
     , tblColumn { colName = "url", colType = TextT, colNullable = False }
     , tblColumn { colName = "attempt", colType = IntegerT, colNullable = False }
     ]
-  , tblPrimaryKey = ["document_id"]
+  , tblPrimaryKey = pkOnColumn "document_id"
   , tblForeignKeys = [
       (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     ]

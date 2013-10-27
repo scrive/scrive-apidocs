@@ -11,7 +11,7 @@ tableAccessNewAccounts = tblTable {
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["user_id"]
+  , tblPrimaryKey = pkOnColumn "user_id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
@@ -27,7 +27,7 @@ tablePasswordReminders = tblTable {
     , tblColumn { colName = "remained_emails", colType = IntegerT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["user_id"]
+  , tblPrimaryKey = pkOnColumn "user_id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
@@ -43,7 +43,7 @@ tableEmailChangeRequests = tblTable {
     , tblColumn { colName = "new_email", colType = TextT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["user_id"]
+  , tblPrimaryKey = pkOnColumn "user_id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
@@ -58,6 +58,6 @@ tableUserAccountRequests = tblTable {
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = ["user_id"]
+  , tblPrimaryKey = pkOnColumn "user_id"
   , tblForeignKeys = [fkOnColumn "user_id" "users" "id"]
   }

@@ -10,5 +10,5 @@ tableVersions = tblTable {
       tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "version", colType = IntegerT, colNullable = False }
     ]
-  , tblPrimaryKey = ["name"]
+  , tblPrimaryKey = pkOnColumn "name"
   }

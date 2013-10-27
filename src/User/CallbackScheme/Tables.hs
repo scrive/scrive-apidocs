@@ -10,7 +10,7 @@ tableUsersCallbackScheme = tblTable {
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "callback_scheme", colType = TextT, colNullable = False }
     ]
-  , tblPrimaryKey = ["user_id"]
+  , tblPrimaryKey = pkOnColumn "user_id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]

@@ -31,7 +31,7 @@ tableEvidenceLog = tblTable {
     , tblColumn { colName = "affected_signatory_link_id", colType = BigIntT }
     , tblColumn { colName = "message_text", colType = TextT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
       indexOnColumn "user_id"
     , indexOnColumn "document_id"

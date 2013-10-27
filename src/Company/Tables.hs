@@ -18,7 +18,7 @@ tableCompanies = tblTable {
     , tblColumn { colName = "sms_originator", colType = TextT, colNullable = False, colDefault = Just "''::text" }
 
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   }
 
 tableCompanyUIs :: Table
@@ -46,7 +46,7 @@ tableCompanyUIs = tblTable {
     , tblColumn { colName = "custom_barssecondarycolour",  colType = TextT }
     , tblColumn { colName = "custom_backgroundcolour",     colType = TextT }
     ]
-  , tblPrimaryKey = ["company_id"]
+  , tblPrimaryKey = pkOnColumn "company_id"
   , tblForeignKeys = [
       (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
     ]

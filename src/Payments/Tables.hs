@@ -25,7 +25,7 @@ tablePaymentPlans = tblTable {
     , tblColumn { colName = "dunning_date", colType = TimestampWithZoneT }
     , tblColumn { colName = "billing_ends", colType = TimestampWithZoneT, colNullable = False }
     ]
-  , tblPrimaryKey = ["account_code"]
+  , tblPrimaryKey = pkOnColumn "account_code"
   , tblIndexes = [uniqueIndexOnColumn "company_id"]
   , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
   }

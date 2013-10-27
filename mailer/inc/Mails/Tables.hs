@@ -30,7 +30,7 @@ tableMails = tblTable {
     , tblColumn { colName = "sent", colType = TimestampWithZoneT }
     , tblColumn { colName = "service_test", colType = BoolT, colNullable = False }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   }
 
 tableMailAttachments :: Table
@@ -44,7 +44,7 @@ tableMailAttachments = tblTable {
     , tblColumn { colName = "content", colType = BinaryT }
     , tblColumn { colName = "file_id", colType = BigIntT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "mail_id" "mails" "id") { fkOnDelete = ForeignKeyCascade }
     , fkOnColumn "file_id" "files" "id"
@@ -65,7 +65,7 @@ tableMailEvents = tblTable {
     , tblColumn { colName = "event", colType = TextT, colNullable = False }
     , tblColumn { colName = "event_read", colType = TimestampWithZoneT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "mail_id" "mails" "id") {
         fkOnDelete = ForeignKeyCascade

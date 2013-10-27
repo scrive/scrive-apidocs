@@ -25,7 +25,7 @@ tableSMSes = tblTable {
     , tblColumn { colName = "sent", colType = TimestampWithZoneT }
     , tblColumn { colName = "data", colType = TextT, colNullable = False }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   }
 
 tableSMSEvents :: Table
@@ -38,7 +38,7 @@ tableSMSEvents = tblTable {
     , tblColumn { colName = "event", colType = TextT, colNullable = False }
     , tblColumn { colName = "event_read", colType = TimestampWithZoneT }
     ]
-  , tblPrimaryKey = ["id"]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "sms_id" "smses" "id") { fkOnDelete = ForeignKeyCascade }
     ]
