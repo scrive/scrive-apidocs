@@ -5,7 +5,7 @@ import DB
 tableAccessNewAccounts :: Table
 tableAccessNewAccounts = tblTable {
     tblName = "access_new_accounts"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
@@ -20,7 +20,7 @@ tableAccessNewAccounts = tblTable {
 tablePasswordReminders :: Table
 tablePasswordReminders = tblTable {
     tblName = "password_reminders"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
@@ -36,7 +36,7 @@ tablePasswordReminders = tblTable {
 tableEmailChangeRequests :: Table
 tableEmailChangeRequests = tblTable {
     tblName = "email_change_requests"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
@@ -52,7 +52,7 @@ tableEmailChangeRequests = tblTable {
 tableUserAccountRequests :: Table
 tableUserAccountRequests = tblTable {
     tblName = "user_account_requests"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }

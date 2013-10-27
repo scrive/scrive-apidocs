@@ -158,7 +158,7 @@ checkDBConsistency logger tables migrations = do
             ValidationOk -> return $ Right Nothing
         Just ver | ver < tblVersion -> do
           normalizePropertyNames
-          logger $ arrListTable table ++ "scheduling for migration " ++ show ver ++ " => " ++ show tblVersion
+          logger $ arrListTable table ++ "scheduling for migration: " ++ show ver ++ " => " ++ show tblVersion
           return . Right . Just $ (table, ver)
         Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
       where
@@ -240,16 +240,16 @@ checkDBConsistency logger tables migrations = do
           return Nothing
 
     migrate :: [Migration m] -> [(Table, Int)] -> m ()
-    migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
-      if tblName (mgrTable m) == tblName t && mgrFrom m >= from
+    migrate ms ts = forM_ ms $ \Migration{..} -> forM_ ts $ \(t, from) -> do
+      if tblName mgrTable == tblName t && mgrFrom >= from
          then do
-           Just ver <- checkVersion $ mgrTable m
-           logger $ arrListTable tblTable ++ "migrating: " ++ show ver ++ " => " ++ show (mgrFrom m + 1) ++ "..."
-           when (ver /= mgrFrom m) $
+           Just ver <- checkVersion mgrTable
+           logger $ arrListTable mgrTable ++ "migrating: " ++ show ver ++ " => " ++ show (mgrFrom + 1) ++ "..."
+           when (ver /= mgrFrom) $
              error $ "Migrations are in wrong order in migrations list."
-           mgrDo m
+           mgrDo
            kRun_ $ SQL "UPDATE table_versions SET version = ? WHERE name = ?"
-                   [toSql $ succ $ mgrFrom m, toSql $ tblNameString t]
+                   [toSql . succ $ mgrFrom, toSql $ tblNameString t]
            return ()
          else return ()
 
@@ -412,7 +412,7 @@ checkDBConsistency logger tables migrations = do
       sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
       sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
       sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
-      sqlWhere "(r.contype IS NULL OR r.contype = 'u')" -- omit primary key
+      sqlWhereIsNULL "r.contype" -- fetch only "pure" indexes
 
     fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> [(TableIndex, RawSQL)]
     fetchTableIndexes acc name columns unique = (TableIndex {

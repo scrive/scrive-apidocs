@@ -5,7 +5,7 @@ import DB
 tableUsersCallbackScheme :: Table
 tableUsersCallbackScheme = tblTable {
     tblName = "user_callback_scheme"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "callback_scheme", colType = TextT, colNullable = False }

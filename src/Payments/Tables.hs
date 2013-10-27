@@ -9,7 +9,7 @@ import DB
 tablePaymentPlans :: Table
 tablePaymentPlans = tblTable {
     tblName = "payment_plans"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblColumns = [
       tblColumn { colName = "account_code", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "company_id", colType = BigIntT, colNullable = False  }

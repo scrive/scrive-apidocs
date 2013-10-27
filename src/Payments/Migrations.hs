@@ -38,6 +38,18 @@ paymentsPlansOnlyForCompanies =
       kRunRaw "ALTER TABLE payment_plans DROP COLUMN user_id"
   }
 
+removeDuplicateIndexFromPaymentPlans :: MonadDB m => Migration m
+removeDuplicateIndexFromPaymentPlans = Migration {
+  mgrTable = tablePaymentPlans
+, mgrFrom = 4
+, mgrDo = do
+  let Table{..} = tablePaymentPlans
+  kRun_ . sqlDropIndex tblName $ indexOnColumn "company_id"
+  -- additionally drop unique constraint and create unique index on company_id
+  kRun_ $ sqlAlterTable tblName ["DROP CONSTRAINT IF EXISTS unique_payment_plans_company_id"]
+  kRun_ . sqlCreateIndex tblName $ uniqueIndexOnColumn "company_id"
+}
+
 paymentsStatsOnlyForCompanies :: MonadDB m => Migration m
 paymentsStatsOnlyForCompanies =
   Migration {
@@ -51,5 +63,3 @@ paymentsStatsOnlyForCompanies =
       kRunRaw "ALTER TABLE payment_stats DROP COLUMN account_type"
       kRunRaw "ALTER TABLE payment_stats DROP COLUMN user_id"
   }
-
-

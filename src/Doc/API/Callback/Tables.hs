@@ -5,7 +5,7 @@ import DB
 tableDocumentApiCallbacks :: Table
 tableDocumentApiCallbacks = tblTable {
     tblName = "document_api_callbacks"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }

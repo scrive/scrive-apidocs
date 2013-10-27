@@ -24,7 +24,7 @@ tableCompanies = tblTable {
 tableCompanyUIs :: Table
 tableCompanyUIs = tblTable {
     tblName = "company_uis"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "company_id",                  colType = BigIntT, colNullable = False }
     , tblColumn { colName = "email_bordercolour",          colType = TextT }

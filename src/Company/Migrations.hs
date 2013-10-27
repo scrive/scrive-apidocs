@@ -7,6 +7,15 @@ import Company.Tables
 
 default (SQL)
 
+removeDuplicateIndexFromCompanyUIs :: MonadDB m => Migration m
+removeDuplicateIndexFromCompanyUIs = Migration {
+  mgrTable = tableCompanyUIs
+, mgrFrom = 1
+, mgrDo = do
+  let Table{..} = tableCompanyUIs
+  kRun_ . sqlDropIndex tblName $ indexOnColumn "company_id"
+}
+
 addIPAddressMaskListToCompanies :: MonadDB m => Migration m
 addIPAddressMaskListToCompanies = Migration {
     mgrTable = tableCompanies

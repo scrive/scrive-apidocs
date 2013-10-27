@@ -10,12 +10,14 @@ import DB.SQLFunction
 import Control.Monad.IO.Class
 
 import ActionQueue.Tables
+import ActionQueue.Migrations
 import Company.Tables
 import Company.Migrations
 import CompanyAccounts.Tables
 import Doc.Tables
 import Doc.Migrations
 import Doc.API.Callback.Tables
+import Doc.API.Callback.Migrations
 import Doc.Tokens.Tables
 import HostClock.Tables
 import User.Migrations
@@ -37,8 +39,9 @@ import Payments.Tables
 import Payments.Migrations
 import Attachment.Tables
 import ThirdPartyStats.Tables
-import User.CallbackScheme.Tables
 import ThirdPartyStats.Migrations
+import User.CallbackScheme.Tables
+import User.CallbackScheme.Migrations
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
@@ -156,6 +159,14 @@ kontraMigrations = [
   , migrateDocumentsAddPurgedTime
   , addRejectRedirectURL
   , migrateDocumentsMoveFilesToMainFilesTable
+  , removeDuplicateIndexFromPaymentPlans
+  , removeDuplicateIndexFromAccessNewAccounts
+  , removeDuplicateIndexFromPasswordReminders
+  , removeDuplicateIndexFromEmailChangeRequests
+  , removeDuplicateIndexFromUserAccountRequests
+  , removeDuplicateIndexFromDocumentApiCallbacks
+  , removeDuplicateIndexFromUsersCallbackScheme
+  , removeDuplicateIndexFromCompanyUIs
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
