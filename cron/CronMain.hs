@@ -83,6 +83,11 @@ main = Log.withLogger $ do
      , forkCron_ True "timeoutDocuments" (60 * 10) $ do
          Log.cron "Running timeoutDocuments..."
          runScheduler timeoutDocuments
+     , forkCron_ False "PurgeDocuments" (60 * 10) $ do
+         Log.cron "Running PurgeDocuments..."
+         runScheduler $ do
+           purgedCount <- dbUpdate $ PurgeDocuments 30 30
+           Log.cron $ "Purged " ++ show purgedCount ++ " documents."
      , forkCron_ True "EmailChangeRequests" (60 * 60) $ do
          Log.cron "Evaluating EmailChangeRequest actions..."
          runScheduler $ actionQueue emailChangeRequest
