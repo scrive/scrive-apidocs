@@ -120,6 +120,9 @@ main = Log.withLogger $ do
      ] ++ (if AWS.isAWSConfigOk $ amazonConfig appConf
            then [forkCron_ True "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon]
            else []) ++
+          (if AWS.isAWSConfigOk $ amazonConfig appConf
+           then [forkCron_ True "AmazonDeleting" 60 $ runScheduler AWS.purgeFiles]
+           else []) ++
      [ forkCron_ True "removeOldDrafts" (60 * 60) $ do
          Log.cron "Removing old, unsaved draft documents..."
          runScheduler $ do

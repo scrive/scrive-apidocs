@@ -4,9 +4,11 @@ module File.Model (
     , GetFileByFileID(..)
     , GetFileThatShouldBeMovedToAmazon(..)
     , NewFile(..)
+    , PurgeFile(..)
     ) where
 
 import Control.Applicative
+import Control.Monad
 import Database.HDBC
 
 import Crypto
@@ -18,6 +20,7 @@ import File.FileID
 import File.Conditions
 import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
+import Data.List (sort)
 
 data GetFileByFileID = GetFileByFileID FileID
 instance MonadDB m => DBQuery m GetFileByFileID File where
@@ -60,6 +63,97 @@ instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) wh
       sqlLimit 1
       mapM_ (sqlResult . raw) filesSelectors
     fetchFiles >>= oneObjectReturnedGuard
+
+data PurgeFile = PurgeFile
+instance MonadDB m => DBUpdate m PurgeFile [(FileID,Maybe String,Maybe String,Bool)] where
+  update (PurgeFile) = do
+    -- lets check if the database still looks similar to what the code
+    -- below was written for
+
+    kRun_ $ ("SELECT table_name, column_name" :: SQL)
+        <+> "  FROM information_schema.key_column_usage"
+        <+> " WHERE constraint_name IN (SELECT constraint_name"
+        <+> "                             FROM information_schema.referential_constraints"
+        <+> "                            WHERE unique_constraint_name = 'pk__files')"
+    refs <- kFold (\acc table_name column_name -> (table_name :: String, column_name::String) : acc) []
+    let expected_refs =
+           [ ("attachments",           "file_id")
+           , ("author_attachments",    "file_id")
+           , ("main_files",            "file_id")
+           , ("mail_attachments",      "file_id")
+           , ("signatory_attachments", "file_id")
+           , ("signatory_screenshots", "file_id")
+           ]
+
+    when (sort expected_refs /= sort refs) $
+      error $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " ++ show refs
+
+    kRun_ $ ("SELECT id, amazon_bucket, amazon_url, content IS NULL" :: SQL)
+        <+> "  FROM files"
+        <+> " WHERE purged_time IS NULL"
+                -- Case 1:"
+                -- File is connected as a file to a document that is still available to somebody."
+        <+> "   AND NOT EXISTS ("
+        <+> "       SELECT TRUE"
+        <+> "         FROM documents"
+        <+> "         JOIN main_files ON main_files.document_id = documents.id"
+        <+> "        WHERE files.id = main_files.file_id"
+        <+> "          AND documents.purged_time IS NULL"
+        <+> "       )"
+                -- Case 3:"
+                -- File is connected as a signatory attachment to a document that is available to somebody."
+        <+> "   AND NOT EXISTS ("
+        <+> "       SELECT TRUE"
+        <+> "         FROM documents"
+        <+> "         JOIN signatory_links ON signatory_links.document_id = documents.id"
+        <+> "         JOIN signatory_attachments ON signatory_attachments.signatory_link_id = signatory_links.id"
+        <+> "        WHERE signatory_attachments.file_id = files.id"
+        <+> "          AND documents.purged_time IS NULL"
+        <+> "       )"
+                -- Case 4:"
+                -- File is connected as an author attachment to a document that is available to somebody."
+        <+> "   AND NOT EXISTS ("
+        <+> "       SELECT TRUE"
+        <+> "         FROM documents"
+        <+> "         JOIN signatory_links ON signatory_links.document_id = documents.id"
+        <+> "         JOIN author_attachments ON author_attachments.document_id = documents.id"
+        <+> "        WHERE author_attachments.file_id = files.id"
+        <+> "          AND documents.purged_time IS NULL"
+        <+> "       )"
+                -- Case 5:"
+                -- There is an email with this file as an attachment"
+        <+> "   AND NOT EXISTS ("
+        <+> "       SELECT TRUE"
+        <+> "         FROM mail_attachments"
+        <+> "        WHERE mail_attachments.file_id = files.id"
+        <+> "       )"
+                -- Case 6:"
+                -- There is a screenshot useful for a non-deleted document"
+        <+> "   AND NOT EXISTS ("
+        <+> "       SELECT TRUE"
+        <+> "         FROM documents"
+        <+> "         JOIN signatory_links ON signatory_links.document_id = documents.id"
+        <+> "         JOIN signatory_screenshots ON signatory_screenshots.signatory_link_id = signatory_links.id"
+        <+> "        WHERE signatory_screenshots.file_id = files.id"
+        <+> "          AND documents.purged_time IS NULL"
+        <+> "       )"
+                -- Case 7:
+                -- There is an attachment with this file referenced.
+        <+> "   AND NOT EXISTS ("
+        <+> "       SELECT TRUE"
+        <+> "         FROM attachments"
+        <+> "        WHERE attachments.file_id = files.id"
+        <+> "          AND NOT attachments.deleted"
+        <+> "       )"
+        <+> "   LIMIT 1"
+    result <- kFold (\acc id' bucket url isonamazon -> (id',bucket,url,isonamazon) : acc) []
+    when (not (null result)) $ do
+      kRun_ $ "UPDATE files"
+          <+> "   SET purged_time = now()"
+          <+> "     , content = NULL"
+          <+> " WHERE files.id IN " <+> parenthesize (sqlConcatComma (map (sqlParam . (\(a,_,_,_) -> a)) result))
+    return result
+
 
 filesSelectors :: [RawSQL]
 filesSelectors = [

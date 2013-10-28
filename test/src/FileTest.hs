@@ -25,6 +25,8 @@ fileTests env = testGroup "Files" [
   testThat "File insert persists content"  env testFileNewFile,
   testThat "File move to AWS works"  env testFileMovedToAWS,
 
+  testThat "File purging works"  env testPurgeFiles,
+
   -- Advanced tests
   testThat "Newly created files are supposed to be moved to amazon"  env testNewFileThatShouldBeMovedToAWS
   ]
@@ -70,6 +72,18 @@ testFileMovedToAWS  = doTimes 100 $ do
   assertEqual "File data name does not change" name fname
   assertEqual "Bucket and url are persistent" (bucket,url) (fbucket,furl)
   assertEqual "AES key is persistent" aes aes2
+
+testPurgeFiles :: TestEnv ()
+testPurgeFiles  = doTimes 100 $ do
+  (name,content) <- fileData
+  _fileid' <- dbUpdate $ NewFile name $ Binary content
+
+  -- here we might purge some other file that is a left over in the
+  -- database from former test but that is ok
+  [(idx,_,_,_)] <- dbUpdate $ PurgeFile
+
+  assertRaisesKontra (\FileWasPurged {} -> True) $ do
+     dbQuery $ GetFileByFileID idx
 
 testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do
