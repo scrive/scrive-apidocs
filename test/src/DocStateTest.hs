@@ -289,7 +289,7 @@ testRejectDocumentEvidenceLog = do
   randomUpdate $ \m t->RejectDocument (documentid doc) (signatorylinkid sl) m (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == RejectDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current RejectDocumentEvidence) lg
 
 testRestartDocumentEvidenceLog :: TestEnv ()
 testRestartDocumentEvidenceLog = do
@@ -300,10 +300,10 @@ testRestartDocumentEvidenceLog = do
   mdoc <- randomUpdate $ \t->RestartDocument cdoc (systemActor t)
   assertJust mdoc
   lg <- dbQuery $ GetEvidenceLog (documentid $ fromJust mdoc)
-  assertJust $ find (\e -> evType e == RestartDocumentEvidence) lg
-  assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current RestartDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg2
+  assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg2
 
 testSetDocumentInviteTimeEvidenceLog :: TestEnv ()
 testSetDocumentInviteTimeEvidenceLog = do
@@ -314,7 +314,7 @@ testSetDocumentInviteTimeEvidenceLog = do
   success <- dbUpdate $ SetDocumentInviteTime (documentid doc) t (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentInviteTimeEvidence) lg
+  assertJust $ find (\e -> evType e == Current SetDocumentInviteTimeEvidence) lg
 
 {-
 testSetElegitimationAuthenticationEvidenceLog :: TestEnv ()
@@ -326,7 +326,7 @@ testSetElegitimationAuthenticationEvidenceLog = do
   assert success1
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetELegAuthenticationMethodEvidence) lg
+  assertJust $ find (\e -> evType e == Current SetELegAuthenticationMethodEvidence) lg
 
 testSetStandardAuthenticationEvidenceLog :: TestEnv ()
 testSetStandardAuthenticationEvidenceLog = do
@@ -337,7 +337,7 @@ testSetStandardAuthenticationEvidenceLog = do
   assert success1
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetStandardAuthenticationMethodEvidence) lg
+  assertJust $ find (\e -> evType e == Current SetStandardAuthenticationMethodEvidence) lg
 -}
 
 getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
@@ -361,7 +361,7 @@ testSignDocumentEvidenceLog = do
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing screenshots (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SignDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
 testTimeoutDocumentEvidenceLog :: TestEnv ()
 testTimeoutDocumentEvidenceLog = do
@@ -370,7 +370,7 @@ testTimeoutDocumentEvidenceLog = do
   success <- randomUpdate $ \t->TimeoutDocument (documentid doc) (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == TimeoutDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current TimeoutDocumentEvidence) lg
 
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
@@ -379,7 +379,7 @@ testPreparationToPendingEvidenceLog = do
   randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == PreparationToPendingEvidence) lg
+  assertJust $ find (\e -> evType e == Current PreparationToPendingEvidence) lg
 
 testMarkInvitationReadEvidenceLog :: TestEnv ()
 testMarkInvitationReadEvidenceLog = do
@@ -389,7 +389,7 @@ testMarkInvitationReadEvidenceLog = do
   success <- randomUpdate $ \t->MarkInvitationRead (documentid doc) (signatorylinkid sl) (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == MarkInvitationReadEvidence) lg
+  assertJust $ find (\e -> evType e == Current MarkInvitationReadEvidence) lg
 
 testErrorDocumentEvidenceLog :: TestEnv ()
 testErrorDocumentEvidenceLog  = do
@@ -398,7 +398,7 @@ testErrorDocumentEvidenceLog  = do
   success <- randomUpdate $ \t->ErrorDocument (documentid doc) "Some error" (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == ErrorDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current ErrorDocumentEvidence) lg
 
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
@@ -415,7 +415,7 @@ testSaveSigAttachmentEvidenceLog = do
   randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) "attachment" file (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SaveSigAttachmentEvidence) lg
+  assertJust $ find (\e -> evType e == Current SaveSigAttachmentEvidence) lg
 
 
 testDeleteSigAttachmentAlreadySigned :: TestEnv ()
@@ -455,7 +455,7 @@ testDeleteSigAttachmentEvidenceLog = do
   randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) file (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == DeleteSigAttachmentEvidence) lg
+  assertJust $ find (\e -> evType e == Current DeleteSigAttachmentEvidence) lg
 
 testAddInvitationEvidenceLog :: TestEnv ()
 testAddInvitationEvidenceLog = do
@@ -465,7 +465,7 @@ testAddInvitationEvidenceLog = do
   success <- randomUpdate $ \t->AddInvitationEvidence (documentid doc) (signatorylinkid sl) Nothing (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == InvitationEvidence) lg
+  assertJust $ find (\e -> evType e == Current InvitationEvidence) lg
 
 testAppendFirstSealedFileEvidenceLog :: TestEnv ()
 testAppendFirstSealedFileEvidenceLog = do
@@ -476,7 +476,7 @@ testAppendFirstSealedFileEvidenceLog = do
                          Guardtime{ extended = False, private = False } (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == AttachGuardtimeSealedFileEvidence) lg
+  assertJust $ find (\e -> evType e == Current AttachGuardtimeSealedFileEvidence) lg
 
 testCancelDocumentEvidenceLog :: TestEnv ()
 testCancelDocumentEvidenceLog = do
@@ -484,7 +484,7 @@ testCancelDocumentEvidenceLog = do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   randomUpdate $ \t-> CancelDocument (documentid doc) (systemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
 
 testELegAbortDocumentDocumentEvidenceLog :: TestEnv ()
 testELegAbortDocumentDocumentEvidenceLog = do
@@ -493,7 +493,7 @@ testELegAbortDocumentDocumentEvidenceLog = do
   let Just sl = getAuthorSigLink doc
   randomUpdate $ \t-> ELegAbortDocument (documentid doc) (signatorylinkid sl) "message" "first" "last" "198404011234" (systemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == CancelDocumenElegEvidence) lg
+  assertJust $ find (\e -> evType e == Current CancelDocumenElegEvidence) lg
 
 testChangeSignatoryEmailWhenUndeliveredEvidenceLog :: TestEnv ()
 testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do
@@ -503,7 +503,7 @@ testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do
   success <- randomUpdate $ \t-> ChangeSignatoryEmailWhenUndelivered (documentid doc) (signatorylinkid sl) Nothing "email@email.com" (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == ChangeSignatoryEmailWhenUndeliveredEvidence) lg
+  assertJust $ find (\e -> evType e == Current ChangeSignatoryEmailWhenUndeliveredEvidence) lg
 
 testCloseDocumentEvidenceLog :: TestEnv ()
 testCloseDocumentEvidenceLog = do
@@ -514,7 +514,7 @@ testCloseDocumentEvidenceLog = do
     randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == CloseDocumentEvidence) lg
+  assertJust $ find (\e -> evType e == Current CloseDocumentEvidence) lg
 
 
 performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> TestEnv (User, MinutesTime, Either String Document)

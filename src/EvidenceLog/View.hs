@@ -93,65 +93,63 @@ eventJSValue doc dee = do
     J.valueM "party" $ approximateActor doc dee
     J.valueM "text"  $ simplyfiedEventText Nothing dee
 
--- Removes events that seam to be duplicated
+-- | Simple events to be included in the archive history and the verification page.  These have translations.
 simpleEvents :: EvidenceEventType -> Bool
-simpleEvents NewDocumentEvidence               = True
-simpleEvents CloseDocumentEvidence             = True
-simpleEvents CancelDocumentEvidence            = True
-simpleEvents RejectDocumentEvidence            = True
-simpleEvents TimeoutDocumentEvidence           = True
-simpleEvents PreparationToPendingEvidence      = True
-simpleEvents MarkInvitationReadEvidence        = True
-simpleEvents SignatoryLinkVisited              = True
-simpleEvents RestartDocumentEvidence           = True
-simpleEvents SignDocumentEvidence              = True
-simpleEvents InvitationEvidence                = True
-simpleEvents InvitationDeliveredByEmail        = True
-simpleEvents InvitationUndeliveredByEmail      = True
-simpleEvents InvitationDeliveredBySMS          = True
-simpleEvents InvitationUndeliveredBySMS        = True
-simpleEvents ReminderSend                      = True
-simpleEvents ResealedPDF                       = True
-simpleEvents CancelDocumenElegEvidence         = True
-simpleEvents ProlongDocumentEvidence           = True
-simpleEvents AttachGuardtimeSealedFileEvidence = True
-simpleEvents AttachExtendedSealedFileEvidence  = True
-simpleEvents _                                 = False
+simpleEvents (Current AttachExtendedSealedFileEvidence)  = True
+simpleEvents (Current AttachGuardtimeSealedFileEvidence) = True
+simpleEvents (Current CancelDocumenElegEvidence)         = True
+simpleEvents (Current CancelDocumentEvidence)            = True
+simpleEvents (Current CloseDocumentEvidence)             = True
+simpleEvents (Current InvitationDeliveredByEmail)        = True
+simpleEvents (Current InvitationDeliveredBySMS)          = True
+simpleEvents (Current InvitationEvidence)                = True
+simpleEvents (Current InvitationUndeliveredByEmail)      = True
+simpleEvents (Current InvitationUndeliveredBySMS)        = True
+simpleEvents (Current MarkInvitationReadEvidence)        = True
+simpleEvents (Current PreparationToPendingEvidence)      = True
+simpleEvents (Current ProlongDocumentEvidence)           = True
+simpleEvents (Current RejectDocumentEvidence)            = True
+simpleEvents (Current ReminderSend)                      = True
+simpleEvents (Current ResealedPDF)                       = True
+simpleEvents (Current RestartDocumentEvidence)           = True
+simpleEvents (Current SignDocumentEvidence)              = True
+simpleEvents (Current SignatoryLinkVisited)              = True
+simpleEvents (Current TimeoutDocumentEvidence)           = True
+simpleEvents _                                           = False
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
-getEvidenceEventStatusClass NewDocumentEvidence               = SCDraft
-getEvidenceEventStatusClass CloseDocumentEvidence             = SCSigned
-getEvidenceEventStatusClass CancelDocumentEvidence            = SCCancelled
-getEvidenceEventStatusClass RejectDocumentEvidence            = SCRejected
-getEvidenceEventStatusClass TimeoutDocumentEvidence           = SCTimedout
-getEvidenceEventStatusClass PreparationToPendingEvidence      = SCSent
-getEvidenceEventStatusClass MarkInvitationReadEvidence        = SCRead
-getEvidenceEventStatusClass SignatoryLinkVisited              = SCOpened
-getEvidenceEventStatusClass RestartDocumentEvidence           = SCDraft
-getEvidenceEventStatusClass SignDocumentEvidence              = SCSigned
-getEvidenceEventStatusClass InvitationEvidence                = SCSent
-getEvidenceEventStatusClass InvitationDeliveredByEmail        = SCDelivered
-getEvidenceEventStatusClass InvitationUndeliveredByEmail      = SCDeliveryProblem
-getEvidenceEventStatusClass InvitationDeliveredBySMS          = SCDelivered
-getEvidenceEventStatusClass InvitationUndeliveredBySMS        = SCDeliveryProblem
-getEvidenceEventStatusClass ReminderSend                      = SCSent
-getEvidenceEventStatusClass ResealedPDF                       = SCSigned
-getEvidenceEventStatusClass CancelDocumenElegEvidence         = SCCancelled
-getEvidenceEventStatusClass ProlongDocumentEvidence           = SCProlonged
-getEvidenceEventStatusClass AttachGuardtimeSealedFileEvidence = SCSealed
-getEvidenceEventStatusClass AttachExtendedSealedFileEvidence  = SCExtended
-getEvidenceEventStatusClass _                                 = SCError
+getEvidenceEventStatusClass (Current CloseDocumentEvidence)             = SCSigned
+getEvidenceEventStatusClass (Current CancelDocumentEvidence)            = SCCancelled
+getEvidenceEventStatusClass (Current RejectDocumentEvidence)            = SCRejected
+getEvidenceEventStatusClass (Current TimeoutDocumentEvidence)           = SCTimedout
+getEvidenceEventStatusClass (Current PreparationToPendingEvidence)      = SCSent
+getEvidenceEventStatusClass (Current MarkInvitationReadEvidence)        = SCRead
+getEvidenceEventStatusClass (Current SignatoryLinkVisited)              = SCOpened
+getEvidenceEventStatusClass (Current RestartDocumentEvidence)           = SCDraft
+getEvidenceEventStatusClass (Current SignDocumentEvidence)              = SCSigned
+getEvidenceEventStatusClass (Current InvitationEvidence)                = SCSent
+getEvidenceEventStatusClass (Current InvitationDeliveredByEmail)        = SCDelivered
+getEvidenceEventStatusClass (Current InvitationUndeliveredByEmail)      = SCDeliveryProblem
+getEvidenceEventStatusClass (Current InvitationDeliveredBySMS)          = SCDelivered
+getEvidenceEventStatusClass (Current InvitationUndeliveredBySMS)        = SCDeliveryProblem
+getEvidenceEventStatusClass (Current ReminderSend)                      = SCSent
+getEvidenceEventStatusClass (Current ResealedPDF)                       = SCSigned
+getEvidenceEventStatusClass (Current CancelDocumenElegEvidence)         = SCCancelled
+getEvidenceEventStatusClass (Current ProlongDocumentEvidence)           = SCProlonged
+getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed
+getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)  = SCExtended
+getEvidenceEventStatusClass _                                           = SCError
 
 -- Remove signatory events that happen after signing (link visited, invitation read)
 cleanUnimportantAfterSigning :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 cleanUnimportantAfterSigning = go Set.empty
   where go _ [] = []
-        go m (e:es) | evType e `elem` [SignatoryLinkVisited, MarkInvitationReadEvidence]
+        go m (e:es) | evType e `elem` [Current SignatoryLinkVisited, Current MarkInvitationReadEvidence]
                        && any (`Set.member` m) (ids e)
                     = go m es
-                    | evType e == SignDocumentEvidence
+                    | evType e == Current SignDocumentEvidence
                     = e : go (m `Set.union` Set.fromList (ids e)) es
-                    | evType e == PreparationToPendingEvidence
+                    | evType e == Current PreparationToPendingEvidence
                     = e : go Set.empty es
                     | otherwise
                     = e : go m es
@@ -159,25 +157,27 @@ cleanUnimportantAfterSigning = go Set.empty
 
 -- Events that should be considered as performed as author even is actor states different.
 authorEvents  :: EvidenceEventType -> Bool
-authorEvents PreparationToPendingEvidence = True
+authorEvents (Current PreparationToPendingEvidence) = True
 authorEvents _ = False
 
 -- Events that should be considered as performed by the system even if actor states different.
 systemEvents  :: EvidenceEventType -> Bool
-systemEvents InvitationDeliveredByEmail = True
-systemEvents InvitationUndeliveredByEmail = True
-systemEvents InvitationDeliveredBySMS = True
-systemEvents InvitationUndeliveredBySMS = True
+systemEvents (Current InvitationDeliveredByEmail) = True
+systemEvents (Current InvitationUndeliveredByEmail) = True
+systemEvents (Current InvitationDeliveredBySMS) = True
+systemEvents (Current InvitationUndeliveredBySMS) = True
 systemEvents _ = False
 
 -- Empty events - they should be skipped, as they don't provide enought information to show to user
 emptyEvent :: DocumentEvidenceEvent -> Bool
-emptyEvent (DocumentEvidenceEvent {evType = InvitationEvidence, evAffectedSigLink = Nothing }) = True
-emptyEvent (DocumentEvidenceEvent {evType = ReminderSend,       evAffectedSigLink = Nothing }) = True
+emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffectedSigLink = Nothing }) = True
+emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
 
 simplyfiedEventText :: TemplatesMonad m => Maybe String -> DocumentEvidenceEvent' SignatoryLink -> m String
-simplyfiedEventText mactor dee = renderTemplateI (eventTextTemplateName (evType dee)) $ do
+simplyfiedEventText mactor dee = case evType dee of
+  Obsolete _ -> return ""
+  Current et -> renderTemplateI (eventTextTemplateName et) $ do
     let siglink = evAffectedSigLink dee
     F.value "text" $ filterTags <$> evMessageText dee
     F.value "signatory" $ getSmartName <$> siglink
@@ -196,9 +196,10 @@ showClockError decimals e = show (realFracToDecimal decimals (e * 1000)) ++ " ms
 suppressRepeatedEvents :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 suppressRepeatedEvents = go Map.empty where
   go _ [] = []
-  go levs (ev:evs) | evType ev == MarkInvitationReadEvidence = if Just (evTime ev) < ((5 `minutesAfter`) <$> Map.lookup (evText ev) levs)
-                                                               then go levs evs
-                                                               else ev : go (Map.insert (evText ev) (evTime ev) levs) evs
+  go levs (ev:evs) | evType ev == Current MarkInvitationReadEvidence =
+                       if Just (evTime ev) < ((5 `minutesAfter`) <$> Map.lookup (evText ev) levs)
+                       then go levs evs
+                       else ev : go (Map.insert (evText ev) (evTime ev) levs) evs
                   | otherwise = ev : go levs evs
 
 -- | Generating text of Evidence log that is attachmed to PDF. It should be complete
@@ -221,7 +222,7 @@ htmlDocFromEvidenceLog title elog ces = do
       F.value "text" $ evText entry
 
 htmlSkipedEvidenceType :: EvidenceEventType -> Bool
-htmlSkipedEvidenceType OldDocumentHistory = True
+htmlSkipedEvidenceType (Obsolete OldDocumentHistory) = True
 htmlSkipedEvidenceType _ = False
 
 filterTags :: String -> String

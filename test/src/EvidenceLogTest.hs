@@ -12,7 +12,6 @@ import TestingUtil
 import TestKontra
 import Text.StringTemplates.Templates
 import Data.List
-import EvidenceLog.View
 
 evidenceLogTests :: TestEnvSt -> Test
 evidenceLogTests env = testGroup "Evidence Log" [
@@ -39,6 +38,8 @@ conversionEq = do
 evidenceLogEventsHaveTexts:: TestEnv ()
 evidenceLogEventsHaveTexts = forM_ (range (0, 100)) $ \a -> do
     let t = safeConvert (a :: Int) :: Either ConvertError EvidenceEventType
-    when (isRight t && (not $ htmlSkipedEvidenceType $ fromRight t)) $ do
-      text <- renderTemplate_ $ eventTextTemplateName (fromRight t)
-      assertBool ("No text provided for event " ++ (show $ fromRight t)) (not $ "No template" `isInfixOf` text)
+    case t of 
+      Right (Current ct) -> do
+       text <- renderTemplate_ $ eventTextTemplateName ct
+       assertBool ("No text provided for event " ++ show ct) (not $ "No template" `isInfixOf` text)
+      _ -> return ()

@@ -929,7 +929,7 @@ removeOldDocumentLog =
   , mgrDo = do
       now <- getMinutesTime
       _ <- kRun $ SQL ("INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
-                              <> " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql OldDocumentHistory, toSql versionID]
+                              <> " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql (Obsolete OldDocumentHistory), toSql versionID]
       kRunRaw "ALTER TABLE documents DROP COLUMN log"
   }
 
