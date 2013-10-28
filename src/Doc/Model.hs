@@ -38,6 +38,7 @@ module Doc.Model
   , MarkInvitationRead(..)
   , NewDocument(..)
   , PreparationToPending(..)
+  , PurgeDocuments(..)
   , RejectDocument(..)
   , RemoveDocumentAttachment(..)
   , ResetSignatoryDetails(..)
@@ -125,7 +126,6 @@ import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
 import Control.Monad.State.Class
 import Company.Model
-
 
 
 -- | Document filtering options
@@ -1119,7 +1119,7 @@ newFromDocument f doc = do
 
 data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
-  update (ArchiveDocument uid did _actor) = do
+  update (ArchiveDocument uid did actor) = do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSetCmd "deleted" "now()"
 
@@ -1137,6 +1137,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
           sqlWhere "documents.id = signatory_links.document_id"
 
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
+    updateMTimeAndObjectVersion did (actorTime actor)
 
 -- | Attach a main file to a document associating it with preparation
 -- status.  Any old main file in preparation status will be removed.
@@ -2354,6 +2355,64 @@ instance MonadDB m => DBQuery m CheckDocumentObjectVersionIs () where
        sqlResult "TRUE"
        sqlWhereDocumentObjectVersionIs did ov
     return ()
+
+data PurgeDocuments = PurgeDocuments Int Int
+instance MonadDB m => DBUpdate m PurgeDocuments Int where
+  update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays) = do
+
+    kRun_ $ ("CREATE TEMP TABLE documents_to_purge(id, title) AS" :: SQL)
+        <+> "SELECT documents.id, documents.title"
+        <+> "  FROM documents"
+        -- document wasn't purged yet
+        <+> " WHERE documents.purged_time IS NULL"
+        -- has not been deleted at least in a single account
+        <+> "   AND NOT EXISTS(SELECT TRUE"
+        <+> "                    FROM signatory_links"
+        <+> "                   WHERE signatory_links.document_id = documents.id"
+        <+> "                     AND signatory_links.user_id IS NOT NULL"
+                                  -- not deleted or linger time hasn't elapsed
+        <+> "                     AND (signatory_links.deleted IS NULL OR"
+        <+> "                          signatory_links.deleted + (" <?> (show savedDocumentLingerDays ++ "days") <+> " :: INTERVAL) > now()))"
+
+        -- is not saved but time to save the document went by
+        <+> "   AND NOT EXISTS(SELECT TRUE"
+        <+> "                    FROM signatory_links"
+        <+> "                   WHERE signatory_links.document_id = documents.id"
+        <+> "                     AND signatory_links.user_id IS NULL"
+                                  -- linger time hasn't elapsed yet
+        <+> "                     AND documents.mtime + (" <?> (show unsavedDocumentLingerDays ++ "days") <+> " :: INTERVAL) > now())"
+
+    -- set purged time on documents
+    rows <- kRun $ ("" :: SQL)
+        <+> "UPDATE documents"
+        <+> "   SET purged_time = now()"
+        <+> " WHERE documents.id IN (SELECT id"
+        <+> "                          FROM documents_to_purge)"
+
+    -- blank out sensitive data
+    kRun_ $ ("UPDATE signatory_links" :: SQL)
+        <+> "   SET sign_ip = 0"
+        <+> "     , seen_ip = 0"
+        <+> "     , eleg_data_mismatch_first_name = ''"
+        <+> "     , eleg_data_mismatch_last_name = ''"
+        <+> "     , eleg_data_mismatch_personal_number = ''"
+        <+> " WHERE signatory_links.document_id IN (SELECT id FROM documents_to_purge)"
+
+    -- blank out sensitive data in fields
+    kRun_ $ ("UPDATE signatory_link_fields" :: SQL)
+        <+> "   SET value = ''"
+        <+> " WHERE signatory_link_fields.signatory_link_id IN"
+        <+> "       (SELECT id"
+        <+> "          FROM signatory_links"
+        <+> "         WHERE signatory_links.document_id IN (SELECT id FROM documents_to_purge))"
+
+    -- remove whole evidence log as it is sensitive data
+    kRun_ $ ("DELETE" :: SQL)
+        <+> "  FROM evidence_log"
+        <+> " WHERE document_id IN (SELECT id FROM documents_to_purge)"
+
+    kRun_ $ ("DROP TABLE documents_to_purge" :: SQL)
+    return (fromIntegral rows)
 
 
 -- Update utilities

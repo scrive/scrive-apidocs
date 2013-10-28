@@ -199,6 +199,10 @@ docStateTests env = testGroup "DocState" [
   testThat "RestoreArchivedDocument fails if the storing user is an unrelated user" env testRestoreArchivedDocumentUnrelatedUserLeft,
   testThat "RestoreArchivedDocument fails if the restoring user is just another standard company user" env testRestoreArchiveDocumentCompanyStandardLeft,
 
+  testThat "PurgeDocuments purges documents" env testPurgeDocument,
+  testThat "PurgeDocuments does not purge documents for saved users" env testPurgeDocumentUserSaved,
+  testThat "PurgeDocuments does not purge documents for links waiting to be signed" env testPurgeDocumentActiveSignLink,
+
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
   testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned
@@ -661,6 +665,42 @@ testRestoreArchiveDocumentCompanyAdminRight = doTimes 10 $ do
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   assertNoArchivedSigLink ndoc
+
+
+testPurgeDocument :: TestEnv ()
+testPurgeDocument = doTimes 10 $ do
+  company <- addNewCompany
+  author <- addNewRandomCompanyUser (companyid company) False
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  now <- getMinutesTime
+  archived1 <- dbUpdate $ PurgeDocuments 0 0
+  assertEqual "Purged zero documents when not deleted" 0 archived1
+  randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) ((systemActor t) { actorTime = now })
+  archived2 <- dbUpdate $ PurgeDocuments 0 0
+  assertEqual "Purged single document" 1 archived2
+
+testPurgeDocumentUserSaved :: TestEnv ()
+testPurgeDocumentUserSaved = doTimes 10 $ do
+  company <- addNewCompany
+  author <- addNewRandomCompanyUser (companyid company) False
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  archived1 <- dbUpdate $ PurgeDocuments 1 0
+  now <- getMinutesTime
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) ((systemActor t) { actorTime = now })
+  archived2 <- dbUpdate $ PurgeDocuments 1 0
+  assertEqual "Purged zero documents before delete" 0 archived1
+  assertEqual "Purged zero documents before time passed after delete" 0 archived2
+
+testPurgeDocumentActiveSignLink :: TestEnv ()
+testPurgeDocumentActiveSignLink = doTimes 10 $ do
+  company <- addNewCompany
+  author <- addNewRandomCompanyUser (companyid company) False
+  doc1 <- addRandomDocumentWithAuthorAndCondition author (isClosed &&^ (not . null . filter (isSignatory &&^ (not . isAuthor)). documentsignatorylinks))
+  now <- getMinutesTime
+  randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc1) ((systemActor t) { actorTime = now })
+  _doc2 <- dbQuery $ GetDocumentByDocumentID (documentid doc1)
+  archived <- dbUpdate $ PurgeDocuments 0 1
+  assertEqual "Purged zero documents" 0 archived
 
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 testArchiveDocumentUnrelatedUserLeft :: TestEnv ()
