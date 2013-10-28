@@ -75,9 +75,28 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     this.model.off();
     $(this.el).remove();
   },
-  // Big instruction or information about document state
   text: function() {
-    return this.model.document().title();
+    var document = this.model.document();
+    if (document.currentViewerIsAuthor() && document.currentSignatoryCanSign()) {
+      return localization.authorview.signNow;
+    } else if (document.isSignedAndClosed()) {
+      return localization.authorview.signedAndClosed;
+    } else if (document.closed()) {
+      return localization.authorview.closed;
+    } else if (document.isSignedNotClosed()) {
+      return localization.authorview.signedNotClosed;
+    } else if (document.pending()) {
+      return localization.authorview.pending;
+    } else if (document.canceled()) {
+      return localization.authorview.canceled;
+    } else if (document.rejected()) {
+      return localization.authorview.rejected;
+    } else if (document.timedout()) {
+      return localization.authorview.timeouted;
+    } else {
+      console.error("Unsure what state we're in");
+      return "";
+    }
   },
   // Smaller text with more details on some states
   dueDateDescription : function() {
@@ -231,8 +250,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var smallerbits = $("<div class='subheadline'/>");
     container.append(smallerbits);
     if (document.timeouttime() != undefined && document.signingInProcess())
-      smallerbits.append($("<label class='duedate'/>").text(this.dueDateDescription()));
-    smallerbits.append($("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(localization.downloadPDF));
+      smallerbits.append($("<span class='duedate'/>").text(this.dueDateDescription()));
+    smallerbits.append($("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf"));
       mixpanel.track_links('.download', 'Download PDF');
 
     $(this.el).append(container);

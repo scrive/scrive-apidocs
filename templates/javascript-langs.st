@@ -423,6 +423,7 @@ javascriptLocalisation =
              , expand : "$_historyExpand()$"
              , available : "$_historyAvailable()$"
              , hide : "$_historyHide()$"
+             , title : "$_historyTitle()$"
            }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"

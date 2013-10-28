@@ -129,16 +129,17 @@ window.AuthorViewView = Backbone.View.extend({
     var subcontainer = $("<div class='subcontainer'/>");
     this.container.append(subcontainer);
     subcontainer.append(this.model.signatories().el());
-    
+
     var documentPagesWrapper = $("<div class='document-pages-wrapper'></div>");
     documentPagesWrapper.append(model.file().view.el);
     subcontainer.append(documentPagesWrapper);
+    if (this.model.hasEvidenceAttachmentsSection())
+       documentPagesWrapper.append(model.evidenceattachments().el());
     if (this.model.hasSignatoriesAttachmentsSection())
        subcontainer.append(model.signatoryattachments().el());
     if (this.model.hasAuthorAttachmentsSection())
        subcontainer.append(model.authorattachments().el());
-    if (this.model.hasEvidenceAttachmentsSection())
-       subcontainer.append(model.evidenceattachments().el());
+
     return this;
   }
 });

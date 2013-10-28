@@ -10,18 +10,21 @@
   .history-box {
       width : 1018px;
       margin: 0 auto;
+      background-color: white;
+      padding-top: 22px;
+      padding-bottom: 22px;
+      border: 1px solid @dark-border;
       .headline {
-        background-color: white;
-        border: 1px solid @dark-border;
-        color: #333;
+        color: @dark-text;
         font-size: 20px;
-        line-height: 18px;
-        margin: 15px 0px 25px;
-        padding: 22px;
+        font-weight: 300;
+        line-height: 20px;
+        margin-bottom: 22px;
         text-align : center;
       }
 
       .document-history-container {
+        width: 943px;
         box-sizing: border-box;
         border: 1px solid @dark-border;
       }
@@ -38,13 +41,13 @@
     width: 1018px;
     background: #fff;
     border: 1px solid @dark-border;
-    padding: 25px 0;
+    padding: 30px 0;
     margin: 25px auto;
     text-align: center;
     .headline {
-      color: #4A4A49;
-      font-size: 24px;
-      font-weight: 400;
+      font-size: 22px;
+      color:#4A4A49;
+      margin-bottom: 10px;
     }
     .subheadline {
       margin-left: auto;
@@ -52,15 +55,17 @@
       margin-top: 11px;
     }
     .duedate {
-        font-weight: normal;
-        display: block;
-        margin-bottom : 28px;
+      font-weight: normal;
+      margin-bottom: 20px;
+      margin-right: 20px;
     }
 
     a.download {
         background: url(../img/senddoc.png) no-repeat;
         padding-left: 20px;
         font-weight: normal;
+        position: relative;
+        left: -10px;
     }
     .buttonbox {
       margin: 32px auto 0;
@@ -292,14 +297,15 @@
 
   }
 
-  .document-pages {
+  .document-pages-wrapper {
+      width:943px; /* Propageted form document-pages*/
       margin: 25px auto 0 auto;
       padding: 36px 36px 36px 37px;
       border: 1px solid #cccccc;
       background: #e9e9e9;
       .border-radius(5px, 5px, 5px, 5px);
       .box-shadow(inset 0px 0px 8px rgba(80, 80, 80, 0.21));
-
+      .section { width: 943px;}
       .pagediv {
 	  &#page1 {
 	      margin-top:0px;
