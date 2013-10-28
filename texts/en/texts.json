@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -655,14 +655,14 @@
 "_paymentPlanEnterprise":"Enterprise",
 "_paymentPlanEnterpriseTag":"Tailored solutions for enterprises.",
 "_paymentPlanForm":"Variable price",
-"_paymentPlanFormPrice":"25 SEK/doc",
+"_paymentPlanFormPrice":"15 SEK/doc",
 "_paymentPlanFormTag":"Website integration or teams with low average use.",
 "_paymentPlanLoading":"Loading",
 "_paymentPlanNextPayment":"Next payment",
 "_paymentPlanNone":"None",
 "_paymentPlanPayments":"Payments",
 "_paymentPlanPerMonth":"per month",
-"_paymentPlanPerMonthPerDoc":"& 999 SEK/month up to 20 users",
+"_paymentPlanPerMonthPerDoc":"& 3000 SEK/month up to 50 users",
 "_paymentPlanPerUserPerMonth":"per user sending documents",
 "_paymentPlanPlaceholder":"Please describe your needs here in a few sentences. We'll get back to you right away.",
 "_paymentPlanPreviousPayments":"Previous payments",

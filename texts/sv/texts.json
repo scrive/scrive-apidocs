@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -655,14 +655,14 @@
 "_paymentPlanEnterprise":"Enterprise",
 "_paymentPlanEnterpriseTag":"Skräddarsydda lösningar för större bolag.",
 "_paymentPlanForm":"Rörligt pris",
-"_paymentPlanFormPrice":"25 SEK/dok",
+"_paymentPlanFormPrice":"15 SEK/dok",
 "_paymentPlanFormTag":"Webbintegration eller team med låg snittanvändning.",
 "_paymentPlanLoading":"Laddar",
 "_paymentPlanNextPayment":"Nästa betalning",
 "_paymentPlanNone":"Ingen",
 "_paymentPlanPayments":"Betalningar",
 "_paymentPlanPerMonth":"per månad",
-"_paymentPlanPerMonthPerDoc":"& 999 SEK/månad upp till 20 användare",
+"_paymentPlanPerMonthPerDoc":"& 3000 SEK/månad upp till 50 användare",
 "_paymentPlanPerUserPerMonth":"per användare som skickar dokument",
 "_paymentPlanPlaceholder":"Beskriv ditt behov här i några få meningar. Vi återkommer till dig direkt.",
 "_paymentPlanPreviousPayments":"Tidigare betalningar",

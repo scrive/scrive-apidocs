@@ -337,7 +337,7 @@
                     editor.on('init', function() {
 			$(editor.getDoc()).blur(function() {
 			    if (view.emaildeliveryused) {
-				doc.setInvitationMessage(editor.getBody().innerHTML);
+				doc.setInvitationMessage(editor.getContent());
 			    }
 			});
 			if (!view.emaildeliveryused) {
@@ -345,7 +345,7 @@
 			}
                     });
                     editor.on('change', function () {
-			doc.setInvitationMessage(editor.getBody().innerHTML);
+			doc.setInvitationMessage(editor.getContent());
                     });
 		    
 
@@ -377,8 +377,8 @@
 			}).on('blur', function(ed, e) {
 			    // if the input field is empty when leaving it, set default
 		  	    // placeholder message
-			    var message = $(editor.getWin().document).find("p");
-			    if(/data-mce-bogus/g.exec(message.html())) {
+			    var message = editor.getContent();
+			    if(message == '') {
 			      editor.setContent(placeholder);
 			      var message = $(editor.getWin().document).find("p");
 			      $(message[0]).css("color", "#999999");
