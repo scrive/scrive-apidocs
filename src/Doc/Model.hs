@@ -73,6 +73,9 @@ module Doc.Model
   , GetDocsSent(..)
   , GetSignatoriesByEmail(..)
   , CheckDocumentObjectVersionIs(..)
+
+   -- useful in tests
+  , updateMTimeAndObjectVersion
   ) where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -1119,7 +1122,7 @@ newFromDocument f doc = do
 
 data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
-  update (ArchiveDocument uid did actor) = do
+  update (ArchiveDocument uid did _actor) = do
     kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSetCmd "deleted" "now()"
 
@@ -1137,7 +1140,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument () where
           sqlWhere "documents.id = signatory_links.document_id"
 
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
-    updateMTimeAndObjectVersion did (actorTime actor)
+
 
 -- | Attach a main file to a document associating it with preparation
 -- status.  Any old main file in preparation status will be removed.

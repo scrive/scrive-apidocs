@@ -695,10 +695,10 @@ testPurgeDocumentActiveSignLink :: TestEnv ()
 testPurgeDocumentActiveSignLink = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) False
-  doc1 <- addRandomDocumentWithAuthorAndCondition author (isClosed &&^ (not . null . filter (isSignatory &&^ (not . isAuthor)). documentsignatorylinks))
+  doc <- addRandomDocumentWithAuthorAndCondition author (isClosed &&^ (not . null . filter (isSignatory &&^ (not . isAuthor)). documentsignatorylinks))
   now <- getMinutesTime
-  randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc1) ((systemActor t) { actorTime = now })
-  _doc2 <- dbQuery $ GetDocumentByDocumentID (documentid doc1)
+  randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) ((systemActor t) { actorTime = now })
+  updateMTimeAndObjectVersion (documentid doc) now
   archived <- dbUpdate $ PurgeDocuments 0 1
   assertEqual "Purged zero documents" 0 archived
 
