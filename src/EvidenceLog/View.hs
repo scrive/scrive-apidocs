@@ -60,7 +60,7 @@ getSignatoryLinks evs = do
 eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&^ (not . emptyEvent))
 
--- TODO: Consider saving actor name in event instead
+-- TODO: Consider saving actor name in event instead, this is likely to become broken
 approximateActor :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent' SignatoryLink -> m String
 approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
                          | otherwise =
@@ -68,7 +68,7 @@ approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
     Just sl -> if (isAuthor sl)
              then authorName
              else case (getSmartName sl) of
-                    "" -> renderTemplate_ "_notNamedParty"
+                    "" -> renderTemplate_ "(_notNamedParty)"
                     name -> return name
     Nothing -> case (evUserID dee) of
                Just uid -> if (isAuthor (doc,uid))
