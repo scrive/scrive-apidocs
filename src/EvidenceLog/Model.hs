@@ -53,7 +53,9 @@ eventTextTemplateName e =  "_" ++ show e ++ "Text"
 
 signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
 signatoryLinkTemplateFields sl = do
+  F.value "identified"  $ signatorylinkauthenticationmethod sl == ELegAuthentication || signatorylinkdeliverymethod sl /= APIDelivery
   F.value "eleg"        $ signatorylinkauthenticationmethod sl == ELegAuthentication
+  F.value "api"         $ signatorylinkdeliverymethod sl == APIDelivery
   F.value "pad"         $ signatorylinkdeliverymethod sl == PadDelivery
   F.value "email"       $ signatorylinkdeliverymethod sl == EmailDelivery
   F.value "mobile"      $ signatorylinkdeliverymethod sl == MobileDelivery
