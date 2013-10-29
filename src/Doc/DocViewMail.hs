@@ -164,7 +164,7 @@ mailDocumentRejected customMessage ctx document rejector ispreview = do
         F.value "rejectorName" $ getSmartName rejector
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
-        F.value "loginlink" $ show $ LinkLogin (getLang document) NotLogged
+        F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
         F.value "ispreview" ispreview
 
 
