@@ -330,7 +330,12 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
 
   in do
       -- Log.debug "Creating seal spec from file."
-      history <- mapM mkHistEntry =<< getSignatoryLinks (eventsForLog elog)
+      -- Remove resealing events and non-signing parties
+      let eventsForHistory = filter ((/=Current ResealedPDF) . evType)
+                           . filter (not . viewingParty)
+          viewingParty e = viewer (evAffectedSigLink e) || viewer (evSigLink e)
+               where viewer s = (signatoryispartner <$> s) == Just False
+      history <- (mapM mkHistEntry . eventsForHistory) =<< getSignatoryLinks (eventsForLog elog)
       -- Log.debug ("about to render staticTexts")
       staticTexts <- renderLocalTemplate document "contractsealingtexts" $ do
                         documentInfoFields document
