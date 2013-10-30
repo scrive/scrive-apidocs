@@ -49,11 +49,12 @@ data InsertEvidenceEvent = InsertEvidenceEvent
     deriving (Typeable)
 
 eventTextTemplateName :: CurrentEvidenceEventType -> String
-eventTextTemplateName e =  "_" ++ show e ++ "Text"
+eventTextTemplateName e =  show e ++ "Text"
 
 signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
 signatoryLinkTemplateFields sl = do
-  F.value "identified"  $ signatorylinkauthenticationmethod sl == ELegAuthentication || signatorylinkdeliverymethod sl /= APIDelivery
+  F.value "identified"  $ signatorylinkauthenticationmethod sl == ELegAuthentication
+                       || not (signatoryisauthor sl || signatorylinkdeliverymethod sl == APIDelivery)
   F.value "eleg"        $ signatorylinkauthenticationmethod sl == ELegAuthentication
   F.value "api"         $ signatorylinkdeliverymethod sl == APIDelivery
   F.value "pad"         $ signatorylinkdeliverymethod sl == PadDelivery

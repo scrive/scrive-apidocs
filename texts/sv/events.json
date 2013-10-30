@@ -1,15 +1,9 @@
 {
 "_AttachExtendedSealedFileEvidenceText":"Scrive förseglade dokumentet med en nyckellös digital signatur.",
 "_AttachGuardtimeSealedFileEvidenceText":"Scrive förseglade dokumentet med en digital signatur.",
-"_AttachSealedFileEvidenceText":"-",
-"_AuthorUsesCSVEvidenceText":"-",
 "_CancelDocumenElegEvidenceText":"Scrive återkallade inbjudan att signera då personuppgifterna för $signatory$ inte stämde överens med uppgifterna i den e-legitimation som användes vid signering. $if(full)$ Orsak som e-legitimationstjänsten angav: $msg$.$endif$",
 "_CancelDocumentEvidenceText":"Inbjudan att signera återkallades$if(!archive)$ av $actor$$endif$.",
-"_ChangeSignatoryEmailWhenUndeliveredEvidenceText":"-",
-"_ChangeSignatoryPhoneWhenUndeliveredEvidenceText":"-",
 "_CloseDocumentEvidenceText":"Scrive låste dokumentet innan det förseglas med en digital signatur.",
-"_DeleteSigAttachmentEvidenceText":"-",
-"_ErrorDocumentEvidenceText":"-",
 "_InvitationDeliveredByEmailText":"En inbjudan att $_view_or_sign()$ levererades$if(!archive)$ till $signatory$$endif$ via e-post.",
 "_InvitationDeliveredBySMSText":"En inbjudan att $_view_or_sign()$ levererades$if(!archive)$ till $signatory$$endif$ via SMS.",
 "_InvitationEvidenceText":"Scrive skickade en inbjudan att $_view_or_sign()$ till $signatory$$_delivery_method()$.  Inbjudan innehöll en länk som ledde till Scrives signeringstjänst online.$if(text)$ Inbjudan innehöll följande meddelande: <BR/> <i>$text:noescape()$</i>$endif$",
@@ -20,15 +14,8 @@
 "_ProlongDocumentEvidenceText":"Förfallodatumet för signering förlängdes$if(!archive)$ av $actor$$endif$.",
 "_RejectDocumentEvidenceText":"Inbjudan att signera avvisades$if(!archive)$ av $actor$$endif$ och signeringsprocessen avbröts av Scrive.  $if(text)$ Avvisningsmeddelandet ar: <BR/> <i>$text:noescape()$</i>$else$.$endif$",
 "_ReminderSendText":"En påminnelse skickades till $signatory$$if(text)$$_delivery_method()$ med meddelandet: <BR/><i>$text:noescape()$</i>$else$.$endif$",
-"_RemovedFromPadDeviceText":"-",
 "_ResealedPDFText":"Dokumentet förseglades av $if(!archive)$$actor$, $endif$en behörig administratör på Scrive.",
 "_RestartDocumentEvidenceText":"Dokumentet startades om$if(!archive)$ av $actor$$endif$ och Scrive öppnade dokumentet för ändringar.",
-"_SaveSigAttachmentEvidenceText":"-",
-"_SendToPadDeviceText":"-",
-"_SetDocumentInviteTimeEvidenceText":"-",
-"_SetELegAuthenticationMethodEvidenceText":"-",
-"_SetStandardAuthenticationMethodEvidenceText":"-",
-"_SignDocumentEvidenceText":"Dokumentet signerades$if(!archive)$ av $actor$$endif$$_identification_method()$.",
-"_SignatoryLinkVisitedText":"Signeringsvyn öppnades online$if(!archive)$ av $actor$$endif$.",
-"_TimeoutDocumentEvidenceText":"-"
+"_SignDocumentEvidenceText":"Dokumentet signerades$if(!archive)$ av $actor$$endif$$if(!author)$$_identification_method()$$endif$.",
+"_SignatoryLinkVisitedText":"Signeringsvyn öppnades online$if(!archive)$ av $actor$$endif$."
 }
