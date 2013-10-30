@@ -8,7 +8,7 @@ module Amazon (
   , runAmazonMonadT
   , AmazonConfig(..)
   , AmazonMonad(..)
-  , purgeFiles
+  , deleteFile
   ) where
 
 import Control.Applicative
@@ -196,23 +196,6 @@ deleteFile ctxs3action bucket url = do
       Log.debug $ "AWS failed to delete " ++ bucket </> url ++ " failed with error: " ++ show err
       return False
 
-purgeFiles :: (MonadDB m, MonadIO m, AmazonMonad m) => m ()
-purgeFiles = do
-  res <- dbUpdate $ PurgeFile
-  mapM_ purge res
-  when (not (null res)) purgeFiles
-  where
-    purge (_id',_amazon_bucket,_amazon_url,  isonamazon) | not isonamazon = return ()
-    purge (_id', Just amazon_bucket, Just amazon_url, _isonamazon) = do
-      conf <- getAmazonConfig
-      success <- deleteFile (mkAWSAction $ amazonConfig conf) amazon_bucket amazon_url
-      if success
-        then kCommit
-        else do
-          kRollback
-          Log.debug "Purging from Amazon failed, sleeping for 5 minutes."
-          liftIO $ threadDelay $ 5 * 60 * 1000000
-    purge (_id', _amazon_bucket, _amazon_url, _isonamazon) = return ()
 
 getFileContents :: (MonadIO m, Log.MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
 getFileContents s3action File{..} = do

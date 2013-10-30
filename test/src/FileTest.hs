@@ -13,6 +13,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server.SimpleHTTP
 import File.File
 import File.Conditions
+import Purging.Files
 
 fileTests :: TestEnvSt -> Test
 fileTests env = testGroup "Files" [
@@ -80,7 +81,8 @@ testPurgeFiles  = doTimes 100 $ do
 
   -- here we might purge some other file that is a left over in the
   -- database from former test but that is ok
-  [(idx,_,_,_)] <- dbUpdate $ PurgeFile
+  [(idx,_,_,_)] <- dbQuery $ FindFilesForPurging 1
+  dbUpdate $ PurgeFile idx
 
   assertRaisesKontra (\FileWasPurged {} -> True) $ do
      dbQuery $ GetFileByFileID idx
