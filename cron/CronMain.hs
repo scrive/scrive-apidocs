@@ -35,6 +35,7 @@ import Payments.Config
 import Payments.Control
 import HostClock.Collector (collectClockError)
 import Session.Data
+import Purging.Files
 import Templates
 import Doc.Model
 import qualified Amazon as AWS
@@ -121,7 +122,7 @@ main = Log.withLogger $ do
            then [forkCron_ True "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon]
            else []) ++
           (if AWS.isAWSConfigOk $ amazonConfig appConf
-           then [forkCron_ True "AmazonDeleting" 60 $ runScheduler AWS.purgeFiles]
+           then [forkCron_ True "AmazonDeleting" (3*60*60) $ runScheduler purgeSomeFiles]
            else []) ++
      [ forkCron_ True "removeOldDrafts" (60 * 60) $ do
          Log.cron "Removing old, unsaved draft documents..."
