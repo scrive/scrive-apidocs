@@ -29,71 +29,77 @@
 }
 /* Status Icons */
 
+@icon-height: 30px;
+@icon-width: 34px;
+
 .icon.status {
-    height: 21px;
-    width: 21px;
+    height: @icon-height;
+    width: @icon-width;
     background: url(../img/status-icons.png) 0 0 no-repeat;
 }
 
-.icon.signed, .icon.sealed, .icon.extended {
-    background-position: -84px 0;
+.icon.signed {
+    background-position: (-@icon-width * 4) 0;
+}
+
+.icon.sealed {
+    background-position: (-@icon-width * 12) 0;
+}
+
+.icon.extended {
+    background-position: (-@icon-width * 13) 0;
 }
 
 .icon.draft {
-    background-position: -210px 0;
+    background-position: (-@icon-width * 10) 0;
 }
 
 .icon.template {
-    background-position: -233px 0;
-}
-
-.icon.problem {
-    background-position: -20px 0;
-    margin-right: 7px;
+    background-position: (-@icon-width * 11) 0;
 }
 
 .icon.rejected {
-    background-position: -105px 0;
+    background-position: (-@icon-width * 5) 0;
     margin-right: 7px;
 }
 
 .icon.deliveryproblem, .icon.problem {
-    background-position: -189px 0;
+    background-position: (-@icon-width * 9) 0;
     margin-right: 7px;
 }
 
 .icon.timeouted {
-    background-position: -147px 0;
+    background-position: (-@icon-width * 7) 0;
     margin-right: 7px;
 }
 
 .icon.cancelled {
-    background-position: -126px 0;
+    background-position: (-@icon-width * 6) 0;
     margin-right: 7px;
 }
 
 .icon.sent {
-    background-position: 0px 0;
+    background-position: (-@icon-width * 0) 0;
     margin-right: 7px;
 }
 
 .icon.delivered {
-    background-position: -21px 0;
+    background-position: (-@icon-width * 1) 0;
     margin-right: 7px;
 }
 
 .icon.read {
-    background-position: -42px 0;
+    background-position: (-@icon-width * 2) 0;
     margin-right: 7px;
 }
 
 .icon.opened {
-    background-position: -63px 0;
+    background-position: (-@icon-width * 3) 0;
     margin-right: 7px;
 }
 
 .icon.prolonged {
-    background-position: -169px 0;
+    background-position: (-@icon-width * 8) 0;
     margin-right: 7px;
 }
 
