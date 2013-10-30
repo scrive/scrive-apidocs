@@ -157,10 +157,10 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       // Remove the modal header but keep the close button
       var modalHeader = $('.modal-container .modal-header');
       modalHeader.remove();
-      var close = $('<div style="padding: 19px;" />');
-      close.append($('<img src="/img/mobile-modal-x.png" />'));
-      close.css('margin-left', '712px');
-      close.css('margin-top', '31px');
+      
+      // Set up close button
+      // localization.process.goback is a shared translation
+      var close = $('<a class="small-device-go-back-button">' + localization.process.goback + '</a>');
       close.click(function() { confirmation.close(); });
 
       // Remove the modal footer but keep the button
@@ -174,7 +174,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       modalFooter.remove();
 
       $('.modal-container .modal-body .modal-content').css('border-bottom', '0px');
-      $('.modal-container .modal-body .modal-content').prepend(close);
 
       signButton.css({
         'font-size': '80px',
@@ -202,6 +201,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
                                 'margin-top': '150px'});
 
       $('.modal-container .modal-body').append(signButton);
+      $('.modal-container .modal-body').append(close);
     }
   }
 });

@@ -66,9 +66,27 @@
     z-index: -1;
 }
 
-.modal-container.small-device:after {
-    border: 20px solid #000000;
-    opacity: 1;
+.modal-container {
+    &.small-device {
+        &:after {
+            border: 20px solid #000000;
+            opacity: 1;
+        }
+        .small-device-go-back-button {
+            font-size: 52px;
+            margin-top: 57px;
+            display: inline-block;
+            margin-left: 46px;
+            color: @red;
+
+            &:hover {
+                color: @red-dark;
+            }
+            &:active {
+                color: @red;
+            }
+        }
+    }
 }
 
 .modal-container {
@@ -187,7 +205,7 @@
    font-size: 22px;
    line-height: 30px;
   .body {
-      padding: 40px 83px;
+      padding: 40px 49px;
     }
 }
 

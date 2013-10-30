@@ -163,7 +163,8 @@ javascriptLocalisation =
                authorname: "$_contractauthorname()$",
                authorsignatoryname: "$_contractauthorsignatoryname()$",
                signatoryname: "$_contractsignatoryname()$",
-               nonsignatoryname: "$_contractnonsignatoryname()$"
+               nonsignatoryname: "$_contractnonsignatoryname()$",
+               goback: "$_goBack()$"
               }
             , filterByTime: {
                 filterForm: "$_fromFilter()$",
