@@ -17,8 +17,40 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
   authorview : function() {
      return this.get("authorview");
   },
+  // Dude date: title + date
+  dueDateDescription : function() {
+      var timeout = this.document().timeouttime();
+      var timeoutText = moment(timeout).format("YYYY-MM-DD");
+      return localization.docsignview.dueDate + " " + timeoutText;
+  },
+  statusText: function() {
+    var document = this.document();
+    if (document.currentViewerIsAuthor() && document.currentSignatoryCanSign()) {
+      return localization.authorview.signNow;
+    } else if (document.isSignedAndClosed()) {
+      return localization.authorview.signedAndClosed;
+    } else if (document.closed()) {
+      return localization.authorview.closed;
+    } else if (document.isSignedNotClosed()) {
+      return localization.authorview.signedNotClosed;
+    } else if (document.pending()) {
+      return localization.authorview.pending;
+    } else if (document.canceled()) {
+      return localization.authorview.canceled;
+    } else if (document.rejected()) {
+      return localization.authorview.rejected;
+    } else if (document.timedout()) {
+      return localization.authorview.timeouted;
+    } else {
+      console.error("Unsure what state we're in");
+      return "";
+    }
+  },
   text: function() {
-    return localization.history.title;
+    if ( this.document().timeouttime() != undefined && this.document().signingInProcess() )
+      return this.statusText() + " - " + this.dueDateDescription();
+    else 
+      return this.statusText();
   },
   history : function() {
     if (this.get("history") == undefined)

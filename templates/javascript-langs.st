@@ -415,6 +415,7 @@ javascriptLocalisation =
              , timeouted : "$_authorviewTimeouted()$"
              , pending  : "$_authorviewPending()$"
              , goToSignView : "$_authorviewGoToSignview()$"
+             , downloadPdf : "$_DownloadPDF()$"
          }
          , history : {
                time  : "$_historyTime()$"
@@ -423,7 +424,6 @@ javascriptLocalisation =
              , expand : "$_historyExpand()$"
              , available : "$_historyAvailable()$"
              , hide : "$_historyHide()$"
-             , title : "$_historyTitle()$"
            }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"

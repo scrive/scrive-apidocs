@@ -75,35 +75,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     this.model.off();
     $(this.el).remove();
   },
-  text: function() {
-    var document = this.model.document();
-    if (document.currentViewerIsAuthor() && document.currentSignatoryCanSign()) {
-      return localization.authorview.signNow;
-    } else if (document.isSignedAndClosed()) {
-      return localization.authorview.signedAndClosed;
-    } else if (document.closed()) {
-      return localization.authorview.closed;
-    } else if (document.isSignedNotClosed()) {
-      return localization.authorview.signedNotClosed;
-    } else if (document.pending()) {
-      return localization.authorview.pending;
-    } else if (document.canceled()) {
-      return localization.authorview.canceled;
-    } else if (document.rejected()) {
-      return localization.authorview.rejected;
-    } else if (document.timedout()) {
-      return localization.authorview.timeouted;
-    } else {
-      console.error("Unsure what state we're in");
-      return "";
-    }
-  },
-  // Smaller text with more details on some states
-  dueDateDescription : function() {
-      var timeout = this.model.document().timeouttime();
-      var timeoutText = moment(timeout).format("YYYY-MM-DD");
-      return localization.docsignview.dueDate + " " + timeoutText;
-  },
   restartButton : function() {
     var model = this.model;
     var document = this.model.document();
@@ -244,14 +215,13 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     $(this.el).empty();
 
     var container = $("<div class='titlebox' />");
-    container.append($("<div class='headline' />").text(this.text()));
+    container.append($("<div class='headline' />").text( document.title() ));
 
 
     var smallerbits = $("<div class='subheadline'/>");
     container.append(smallerbits);
-    if (document.timeouttime() != undefined && document.signingInProcess())
-      smallerbits.append($("<span class='duedate'/>").text(this.dueDateDescription()));
-    smallerbits.append($("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf"));
+
+    smallerbits.append($("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(localization.authorview.downloadPdf));
       mixpanel.track_links('.download', 'Download PDF');
 
     $(this.el).append(container);
