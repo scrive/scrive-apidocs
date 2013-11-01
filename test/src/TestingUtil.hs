@@ -5,6 +5,7 @@ module TestingUtil where
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
+import Context (Context(..))
 import Control.Applicative
 import Control.Concurrent.STM
 import Data.Char
@@ -137,13 +138,56 @@ newtype AuthorActor    = AuthorActor    { unAuthorActor    :: Actor }
 newtype SystemActor    = SystemActor    { unSystemActor    :: Actor }
 newtype SignatoryActor = SignatoryActor { unSignatoryActor :: Actor }
 
+instance Arbitrary Context where
+  arbitrary = do
+    (time, ip, clientname, clienttime) <- arbitrary
+    return undefinedContext
+            { ctxtime = time
+            , ctxipnumber = ip
+            , ctxclientname = clientname
+            , ctxclienttime = clienttime
+            }
+    where err = error "TestingUtil.Arbitrary.Context"
+          undefinedContext = Context
+            { ctxmaybeuser           = err
+            , ctxhostpart            = err
+            , ctxresourcehostpart    = err
+            , ctxflashmessages       = err
+            , ctxtime                = err
+            , ctxclientname          = err
+            , ctxclienttime          = err
+            , ctxnormalizeddocuments = err
+            , ctxipnumber            = err
+            , ctxproduction          = err
+            , ctxtemplates           = err
+            , ctxglobaltemplates     = err
+            , ctxlang                = err
+            , ctxmailsconfig         = err
+            , ctxlivedocxconf        = err
+            , ctxlogicaconf          = err
+            , ctxfilecache           = err
+            , ctxxtoken              = err
+            , ctxadminaccounts       = err
+            , ctxsalesaccounts       = err
+            , ctxmaybepaduser        = err
+            , ctxstaticresources     = err
+            , ctxusehttps            = err
+            , ctxgtconf              = err
+            , ctxrecurlyconfig       = err
+            , ctxsessionid           = err
+            , ctxmixpaneltoken       = err
+            , ctxhomebase            = err
+            , ctxbrandeddomains      = err
+            , ctxsalesforceconf      = err
+            }
+
 instance Arbitrary AuthorActor where
   arbitrary = do
-    (time, ip, uid, uinfo) <- arbitrary
+    (ctx, uid, uinfo) <- arbitrary
     let user = undefined { userid = uid
                          , userinfo = uinfo
                          }
-    return $ AuthorActor $ authorActor time ip user
+    return $ AuthorActor $ authorActor ctx user
 
 instance Arbitrary SystemActor where
   arbitrary = do
@@ -152,8 +196,8 @@ instance Arbitrary SystemActor where
 
 instance Arbitrary SignatoryActor where
   arbitrary = do
-    (time, ip, sl) <- arbitrary
-    return $ SignatoryActor $ signatoryActor time ip sl
+    (ctx, sl) <- arbitrary
+    return $ SignatoryActor $ signatoryActor ctx sl
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary

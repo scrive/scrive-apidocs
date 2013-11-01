@@ -46,7 +46,6 @@ import DB
 import Kontra
 import User.Model
 import EvidenceLog.Model
-import Util.HasSomeUserInfo
 import DB.SQL2
 
 import OAuth.Util
@@ -299,14 +298,14 @@ getSessionUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) user)
+    Just user -> return $ Just (user, authorActor ctx user)
 
 getSessionUserWithPad :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
 getSessionUserWithPad = do
   ctx <- getContext
   case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) user)
+    Just user -> return $ Just (user, authorActor ctx user)
 
 getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (Either String (User, Actor)))
 getOAuthUser priv = do
@@ -321,5 +320,5 @@ getOAuthUser priv = do
         Nothing -> return $ Just $ Left "OAuth credentials are invalid."
         Just (userid, apistring) -> do
           user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
-          let actor = apiActor (ctxtime ctx) (ctxipnumber ctx) userid (getEmail user) apistring
+          let actor = apiActor ctx user apistring
           return $ Just $ Right (user, actor)

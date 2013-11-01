@@ -239,6 +239,8 @@ mkContext lang = do
         , ctxresourcehostpart = "http://testkontra.fake"
         , ctxflashmessages = []
         , ctxtime = time
+        , ctxclientname = Nothing
+        , ctxclienttime = Nothing
         , ctxnormalizeddocuments = docs
         , ctxipnumber = noIP
         , ctxproduction = False
@@ -273,7 +275,6 @@ mkContext lang = do
         , ctxhomebase = "https://staging.scrive.com"
         , ctxbrandeddomains = []
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
-
     }
 
 -- pgsql database --

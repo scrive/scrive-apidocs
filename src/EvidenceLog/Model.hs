@@ -90,6 +90,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
       sqlSet "api_user" $ actorAPIString actor
       sqlSet "affected_signatory_link_id" $ signatorylinkid <$> masl
       sqlSet "message_text" $ mmsg
+      sqlSet "client_time" $ actorClientTime actor
+      sqlSet "client_name" $ actorClientName actor
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields mdid actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid Nothing Nothing actor)
@@ -98,6 +100,8 @@ type DocumentEvidenceEvent = DocumentEvidenceEvent' SignatoryLinkID
 data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
   , evTime       :: MinutesTime
+  , evClientTime :: Maybe MinutesTime
+  , evClientName :: Maybe String
   , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
   , evText       :: String
   , evType       :: EvidenceEventType
@@ -130,6 +134,8 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", api_user"
       <> ", affected_signatory_link_id"
       <> ", message_text"
+      <> ", client_time"
+      <> ", client_name"
       <> ", host_clock.time"
       <> ", host_clock.clock_offset"
       <> ", host_clock.clock_frequency"
@@ -140,10 +146,12 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       ]
     kFold fetchEvidenceLog []
     where
-      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg hctime offset frequency =
+      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg ctime cname hctime offset frequency =
         DocumentEvidenceEvent {
             evDocumentID = did'
           , evTime       = tm
+          , evClientTime = ctime
+          , evClientName = cname
           , evClockErrorEstimate = HC.ClockErrorEstimate <$> hctime <*> offset <*> frequency
           , evText       = txt
           , evType       = tp
@@ -178,6 +186,8 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", api_user"
     <> ", affected_signatory_link_id"
     <> ", message_text"
+    <> ", client_time"
+    <> ", client_name"
     <> ") (SELECT "
     <> "  todocs.id :: BIGINT"
     <> ", time"
@@ -192,6 +202,8 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", api_user"
     <> ", affected_signatory_link_id"
     <> ", message_text"
+    <> ", client_time"
+    <> ", client_name"
     <> " FROM evidence_log, (VALUES" <+> sqlConcatComma (map (parenthesize . sqlParam) todocs) <+> ") AS todocs(id)"
     <> " WHERE evidence_log.document_id =" <?> fromdoc <+> ") ORDER BY evidence_log.id"
 

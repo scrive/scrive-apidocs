@@ -180,7 +180,7 @@ handleSignShowSaveMagicHash did sid mh = do
   ctx <- getContext
   document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
   invitedlink <- guardJust $ getSigLinkFor document sid
-  dbUpdate $ AddSignatoryLinkVisitedEvidence did (signatoryActor (ctxtime ctx) (ctxipnumber ctx) invitedlink)
+  dbUpdate $ AddSignatoryLinkVisitedEvidence did (signatoryActor ctx invitedlink)
 
   -- Redirect to propper page
   return $ LinkSignDocNoMagicHash did sid
@@ -188,8 +188,7 @@ handleSignShowSaveMagicHash did sid mh = do
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow documentid
                 signatorylinkid = do
-  Context { ctxtime
-          , ctxipnumber } <- getContext
+  ctx <- getContext
 
   mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
 
@@ -200,11 +199,9 @@ handleSignShow documentid
       switchLangWhenNeeded  (Just invitedlink) document
       when (not (isTemplate document) && (not (isPreparation document)) && (not (isClosed document))) $
         dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
-           (signatoryActor ctxtime ctxipnumber invitedlink)
+           (signatoryActor ctx invitedlink)
       document' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
 
-
-      ctx <- getContext
       ad <- getAnalyticsData
       content <- pageDocumentSignView ctx document' invitedlink ad
       simpleHtmlResonseClrFlash content
@@ -498,11 +495,11 @@ handleDeleteSigAttach docid siglinkid = do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   fid <- read <$> getCriticalField asValidID "deletesigattachment"
-  Context{ctxtime, ctxipnumber} <- getContext
+  ctx <- getContext
   let email = getEmail siglink
   Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ email
   _ <- dbUpdate $ DeleteSigAttachment docid siglinkid fid
-       (signatoryActor ctxtime ctxipnumber siglink)
+       (signatoryActor ctx siglink)
   return $ LinkSignDoc doc siglink
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
@@ -521,7 +518,7 @@ handleSigAttach docid siglinkid = do
   ctx <- getContext
   content <- guardRightM $ liftIO $ preCheckPDF (concatChunks content1)
   fileid' <- dbUpdate $ NewFile attachname content
-  let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) siglink
+  let actor = signatoryActor ctx siglink
   dbUpdate $ SaveSigAttachment docid siglinkid attachname fileid' actor
   newdoc <- dbQuery $ GetDocumentByDocumentID docid
   return $ LinkSignDoc newdoc siglink

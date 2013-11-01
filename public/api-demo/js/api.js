@@ -40,7 +40,14 @@ window.ApiCall = Backbone.Model.extend({
         oauth : function() {return this.get("oauth");},
         authorization: function() { return this.oauth().authorizationForRequests();  },
         result : function() {return this.get("result");},
-        setResult : function(result) {return this.set({"result" : result});}
+        setResult : function(result) {return this.set({"result" : result});},
+        call : function(urlsuffix, arg) {
+          arg.headers = { authorization : this.authorization(),
+                          'client-name' : "api-demo",
+                          'client-time' : new Date().toISOString()
+                        };
+          $.ajax(Scrive.apiUrl()+urlsuffix, arg);
+        }
 });
 
 

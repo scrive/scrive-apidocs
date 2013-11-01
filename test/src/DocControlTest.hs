@@ -125,7 +125,7 @@ testLastPersonSigningADocumentClosesIt = do
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
   randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
-               (signatoryActor (documentctime doc') (ctxipnumber ctx) siglink)
+               (signatoryActor ctx{ ctxtime = documentctime doc' } siglink)
   doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))

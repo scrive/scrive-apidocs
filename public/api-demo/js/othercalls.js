@@ -20,7 +20,7 @@ window.CheckClientApiCall = ApiCall.extend({
         isCheckClient : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"checkclient", {
+            this.call("checkclient", {
                 type: 'POST',
                  data : {client : this.client()},
                 cache: false,

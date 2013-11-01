@@ -53,9 +53,9 @@ import MinutesTime
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
-    Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
+    ctx@(Context { ctxmaybeuser = Just user }) <- getContext
     docids <- getCriticalField asValidDocIDList "documentids"
-    let actor = userActor ctxtime ctxipnumber user
+    let actor = userActor ctx user
     docs <- getDocsByDocIDs docids
     forM_ docs $ \doc -> do
               let usl = getSigLinkFor doc user

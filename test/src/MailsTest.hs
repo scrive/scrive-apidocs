@@ -10,7 +10,6 @@ import Context
 import TestingUtil
 import TestKontra as T
 import User.Model
-import IPAddress
 import Utils.Default
 import Doc.Model
 import Doc.DocViewMail
@@ -80,7 +79,7 @@ sendDocumentMails mailTo author = do
         -- make  the context, user and document all use the same lang
         ctx <- mailingContext l
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
-        let aa = authorActor (ctxtime ctx) noIP author
+        let aa = authorActor ctx author
         Just d <- randomUpdate $ NewDocument author "Document title" Signable 0 aa
         True <- dbUpdate $ SetDocumentLang (documentid d) l (systemActor $ ctxtime ctx)
 
@@ -98,7 +97,7 @@ sendDocumentMails mailTo author = do
         d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
         randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
-             (signatoryActor now noIP asl2)
+             (signatoryActor ctx asl2)
         randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
         doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
@@ -121,8 +120,8 @@ sendDocumentMails mailTo author = do
         -- awaiting author email
         checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
-        randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
-                                   (signatoryActor (10 `minutesAfter` now) ip sl)
+        randomUpdate $ SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
+                                   (signatoryActor ctx{ ctxtime = 10 `minutesAfter` now } sl)
         sdoc <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl False

@@ -20,13 +20,12 @@ window.CreateFromFileApiCall = ApiCall.extend({
             $("body").append(form);
             form.append(this.file());
             var formData = new FormData(form[0]);
-            $.ajax(Scrive.apiUrl()+"createfromfile", {
+            this.call("createfromfile", {
                 type: 'POST',
                 data: formData,
                 cache: false,
                 contentType: false,
                 processData: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.file().detach();
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -63,13 +62,12 @@ window.ChangeMainFileApiCall = ApiCall.extend({
             $("body").append(form);
             form.append(this.file());
             var formData = new FormData(form[0]);
-            $.ajax(Scrive.apiUrl()+"changemainfile/" + this.documentid(), {
+            this.call("changemainfile/" + this.documentid(), {
                 type: 'POST',
                 data: formData,
                 cache: false,
                 contentType: false,
                 processData: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.file().detach();
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -98,12 +96,11 @@ window.CreateFromTemplateApiCall = ApiCall.extend({
         setTemplateid : function(templateid) {return this.set({"templateid" : templateid});},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"createfromtemplate/" + model.templateid(), {
+            this.call("createfromtemplate/" + model.templateid(), {
                 type: 'POST',
                 cache: false,
                 contentType: false,
                 processData: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -146,12 +143,11 @@ window.UpdateApiCall = ApiCall.extend({
             form.append($("<input type='hidden' name='json'/>").val(model.json()));
 
             //var formData = new FormData(form[0]);
-            $.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
+            this.call("update/" + model.documentid(), {
                 type: 'POST',
                 data:{json:model.json(), objectversion : this.objectversion()},
                 //data: formData,
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                     form.remove();
@@ -187,11 +183,10 @@ window.ReadyApiCall = ApiCall.extend({
             form.attr('action', Scrive.apiUrl()+"ready/" + model.documentid());
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val('{ "timezone": "Europe/Stockholm" }'));
-            $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
+            this.call("ready/" + model.documentid(), {
                 type: 'POST',
                 data : {json : '{ "timezone": "Europe/Stockholm" }' , objectversion : model.objectversion()},
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -218,12 +213,11 @@ window.SendReminderApiCall = ApiCall.extend({
         isSendReminder : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"remind/" + model.documentid(), {
+            this.call("remind/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
                 contentType: false,
                 processData: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -255,11 +249,10 @@ window.CancelApiCall = ApiCall.extend({
         isCancel : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"cancel/" + model.documentid(), {
+            this.call("cancel/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
                 data : {objectversion : model.objectversion()},
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -285,10 +278,9 @@ window.RestartApiCall = ApiCall.extend({
         isRestart : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"restart/" + model.documentid(), {
+            this.call("restart/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -314,10 +306,9 @@ window.ProlongApiCall = ApiCall.extend({
         isProlong : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"prolong/" + model.documentid(), {
+            this.call("prolong/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -345,12 +336,11 @@ window.DeleteApiCall = ApiCall.extend({
         isDelete : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"delete/" + model.documentid(), {
+            this.call("delete/" + model.documentid(), {
                 type: 'DELETE',
                 cache: false,
                 contentType: false,
                 processData: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -378,10 +368,9 @@ window.GetApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"get/" + model.documentid(), {
+            this.call("get/" + model.documentid(), {
                 type: 'GET',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -408,10 +397,9 @@ window.GetHistoryApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"history/" + model.documentid(), {
+            this.call("history/" + model.documentid(), {
                 type: 'GET',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -462,7 +450,7 @@ window.ListApiCall = ApiCall.extend({
         isList : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"list", {
+            this.call("list", {
                 type: 'GET',
                 cache: false,
                 data : { tags   : model.tags(),
@@ -471,7 +459,6 @@ window.ListApiCall = ApiCall.extend({
                          selectfilter : model.selectfilters(),
                          documentType : model.documentType()
                 },
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -499,10 +486,9 @@ window.DownloadMainFileApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"downloadmainfile/" + model.documentid() + "/filename.pdf", {
+            this.call("downloadmainfile/" + model.documentid() + "/filename.pdf", {
                 type: 'GET',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -534,10 +520,9 @@ window.DownloadFileApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"downloadfile/" + model.documentid() + "/" + model.fileid() + "/filename.pdf", {
+            this.call("downloadfile/" + model.documentid() + "/" + model.fileid() + "/filename.pdf", {
                 type: 'GET',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -571,10 +556,9 @@ window.AddToPadQueueApiCall = ApiCall.extend({
 
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"padqueue/add/" + model.documentid() + "/" + model.signatorylinkid(), {
+            this.call("padqueue/add/" + model.documentid() + "/" + model.signatorylinkid(), {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -616,10 +600,9 @@ window.RejectApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"reject/" + model.documentid() + "/" + model.signatorylinkid(), {
+            this.call("reject/" + model.documentid() + "/" + model.signatorylinkid(), {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 data : {
                      customtext : this.customtext(),
                      objectversion : model.objectversion()
@@ -678,10 +661,9 @@ window.SignApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"sign/" + model.documentid() + "/" + model.signatorylinkid(), {
+            this.call("sign/" + model.documentid() + "/" + model.signatorylinkid(), {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 data : {
                      screenshots : JSON.stringify({first : [new Date().toISOString(),this.screenshotFirst()] , signing : [new Date().toISOString(),this.screenshotSigning()] }),
                      fields : this.fields(),

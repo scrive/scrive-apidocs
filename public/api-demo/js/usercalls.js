@@ -14,10 +14,9 @@ window.GetProfileApiCall = ApiCall.extend({
         isGetProfile : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"getprofile", {
+            this.call("getprofile", {
                 type: 'GET',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -37,10 +36,9 @@ window.GetPaymentInfoApiCall = ApiCall.extend({
         isGetPaymentInfo : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"paymentinfo", {
+            this.call("paymentinfo", {
                 type: 'GET',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -70,10 +68,9 @@ window.SetLanguageApiCall = ApiCall.extend({
 
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"changelanguage", {
+            this.call("changelanguage", {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -133,10 +130,9 @@ window.UpdateProfileApiCall = ApiCall.extend({
 
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"updateprofile", {
+            this.call("updateprofile", {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -180,10 +176,9 @@ window.SignupApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"signup", {
+            this.call("signup", {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -212,10 +207,9 @@ window.SendPasswordResetMailApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"sendpasswordresetmail", {
+            this.call("sendpasswordresetmail", {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(res);
                 },
@@ -252,10 +246,9 @@ window.SetPasswordApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.apiUrl()+"changepassword" , {
+            this.call("changepassword" , {
                 type: 'POST',
                 cache: false,
-                headers : { authorization : model.authorization() },
                 data : { oldpassword   : model.oldpassword(),
                          password  : model.newpassword() },
                 success : function(res) {

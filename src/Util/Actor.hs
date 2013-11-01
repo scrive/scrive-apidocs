@@ -1,5 +1,5 @@
 module Util.Actor (
-  Actor(actorTime, actorIP, actorUserID, actorEmail, actorSigLinkID, actorAPIString, actorWho)
+  Actor(..)
   , authorActor
   , signatoryActor
   , systemActor
@@ -23,18 +23,22 @@ import Control.Monad
 
 mkAuthorActor :: Context -> Maybe Actor
 mkAuthorActor ctx = case (ctxmaybeuser ctx) `mplus` (ctxmaybepaduser ctx) of
-  Just user -> Just $ authorActor (ctxtime ctx) (ctxipnumber ctx) user
+  Just user -> Just $ authorActor ctx user
   Nothing   -> Nothing
 
 mkAdminActor :: Context -> Maybe Actor
 mkAdminActor ctx = case ctxmaybeuser ctx of
-  Just user -> Just $ adminActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
+  Just user -> Just $ adminActor ctx user
   Nothing   -> Nothing
 
 -- | Actor describes who is performing an action and when
 data Actor = Actor {
     -- | the time the action is taken
     actorTime      :: MinutesTime
+    -- | the client time the action is taken
+  , actorClientTime :: Maybe MinutesTime
+    -- | the client name
+  , actorClientName :: Maybe String
     -- | If the action is originated on another machine, its IP
   , actorIP        :: Maybe IPAddress
     -- | If the action is originated by a logged in user
@@ -49,9 +53,24 @@ data Actor = Actor {
   , actorWho       :: String
   } deriving (Eq, Ord, Show, Typeable)
 
+contextActor :: Context -> Actor
+contextActor ctx = Actor
+  { actorTime = ctxtime ctx
+  , actorClientTime = ctxclienttime ctx
+  , actorClientName = ctxclientname ctx
+  , actorIP = Just (ctxipnumber ctx)
+  , actorUserID = Nothing
+  , actorEmail = Nothing
+  , actorSigLinkID = Nothing
+  , actorAPIString = Nothing
+  , actorWho = ""
+  }
+
 systemActor :: MinutesTime -> Actor
 systemActor time = Actor {
     actorTime = time
+  , actorClientTime = Nothing
+  , actorClientName = Nothing
   , actorIP = Nothing
   , actorUserID = Nothing
   , actorEmail = Nothing
@@ -62,26 +81,17 @@ systemActor time = Actor {
 
 -- | For an action that requires an operation on a document and an
 -- author to be logged in
-authorActor :: MinutesTime -> IPAddress -> User -> Actor
-authorActor time ip u = Actor {
-    actorTime = time
-  , actorIP = Just ip
-  , actorUserID = Just (userid u)
-  , actorEmail = Just (getEmail u)
-  , actorSigLinkID = Nothing
-  , actorAPIString = Nothing
-  , actorWho = "the author (" ++ getIdentifier u ++ ")"
+authorActor :: Context -> User -> Actor
+authorActor ctx u = (userActor ctx u) {
+    actorWho = "the author (" ++ getIdentifier u ++ ")"
 }
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
-signatoryActor :: MinutesTime -> IPAddress -> SignatoryLink -> Actor
-signatoryActor time ip s = Actor {
-    actorTime = time
-  , actorIP = Just ip
-  , actorUserID = maybesignatory s
+signatoryActor :: Context -> SignatoryLink -> Actor
+signatoryActor ctx s = (contextActor ctx) {
+    actorUserID = maybesignatory s
   , actorEmail = Just (getEmail s)
   , actorSigLinkID = Just (signatorylinkid s)
-  , actorAPIString = Nothing
   , actorWho = "the signatory (" ++ getIdentifier s ++ ")"
 }
 
@@ -90,6 +100,8 @@ mailSystemActor :: MinutesTime -> Maybe UserID -> String -> SignatoryLinkID -> A
 mailSystemActor time muid email slid = Actor {
     actorTime = time
   , actorIP = Nothing
+  , actorClientTime = Nothing
+  , actorClientName = Nothing
   , actorUserID = muid
   , actorEmail = Just email
   , actorSigLinkID = Just slid
@@ -98,36 +110,21 @@ mailSystemActor time muid email slid = Actor {
 }
 
 -- | For actions performed by logged in user
-userActor :: MinutesTime -> IPAddress -> User -> Actor
-userActor time ip u = Actor {
-    actorTime = time
-  , actorIP = Just ip
-  , actorUserID = Just (userid u)
+userActor :: Context -> User -> Actor
+userActor ctx u = (contextActor ctx) {
+    actorUserID = Just (userid u)
   , actorEmail = Just (getEmail u)
-  , actorSigLinkID = Nothing
-  , actorAPIString = Nothing
   , actorWho = "the user (" ++ getIdentifier u ++ ")"
 }
 
 -- | For actions performed by an admin
-adminActor :: MinutesTime -> IPAddress -> UserID -> String -> Actor
-adminActor time ip uid email = Actor {
-    actorTime = time
-  , actorIP = Just ip
-  , actorUserID = Just uid
-  , actorEmail = Just email
-  , actorSigLinkID = Nothing
-  , actorAPIString = Nothing
-  , actorWho = "the admin (" ++ email ++ ")"
+adminActor :: Context -> User -> Actor
+adminActor ctx u = (userActor ctx u) {
+    actorWho = "the admin (" ++ (getEmail u) ++ ")"
 }
 
-apiActor :: MinutesTime -> IPAddress -> UserID -> String -> String -> Actor
-apiActor time ip uid email apistring = Actor {
-    actorTime = time
-  , actorIP = Just ip
-  , actorUserID = Just uid
-  , actorEmail = Just email
-  , actorSigLinkID = Nothing
-  , actorAPIString = Just apistring
-  , actorWho = "the user (" ++ show email ++ ") (using the API)"
+apiActor :: Context -> User -> String -> Actor
+apiActor ctx u apistring = (userActor ctx u) {
+    actorAPIString = Just apistring
+  , actorWho = "the user (" ++ show (getEmail u) ++ ") (using the API)"
   }

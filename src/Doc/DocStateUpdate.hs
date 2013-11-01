@@ -27,8 +27,8 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
   switchLang (getLang olddoc)
   let Just sl' = getSigLinkFor olddoc slid
-  Context{ ctxtime, ctxipnumber } <- getContext
-  let actor = signatoryActor ctxtime ctxipnumber sl'
+  ctx <- getContext
+  let actor = signatoryActor ctx sl'
   dbUpdate $ UpdateFieldsForSigning did slid fields actor
   dbUpdate $ SignDocument did slid mh Nothing screenshots actor
   doc <- dbQuery $ GetDocumentByDocumentID did
@@ -43,11 +43,11 @@ signDocumentWithEleg :: Kontrakcja m
                      -> SignatoryScreenshots.SignatoryScreenshots
                      -> m (Document, Document)
 signDocumentWithEleg did slid mh fields sinfo screenshots = do
-  Context{ ctxtime, ctxipnumber } <- getContext
+  ctx <- getContext
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
   switchLang (getLang olddoc)
   let Just sl' = getSigLinkFor olddoc slid
-  let actor = signatoryActor ctxtime ctxipnumber sl'
+  let actor = signatoryActor ctx sl'
   dbUpdate $ UpdateFieldsForSigning did slid fields actor
   dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
   doc <- dbQuery $ GetDocumentByDocumentID did

@@ -62,9 +62,9 @@ handleShare =  do
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
-    Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
+    ctx@(Context { ctxmaybeuser = Just user}) <- getContext
     ids <- getCriticalField asValidAttachmentIDList "attachmentids"
-    let actor = userActor ctxtime ctxipnumber user
+    let actor = userActor ctx user
     dbUpdate $ DeleteAttachments (userid user) ids actor
     J.runJSONGenT $ return ()
 

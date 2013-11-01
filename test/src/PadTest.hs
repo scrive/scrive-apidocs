@@ -6,7 +6,6 @@ import Data.List
 import User.Model
 import Doc.DocUtils
 import Doc.DocStateData
-import IPAddress
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import TestingUtil
@@ -14,6 +13,7 @@ import TestingUtil
 import Test.Framework
 import TestKontra
 import Util.Actor
+import Utils.Default (defaultValue)
 
 import PadQueue.Model
 
@@ -34,8 +34,8 @@ padQueueTests env = testGroup "PadQueue" [
 testAddToPadQueue :: TestEnv ()
 testAddToPadQueue = do
   user <- addNewRandomUser
-  time <- getMinutesTime
-  let aa = authorActor time noIP user
+  ctx <- mkContext defaultValue
+  let aa = authorActor ctx user
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^
@@ -49,8 +49,8 @@ testAddToPadQueue = do
 testRemoveFromPadQueue :: TestEnv ()
 testRemoveFromPadQueue = do
   user <- addNewRandomUser
-  time <- getMinutesTime
-  let aa = authorActor time noIP user
+  ctx <- mkContext defaultValue
+  let aa = authorActor ctx user
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^
@@ -66,8 +66,8 @@ testRemoveFromPadQueue = do
 testLastDocumentInPadqueue :: TestEnv ()
 testLastDocumentInPadqueue = do
   user <- addNewRandomUser
-  time <- getMinutesTime
-  let aa = authorActor time noIP user
+  ctx <- mkContext defaultValue
+  let aa = authorActor ctx user
   doc1 <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^

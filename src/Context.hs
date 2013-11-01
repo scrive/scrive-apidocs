@@ -34,6 +34,8 @@ data Context = Context
     , ctxresourcehostpart    :: String -- ^ The hostname for the resources (will be https if possible)
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
+    , ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent
+    , ctxclienttime          :: Maybe MinutesTime -- ^ Client-local time when an action was performed (e.g. signing a document)
     , ctxnormalizeddocuments :: MemCache.MemCache FileID JpegPages -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxproduction          :: Bool -- ^ Is this server the production server?

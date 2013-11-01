@@ -308,7 +308,7 @@ apiCallReject did slid = api $ do
   do
       ctx <- getContext
       let Just sll = getSigLinkFor doc slid
-          actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) sll
+          actor = signatoryActor ctx sll
       customtext <- lift $ getOptionalField  asValidInviteText "customtext"
       lift $ switchLang (getLang doc)
       lift $ (dbUpdate $ RejectDocument did slid customtext actor)
@@ -402,7 +402,7 @@ handleMismatch doc sid msg sfn sln spn = do
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
         Just newdoc <- runMaybeT $ do
           dbUpdate $ ELegAbortDocument (documentid doc) sid msg sfn sln spn
-           (signatoryActor (ctxtime ctx) (ctxipnumber ctx) sl)
+           (signatoryActor ctx sl)
           newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
           return newdoc
         postDocumentCanceledChange newdoc
@@ -485,7 +485,7 @@ apiCallGet did = api $ do
          when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
          when (not (isTemplate doc) && (not (isPreparation doc)) && (not (isClosed doc)) ) $
            dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
-                         (signatoryActor (ctxtime ctx) (ctxipnumber ctx) sl)
+                         (signatoryActor ctx sl)
          lift $ switchLang (getLang doc)
 
          mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
@@ -503,7 +503,7 @@ apiCallGet did = api $ do
         when_ ((isJust msiglink) && (not (isPreparation doc)) && (not (isClosed doc)) && (not (isTemplate doc))) $ do
             let sl = fromJust msiglink
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
-                 (signatoryActor (ctxtime ctx) (ctxipnumber ctx) sl)
+                 (signatoryActor ctx sl)
 
         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
@@ -706,7 +706,7 @@ documentUploadSignatoryAttachment did sid aname = api $ do
 
   let sanitizedFileName = dropFilePathFromWindows filename
   fileid' <- dbUpdate $ NewFile sanitizedFileName content
-  let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) sl
+  let actor = signatoryActor ctx sl
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     dbUpdate $ SaveSigAttachment (documentid doc) sid aname fileid' actor
     newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -719,7 +719,7 @@ documentUploadSignatoryAttachment did sid aname = api $ do
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  String -> m Response
 documentDeleteSignatoryAttachment did sid aname = api $ do
-  Context{ctxtime, ctxipnumber} <- getContext
+  ctx <- getContext
   (slid, magichash) <- getSigLinkID
   doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
 
@@ -732,7 +732,7 @@ documentDeleteSignatoryAttachment did sid aname = api $ do
   fileid <- apiGuard (actionNotAvailable "That signatory attachment request does not have a file uploaded for it, or it has been previously deleted.") $ signatoryattachmentfile sigattach
 
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
-    dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid (signatoryActor ctxtime ctxipnumber sl)
+    dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid (signatoryActor ctx sl)
     newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
     return newdoc
 

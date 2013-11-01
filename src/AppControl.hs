@@ -19,6 +19,7 @@ import DB
 import DB.PostgreSQL
 import IPAddress
 import Kontra
+import MinutesTime (parseMinutesTimeRealISO)
 import Utils.Either
 import Utils.HTTP
 import Utils.Monoid
@@ -252,8 +253,8 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     createContext session = do
       -- rqPeer hostname comes always from showHostAddress
       -- so it is a bunch of numbers, just read them out
+      rq <- askRq
       peerip <- do
-        rq <- askRq
         -- First, we look for x-forwarded-for, which a proxy might insert
         -- Then, we look for x-real-ip, which nginx might insert
         let peerhost :: HostName
@@ -271,6 +272,9 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       currhostpart <- getHostpart
       reshostpart <- getResourceHostpart
       minutestime <- getMinutesTime
+      let clientName = BS.toString <$> getHeader "client-name" rq
+          clientTime = parseMinutesTimeRealISO =<< (BS.toString <$> getHeader "client-time" rq)
+          userAgent  = BS.toString <$> getHeader "user-agent" rq
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session
 
@@ -298,6 +302,8 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxresourcehostpart = reshostpart
         , ctxflashmessages = flashmessages
         , ctxtime = minutestime
+        , ctxclientname = clientName `mplus` userAgent
+        , ctxclienttime = clientTime
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
         , ctxproduction = production appConf
