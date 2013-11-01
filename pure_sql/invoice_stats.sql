@@ -10,7 +10,7 @@ CREATE FUNCTION escape_for_csv(text) RETURNS text
     RETURNS NULL ON NULL INPUT;
 
 CREATE TEMP TABLE thetime(time) AS
-    VALUES ('2013-08-01' :: TIMESTAMP WITH TIME ZONE);
+    VALUES ('2013-10-01' :: TIMESTAMP WITH TIME ZONE);
 
 CREATE TEMP TABLE results AS
 SELECT escape_for_csv(companies.name) AS "Company name"
@@ -74,17 +74,24 @@ SELECT escape_for_csv(companies.name) AS "Company name"
                                   AND signatory_links.document_id = documents.id) = thetime.time)) AS "Sigs closed"
      , (SELECT count(*)
           FROM users
-         WHERE NOT users.deleted
+         WHERE (users.deleted IS NULL OR users.deleted > thetime.time)
            AND users.company_id = companies.id
-           AND has_accepted_terms_of_service IS NOT NULL
-           AND has_accepted_terms_of_service < thetime.time + interval '1 month') AS "Users now"
+           AND has_accepted_terms_of_service <= thetime.time) AS "Users at begin of month"
      , (SELECT count(*)
           FROM users
-         WHERE NOT users.deleted
+         WHERE (users.deleted IS NULL OR users.deleted > thetime.time + interval '1 month')
            AND users.company_id = companies.id
-           AND has_accepted_terms_of_service IS NOT NULL
+           AND has_accepted_terms_of_service <= thetime.time + interval '1 month') AS "Users at end of month"
+     , (SELECT count(*)
+          FROM users
+         WHERE users.company_id = companies.id
            AND has_accepted_terms_of_service >= thetime.time
-           AND has_accepted_terms_of_service < thetime.time + interval '1 month') AS "Users TOS"
+           AND has_accepted_terms_of_service < thetime.time + interval '1 month') AS "Users activated during month"
+     , (SELECT count(*)
+          FROM users
+         WHERE users.company_id = companies.id
+           AND users.deleted >= thetime.time
+           AND users.deleted < thetime.time + interval '1 month') AS "Users deleted during month"
      , substring((thetime.time :: DATE :: TEXT) for 7) AS "Month"
 
   FROM companies
@@ -107,9 +114,11 @@ SELECT *
   FROM results
  WHERE "Sigs closed" > 0
     OR "Docs closed" > 0
-    OR "Users now" > 0
-    OR "Users TOS" > 0
- ORDER BY 1
+    OR "Users at begin of month" > 0
+    OR "Users at end of month" > 0
+    OR "Users activated during month" > 0
+    OR "Users deleted during month" > 0
+ ORDER BY 1, 2
      ;
 
 ROLLBACK;
