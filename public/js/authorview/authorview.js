@@ -128,9 +128,9 @@ window.AuthorViewView = Backbone.View.extend({
     this.container.append(this.model.history().el());
     var subcontainer = $("<div class='subcontainer'/>");
     this.container.append(subcontainer);
-    subcontainer.append(this.model.signatories().el());
 
     var documentPagesWrapper = $("<div class='document-pages-wrapper'></div>");
+    documentPagesWrapper.append(this.model.signatories().el());
     documentPagesWrapper.append(model.file().view.el);
     subcontainer.append(documentPagesWrapper);
     if (this.model.hasEvidenceAttachmentsSection())
