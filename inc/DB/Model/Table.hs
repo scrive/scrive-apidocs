@@ -4,6 +4,8 @@ module DB.Model.Table (
   , TableColumn(..)
   , tblColumn
   , sqlAddColumn
+  , sqlAlterColumn
+  , sqlDropColumn
   , Table(..)
   , tblTable
   , sqlCreateTable
@@ -90,6 +92,12 @@ sqlAddColumn TableColumn{..} = "ADD COLUMN"
   <+> raw (columnTypeToSQL colType)
   <+> (if colNullable then "NULL" else "NOT NULL")
   <+> raw (maybe "" ("DEFAULT" <+>) colDefault)
+
+sqlAlterColumn :: RawSQL -> RawSQL -> SQL
+sqlAlterColumn cname alter = "ALTER COLUMN" <+> raw cname <+> raw alter
+
+sqlDropColumn :: RawSQL -> SQL
+sqlDropColumn cname = "DROP COLUMN" <+> raw cname
 
 ----------------------------------------
 
