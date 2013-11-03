@@ -1,4 +1,8 @@
-module DB.Model.Check where
+module DB.Model.Check (
+    TableCheck(..)
+  , sqlAddCheck
+  , sqlDropCheck
+  ) where
 
 import DB.SQL
 

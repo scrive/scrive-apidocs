@@ -1,4 +1,14 @@
-module DB.Model.Table where
+module DB.Model.Table (
+    ColumnType(..)
+  , columnTypeToSQL
+  , TableColumn(..)
+  , tblColumn
+  , sqlAddColumn
+  , Table(..)
+  , tblTable
+  , sqlCreateTable
+  , sqlAlterTable
+  ) where
 
 import Data.Convertible
 import Data.Char

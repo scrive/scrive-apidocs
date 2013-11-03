@@ -1,4 +1,6 @@
-module DB.Model.Migration where
+module DB.Model.Migration (
+    Migration(..)
+  )  where
 
 import DB.Model.Table
 

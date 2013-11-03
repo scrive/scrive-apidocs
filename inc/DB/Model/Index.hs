@@ -1,4 +1,14 @@
-module DB.Model.Index where
+module DB.Model.Index (
+    TableIndex(..)
+  , tblIndex
+  , indexOnColumn
+  , indexOnColumns
+  , uniqueIndexOnColumn
+  , uniqueIndexOnColumns
+  , indexName
+  , sqlCreateIndex
+  , sqlDropIndex
+  ) where
 
 import Data.Monoid
 import qualified Data.Set as S

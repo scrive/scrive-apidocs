@@ -1,4 +1,12 @@
-module DB.Model.ForeignKey where
+module DB.Model.ForeignKey (
+    ForeignKey(..)
+  , ForeignKeyAction(..)
+  , fkOnColumn
+  , fkOnColumns
+  , fkName
+  , sqlAddFK
+  , sqlDropFK
+  ) where
 
 import Data.Monoid
 import qualified Data.Set as S
