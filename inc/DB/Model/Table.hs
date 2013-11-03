@@ -55,7 +55,7 @@ instance Convertible SqlValue ColumnType where
         , convErrorMessage = "Unknown data type"
         }
 
-columnTypeToSQL :: ColumnType -> SQL
+columnTypeToSQL :: ColumnType -> RawSQL
 columnTypeToSQL BigIntT = "BIGINT"
 columnTypeToSQL BigSerialT = "BIGSERIAL"
 columnTypeToSQL BinaryT = "BYTEA"
@@ -87,7 +87,7 @@ tblColumn = TableColumn {
 sqlAddColumn :: TableColumn -> SQL
 sqlAddColumn TableColumn{..} = "ADD COLUMN"
   <+> raw colName
-  <+> columnTypeToSQL colType
+  <+> raw (columnTypeToSQL colType)
   <+> (if colNullable then "NULL" else "NOT NULL")
   <+> raw (maybe "" ("DEFAULT" <+>) colDefault)
 

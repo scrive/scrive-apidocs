@@ -324,16 +324,21 @@ checkDBConsistency logger tables migrations = do
             validateNames False = ValidationError $ errorMsg ("no. " ++ show n) "names" (unRawSQL . colName)
 
             validateTypes True = mempty
-            validateTypes False = ValidationError $ errorMsg cname "types" (show . colType)
+            validateTypes False = ValidationError $ (errorMsg cname "types" (show . colType)) ++ " " ++ sql_hint ("TYPE" <+> columnTypeToSQL (colType d))
 
             validateNullables True = mempty
-            validateNullables False = ValidationError $ errorMsg cname "nullables" (show . colNullable)
+            validateNullables False = ValidationError $ (errorMsg cname "nullables" (show . colNullable)) ++ " " ++ sql_hint ((if colNullable d then "DROP" else "SET") <+> "NOT NULL")
 
             validateDefaults True = mempty
-            validateDefaults False = ValidationError $ errorMsg cname "defaults" (show . colDefault)
+            validateDefaults False = ValidationError $ (errorMsg cname "defaults" (show . colDefault)) ++ " " ++ sql_hint set_default
+              where
+                set_default = case colDefault d of
+                  Just v  -> "SET DEFAULT" <+> v
+                  Nothing -> "DROP DEFAULT"
 
             cname = unRawSQL . colName $ d
-            errorMsg ident attr f = "Column " ++ ident ++ " differs in " ++ attr ++ " (table: " ++ f c ++ ", definition: " ++ f d ++ ")"
+            errorMsg ident attr f = "Column '" ++ ident ++ "' differs in " ++ attr ++ " (table: " ++ f c ++ ", definition: " ++ f d ++ ")."
+            sql_hint sql = "(HINT: SQL for making the change is: ALTER TABLE " ++ tblNameString table ++ " ALTER COLUMN " ++ unRawSQL (colName d) ++ " " ++ unRawSQL sql ++ ")"
 
         checkPrimaryKey :: Maybe PrimaryKey -> Maybe (PrimaryKey, RawSQL) -> ValidationResult
         checkPrimaryKey mdef mpk = mconcat [
