@@ -11,6 +11,7 @@ module EvidenceLog.View (
   ) where
 
 
+import Data.Char (isSpace)
 import qualified Data.Set as Set
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
@@ -179,7 +180,7 @@ simplyfiedEventText mactor dee = case evType dee of
   Obsolete _ -> return ""
   Current et -> renderTemplateI (eventTextTemplateName et) $ do
     let siglink = evAffectedSigLink dee
-    F.value "text" $ filterTags <$> evMessageText dee
+    F.value "text" $ filterTagsNL <$> evMessageText dee
     F.value "signatory" $ getSmartName <$> siglink
     case mactor of
       Nothing    -> F.value "archive" True
@@ -225,10 +226,10 @@ htmlSkipedEvidenceType :: EvidenceEventType -> Bool
 htmlSkipedEvidenceType (Obsolete OldDocumentHistory) = True
 htmlSkipedEvidenceType _ = False
 
-filterTags :: String -> String
-filterTags ('<':rest) = ' ' : (filterTags (drop 1 $ dropWhile (\c -> c /= '>') rest))
-filterTags (a:rest) = a : (filterTags rest)
-filterTags [] = []
+filterTagsNL :: String -> String
+filterTagsNL ('<':rest) = ' ' : (filterTagsNL (drop 1 $ dropWhile (\c -> c /= '>') rest))
+filterTagsNL (a:rest) = (if isSpace a then ' ' else a): (filterTagsNL rest)
+filterTagsNL [] = []
 
 -- | Detect one of 'png' or 'jpeg' based on magic numbers in binary content.
 detectImageMimeType :: BS.ByteString -> BS.ByteString
