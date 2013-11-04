@@ -26,7 +26,7 @@ javascriptLocalisation =
              , verifyingSignature : "$_verifyingSignature()$"
              , signviewAttachmentUploadedInOtherWindow : "$_signviewAttachmentUploadedInOtherWindow()$"
              , tbsGenerationMessage : function(doctitle, docid){
-                    return  '$_tbsGenerationMessage1()$"' + doctitle + '"$_tbsGenerationMessage2()$"' + docid + '"$_tbsGenerationMessage3()$'
+                    return  '$_tbsGenerationMessage1()$ "' + doctitle + '" $_tbsGenerationMessage2()$ "' + docid + '" $_tbsGenerationMessage3()$'
                      }
              , ie6NotSupported : "$_ie6NotSupported()$"
              , name : "$_firstnameAndLastName()$"
