@@ -39,6 +39,7 @@ import Utils.IO
 import System.Directory
 import System.Exit
 import Kontra
+import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.StringTemplates.Templates
 import Text.Printf
 import Text.JSON.Gen
@@ -320,9 +321,11 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
 
       initials = intercalate ", " initialsx
 
+      removeTags s = concat [t | TagText t <- parseTags s]
+
       mkHistEntry ev = do
         actor <- approximateActor document ev
-        comment <- simplyfiedEventText (Just actor) ev
+        comment <- removeTags <$> simplyfiedEventText (Just actor) ev
         return $ Seal.HistEntry{ Seal.histdate = formatMinutesTimeForVerificationPage $ evTime ev
                                , Seal.histcomment = comment
                                , Seal.histaddress = maybe "" show $ evIP4 ev
