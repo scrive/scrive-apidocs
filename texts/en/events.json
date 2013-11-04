@@ -12,7 +12,7 @@
 "_MarkInvitationReadEvidenceText":"Scrive´s notification system reported that the invitation to $_view_or_sign()$ (sent to $email$) was opened.",
 "_PreparationToPendingEvidenceText":"The editing of the document was finalised$if(!archive)$ by $actor$$endif$, and Scrive locked the document from editing.$if(full)$ The language was set to $lang$, and the signing due date was set to $timeouttime$ UTC.$if(timezone)$ The time zone $timezone$ was provided by $actor$.$endif$$endif$",
 "_ProlongDocumentEvidenceText":"The due date for signing was prolonged$if(!archive)$ by $actor$$endif$.",
-"_RejectDocumentEvidenceText":"The invitation to sign was rejected$if(!archive)$by $actor$$endif$ and the signing process was cancelled by Scrive.$if(text)$ The rejection message was: <BR/> <i>$text:noescape()$</i>$endif$",
+"_RejectDocumentEvidenceText":"The invitation to sign was rejected$if(!archive)$ by $actor$$endif$ and the signing process was cancelled by Scrive.$if(text)$ The rejection message was: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ReminderSendText":"A reminder to sign was sent to $signatory$ by the Scrive system$_delivery_method()$.$if(full)$ The Scrive system reset the delivery status details (sent/received/read invitation/read online).$endif$$if(text)$ The reminder message was: <BR/> <i>$text:noescape()$</i>$endif$",
 "_ResealedPDFText":"The document was sealed by $if(!archive)$$actor$, $endif$an authorized Scrive administrator.",
 "_RestartDocumentEvidenceText":"The document was restarted$if(!archive)$ by $actor$$endif$ and Scrive opened the document for editing.",
