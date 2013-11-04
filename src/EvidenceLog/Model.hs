@@ -69,6 +69,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
    let fields = do
          F.value "full" True
          F.value "actor" $ actorWho actor
+         maybe (return ()) (F.value "text") mmsg
          case masl of
            Nothing -> return ()
            Just sl -> do
