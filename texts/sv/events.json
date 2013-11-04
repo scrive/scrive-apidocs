@@ -12,7 +12,7 @@
 "_MarkInvitationReadEvidenceText":"Scrives notifieringsystem rapporterade att inbjudan att $_view_or_sign()$ (sänt till $email$) öppnades.",
 "_PreparationToPendingEvidenceText":"Redigeringen av dokumentet avslutades$if(!archive)$ av $actor$$endif$ och Scrive låste dokumentet för ändringar.",
 "_ProlongDocumentEvidenceText":"Förfallodatumet för signering förlängdes$if(!archive)$ av $actor$$endif$.",
-"_RejectDocumentEvidenceText":"Inbjudan att signera avvisades$if(!archive)$ av $actor$$endif$ och signeringsprocessen avbröts av Scrive.  $if(text)$ Avvisningsmeddelandet ar: <BR/> <i>$text:noescape()$</i>$else$.$endif$",
+"_RejectDocumentEvidenceText":"Inbjudan att signera avvisades$if(!archive)$ av $actor$$endif$ och signeringsprocessen avbröts av Scrive.  $if(text)$ Avvisningsmeddelandet är: <BR/> <i>$text:noescape()$</i>$else$.$endif$",
 "_ReminderSendText":"En påminnelse skickades till $signatory$$if(text)$$_delivery_method()$ med meddelandet: <BR/><i>$text:noescape()$</i>$else$.$endif$",
 "_ResealedPDFText":"Dokumentet förseglades av $if(!archive)$$actor$, $endif$en behörig administratör på Scrive.",
 "_RestartDocumentEvidenceText":"Dokumentet startades om$if(!archive)$ av $actor$$endif$ och Scrive öppnade dokumentet för ändringar.",
