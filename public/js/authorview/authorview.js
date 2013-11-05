@@ -133,12 +133,12 @@ window.AuthorViewView = Backbone.View.extend({
     documentPagesWrapper.append(this.model.signatories().el());
     documentPagesWrapper.append(model.file().view.el);
     subcontainer.append(documentPagesWrapper);
+    if (this.model.hasAuthorAttachmentsSection())
+       documentPagesWrapper.append(model.authorattachments().el());
+    if (this.model.hasSignatoriesAttachmentsSection())
+       documentPagesWrapper.append(model.signatoryattachments().el());
     if (this.model.hasEvidenceAttachmentsSection())
        documentPagesWrapper.append(model.evidenceattachments().el());
-    if (this.model.hasSignatoriesAttachmentsSection())
-       subcontainer.append(model.signatoryattachments().el());
-    if (this.model.hasAuthorAttachmentsSection())
-       subcontainer.append(model.authorattachments().el());
 
     return this;
   }
