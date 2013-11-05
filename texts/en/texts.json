@@ -903,7 +903,7 @@
 "_welcomeback":"Welcome!",
 "_you":"you",
 "_youCantCancelThisDocuments":"You can't withdraw selected documents.",
-"_youCantSendRemindersToThisDocuments":"Reminders can´t be sent for some of the selected documents.",
+"_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your e-ID provider.",
 "_zip":"Zip"
 }

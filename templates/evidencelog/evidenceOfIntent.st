@@ -168,7 +168,7 @@ $htmlopentag()$
 <h1>Evidence of Intent </h1>
 
 <p>
-  When a person signs a document using the Scrive e-signing system a screen capture is executed on the person´s screen and saved by the Scrive e-signing system. The purpose of making the screen capture is to collect evidence of the signing environment at the time of signing the document. When sealing the signed document the Scrive e-signing system includes the screen captures from all signing parties into this document.
+  When a person signs a document using the Scrive e-signing system a screen capture is executed on the person’s screen and saved by the Scrive e-signing system. The purpose of making the screen capture is to collect evidence of the signing environment at the time of signing the document. When sealing the signed document the Scrive e-signing system includes the screen captures from all signing parties into this document.
 </p>
 <p>
   The screen capture technology used does not function with some older browsers. Therefore, in case the screen capture technology would fail with executing the screen capture, a screen shot with a reference signing view is prepared in the Scrive e-signing system at each production upgrade. Upon sealing the document, the Scrive e-signing system includes the latest reference signing view in this Evidence of Intent (one per party that signed). The reference signing view is included as a reference even if the screen capture succeeded.
