@@ -12,7 +12,6 @@ import Data.Maybe (catMaybes)
 import ActionQueue.EmailChangeRequest
 import ActionQueue.Monad
 import ActionQueue.PasswordReminder
-import ActionQueue.Scheduler
 import ActionQueue.UserAccountRequest
 import AppConf
 import AppDB
@@ -24,6 +23,7 @@ import DB.Checks
 import DB.SQLFunction
 import DB.PostgreSQL
 import Doc.API.Callback.Model
+import Doc.Action
 import Doc.ExtendSignature (extendSignatures, sealMissingSignaturesNewerThan)
 import qualified MemCache
 import Utils.Cron
