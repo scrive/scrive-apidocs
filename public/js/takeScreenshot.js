@@ -8,6 +8,16 @@
                    image loading takes too long time
 */
 
+    var scaleCanvas = function (canvas, scale) {
+      var newCanvas = document.createElement('canvas');
+      newCanvas.width = Math.ceil(canvas.width * scale);
+      newCanvas.height = Math.ceil(canvas.height * scale);
+
+      var ctx = newCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, canvas.width * scale, canvas.height * scale);
+      return newCanvas;
+    };
+
     window.takeScreenshot = function(success, error, timeout, timeoutval) {
         var callbackCalled = false;
         function timedout() {
@@ -25,14 +35,15 @@
               html2canvas( $('body'),
                           { onrendered: function(canvas)
                             {
+                                var newCanvas = scaleCanvas(canvas, 0.6); // smallest scale that still makes text readable
+                                canvas = null;
                                 if (!callbackCalled) {
                                     callbackCalled = true;
-                                    success(canvas);
+                                    success(newCanvas);
                                 }
                             },
                             width : $(window).width(),
                             height : $(window).height(),
-                            scale : 0.6, // smallest scale that still makes text readable
                             logging: true,
                             proxy: null
                           }

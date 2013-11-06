@@ -30,9 +30,12 @@ var DocumentHistoryModel = Backbone.Model.extend({
                 }),
                 new Cell({name: localization.history.time,  width:"150px",  field:"time",
                   rendering: function(time) {
-                         if (time != undefined && time != "")
-                           return $("<span/>").text(new Date(Date.parse(time)).toTimeAbrev()).attr("title",new Date(Date.parse(time)).fullTime());
-                         else return $("<span/>");
+                         var span = $("<span/>");
+                         if (time != undefined && time != "") {
+                           var date = new Date(Date.parse(time));
+                           span.text(date.toTimeAbrevWithMinutes());
+                         }
+                         return span;
                   }
                 }),
                 new Cell({name: localization.history.party, width:"200px", field:"party"}),

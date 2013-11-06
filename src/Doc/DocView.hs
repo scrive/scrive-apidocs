@@ -134,7 +134,7 @@ signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
-    J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
+    J.value "userid" $ show <$> maybesignatory siglink
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
     J.value "rejectredirect" $ signatorylinkrejectredirecturl siglink
     J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink

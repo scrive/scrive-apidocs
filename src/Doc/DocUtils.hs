@@ -201,7 +201,7 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
        documentDeliverableTosignatory
     && signatoryActivated
     && userIsAuthor
-    && not isUserSignator
+    && not (isAuthor siglink)
     && not dontShowAnyReminder
     && (signatorylinkdeliverymethod siglink /= EmailDelivery || (mailinvitationdeliverystatus siglink /= Undelivered && mailinvitationdeliverystatus siglink /= Deferred))
     && (signatorylinkdeliverymethod siglink /= MobileDelivery || (smsinvitationdeliverystatus siglink /= Undelivered && smsinvitationdeliverystatus siglink /= Deferred))
@@ -213,7 +213,6 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
     && signatoryispartner siglink
   where
     userIsAuthor = isAuthor (document, user)
-    isUserSignator = isSigLinkFor user siglink
     wasNotSigned = isNothing (maybesigninfo siglink)
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder siglink
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]

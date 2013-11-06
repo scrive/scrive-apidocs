@@ -99,6 +99,21 @@ if (!Date.prototype.toTimeAbrev) {
     };
 }
 
+if (!Date.prototype.toTimeAbrevWithMinutes) {
+    Date.prototype.toTimeAbrevWithMinutes = function() {
+        var curr = new Date();
+        function pad(n) { return n < 10 ? '0' + n : n }
+        var minutesPart = pad(this.getHours()) + ":" + pad(this.getMinutes());
+
+        if (this.getUTCFullYear() == curr.getUTCFullYear() && this.getUTCMonth() == curr.getUTCMonth() && this.getUTCDate() == curr.getUTCDate())
+          return minutesPart;
+        if (this.getUTCFullYear() == curr.getFullYear())
+          return this.getDate() + " " + monthShortName(this.getMonth()) + " " + minutesPart;
+        else
+          return this.getFullYear() + "-" + pad(this.getMonth() + 1) + "-" + pad(this.getDate()) + " " + minutesPart;
+    };
+}
+
 if (!Date.prototype.fullTime) {
     Date.prototype.fullTime = function() {
         function pad(n) { return n < 10 ? '0' + n : n }
