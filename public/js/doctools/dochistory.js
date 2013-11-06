@@ -30,9 +30,17 @@ var DocumentHistoryModel = Backbone.Model.extend({
                 }),
                 new Cell({name: localization.history.time,  width:"150px",  field:"time",
                   rendering: function(time) {
-                         if (time != undefined && time != "")
-                           return $("<span/>").text(new Date(Date.parse(time)).toTimeAbrev()).attr("title",new Date(Date.parse(time)).fullTime());
-                         else return $("<span/>");
+                         if (time != undefined && time != "") {
+                           var date = new Date(Date.parse(time))
+                           var now = new Date();
+                           var span = $("<span/>");
+                           if (date.getDay() == now.getDay() && date.getMonth() == now.getMonth() && date.getYear() == now.getYear()) {
+                             span.text(date.toTimeAbrev());
+                           } else {
+                             span.text(date.toTimeAbrev() + ' ' + date.getHours() + ':' + date.getMinutes());
+                           }
+                           return span;
+                         } else return $("<span/>");
                   }
                 }),
                 new Cell({name: localization.history.party, width:"200px", field:"party"}),
