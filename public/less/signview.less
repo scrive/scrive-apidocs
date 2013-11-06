@@ -352,16 +352,6 @@
     }
   }
 
-  .signatoryattachments .item {
-    margin-bottom : 10px;
-    margin-right  : 9px;
-  }
-
-
-  .signatoryattachments .item .name {
-      font-weight: bold;
-      color: black;
-  }
 
   .authorattachments .list, .signatoryattachments .list {
       float: right;
@@ -374,84 +364,52 @@
       float: left;
   }
 
-  .signatoryattachments  .list .desc {
+
+  .signatoryattachments {
+    .item {
+      margin-bottom : 10px;
+      margin-right  : 9px;
+    }
+    .desc {
       width: 320px;
-      vertical-align: top;
-  }
+    }
 
-  .signatoryattachments  .list .desc .description {
+   .icon {
+      float: left;
+      width: 13px;
+      height: 14px;
+      margin-top: 3px;
+      margin-right: 2px;
+      background: url(../img/attachment-icon.png);
+    }
+
+    .filename {
+      margin-top: 6px;
+      color: black;
+    }
+    .file {
+      vertical-align : top;
+    }
+
+    .loading {
+      margin-left: 80px;
+    }
+
+    .button{
+      float:right;
+      margin-left: 6px;
+    }
+
+    .name {
+      font-weight: 400;
+    }
+
+   .description {
       font-style: italic;
-  }
+      max-width: 360px;
+      overflow: hidden;
+   }
 
-  .signatoryattachments .file {
-      vertical-align:top
-  }
-
-
-  .signatoryattachments .list .item .loading {
-    margin-left: 80px;
-  }
-
-
-  .signatoryattachments .list .item .button{
-    float:right;
-    margin-left: 6px;
-    margin-top: 6px;
-  }
-
-  .signatoryattachments .list .item .file .name {
-    color: black;
-    text-align : right;
-  }
-
-  .signatoryattachments .list .item .action {
-    float: left;
-    margin-right: 10px;
-  }
-
-  .signatoryattachments .list .item .name {
-    font-weight: 400;
-  }
-
-  .signatoryattachments .list .item .description {
-    font-style: italic;
-    max-width: 360px;
-    overflow: hidden;
-  }
-
-  .uploadedsignatoryattachments .list {
-    float: left;
-    width: 500px;
-    margin-right: 20px;
-  }
-
-  .uploadedsignatoryattachments .item .icon {
-    float: left;
-    width: 13px;
-    height: 14px;
-    background: url(../img/attachment-icon.png);
-  }
-
-  .uploadedsignatoryattachments .item {
-    margin-bottom: 10px;
-  }
-
-  .uploadedsignatoryattachments .item .label {
-    float: left;
-    margin-left: 10px;
-  }
-
-  .uploadedsignatoryattachments .list .item .name {
-    font-weight: bold;
-    color: black;
-  }
-
-  .uploadedsignatoryattachments .list .item .from {
-    font-style: italic;
-  }
-
-  .uploadedsignatoryattachments .list .item a {
-    text-decoration: underline;
   }
 
   .signatories .list .sig .statustext {

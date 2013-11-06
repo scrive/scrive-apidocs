@@ -120,11 +120,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       if (attachment.get('loading')) {
           container.append($("<img class='loading'>").attr('src', "/img/wait30trans.gif"));
       } else if (attachment.hasFile()) {
-          container.append($("<div class='icon' />"));
-          var label = $("<div class='file' />");
-          label.append($("<div class='name' />").text(this.model.file().name() + ".pdf"));
-          label.append($("<div class='clearfix' />"));
-          container.append(label);
           container.append(this.reviewButton().el());
           if (attachment.signatory().document().currentSignatoryCanSign())
             container.append(this.removeButton().el());
@@ -151,11 +146,13 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     this.render();
   },
   signatoryAttachmentDescription: function(attachment, labelCss) {
+    var self = this;
     var container = $("<div class='item' />");
-    var name = $("<div class='name' />");
-    var desc = $("<div class='description' />");
-    name.css(labelCss);
-    desc.css(labelCss);
+    var filename = $("<div class='label' />").css(labelCss);
+    var name = $("<div class='name' />").css(labelCss);
+    var desc = $("<div class='description' />").css(labelCss);
+    if (attachment.file() != undefined)
+      container.append($("<div class='filename'/>").append($("<div class='icon'/>")).append(filename.text(attachment.file().name())));
     container.append(name.text(attachment.name()));
     container.append(desc.text(attachment.description()));
     return container;
@@ -200,10 +197,10 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     var tbody = $("<tbody/>");
     table.append(tbody);
     _.each(this.model.document().currentSignatory().attachments(), function(attachment) {
-      var tr = $("<tr/>");
-      tr.append($("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment, labelCss)));
-      tr.append($("<td class='file'>").append(self.signatoryAttachmentFile(attachment, labelCss)));
-      tbody.append(tr);
+      var desc = $("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment, labelCss));
+      var file = $("<td class='file'>").append(self.signatoryAttachmentFile(attachment, labelCss));
+      self.listenTo(attachment, 'change', function() {desc.empty().append(self.signatoryAttachmentDescription(attachment, labelCss));});
+      tbody.append($("<tr/>").append(desc).append(file));
     });
 
     container.append(table);
