@@ -8,11 +8,14 @@ module Doc.Action (
   , sendInvitationEmail1
   , sendAllReminderEmails
   , sendClosedEmails
+  , timeoutDocuments
   ) where
 
 import Control.Applicative
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
+import Control.Monad.Reader
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Logic
 import Crypto.RNG
 import Data.Char
@@ -45,9 +48,9 @@ import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import ThirdPartyStats.Core
 import ActionQueue.UserAccountRequest
+import ActionQueue.Scheduler
 import User.Action
 import User.Utils
-import Control.Monad
 import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
@@ -522,3 +525,19 @@ sendNotifications sl domail dosms = do
     MobileDelivery  -> dosms
     EmailAndMobileDelivery -> domail >> dosms
     _               -> return ()
+
+
+-- | Time out documents once per day after midnight.  Do it in chunks
+-- so that we don't choke the server in case there are many documents to time out
+timeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m) => m ()
+timeoutDocuments = do
+  now <- getMinutesTime
+  docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
+  forM_ docs $ \doc -> do
+    gt <- getGlobalTemplates
+    runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
+    triggerAPICallbackIfThereIsOne doc
+    Log.debug $ "Document timedout " ++ (show $ documentid doc)
+  when (not (null docs)) $ do
+    kCommit
+    timeoutDocuments
