@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -726,10 +726,11 @@
 "_personalNumberLabel":"Pers.nr",
 "_personalNumberText":"ID no",
 "_personnumber":"SSN",
-"_phone":"Phone (+46701234567)",
+"_phone":"Phone",
 "_phoneButtonLabel":"Please call me",
 "_phoneConfirmationText":"Thanks, someone from Scrive will try to call you within one work day.",
 "_phoneFormDescription":"My number is",
+"_phonePlaceholder":"Phone (+46701234567)",
 "_phoneSubmitButtonLabel":"OK",
 "_placeFieldName":"place",
 "_poweredByScrive":"E-signing powered by Scrive",
