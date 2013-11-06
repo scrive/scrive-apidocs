@@ -31,7 +31,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
                 new Cell({name: localization.history.time,  width:"150px",  field:"time",
                   rendering: function(time) {
                          if (time != undefined && time != "") {
-                           var date = new Date(Date.parse(time))
+                           var date = new Date(Date.parse(time));
                            var now = new Date();
                            var span = $("<span/>");
                            if (date.getDay() == now.getDay() && date.getMonth() == now.getMonth() && date.getYear() == now.getYear()) {
