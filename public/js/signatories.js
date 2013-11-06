@@ -539,7 +539,10 @@ window.Signatory = Backbone.Model.extend({
         this.trigger("removed");
     },
     hasUser: function() {
-        return this.get("hasUser");
+        return this.userid() != undefined;
+    },
+    userid : function() {
+        return this.get("userid");
     },
     draftData : function() {
         return {
