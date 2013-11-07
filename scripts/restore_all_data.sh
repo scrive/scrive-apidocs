@@ -51,7 +51,7 @@ echo "  password:               $PGPASSWORD"
 #
 echo Dropping old database
 dropdb -i $PGDATABASE --no-password
-createdb $PGDATABASE -O $PGUSER --no-password --locale=sv_SE.UTF-8
+createdb $PGDATABASE -O $PGUSER --no-password -T template0 --locale=sv_SE.UTF-8
 psql $PGDATABASE -c "ALTER DATABASE $PGDATABASE SET TIMEZONE = UTC"
 psql $PGDATABASE -c "DROP EXTENSION plpgsql"
 
