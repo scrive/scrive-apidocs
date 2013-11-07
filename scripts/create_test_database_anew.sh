@@ -39,7 +39,8 @@ echo "  password:               $PGPASSWORD"
 #
 echo Dropping old test database: $PGDATABASE
 dropdb -i $PGDATABASE --no-password
-createdb $PGDATABASE -O $PGUSER --no-password --locale=sv_SE.UTF-8
+createdb $PGDATABASE -O $PGUSER --no-password --locale=sv_SE.UTF-8 -T template0
 psql $PGDATABASE -c "ALTER DATABASE $PGDATABASE SET TIMEZONE = UTC"
+psql $PGDATABASE -c "CREATE EXTENSION IF NOT EXISTS pgcrypto"
 
 echo You have a clean new test database $PGDATABASE. Done!
