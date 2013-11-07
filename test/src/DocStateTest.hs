@@ -1036,7 +1036,7 @@ testGetDocumentsSQLTextFiltered = doTimes 1 $ do
       title1 = "thisshouldbeuniquetitle"
       title2 = "THISshouldbeuniquetitleÖÅÄ"
 
-  actor <- unAuthorActor <$> rand 10 arbitrary
+  actor <- arbitraryAuthorActor
 
   success <- dbUpdate $ SetDocumentTitle (documentid doc1) title (actor)
   assert success
@@ -1239,7 +1239,7 @@ testTimeoutDocumentSignablePendingRight = doTimes 10 $ do
 
 testTimeoutDocumentSignableNotLeft :: TestEnv ()
 testTimeoutDocumentSignableNotLeft = doTimes 10 $ do
-  actor <- unSystemActor <$> rand 10 arbitrary
+  actor <- arbitrarySystemActor
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
     randomUpdate $ \d-> TimeoutDocument d actor
 
@@ -1437,9 +1437,10 @@ testMarkDocumentSeenNotLeft :: TestEnv ()
 testMarkDocumentSeenNotLeft = doTimes 10 $ do
   author <- addNewRandomUser
   _doc <- addRandomDocument (randomDocumentAllowsDefault author)
-  (d, s, m, a) <- rand 10 arbitrary
+  (d, s, m) <- rand 10 arbitrary
+  a <- arbitrarySignatoryActor
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    randomUpdate $ MarkDocumentSeen d s m (unSignatoryActor a)
+    randomUpdate $ MarkDocumentSeen d s m a
 
 forEachSignatoryLink :: Document -> (SignatoryLink -> TestEnv ()) -> TestEnv ()
 forEachSignatoryLink doc fn =
@@ -1480,7 +1481,7 @@ testSetInvitationDeliveryStatusNotSignableLeft :: TestEnv ()
 testSetInvitationDeliveryStatusNotSignableLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
-  actor <- unSystemActor <$> rand 10 arbitrary
+  actor <- arbitrarySystemActor
   let Just sl = getAuthorSigLink doc
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
     success <- randomUpdate $ \st-> SetEmailInvitationDeliveryStatus (documentid doc) (signatorylinkid sl) st actor
@@ -1489,7 +1490,7 @@ testSetInvitationDeliveryStatusNotSignableLeft = doTimes 10 $ do
 
 testSetInvitationDeliveryStatusNotLeft :: TestEnv ()
 testSetInvitationDeliveryStatusNotLeft = doTimes 10 $ do
-  actor <- unSystemActor <$> rand 10 arbitrary
+  actor <- arbitrarySystemActor
   --assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
     success <- randomUpdate $ \d s st-> SetEmailInvitationDeliveryStatus d s st actor
@@ -1500,8 +1501,9 @@ testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isSignable
   slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
-  (st, actor) <- rand 10 arbitrary
-  success <- randomUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) slid st (unSystemActor actor)
+  st <- rand 10 arbitrary
+  actor <- arbitrarySystemActor
+  success <- randomUpdate $ SetEmailInvitationDeliveryStatus (documentid doc) slid st actor
   assert success
 
 testSetDocumentTagsRight :: TestEnv ()
@@ -1526,7 +1528,7 @@ testCloseDocumentSignableButNotEverybodyHasSigned = doTimes 10 $ do
          , randomDocumentCondition = (\doc -> length (documentsignatorylinks doc) > 1) &&^
                                      (not . all (isSignatory =>>^ hasSigned) . documentsignatorylinks)
          }
-  sa <- unSystemActor <$> rand 10 arbitrary
+  sa <- arbitrarySystemActor
   assertRaisesKontra (\(SignatoryHasNotYetSigned {}) -> True) $ do
     randomUpdate $ CloseDocument (documentid doc) sa
 
@@ -1537,13 +1539,13 @@ testCloseDocumentNotSignableNothing = doTimes 10 $ do
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
-  sa <- unSystemActor <$> rand 10 arbitrary
+  sa <- arbitrarySystemActor
   assertRaisesKontra (\(DocumentTypeShouldBe {}) -> True) $ do
     randomUpdate $ CloseDocument (documentid doc) sa
 
 testCloseDocumentNotNothing :: TestEnv ()
 testCloseDocumentNotNothing = doTimes 10 $ do
-  sa <- unSystemActor <$> rand 10 arbitrary
+  sa <- arbitrarySystemActor
   did <- rand 10 arbitrary
   assertRaisesKontra (\(DocumentDoesNotExist {}) -> True) $ do
     randomUpdate $ CloseDocument did sa
@@ -1564,15 +1566,16 @@ testCancelDocumentNotSignableNothing = doTimes 10 $ do
 
 testCancelDocumentNotNothing :: TestEnv ()
 testCancelDocumentNotNothing = doTimes 10 $ do
-  aa <- unAuthorActor <$> rand 10 arbitrary
+  aa <- arbitraryAuthorActor
 
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $
              randomUpdate $ (\did -> CancelDocument did aa)
 
 testSetDocumentTitleNotLeft :: TestEnv ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do
-  (did, title, actor) <- rand 10 arbitrary
-  success <- randomUpdate $ SetDocumentTitle did title (unAuthorActor actor)
+  (did, title) <- rand 10 arbitrary
+  actor <- arbitraryAuthorActor
+  success <- randomUpdate $ SetDocumentTitle did title actor
   assert $ not success
 
 testSetDocumentTitleRight :: TestEnv ()
@@ -1582,7 +1585,7 @@ testSetDocumentTitleRight = doTimes 10 $ do
          { randomDocumentCondition = (not . isClosed)
          }
   let title = "my new cool title"
-  actor <- unAuthorActor <$> rand 10 arbitrary
+  actor <- arbitraryAuthorActor
   success <- randomUpdate $ SetDocumentTitle (documentid doc) title actor
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
@@ -1591,8 +1594,9 @@ testSetDocumentTitleRight = doTimes 10 $ do
 
 testSetDocumentDaysToSignNotLeft :: TestEnv ()
 testSetDocumentDaysToSignNotLeft = doTimes 10 $ do
-  (did, d, actor) <- rand 10 arbitrary
-  success <- randomUpdate $ SetDaysToSign did d (unAuthorActor actor)
+  (did, d) <- rand 10 arbitrary
+  actor <- arbitraryAuthorActor
+  success <- randomUpdate $ SetDaysToSign did d actor
   assert $ not success
 
 testSetDocumentDaysToSignRight :: TestEnv ()
@@ -1601,7 +1605,7 @@ testSetDocumentDaysToSignRight = doTimes 10 $ do
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentCondition = not . isClosed
          }
-  actor <- unAuthorActor <$> rand 10 arbitrary
+  actor <- arbitraryAuthorActor
   let daystosign = 15
   success1 <- randomUpdate $ SetDaysToSign (documentid doc) daystosign actor
   ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc

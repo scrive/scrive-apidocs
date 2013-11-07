@@ -5,7 +5,6 @@ module TestingUtil where
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
-import Context (Context(..))
 import Control.Applicative
 import Control.Concurrent.STM
 import Data.Char
@@ -133,71 +132,21 @@ class ExtendWithRandomnes a where
           stdgen <- random
           return $ unGen (moreRandom a) stdgen 10
 
+arbitraryAuthorActor :: TestEnv Actor
+arbitraryAuthorActor = do
+  ctx <- mkContext defaultValue
+  (uid, uinfo) <- rand 10 arbitrary
+  let user = undefined { userid = uid
+                       , userinfo = uinfo
+                       }
+  return $ authorActor ctx user
 
-newtype AuthorActor    = AuthorActor    { unAuthorActor    :: Actor }
-newtype SystemActor    = SystemActor    { unSystemActor    :: Actor }
-newtype SignatoryActor = SignatoryActor { unSignatoryActor :: Actor }
+arbitrarySystemActor :: TestEnv Actor
+arbitrarySystemActor = systemActor <$> rand 10 arbitrary
 
-instance Arbitrary Context where
-  arbitrary = do
-    (time, ip, clientname, clienttime) <- arbitrary
-    return undefinedContext
-            { ctxtime = time
-            , ctxipnumber = ip
-            , ctxclientname = clientname
-            , ctxclienttime = clienttime
-            }
-    where err = error "TestingUtil.Arbitrary.Context"
-          undefinedContext = Context
-            { ctxmaybeuser           = err
-            , ctxhostpart            = err
-            , ctxresourcehostpart    = err
-            , ctxflashmessages       = err
-            , ctxtime                = err
-            , ctxclientname          = err
-            , ctxclienttime          = err
-            , ctxnormalizeddocuments = err
-            , ctxipnumber            = err
-            , ctxproduction          = err
-            , ctxtemplates           = err
-            , ctxglobaltemplates     = err
-            , ctxlang                = err
-            , ctxmailsconfig         = err
-            , ctxlivedocxconf        = err
-            , ctxlogicaconf          = err
-            , ctxfilecache           = err
-            , ctxxtoken              = err
-            , ctxadminaccounts       = err
-            , ctxsalesaccounts       = err
-            , ctxmaybepaduser        = err
-            , ctxstaticresources     = err
-            , ctxusehttps            = err
-            , ctxgtconf              = err
-            , ctxrecurlyconfig       = err
-            , ctxsessionid           = err
-            , ctxmixpaneltoken       = err
-            , ctxhomebase            = err
-            , ctxbrandeddomains      = err
-            , ctxsalesforceconf      = err
-            }
-
-instance Arbitrary AuthorActor where
-  arbitrary = do
-    (ctx, uid, uinfo) <- arbitrary
-    let user = undefined { userid = uid
-                         , userinfo = uinfo
-                         }
-    return $ AuthorActor $ authorActor ctx user
-
-instance Arbitrary SystemActor where
-  arbitrary = do
-    time <- arbitrary
-    return $ SystemActor $ systemActor time
-
-instance Arbitrary SignatoryActor where
-  arbitrary = do
-    (ctx, sl) <- arbitrary
-    return $ SignatoryActor $ signatoryActor ctx sl
+arbitrarySignatoryActor :: TestEnv Actor
+arbitrarySignatoryActor = signatoryActor <$> mkContext defaultValue
+                                         <*> rand 10 arbitrary
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
