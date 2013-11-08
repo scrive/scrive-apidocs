@@ -135,7 +135,7 @@ var SignatureDrawOrTypeView = Backbone.View.extend({
           var row2 = $("<div style='margin:4px 0px;height:42px'>");
           header.append(row2);
           row2.append(this.textInput.el())
-              .append($("<div style='width:200px;float:left;'/>").append(fontSelect.el()))
+              .append($("<div style='width:200px;float:left;'/>").append(fontSelect.el()));
         }
         return header;
     },
