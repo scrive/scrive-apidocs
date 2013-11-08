@@ -40,7 +40,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             var hasHelpingButtonsExperiment = new Experiment({
               namespace: 'ftue', 
               name: 'extrapartybuttons', 
-              domain: ['shown', 'hidden']
+              domain: ['shown']
             });
             mixpanel.register({'Extra add party buttons shown': hasHelpingButtonsExperiment.value()});
             mixpanel.track("Instructions to add party shown");
