@@ -41,12 +41,20 @@ window.ApiCall = Backbone.Model.extend({
         authorization: function() { return this.oauth().authorizationForRequests();  },
         result : function() {return this.get("result");},
         setResult : function(result) {return this.set({"result" : result});},
-        call : function(urlsuffix, arg) {
-          arg.headers = { authorization : this.authorization(),
-                          'client-name' : "api-demo",
-                          'client-time' : new Date().toISOString()
+        _call : function(urlsuffix, arg, authenticate) {
+          arg.headers = { 'Client-Name' : "api-demo",
+                          'Client-Time' : new Date().toISOString()
                         };
+          if (authenticate) {
+            arg.headers.authorization = this.authorization();
+          }
           $.ajax(Scrive.apiUrl()+urlsuffix, arg);
+        },
+        unauthenticatedCall : function(urlsuffix, arg) {
+          this._call(urlsuffix, arg, false);
+        },
+        call : function(urlsuffix, arg) {
+          this._call(urlsuffix, arg, true);
         }
 });
 

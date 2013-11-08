@@ -135,11 +135,7 @@ class ExtendWithRandomnes a where
 arbitraryAuthorActor :: TestEnv Actor
 arbitraryAuthorActor = do
   ctx <- mkContext defaultValue
-  (uid, uinfo) <- rand 10 arbitrary
-  let user = undefined { userid = uid
-                       , userinfo = uinfo
-                       }
-  return $ authorActor ctx user
+  authorActor ctx <$> rand 10 arbitrary
 
 arbitrarySystemActor :: TestEnv Actor
 arbitrarySystemActor = systemActor <$> rand 10 arbitrary
@@ -339,6 +335,30 @@ instance Arbitrary UserInfo where
                       , userphone           = []
                       , useremail           = Email em
                       }
+
+instance Arbitrary Password where
+  arbitrary = Password <$> arbitrary <*> arbitrary
+
+instance Arbitrary Binary where
+  arbitrary = Binary <$> arbitrary
+
+instance Arbitrary SignupMethod where
+  arbitrary = elements [AccountRequest, ViralInvitation, BySigning, ByAdmin, CompanyInvitation]
+
+instance Arbitrary UserSettings where
+  arbitrary = UserSettings <$> arbitrary
+
+instance Arbitrary User where
+  arbitrary = User <$> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
+                   <*> arbitrary
 
 instance Arbitrary CollectResponse where
   arbitrary = oneof [outstanding, usersign, complete]

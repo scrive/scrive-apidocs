@@ -20,7 +20,7 @@ window.CheckClientApiCall = ApiCall.extend({
         isCheckClient : function() {return true;},
         send : function() {
             var model = this;
-            this.call("checkclient", {
+            this.unauthenticatedCall("checkclient", {
                 type: 'POST',
                  data : {client : this.client()},
                 cache: false,
