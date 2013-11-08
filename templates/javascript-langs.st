@@ -276,6 +276,7 @@ javascriptLocalisation =
                     , forThis : "$_checkboxFor()$"
                     , done : "$_checkboxDone()$"
              }
+             , phonePlaceholder: "$_phonePlaceholder()$"
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
              , optional: "$_designViewOptional()$"

@@ -58,8 +58,13 @@ documentAPICallback = Action {
             2 -> evaluateAgainAfter 10
             3 -> evaluateAgainAfter 30
             4 -> evaluateAgainAfter 60
+            5 -> evaluateAgainAfter 120
+            6 -> evaluateAgainAfter 240
+            7 -> evaluateAgainAfter 240
+            8 -> evaluateAgainAfter 240
+            9 -> evaluateAgainAfter 480
             _ -> do
-              Log.debug "5th call attempt failed, discarding."
+              Log.debug "10th call attempt failed, discarding."
               deleteAction
       where
         deleteAction = do

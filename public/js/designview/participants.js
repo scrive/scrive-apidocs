@@ -946,6 +946,10 @@
             return div;
         },
         detailsInformationField: function(name, type, placeholder) {
+            if (placeholder == localization.phone) {
+              // such an ugly hack to only change this placeholder in one place
+              placeholder = localization.designview.phonePlaceholder;
+            }
             var view = this;
             var sig = view.model;
             var viewmodel = view.viewmodel;

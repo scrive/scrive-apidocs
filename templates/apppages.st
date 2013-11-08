@@ -318,6 +318,10 @@ $if(custombarscolour)$
     background: none repeat scroll 0 0 $custombarscolour$;
     border-top-color:$custombarscolour$;
   }
+
+  div.design-view-button-bar {
+    background: $custombarscolour$;
+  }
 $endif$
 
 </style>

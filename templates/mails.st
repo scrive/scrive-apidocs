@@ -62,6 +62,7 @@ mailRejectContractMail=
         mailp1 = _mailRejectMailContentRejected();
         mailspacing1 = "";
         mailp2 = mailRejectMailContentHeader();
+        mailp3 = nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailRejectMailContentRejectedButton());
         footer = null
       )$
 ####
@@ -345,7 +346,8 @@ mailMismatchSignatory=
 $_mailMismatchSignatoryTitle()$
     $nicemail(
         mailheader=_mailMismatchSignatoryTitle();
-        mailp1=mailMismatchSignatoryMainP()
+        mailp1=mailMismatchSignatoryMainP();
+        mailp2=nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailMismatchSignatoryContentBodyButton())
     )$
 #####
 mailMismatchSignatoryMainP=
