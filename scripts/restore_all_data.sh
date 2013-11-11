@@ -11,16 +11,9 @@ then
 fi
 
 
-#
-# This script should be in ./scripts directory.
-# Lets establish where is the root directory:
-#
-ROOT_SCRIPTS=`dirname $0`
-ROOT=`dirname $ROOT_SCRIPTS`
+CONF=kontrakcja.conf
 
-CONF=$ROOT/kontrakcja.conf
-
-DBSTRING=`sed -e '/dbConfig/!d' -e 's/^.*dbConfig[ \\t]*=[ \\t]*//' $ROOT/kontrakcja.conf`
+DBSTRING=`sed -e '/dbConfig/!d' -e 's/^.*dbConfig[ \\t]*=[ \\t]*//' $CONF`
 
 
 export PGDATABASE=`echo $DBSTRING | sed -e s/^.*dbname=\'// -e s/\'.*//`
