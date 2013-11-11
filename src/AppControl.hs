@@ -324,6 +324,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxrecurlyconfig = recurlyConfig appConf
         , ctxsessionid = sesID session
         , ctxmixpaneltoken = mixpanelToken appConf
+        , ctxgoogleanalyticstoken = googleanalyticsToken appConf
         , ctxhomebase = homebase appConf
         , ctxbrandeddomains = brandedDomains appConf
         , ctxsalesforceconf = getSalesforceConf appConf

@@ -35,6 +35,7 @@ import Payments.Model
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
                                    , aToken          :: String
+                                   , aTokenGa          :: String
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
                                    }
@@ -46,6 +47,7 @@ getAnalyticsData = do
     Just user -> dbQuery $ GetCompany $ usercompany user
     _ -> return Nothing
   token <- ctxmixpaneltoken <$> getContext
+  tokenGa <- ctxgoogleanalyticstoken <$> getContext
   mplan <- case muser of
     Just user -> dbQuery $ GetPaymentPlan (usercompany user)
     Nothing -> return Nothing
@@ -54,6 +56,7 @@ getAnalyticsData = do
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
                          , aToken        = token
+                         , aTokenGa       = tokenGa
                          , aPaymentPlan  = mplan
                          , aLanguage     = lang
                          }
@@ -65,6 +68,7 @@ analyticsTemplates :: Monad m => AnalyticsData -> Fields m ()
 analyticsTemplates ad = do
   mnop (F.value "userid" . show . userid) $ aUser ad
   F.value "token" $ aToken ad
+  F.value "tokenGa" $ aTokenGa ad
   F.value "properties" $ encode $ toJSValue ad
 
 instance ToJSValue AnalyticsData where

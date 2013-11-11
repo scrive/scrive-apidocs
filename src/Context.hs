@@ -56,6 +56,7 @@ data Context = Context
     , ctxrecurlyconfig       :: RecurlyConfig
     , ctxsessionid           :: SessionID
     , ctxmixpaneltoken       :: String
+    , ctxgoogleanalyticstoken       :: String
     , ctxhomebase            :: String
     , ctxbrandeddomains      :: BrandedDomains
     , ctxsalesforceconf      :: SalesforceConf
