@@ -118,9 +118,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
 
     this.emailpreviewfooter = $('<div class="emailpreviewfooter"/>').text(localization.companyBranding.sampleEmailFooter);
     var emailpreviewfootercell = $('<td/>');
-    emailpreviewfootercell.append($('<br/>'));
     emailpreviewfootercell.append(this.emailpreviewfooter);
-    emailpreviewfootercell.append($('<br/>'));
 
     var emailpreviewfootersubtable = $('<table border="0" cellpadding="0" cellspacing="0" width="100%"/>');
     emailpreviewfootersubtable.append($('<tr/>').append(emailpreviewfootercell));
@@ -135,13 +133,13 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
     this.maincontenttable.append(contentmainrow);
     this.maincontenttable.append(footerrow);
 
-    var maincontentrow = $('<tr/>').append($('<td style="padding-bottom: 30px; padding-top: 30px;"/>').append(this.maincontenttable));
+    var maincontentrow = $('<tr/>').append($('<td style="padding-bottom: 30px; padding-top: 24px;"/>').append(this.maincontenttable));
 
     var maintable = $('<table class="maintable"/>');
     maintable.append(logorow);
     maintable.append(maincontentrow);
 
-    this.container = $('<center class="mail-sample"/>');
+    this.container = $('<div class="mail-sample"/>');
     this.container.append(maintable);
 
     $(this.el).empty();
@@ -180,7 +178,7 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
   },
   changeBorderColour : function(bordercolour) {
     this.contenttable.css('border-bottom-color', bordercolour);
-    this.maincontenttable.css('border', '1px solid ' + bordercolour);
+    this.maincontenttable.css('border', '4px solid ' + bordercolour);
   },
   changeFont : function(font) {
     this.documentcontent.css('font-family', font);
@@ -189,28 +187,15 @@ window.CompanyBrandingEmailSampleView = Backbone.View.extend({
   changeButtonColour : function(buttoncolour,customised) {
     if (customised) {
       this.emailpreviewbutton.css('background',  buttoncolour)
-                           .css('border', '2px solid '+ buttoncolour)
-                           .css('-webkit-box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px')
-                           .css('-moz-box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px')
-                           .css('-ms-box-shadow', 'inset ' +' #CCCCCC' + ' 0 0 0 1px')
-                           .css('-o-box-shadow','inset ' + '#CCCCCC' + ' 0 0 0 1px')
-                           .css('box-shadow', 'inset ' + '#CCCCCC' + ' 0 0 0 1px');
-    } else if (this.model.companyui().domainmailsbuttoncolor() != "") {
-           this.emailpreviewbutton.css('background',  this.model.companyui().domainmailsbuttoncolor())
-                           .css('border', '2px solid '+ this.model.companyui().domainmailsbuttoncolor())
-                           .css('-webkit-box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
-                           .css('-moz-box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
-                           .css('-ms-box-shadow', 'inset ' +this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
-                           .css('-o-box-shadow','inset ' +this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px')
-                           .css('box-shadow', 'inset ' + this.model.companyui().domainmailsbuttoncolor() + ' 0 0 0 1px');
-    } else {
-    this.emailpreviewbutton.css({'background': '#53b688',
-                                 'border': '2px solid #53b688',
-                                 '-webkit-box-shadow': 'inset #CCCCCC 0 0 0 1px',
-                                 '-moz-box-shadow': 'inset #CCCCCC 0 0 0 1px',
-                                 '-ms-box-shadow': 'inset #CCCCCC 0 0 0 1px',
-                                 '-o-box-shadow': 'inset #CCCCCC 0 0 0 1px',
-                                 'box-shadow': 'inset #CCCCCC 0 0 0 1px'});
+        .css('border', '2px solid '+ buttoncolour);
+    } 
+    else if (this.model.companyui().domainmailsbuttoncolor() != "") {
+      this.emailpreviewbutton.css('background',  this.model.companyui().domainmailsbuttoncolor())
+        .css('border', '2px solid '+ this.model.companyui().domainmailsbuttoncolor());
+    } 
+    else {
+      this.emailpreviewbutton.css({'background': '#53b688',
+                                    'border': '2px solid #53b688'});
     }
   },
   changeEmailBackgroundColour : function(emailbackgroundcolour) {
