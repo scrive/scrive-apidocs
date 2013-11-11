@@ -40,7 +40,7 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         }),
         signviewbackgroundcolour: new CompanyBrandingColour({
           customised: companyui.signviewbackgroundcolour().trim() != '',
-          defaultcolour:  companyui.domainbackgroundcolour() != "" ? companyui.domainbackgroundcolour() : "#EEEEEE",
+          defaultcolour:  companyui.domainbackgroundcolour() != "" ? companyui.domainbackgroundcolour() : "#f7f7f7",
           colour: companyui.signviewbackgroundcolour(),
           label: localization.companyBranding.customiseSignViewBackgroundColour
         })
