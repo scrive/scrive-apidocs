@@ -295,11 +295,16 @@ window.ProlongApiCall = ApiCall.extend({
         defaults: {
             name : "Prolong API call",
             documentid : LocalStorage.get("api","documentid"),
+            days : 1
         },
         documentid : function() {return this.get("documentid");},
         setDocumentid : function(documentid) {
             LocalStorage.set("api","documentid",documentid);
             return this.set({"documentid" : documentid});
+        },
+        days : function() {return this.get("days");},
+        setDays : function(days) {
+            return this.set({"days" : days});
         },
         initialize: function (args) {
         },
@@ -309,6 +314,7 @@ window.ProlongApiCall = ApiCall.extend({
             this.call("prolong/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
+                data : {days : model.days()},
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
@@ -952,10 +958,13 @@ window.ProlongApiCallView = Backbone.View.extend({
             box.append(this.boxRight).append(boxLeft);
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var daysInput = $("<input type='text'/>").val(model.days());
+            daysInput.change(function() {model.setDays(daysInput.val()); return false;})
 
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+            boxLeft.append($("<div>Days : <BR/></div>").append(daysInput))
                                            .append($("<div/>").append(button));
             this.render();
         },

@@ -141,6 +141,12 @@ javascriptLocalisation =
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
             , flashDocumentRestarted : "$_flashMessageContractRestarted()$"
+            , prolongmodal : {
+                 title : "$_prolongModalTitle()$"
+               , text  : "$_prolongModalText()$"
+               , days  : "$_prolongModalDays()$"
+               , button : "$_prolongModalButton()$"
+              }
             , process : {
                sendbuttontext: "$_contractsendbuttontext()$",
                confirmsendtext: "$_contractconfirmsendtext()$",

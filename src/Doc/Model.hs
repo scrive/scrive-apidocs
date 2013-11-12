@@ -2166,14 +2166,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
     updateMTimeAndObjectVersion did (actorTime actor)
     return ()
 
-data ProlongDocument = ProlongDocument DocumentID Actor
+data ProlongDocument = ProlongDocument DocumentID Int Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
-  update (ProlongDocument did actor) = do
+  update (ProlongDocument did days actor) = do
     let time = actorTime actor
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "status" Pending
        sqlSet "mtime" time
-       sqlSetCmd "timeout_time" "now() + (interval '1 day')"
+       sqlSetCmd "timeout_time" ("now() + (interval '1 day') * " <?> (show days))
        sqlWhereDocumentIDIs did
        sqlWhereDocumentTypeIs Signable
        sqlWhereDocumentStatusIs Timedout

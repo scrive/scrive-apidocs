@@ -161,10 +161,11 @@ window.Document = Backbone.Model.extend({
               method: "POST"
           });
     },
-    prolong: function() {
+    prolong: function(days) {
           return new Submit({
               url: "/api/frontend/prolong/" + this.documentid(),
-              method: "POST"
+              method: "POST",
+              days : days
           });
     },
     canbecanceled: function() {

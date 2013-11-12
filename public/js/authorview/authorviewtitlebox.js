@@ -23,13 +23,6 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   restart : function(success) {
     this.document().restart().sendAjax(success);
   },
-  prolong : function() {
-    var self = this;
-    LoadingDialog.open();
-    this.document().prolong().sendAjax(function() {
-      self.authorview().reload(true);
-    });
-  },
   canBeWithdrawn : function() {
     return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
   },
@@ -104,7 +97,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       oneClick : true,
       onClick: function() {
         mixpanel.track('Click prolong button');
-        model.prolong();
+        new ProlongModal({authorview : model.authorview()});
       }
     }).el();
   },

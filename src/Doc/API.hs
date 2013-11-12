@@ -433,7 +433,13 @@ apiCallProlong did =  api $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     when (documentstatus doc /= Timedout ) $ do
           throwIO . SomeKontraException $ (conflictError "Document is not timedout")
-    dbUpdate $ ProlongDocument (documentid doc) actor
+    mdays <- lift $ getDefaultedField 1 asValidNumber "days"
+    days <- case mdays of
+         Nothing -> throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and 90")
+         Just n -> if (n < 1 || n > 90)
+                            then throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and 90")
+                            else return n
+    dbUpdate $ ProlongDocument (documentid doc) days actor
     triggerAPICallbackIfThereIsOne doc
     newdocument <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
