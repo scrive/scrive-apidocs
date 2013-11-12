@@ -71,8 +71,11 @@ handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
-         Just user -> renderFromBody kontrakcja =<< showAccount user
          Nothing -> sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
+         Just user -> do
+           pb <- showAccount user
+           renderFromBodyWithFields kontrakcja pb (F.value "account" True)
+
 
 -- please treat this function like a public query form, it's not secure
 handleRequestPhoneCall :: Kontrakcja m => m KontraLink

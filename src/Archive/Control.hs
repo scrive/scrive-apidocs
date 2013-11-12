@@ -50,6 +50,9 @@ import Text.JSON.String (runGetJSON)
 import Doc.DocDraft()
 import Data.String.Utils (splitWs)
 import MinutesTime
+import AppView
+import Happstack.Server(Response)
+import qualified Text.StringTemplates.Fields as F
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
@@ -132,11 +135,13 @@ handleZip = do
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}
-showArchive :: Kontrakcja m => m (Either KontraLink String)
+showArchive :: Kontrakcja m => m (Either KontraLink Response)
 showArchive = checkUserTOSGet $ do
     tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
     user    <- guardJustM $ ctxmaybeuser <$> getContext
-    pageArchive user tostime
+    pb <-  pageArchive user tostime
+    renderFromBodyWithFields kontrakcja pb (F.value "archive" True)
+
 
 jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do

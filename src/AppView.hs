@@ -4,6 +4,7 @@
 -}
 module AppView( kontrakcja
               , renderFromBody
+              , renderFromBodyWithFields
               , renderFromBodyThin
               , notFoundPage
               , internalServerErrorPage
@@ -64,12 +65,24 @@ renderFromBody :: Kontrakcja m
                => String
                -> String
                -> m Response
-renderFromBody title content = do
+renderFromBody title content = renderFromBodyWithFields title content (return ())
+
+
+{- |
+   Renders some page body xml into a complete reponse. It can take aditional fields to be passed to a template
+-}
+renderFromBodyWithFields :: Kontrakcja m
+               => String
+               -> String
+               -> Fields m ()
+               -> m Response
+renderFromBodyWithFields title content fields = do
   ctx <- getContext
   ad <- getAnalyticsData
-  res <- simpleHtmlResponse =<< pageFromBody False ctx ad title content
+  res <- simpleHtmlResponse =<< pageFromBody False ctx ad title content fields
   clearFlashMsgs
   return res
+
 
 {- |
    Renders some page body xml into a complete reponse
@@ -81,7 +94,7 @@ renderFromBodyThin :: Kontrakcja m
 renderFromBodyThin title content = do
   ctx <- getContext
   ad <- getAnalyticsData
-  res <- simpleHtmlResponse =<< pageFromBody True ctx ad title content
+  res <- simpleHtmlResponse =<< pageFromBody True ctx ad title content (return ())
   clearFlashMsgs
   return res
 
@@ -94,8 +107,9 @@ pageFromBody :: Kontrakcja m
              -> AnalyticsData
              -> String
              -> String
+             -> Fields m ()
              -> m String
-pageFromBody thin ctx ad title bodytext = do
+pageFromBody thin ctx ad title bodytext fields = do
   mcompanyui <- companyUIForPage
   mbd <- return $ currentBrandedDomain ctx
   renderTemplate "wholePage" $ do
@@ -104,6 +118,7 @@ pageFromBody thin ctx ad title bodytext = do
     standardPageFields ctx title ad
     F.valueM "httplink" $ getHttpHostpart
     brandingFields mbd mcompanyui
+    fields
 
 companyForPage  :: Kontrakcja m => m (Maybe Company)
 companyForPage = do

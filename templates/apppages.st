@@ -355,10 +355,10 @@ $endif$
         <a class="page js-logout"  href="$linklogout$">$_headerLogOut()$</a>
       </li>
       <li class="float-right" >
-          <a class="page" id='page-account'  href="$linkaccount$">$_headerAccount()$</a>
+          <a class="page $if(account)$active$endif$" id='page-account'  href="$linkaccount$">$_headerAccount()$</a>
       </li>
       <li class="page-first float-right" >
-          <a class="s-archive page"  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
+          <a class="s-archive page $if(archive)$active$endif$ "  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
       </li>
       <li class="session-create float-right fromtemplate2">
           <a class="button button fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
