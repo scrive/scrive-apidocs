@@ -17,7 +17,7 @@ window.CompanyBrandingSignViewModel = Backbone.Model.extend({
         }),
         signviewtextcolour: new CompanyBrandingColour({
           customised: companyui.signviewtextcolour().trim() != '',
-          defaultcolour: "#333333",
+          defaultcolour: "#4a4a49",
           colour: companyui.signviewtextcolour(),
           label: localization.companyBranding.customiseTextColour
         }),
@@ -81,24 +81,24 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     var company = this.model;
 
     this.container = $("<div class='sample-sign-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
-    this.header = $("<div class='sample-sign-view-header' style='min-height: 50px; width: 100%;border-bottom: 1px solid #DEE4ED '/>");
+    this.header = $("<div class='sample-sign-view-header' />");
 
     this.logo = $('<img/>');
-    var leftheader = $('<div style="float: left; margin: 10px;"/>');
+    var leftheader = $('<div class="logo" />');
     leftheader.append(this.logo);
-    this.rightheader = $('<div style="float: right; margin: 10px;font-size: 10px;"/>');
+    this.rightheader = $('<div class="header-text" />');
     this.rightheader.text('HEADER TEXT');
     this.header.append(leftheader).append(this.rightheader).append($('<div style="clear:both;"/>'));
 
 
-    this.contentheader = $('<div style="text-align: center;padding-top:5px;font-size: 12px;box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);background-color: white;margin-bottom:10px;"/>');
-    this.contentheader.html('<p style="font-size: 18px;margin-bottom: 0px;">Follow the <span style="color:#53b688" class="highlight-green">GREEN ARROW</span> to e-sign</p><p style="margin-right: 20px;font-weight: normal;margin-bottom: 1px;">Due date 2020-09-16</p><p style="background: url(../img/senddoc.png) no-repeat;padding-left: 20px;font-weight: normal;display: inline-block;background-position: 0px 2px;position: relative;font-size:11px;left: -10px;color: #7a94b8;cursor: pointer;margin-bottom:8px;">MyNewsdesk demo document</p>');
+    this.contentheader = $('<div style="text-align: center;padding-top:5px;font-size: 12px;background-color: white;border: 1px solid #cccccc; border-bottom-width: 0;"/>');
+    this.contentheader.html('<div style="font-size: 18px;margin-bottom: 0px; margin-top: 10px;">Follow the <span style="color:#53b688; font-weight: 600;" class="highlight-green">GREEN ARROW</span> to e-sign</div><div style="margin-right: 20px;font-weight: normal;margin-bottom: 1px;">Due date 2020-09-16</div><p style="background: url(../img/senddoc.png) no-repeat;padding-left: 20px;font-weight: normal;display: inline-block;background-position: 0px 2px;position: relative;font-size:11px;left: -10px;color: #7a94b8;cursor: pointer;margin-bottom:8px;">MyNewsdesk demo document</p>');
     var documentpic = $('<img src="/img/document_example.png" style="box-shadow: 0px 0px 8px rgba(80, 80, 80, 0.31);width: 480px;"/>')
                         .css("width","480px");
 
-    var document = $("<div/>").css("border", "1px dashed #cccccc")
-      .css("padding", "10px").css("text-align","center").css("background", "#e9e9e9");
-    document.append(this.contentheader);
+    var document = $("<div/>").css("border", "1px solid #cccccc")
+      .css("padding", "10px").css("padding-bottom", "0").css("text-align","center").css("background", "#e9e9e9").css("border-bottom-right-radius", "4px").css("border-bottom-left-radius", "4px");
+    
     document.append(documentpic);
     var rejectbuttoncontainer = $('<div style="float: left;padding:10px;"/>');
     var rejectbutton = new Button({size: 'tiny',
@@ -122,13 +122,15 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
       .css("padding-bottom", "10px").css("padding-top", "15px");
 
     document.append(buttonsdiv);
+    contentcontent.append(this.contentheader);
     contentcontent.append(document);
+
     this.content = $('<div style="padding-bottom:20px;"/>');
     this.content.append(contentcontent);
 
-    this.footercontent = $('<div style="text-align: center;"/>');
+    this.footercontent = $('<div style="text-align: center; display: table-cell; vertical-align: middle;"/>');
     this.footercontent.text('FOOTER TEXT');
-    this.footer = $('<div style="height: 30px; padding:10px;border-top: 1px solid #DEE4ED;font-size: 10px;"/>');
+    this.footer = $('<div style="height: 30px; padding:10px;border-top: 1px solid #DEE4ED;font-size: 10px; display: table; width: 541px"/>');
     this.footer.append(this.footercontent);
 
     this.container.append(this.header).append(this.content).append(this.footer);
