@@ -31,7 +31,7 @@
             window.setTimeout(timedout, timeoutval);
 
         try {
-           if (!BrowserInfo.isIE8orLower() && !BrowserInfo.isIphone())
+           if (!BrowserInfo.isIE8orLower() && !BrowserInfo.isIphone() && !BrowserInfo.isIpad())
               html2canvas( $('body'),
                           { onrendered: function(canvas)
                             {
