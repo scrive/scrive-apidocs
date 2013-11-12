@@ -182,6 +182,7 @@ simplyfiedEventText mactor dee = case evType dee of
     let siglink = evAffectedSigLink dee
     F.value "text" $ filterTagsNL <$> evMessageText dee
     F.value "signatory" $ getSmartName <$> siglink
+    F.value "signatory_email" $ getEmail <$> siglink
     case mactor of
       Nothing    -> F.value "archive" True
       Just actor -> F.value "actor" actor

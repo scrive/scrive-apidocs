@@ -71,7 +71,7 @@ docStateTests env = testGroup "DocState" [
   testThat "Documents searching by text works" env testGetDocumentsSQLTextFiltered,
 
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
-  testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
+  testThat "MarkInvitationRead adds correct text to the log" env testMarkInvitationReadEvidenceLog,
   testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
   testThat "SaveSigAttachment adds to the log" env testSaveSigAttachmentEvidenceLog,
   testThat "DeleteSigAttachment will not work after signing" env testDeleteSigAttachmentAlreadySigned,
@@ -389,7 +389,14 @@ testMarkInvitationReadEvidenceLog = do
   success <- randomUpdate $ \t->MarkInvitationRead (documentid doc) (signatorylinkid sl) (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == Current MarkInvitationReadEvidence) lg
+  -- The text for MarkInvitationRead in the event log is hard to check
+  -- manually since it relies on external mail system notifications,
+  -- so we test it explicitly.
+  let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
+      expected = "Scrive’s notification system reported that the invitation to "
+              ++ (if signatoryispartner sl then "sign" else "view")
+              ++ " (sent to " ++ getEmail sl ++ ") was opened."
+  assertEqual "Correct event text" (Just expected) (evText <$> me)
 
 testErrorDocumentEvidenceLog :: TestEnv ()
 testErrorDocumentEvidenceLog  = do

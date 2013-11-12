@@ -9,7 +9,7 @@
 "_InvitationEvidenceText":"Scrive skickade en inbjudan att $_view_or_sign()$ till $signatory$$_delivery_method()$.  Inbjudan innehöll en länk som ledde till Scrives signeringstjänst online.$if(text)$ Inbjudan innehöll följande meddelande: <BR/> <i>$text:noescape()$</i>$endif$",
 "_InvitationUndeliveredByEmailText":"Scrives externa e-postsystem rapporterade att inbjudan inte kunde levereras$if(!archive)$ till $signatory$$endif$ och fortsatta kontaktförsök avbröts.",
 "_InvitationUndeliveredBySMSText":"Scrives externa SMS-system rapporterade att inbjudan inte kunde levereras$if(!archive)$ till $signatory$$endif$ och fortsatta kontaktförsök avbröts.",
-"_MarkInvitationReadEvidenceText":"Scrives notifieringsystem rapporterade att inbjudan att $_view_or_sign()$ (sänt till $email$) öppnades.",
+"_MarkInvitationReadEvidenceText":"Scrives notifieringsystem rapporterade att inbjudan att $_view_or_sign()$ (sänt till $signatory_email$) öppnades.",
 "_PreparationToPendingEvidenceText":"Redigeringen av dokumentet avslutades$if(!archive)$ av $actor$$endif$ och Scrive låste dokumentet för ändringar.",
 "_ProlongDocumentEvidenceText":"Förfallodatumet för signering förlängdes$if(!archive)$ av $actor$$endif$.",
 "_RejectDocumentEvidenceText":"Inbjudan att signera avvisades$if(!archive)$ av $actor$$endif$ och signeringsprocessen avbröts av Scrive.  $if(text)$ Avvisningsmeddelandet är: <BR/> <i>$text:noescape()$</i>$else$.$endif$",

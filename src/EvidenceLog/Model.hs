@@ -23,7 +23,7 @@ import MinutesTime
 import Data.Typeable
 import User.Model
 import Util.Actor
-import Util.HasSomeUserInfo (getIdentifier)
+import Util.HasSomeUserInfo (getIdentifier, getEmail)
 import Doc.SignatoryLinkID
 import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
 import Version
@@ -74,6 +74,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
            Nothing -> return ()
            Just sl -> do
              F.value "signatory" $ getIdentifier sl
+             F.value "signatory_email" $ getEmail sl
              signatoryLinkTemplateFields sl
          textFields
    let text = runIdentity $ renderHelper ts (eventTextTemplateName event) fields
