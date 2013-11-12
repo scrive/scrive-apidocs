@@ -15,14 +15,11 @@ import User.Model
 import Doc.SignatoryLinkID
 import Doc.DocumentID
 import Doc.Model
-import Data.Maybe (listToMaybe, isJust)
-import Data.Functor
+import Data.Maybe (listToMaybe)
 import Util.Actor
 import EvidenceLog.Model
 import Text.StringTemplates.Templates
-import Text.StringTemplates.Fields
 import Util.SignatoryLinkUtils
-import Util.HasSomeUserInfo
 
 type PadQueue = Maybe (DocumentID,SignatoryLinkID)
 
@@ -30,15 +27,16 @@ data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
   update (AddToPadQueue uid did slid a) = do
     doc <- query $ GetDocumentByDocumentID did
-    let signame = getIdentifier <$> getSigLinkFor doc slid
     update $ ClearPadQueue uid a
     r <- kRun $ SQL "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
                 [toSql uid, toSql did, toSql slid]
     when_ (r == 1) $
-                update $ InsertEvidenceEvent
+                update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 SendToPadDevice
-                (value "signatory" signame)
+                (return ())
                 (Just did)
+                (getSigLinkFor doc slid)
+                Nothing
                 a
     return ()
 
@@ -52,14 +50,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
        Nothing -> return ()
        Just (did, slid) -> do
          doc <- query $ GetDocumentByDocumentID did
-         let signame = getIdentifier <$> getSigLinkFor doc slid
          r <- kRun $ SQL "DELETE FROM padqueue WHERE user_id = ?"
                    [toSql uid]
-         when_ ((r == 1) && isJust pq ) $ do
-           _ <- update $ InsertEvidenceEvent
+         when_ (r == 1) $ do
+           _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 RemovedFromPadDevice
-                (value "signatory" signame)
-                (fst <$> pq)
+                (return ())
+                (Just did)
+                (getSigLinkFor doc slid)
+                Nothing
                 a
            return ()
 
