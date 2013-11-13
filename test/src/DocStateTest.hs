@@ -59,10 +59,6 @@ docStateTests env = testGroup "DocState" [
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
-{-
-  testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
-  testThat "Set StandardAuthentication adds to the log" env testSetStandardAuthenticationEvidenceLog,
--}
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
@@ -72,7 +68,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "MarkInvitationRead adds correct text to the log" env testMarkInvitationReadEvidenceLog,
-  testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
   testThat "SaveSigAttachment adds to the log" env testSaveSigAttachmentEvidenceLog,
   testThat "DeleteSigAttachment will not work after signing" env testDeleteSigAttachmentAlreadySigned,
   testThat "DeleteSigAttachment adds to the log" env testDeleteSigAttachmentEvidenceLog,
@@ -316,30 +311,6 @@ testSetDocumentInviteTimeEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current SetDocumentInviteTimeEvidence) lg
 
-{-
-testSetElegitimationAuthenticationEvidenceLog :: TestEnv ()
-testSetElegitimationAuthenticationEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor t)
-  assert success1
-  assert success2
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == Current SetELegAuthenticationMethodEvidence) lg
-
-testSetStandardAuthenticationEvidenceLog :: TestEnv ()
-testSetStandardAuthenticationEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication (systemActor t)
-  assert success1
-  assert success2
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == Current SetStandardAuthenticationMethodEvidence) lg
--}
-
 getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
   now <- getMinutesTime
@@ -398,28 +369,19 @@ testMarkInvitationReadEvidenceLog = do
               ++ " (sent to " ++ getEmail sl ++ ") was opened."
   assertEqual "Correct event text" (Just expected) (evText <$> me)
 
-testErrorDocumentEvidenceLog :: TestEnv ()
-testErrorDocumentEvidenceLog  = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (const True)
-  success <- randomUpdate $ \t->ErrorDocument (documentid doc) "Some error" (systemActor t)
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == Current ErrorDocumentEvidence) lg
-
-
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
 testSaveSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ isSignable)
   file <- addNewRandomFile
+  let sa = SignatoryAttachment { signatoryattachmentfile        = Nothing
+                               , signatoryattachmentname        = "attachment"
+                               , signatoryattachmentdescription = "gimme!"
+                               }
   randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
-                        [SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                             , signatoryattachmentname        = "attachment"
-                                             , signatoryattachmentdescription = "gimme!"
-                                             }] (systemActor t)
+                        [sa] (systemActor t)
   randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
-  randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) "attachment" file (systemActor t)
+  randomUpdate $ \t->SaveSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) sa file (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current SaveSigAttachmentEvidence) lg
@@ -434,20 +396,21 @@ testDeleteSigAttachmentAlreadySigned = do
                                                            &&^ (((==) 2) . length .documentsignatorylinks))
   file <- addNewRandomFile
   let sl = (documentsignatorylinks doc) !! 1
+      sa = SignatoryAttachment { signatoryattachmentfile        = Nothing
+                               , signatoryattachmentname        = "attachment"
+                               , signatoryattachmentdescription = "gimme!"
+                               }
   _<-randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ sl)
-                        [SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                             , signatoryattachmentname        = "attachment"
-                                             , signatoryattachmentdescription = "gimme!"
-                                             }] (systemActor t)
+                        [sa] (systemActor t)
   randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
-  randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" file (systemActor t)
+  randomUpdate $ \t->SaveSigAttachment doc (signatorylinkid $ sl) sa file (systemActor t)
 
-  randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) file (systemActor t)
-  randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" file (systemActor t)
+  randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ sl) file (systemActor t)
+  randomUpdate $ \t->SaveSigAttachment doc (signatorylinkid $ sl) sa file (systemActor t)
   randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
-    randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) file (systemActor t)
+    randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ sl) file (systemActor t)
 
 testDeleteSigAttachmentEvidenceLog :: TestEnv ()
 testDeleteSigAttachmentEvidenceLog = do
@@ -459,7 +422,7 @@ testDeleteSigAttachmentEvidenceLog = do
                                              , signatoryattachmentname        = "attachment"
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
-  randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) file (systemActor t)
+  randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) file (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current DeleteSigAttachmentEvidence) lg
@@ -1186,9 +1149,8 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   file1 <- addNewRandomFile
   file2 <- addNewRandomFile
   --execute
-  let name1 = "att1"
   let att1 = SignatoryAttachment { signatoryattachmentfile = Just file1
-                                 , signatoryattachmentname = name1
+                                 , signatoryattachmentname = "att1"
                                  , signatoryattachmentdescription = "att1 description"
                                  }
   let att2 = SignatoryAttachment { signatoryattachmentfile = Nothing
@@ -1201,10 +1163,10 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   randomUpdate $ SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) [att1, att2] sa
 
   doc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  randomUpdate $ DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) file1 sa
+  randomUpdate $ DeleteSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) file1 sa
   ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-  randomUpdate $ SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) name1 file2 sa
+  randomUpdate $ SaveSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) att1 file2 sa
   ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   --assert

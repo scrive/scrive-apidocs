@@ -44,6 +44,7 @@ import Text.StringTemplates.Templates
 import Text.Printf
 import Text.JSON.Gen
 import Text.JSON.Pretty (pp_value)
+import System.FilePath (takeBaseName)
 import System.Time
 import System.Locale
 import Templates
@@ -285,9 +286,13 @@ sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m, 
                      -> m Seal.SealSpec
 sealSpecFromDocument boxImages hostpart document elog ces content inputpath outputpath = do
   additionalAttachments <- findOutAttachmentDesc document
-  sigVerFile <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/verification.html"
-  evidenceDoc <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/evidenceDocumentation.html"
-  sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
+  docs <- mapM (\f -> ((takeBaseName f,) . BS.toString . B64.encode) <$> liftIO (BS.readFile f))
+            [ "files/evidenceDocumentation.html"
+            , "files/digitalSignatureDocumentationPartI.html"
+            , "files/digitalSignatureDocumentationPartII.html"
+            ]
+  
+  sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
 
 sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
@@ -299,10 +304,9 @@ sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMona
                      -> String
                      -> String
                      -> [Seal.FileDesc]
-                     -> String
-                     -> String
+                     -> [(String, String)]
                      -> m Seal.SealSpec
-sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments sigVerFile evidenceDoc =
+sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
 
@@ -325,7 +329,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
 
       mkHistEntry ev = do
         actor <- approximateActor document ev
-        comment <- removeTags <$> simplyfiedEventText (Just actor) ev
+        comment <- removeTags <$> simplyfiedEventText (Just actor) document ev
         return $ Seal.HistEntry{ Seal.histdate = formatMinutesTimeForVerificationPage $ evTime ev
                                , Seal.histcomment = comment
                                , Seal.histaddress = maybe "" show $ evIP4 ev
@@ -333,8 +337,8 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
 
   in do
       -- Log.debug "Creating seal spec from file."
-      -- Remove resealing-induced events and non-signing parties
-      let eventsForHistory = filter (not . (`elem` map Current [ResealedPDF, AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType)
+      -- Remove events induced by resealing and non-signing party activities
+      let eventsForHistory = filter (not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType)
                            . filter (not . viewingParty)
           viewingParty e = viewer (evAffectedSigLink e) || viewer (evSigLink e)
                where viewer s = (signatoryispartner <$> s) == Just False
@@ -357,18 +361,14 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
                                                    , Seal.mimeType = Nothing
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
       evidenceOfIntent <- evidenceOfIntentAttachment (documenttitle document) (documentsignatorylinks document)
-      -- add signature verification documentation
-      let signatureVerificationAttachment =
-            Seal.SealAttachment { Seal.fileName = "DigitalSignatureDocumentation.html"
-                                , Seal.mimeType = Nothing
-                                , Seal.fileBase64Content = sigVerFile
-                                }
-      let evidenceDocumentationAttachment =
-            Seal.SealAttachment { Seal.fileName = "EvidenceDocumentation.html"
-                                , Seal.mimeType = Nothing
-                                , Seal.fileBase64Content = evidenceDoc
-                                }
 
+      -- documentation files
+      let docAttachments =
+            [ Seal.SealAttachment { Seal.fileName = name
+                                  , Seal.mimeType = Nothing
+                                  , Seal.fileBase64Content = doc
+                                  }
+            | (name, doc) <- docs ]
 
       let numberOfPages = getNumberOfPDFPages content
       numberOfPagesText <-
@@ -393,7 +393,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
             , Seal.staticTexts    = readtexts
-            , Seal.attachments    = [evidenceDocumentationAttachment, evidenceattachment, evidenceOfIntent, signatureVerificationAttachment]
+            , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfIntent]
             , Seal.filesList      =
               [ Seal.FileDesc { fileTitle = documenttitle document
                               , fileRole = mainDocumentText
@@ -413,7 +413,7 @@ presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath 
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
              => Document
-             -> m (Either String Document)
+             -> m (Maybe Document)
 sealDocument document = do
   mfile <- documentfileM document
   case mfile of
@@ -422,10 +422,9 @@ sealDocument document = do
       result <- sealDocumentFile document file
       Log.debug $ "Sealing of document #" ++ show (documentid document) ++ " should be done now"
       return result
-    Nothing ->do
-      let msg = "Sealing of document #" ++ show (documentid document) ++ " because it has no main file attached"
-      Log.debug $ msg
-      return $ Left msg
+    Nothing -> do
+      Log.debug $ "Sealing of document #" ++ show (documentid document) ++ " failed because it has no main file attached"
+      return Nothing
 
 collectClockErrorStatistics :: MonadDB m => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
 collectClockErrorStatistics [] = return $ HC.ClockErrorStatistics Nothing Nothing Nothing 0 0
@@ -437,18 +436,23 @@ collectClockErrorStatistics elog = do
 sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
                  => Document
                  -> File
-                 -> m (Either String Document)
+                 -> m (Maybe Document)
 sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
   withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
     Context{ctxhostpart, ctxtime, ctxgtconf} <- getContext
-    elog <- dbQuery $ GetEvidenceLog documentid
-    ces <- collectClockErrorStatistics elog
+    _ <- update $ InsertEvidenceEvent
+        AttachSealedFileEvidence
+        (return ())
+        (Just documentid)
+        (systemActor ctxtime)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
+    elog <- dbQuery $ GetEvidenceLog documentid
+    ces <- collectClockErrorStatistics elog
     config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog ces content tmpin tmpout
 
     (code,_stdout,stderr) <- liftIO $ do
@@ -459,18 +463,13 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
-        _ <- update $ InsertEvidenceEvent
-            AttachSealedFileEvidence
-            (return ())
-            (Just documentid)
-            (systemActor ctxtime)
         Just _sealedfileid <- digitallySealDocument True ctxtime ctxgtconf documentid tmpout filename
         triggerAPICallbackIfThereIsOne document -- Callback does not depend on sealed file
         res <- dbQuery $ GetDocumentByDocumentID documentid
-        return $ (Right res)
+        return $ (Just res)
       ExitFailure _ -> do
         -- error handling
-        msg <- liftIO $ do
+        liftIO $ do
           systmp <- getTemporaryDirectory
           (path, handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
           let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
@@ -479,10 +478,14 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
           Log.error $ "Sealing configuration: " ++ show config
           BS.hPutStr handle content
           hClose handle
-          return msg
         _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (systemActor ctxtime)
+        _ <- dbUpdate $ InsertEvidenceEvent
+                          ErrorSealingDocumentEvidence
+                          (return ())
+                          (Just documentid)
+                          (systemActor ctxtime)
         triggerAPICallbackIfThereIsOne document
-        return $ Left msg
+        return Nothing
 
 digitallySealDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
                       => Bool -> MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m (Maybe FileID)

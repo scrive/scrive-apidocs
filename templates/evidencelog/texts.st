@@ -2,9 +2,7 @@ AttachExtendedSealedFileEvidenceText=$_AttachExtendedSealedFileEvidenceText()$
 ###
 AttachGuardtimeSealedFileEvidenceText=$_AttachGuardtimeSealedFileEvidenceText()$
 ###
-AttachSealedFileEvidenceText=The verification page, evidence log, evidence of intent, evidence documentation and digital signature documentation were appended to the document by Scrive.
-###
-AuthorUsesCSVEvidenceText=The signing process was started by Scrive using the mass signing feature.
+AttachSealedFileEvidenceText=$_AttachSealedFileEvidenceText()$
 ###
 CancelDocumenElegEvidenceText=$_CancelDocumenElegEvidenceText()$
 ###
@@ -16,9 +14,9 @@ ChangeSignatoryPhoneWhenUndeliveredEvidenceText=The phone number for the signato
 ###
 CloseDocumentEvidenceText=$_CloseDocumentEvidenceText()$
 ###
-DeleteSigAttachmentEvidenceText=The attachment with the name "$name$" was deleted by $actor$.
+DeleteSigAttachmentEvidenceText=The attachment “$name$” previously uploaded by $actor$ on the request of $author$ was deleted by $actor$.
 ###
-ErrorDocumentEvidenceText=The following error occurred: $errmsg$. The signing process was cancelled by Scrive.
+ErrorSealingDocumentEvidenceText=Due to a system error the Scrive e-signing system fails to finalise the document, i.e. fails to include the Verification Page, Evidence Log, Evidence of Intent, Evidence Documentation and Digital Signature Documentation into the document before sealing the Evidence Package (as defined in the Evidence Documentation) with a digital signature.
 ###
 InvitationDeliveredByEmailText=$_InvitationDeliveredByEmailText()$
 ###
@@ -40,25 +38,21 @@ RejectDocumentEvidenceText=$_RejectDocumentEvidenceText()$
 ###
 ReminderSendText=$_ReminderSendText()$
 ###
-RemovedFromPadDeviceText=In person signing for signatory ($signatory$) was withdrawn by $actor$.
+RemovedFromPadDeviceText=The invitation to signatory ($signatory$) to sign by in-person signing was withdrawn by $actor$.
 ###
 ResealedPDFText=$_ResealedPDFText()$
 ###
 RestartDocumentEvidenceText=$_RestartDocumentEvidenceText()$
 ###
-SaveSigAttachmentEvidenceText=The attachment with the name "$name$" was uploaded by $actor$.
+SaveSigAttachmentEvidenceText=The signatory ($actor$) uploaded the attachment “$name$” requested by $author$.  The request had the following description: $description$
 ###
-SendToPadDeviceText=The signing invitation for signatory ($signatory$) was set to "in person signing". In person signing does not prompt any signing invitation to be sent.
+SendToPadDeviceText=The signing invitation for signatory ($signatory$) was set to “in-person signing,” by $actor$, enabling $actor$ to bring up and present the Sign View for $signatory$.
 ###
 SetDocumentInviteTimeEvidenceText=The signing process was started by $actor$.
-###
-SetELegAuthenticationMethodEvidenceText=e-ID authentication method for signatories to sign was required by $actor$.
-###
-SetStandardAuthenticationMethodEvidenceText=No additional authentication method for signatories to sign was required by $actor$.
 ###
 SignDocumentEvidenceText=$_SignDocumentEvidenceText()$
 ###
 SignatoryLinkVisitedText=$_SignatoryLinkVisitedText()$
 ###
-TimeoutDocumentEvidenceText=The due date for signing the document passed. The possibility to sign was disabled by Scrive.
+TimeoutDocumentEvidenceText=$_TimeoutDocumentEvidenceText()$
 ###

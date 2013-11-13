@@ -140,9 +140,8 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
         case enewdoc of
-          Right newdoc -> sendClosedEmails ctx newdoc False
-          Left errmsg -> do
-            _ <- dbUpdate $ ErrorDocument documentid errmsg (systemActor time)
+          Just newdoc -> sendClosedEmails ctx newdoc False
+          Nothing -> do
             Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ documenttitle
             sendDocumentErrorEmail closeddoc author
         return ()
@@ -260,7 +259,7 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
     case getAuthorSigLink document of
       Nothing -> error "No author in Document"
       Just authorsl -> do
-        sendNotifications authorsl
+        void $ sendNotifications authorsl
           (do
             mail <- mailMismatchSignatory
                     ctx
@@ -280,7 +279,7 @@ sendDataMismatchEmailAuthor ctx document author messages badname bademail = do
     let authorname = getFullName authorlink
         authoremail = getEmail authorlink
         authorlink = $(fromJust) $ getAuthorSigLink document
-    sendNotifications authorlink
+    void $ sendNotifications authorlink
       (do
         mail <- mailMismatchAuthor ctx document authorname messages badname bademail (getLang author)
         scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]})
@@ -354,7 +353,7 @@ sendInvitationEmailsToViewers ctx document = do
 sendInvitationEmail1 :: Kontrakcja m => Context -> Document -> SignatoryLink -> m (Either String Document)
 sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) = do
   -- send invitation to sign to invited person
-  sendNotifications signatorylink
+  sent <- sendNotifications signatorylink
 
     (do
       mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink) False
@@ -367,15 +366,16 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
      (scheduleSMS =<< smsInvitation document signatorylink)
 
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ AddInvitationEvidence (documentid document) (signatorylinkid signatorylink) (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
-    doc <- dbQuery $ GetDocumentByDocumentID (documentid document)
-    return doc
+    when sent $ do
+      True <- dbUpdate $ AddInvitationEvidence (documentid document) (signatorylinkid signatorylink) (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
+      return ()
+    dbQuery $ GetDocumentByDocumentID (documentid document)
   return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
 
 sendInvitationEmail1 ctx document authorsiglink =
   if (isSignatory authorsiglink)
      then do
-       sendNotifications authorsiglink
+       void $ sendNotifications authorsiglink
           (do
             -- send invitation to sign to author when it is his turn to sign
             mail <- mailDocumentAwaitingForAuthor ctx document $ getLang document
@@ -390,7 +390,7 @@ sendInvitationEmail1 ctx document authorsiglink =
 -}
 sendReminderEmail :: Kontrakcja m => Maybe String -> Context -> Actor -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx actor doc siglink = do
-  sendNotifications siglink
+  sent <- sendNotifications siglink
     (do
       mail <- mailDocumentRemind custommessage ctx doc siglink False
       mailattachments <- makeMailAttachments doc
@@ -402,10 +402,11 @@ sendReminderEmail custommessage ctx actor doc siglink = do
                                              else []
                              })
     (scheduleSMS =<< smsReminder doc siglink)
-  when (isPending doc &&  not (hasSigned siglink)) $ do
-    Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
-    dbUpdate $ PostReminderSend doc siglink custommessage actor
-  triggerAPICallbackIfThereIsOne doc
+  when sent $ do
+    when (isPending doc &&  not (hasSigned siglink)) $ do -- Why are these conditions not checked before?
+      Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
+      dbUpdate $ PostReminderSend doc siglink custommessage actor
+    triggerAPICallbackIfThereIsOne doc
   return siglink
 
 -- | Send emails to all parties when a document is closed.  If
@@ -458,7 +459,7 @@ sendRejectEmails customMessage ctx document signalink = do
                                  , signatorylinkdeliverymethod sl == EmailDelivery || isAuthor sl
                                  ]
   forM_ activatedSignatories $ \sl -> do
-    sendNotifications sl
+    void $ sendNotifications sl
       (do
          mail <- mailDocumentRejected customMessage ctx document signalink False
          scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
@@ -516,15 +517,15 @@ handlePostSignSignup ctx email fn ln cnm cnr = do
 
 -- Notification sendout
 
--- | Currently, we pick either mail or SMS delivery.  In the future, we may do both.
-sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> m () -> m () -> m ()
+-- | Send out mail and/or SMS or not, depending on delivery method.  Return 'False' iff nothing was sent.
+sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> m () -> m () -> m Bool
 sendNotifications sl domail dosms = do
   Log.debug $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
   case signatorylinkdeliverymethod sl of
-    EmailDelivery   -> domail
-    MobileDelivery  -> dosms
-    EmailAndMobileDelivery -> domail >> dosms
-    _               -> return ()
+    EmailDelivery   -> domail >> return True
+    MobileDelivery  -> dosms >> return True
+    EmailAndMobileDelivery -> domail >> dosms >> return True
+    _               -> return False
 
 
 -- | Time out documents once per day after midnight.  Do it in chunks
