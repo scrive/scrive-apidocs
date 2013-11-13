@@ -9,7 +9,6 @@ import Control.Monad
 import Data.Maybe
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
-
 import DB
 import Happstack.Fields
 import Mails.Model

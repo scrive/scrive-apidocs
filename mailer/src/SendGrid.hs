@@ -1,28 +1,71 @@
 module SendGrid (
-    handleSendGridEvents
+      handleSendGridEvents
+    , handleSendGridEventsV3
   ) where
 
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
+import Control.Monad.Trans
+import Control.Concurrent.MVar
+
 import Data.Maybe
 import Happstack.Server
+import qualified Data.ByteString.Lazy.UTF8 as BS
+import Text.JSON
+
 import qualified Control.Exception.Lifted as E
 
 import DB
 import Happstack.Fields
 import Mails.Model
 import Mailer
-import qualified Log (mailingServer)
+import qualified Log (MonadLog, mailingServer)
+import Text.JSON.FromJSValue
+import Utils.Read
+
+handleSendGridEventsV3 :: Mailer Response
+handleSendGridEventsV3= do
+  logMsg $ "Processing some sendgrid events (new interface)"
+  rqVar <- rqBody <$> askRq
+  logMsg $ "We have rq - now decoding"
+  rq <- liftIO $ fmap unBody <$> tryTakeMVar rqVar
+  logMsg $ "Body is decoded"
+  case (decode <$> BS.toString <$> rq) of
+       Just (Ok (JSArray a)) -> do
+         logMsg $ "Json array is parsed"
+         mapM_ processSendGridEventV3 a
+         ok $ toResponse ("Thanks" :: String)
+       _ -> do
+         logMsg $ "Parse problem on " ++ show rq
+         badRequest $ toResponse ("Invalid response" :: String)
+
+
+processSendGridEventV3 :: JSValue -> Mailer ()
+processSendGridEventV3 js = do
+  logMsg $ "Processing json:" ++ encode js
+  withJSValue js $ do
+    mmid <- join <$> fmap maybeRead <$> fromJSValueField "email_id"
+    mmtk <- join <$> fmap maybeRead <$> fromJSValueField "email_token"
+    case (mmid,mmtk) of
+      (Just mid, Just token) -> do
+        logMsg $ "Getting mail for DB"
+        mmail <- dbQuery $ GetEmail mid token
+        logMsg $ "Checking it"
+        case mmail of
+          Nothing -> logMsg $ "Email with id = " ++ show mid ++ ", token = " ++ show token ++ " doesn't exist."
+          Just _ ->  logMsg $ "Email with id = " ++ show mid ++ ", token = " ++ show token ++ " exists and we got event about it."
+      _ -> logMsg $ "Recieved event - but can't determine mail " ++ show js
+  return ()
 
 handleSendGridEvents :: Mailer Response
 handleSendGridEvents = do
-  logMsg $ "Processing some sendgrid event"
+  logMsg $ "Processing some sendgrid event (old interface)"
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
   logMsg $ "For email: " ++ show mident
   case mident of
     (Just mid, Just token) -> do
-      logMsg $ "Getting mail for DB" 
+      logMsg $ "Getting mail for DB"
       mmail <- dbQuery $ GetEmail mid token
       logMsg $ "Checking it"
       case mmail of
@@ -35,7 +78,7 @@ handleSendGridEvents = do
             fvalue <- getField name
             logMsg $ "Value is " ++ show fvalue
             return (name, fvalue)
-          logMsg $ "Fields are " ++ show fields 
+          logMsg $ "Fields are " ++ show fields
           if fields /= map (second Just) attrs
             then logMsg $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one: " ++ show fields
             else do
@@ -59,7 +102,7 @@ handleSendGridEvents = do
     (mid, token) -> logMsg $ "Invalid id (" ++ show mid ++ ") or token (" ++ show token ++ ") received."
   ok $ toResponse ("Thanks" :: String)
 
-logMsg :: String -> Mailer ()
+logMsg :: (Log.MonadLog m) => String -> m ()
 logMsg msg = Log.mailingServer $ "handleSendgridEvents: " ++ msg
 
 readEventType :: Maybe String -> Mailer (Maybe SendGridEvent)
