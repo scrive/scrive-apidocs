@@ -27,18 +27,19 @@ header.site {
           display : block;
           font : 15px/80px @source;
           text-align : center;
-          color : @text-very-light;
-	  font-weight:300;
+          color : @text-lighter;
+	        font-weight:300;
           height : 80px;
           margin-top : -37px;
           border-top : 4px solid transparent;
           padding: 0 14px;
           &:hover {
-            color : @text-light;
+            color : @text-very-light;
           }
          &.active {
-          font-weight: bold;
-          cursor: default;
+          font-weight: 600;
+          cursor: pointer;
+          color : @text-very-light;
           }
         }
         &.session-login {
