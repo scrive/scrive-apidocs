@@ -44,7 +44,7 @@ import Text.StringTemplates.Templates
 import Text.Printf
 import Text.JSON.Gen
 import Text.JSON.Pretty (pp_value)
-import System.FilePath (takeBaseName)
+import System.FilePath (takeFileName)
 import System.Time
 import System.Locale
 import Templates
@@ -259,7 +259,7 @@ evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
   html <- evidenceOfIntentHTML title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
-  return $ Seal.SealAttachment { Seal.fileName = "EvidenceofIntent.html"
+  return $ Seal.SealAttachment { Seal.fileName = "Evidence_of_Intent.html"
                                , Seal.mimeType = Nothing
                                , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString html
                                }
@@ -286,10 +286,10 @@ sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m, 
                      -> m Seal.SealSpec
 sealSpecFromDocument boxImages hostpart document elog ces content inputpath outputpath = do
   additionalAttachments <- findOutAttachmentDesc document
-  docs <- mapM (\f -> ((takeBaseName f,) . BS.toString . B64.encode) <$> liftIO (BS.readFile f))
-            [ "files/evidenceDocumentation.html"
-            , "files/digitalSignatureDocumentationPartI.html"
-            , "files/digitalSignatureDocumentationPartII.html"
+  docs <- mapM (\f -> ((takeFileName f,) . BS.toString . B64.encode) <$> liftIO (BS.readFile f))
+            [ "files/Evidence_Documentation.html"
+            , "files/Digital_Signature_Documentation_Part_I.html"
+            , "files/Digital_Signature_Documentation_Part_II.html"
             ]
   
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
@@ -357,7 +357,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
 
       -- Creating HTML Evidence Log
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) (suppressRepeatedEvents elog) ces
-      let evidenceattachment = Seal.SealAttachment { Seal.fileName = "EvidenceLog.html"
+      let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Evidence_Log.html"
                                                    , Seal.mimeType = Nothing
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
       evidenceOfIntent <- evidenceOfIntentAttachment (documenttitle document) (documentsignatorylinks document)
