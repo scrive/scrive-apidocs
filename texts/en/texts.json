@@ -656,7 +656,7 @@
 "_paymentNumberOfUsers":"Number of users",
 "_paymentPlanAlreadySubscribed":"You already have a subscription",
 "_paymentPlanAlreadySubscribedGo":"Please go to <a href='/Scrive/account#subscription'>your subscription settings</a> to manage your subscription.",
-"_paymentPlanAskViktor":"To change your plan, please contact <a href='mailto:viktor@scrive.com'>our sales department</a>.",
+"_paymentPlanAskViktor":"To change your plan, please contact <a href='mailto:viktor@scrive.com' target='_blank'>our sales department</a>.",
 "_paymentPlanCancelSubscription":"Cancel subscription",
 "_paymentPlanChangeBilling":"Change billing information",
 "_paymentPlanContact":"Contact us",

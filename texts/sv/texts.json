@@ -656,7 +656,7 @@
 "_paymentNumberOfUsers":"Antal användare",
 "_paymentPlanAlreadySubscribed":"Du är redan prenumerant",
 "_paymentPlanAlreadySubscribedGo":"Gå till <a href='/Scrive/account#subscription'>dina inställningar</a> för att hantera din prenumeration.",
-"_paymentPlanAskViktor":"För att byta prisplan, var god kontakta <a href='mailto:viktor@scrive.com'>vår säljavdelning</a>.",
+"_paymentPlanAskViktor":"För att byta prisplan, var god kontakta <a href='mailto:viktor@scrive.com' target='_blank'>vår säljavdelning</a>.",
 "_paymentPlanCancelSubscription":"Avsluta prenumeration",
 "_paymentPlanChangeBilling":"Byt betalningsinfo",
 "_paymentPlanContact":"Kontakta oss",
