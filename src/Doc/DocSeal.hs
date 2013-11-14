@@ -478,12 +478,10 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
           Log.error $ "Sealing configuration: " ++ show config
           BS.hPutStr handle content
           hClose handle
-        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (systemActor ctxtime)
-        _ <- dbUpdate $ InsertEvidenceEvent
-                          ErrorSealingDocumentEvidence
-                          (return ())
-                          (Just documentid)
-                          (systemActor ctxtime)
+        void $ dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid)
+                            ErrorSealingDocumentEvidence
+                            (return ())
+                            (systemActor ctxtime)
         triggerAPICallbackIfThereIsOne document
         return Nothing
 
