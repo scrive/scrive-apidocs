@@ -241,7 +241,7 @@ var SelectView = Backbone.View.extend({
               var options = $("<ul class='select-opts'/>")
                                 .addClass(this.model.expandSide())
                                 .css("border", this.model.border())
-                                .css("width", this.model.optionsWidth());
+                                .css("min-width", this.model.optionsWidth());
 
               _.each(model.options(),function(e){
                     if (!e.disabled())

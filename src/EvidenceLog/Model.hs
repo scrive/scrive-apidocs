@@ -227,16 +227,12 @@ data CurrentEvidenceEventType =
   AttachSealedFileEvidence                        |
   PreparationToPendingEvidence                    |
   DeleteSigAttachmentEvidence                     |
-  AuthorUsesCSVEvidence                           |
-  ErrorDocumentEvidence                           |
   RejectDocumentEvidence                          |
   SetDocumentInviteTimeEvidence                   |
   InvitationEvidence                              |
   SendToPadDevice                                 |
   RemovedFromPadDevice                            |
   ResealedPDF                                     |
-  SetStandardAuthenticationMethodEvidence         |
-  SetELegAuthenticationMethodEvidence             |
   ReminderSend                                    |  --Renamed
   InvitationDeliveredByEmail                      |
   InvitationUndeliveredByEmail                    |
@@ -246,7 +242,8 @@ data CurrentEvidenceEventType =
   InvitationDeliveredBySMS                        |
   InvitationUndeliveredBySMS                      |
   AttachGuardtimeSealedFileEvidence               |
-  AttachExtendedSealedFileEvidence
+  AttachExtendedSealedFileEvidence                |
+  ErrorSealingDocumentEvidence
   deriving (Eq, Show, Read, Ord)
 
 data ObsoleteEvidenceEventType =
@@ -296,7 +293,11 @@ data ObsoleteEvidenceEventType =
   SetPadDeliveryMethodEvidence                    |
   SetAPIDeliveryMethodEvidence                    |
   SetDocumentProcessEvidence                      |
-  DetachFileEvidence
+  DetachFileEvidence                              |
+  SetStandardAuthenticationMethodEvidence         |
+  SetELegAuthenticationMethodEvidence             |
+  AuthorUsesCSVEvidence                           |
+  ErrorDocumentEvidence
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -338,8 +339,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert (Current AttachSealedFileEvidence)                         = return 36
   safeConvert (Current PreparationToPendingEvidence)                     = return 37
   safeConvert (Current DeleteSigAttachmentEvidence)                      = return 38
-  safeConvert (Current AuthorUsesCSVEvidence)                            = return 39
-  safeConvert (Current ErrorDocumentEvidence)                            = return 40
+  safeConvert (Obsolete AuthorUsesCSVEvidence)                           = return 39
+  safeConvert (Obsolete ErrorDocumentEvidence)                           = return 40
   safeConvert (Obsolete MarkDocumentSeenEvidence)                        = return 41
   safeConvert (Current RejectDocumentEvidence)                           = return 42
   safeConvert (Current SetDocumentInviteTimeEvidence)                    = return 43
@@ -362,8 +363,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert (Obsolete ChangeFieldEvidence)                             = return 60
   safeConvert (Current ResealedPDF)                                      = return 61
   safeConvert (Obsolete OldDocumentHistory)                              = return 62
-  safeConvert (Current SetStandardAuthenticationMethodEvidence)          = return 63
-  safeConvert (Current SetELegAuthenticationMethodEvidence)              = return 64
+  safeConvert (Obsolete SetStandardAuthenticationMethodEvidence)         = return 63
+  safeConvert (Obsolete SetELegAuthenticationMethodEvidence)             = return 64
   safeConvert (Obsolete SetEmailDeliveryMethodEvidence)                  = return 65
   safeConvert (Obsolete SetPadDeliveryMethodEvidence)                    = return 66
   safeConvert (Obsolete SetAPIDeliveryMethodEvidence)                    = return 67
@@ -379,6 +380,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert (Current InvitationUndeliveredBySMS)                       = return 77
   safeConvert (Current AttachGuardtimeSealedFileEvidence)                = return 78
   safeConvert (Current AttachExtendedSealedFileEvidence)                 = return 79
+  safeConvert (Current ErrorSealingDocumentEvidence)                     = return 80
 
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return (Obsolete AddSigAttachmentEvidence)
@@ -419,8 +421,8 @@ instance Convertible Int EvidenceEventType where
     safeConvert 36 = return (Current AttachSealedFileEvidence)
     safeConvert 37 = return (Current PreparationToPendingEvidence)
     safeConvert 38 = return (Current DeleteSigAttachmentEvidence)
-    safeConvert 39 = return (Current AuthorUsesCSVEvidence)
-    safeConvert 40 = return (Current ErrorDocumentEvidence)
+    safeConvert 39 = return (Obsolete AuthorUsesCSVEvidence)
+    safeConvert 40 = return (Obsolete ErrorDocumentEvidence)
     safeConvert 41 = return (Obsolete MarkDocumentSeenEvidence)
     safeConvert 42 = return (Current RejectDocumentEvidence)
     safeConvert 43 = return (Current SetDocumentInviteTimeEvidence)
@@ -443,8 +445,8 @@ instance Convertible Int EvidenceEventType where
     safeConvert 60 = return (Obsolete ChangeFieldEvidence)
     safeConvert 61 = return (Current ResealedPDF)
     safeConvert 62 = return (Obsolete OldDocumentHistory)
-    safeConvert 63 = return (Current SetStandardAuthenticationMethodEvidence)
-    safeConvert 64 = return (Current SetELegAuthenticationMethodEvidence)
+    safeConvert 63 = return (Obsolete SetStandardAuthenticationMethodEvidence)
+    safeConvert 64 = return (Obsolete SetELegAuthenticationMethodEvidence)
     safeConvert 65 = return (Obsolete SetEmailDeliveryMethodEvidence)
     safeConvert 66 = return (Obsolete SetPadDeliveryMethodEvidence)
     safeConvert 67 = return (Obsolete SetAPIDeliveryMethodEvidence)
@@ -460,6 +462,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 77 = return (Current InvitationUndeliveredBySMS)
     safeConvert 78 = return (Current AttachGuardtimeSealedFileEvidence)
     safeConvert 79 = return (Current AttachExtendedSealedFileEvidence)
+    safeConvert 80 = return (Current ErrorSealingDocumentEvidence)
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

@@ -380,7 +380,7 @@ var TextTypeSetterView = Backbone.View.extend({
         return new Select({name : localization.fontSize.name + ": " + fontSizeName,
                            textWidth: "191px",
                            optionsWidth: "218px",
-                           style: "font-size: 16px",
+                           style: "font-size: 16px; width: 220px;",
                            options: [
                               { name : localization.fontSize.small,
                                 style: "font-size: 12px",
@@ -410,7 +410,9 @@ var TextTypeSetterView = Backbone.View.extend({
         var signatory = placement.signatory();
         var sname = signatory.nameOrEmail() || signatory.nameInDocument();
 
-        div.text(fname + ' ' + localization.designview.requestedFrom + ' ' + sname);
+        div.text(fname + ' ' + localization.designview.requestedFrom);
+        div.append($('<br/>'));
+        div.append(document.createTextNode(sname));
 
         return div;
     },
