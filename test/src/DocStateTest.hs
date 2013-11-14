@@ -365,8 +365,8 @@ testMarkInvitationReadEvidenceLog = do
   -- so we test it explicitly.
   let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
       expected = "The Scrive e-signing system’s external email delivery system reported that the invitation to "
-                  ++ (if signatoryispartner sl then "sign" else "view")
-                  ++ " (sent to " ++ getEmail sl ++ ") was opened."
+              ++ (if signatoryispartner sl then "sign" else "review")
+              ++ " (sent to " ++ getEmail sl ++ ") was opened."
   assertEqual "Correct event text" (Just expected) (evText <$> me)
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
