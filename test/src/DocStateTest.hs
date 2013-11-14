@@ -68,10 +68,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "MarkInvitationRead adds correct text to the log" env testMarkInvitationReadEvidenceLog,
-<<<<<<< HEAD
-  testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
-=======
->>>>>>> staging
   testThat "SaveSigAttachment adds to the log" env testSaveSigAttachmentEvidenceLog,
   testThat "DeleteSigAttachment will not work after signing" env testDeleteSigAttachmentAlreadySigned,
   testThat "DeleteSigAttachment adds to the log" env testDeleteSigAttachmentEvidenceLog,
@@ -369,8 +365,8 @@ testMarkInvitationReadEvidenceLog = do
   -- so we test it explicitly.
   let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
       expected = "The Scrive e-signing system’s external email delivery system reported that the invitation to "
-              ++ (if signatoryispartner sl then "sign" else "view")
-              ++ " (sent to " ++ getEmail sl ++ ") was opened."
+                  ++ (if signatoryispartner sl then "sign" else "view")
+                  ++ " (sent to " ++ getEmail sl ++ ") was opened."
   assertEqual "Correct event text" (Just expected) (evText <$> me)
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
