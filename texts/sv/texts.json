@@ -201,7 +201,7 @@
 "_contractauthorsignatoryname":"Part",
 "_contractcancelbuttontext":"Återkalla inbjudan",
 "_contractcancelmodaltext":"Om en part klickar på signeringslänken efter att du återkallat kommer parten att få information om att dokumentet inte längre går att signera.<br/>Inget meddelande om återkallandet kommer att skickas.<br/>Är du säker på att du vill återkalla inbjudan att signera?",
-"_contractcancelmodaltextwithsignatures":"När du återkallar inbjudan kommer eventuella tidigare signaturer att ogiltigförklaras.<br/>Om en part klickar på signeringslänken efter att du återkallat kommer parten att få information om att dokumentet inte längre går att signera.<br/>Inget meddelande om återkallandet kommer att skickas.<br/>Är du säker på att du vill återkalla inbjudan att signera?",
+"_contractcancelmodaltextwithsignatures":"När du återkallar inbjudan kommer tidigare signaturer att ogiltigförklaras.<br/>Om en part klickar på signeringslänken efter att du återkallat kommer parten att få information om att dokumentet inte längre går att signera.<br/>Inget meddelande om återkallandet kommer att skickas.<br/>Är du säker på att du vill återkalla inbjudan att signera?",
 "_contractcancelmodaltitle":"Återkalla inbjudan att signera",
 "_contractconfirmsendtext":"Är du säker på att du vill skicka dokumentet",
 "_contractconfirmsendtitle":"Skicka inbjudan",
