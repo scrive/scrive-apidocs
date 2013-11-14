@@ -90,16 +90,16 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header3 = $('<div style="display: inline-block; margin: 7px 14px 7px 2px;"/>');
     this.header3.append(new Button({size: 'tiny', color: 'blue', text: 'Start document from template', style:"padding: 4px 8px;font-size:9px", onClick : function() {return false;}}).el());
 
-    this.header4 = $('<div style="display: inline-block; height: 15px; line-height: 15px; font-size:10px;"/>');
+    this.header4 = $('<div style="display: inline-block; line-height: 15px; font-size:10px;"/>');
     this.header4content = $("<a class='hoverable'>Archive</a>");
     this.header4.append(this.header4content);
 
-    this.header5 = $('<div style="display: inline-block; height: 15px; line-height: 15px; font-size:10px;"/>');
+    this.header5 = $('<div style="display: inline-block; line-height: 15px; font-size:10px;"/>');
     this.header5content = $("<a class='hoverable'>Account</a>");
     this.header5.append(this.header5content);
 
 
-    this.header6 = $('<div style="display: inline-block; height: 15px;  line-height: 15px; font-size:10px; margin-right: 22px;"/>');
+    this.header6 = $('<div style="display: inline-block; line-height: 15px; font-size:10px; margin-right: 22px;"/>');
     this.header6content = $("<a class='hoverable'>Log out</a>");
     this.header6.append(this.header6content);
 
