@@ -129,7 +129,7 @@ var DocumentHistoryView = Backbone.View.extend({
 
       container.append(historyList.el());
 
-      if (historyList.model().length >= 15) {
+      if (historyList.model().length > 15) {
            var footer = $("<div class='document-history-footer'/>");
            footer.append(this.expandAllOption());
            container.append(footer);

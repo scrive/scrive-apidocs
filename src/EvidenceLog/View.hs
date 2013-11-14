@@ -23,6 +23,7 @@ import Text.StringTemplates.Templates
 import Control.Applicative
 
 import MinutesTime
+import Templates (renderLocalTemplate)
 import Text.JSON
 
 import Text.JSON.Gen as J
@@ -92,10 +93,11 @@ eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"  $ formatMinutesTimeRealISO (evTime dee)
     J.valueM "party" $ approximateActor doc dee
-    J.valueM "text"  $ simplyfiedEventText Nothing dee
+    J.valueM "text"  $ simplyfiedEventText Nothing doc dee
 
 -- | Simple events to be included in the archive history and the verification page.  These have translations.
 simpleEvents :: EvidenceEventType -> Bool
+simpleEvents (Current AttachSealedFileEvidence)          = True
 simpleEvents (Current AttachExtendedSealedFileEvidence)  = True
 simpleEvents (Current AttachGuardtimeSealedFileEvidence) = True
 simpleEvents (Current CancelDocumenElegEvidence)         = True
@@ -137,6 +139,7 @@ getEvidenceEventStatusClass (Current ReminderSend)                      = SCSent
 getEvidenceEventStatusClass (Current ResealedPDF)                       = SCSigned
 getEvidenceEventStatusClass (Current CancelDocumenElegEvidence)         = SCCancelled
 getEvidenceEventStatusClass (Current ProlongDocumentEvidence)           = SCProlonged
+getEvidenceEventStatusClass (Current AttachSealedFileEvidence)          = SCSigned
 getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed
 getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)  = SCExtended
 getEvidenceEventStatusClass _                                           = SCError
@@ -175,13 +178,16 @@ emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffect
 emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
 
-simplyfiedEventText :: TemplatesMonad m => Maybe String -> DocumentEvidenceEvent' SignatoryLink -> m String
-simplyfiedEventText mactor dee = case evType dee of
+-- | Produce simplified text for an event.  If actor is provided, the
+-- text is for the verification page, otherwise it is for the archive.
+simplyfiedEventText :: TemplatesMonad m => Maybe String -> Document -> DocumentEvidenceEvent' SignatoryLink -> m String
+simplyfiedEventText mactor doc dee = case evType dee of
   Obsolete _ -> return ""
-  Current et -> renderTemplateI (eventTextTemplateName et) $ do
+  Current et -> (if isJust mactor then renderLocalTemplate doc else renderTemplate) (eventTextTemplateName et) $ do
     let siglink = evAffectedSigLink dee
     F.value "text" $ filterTagsNL <$> evMessageText dee
     F.value "signatory" $ getSmartName <$> siglink
+    F.value "signatory_email" $ getEmail <$> siglink
     case mactor of
       Nothing    -> F.value "archive" True
       Just actor -> F.value "actor" actor

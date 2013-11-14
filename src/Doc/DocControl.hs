@@ -11,8 +11,6 @@ module Doc.DocControl(
     , handleSignShow
     , handleSignShowSaveMagicHash
     , handleAcceptAccountFromSign
-    , handleSigAttach
-    , handleDeleteSigAttach
     , handleEvidenceAttachment
     , handleIssueShowGet
     , handleIssueAuthorGoToSignview
@@ -488,40 +486,6 @@ checkFileAccessWith fid msid mmh mdid mattid =
        when (length atts /= 1) $
                 internalError
     _ -> internalError
-
-handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
-handleDeleteSigAttach docid siglinkid = do
-  mh <- guardJustM $ dbQuery $ GetDocumentSessionToken siglinkid
-  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid siglinkid mh
-  siglink <- guardJust $ getSigLinkFor doc siglinkid
-  fid <- read <$> getCriticalField asValidID "deletesigattachment"
-  ctx <- getContext
-  let email = getEmail siglink
-  Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ email
-  _ <- dbUpdate $ DeleteSigAttachment docid siglinkid fid
-       (signatoryActor ctx siglink)
-  return $ LinkSignDoc doc siglink
-
-handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-handleSigAttach docid siglinkid = do
-  mh <- guardJustM $ dbQuery $ GetDocumentSessionToken siglinkid
-  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid siglinkid mh
-  siglink <- guardJust $ getSigLinkFor doc siglinkid
-  attachname <- getCriticalField asValidFieldValue "attachname"
-  _ <- guardJust $  find (\sa -> signatoryattachmentname sa == attachname) (signatoryattachments siglink)
-  (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
-  content1 <- case contentspec of
-    Left filepath -> liftIO $ BSL.readFile filepath
-    Right content -> return content
-  -- we need to downgrade the PDF to 1.4 that has uncompressed structure
-  -- we use gs to do that of course
-  ctx <- getContext
-  content <- guardRightM $ liftIO $ preCheckPDF (concatChunks content1)
-  fileid' <- dbUpdate $ NewFile attachname content
-  let actor = signatoryActor ctx siglink
-  dbUpdate $ SaveSigAttachment docid siglinkid attachname fileid' actor
-  newdoc <- dbQuery $ GetDocumentByDocumentID docid
-  return $ LinkSignDoc newdoc siglink
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do

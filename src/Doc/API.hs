@@ -708,7 +708,7 @@ documentUploadSignatoryAttachment did sid aname = api $ do
   fileid' <- dbUpdate $ NewFile sanitizedFileName content
   let actor = signatoryActor ctx sl
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
-    dbUpdate $ SaveSigAttachment (documentid doc) sid aname fileid' actor
+    dbUpdate $ SaveSigAttachment doc sid sigattach fileid' actor
     newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
     return newdoc
 
@@ -731,8 +731,8 @@ documentDeleteSignatoryAttachment did sid aname = api $ do
   -- attachment must have a file
   fileid <- apiGuard (actionNotAvailable "That signatory attachment request does not have a file uploaded for it, or it has been previously deleted.") $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
-    dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid (signatoryActor ctx sl)
+  d <- apiGuardL (serverError "documentDeleteSignatoryAttachment: DeleteSigAttachment failed") . runMaybeT $ do
+    dbUpdate $ DeleteSigAttachment doc sid fileid (signatoryActor ctx sl)
     newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
     return newdoc
 

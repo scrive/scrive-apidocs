@@ -1408,43 +1408,34 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
     return ()
 
 
-data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID Actor
+data DeleteSigAttachment = DeleteSigAttachment Document SignatoryLinkID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () where
-  update (DeleteSigAttachment did slid fid actor) = do
-    let decode acc email saname = acc ++ [(email,saname)]
-    (email::String,saname::String) <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_attachments" $ do
+  update (DeleteSigAttachment doc slid fid actor) = do
+    let decode acc saname = acc ++ [saname]
+    (saname::String) <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_attachments" $ do
       sqlFrom "signatory_links"
       sqlWhere "signatory_links.id = signatory_attachments.signatory_link_id"
       sqlSet "file_id" SqlNull
-      sqlResult $ parenthesize $ toSQLCommand $ sqlSelect "signatory_link_fields" $ do
-                                   sqlResult "value"
-                                   sqlWhereEq "type" EmailFT
-                                   sqlWhere "signatory_link_fields.signatory_link_id = signatory_attachments.signatory_link_id"
       sqlResult "signatory_attachments.name"
       sqlWhereEq "file_id" fid
       sqlWhereSignatoryLinkIDIs slid
       sqlWhereSignatoryHasNotSigned
     _ <- update $ InsertEvidenceEvent
                     DeleteSigAttachmentEvidence
-                    (value "name" saname >> value "email" email)
-                    (Just did)
+                    (do value "name" saname
+                        value "author" $ getIdentifier $ $(fromJust) $ getAuthorSigLink doc)
+                    (Just (documentid doc))
                     actor
     return ()
 
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
-  update (ErrorDocument docid errmsg actor) = do
+  update (ErrorDocument docid errmsg _actor) = do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
       sqlSet "status" $ DocumentError errmsg
       sqlSet "error_text" errmsg
       sqlWhereDocumentIDIs docid
-
-    _ <- update $ InsertEvidenceEvent
-                ErrorDocumentEvidence
-                (value "errmsg" errmsg)
-                (Just docid)
-                actor
     return ()
 
 selectDocuments :: MonadDB m => SqlSelect -> m [Document]
@@ -1875,9 +1866,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser Bool wh
     If there's a problem such as the document isn't in a pending or awaiting author state,
     or the document does not exist a Left is returned.
 -}
-data SaveSigAttachment = SaveSigAttachment DocumentID SignatoryLinkID String FileID Actor
+data SaveSigAttachment = SaveSigAttachment Document SignatoryLinkID SignatoryAttachment FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment () where
-  update (SaveSigAttachment did slid name fid actor) = do
+  update (SaveSigAttachment doc slid sigattach fid actor) = do
+    let name = signatoryattachmentname sigattach
     kRun1OrThrowWhyNot $ sqlUpdate "signatory_attachments" $ do
        sqlFrom "signatory_links"
        sqlWhere "signatory_links.id = signatory_attachments.signatory_link_id"
@@ -1888,8 +1880,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment () where
 
     _ <- update $ InsertEvidenceEvent
         SaveSigAttachmentEvidence
-        (value "name" name)
-        (Just did)
+        (do value "name" name
+            value "description" $ signatoryattachmentdescription sigattach
+            value "author" $ getIdentifier $ $(fromJust) $ getAuthorSigLink doc)
+        (Just (documentid doc))
         actor
     return ()
 
