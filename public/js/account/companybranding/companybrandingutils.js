@@ -197,7 +197,7 @@ var CompanyBrandingFontView = Backbone.View.extend({
              };
     };
 
-    var fonts = {'default': 'Helvetica Neue, Arial, sans-serif',
+    var fonts = {'default': model.get('defaultfont'),
                  'Comic Sans MS': 'comic sans ms,sans-serif',
                  'Courier New': 'courier new,monospace',
                  'Helvetica': 'helvetica,sans-serif',
