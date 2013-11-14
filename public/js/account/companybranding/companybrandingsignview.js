@@ -129,7 +129,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
     this.content.append(contentcontent);
 
     this.footercontent = $('<div style="text-align: center; display: table-cell; vertical-align: middle;"/>');
-    this.footercontent.text('FOOTER TEXT');
+    this.footercontent.text('Powered by Scrive');
     this.footer = $('<div style="height: 30px; padding:10px;border-top: 1px solid #DEE4ED;font-size: 10px; display: table; width: 541px"/>');
     this.footer.append(this.footercontent);
 
