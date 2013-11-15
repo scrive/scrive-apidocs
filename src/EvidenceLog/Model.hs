@@ -62,6 +62,7 @@ signatoryLinkTemplateFields sl = do
   F.value "mobile"      $ signatorylinkdeliverymethod sl == MobileDelivery
   F.value "emailmobile" $ signatorylinkdeliverymethod sl == EmailAndMobileDelivery
   F.value "viewing"     $ not $ signatoryispartner sl
+  F.value "signing"     $ signatoryispartner sl
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid masl mmsg actor) = do

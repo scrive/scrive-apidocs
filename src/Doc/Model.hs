@@ -1692,7 +1692,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
   update (MarkInvitationRead did slid actor) = do
         sig <- query $ GetSignatoryLinkByID did slid Nothing
         let time = actorTime actor
-            eml  = getEmail sig
         success <- kRun01 $ sqlUpdate "signatory_links" $ do
                       sqlSet "read_invitation" time
                       sqlWhereEq "id" slid
@@ -1700,7 +1699,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
                       sqlWhere "read_invitation IS NULL"
         _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
             MarkInvitationReadEvidence
-            (value "email" eml)
+            (return ())
             (Just did)
             (Just sig)
             Nothing
