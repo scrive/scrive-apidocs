@@ -49,6 +49,7 @@ import Doc.Conditions
 import qualified Data.Set as S
 import Util.Actor
 import EvidenceLog.Model
+import EvidenceLog.View (getSignatoryLinks, simplyfiedEventText)
 
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
@@ -357,17 +358,23 @@ testMarkInvitationReadEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   let Just sl = getAuthorSigLink doc
-  success <- randomUpdate $ \t->MarkInvitationRead (documentid doc) (signatorylinkid sl) (systemActor t)
+  now <- getMinutesTime
+  success <- randomUpdate $ MarkInvitationRead (documentid doc) (signatorylinkid sl) (mailSystemActor now Nothing (getEmail sl) (signatorylinkid sl))
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   -- The text for MarkInvitationRead in the event log is hard to check
   -- manually since it relies on external mail system notifications,
   -- so we test it explicitly.
   let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
-      expected = "The Scrive e-signing system’s external email delivery system reported that the invitation to "
+  assertJust me
+  let Just e = me
+  let expected simple = (if simple then "The" else "The Scrive e-signing system’s external email delivery system reports that the") ++ " invitation to "
               ++ (if signatoryispartner sl then "sign" else "review")
-              ++ " (sent to " ++ getEmail sl ++ ") was opened."
-  assertEqual "Correct event text" (Just expected) (evText <$> me)
+              ++ " (sent to " ++ getEmail sl ++ ") has been opened."
+  assertEqual "Correct event text" (expected False) (evText e)
+  [e'] <- getSignatoryLinks [e]
+  simpletext <- simplyfiedEventText (Just "author") doc{ documentlang = LANG_EN } e'
+  assertEqual "Correct simplified event text" (expected True) simpletext
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
 testSaveSigAttachmentEvidenceLog = do

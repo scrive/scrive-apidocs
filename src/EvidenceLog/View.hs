@@ -109,12 +109,9 @@ simpleEvents (Current InvitationEvidence)                = True
 simpleEvents (Current InvitationUndeliveredByEmail)      = True
 simpleEvents (Current InvitationUndeliveredBySMS)        = True
 simpleEvents (Current MarkInvitationReadEvidence)        = True
-simpleEvents (Current PreparationToPendingEvidence)      = True
 simpleEvents (Current ProlongDocumentEvidence)           = True
 simpleEvents (Current RejectDocumentEvidence)            = True
 simpleEvents (Current ReminderSend)                      = True
-simpleEvents (Current ResealedPDF)                       = True
-simpleEvents (Current RestartDocumentEvidence)           = True
 simpleEvents (Current SignDocumentEvidence)              = True
 simpleEvents (Current SignatoryLinkVisited)              = True
 simpleEvents (Current TimeoutDocumentEvidence)           = True
@@ -187,7 +184,9 @@ simplyfiedEventText mactor doc dee = case evType dee of
     let siglink = evAffectedSigLink dee
     F.value "text" $ filterTagsNL <$> evMessageText dee
     F.value "signatory" $ getSmartName <$> siglink
-    F.value "signatory_email" $ getEmail <$> siglink
+    -- signatory email: there are events that are missing affected
+    -- signatory, but happen to have evEmail set to what we want
+    F.value "signatory_email" $ (getEmail <$> siglink) <|> evEmail dee
     case mactor of
       Nothing    -> F.value "archive" True
       Just actor -> F.value "actor" actor

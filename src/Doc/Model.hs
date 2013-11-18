@@ -77,6 +77,7 @@ module Doc.Model
   , updateMTimeAndObjectVersion
   ) where
 
+import Control.Monad.Identity (Identity)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.IO.Class
 import DB
@@ -123,6 +124,7 @@ import Text.StringTemplates.Templates
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import Text.StringTemplates.Fields (value)
+import qualified Text.StringTemplates.Fields as F
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
@@ -1429,14 +1431,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () wher
     return ()
 
 
-data ErrorDocument = ErrorDocument DocumentID String Actor
+data ErrorDocument = ErrorDocument DocumentID String CurrentEvidenceEventType (F.Fields Identity ()) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument () where
-  update (ErrorDocument docid errmsg _actor) = do
+  update (ErrorDocument docid errmsg event textFields actor) = do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
       sqlSet "status" $ DocumentError errmsg
       sqlSet "error_text" errmsg
       sqlWhereDocumentIDIs docid
-    return ()
+    void $ update $ InsertEvidenceEvent event textFields (Just docid) actor
 
 selectDocuments :: MonadDB m => SqlSelect -> m [Document]
 selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit True Nothing sqlquery
@@ -1690,7 +1692,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
   update (MarkInvitationRead did slid actor) = do
         sig <- query $ GetSignatoryLinkByID did slid Nothing
         let time = actorTime actor
-            eml  = getEmail sig
         success <- kRun01 $ sqlUpdate "signatory_links" $ do
                       sqlSet "read_invitation" time
                       sqlWhereEq "id" slid
@@ -1698,7 +1699,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
                       sqlWhere "read_invitation IS NULL"
         _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
             MarkInvitationReadEvidence
-            (value "email" eml)
+            (return ())
             (Just did)
             (Just sig)
             Nothing

@@ -403,7 +403,8 @@ sendReminderEmail custommessage ctx actor doc siglink = do
                              })
     (scheduleSMS =<< smsReminder doc siglink)
   when sent $ do
-    when (isPending doc &&  not (hasSigned siglink)) $ do -- Why are these conditions not checked before?
+    when (isPending doc &&  not (hasSigned siglink)) $ do
+      -- Reset delivery status if the signatory has not signed yet
       Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
       dbUpdate $ PostReminderSend doc siglink custommessage actor
     triggerAPICallbackIfThereIsOne doc

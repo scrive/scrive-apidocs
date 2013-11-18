@@ -1228,8 +1228,8 @@
             div.addClass('design-view-action-participant-info-box');
             div.append(view.color());
             div.append(view.name());
-            div.append(view.company());
             div.append(view.email());
+            div.append(view.company());
             div.append(view.orderIcon.el);
             div.append(view.deviceIcon.el);
             div.append(view.roleIcon.el);
