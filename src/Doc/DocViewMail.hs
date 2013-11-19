@@ -30,6 +30,7 @@ import Mails.SendMail
 import MinutesTime (formatMinutesTime)
 import Utils.Monoid
 import Utils.Prelude
+import Utils.Color
 import Text.StringTemplates.Templates
 import Templates
 import Util.HasSomeUserInfo
@@ -367,7 +368,7 @@ brandingMailFields mbd companyui = do
     F.value "textcolor" $ (join $ companyemailtextcolour <$> companyui) `mplus`(bdmailstextcolor <$> mbd)
     F.value "font"  $ companyemailfont <$> companyui
     F.value "bordercolour"  $ companyemailbordercolour <$> companyui
-    F.value "buttoncolour"  $ (join $ companyemailbuttoncolour <$> companyui) `mplus` (bdmailsbuttoncolor <$> mbd)
+    F.value "buttoncolour"  $ ensureHexRGB <$> (join $ companyemailbuttoncolour <$> companyui) `mplus` (bdmailsbuttoncolor <$> mbd)
     F.value "skipbuttonborder" $ isNothing (join $ companyemailbuttoncolour <$> companyui) && isJust (bdmailsbuttoncolor <$> mbd)
     F.value "emailbackgroundcolour"  $ (join $ companyemailemailbackgroundcolour <$> companyui) `mplus` (bdmailsbackgroundcolor <$> mbd)
     when (isJust companyui || isJust mbd) $ do
