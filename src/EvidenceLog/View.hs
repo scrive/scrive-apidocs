@@ -97,12 +97,10 @@ eventJSValue doc dee = do
 
 -- | Simple events to be included in the archive history and the verification page.  These have translations.
 simpleEvents :: EvidenceEventType -> Bool
-simpleEvents (Current AttachSealedFileEvidence)          = True
 simpleEvents (Current AttachExtendedSealedFileEvidence)  = True
 simpleEvents (Current AttachGuardtimeSealedFileEvidence) = True
 simpleEvents (Current CancelDocumenElegEvidence)         = True
 simpleEvents (Current CancelDocumentEvidence)            = True
-simpleEvents (Current CloseDocumentEvidence)             = True
 simpleEvents (Current InvitationDeliveredByEmail)        = True
 simpleEvents (Current InvitationDeliveredBySMS)          = True
 simpleEvents (Current InvitationEvidence)                = True

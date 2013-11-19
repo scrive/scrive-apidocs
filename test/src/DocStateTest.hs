@@ -370,7 +370,7 @@ testMarkInvitationReadEvidenceLog = do
   let Just e = me
   let expected simple = (if simple then "The" else "The Scrive e-signing system’s external email delivery system reports that the") ++ " invitation to "
               ++ (if signatoryispartner sl then "sign" else "review")
-              ++ " (sent to " ++ getEmail sl ++ ") has been opened."
+              ++ " (sent to " ++ getEmail sl ++ ") is opened."
   assertEqual "Correct event text" (expected False) (evText e)
   [e'] <- getSignatoryLinks [e]
   simpletext <- simplyfiedEventText (Just "author") doc{ documentlang = LANG_EN } e'
