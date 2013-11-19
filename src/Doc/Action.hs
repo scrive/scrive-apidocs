@@ -18,7 +18,6 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Logic
 import Crypto.RNG
-import Data.Char
 import DB
 import Doc.DocSeal
 import Doc.Model
@@ -442,10 +441,8 @@ makeMailAttachments document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
       allfiles' = maybeToList mainfile ++ aattachments ++ sattachments
   allfiles <- mapM (dbQuery . GetFileByFileID) allfiles'
-  let dropPDFSuffix name | ".pdf" `isSuffixOf` (map toLower name) = reverse . drop 4 $ reverse name
-                         | otherwise = name
   --use the doc title rather than file name for the main file (see jira #1152)
-  let filenames = map dropPDFSuffix $ documenttitle document : map filename ($(tail) allfiles)
+  let filenames =  (documenttitle document ++ ".pdf") : map filename ($(tail) allfiles)
 
   let filecontents = map (Right . fileid) allfiles
   return $ zip filenames filecontents

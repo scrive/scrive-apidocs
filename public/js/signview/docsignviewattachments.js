@@ -46,7 +46,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     var attachment = this.model;
     var uploadurl = this.uploadURL();
     return new UploadButton({
-      width: 160,
+      width: 200,
       size : 'small',
       name: "file",
       text: localization.signatoryAttachmentUploadButton,
@@ -140,6 +140,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.title = args.title;
+    this.subtitle = args.subtitle;
     this.textcolour = args.textcolour;
     this.textfont = args.textfont;
     this.uploadElems = [];
@@ -190,9 +191,11 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='signatoryattachments' />");
-    var header = $("<h2/>");
-    header.css(labelCss);
-    container.append(header.text(this.title == undefined ? localization.requestedAttachments : this.title));
+    var header = $("<div class='header'/>");
+    container.append(header);
+    header.append($("<h2/>").text(this.title == undefined ? localization.requestedAttachments : this.title).css(labelCss));
+    if (this.subtitle != undefined)
+      header.append($("<div class='subtitle'/>").text(this.subtitle).css(labelCss));
     var table = $("<table class='list'/>");
     var tbody = $("<tbody/>");
     table.append(tbody);

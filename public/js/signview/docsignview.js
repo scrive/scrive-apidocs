@@ -168,6 +168,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                         ((this.document().currentSignatory().attachments().length > 1) ?
                                             localization.docsignview.signatoryAttachmentsTitleForLots :
                                             localization.docsignview.signatoryAttachmentsTitleForOne),
+                                subtitle :   this.document().currentSignatory().hasSigned() ? undefined : localization.docsignview.signatoryAttachmentsSupportedFormats,
                                 textcolour : this.usebranding() ? this.signviewbranding().signviewtextcolour() : undefined,
                                 textfont : this.usebranding() ? this.signviewbranding().signviewtextfont() : undefined
 
