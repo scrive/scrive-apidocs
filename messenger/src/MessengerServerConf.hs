@@ -16,6 +16,7 @@ data SenderConfig = GlobalMouthSender
   {
     gmSenderUser      :: String
   , gmSenderPassword  :: String
+  , gmURL             :: String           -- "https://gw3.mcm.globalmouth.com:8443/api/mcm"
   }
   | LocalSender
   { localDirectory     :: FilePath
