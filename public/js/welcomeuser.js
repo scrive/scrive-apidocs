@@ -88,16 +88,6 @@ window.WelcomeUser = {
             // make it look similar to the upload button so that the user gets familiar with the button style/functioning
             cssClass: 'design-view-document-buttons-upload-button', 
             onClick: function() {
-                var sampleDocumentExperiment = new Experiment({
-                  name: 'sampledocument',
-                  namespace: 'welcome', 
-                  domain: ['loremipsumcontract'] 
-                });
-
-                mixpanel.register({
-                    'Sample document test group': sampleDocumentExperiment.value(),
-                    'Welcome modal accepted': true
-                });
                 mixpanel.people.set({
                     'Welcome modal accepted': true
                 });
@@ -112,7 +102,7 @@ window.WelcomeUser = {
                     window.location.pathname = '/d/' + documentData.id;
                 },
                 function() {}, // currently no error handling.
-                '/pdf/sample_document_' + sampleDocumentExperiment.value() + '_' + localization.code + '.base64.pdf',
+                '/pdf/sample_document_loremipsumcontract_' + localization.code + '.base64.pdf',
                 localization.welcomenewuser.documentTitle);
             }
         });

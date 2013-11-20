@@ -37,12 +37,6 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
         var that = this;
 
         if (document.mainfile() != null && document.signatories().length == 1 && this.acceptedSampleDocument) {
-            var hasHelpingButtonsExperiment = new Experiment({
-              namespace: 'ftue', 
-              name: 'extrapartybuttons', 
-              domain: ['shown']
-            });
-            mixpanel.register({'Extra add party buttons shown': hasHelpingButtonsExperiment.value()});
             mixpanel.track("Instructions to add party shown");
 
             var addParticipant = function(name, email, phone, company) {
@@ -101,15 +95,12 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             content.append($('<h1 class="arrowed"></h1>').text(localization.ftue.step2));
             content.append($('<h3></h3>').html(localization.ftue.step2description)); 
 
-            var hasHelpingButtons = hasHelpingButtonsExperiment.value() == 'shown';
-            if (hasHelpingButtons) { content.append(buttons); }
+            content.append(buttons);
 
             this.model.highlight().moveTo({
                 el: $('.design-view-action-participant-new-single .button'), 
                 margins: {top: 15, left: 15, bottom: 40, right: 55},
-                explanation:
-                hasHelpingButtons ? {placement: 'left', content: content, height: '180', width: '408'} :
-                                    {placement: 'left', content: content, height: '96', width: '290'}
+                explanation: {placement: 'left', content: content, height: '180', width: '408'}
             });
             this.model.progressbar().setStep(2);
         }
@@ -222,10 +213,8 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             }
         });
 
-        var sampleDocumentExperiment = new Experiment({namespace: 'welcome', name: 'sampledocument'});
-
         var img = $('<img class="document-preview" width="250" />');
-        img.attr('src', '/img/sample_document_' + sampleDocumentExperiment.value() + '_' + localization.code + '.png'); 
+        img.attr('src', '/img/sample_document_loremipsumcontract_' + localization.code + '.png'); 
 
         this.previewSampleDocument.append(button.el()).append(img);
     }
