@@ -10,7 +10,7 @@
 "InvitationEvidenceText":"En inbjudan$_to_review_or_sign()$ skickades till $signatory$ via $_delivery_method()$$if(!archive)$ av $_theScriveSystem()$$endif$.$if(full)$ Inbjudan innehöll en länk till $_theScriveSystem()$s gränssnitt för att signera dokument.$endif$$if(text)$ Inbjudan innehöll följande meddelande: <BR/> <i>$text:noescape()$</i>$endif$",
 "InvitationUndeliveredByEmailText":"$_TheEmailSystemReportsThatTheInvitation()$ kunde inte levereras$if(!archive)$ till $signatory$$endif$ via e-post och fortsatta kontaktförsök avbröts.",
 "InvitationUndeliveredBySMSText":"$_TheSMSSystemReportsThatTheInvitation()$ kunde inte levereras$if(!archive)$ till $signatory$$endif$ via SMS och fortsatta kontaktförsök avbröts.",
-"MarkInvitationReadEvidenceText":"$_TheEmailSystemReportsThatTheInvitation()$ $_to_review_or_sign()$ (sänt till $signatory_email$) öppnades.",
+"MarkInvitationReadEvidenceText":"$_TheEmailSystemReportsThatTheInvitation()$ $_to_review_or_sign()$ (sänd till $signatory_email$) öppnades.",
 "PreparationToPendingEvidenceText":"Redigeringen av dokumentet avslutades$if(!archive)$ av $actor$$endif$$if(full)$ och $_TheScriveSystem()$ låste dokumentet för ändringar$endif$.",
 "ProlongDocumentEvidenceText":"Förfallodatumet för signering förlängdes$if(!archive)$ av $actor$$endif$.",
 "RejectDocumentEvidenceText":"Inbjudan att signera avvisades$if(!archive)$ av $actor$$endif$. $_ThePossibilityToSignIsDisabled()$$if(text)$ Avvisningsmeddelandet$if(!archive)$ från $actor$$endif$ var: <BR/> <i>$text:noescape()$</i>$endif$",
