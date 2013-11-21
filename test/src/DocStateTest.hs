@@ -651,6 +651,13 @@ testPurgeDocument = doTimes 10 $ do
   archived2 <- dbUpdate $ PurgeDocuments 0 0
   assertEqual "Purged single document" 1 archived2
 
+  allDocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                         [DocumentFilterByDocumentID (documentid doc), DocumentFilterPurged False] [] (0,-1)
+  allDocs2 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                         [DocumentFilterByDocumentID (documentid doc), DocumentFilterPurged True] [] (0,-1)
+  assertEqual "List documents includes purged ones" [documentid doc] (map documentid allDocs2)
+  assertEqual "List documents does not include purged ones" [] (map documentid allDocs1)
+
 testPurgeDocumentUserSaved :: TestEnv ()
 testPurgeDocumentUserSaved = doTimes 10 $ do
   company <- addNewCompany
