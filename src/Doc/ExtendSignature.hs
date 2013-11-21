@@ -9,14 +9,14 @@ import AppConf (guardTimeConf, hostpart, mailsConfig, brandedDomains)
 import BrandedDomains (findBrandedDomain, bdurl)
 import Context (MailContext(..))
 import Control.Applicative ((<$>))
-import Control.Monad (forM_, when)
+import Control.Monad (forM_, when, void)
 import Control.Monad.Reader (MonadReader, runReaderT, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
 import qualified Data.ByteString as BS
 import Data.Maybe (fromMaybe)
-import DB (getMinutesTime, MonadDB, dbQuery)
+import DB (getMinutesTime, MonadDB, dbQuery, kCommit)
 import Doc.Action (sendClosedEmails)
 import Doc.DocSeal (digitallySealDocument, digitallyExtendDocument)
 import Doc.DocStateData (Document(..), DocumentStatus(..), documentsealstatus)
@@ -61,13 +61,16 @@ sealMissingSignaturesNewerThan mhours = do
         Just hours -> [DocumentFilterByLatestSignTimeAfter ((60 * hours) `minutesBefore` now)]
 
   docs <- dbQuery $ GetDocuments [DocumentsOfWholeUniverse]
-            ([ DocumentFilterStatuses [Closed]
+            ([ DocumentFilterPurged False
+             , DocumentFilterStatuses [Closed]
              , DocumentFilterBySealStatus [Missing]
              ] ++ signtimefilter)
             [] (0,100)
   forM_ docs $ \doc -> do
     case documentsealstatus doc of
-      Just Missing -> sealDocument doc
+      Just Missing -> do
+        sealDocument doc
+        kCommit
       _ -> return ()
 
 extendSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m) => m ()
@@ -75,18 +78,21 @@ extendSignatures = do
   lpt <- latest_publication_time
   Log.debug $ "extendSignatures: latest publication time is " ++ show lpt
   docs <- dbQuery $ GetDocuments [DocumentsOfWholeUniverse]
-            [ DocumentFilterStatuses [Closed]
+            [ DocumentFilterPurged False
+            , DocumentFilterStatuses [Closed]
             , DocumentFilterByLatestSignTimeBefore lpt
             , DocumentFilterBySealStatus
               [ Guardtime{ extended = False, private = True }
               , Guardtime{ extended = False, private = False }
               ]
-            ] [] (0,100)
-  forM_ docs $ \d -> 
+            ] [] (0,50)
+  when (not (null docs)) $ do
+    Log.debug $ "extendSignatures: considering " ++ show (length docs) ++ " document(s)"
+  forM_ docs $ \d ->
     case documentsealstatus d of
       Just (Guardtime{ extended = False }) -> do
-        _ <- extendDocumentSeal d
-        return ()
+        void $ extendDocumentSeal d
+        kCommit
       _ -> return ()
 
 sealDocument :: (CryptoRNG m, MonadIO m, AmazonMonad m, MonadReader SchedulerData m, MonadBaseControl IO m, MonadDB m)

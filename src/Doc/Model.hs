@@ -165,6 +165,7 @@ data DocumentFilter
   | DocumentFilterByModificationTimeAfter MinutesTime -- ^ That were modified after given time
   | DocumentFilterByLatestSignTimeBefore MinutesTime  -- ^ With latest sign time before given time
   | DocumentFilterByLatestSignTimeAfter MinutesTime   -- ^ With latest sign time after given time
+  | DocumentFilterPurged Bool                         -- ^ Only purged (=True) or non-purged (=False) documents
   deriving Show
 
 -- | Document security domain.
@@ -353,6 +354,9 @@ documentFilterToSQL (DocumentFilterByLatestSignTimeBefore time) = do
   sqlWhere $ documentLatestSignTimeExpression <+> "<" <?> time
 documentFilterToSQL (DocumentFilterByLatestSignTimeAfter time) = do
   sqlWhere $ documentLatestSignTimeExpression <+> ">" <?> time
+documentFilterToSQL (DocumentFilterPurged f) =
+  if f then sqlWhereIsNotNULL "documents.purged_time"
+       else sqlWhereIsNULL    "documents.purged_time"
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
   sqlWhere $ raw $ unsafeFromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do

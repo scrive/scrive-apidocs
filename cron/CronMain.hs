@@ -72,7 +72,7 @@ main = Log.withLogger $ do
     token -> return $ Just $ processMixpanelEvent token
 
   withCronJobs
-    ([ forkCron_ True "extendSignatures" (60 * 60 * 6) $ do
+    ([ forkCron_ True "extendSignatures" (60 * 60 * 3) $ do
          Log.cron "Running extendSignatures..."
          runScheduler extendSignatures
      , forkCron_ True "sealMissingSignatures (new)" (60 * 10) $ do
