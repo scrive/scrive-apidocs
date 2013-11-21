@@ -1350,13 +1350,14 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
 
             -- If we know actor's time zone:
             --   Set timeout to the beginning of the day: start of actorTime day + days to sign + 1
-            --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 00:00
+            --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 25 23:59 59
             --   Rationale: actor may have picked October 25 from calendar as last day to sign, which gave days to sign = 1, and so
             --   we should time out when October 25 has passed in actor's time zone.
             -- If we don't know actor's time zone:
             --   Set timeout to actorTime + days to sign + 1
-            --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 13:00
+            --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 12:59:59
             --   Rationale: Signatories will have at least until the end of the intended last day to sign.
+            -- We try to match expectation when one day after 24 december is understood as till last minute of 25 december.
             let timestamp = case mtzn of
                   Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
                   Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
@@ -1370,7 +1371,7 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
               lang :: Lang <- kRunAndFetch1OrThrowWhyNot (flip (:)) $ sqlUpdate "documents" $ do
                 sqlSet "status" Pending
                 sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                            <+> "+ (interval '1 day') * documents.days_to_sign"
+                            <+> "+ ((interval '1 day') * documents.days_to_sign) + (interval '23 hours 59 minutes 59 seconds')" -- This interval add almoust one they from description above.
                 sqlResult "lang"
                 sqlWhereDocumentIDIs docid
                 sqlWhereDocumentTypeIs Signable
