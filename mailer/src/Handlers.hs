@@ -15,6 +15,10 @@ import MailingServerConf
 import Mailer
 import SendGrid
 import System.Directory
+import Data.List
+import Data.Functor
+import Data.ByteString.UTF8  as BS
+import Data.Maybe
 
 router :: CryptoRNGState -> MailingServerConf -> Mailer Response -> ServerPartT IO Response
 router rng conf routes = withPostgreSQL (mscDBConfig conf) $
@@ -23,11 +27,20 @@ router rng conf routes = withPostgreSQL (mscDBConfig conf) $
 handlers :: Route (Mailer Response)
 handlers = choice [
     dir "mail" $ dir "sendgrid" $ hPost $ withDecodedBody handleSendGridEvents
-  , dir "mail" $ dir "sendgrid" $ dir "v3" $ hPost handleSendGridEventsV3
   , dir "mail" $ dir "mailgun" $ hPost $ withDecodedBody handleMailGunEvents
   ]
   where
     hPost = path POST id
+
+
+
+
+handleSendGridEvents :: Mailer Response
+handleSendGridEvents = do
+  ct <- getHeader "Content-Type" <$> askRq
+  if ("x-www-form-urlencoded" `isInfixOf` (fromMaybe "" $ BS.toString <$> ct))
+     then withDecodedBody handleSendGridEventsV1
+     else handleSendGridEventsV3
 
 
 withDecodedBody :: Mailer Response -> Mailer Response

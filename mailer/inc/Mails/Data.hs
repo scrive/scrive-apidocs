@@ -88,3 +88,5 @@ data Mail = Mail {
   , mailXSMTPAttrs  :: XSMTPAttrs
   , mailServiceTest :: Bool
   } deriving (Eq, Ord, Show)
+
+
