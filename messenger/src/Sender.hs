@@ -41,20 +41,20 @@ instance Eq Sender where
 
 createSender :: SenderConfig -> Sender
 createSender mc = case mc of
-  GlobalMouthSender{..}   -> createGlobalMouthSender gmSenderUser gmSenderPassword
+  GlobalMouthSender{..}   -> createGlobalMouthSender gmSenderUser gmSenderPassword gmURL
   LocalSender{}  -> createLocalSender mc
 
-createGlobalMouthSender :: String -> String -> Sender
-createGlobalMouthSender user password = Sender { senderName = "GlobalMouth", sendSMS = send }
+createGlobalMouthSender :: String -> String -> String -> Sender
+createGlobalMouthSender user password url = Sender { senderName = "GlobalMouth", sendSMS = send }
   where
     send :: CryptoRNG m => ShortMessage -> m Bool
     send sms@ShortMessage{..} = do
       liftIO $ do
         Log.messengerServer $ show sms
-        sendSMS2 (user,password) smOriginator smMSISDN smBody (show smID)
+        sendSMS2 (user,password,url) smOriginator smMSISDN smBody (show smID)
 
-sendSMS2 :: (String, String) -> String -> String -> String -> String -> IO Bool
-sendSMS2 (user, password) originator msisdn body ref = do
+sendSMS2 :: (String, String, String) -> String -> String -> String -> String -> IO Bool
+sendSMS2 (user, password, baseurl) originator msisdn body ref = do
   (code, stdout, stderr) <- readCurl [url] BS.empty
   case (code, maybeRead (takeWhile (not . isSpace) $ BSC.unpack stdout)) of
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 ->
@@ -76,7 +76,8 @@ sendSMS2 (user, password) originator msisdn body ref = do
       , md5s . Str $ latin_user ++ ":" ++ latin_password
       ]
     url = concat [
-        "https://gw3.mcm.globalmouth.com:8443/api/mcm?"
+        baseurl
+      , "?"
       , "username=", urlEncode latin_user, "&"
       , "body=", urlEncode latin_body, "&"
       , "msisdn=", urlEncode latin_msisdn, "&"

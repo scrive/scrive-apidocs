@@ -43,10 +43,7 @@ window.File = Backbone.Model.extend({
     },
     downloadLink : function() {
         var link = null;
-        /* FIXME: this is wrong that we add .pdf as default extension. File should just know better. */
         var name = this.name();
-        if (name.toLowerCase().indexOf(".pdf", name.length - 4) == -1)
-          name = name + ".pdf";
         if( this.fileid()!==undefined && this.attachmentid()!==undefined ) {
             link = "/a/download/" + this.attachmentid() + "/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
@@ -64,7 +61,7 @@ window.File = Backbone.Model.extend({
     downloadLinkForMainFile : function(name) {
         var link = null;
         if( this.documentid()!==undefined ) {
-            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent((name == undefined ? this.name() : name)) + ".pdf" + this.queryPart();
+            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(name + ".pdf") + this.queryPart();
         }
         else {
             console.log("File is not binded to document");

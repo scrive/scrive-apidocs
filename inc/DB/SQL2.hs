@@ -123,6 +123,7 @@ module DB.SQL2
   , sqlWhereILike
   , sqlWhereILikeE
   , sqlWhereIsNULL
+  , sqlWhereIsNotNULL
   , sqlWhereIsNULLE
 
   , sqlIgnore
@@ -631,6 +632,9 @@ sqlWhereNotExists sqlSelectD = do
 
 sqlWhereIsNULL :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhereIsNULL col = sqlWhere $ col <+> "IS NULL"
+
+sqlWhereIsNotNULL :: (MonadState v m, SqlWhere v) => SQL -> m ()
+sqlWhereIsNotNULL col = sqlWhere $ col <+> "IS NOT NULL"
 
 sqlWhereIsNULLE :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a)
                 => (a -> e) -> SQL -> m ()

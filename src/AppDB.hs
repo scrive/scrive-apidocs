@@ -168,6 +168,7 @@ kontraMigrations = [
   , removeDuplicateIndexFromUsersCallbackScheme
   , removeDuplicateIndexFromCompanyUIs
   , addClientTimeNameToEvidenceLog
+  , fixSignatureFieldsWithAnySize
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

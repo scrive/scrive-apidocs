@@ -186,8 +186,8 @@ jsonDocumentsList = do
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
-      filters = filters1 ++ filters2 ++ tagsFilters
-  Log.debug $ "Filtering with " ++ show filters
+      filters = filters1 ++ filters2 ++ tagsFilters ++ [DocumentFilterPurged False]
+
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of

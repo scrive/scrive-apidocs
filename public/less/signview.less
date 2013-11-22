@@ -19,7 +19,6 @@
       font-weight:300;
       color:#4A4A49;
       font-size:20px;
-      margin-bottom:20px;
   }
 
   .pagediv {
@@ -360,10 +359,19 @@
       margin-right: -10px; // line up with the signatory boxes
   }
 
-  .authorattachments h2, .signatoryattachments h2 {
+  .authorattachments h2 {
+      float: left;
+  }
+  .signatoryattachments .header {
       float: left;
   }
 
+  .signatoryattachments .header .subtitle {
+      font-size: 13px;
+      line-height: 15px;
+      font-weight : 300;
+      color: #808080;
+  }
 
   .signatoryattachments {
     .item {

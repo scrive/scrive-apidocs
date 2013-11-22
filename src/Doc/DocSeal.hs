@@ -74,6 +74,7 @@ import Control.Logic
 import Utils.Prelude
 import qualified Amazon as AWS
 import Doc.API.Callback.Model
+import Data.Char
 
 personFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> Seal.Person
 personFromSignatory boxImages signatory =
@@ -206,10 +207,12 @@ findOutAttachmentDesc document = do
           let name' = filename file
           return (getNumberOfPDFPages contents, name')
         numberOfPagesText <-
-          if numberOfPages==1
-           then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
-           else renderLocalTemplate document "_numberOfPages" $ do
-             F.value "pages" numberOfPages
+          if (".png" `isSuffixOf` (map toLower name) || ".jpg" `isSuffixOf` (map toLower name) )
+           then return ""
+           else if numberOfPages==1
+                  then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
+                  else renderLocalTemplate document "_numberOfPages" $ do
+                    F.value "pages" numberOfPages
 
         attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
                                      F.value "author" authorName
@@ -230,16 +233,19 @@ findOutAttachmentDesc document = do
 
       findAttachmentsForSignatoryAttachment (num, sigattach, sl) = do
         let personName = getSmartName sl
-        numberOfPages <- case signatoryattachmentfile sigattach of
-                       Nothing -> return 1
+        (numberOfPages,name) <- case signatoryattachmentfile sigattach of
+                       Nothing -> return (1,"")
                        Just fileid' -> do
+                                   file <- dbQuery $ GetFileByFileID fileid'
                                    contents <- getFileIDContents fileid'
-                                   return $ getNumberOfPDFPages contents
+                                   return $ (getNumberOfPDFPages contents,filename file)
         numberOfPagesText <-
-          if numberOfPages==1
-           then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
-           else renderLocalTemplate document "_numberOfPages" $ do
-             F.value "pages" numberOfPages
+          if (".png" `isSuffixOf` (map toLower name) || ".jpg" `isSuffixOf` (map toLower name) )
+           then return ""
+           else if numberOfPages==1
+              then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
+              else renderLocalTemplate document "_numberOfPages" $ do
+                F.value "pages" numberOfPages
 
         attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
                                      F.value "author" personName
@@ -291,7 +297,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content inputpath outp
             , "files/Digital_Signature_Documentation_Part_I.html"
             , "files/Digital_Signature_Documentation_Part_II.html"
             ]
-  
+
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
 
 sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)

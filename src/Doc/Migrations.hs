@@ -1092,3 +1092,24 @@ migrateDocumentsMoveFilesToMainFilesTable =
         kRun_ $ "ALTER TABLE documents DROP COLUMN sealed_file_id"
         kRun_ $ "ALTER TABLE documents DROP COLUMN seal_status"
     }
+
+fixSignatureFieldsWithAnySize :: MonadDB m => Migration m
+fixSignatureFieldsWithAnySize =
+  Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 4
+  , mgrDo =  do
+    kRun_ $ sqlSelect "signatory_link_fields" $ do
+                 sqlResult "id, placements"
+                 sqlWhere "placements ILIKE '%\"wrel\":0,%'"
+                 sqlWhereEq "type" (SignatureFT undefined)
+    values <- kFold (\acc ids placements -> (ids :: Integer, placements :: [FieldPlacement]) : acc) []
+    forM_ values $ \(fid,  placements) -> do
+      let placements' = for placements (\p -> if (placementwrel p == 0 || placementhrel p == 0)
+                                                then  p {placementwrel = 260 / 943, placementhrel = 102 / 1335 }
+                                                else p )
+
+      kRun_ $ sqlUpdate "signatory_link_fields" $ do
+                  sqlSet "placements" placements'
+                  sqlWhereEq "id" fid
+  }

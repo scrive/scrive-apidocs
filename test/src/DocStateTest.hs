@@ -368,9 +368,9 @@ testMarkInvitationReadEvidenceLog = do
   let me = find (\e -> evType e == Current MarkInvitationReadEvidence) lg
   assertJust me
   let Just e = me
-  let expected simple = (if simple then "The" else "The Scrive e-signing system’s external email delivery system reports that the") ++ " invitation to "
+  let expected simple = (if simple then "The" else "The Scrive e-signing system’s external email delivery system reported that the") ++ " invitation to "
               ++ (if signatoryispartner sl then "sign" else "review")
-              ++ " (sent to " ++ getEmail sl ++ ") has been opened."
+              ++ " (sent to " ++ getEmail sl ++ ") was opened."
   assertEqual "Correct event text" (expected False) (evText e)
   [e'] <- getSignatoryLinks [e]
   simpletext <- simplyfiedEventText (Just "author") doc{ documentlang = LANG_EN } e'
@@ -650,6 +650,13 @@ testPurgeDocument = doTimes 10 $ do
   randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) ((systemActor t) { actorTime = now })
   archived2 <- dbUpdate $ PurgeDocuments 0 0
   assertEqual "Purged single document" 1 archived2
+
+  allDocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                         [DocumentFilterByDocumentID (documentid doc), DocumentFilterPurged False] [] (0,-1)
+  allDocs2 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                         [DocumentFilterByDocumentID (documentid doc), DocumentFilterPurged True] [] (0,-1)
+  assertEqual "List documents includes purged ones" [documentid doc] (map documentid allDocs2)
+  assertEqual "List documents does not include purged ones" [] (map documentid allDocs1)
 
 testPurgeDocumentUserSaved :: TestEnv ()
 testPurgeDocumentUserSaved = doTimes 10 $ do

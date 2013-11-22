@@ -68,7 +68,7 @@ import qualified Data.ByteString.Base64 as B64
 import Text.JSON.Gen
 import MinutesTime
 import Text.StringTemplates.Templates
-import Data.Map as Map
+import Data.Map as Map hiding (map)
 
 import Doc.DocSeal as DocSeal
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -86,6 +86,8 @@ import Company.Model
 import Company.CompanyUI
 import User.Utils
 import User.UserView
+import Data.List
+import Data.Char
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -585,7 +587,7 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
 
 
 apiCallDownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
-apiCallDownloadFile did fileid _nameForBrowser = api $ do
+apiCallDownloadFile did fileid nameForBrowser = api $ do
   (msid :: Maybe SignatoryLinkID) <- lift $ readField "signatorylinkid"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
   doc <- do
@@ -609,7 +611,14 @@ apiCallDownloadFile did fileid _nameForBrowser = api $ do
      else do
         content <- getFileIDContents fileid
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
-            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+            ct = if (".pdf" `isSuffixOf` (map toLower nameForBrowser))
+                    then  "application/pdf"
+                    else if (".png" `isSuffixOf` (map toLower nameForBrowser))
+                      then "image/png"
+                      else if (".jpg" `isSuffixOf` (map toLower nameForBrowser))
+                        then "image/jpeg"
+                        else "application/octet-stream"
+            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString ct) res
         return res2
 
 
@@ -632,7 +641,7 @@ apiCallChangeMainFile docid = api $ do
     Nothing -> return Nothing
     Just (Input _ Nothing _) -> throwIO . SomeKontraException $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
-      let filename = takeBaseName filename'
+      let filename = takeBaseName filename' ++ ".pdf"
       let mformat = getFileFormatForConversion filename'
       content' <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
@@ -654,7 +663,7 @@ apiCallChangeMainFile docid = api $ do
                                       Right dcontent -> preCheckPDF dcontent
                                       Left _ -> return (Left m)
       fileid' <- dbUpdate $ NewFile filename pdfcontent
-      return $ Just (fileid', filename)
+      return $ Just (fileid', takeBaseName filename)
 
   case mft of
     Just  (fileid,filename) -> do
@@ -708,7 +717,11 @@ documentUploadSignatoryAttachment did sid aname = api $ do
   -- we use gs to do that of course
   ctx <- getContext
 
-  content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
+  content <- if (".pdf" `isSuffixOf` (map toLower filename))
+              then apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
+              else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
+                then return $ Binary $ concatChunks content1
+                else throwIO . SomeKontraException $ badInput "Only pdf files or images can be attached."
 
   let sanitizedFileName = dropFilePathFromWindows filename
   fileid' <- dbUpdate $ NewFile sanitizedFileName content

@@ -60,9 +60,18 @@ assembleContent Mail{..} = do
         "\r\n"
       footerContent = "\r\n--" ++ boundaryAlternative ++ "--\r\n"
       footerEmail = "\r\n--" ++ boundaryMixed ++ "--\r\n"
+      attachmentType fname =
+                if (".pdf" `isSuffixOf` (map toLower fname))
+                    then  "application/pdf"
+                    else if (".png" `isSuffixOf` (map toLower fname))
+                      then "image/png"
+                      else if (".jpg" `isSuffixOf` (map toLower fname))
+                        then "image/jpeg"
+                        else "application/octet-stream"
+
       headerAttach fname = "\r\n--" ++ boundaryMixed ++ "\r\n" ++
-        "Content-Disposition: inline; filename=\"" ++ mailEncode fname ++".pdf\"\r\n" ++
-        "Content-Type: application/pdf; name=\"" ++ mailEncode fname ++ ".pdf\"\r\n" ++
+        "Content-Disposition: inline; filename=\"" ++ mailEncode fname ++"\"\r\n" ++
+        "Content-Type: "++attachmentType fname++"; name=\"" ++ mailEncode fname ++ "\"\r\n" ++
         "Content-Transfer-Encoding: base64\r\n" ++
         "\r\n"
       attach Attachment{..} = do
