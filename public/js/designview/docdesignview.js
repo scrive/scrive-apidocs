@@ -144,7 +144,7 @@
            if (this.sendButton != undefined) {
              if (this.model.document().hasProblems(true)) {
               this.sendButton.addClass('disabled');
-              this.sendButton.unbind('click');
+              this.sendButton.unbind('click').click(this.formProblemClick);
              } else  {
               this.sendButton.removeClass("disabled");
               this.sendButton.unbind('click').click(this.finalClick);
@@ -184,6 +184,35 @@
             });
 
             return removeDocumentButton.el();
+        },
+        formProblemClick: function() {
+          if(!this.model.document().hasProblems(true)) {
+            return;
+          }
+
+          var content = $('<div class="something-missing-modal"/>');
+
+          var contentP1 = $('<p/>');
+          contentP1.text(localization.designview.somethingMissingModal.p11);
+          contentP1.append($('<br/>'));
+          contentP1.append(document.createTextNode(localization.designview.somethingMissingModal.p12));
+          content.append($('<div class="something-missing-popup-p1"/>').append(contentP1));
+
+          content.append($('<div class="something-missing-popup-p2"/>').append($('<p/>').text(localization.designview.somethingMissingModal.p2)));
+
+          content.append($('<div class="something-missing-popup-email"/>').text(localization.designview.somethingMissingModal.email));
+
+          var contentP3 = $('<p/>');
+          contentP3.text(localization.designview.somethingMissingModal.p31);
+          contentP3.append($('<br/>'));
+          contentP3.append(document.createTextNode(localization.designview.somethingMissingModal.p32));
+          content.append($('<div class="something-missing-popup-p3"/>').append(contentP3));
+
+          content.append($('<div class="something-missing-popup-mobile"/>').text(localization.designview.somethingMissingModal.mobile));
+
+          Confirmation.popup({title: localization.designview.somethingMissingModal.title,
+                              cantCancel: true,
+                              content: content});
         },
         finalClick: function() {
             var view = this;
