@@ -37,6 +37,7 @@ import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified ELegitimation.Control as BankID
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
@@ -88,6 +89,8 @@ import User.Utils
 import User.UserView
 import Data.List
 import Data.Char
+import Attachment.Model
+import Utils.Read
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -103,6 +106,7 @@ versionedAPI _version = choice [
   dir "createfromtemplate" $ hPostAllowHttp $ toK1 $ apiCallCreateFromTemplate,
   dir "clone"              $ hPost $ toK1   $  apiCallClone,
   dir "update"             $ hPost $ toK1 $ apiCallUpdate,
+  dir "setattachments"     $ hPost $ toK1 $ apiCallSetAuthorAttachemnts,
   dir "ready"              $ hPostAllowHttp $ toK1 $ apiCallReady,
   dir "cancel"             $ hPost $ toK1 $ apiCallCancel,
   dir "reject"             $ hPost $ toK2 $ apiCallReject,
@@ -244,6 +248,77 @@ apiCallUpdate did = api $ do
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
   triggerAPICallbackIfThereIsOne newdocument
   Ok <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
+
+
+apiCallSetAuthorAttachemnts  :: Kontrakcja m => DocumentID -> m Response
+apiCallSetAuthorAttachemnts did = api $ do
+  (user, actor, _) <- getAPIUser APIDocCreate
+  doc <- dbQuery $ GetDocumentByDocumentID $ did
+  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+  when (documentstatus doc /= Preparation) $ do
+        checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
+  when (not $ (auid == userid user)) $ do
+        throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+  attachments <- getAttachments doc 0
+  forM_ (documentauthorattachments doc) $ \att -> dbUpdate $ RemoveDocumentAttachment did (authorattachmentfile att) actor
+  forM_ attachments $ \att -> dbUpdate $ AddDocumentAttachment did att actor
+  triggerAPICallbackIfThereIsOne doc
+  newdocument <- dbQuery $ GetDocumentByDocumentID $ did
+  Ok <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+   where
+        getAttachments :: Kontrakcja m => Document -> Int -> APIMonad m [FileID]
+        getAttachments doc i = do
+            mf <- tryGetFile doc i
+            case mf of
+                 Just f -> do
+                            atts <- getAttachments doc (i+1)
+                            if (f `elem` atts)
+                              then return atts
+                              else return $ f: atts
+                 Nothing -> return []
+        tryGetFile ::  Kontrakcja m => Document -> Int -> APIMonad m  (Maybe FileID)
+        tryGetFile doc i = do
+            inp <- lift $ getDataFn' (lookInput $ "attachment_" ++ show i)
+            case inp of
+                 Just (Input (Left filepath) (Just filename) _contentType) -> do
+                     content <- liftIO $ BSL.readFile filepath
+                     cres <- liftIO $ preCheckPDF (concatChunks content)
+                     case cres of
+                       Left _ -> do
+                         Log.debug $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
+                         throwIO . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
+                       Right content' -> do
+                         fileid' <- dbUpdate $ NewFile filename content'
+                         return (Just fileid')
+                 Just (Input  (Right c)  _ _)  -> do
+                      case maybeRead (BSL.toString c) of
+                          Just fid -> do
+                            access <- hasAccess doc fid
+                            if access
+                              then return (Just fid)
+                              else throwIO . SomeKontraException $ (forbidden $ "Access to attachment " ++ show i ++ " forbiden")
+                          Nothing -> throwIO . SomeKontraException $ (badInput $ "Can parse attachment id for attachment " ++ show i)
+                 _ -> return Nothing
+
+        hasAccess ::  Kontrakcja m => Document -> FileID -> APIMonad m Bool
+        hasAccess doc fid = do
+          user <- fromJust <$> ctxmaybeuser <$> getContext
+          if (fid `elem` (authorattachmentfile <$> documentauthorattachments doc))
+           then return True
+           else do
+            atts <-  dbQuery $ GetAttachments [  AttachmentsSharedInUsersCompany (userid user)
+                                              , AttachmentsOfAuthorDeleteValue (userid user) True
+                                              , AttachmentsOfAuthorDeleteValue (userid user) False
+                                             ]
+                                            [ AttachmentFilterByFileID [fid]]
+                                            []
+                                            (0,1)
+            return $ not $ Prelude.null atts
+
+
+
+
+
 
 apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do

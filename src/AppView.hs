@@ -12,6 +12,7 @@ module AppView( kontrakcja
               , simpleHtmlResponse
               , simpleHtmlResonseClrFlash
               , priceplanPage
+              , unsupportedBrowserPage
               , standardPageFields
               , contextInfoFields
               , renderTemplateAsPage
@@ -173,6 +174,12 @@ priceplanPage = do
             F.value "pricecolour" $ bdpricecolour bd
             standardPageFields ctx kontrakcja ad
           simpleHtmlResonseClrFlash content
+
+
+unsupportedBrowserPage :: Kontrakcja m => m Response
+unsupportedBrowserPage = do
+  res <- renderTemplate "unsupportedBrowser" $ return ()
+  simpleHtmlResponse res
 
 handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do

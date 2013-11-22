@@ -93,8 +93,6 @@ staticRoutes = choice
      , dir "d" $ dir "zip"          $ hGet  $ toK0 $ ArchiveControl.handleZip
      , dir "d" $ dir "signview"     $ hPost $ toK1 $ DocControl.handleIssueAuthorGoToSignview
      , dir "d" $ dir "evidenceattachment" $ hGet $ toK2 $ DocControl.handleEvidenceAttachment
-     , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
-     , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
@@ -170,7 +168,7 @@ staticRoutes = choice
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes
 
-     , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ ServerUtils.handleUnsupportedBrowser
+     , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ unsupportedBrowserPage
      , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
 
      , documentAPI
@@ -180,6 +178,7 @@ staticRoutes = choice
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
 
      -- public services
+     , dir "parsecsv"        $ hPost $ toK0 $ ServerUtils.handleParseCSV
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
      , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage

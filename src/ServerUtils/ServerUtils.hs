@@ -1,7 +1,7 @@
 module ServerUtils.ServerUtils (
-     handleSerializeImage
+     handleParseCSV
+   , handleSerializeImage
    , handleTextToImage
-   , handleUnsupportedBrowser
    , handleScaleImage
   ) where
 
@@ -28,17 +28,39 @@ import Data.Maybe
 import Utils.String
 import Utils.IO
 import Data.Char (ord)
-import AppView (simpleHtmlResponse)
-import Text.StringTemplates.Templates (renderTemplate)
 import System.Directory (getCurrentDirectory)
 import System.Path (secureAbsNormPath)
-import System.FilePath ((</>))
+import System.FilePath ((</>), takeBaseName)
+import Text.JSON.Gen as J
+import Util.CSVUtil
+import qualified Data.ByteString.UTF8 as BS (fromString)
 
+-- Read a csv file from POST, and returns a JSON with content
+handleParseCSV :: Kontrakcja m => m JSValue
+handleParseCSV = do
+  input <- getDataFn' (lookInput "csv")
+  res <- case input of
+        Just(Input contentspec (Just filename) _ ) -> do
+          content <- case contentspec of
+                       Left filepath -> liftIO $ BSL.readFile filepath
+                       Right content -> return content
+          let _title = BS.fromString (takeBaseName filename)
+          case parseCSV content of
+                 Right (h:r) -> J.runJSONGenT $ do
+                         J.value "header" $ h
+                         J.value "rows" $ r
+                 _ -> runJSONGenT $ J.value "parseError" True
+        _ -> runJSONGenT $ J.value "parseError" True
+  return res
+
+-- Read an image file from POST, and returns a its content encoded with Base64
 handleSerializeImage :: Kontrakcja m => m JSValue
 handleSerializeImage = do
   logo <- guardJustM $ getFileField "logo"
   runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
 
+
+-- Read an image file from POST or /public/img directory, and return it scaled down to 60%, and base 64 encoded
 handleScaleImage :: Kontrakcja m => m JSValue
 handleScaleImage = do
   logo <- guardJustM $ getFileField "logo"
@@ -65,11 +87,8 @@ handleScaleImage = do
         strictBStoLazyBS = BSL.fromChunks . (:[])
         lazyBStoStrictBS = BS.concat . BSL.toChunks
 
-handleUnsupportedBrowser :: Kontrakcja m => m Response
-handleUnsupportedBrowser = do
-  res <- renderTemplate "unsupportedBrowser" $ return ()
-  simpleHtmlResponse res
-
+-- Based on text, returns an image of this text, drawn using `handwriting` font.
+-- Expected text, dimentions, font and format (base64 or plain) are passed as parameters.
 handleTextToImage :: Kontrakcja m =>  m Response
 handleTextToImage = do
     text <- fmap (take 50) $ guardJustM $ getField "text"

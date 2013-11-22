@@ -14,8 +14,6 @@ module Doc.DocControl(
     , handleEvidenceAttachment
     , handleIssueShowGet
     , handleIssueAuthorGoToSignview
-    , handleSetAttachments
-    , handleParseCSV
     , prepareEmailPreview
     , handleResend
     , handleChangeSignatoryEmail
@@ -54,14 +52,11 @@ import KontraLink
 import MagicHash
 import Happstack.Fields
 import Utils.Monad
-import Utils.Read
-import Utils.String
 import Redirect
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
 import Text.StringTemplates.Templates
-import Util.CSVUtil
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
@@ -78,10 +73,8 @@ import Happstack.Server.Types
 import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length, take)
 import qualified Data.Map as Map
-import System.FilePath
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
@@ -507,83 +500,6 @@ prepareEmailPreview docid slid = do
              mailInvitationContent False ctx Sign doc Nothing True
          _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
-
-handleSetAttachments :: Kontrakcja m => DocumentID -> m JSValue
-handleSetAttachments did = do
-    guardLoggedIn
-    doc <- getDocByDocIDForAuthor did
-    attachments <- getAttachments doc 0
-    Log.debug $ "Setting attachments to " ++ show attachments
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    forM_ (documentauthorattachments doc) $ \att -> dbUpdate $ RemoveDocumentAttachment did (authorattachmentfile att) actor
-    forM_ (nub attachments) $ \att -> dbUpdate $ AddDocumentAttachment did att actor -- usage of nub is ok, as we never expect this list to be big
-    runJSONGenT $ return ()
-   where
-        getAttachments :: Kontrakcja m => Document -> Int -> m [FileID]
-        getAttachments doc i = do
-            mf <- tryGetFile doc i
-            case mf of
-                 Just f -> (f:) <$> getAttachments doc (i+1)
-                 Nothing -> return []
-        tryGetFile ::  Kontrakcja m => Document -> Int -> m (Maybe FileID)
-        tryGetFile doc i = do
-            inp <- getDataFn' (lookInput $ "attachment_" ++ show i)
-            case inp of
-                 Just (Input (Left filepath) (Just filename) _contentType) -> do
-                     content <- liftIO $ BSL.readFile filepath
-                     cres <- liftIO $ preCheckPDF (concatChunks content)
-                     case cres of
-                       Left _ -> do
-                         Log.debug $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
-                         internalError
-                       Right content' -> do
-                         fileid' <- dbUpdate $ NewFile filename content'
-                         return (Just fileid')
-                 Just (Input  (Right c)  _ _)  -> do
-                      case maybeRead (BSL.toString c) of
-                          Just fid -> do
-                            access <- hasAccess doc fid
-                            if access
-                              then return (Just fid)
-                              else internalError
-                          Nothing -> internalError
-                 _ -> return Nothing
-
-        hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
-        hasAccess doc fid = do
-          user <- fromJust <$> ctxmaybeuser <$> getContext
-          if (fid `elem` (authorattachmentfile <$> documentauthorattachments doc))
-           then return True
-           else do
-            atts <- dbQuery $ GetAttachments [  AttachmentsSharedInUsersCompany (userid user)
-                                              , AttachmentsOfAuthorDeleteValue (userid user) True
-                                              , AttachmentsOfAuthorDeleteValue (userid user) False
-                                             ]
-                                            [ AttachmentFilterByFileID [fid]]
-                                            []
-                                            (0,1)
-            return $ not $ null atts
-
-
-
-handleParseCSV :: Kontrakcja m => m JSValue
-handleParseCSV = do
-  ctx <- getContext
-  _ <- guardJust $ ctxmaybeuser ctx
-  input <- getDataFn' (lookInput "csv")
-  res <- case input of
-        Just(Input contentspec (Just filename) _ ) -> do
-          content <- case contentspec of
-                       Left filepath -> liftIO $ BSL.readFile filepath
-                       Right content -> return content
-          let _title = BS.fromString (takeBaseName filename)
-          case parseCSV content of
-                 Right (h:r) -> runJSONGenT $ do
-                         J.value "header" $ h
-                         J.value "rows" $ r
-                 _ -> runJSONGenT $ J.value "parseError" True
-        _ -> runJSONGenT $ J.value "parseError" True
-  return res
 
 -- | Switch to document language. Checks first if there is not logged in user. If so it will switch only if this is a different signatory.
 switchLangWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m ()

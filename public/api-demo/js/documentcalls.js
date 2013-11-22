@@ -160,6 +160,52 @@ window.UpdateApiCall = ApiCall.extend({
         }
 });
 
+
+window.SetAttachmentsApiCall = ApiCall.extend({
+        defaults: {
+            name : "Change main file API call",
+            files : [],
+            documentid : LocalStorage.get("api","documentid")
+        },
+        initialize: function (args) {
+        },
+        isSetAttachments : function() {return true;},
+        files : function() {return this.get("files");},
+        addFile : function(f) {}
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+             LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        send : function() {
+            var model = this;
+            var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            $("body").append(form);
+            form.append(this.file());
+            var formData = new FormData(form[0]);
+            this.call("setattachments/" + this.documentid(), {
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success : function(res) {
+                    model.file().detach();
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                    form.remove();
+                },
+                error : function(res) {
+                    model.file().detach();
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                    form.remove();
+                }
+            });
+
+        }
+});
+
+
+
 window.ReadyApiCall = ApiCall.extend({
         defaults: {
             name : "Ready API call",
