@@ -27,12 +27,10 @@ handleSendGridEventsV3 :: Mailer Response
 handleSendGridEventsV3= do
   logMsg $ "Processing some sendgrid events (new interface)"
   rqVar <- rqBody <$> askRq
-  logMsg $ "We have rq - now decoding"
   rq <- liftIO $ fmap unBody <$> tryTakeMVar rqVar
-  logMsg $ "Body is decoded"
   case (decode <$> BS.toString <$> rq) of
        Just (Ok (JSArray a)) -> do
-         logMsg $ "Json array is parsed"
+         logMsg $ "Event json parsed : we got " ++ (show $ length a) ++ " events."
          mapM_ processSendGridEventV3 a
          ok $ toResponse ("Thanks" :: String)
        _ -> do
@@ -42,45 +40,36 @@ handleSendGridEventsV3= do
 
 processSendGridEventV3 :: JSValue -> Mailer ()
 processSendGridEventV3 js = do
-  logMsg $ "Processing json:" ++ encode js
   withJSValue js $ do
     mmid <- join <$> fmap maybeRead <$> fromJSValueField "email_id"
     mmtk <- join <$> fmap maybeRead <$> fromJSValueField "email_token"
     case (mmid,mmtk) of
       (Just mid, Just token) -> do
-        logMsg $ "Getting mail for DB"
         mmail <- dbQuery $ GetEmail mid token
-        logMsg $ "Checking it"
         case mmail of
           Nothing -> logError $ "Error: Email with id = " ++ show mid ++ ", token = " ++ show token ++ " doesn't exist."
           Just Mail{..} -> do
-              logMsg $ "Checking SMTP params"
               let attrs = fromXSMTPAttrs mailXSMTPAttrs
               fields <- forM attrs $ \(name,_) -> do
-                logMsg $ "Reading field " ++ show name
                 fvalue <- fromJSValueField name
-                logMsg $ "Value is " ++ show fvalue
                 return (name, fvalue)
-              logMsg $ "Fields are " ++ show fields
               if fields /= map (second Just) attrs
-                then logError $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one: " ++ show fields
+                then logError $ "Expected X-SMTP data (" ++ show attrs ++ ") doesn't match delivered one: " ++ show fields ++ ". JSON " ++ encode js
                 else do
-                  logMsg $ "Reading event type "
                   mevent <- sendgridEventFromJSValueM
-                  logMsg $ "Email with id = " ++ show mid ++ ", token = " ++ show token ++ " exists and we got " ++ show mevent ++ " about it."
                   case mevent of
-                    Nothing -> logError "Invalid event "
+                    Nothing -> logError $ "We could not parse event type:"  ++ encode js
                     Just event -> do
-                        logMsg $ "Reading rest of event"
+                        logMsg $ "For email with id = " ++ show mid ++ ", token = " ++ show token ++ " we got event: " ++ show event
                         email <- fromMaybe "" <$> fromJSValueField "email"
                         category <- fromMaybe "" <$> fromJSValueField "category"
                         let ev = SendGridEvent email event category
-                        logMsg $ "Doing final update"
+                        logMsg $ "Updating database"
                         res <- dbUpdate (UpdateWithEvent mailID ev)
                         if not res
-                          then logError "UpdateWithEvent didn't update anything"
-                          else logMsg $ "Event '" ++ show event ++ "' for email #" ++ show mailID ++ " received."
-      _ -> logError $ "Recieved event - but can't determine mail " ++ show js
+                          then logError $ "UpdateWithEvent didn't update anything for mail #" ++ show mailID ++ " event " ++ show ev
+                          else logMsg $ "Event '" ++ show event ++ "' for email #" ++ show mailID ++ " recorded."
+      _ -> logError $ "Recieved event - but can't determine mail " ++ encode js
   return ()
 
 

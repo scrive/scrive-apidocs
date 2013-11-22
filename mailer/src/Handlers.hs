@@ -26,7 +26,7 @@ router rng conf routes = withPostgreSQL (mscDBConfig conf) $
 
 handlers :: Route (Mailer Response)
 handlers = choice [
-    dir "mail" $ dir "sendgrid" $ hPost $ withDecodedBody handleSendGridEvents
+    dir "mail" $ dir "sendgrid" $ hPost $ handleSendGridEvents
   , dir "mail" $ dir "mailgun" $ hPost $ withDecodedBody handleMailGunEvents
   ]
   where
