@@ -276,16 +276,6 @@ javascriptLocalisation =
                     , forThis : "$_checkboxFor()$"
                     , done : "$_checkboxDone()$"
              }
-             , somethingMissingModal : {
-                 title : "$_designviewSomethingMissingModalTitle()$"
-               , p11 : "$_designviewSomethingMissingModalP11()$"
-               , p12 : "$_designviewSomethingMissingModalP12()$"
-               , p2 : "$_designviewSomethingMissingModalP2()$"
-               , email : "$_designviewSomethingMissingModalEmail()$"
-               , p31 : "$_designviewSomethingMissingModalP31()$"
-               , p32 : "$_designviewSomethingMissingModalP32()$"
-               , mobile : "$_designviewSomethingMissingModalMobile()$"
-             }
              , phonePlaceholder: "$_phonePlaceholder()$"
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
