@@ -1,111 +1,139 @@
 header.site {
-  min-width: 1018px;
-  &.thin { min-width: 960px; } // related to tablets
-  top : 0;
-  left : 0;
-  width : 100%;
-  z-index : 100;
   background : @blue-header;
-  font-size: @regular-font-size;
   font-family: @source;
+  font-size: @regular-font-size;
+  left: 0;
+  min-width: 1018px;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  
+  &.thin {
+    min-width: 960px; // related to tablets
+  
+  } 
+  
   nav {
-    position : relative;
-    min-height: 80px;
     border-bottom : 1px solid black;
+    min-height: 80px;
+    position: relative;
+    
     .box-shadow(0 4px 0 rgba(0, 0, 0, 0.1));
+    
     ul.ct {
       .clearfix;
-      min-height: 80px;
+
       margin: 0 auto;
+      min-height: 80px;
+      position: relative;
       width: 1018px;
-      &.thin { width: 960px; } // related to tablets, can't be wider in ipad
-      position : relative;
+  
+      &.thin { 
+        width: 960px; // related to tablets, can't be wider in ipad
+      }
 
       // right-container is used to align the items to the bottom
       // since the logo (#branding) can have different heights
       .right-container {
-        position: absolute;
         bottom: 0;
+        position: absolute;
         right: 0;
       }
 
       li {
-        height : 24px;
-        margin : 32px 0 24px;
+        height: 24px;
+        margin: 32px 0 24px;
+        
         a.page {
-          display : block;
-          font : 15px/80px @source;
-          text-align : center;
-          color : @text-lighter;
-	        font-weight:300;
-          min-height : 80px;
-          margin-top : -37px;
-          border-top : 4px solid transparent;
+          border-top: 4px solid transparent;
+          color: @text-lighter;
+          display: block;
+          font: 15px/80px @source;
+	        font-weight: 300;
+          margin-top: -37px;
+          min-height: 80px;
           padding: 0 14px;
+          text-align: center;
+
           &:hover {
-            color : @text-very-light;
+            color: @text-very-light;
           }
-         &.active {
-          font-weight: 600;
-          cursor: pointer;
-          color : @text-very-light;
+          
+          &.active {
+            color: @text-very-light;
+            cursor: pointer;
+            font-weight: 600;
           }
         }
+
         &.session-login {
           margin-top: 23px;
-          width : auto;
+          width: auto;
+          
           .clearfix;
+          
           a.button {
-            margin-top : -4px;
+            float: left;
+            font-weight: 300;
             margin-left: 13px;
-            margin-right : 0px;
-	    font-weight:300;
-            min-width : 32px;
-            float : left;
-            transform : translateZ(0);
+            margin-right: 0px;
+            margin-top: -4px;
+            min-width: 32px;
+            transform: translateZ(0);
+
             &#page-login{
               margin-left: 20px;
             }
           }
         }
+
         &.session-create {
-          padding-right : 10px;
+          padding-right: 10px;
+          
           .clearfix;
+
           &.fromtemplate2 {
             // be careful with this, sometimes we pop down from the header in branded domains
             padding-right: 40px; 
           }
+
           a.button {
-            margin-top : -14px;
+            float: left;
             font-size: @regular-font-size;
+            font-weight: 300;
             margin-right : 0px;
+            margin-top: -14px;
             padding: 14px 20px;
-	    font-weight:300;
-            float : left;
-            transform : translateZ(0);
+            transform: translateZ(0);
           }
         }
-        &.page-first, &.session-create, &.session-login {
-          border-left-color : transparent;
+
+        &.page-first,
+        &.session-create,
+        &.session-login {
+          border-left-color: transparent;
         }
+
         &#branding {
           .clearfix;
-          height: auto;
-          margin-bottom:0px;
+          
+          border-left: none;
           float: left;
-          border-left : none;
-          position : relative;
+          margin-bottom: 0px;
+          height: auto;
+          position: relative;
 
           a#logo {
-            display : block;
-            text-align : left;
+            display: block;
             padding: 0px;
+            text-align: left;
+            
             img {
-              margin : 20px 0 26px;
-              padding-top: 10px;
-              padding-bottom: 10px;
-              max-width: 350px;
+              margin: 20px 0 26px;
               max-height: 140px;
+              max-width: 350px;
+              padding-bottom: 10px;
+              padding-top: 10px;
             }
           }
         }
