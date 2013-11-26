@@ -1,12 +1,14 @@
 #!/bin/sh -e
 
-if [ -z $1 -o -z $2 ];
+ROOTDIR=$(dirname $0)/..
+
+if [ -z "$1" -o -z $2 ];
 then
     echo "Usage:"
-    echo "    $1 dbconnstring documentid"
+    echo "    $0 psqlargs documentid"
     echo
     echo "Where:"
-    echo "   dbconnstring - database name or connection string"
+    echo "   psqlargs - psql arguments like database name and user"
     echo "   documentid  - document id that was signed and should serve as reference screenshot"
     exit 55
 fi
@@ -27,17 +29,17 @@ EOF
 SQL_SELECT_FILE="SELECT encode(files.content,'base64') $SQL_BASE"
 SQL_SELECT_TIME="SELECT EXTRACT(EPOCH FROM signatory_screenshots.time) $SQL_BASE"
 
-psql $1 -q -t -A -c "$SQL_SELECT_FILE" | base64 -D > ../public/reference_screenshot.jpg.tmp
+psql $1 -q -t -A -c "$SQL_SELECT_FILE" | base64 -d > $ROOTDIR/public/reference_screenshot.jpg.tmp
 
-psql $1 -q -t -A -c "$SQL_SELECT_TIME"  > ../public/reference_screenshot_seconds.txt.tmp
+psql $1 -q -t -A -c "$SQL_SELECT_TIME"  > $ROOTDIR/public/reference_screenshot_seconds.txt.tmp
 
-if [ -s ../public/reference_screenshot.jpg.tmp -a -s ../public/reference_screenshot_seconds.txt.tmp ];
+if [ -s $ROOTDIR/public/reference_screenshot.jpg.tmp -a -s $ROOTDIR/public/reference_screenshot_seconds.txt.tmp ];
 then
     echo "Seems like it has worked"
     echo "Epoch seconds is:"
-    cat ../public/reference_screenshot_seconds.txt.tmp
-    mv -f ../public/reference_screenshot_seconds.txt.tmp ../public/reference_screenshot_seconds.txt
-    mv -f ../public/reference_screenshot.jpg.tmp ../public/reference_screenshot.jpg
+    cat $ROOTDIR/public/reference_screenshot_seconds.txt.tmp
+    mv -f $ROOTDIR/public/reference_screenshot_seconds.txt.tmp $ROOTDIR/public/reference_screenshot_seconds.txt
+    mv -f $ROOTDIR/public/reference_screenshot.jpg.tmp $ROOTDIR/public/reference_screenshot.jpg
 else
     echo "Our magic select statements returned no results"
     echo "Reference screenshot left intact"
