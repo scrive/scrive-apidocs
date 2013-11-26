@@ -3,6 +3,8 @@
 # This script assumes the existence of BUILD_NUMBER from TeamCity
 # This script assumes TMP which is the directory as a temporary workspace
 # This script assumes SRV which is the name of the server (ie, production, staging)
+# This script assumes TRGMH which is ssh string to target server (builds@prod.scrive.lan)
+# This script assumes TRGMH2 which is ssh string to target secondary server (builds@staging.scrive.lan)
 # This script assumes SRV2 which is the name of the secondary server (api-testbed)
 # This script assumes AMZN which is a boolean whether to upload to Amazon
 
@@ -19,6 +21,7 @@ BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
 echo "BUILD ID: "$BUILD_ID
 echo "TMP: "$TMP
 echo "Server: "$SRV
+echo "Target server: "$TRGMH
 
 echo "Building Clean"
 ./build-scripts/runCleanCompile.sh "$1" > build-report.txt
@@ -62,7 +65,7 @@ if [ $AMZN -ne 0 ]
 then
   echo "Pushing to amazon"
   s3cmd --config=/home/builds/.s3cfg --acl-private put "$TMP/$finalfile" s3://production-builds
-  
+
   echo "Checking amazon md5 sum"
   md5amazon=`s3cmd --config=/home/builds/.s3cfg info "s3://production-builds/$finalfile" | grep MD5 | awk '{print $3}'`
   echo "MD5SUM from Amazon S3: "$md5amazon
@@ -75,25 +78,25 @@ then
       echo "MD5 sum does not match. Please try again."
       exit 1
   fi
-  
+
   echo ""
   echo "Backed-up file on Amazon:"
   echo "s3://production-builds/$finalfile"
-  
+
   echo ""
 fi
 
 echo "Copying deployment file to /tmp on $SRV server"
-ssh builds@prod.scrive.lan "rm -rf /tmp/"$SRV"_deployment && mkdir /tmp/"$SRV"_deployment"
-cat "$TMP/$finalfile" | ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && tar -zx"
-scp "/home/builds/key/builds.scrive.com.pubkey.pem" "builds@prod.scrive.lan:/tmp/"$SRV"_deployment/."
+ssh $TRGMH  "rm -rf /tmp/"$SRV"_deployment && mkdir /tmp/"$SRV"_deployment"
+cat "$TMP/$finalfile" | ssh $TRGMH  "cd /tmp/"$SRV"_deployment && tar -zx"
+scp "/home/builds/key/builds.scrive.com.pubkey.pem" $TRGMH":/tmp/"$SRV"_deployment/."
 
 echo "Verifying and unzipping deployment file"
-ssh builds@prod.scrive.lan "cd /tmp/"$SRV"_deployment && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
+ssh $TRGMH  "cd /tmp/"$SRV"_deployment && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
 
-if [ ! -z "$SRV2" ]; then
+if [ ! -z "$SRV2" && ! -z "$TRGMH2"]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
    ssh api-testbed@vm-dev.scrive.com "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
    cat "$TMP/$finalfile" | ssh api-testbed@vm-dev.scrive.com "cd /tmp/"$SRV2"_deployment && tar -zx ; exit \$?"
