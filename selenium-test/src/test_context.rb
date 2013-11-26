@@ -1,6 +1,16 @@
 require "rubygems"
 require "selenium-webdriver"
-require "selenium-test/src/test_properties.rb"
+
+begin
+  require "selenium-test/src/test_properties.rb"
+rescue LoadError => e
+  # try using ruby 1.9 mechanism
+  begin
+    require_relative "test_properties.rb"
+  rescue
+    raise e
+  end
+end
 
 class TestContext
 

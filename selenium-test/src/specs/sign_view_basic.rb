@@ -2,7 +2,16 @@ require "rubygems"
 gem "rspec"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
-require "selenium-test/src/helpers.rb"
+begin
+  require "selenium-test/src/helpers.rb"
+rescue LoadError => e
+  # try using ruby 1.9 mechanism
+  begin
+    require_relative "../helpers.rb"
+  rescue
+    raise e
+  end
+end
 
 describe "basic signing" do
 
