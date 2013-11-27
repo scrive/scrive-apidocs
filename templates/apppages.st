@@ -351,21 +351,23 @@ $endif$
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
-      <li class="float-right" >
-        <a class="page js-logout"  href="$linklogout$">$_headerLogOut()$</a>
-      </li>
-      <li class="float-right" >
-          <a class="page $if(account)$active$endif$" id='page-account'  href="$linkaccount$">$_headerAccount()$</a>
-      </li>
-      <li class="page-first float-right" >
-          <a class="s-archive page $if(archive)$active$endif$ "  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
-      </li>
-      <li class="session-create float-right fromtemplate2">
-          <a class="button button fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
-      </li>
-      <li class="session-create float-right">
-          <a class="button button js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
-      </li>
+      <ul class="right-container">
+        <li class="float-right" >
+          <a class="page js-logout"  href="$linklogout$">$_headerLogOut()$</a>
+        </li>
+        <li class="float-right" >
+            <a class="page $if(account)$active$endif$" id='page-account'  href="$linkaccount$">$_headerAccount()$</a>
+        </li>
+        <li class="page-first float-right" >
+            <a class="s-archive page $if(archive)$active$endif$ "  id='page-archive' href="$linkissue$">$_headerArchive()$</a>
+        </li>
+        <li class="session-create float-right fromtemplate2">
+            <a class="button button fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
+        </li>
+        <li class="session-create float-right">
+            <a class="button button js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
+        </li>
+      </ul>
       $else$
       <li class="session-login float-right">
         <a class="button" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>

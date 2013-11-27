@@ -77,7 +77,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.subheader = $("<div style='width:560px;height:0px;position:absolute;margin-top:2px;'/>");
     this.header.append(this.subheader);
 
-    this.innerheader = $("<div style='display: table-cell; vertical-align: middle; text-align: right;'/>");
+    this.innerheader = $("<div style='display: table-cell; vertical-align: bottom; text-align: right;'/>");
 
     this.header1 = $('<div style="float: left;margin-left:20px;"/>');
     this.logowrapper = $("<a class='hoverable logo' style='padding: 5px 0;' />");
