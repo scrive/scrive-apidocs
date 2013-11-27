@@ -88,6 +88,7 @@ adminonlyRoutes =
         , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
         , dir "useradmin" $ dir "details" $ hGet $ toK1 $ handleUserGetProfile
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
+        , dir "useradmin" $ dir "delete" $ hPost $ toK1 $ handleDeleteUser
         , dir "useradmin" $ dir "move" $ hPost $ toK1 $ handleMoveUserToDifferentCompany
 
         , dir "useradmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminUserUsageStatsDays
@@ -335,6 +336,12 @@ handleUserChange uid = onlySalesOrAdmin $ do
   settingsChange <- getUserSettingsChange
   _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ uid
+
+
+handleDeleteUser :: Kontrakcja m => UserID -> m ()
+handleDeleteUser uid = onlySalesOrAdmin $ do
+  _ <- dbUpdate $ DeleteUser uid
+  return ()
 
 
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()

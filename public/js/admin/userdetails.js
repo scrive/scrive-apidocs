@@ -170,6 +170,12 @@ var AdminUserDetailsModel = Backbone.Model.extend({
        companyid : this.newcompanyid()
     });
   },
+  deleteUser : function() {
+    return new Submit({
+       url : "/adminonly/useradmin/delete/" + this.user().userid(),
+       method : "POST"
+    });
+  },
   refresh : function() {
     this.user().set({"ready" : false}, {silent: true});
     this.user().fetch({cache: false, processData: true});
@@ -282,7 +288,18 @@ var AdminUserDetailsView = Backbone.View.extend({
     buttonsRow: function() {
       var self = this;
       var model = this.model;
-      var buttonRow = $("<div style='width:500px;height:50px;margin-top:30px;'/>");
+      var buttonRow = $("<div style='width:600px;height:50px;margin-top:30px;'/>");
+
+
+      var deleteButton = new Button({
+                text: "Delete user"
+              , color: "red"
+              , size: "tiny"
+              , style: "margin-left:20px"
+              , onClick : function() {
+                  self.openDeleteModal();
+                }
+          });
 
       var invitationButton = new Button({
                 text: "Resend invitation"
@@ -320,7 +337,7 @@ var AdminUserDetailsView = Backbone.View.extend({
                 }
           });
 
-      return buttonRow.append(invitationButton.el()).append(moveButton.el()).append(saveButton.el());
+      return buttonRow.append(deleteButton.el()).append(invitationButton.el()).append(moveButton.el()).append(saveButton.el());
 
     },
     openMoveToDifferentCompanyModal : function() {
@@ -358,6 +375,26 @@ var AdminUserDetailsView = Backbone.View.extend({
                 new FlashMessage({color: "green", content : "Moved"});
                 model.refresh();
                 popup.close();
+                return false;
+            },
+            function() {
+              new FlashMessage({color: "red", content : "Failed"});
+              return false;
+            }
+         );
+        }
+      });
+    },
+    openDeleteModal : function() {
+      var model = this.model;
+      var popup = Confirmation.popup({
+        title : "Delete",
+        acceptText: "Delete",
+        content : $("<div style='text-align:center;'>Are you sure that you want to delete this user?</div>"),
+        onAccept : function() {
+          model.deleteUser().sendAjax(
+            function() {
+                window.location = "/adminonly";
                 return false;
             },
             function() {
