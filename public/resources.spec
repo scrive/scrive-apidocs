@@ -6,12 +6,10 @@ ignore  tiny_mce/skins
 ignore  libs/recurly/recurly.css
 ignore  api-demo
 ignore  less/branding/buttons.less
-ignore  less/branding/colors.less
 ignore  less/branding/elements.less
 ignore  less/branding/index.less
 ignore  less/branding/reset.less
 ignore  less/branding/sample.less
-ignore  less/branding/typography.less
 ignore  less/branding/header.less
 ignore  less/branding/footer.less
 ignore  less/branding/containter.less
@@ -23,6 +21,7 @@ ignore  less/branding/tooltip.less
 ignore  less/branding/checkbox.less
 ignore  less/branding/contact.less
 ignore  less/branding/main.less
+ignore  less/branding/variables.less
 ignore  less/designview/util.less
 ignore  libs/html5shiv.js
 ignore  css/fonts

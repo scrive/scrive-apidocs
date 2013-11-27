@@ -3,8 +3,7 @@
   Author: Eric Normand
 
 **/
-@import 'branding/colors';
-@import 'branding/typography';
+@import 'branding/variables';
 
 .payments.loading {
     background-image: url(/img/wait30trans.gif);
@@ -35,7 +34,7 @@
 
 .surround-content {
     padding: 20px;  
-    background-color:white;
+    background-color: @white;
     border: 1px solid #ddd;
 }
 
@@ -58,7 +57,7 @@
 	    padding-top: 10px;
 	    padding-left: 5px;
             a {
-                color: @blue;
+                color: @brand-primary-darker;
                 font-weight: 400;
             }
 	}
@@ -86,11 +85,7 @@
 }
 
 .payments-dashboard .subscribed {
-
-    @blue: #35a4d6;
-    @darkblue: #137DAD;
-    @green: #9bd567;
-    
+   
     .payments {
         margin: auto;
         height: 650px;
@@ -264,7 +259,7 @@
             margin: 8px 0;
             input[type=text] {
                 padding: 1px;
-                background-color: #fff;
+                background-color: @white;
                 border: 1px solid lightgray;
                 border-radius: 2px;
                 margin: 3px auto 3px 0;
@@ -280,10 +275,10 @@
                 display: inline-block;
                 margin: 0;
                 border: 1px solid #ccc;
-                font: 16px/16px @sans;
+                font: 16px/16px @font-family-sans;
                 padding: 7px 10px;
                 height: 16px;
-                color: @txt;
+                color: @primary-font-color;
                 width: 260px;
             }
 
@@ -325,12 +320,12 @@
 
     .recurly .server_errors.any {
         margin: 16px 28px 0 0;
-        color: @red;
+        color: @brand-negative;
     }
 
     .recurly .field .error {
         display: inline-block;
-        color: @red;
+        color: @brand-negative;
         margin-left: 16px;
     }
 

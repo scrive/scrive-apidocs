@@ -1,3 +1,4 @@
+@import 'branding/variables';
 @import 'designview/util';
 
 @page-div-width: 943px;
@@ -6,135 +7,121 @@
 @a4-height-in-pt: 842px;
 
 .document-pages {
-    text-align: center;
-    margin: 0 auto;
+  text-align: center;
+  margin: 0 auto;
+  position: relative;
+  width:943px;
+  .pagediv {
+    width: @page-div-width;
+    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
     position: relative;
-    width:943px;
-    .pagediv {
-        width: @page-div-width;
-        .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
-        position: relative;
-    }
+  }
 
-    .waiting4page {
-        margin: 10px auto;
-        width: @page-div-width;
-        height: 100px;
-        border: 1px solid #777;
-	.box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
-        background-color: #fafafa;
-        background-image: url(/img/wait30trans.gif);
-        background-repeat: no-repeat;
-        background-position: center center;
-    }
+  .waiting4page {
+    margin: 10px auto;
+    width: @page-div-width;
+    height: 100px;
+    border: 1px solid #777;
+    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
+    background-color: #fafafa;
+    background-image: url(/img/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+  }
 
-    .nofilediv {
-        width: @page-div-width;
-        min-height : 600px;
-        /*
-          border: 1px solid #777;
-          background-color: #FFFFFF;
-          box-shadow: 1px 1px 5px #505050;
-          -moz-box-shadow: 1px 1px 5px #505050;
-          -webkit-box-shadow: 1px 1px 5px #505050;
-          */
-        text-align: center;
-        margin: 10px auto;
+  .nofilediv {
+    width: @page-div-width;
+    min-height : 600px;
+    text-align: center;
+    margin: 10px auto;
+  }
+  .nofilediv .innerbox {
+    width: 900px;
+    margin:60px auto;
+    .button-box {
+      width : 320px;
+      height : 30px;
+      margin : 20px auto;
     }
-    .nofilediv .innerbox {
-        width: 900px;
-        margin:60px auto;
-        .button-box {
-            width : 320px;
-            height : 30px;
-            margin : 20px auto;
-        }
-        .inner-description-left {
-            width : 400px;
-            margin : 30px auto 40px auto;
-            float : left;
-        }
-        .inner-description-right{
-            width : 400px;
-            margin : 30px auto 40px auto;
-            float : right;
-        }
-        h4 {
-            color : #000000;
-        }
+    .inner-description-left {
+      width : 400px;
+      margin : 30px auto 40px auto;
+      float : left;
     }
-    .pagejpg {
-        /* Show page image in full width and height comes from aspect ratio of bitmap */
-        width: 100%;
-        background-color: #fafafa;
+    .inner-description-right{
+      width : 400px;
+      margin : 30px auto 40px auto;
+      float : right;
     }
+    h4 {
+      color : #000000;
+    }
+  }
+  .pagejpg {
+    /* Show page image in full width and height comes from aspect ratio of bitmap */
+    width: 100%;
+    background-color: #fafafa;
+  }
 
-   .hline {
-        height: 1px;
-        left: 0px;
-    }
+  .hline {
+    height: 1px;
+    left: 0px;
+  }
 
-    .nofilediv {
-        width: @page-div-width;
-        min-height : 600px;
-        /*
-          border: 1px solid #777;
-          background-color: #FFFFFF;
-          box-shadow: 1px 1px 5px #505050;
-          -moz-box-shadow: 1px 1px 5px #505050;
-          -webkit-box-shadow: 1px 1px 5px #505050;
-          */
-        text-align: center;
-        margin: 10px auto;
+  .nofilediv {
+    width: @page-div-width;
+    min-height : 600px;
+    text-align: center;
+    margin: 10px auto;
+  }
+  .nofilediv .innerbox {
+    width: 900px;
+    margin:60px auto;
+    .button-box {
+      width : 320px;
+      height : 30px;
+      margin : 20px auto;
     }
-    .nofilediv .innerbox {
-        width: 900px;
-        margin:60px auto;
-        .button-box {
-            width : 320px;
-            height : 30px;
-            margin : 20px auto;
-        }
-        .inner-description-left {
-            width : 400px;
-            margin : 30px auto 40px auto;
-            float : left;
-        }
-        .inner-description-right{
-            width : 400px;
-            margin : 30px auto 40px auto;
-            float : right;
-        }
-        h4 {
-            color : #000000;
-        }
+    .inner-description-left {
+      width : 400px;
+      margin : 30px auto 40px auto;
+      float : left;
     }
-    .pagejpg {
-        /* Show page image in full width and height comes from aspect ratio of bitmap */
-        width: 100%;
-        background-color: #fafafa;
+    .inner-description-right{
+      width : 400px;
+      margin : 30px auto 40px auto;
+      float : right;
     }
+    h4 {
+      color : #000000;
+    }
+  }
+  .pagejpg {
+    /* Show page image in full width and height comes from aspect ratio of bitmap */
+    width: 100%;
+    background-color: #fafafa;
+  }
 
-    .hline {
-        height: 1px;
-        left: 0px;
-        background: #dedede;
-        position: absolute;
-    }
+  .hline {
+    height: 1px;
+    left: 0px;
+    background: #dedede;
+    position: absolute;
+  }
 
-    .vline {
-        width: 1px;
-        top: 0px;
-        background: #dedede;
-        position: absolute;
-    }
+  .vline {
+    width: 1px;
+    top: 0px;
+    background: #dedede;
+    position: absolute;
+  }
 
-    .placedfield {
-        position: absolute;
-        &.active {
-          z-index : 1;
-        }
+  .placedfield {
+    position: absolute;
+    &.active {
+      z-index : 1;
     }
+  }
 }
 
 /* This .placedfieldvalue and .placedcheckbox have to be outside of
@@ -143,63 +130,63 @@
  */
 
 .placedfieldvalue {
-    white-space: nowrap;
-    font-size: 10px * @page-div-width / @a4-width-in-pt;
-    line-height: 10px * @page-div-width / @a4-width-in-pt;
-    margin: 8px 7px 6px 7px;
-    background-color: white;
-    filter: ~"alpha(opacity=95)";
-    -moz-opacity: 0.95;
-    opacity: 0.95;
+  white-space: nowrap;
+  font-size: 10px * @page-div-width / @a4-width-in-pt;
+  line-height: 10px * @page-div-width / @a4-width-in-pt;
+  margin: 8px 7px 6px 7px;
+  background-color: @white;
+  filter: ~"alpha(opacity=95)";
+  -moz-opacity: 0.95;
+  opacity: 0.95;
 }
 /*  In design view we have also border so we want to change margin to padding.
  *  But in other view we don't want fields overlaping if texts are not overlaping.
  */
 .designview .placedfieldvalue {
-    margin: 0;
-    padding: 8px 7px 6px 7px;
+  margin: 0;
+  padding: 8px 7px 6px 7px;
 }
 
 .placedcheckbox {
-    background: url("../img/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
-    height: 12px;
-    width: 12px;
+  background: url("../img/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
+  height: 12px;
+  width: 12px;
 }
 
 .placedcheckbox:active {
-    background: url("../img/checkbox-blue-active.png") no-repeat scroll 0 0;
+  background: url("../img/checkbox-blue-active.png") no-repeat scroll 0 0;
 }
 
 .placedcheckbox.checked {
-    background: url("../img/checkbox-blue-checked.png") no-repeat scroll 0 0;
+  background: url("../img/checkbox-blue-checked.png") no-repeat scroll 0 0;
 }
 
 .signatureBox {
-    min-width: 10px;
-    text-align: center;
-    border: 1px solid #999999;
-    filter: ~"alpha(opacity=95)";
-    -moz-opacity: 0.95;
-    opacity: 0.95;
-    background-color: white;
-    -moz-border-radius: 2px;
-    -webkit-border-radius: 2px;
+  min-width: 10px;
+  text-align: center;
+  border: 1px solid #999999;
+  filter: ~"alpha(opacity=95)";
+  -moz-opacity: 0.95;
+  opacity: 0.95;
+  background-color: @white;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
 }
 
 .signatureBox.forDrawing{
-    background-color: transparent;
+  background-color: transparent;
 }
 
 .signatureBox .signatureHeader {
-    background-image: url("/img/drag.png");
-    background-position: 2px 2px;
-    background-repeat: no-repeat;
-    width: 100%;
-    font-size: 12px;
-    font-style: italic;
-    color: #666666;
-    padding-top:2px;
-    padding-bottom:2px;
-    min-height: 10px;
-    overflow: auto;
+  background-image: url("/img/drag.png");
+  background-position: 2px 2px;
+  background-repeat: no-repeat;
+  width: 100%;
+  font-size: 12px;
+  font-style: italic;
+  color: #666666;
+  padding-top:2px;
+  padding-bottom:2px;
+  min-height: 10px;
+  overflow: auto;
 }

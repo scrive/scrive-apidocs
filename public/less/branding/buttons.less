@@ -1,7 +1,7 @@
-@import 'colors.less';
+@import 'variables.less';
 
 .button {
-  background-color: @blue;
+  background-color: @brand-primary-darker;
   max-height: 16px;
   min-width: 50px;
   .border-radius(1px,1px,1px,1px);
@@ -10,21 +10,21 @@
   text-decoration: none;
   padding: 13px 20px;
   margin: 0;
-  color: #fff !important;
+  color: @white !important;
   text-align: center;
   .transition(.15s, ease-in-out);
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
   display: inline-block;
-  font-family: @source;
+  font-family: @font-family-source;
   line-height : 16px;
   -webkit-transform: translateZ(0);
   zoom:1; /* IE 7 Hack starts here*/
   *display:inline;
 
   &:hover { background-color: @blue-hover; }
-  &:active, &.active { background-color: @blue; }
+  &:active, &.active { background-color: @brand-primary-darker; }
 
   &.button-small {
     max-height: 14px;
@@ -85,16 +85,16 @@
 }
 
 .button-green {
-  .colored-button(@green, @green-hover);
+  .colored-button(@brand-secondary, @brand-secondary-dark);
 }
 
 .button-gray {
   .colored-button(@grey, darken(@grey, 5%));
-  color: @text-very-dark !important;
+  color: @primary-font-color !important;
 }
 
 .button-signview-blue {
-  .colored-button(@signview-blue, @signview-blue-hover);
+  .colored-button(@brand-primary-complementary, @brand-primary-complementary-dark);
 }
 
 .button-light-blue {
@@ -104,15 +104,8 @@
   }
 }
 
-.button-orange {
-  .colored-button(@orange, lighten(@orange, 25%));
-  &.button-small {
-    font-weight: 400;
-  }
-}
-
 .button-red {
-  .colored-button(@red, @red-dark);
+  .colored-button(@btn-negative-bg, @btn-negative-bg-hover);
 }
 
 /* Special fixes for special browsers */

@@ -1,12 +1,12 @@
-@import 'branding/colors';
+@import 'branding/variables';
 @import 'branding/elements';
 @import 'designview/util';
 
 .signview {
-  width: 100%;
+  min-height: 100%;
   min-width: 1018px;
-  min-height:100%;
-  position:relative;
+  position: relative;
+  width: 100%;
 
   // Don't make it relative when the author signs, because that results
   // in the arrow being off (since signview is not 100% of the document the
@@ -16,15 +16,16 @@
   }
 
   h2 {
-      font-weight:300;
-      color:#4A4A49;
-      font-size:20px;
+    color: #4A4A49;
+    font-size: 20px;
+    font-weight: 300;
   }
 
   .pagediv {
-      margin-top:15px;
+      margin-top: 15px;
+
       &:first-child {
-	  margin-top:0px;
+        margin-top: 0px;
       }
   }
 
@@ -33,165 +34,174 @@
   }
 
   .pageheader {
+    background: @brand-primary;
+    border-bottom: solid #DEE4ED 1px;
+    color: @white;
     min-width: 1018px;
     width: 100%;
-    background: @blue-header;
-    color: white;
-    border-bottom: solid #DEE4ED 1px;
+
     .content {
-      margin: auto;
-      width: 1018px;
-      height: 120px;
       display: table;
+      height: 120px;
+      margin: auto;
       overflow: hidden;
+      width: 1018px;
+
       .sender {
-        .ie7 & { /* IE7 has problems with margin top. But this should make it look not too bad. */
-          margin-top:40px;
-          height:auto;
-          display: block;
-        }
-        display:table-cell;
+        color: @text-lighter;
+        display: table-cell;
         height: 100%;
         text-align: right;
         vertical-align: middle;
-        color: @text-lighter;
-        .name,.phone  {
-            vertical-align: middle;
+
+        // IE7 has problems with margin top. But this should make it look not too bad.
+        .ie7 & { 
+          display: block;
+          height: auto;
+          margin-top: 40px;
+        }
+
+        .name,
+        .phone {
+          vertical-align: middle;
         }
       }
     }
+
     .logowrapper {
-        float:left;
-        display:inline-block;
-        // IE7 hack - http://stackoverflow.com/a/6545033/337587
-        *display: inline;
-        zoom: 1;
-        // END - hack
-        margin-top:45px;
-        margin-bottom:45px;
-        line-height : 30px;
+      display:inline-block;
+      *display: inline; // IE7 hack - http://stackoverflow.com/a/6545033/337587
+      float:left;
+      line-height: 30px;
+      margin-bottom: 45px;
+      margin-top: 45px;
+      zoom: 1; // IE7 hack - http://stackoverflow.com/a/6545033/337587
 
-        .logo {
-            margin-left: 38px;
-        }
-        }
+      .logo {
+        margin-left: 38px;
+      }
     }
-
+  }
 
   .instructions {
-    background: white;
-    padding-top: 40px;
-    padding-bottom: 25px;
-    margin-top: 0px !important;
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
+    background: @white;
     border: 1px solid #cccccc;
     border-bottom-width: 0;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0px !important;
+    padding-bottom: 25px;
+    padding-top: 40px;
+    text-align: center;
 
     .highlight-green {
-	text-transform: uppercase;
-	color: @green;
-        font-weight: 600;
+    	color: @brand-secondary;
+      font-weight: 600;
+      text-transform: uppercase;
     }
 
     &.small-screen.section {
       padding-bottom: 15px;
+
       .headline {
         font-size: 64px;
-        margin-bottom: 30px;
         line-height: 15px;
+        margin-bottom: 30px;
       }
+
       .subheadline {
         font-size: 44px;
         line-height: 45px;
       }
     }
 
-
     .headline {
+      color: #4A4A49;
       font-size: 22px;
-      color:#4A4A49;
       margin-bottom: 10px;
 
       .name {
         white-space: nowrap;
       }
     }
+
     .giveForSigning {
-      margin: auto;
       border: 1px solid #E9E9E9;
+      display: inline-block;
+      font-weight: normal;
       margin: 5px auto 10px;
       padding-left: 10px;
-      font-weight: normal;
-      display: inline-block;
     }
+
    .giveForSigning strong{
-      color: black;
+      color: @black;
+
       a.button {
-          margin-left: 10px;
+        margin-left: 10px;
       }
     }
+
    .subheadline {
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 0px;
-      margin-bottom: 10px;
+      margin: 0 auto 10px;
+
      .smaller-bits {
         margin: 0px auto 10px auto;
-        margin-top: 0px;
-        text-align : center;
+        text-align: center;
+
         .duedate {
           margin: 0px auto 20px auto;
-          font-weight:normal;
+          font-weight: normal;
         }
+
         .download  {
           background: url(../img/senddoc.png) no-repeat;
-          padding-left:20px;
-          font-weight:normal;
-          display:inline-block;
-      	  background-position:0px 2px;
-      	  position:relative;
-      	  left: 10px;
+          background-position: 0px 2px;
+          display: inline-block;
+          font-weight: normal;
+          left: 10px;
+          padding-left: 20px;
+      	  position: relative;
+      	  
           .docname {
-              text-align: left;
-              text-decoration: underline;
-              font-weight: normal;
-              color: grey;
-              width: auto;
+            color: grey;
+            font-weight: normal;
+            text-align: left;
+            text-decoration: underline;
+            width: auto;
           }
         }
       }
     }
 
     .arrow-legend {
-      margin: auto;
       display: inline-block;
+      margin: 7px auto -8px;
       text-align: left;
-      margin-top: 7px;
-      margin-bottom: -8px;
 
       .row {
-        float: left;
         clear: left;
+        float: left;
         margin-bottom: -1px;
       }
+
       .icon-legend {
         display: inline-block;
-        width: 25px;
-        height: 25px;
         float: left;
+        height: 25px;
         margin-right: 5px;
+        width: 25px;
 
         &.mandatory {
           background-image: url(../img/icon-legend-mandatory.png);
           background-repeat: no-repeat;
         }
+
         &.optional {
           background-image: url(../img/icon-legend-optional.png);
           background-repeat: no-repeat;
         }
       }
+
       .copy {
         display: inline-block;
         float: left;
@@ -201,19 +211,20 @@
   }
 
   .save {
-    background-color: white;
-    text-align: center;
-    padding: 40px;
-    overflow: none;
-    margin-top: 15px;
+    background-color: @white;
     margin-bottom : 15px;
+    margin-top: 15px;
+    overflow: none;
+    padding: 40px;
+    text-align: center;
 
     &.small-screen {
+
       .title {
-        line-height: 54px;
         font-size: 45px;
-        padding-top: 30px;
+        line-height: 54px;
         padding-bottom: 30px;
+        padding-top: 30px;
       }
 
       .subtitle {
@@ -223,47 +234,40 @@
   }
 
   .save .title {
-    font-size: 22px;
     color: #4A4A49;
-    margin-bottom: 10px;
+    font-size: 22px;
     font-weight: 400;
+    margin-bottom: 10px;
   }
 
   .save .subtitle {
     margin-bottom: 20px;
-    max-width: 602px;
-    margin-right: auto;
     margin-left: auto;
+    margin-right: auto;
+    max-width: 602px;
   }
 
   .save .headline {
-    text-transform: uppercase;
-    color: black;
+    color: @black;
     font-size: x-large;
     margin-bottom: 5px;
+    text-transform: uppercase;
   }
 
   .save .subheadline {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 7px;
-    margin-bottom: 5px;
     font-size: 18px;
+    margin: 7px auto 5px;
     line-height: 20px;
   }
 
-
   .save .highlight {
+    background-color: #e7f6d5;
+    border: solid #89c041 1px;
     margin-left: auto;
     margin-right: auto;
-    text-align: left;
-    padding-top: 40px;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 40px;
-    border: solid #89c041 1px;
-    background-color: #e7f6d5;
     overflow: none;
+    padding: 40px 20px;
+    text-align: left;
     width: 700px;
   }
 
@@ -274,18 +278,18 @@
   }
 
   .save .item input {
-      position: relative;
-      width: 146px;
-      font-size: 13px;
-      border: 1px solid #9e9e9e;
+    border: 1px solid #9e9e9e;
+    font-size: 13px;
+    position: relative;
+    width: 146px;
   }
 
   .save .item {
     float: left;
-    width: 172px;
+    margin-bottom: 11px;
     margin-left: 11px;
     margin-right: 11px;
-    margin-bottom: 11px;
+    width: 172px;
   }
 
   .save .invalid {
@@ -307,96 +311,103 @@
   }
 
   .subcontainerWrapper {
-      padding-bottom:23px;
-      padding-top:10px;
-      margin-top: 20px;
+    margin-top: 20px;
+    padding-bottom:23px;
+    padding-top:10px;
   }
 
   .subcontainer {
-      background: #e9e9e9;
-      width: 943px;
-      margin: 0 auto;
-      border: 1px solid #cccccc;
-      .rounded(5px);
-      .border-radius(0, 5px, 5px, 0);
-      padding: 36px 36px 36px 37px;
-      .box-shadow(inset 0px 0px 8px rgba(80, 80, 80, 0.21));
+    background: #e9e9e9;
+    border: 1px solid #cccccc;
+    margin: 0 auto;
+    padding: 36px 36px 36px 37px;
+    width: 943px;
+    
+    .border-radius(0, 5px, 5px, 0);
+    .box-shadow(inset 0px 0px 8px rgba(80, 80, 80, 0.21));
+    .rounded(5px);
   }
 
   .subcontainer .end {
-    /*background-image: url(../img/horizontal-shading-bar.png); */
+    // background-image: url(../img/horizontal-shading-bar.png);
     background-repeat: no-repeat;
     height: 2px;
   }
 
   .section {
     clear: both;
-    background-color: white;
-    /* background-image: url(../img/horizontal-shading-bar.png); */
+    background-color: @white;
+    // background-image: url(../img/horizontal-shading-bar.png);
     background-repeat: no-repeat;
-    overflow: hidden;
-    margin-top: 15px;
-    width: 883px;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 15px;
+    overflow: hidden;
+    width: 883px;
 
     &.instructions {
-      .box-shadow(none);
       width: 956px;
+
+      .box-shadow(none);
     }
+
     &.highlight {
-    	border: 2px solid @green;
-    	box-shadow:none;
+    	border: 2px solid @brand-secondary;
+    	box-shadow: none;
     	width: 880px;
     }
   }
 
-
-  .authorattachments .list, .signatoryattachments .list {
-      float: right;
-      width: 610px;
-      margin-left: 23px;
-      margin-right: -10px; // line up with the signatory boxes
+  .authorattachments .list,
+  .signatoryattachments .list {
+    float: right;  
+    margin-left: 23px;
+    margin-right: -10px; // line up with the signatory boxes
+    width: 610px;
   }
 
   .authorattachments h2 {
       float: left;
   }
+
   .signatoryattachments .header {
       float: left;
   }
 
   .signatoryattachments .header .subtitle {
-      font-size: 13px;
-      line-height: 15px;
-      font-weight : 300;
-      color: #808080;
+    color: #808080;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 15px;
   }
 
   .signatoryattachments {
+
     .item {
-      margin-bottom : 10px;
-      margin-right  : 9px;
+      margin-bottom: 10px;
+      margin-right: 9px;
     }
+
     .desc {
       width: 320px;
     }
 
-   .icon {
-      float: left;
-      width: 13px;
-      height: 14px;
-      margin-top: 3px;
-      margin-right: 2px;
+    .icon {
       background: url(../img/attachment-icon.png);
+      float: left;
+      height: 14px;
+      margin-right: 2px;
+      margin-top: 3px;
+      width: 13px;
     }
 
     .filename {
+      color: @black;
       margin-top: 6px;
-      color: black;
     }
+
     .file {
-      vertical-align : top;
+      vertical-align: top;
     }
 
     .loading {
@@ -404,113 +415,113 @@
     }
 
     .button{
-      float:right;
       margin-left: 6px;
+      float: right;
     }
 
     .name {
       font-weight: 400;
     }
 
-   .description {
+    .description {
       font-style: italic;
       max-width: 360px;
       overflow: hidden;
-   }
-
+    }
   }
 
   .signatories .list .sig .statustext {
-      width: 124px;
-      float: left;
-      font-size: 14px;
-      vertical-align: middle;
-      line-height: 13px;
+    float: left;
+    font-size: 14px;
+    line-height: 13px;
+    vertical-align: middle;
+    width: 124px;
   }
-
 
   .signatories {
-      .columns-container {
-	  float:right;
-	  display:inline-block;
-	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
-	  *display: inline;
-	  zoom: 1;
-	  // END - hack
+      
+    .columns-container {
+  	  display: inline-block;
+      *display: inline; // IE7 hack - http://stackoverflow.com/a/6545033/337587
+      float: right;
+  	  zoom: 1; // IE7 hack - http://stackoverflow.com/a/6545033/337587
+    }
 
-      }
-      .column {
-	  vertical-align:top;
-	  width: 260px;
-	  display:inline-block;
-	  // IE7 hack - http://stackoverflow.com/a/6545033/337587
-	  *display: inline;
-	  zoom: 1;
-	  // END - hack
-	  border: solid #bababc 1px;
-	  min-height: 196px;
-	  background-color: @grey-background;
-	  padding: 15px;
-	  &.first-column {
-	      margin-right: 20px;
-	  }
-      }
+    .column {
+      background-color: @grey-background;
+  	  border: solid #bababc 1px;
+      display:inline-block;
+  	  *display: inline; // IE7 hack - http://stackoverflow.com/a/6545033/337587
+  	  min-height: 196px;
+  	  padding: 15px;
+      vertical-align: top;
+      width: 260px;
+      zoom: 1; // IE7 hack - http://stackoverflow.com/a/6545033/337587
 
-      .name {
-	  font-size: 16px;
-	  word-wrap: break-word;
+      &.first-column {
+        margin-right: 20px;
       }
+    }
 
-      h2 {
-	  float:left;
-      }
+    .name {
+      font-size: 16px;
+      word-wrap: break-word;
+    } 
 
-      .inner {
-	  min-height: 72px;
-	  color : #505050;
-	  border-top: 1px dashed #ccc;
-	  .email:hover{
-	      overflow: visible;
-	  }
-      }
+    h2 {
+      float: left;
+    }
 
-      .details {
-	  padding: 10px;
-	  font-size: 14px;
-      }
+    .inner {
+  	  color: #505050;
+  	  border-top: 1px dashed #ccc;
+      min-height: 72px;
 
-      .statusbox {
-	  border-top: 1px dashed #ccc;
-	  font-size: 13px;
-	  line-height: 17px;
-	  padding:10px;
-	  .spacing {
-	      margin-left: auto;
-	      margin-right: auto;
-	  }
-          .statustext {
-            float: left;
-            margin-top: 5px;
-          }
+  	  .email:hover{
+  	    overflow: visible;
+  	  }
+    }
+
+    .details {
+      font-size: 14px;
+      padding: 10px;
+    }
+
+    .statusbox {
+  	  border-top: 1px dashed #ccc;
+  	  font-size: 13px;
+  	  line-height: 17px;
+  	  padding: 10px;
+  	  
+      .spacing {
+        margin-left: auto;
+        margin-right: auto;
       }
+      
+      .statustext {
+        float: left;
+        margin-top: 5px;
+      }
+    }
   }
+
   .field {
-      height: 18px;
-      line-height:16px;
-      width: 200px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow:hidden;
-      margin-bottom: 3px;
+    height: 18px;
+    line-height: 16px;
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 200px;
   }
 
   .icon.status {
-      padding-top: 1px;
+    padding-top: 1px;
   }
 
   .signatories .statusbox .icon.status {
-      display: inline-block;
-      float: left;
+    display: inline-block;
+    float: left;
   }
 
   .rejectwrapper {
@@ -522,191 +533,199 @@
   }
 
   .pagefooter {
-    min-width: 1018px;
-    width: 100%;
-    height: 120px;
-    background: #FFFFFF;
-    color: #333333;
+    background: @white;
     border-top: solid #DEE4ED 1px;
-    position:absolute;
-    bottom:0;
+    bottom: 0;
+    color: #333333;
+    height: 120px;
+    min-width: 1018px;
+    position: absolute;
+    width: 100%;
+
     .content {
-	width: 1018px;
-	padding-top: 40px;
-	margin : auto;
+    	margin: auto;
+      padding-top: 40px;
+      width: 1018px;
     }
   }
 
   .pagefooter.small-screen .poweredbyscrive {
+    
     .logo {
       margin-top: 0px;
     }
   }
 
   .pagefooter .poweredbyscrive {
-    margin: 00px auto;
-    text-align : center;
+    margin: 0 auto;
+    text-align: center;
+
     .logo {
-        background-image : url("../img/logo-small-grey.png");
-        width: 80px;
-        height: 16px;
-        margin-left: 2px;
-        display: inline-block;
+      background-image : url("../img/logo-small-grey.png");
+      display: inline-block;
+      height: 16px;
+      margin-left: 2px;
+      width: 80px;
     }
   }
 
   .pagefooter .poweredbyscrive a {
-    /*  color: white; */
     font-size: small;
-    text-transform: uppercase;
     text-decoration: none;
+    text-transform: uppercase;
   }
 
   .sig {
-      &.first {
-	  margin-top: 0px;
-	  padding-top: 0px;
-      }
-      &:last-child {
-	  border-bottom:none;
-      }
-      padding: 10px;
-      border-bottom: 1px dashed #ccc;
+    padding: 10px;
+    border-bottom: 1px dashed #ccc;
+
+    &.first {
+  	  margin-top: 0px;
+  	  padding-top: 0px;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }  
   }
 
   .sig .name {
-      margin-bottom: 2px;
+    margin-bottom: 2px;
   }
 
   .sig .name.first {
-      margin-top: 0px;
+    margin-top: 0px;
   }
 
   .section {
+  
     &.spacing {
       padding: 30px;
     }
   }
 
-
   .signatoryattachments {
-      padding-top: 20px;
-      padding-bottom: 10px; /* An extra 10px snuck in somewhere! */
+    padding-top: 20px;
+    padding-bottom: 10px; // An extra 10px snuck in somewhere!
   }
 
   .signatoryattachments .buttonbox {
-      float: left;
-      margin-left: 10px;
+    float: left;
+    margin-left: 10px;
   }
 
   .sender .inner {
-      margin-right: 37px;
+    margin-right: 37px;
   }
 
   .section {
-      .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
-      padding-top: 35px;
-      padding-bottom:35px;
+    padding-top: 35px;
+    padding-bottom:35px;
+
+    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
   }
 
   .newaccount .inner {
-      width: 620px;
-      margin: auto;
+    margin: auto;
+    width: 620px;
   }
 
   .sbox {
-      padding: 10px;
+    padding: 10px;
   }
 
   .video {
-      .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
-      background-color: #e1e1e1;
-      padding: 30px;
-      margin-left: 227px;
-      height: 328px;
+    background-color: #e1e1e1;
+    height: 328px;
+    margin-left: 227px;
+    padding: 30px;
+
+    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
   }
 
   .line {
-      display: table;
-      overflow: hidden;
-      height: 15px;
-      width: 100%;
-      margin-top:7px;
+    display: table;
+    height: 15px;
+    margin-top: 7px;
+    overflow: hidden;
+    width: 100%;
   }
 
   .line .middle {
-      display: table-cell;
-      vertical-align: middle;
+    display: table-cell;
+    vertical-align: middle;
   }
 
   .titleinfo {
-      padding: 10px;
+    padding: 10px;
   }
 
   .extradetails {
-      .title {
-	  float: left;
-	  width: 260px;
+  
+    .title {
+      float: left;
+      width: 260px;
+    }
+
+    .descriptionbox {
+      float: left;
+      width: 260px;
+    }
+
+    .fillbox {
+      float: right;
+      width: 260px;
+	  
+      .info-text-input {
+  	    margin-bottom: 15px;
+        padding: 8px;
+  	    width: 248px;
       }
 
-      .descriptionbox {
-	  float: left;
-	  width: 260px;
-      }
-
-      .fillbox {
-	  float: right;
-	  width: 260px;
-	  .info-text-input{
-	      padding: 8px;
-              margin-bottom: 15px;
-	      width: 248px;
-	  }
-	  .signatureBox.withImage {
+      .signatureBox.withImage {
 	      border: 1px solid #C6DADE;
-	      border-radius: 4px 4px 4px 4px;
-	      padding: 2px;
+	      border-radius: 4px;
 	      margin-top: 5px;
-	  }
-      }
-  }
-  .section.highlight.extradetails {
-      padding-bottom: 35px;
-      padding-top: 35px;
-  }
-
-
-  .signatureBox.forDrawing {
-      border-width: 0px;
-      padding-top: 2px;
-      padding-bottom: 4px;
-      margin-top: 5px;
-  }
-
-
-  .document-pages {
-    .placedfield {
-
-       .placedcheckbox,
-       .placedcheckbox.checked {
-            background-position: center;
-            padding: 10px;
-            margin-left: -10px;
-            margin-top: -10px;
-
-       }
-
-
-       &.to-fill-now {
-          border: 2px solid @signview-blue;
-          .placedcheckbox {
-              padding: 9px;
-          }
-          &.obligatory {
-            border: 2px solid @green;
-        }
+        padding: 2px;
       }
     }
   }
 
+  .section.highlight.extradetails {
+    padding-bottom: 35px;
+    padding-top: 35px;
+  }
+
+  .signatureBox.forDrawing {
+    border-width: 0px;
+    margin-top: 5px;
+    padding-bottom: 4px;
+    padding-top: 2px;    
+  }
+
+  .document-pages {
+
+    .placedfield {
+
+     .placedcheckbox,
+     .placedcheckbox.checked {
+        background-position: center;
+        margin-left: -10px;
+        margin-top: -10px;
+        padding: 10px;
+      }
+
+      &.to-fill-now {
+        border: 2px solid @brand-primary-complementary;
+        
+        .placedcheckbox {
+          padding: 9px;
+        }
+        
+        &.obligatory {
+          border: 2px solid @brand-secondary;
+        }
+      }
+    }
+  }
 }

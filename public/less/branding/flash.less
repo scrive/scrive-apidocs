@@ -9,9 +9,9 @@
 }
 
 .flash-content {
-    height: 64px - 4px;
-    border-radius: 3px;
-    color:white;
+  height: 64px - 4px;
+  border-radius: 3px;
+  color:@white;
 }
 
 .flash-icon-wrapper {
@@ -22,10 +22,10 @@
 }
 
 .flash-icon {
-    width:60px;
-    height:40px;
-    margin: 10px auto;
-    background-image: url("../../img/notification-sprite.png");
+  width:60px;
+  height:40px;
+  margin: 10px auto;
+  background-image: url("../../img/notification-sprite.png");
 }
 
 .flash-body {
@@ -34,7 +34,7 @@
   text-align: left;
   font-size: 1.25em;
   line-height: 60px;
-  font-family: @source;
+  font-family: @font-family-source;
   max-width: 840px;
   &.twoLines {
     line-height: 22px;
@@ -75,13 +75,13 @@
   }
   &.success {
     .flash-content {
-      background-color:@green-secondary;
+      background-color: @brand-secondary-light;
     }
     .flash-icon {
-	background-position: 3px;
+      background-position: 3px;
     }
     .flash-icon-wrapper {
-	background-color:@green;
+      background-color: @brand-secondary;
     }
 
   }
@@ -90,10 +90,10 @@
       background-color:@red;
     }
     .flash-icon {
-	background-position: 58px;
+      background-position: 58px;
     }
     .flash-icon-wrapper {
-	background-color:@red-secondary;
+      background-color:@red-secondary;
     }
   }
   &.warning {
@@ -101,11 +101,10 @@
       background-color:@blue-secondary;
     }
     .flash-icon {
-	background-position: 112px;
+      background-position: 112px;
     }
     .flash-icon-wrapper {
-	background-color:@blue;
+      background-color: @brand-primary-darker;
     }
   }
 }
-

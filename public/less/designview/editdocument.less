@@ -1,5 +1,5 @@
 @import 'util.less';
-@import '../branding/colors.less';
+@import '../branding/variables.less';
 
 /// @DRAGGABLES ///
 
@@ -7,198 +7,198 @@
 
 // TODO: remove some overlap with the process box.
 .design-view-action-document-draggables {
-    .box-sizing(border-box);
-    width: 1018px;
-    margin: auto;
-    height: 96px;
-    background-color: @grey-background;
-    border-bottom: 4px solid #fff;
-    border-left: 4px solid #fff;
-    border-right: 4px solid #fff;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
-    padding-top:16px;
-    .box-shadow(0 4px 0 rgba(0,0,0,0.05));
+  .box-sizing(border-box);
+  width: 1018px;
+  margin: auto;
+  height: 96px;
+  background-color: @grey-background;
+  border-bottom: 4px solid @white;
+  border-left: 4px solid @white;
+  border-right: 4px solid @white;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  padding-top:16px;
+  .box-shadow(0 4px 0 rgba(0,0,0,0.05));
 }
 
 .design-view-action-document-draggables-help {
-    .box-sizing(border-box);
+  .box-sizing(border-box);
+  display: inline-block;
+  position: relative;
+  text-align:center;
+
+  .icon {
+    height: 35px;
+    width: 38px;
+    background-image:url("../../img/Add-field-help-sprite.png");
     display: inline-block;
     position: relative;
-    text-align:center;
+    top: 3px;
+  }
 
+  &.help1 {
+    margin-left:35px;
+    width:196px;
     .icon {
-	height: 35px;
-	width: 38px;
-	background-image:url("../../img/Add-field-help-sprite.png");
-	display: inline-block;
-	position: relative;
-	top: 3px;
+      background-position:0px 0px;
     }
+    .text {
+      min-width: 123px;
+      max-width: 135px;
+      margin-left: 10px;
+    }
+  }
+  &.help2 {
+    margin-left:12px;
+    min-width: 156px;
+    max-width: 190px;
+    .icon {
+      background-position:38px 0px;
+    }
+    .text {
+      min-width: 83px;
+      max-width: 125px;
+      margin-left: 4px;
+      margin-right: 14px;
+    }
+  }
+  .wrapper {
+    border:@draggables-border;
+    border-radius: 2px;
+    padding: 6px 0px 6px 5px;
+    height:42px;
 
-    &.help1 {
-	margin-left:35px;
-	width:196px;
-	.icon {
-	    background-position:0px 0px;
-	}
-	.text {
-	    min-width: 123px;
-	    max-width: 135px;
-	    margin-left: 10px;
-	}
+    .text {
+      display : inline-block;
+      line-height: 16px;
+      text-align : left;
     }
-    &.help2 {
-	margin-left:12px;
-	min-width: 156px;
-        max-width: 190px;
-	.icon {
-	    background-position:38px 0px;
-	}
-	.text {
-	    min-width: 83px;
-            max-width: 125px;
-	    margin-left: 4px;
-	    margin-right: 14px;
-	}
-    }
-    .wrapper {
-	border:@draggables-border;
-        border-radius: 2px;
-        padding: 6px 0px 6px 5px;
-	height:42px;
-	
-        .text {
-          display : inline-block;
-          line-height: 16px;
-          text-align : left;
-        }
-    }
+  }
 }
 
 @draggable-background: #FAFAFA;
 
 .design-view-action-document-draggable {
-    .box-sizing(border-box);
-    height: 100%;
-    display: inline-block;
-    position: relative;
-    margin-right:12px;
-    vertical-align:top;
- 
-    &.design-view-action-document-draggable-textbox {
-	margin-left: 30px;
-	.design-view-action-document-draggable-icon {
-	    background-position: 0px 0px;
-	}
-	.design-view-action-document-draggable-text {
-	    width:110px;
-	}
-    }
+  .box-sizing(border-box);
+  height: 100%;
+  display: inline-block;
+  position: relative;
+  margin-right:12px;
+  vertical-align:top;
 
-    &.design-view-action-document-draggable-signature {
-	.design-view-action-document-draggable-icon {
-	    background-position: 44px 0px;
-	}
-	.design-view-action-document-draggable-text {
-	    width:116px;
-	}
-    }
-   
-
-    &.design-view-action-document-draggable-checkbox {
-	.design-view-action-document-draggable-icon {
-	    background-position: 21px 0px;
-	}
-	.design-view-action-document-draggable-text {
-	    width:94px;
-	}
-    }
-   
-    .design-view-action-document-draggable-wrapper {
-	border: @draggables-border;
-	border-radius: 2px;
-	padding:5px;
-    }
-    
-    .design-view-action-document-draggable-inner-wrapper {
-	background-color:@green-secondary;
-	height:44px;
-	border-radius:2px;
-    }
-    
-    .design-view-action-document-draggable-icon-wrapper {
-	border-radius: 2px 0px 0px 2px;
-	display:inline-block;
-	background-color: @green;
-	height:100%;
-	width:44px;
-	text-align:center;
-    }
-    
-    .design-view-action-document-draggable-text {
-	cursor: default;
-	display:inline-block;
-	text-align:center;
-	position: relative;
-	top: -7px;
-	span {
-	    color:white;
-	    position: relative;
-	    top: 2px;
-	}
-    }
-    
+  &.design-view-action-document-draggable-textbox {
+    margin-left: 30px;
     .design-view-action-document-draggable-icon {
-	background-image: url(../../img/place-fields-sprite.png);
-	width: 21px;
-	height: 20px;
-	display: inline-block;
-	margin-top:11px;
-	margin-left:3px;
+      background-position: 0px 0px;
     }
+    .design-view-action-document-draggable-text {
+      width:110px;
+    }
+  }
+
+  &.design-view-action-document-draggable-signature {
+    .design-view-action-document-draggable-icon {
+      background-position: 44px 0px;
+    }
+    .design-view-action-document-draggable-text {
+      width:116px;
+    }
+  }
+
+
+  &.design-view-action-document-draggable-checkbox {
+    .design-view-action-document-draggable-icon {
+      background-position: 21px 0px;
+    }
+    .design-view-action-document-draggable-text {
+      width:94px;
+    }
+  }
+
+  .design-view-action-document-draggable-wrapper {
+    border: @draggables-border;
+    border-radius: 2px;
+    padding:5px;
+  }
+
+  .design-view-action-document-draggable-inner-wrapper {
+    background-color: @brand-secondary-light;
+    height:44px;
+    border-radius:2px;
+  }
+
+  .design-view-action-document-draggable-icon-wrapper {
+    border-radius: 2px 0px 0px 2px;
+    display:inline-block;
+    background-color: @brand-secondary;
+    height:100%;
+    width:44px;
+    text-align:center;
+  }
+
+  .design-view-action-document-draggable-text {
+    cursor: default;
+    display:inline-block;
+    text-align:center;
+    position: relative;
+    top: -7px;
+    span {
+      color: @white;
+      position: relative;
+      top: 2px;
+    }
+  }
+
+  .design-view-action-document-draggable-icon {
+    background-image: url(../../img/place-fields-sprite.png);
+    width: 21px;
+    height: 20px;
+    display: inline-block;
+    margin-top:11px;
+    margin-left:3px;
+  }
 }
 
 .typesetter-obligatory-option {
-    width: 220px;
+  width: 220px;
 }
 
 .text-field-placement-setter-field-name {
-    width: 221px;
-    .name {
-        border: 1px solid red;
-        width: 150px;
-        vertical-align: top;
-        height: 19px;
-        padding: 5px;
-    }
-    input {
-        height: 24px;
-        font-size: 14px;
-        margin-top: -5px;
-    }
-    .button {
-        padding: 8px 12px 9px;
-        vertical-align: top;
-    }
+  width: 221px;
+  .name {
+    border: 1px solid red;
+    width: 150px;
+    vertical-align: top;
+    height: 19px;
+    padding: 5px;
+  }
+  input {
+    height: 24px;
+    font-size: 14px;
+    margin-top: -5px;
+  }
+  .button {
+    padding: 8px 12px 9px;
+    vertical-align: top;
+  }
 }
 
 .text-field-placement-setter-field-selector, .text-field-placement-setter-field-field-selector {
-    font-size: 14.5px; // keep consistent with size of .placedfield.ui-draggable when placing fields.
+  font-size: 14.5px; // keep consistent with size of .placedfield.ui-draggable when placing fields.
+  height: 29px;
+  width: 189px;
+  .select-button {
     height: 29px;
-    width: 189px;
-    .select-button {
-      height: 29px;
-      .select-button-label { padding-top: 5px }
-      .select-button-right, .select-button-left { top: -2px; }
-    }
-    .select-opts {
-      top: 28px !important;
-    }
+    .select-button-label { padding-top: 5px }
+    .select-button-right, .select-button-left { top: -2px; }
+  }
+  .select-opts {
+    top: 28px !important;
+  }
 }
 
 .text-field-placement-setter-field-editor {
-    width: 208px;
-    height: 20px;
-    padding: 5px;
+  width: 208px;
+  height: 20px;
+  padding: 5px;
 }

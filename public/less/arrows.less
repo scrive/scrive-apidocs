@@ -1,13 +1,15 @@
- .signview .arrows {
-   @scroll-arrow-size: 102px;
-   @scroll-arrow-margin: 50px;
-   @action-arrow-front-width:20px;
-   @action-arrow-back-width:9px;
-   @action-arrow-height: 38px;
+@import 'branding/variables';
+
+.signview .arrows {
+  @scroll-arrow-size: 102px;
+  @scroll-arrow-margin: 50px;
+  @action-arrow-front-width:20px;
+  @action-arrow-back-width:9px;
+  @action-arrow-height: 38px;
 
   .hidden {
-      opacity: 0;
-      filter: alpha(opacity=0)
+    opacity: 0;
+    filter: alpha(opacity=0)
   }
 
   .scroll-arrow {
@@ -55,7 +57,7 @@
 
   .label {
     background-repeat: repeat-x;
-    color: white;
+    color: @white;
     font-size: 14px;
     padding-top: 6px;
     height : @action-arrow-height;

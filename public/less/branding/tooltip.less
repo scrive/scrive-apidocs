@@ -1,42 +1,42 @@
 .tooltip-container {
-	color: #666;
-	position: absolute;
-	width: 250px;
-	z-index: 1001;
-    .tooltip-body {
-      background: #fff;
-      margin: 5px;
-      padding: 13px 20px 13px;
-      width: 200px;
-      p {
-        display: inline;
-      }
+  color: #666;
+  position: absolute;
+  width: 250px;
+  z-index: 1001;
+  .tooltip-body {
+    background: @white;
+    margin: 5px;
+    padding: 13px 20px 13px;
+    width: 200px;
+    p {
+      display: inline;
     }
-    &:before {
-      border: 5px solid #000;
-      border-radius: 5px;
-      bottom: 0;
-      content: " ";
-      left: 0;
-      opacity: 0.55;
-      position: absolute;
-      right: 0;
-      top: 0;
-      -moz-border-radius: 5px;
-      -webkit-border-radius: 5px;
-    }
-    .tooltip-arrow {
-      background: url(/img/tooltip-arrow.png);
-      height: 33px;
-      left: -17px;
-      position: absolute;
-      top: 12px;
-      width: 17px;
-      z-index: 1002;
+  }
+  &:before {
+    border: 5px solid #000;
+    border-radius: 5px;
+    bottom: 0;
+    content: " ";
+    left: 0;
+    opacity: 0.55;
+    position: absolute;
+    right: 0;
+    top: 0;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+  }
+  .tooltip-arrow {
+    background: url(/img/tooltip-arrow.png);
+    height: 33px;
+    left: -17px;
+    position: absolute;
+    top: 12px;
+    width: 17px;
+    z-index: 1002;
   }
 
   &.black-theme {
-     color: #EFEFEF;
+    color: #EFEFEF;
     .tooltip-body {
       opacity: 0.55;
       background: #000000;
@@ -48,4 +48,3 @@
 
   }
 }
-

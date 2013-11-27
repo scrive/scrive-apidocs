@@ -1,75 +1,77 @@
+@import 'branding/variables';
+
 .apidashboard {
-    p {
-        font-size: 14px;
+  p {
+    font-size: 14px;
+  }
+
+  .subbox {
+    display : none;
+  }
+
+  .account .col {
+    width: 100%;
+  }
+  .oauth-section {
+    margin-bottom: 55px;
+    &:last-child {
+      margin-bottom:0px;
     }
 
-    .subbox {
-      display : none;
+    .oauth-section-header {
+      border-bottom: 1px solid #DEE4ED;
+      color: #000;
+      display: block;
+      font-size: 25px;
+      font-weight:300;
+      line-height: 21px;
+      margin: 38px 0px 5px;
+      min-height: 32px;
+      padding-bottom: 10px;
+      position: relative;
+      text-align: left;
+      display: block;
     }
+    .oauth-section-label {
+      color: #333333;
+      display: block;
+      font-family: @font-family-sans;
+      font-size: 1em;
+      line-height: 1em;
+      margin: 15px 0px 15px;
+      position: relative;
+      text-align: left;
+      display: block;
 
-    .account .col {
-        width: 100%;
     }
-    .oauth-section {
-      margin-bottom: 55px;
-      &:last-child {
-	  margin-bottom:0px;
+    label.delete {
+      cursor: pointer;
+      color: #B50008;
+      &:hover {
+        color: red;
       }
-
-      .oauth-section-header {
-        border-bottom: 1px solid #DEE4ED;
-        color: #000;
-        display: block;
-        font-size: 25px;
-	font-weight:300;
-        line-height: 21px;
-        margin: 38px 0px 5px;
-        min-height: 32px;
-        padding-bottom: 10px;
-        position: relative;
-        text-align: left;
-        display: block;
-      }
-      .oauth-section-label {
-        color: #333333;
-        display: block;
-        font-family: Source Sans Pro,Helvetica Neue,sans-serif;
-        font-size: 1em;
-        line-height: 1em;
-        margin: 15px 0px 15px;
-        position: relative;
-        text-align: left;
-        display: block;
-
-      }
-      label.delete {
-        cursor: pointer;
-        color: #B50008;
-        &:hover {
-          color: red;
-        }
-      }
-    }
-
-    .account .col p {
-        margin-right: 30px;
-        display: inline-block;
-
-    }
-
-    .col.float-right {
-        display: none;
-    }
-
-
-    .col {
-        display: table;
-        overflow: hidden;
-        height: 33px;
-    }
-
-    .middle {
-        display: table-cell;
-        vertical-align: middle;
     }
   }
+
+  .account .col p {
+    margin-right: 30px;
+    display: inline-block;
+
+  }
+
+  .col.float-right {
+    display: none;
+  }
+
+
+  .col {
+    display: table;
+    overflow: hidden;
+    height: 33px;
+  }
+
+  .middle {
+    display: table-cell;
+    vertical-align: middle;
+  }
+}

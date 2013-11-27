@@ -1,4 +1,4 @@
-@import 'branding/colors';
+@import 'branding/variables';
 @import 'branding/elements';
 @import 'designview/util';
 
@@ -8,40 +8,40 @@
   }
 
   .history-box {
-      width : 1016px; // total width of 1018px with border etc.
-      margin: 0 auto;
-      background-color: white;
-      padding-top: 22px;
-      padding-bottom: 22px;
+    width : 1016px; // total width of 1018px with border etc.
+    margin: 0 auto;
+    background-color: @white;
+    padding-top: 22px;
+    padding-bottom: 22px;
+    border: 1px solid @dark-border;
+    border-bottom-width: 0;
+
+    .headline {
+      color: @dark-text;
+      font-size: 20px;
+      font-weight: 300;
+      line-height: 20px;
+      margin-bottom: 22px;
+      text-align : center;
+    }
+
+    .document-history-container {
+      width: 943px;
+      box-sizing: border-box;
       border: 1px solid @dark-border;
-      border-bottom-width: 0;
+    }
 
-      .headline {
-        color: @dark-text;
-        font-size: 20px;
-        font-weight: 300;
-        line-height: 20px;
-        margin-bottom: 22px;
-        text-align : center;
+    .table > table {
+      border: none;
+      thead > tr {
+        border-top: none;
       }
-
-      .document-history-container {
-        width: 943px;
-        box-sizing: border-box;
-        border: 1px solid @dark-border;
-      }
-
-      .table > table {
-        border: none;
-        thead > tr {
-          border-top: none;
-        }
-      }
+    }
   }
 
   .titlebox {
     width: 1018px;
-    background: #fff;
+    background: @white;
     border: 1px solid @dark-border;
     padding: 30px 0;
     margin: 25px auto;
@@ -63,11 +63,11 @@
     }
 
     a.download {
-        background: url(../img/senddoc.png) no-repeat;
-        padding-left: 20px;
-        font-weight: normal;
-        position: relative;
-        left: -10px;
+      background: url(../img/senddoc.png) no-repeat;
+      padding-left: 20px;
+      font-weight: normal;
+      position: relative;
+      left: -10px;
     }
     .buttonbox {
       margin: 32px auto 0;
@@ -77,210 +77,212 @@
   }
 
   .section {
-      padding-top: 20px;
-      padding-bottom: 10px;
-      margin-left: auto;
-      margin-right: auto;
-      border: 1px solid @dark-border;
-      clear: both;
-      background-color: white;
-      overflow: hidden;
-      margin-top: 35px;
-      width: 1018px;
-      box-sizing: border-box;
-      h2 {
-          float: left;
-          width: 260px;
-          margin-bottom: 20px;
-          color: @dark-text;
-          padding-left: 30px;
-          font-size: 20px;
-          font-weight: 300;
-        }
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid @dark-border;
+    clear: both;
+    background-color: @white;
+    overflow: hidden;
+    margin-top: 35px;
+    width: 1018px;
+    box-sizing: border-box;
+    h2 {
+      float: left;
+      width: 260px;
+      margin-bottom: 20px;
+      color: @dark-text;
+      padding-left: 30px;
+      font-size: 20px;
+      font-weight: 300;
     }
+  }
 
   .column.spacing {
-          margin-right: 20px;
+    margin-right: 20px;
   }
 
   .subcontainer {
-      margin-bottom: 35px;
+    margin-bottom: 35px;
   }
 
   .subcontainer .signatories {
-      padding-bottom: 30px;
-      padding-top: 30px;
-      margin-bottom: 15px;
-      margin-top: 0;
+    padding-bottom: 30px;
+    padding-top: 30px;
+    margin-bottom: 15px;
+    margin-top: 0;
 
-      .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
+    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
 
-      div.spacing {
-          .butt {
-            padding-bottom: 0px;
-            margin-bottom: 0px;
-          }
+    div.spacing {
+      .butt {
+        padding-bottom: 0px;
+        margin-bottom: 0px;
       }
+    }
 
 
-      .sig.first {
-          margin-top: 0px;
-          padding-top: 0px;
+    .sig.first {
+      margin-top: 0px;
+      padding-top: 0px;
+    }
+
+    .sig {
+      margin-top: 4px;
+    }
+
+    .inner .details, .titleinfo, .statusbox, .optionbox {
+      padding:10px;
+    }
+
+    .signatory-box {
+      border: solid @dark-border 1px;
+      background: @grey-background;
+      vertical-align: top;
+      padding: 15px;
+      min-width:269px;
+    }
+
+    .signatory-box-separator {
+      width: 20px;
+    }
+
+    .column {
+      display: inline-block;
+      width: 100%;
+      min-height: 125px;
+      &.spacing {
+        margin-right: 0px;
       }
-
       .sig {
-          margin-top: 4px;
+        &:first-child {
+          padding-top:0px;
+        }
+        padding: 10px;
+        border-bottom: 1px dashed #ccc;
+        &:last-child {
+          padding-bottom:0px;
+          border-bottom:none;
+        }
       }
 
-      .inner .details, .titleinfo, .statusbox, .optionbox {
-	  padding:10px;
-      }
+    }
 
-      .signatory-box {
-          border: solid @dark-border 1px;
-          background: @grey-background;
-          vertical-align: top;
-	  padding: 15px;
-	  min-width:269px;
-      }
+    .name {
+      color: @text-dark;
+      font-size: 16px;
+    }
 
-      .signatory-box-separator {
-          width: 20px;
-      }
+    .company {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
 
-      .column {
-          display: inline-block;
-          width: 100%;
-          min-height: 125px;
-          &.spacing {
-            margin-right: 0px;
-          }
-	  .sig {
-	      &:first-child {
-		  padding-top:0px;
-	      }
-	      padding: 10px;
-	      border-bottom: 1px dashed #ccc;
-	      &:last-child {
-		  padding-bottom:0px;
-		  border-bottom:none;
-	      }
-	  }
+    .inner {
+      min-height: 75px;
+      color : #505050;
+      border-top: 1px dashed #ccc;
+    }
 
-      }
+    .inner .email:hover{
+      overflow: visible;
+    }
 
-      .name {
-          color: @text-dark;
-          font-size: 16px;
-      }
-
-      .company {
-          font-size: 14px;
-          margin-bottom: 5px;
-      }
-
-      .inner {
-          min-height: 75px;
-          color : #505050;
-          border-top: 1px dashed #ccc;
-      }
-
-      .inner .email:hover{
-              overflow: visible;
-      }
-
-      .field {
-          height: 16px;
-          font-size: 14px;
-          line-height: 15px;
-          width: 200px;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          overflow:hidden;
-          margin-bottom: 5px;
-      }
+    .field {
+      height: 16px;
+      font-size: 14px;
+      line-height: 15px;
+      width: 200px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow:hidden;
+      margin-bottom: 5px;
+    }
+    .statustext {
+      float: left;
+      font-size: 14px;
+    }
+    .statusbox {
+      border-top: 1px dashed #ccc;
+      font-size: 13px;
+      vertical-align: middle;
       .statustext {
+        margin-top: 3px;
+      }
+    }
+
+    .statusbox .icon.status {
+      display: inline-block;
+      float: left;
+      margin-top: 1px;
+      margin-right:10px;
+    }
+
+    .line {
+      overflow: hidden;
+      margin-top: 2px;
+      display: table;
+      .middle {
+        display:table-cell;
+        vertical-align: middle;
+        a {
+          cursor: pointer;
+        }
+        .icon.status {
+          margin-right: 7px;
+        }
+      }
+      .details {
+        font-size: 14px;
+        float:right;
+      }
+
+    }
+
+    .optionbox {
+      margin-top: 30px;
+      height : 40px;
+      border-top: 1px dashed #ccc;
+      display: block;
+
+      .change-email-box, .change-mobile-box {
+        margin-bottom: 4px;
+        display: inline-block;
+        padding: 8px 0px 0px 0px;
+
+        input {
+          width: 180px;
           float: left;
-          font-size: 14px;
-      }
-      .statusbox {
-          border-top: 1px dashed #ccc;
-          font-size: 13px;
-          vertical-align: middle;
-          .statustext {
-              margin-top: 3px;
-          }
-      }
+        }
 
-      .statusbox .icon.status {
-          display: inline-block;
+        .btn-tiny {
+          margin-left: 5px;
           float: left;
-          margin-top: 1px;
-	  margin-right:10px;
+        }
       }
 
-      .line {
-          overflow: hidden;
-	  margin-top: 2px;
-          display: table;
-	  .middle {
-	      display:table-cell;
-              vertical-align: middle;
-              a {
-		  cursor: pointer;
-              }
-              .icon.status {
-                  margin-right: 7px;
-              }
-	  }
-	  .details {
-              font-size: 14px;
-	      float:right;
-	  }
-
+      .reminderForSendIcon {
+        background: url(../img/remind.png) 0 0 no-repeat;
+        margin-top: 7px;
+        margin-right: 7px;
+        display: inline-block;
+        height: 16px;
+        width: 16px;
+        float:left;
       }
 
-     .optionbox {
-        margin-top: 30px;
-        height : 40px;
-        border-top: 1px dashed #ccc;
-        display: block;
-        color: @blueH;
-        .change-email-box, .change-mobile-box {
-            margin-bottom: 4px;
-            display: inline-block;
-            padding: 8px 0px 0px 0px;
-            input {
-              width: 180px;
-              float: left;
-            }
-            .btn-tiny {
-              margin-left: 5px;
-              float: left;
-            }
-        }
+      .reminderForSignedIcon  {
+        background: url(../img/senddoc.png) 0 0 no-repeat;
+        display: inline-block;
+        margin-top: 4px;
+        margin-right: 7px;
+        height: 16px;
+        width: 16px;
+        float:left;
+      }
 
-        .reminderForSendIcon {
-            background: url(../img/remind.png) 0 0 no-repeat;
-            margin-top: 7px;
-            margin-right: 7px;
-            display: inline-block;
-            height: 16px;
-            width: 16px;
-            float:left;
-        }
-
-        .reminderForSignedIcon  {
-            background: url(../img/senddoc.png) 0 0 no-repeat;
-            display: inline-block;
-            margin-top: 4px;
-            margin-right: 7px;
-            height: 16px;
-            width: 16px;
-            float:left;
-        }
-
-     }
+    }
 
   }
 
@@ -301,59 +303,59 @@
       margin-left: 23px;
       margin-right: 20px;
       .desc {
-          width: 420px;
-          .description {
-             font-style: italic;
-          }
+        width: 420px;
+        .description {
+          font-style: italic;
+        }
       }
       .file {
-          vertical-align:top
+        vertical-align:top
       }
     }
   }
 
   .document-pages-wrapper {
-      width:943px; /* Propageted form document-pages*/
-      margin: 0 auto 0 auto;
-      padding: 36px 36px 36px 37px;
-      border: 1px solid #cccccc;
-      background: #e9e9e9;
-      .border-radius(0, 5px, 5px, 0);
-      .box-shadow(inset 0px 0px 8px rgba(80, 80, 80, 0.21));
+    width:943px; /* Propageted form document-pages*/
+    margin: 0 auto 0 auto;
+    padding: 36px 36px 36px 37px;
+    border: 1px solid #cccccc;
+    background: #e9e9e9;
+    .border-radius(0, 5px, 5px, 0);
+    .box-shadow(inset 0px 0px 8px rgba(80, 80, 80, 0.21));
 
-      .section {
-        width: 943px;
-        margin-top:15px;
-        .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
+    .section {
+      width: 943px;
+      margin-top:15px;
+      .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
 
-        &.signatories {
-          margin-top: 0; // Since signatories is on top we dont need any extra margin, reset to 0.
-        }
+      &.signatories {
+        margin-top: 0; // Since signatories is on top we dont need any extra margin, reset to 0.
       }
-      .pagediv {
-        margin-top:15px;
+    }
+    .pagediv {
+      margin-top:15px;
 
-        &#page1 {
-          margin-top:0px;
-        }
+      &#page1 {
+        margin-top:0px;
       }
+    }
   }
 
 }
 
 .prolong-modal-content {
-    text-align : center;
-    .text {
-      display: inline-block;
-    }
-    .info-text-input {
-      margin-left: 8px;
-      margin-right: 8px;
-      width: 30px;
+  text-align : center;
+  .text {
+    display: inline-block;
+  }
+  .info-text-input {
+    margin-left: 8px;
+    margin-right: 8px;
+    width: 30px;
 
-      input {
-        height: 27px;
-        text-align: center;
-      }
+    input {
+      height: 27px;
+      text-align: center;
     }
+  }
 }

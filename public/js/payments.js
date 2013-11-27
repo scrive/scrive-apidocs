@@ -361,18 +361,6 @@
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
 
-            var buttoncolour = model.buttoncolorclass();
-            if (buttoncolour == 'red')
-              button.addClass('button-red');
-            else if (buttoncolour == 'green')
-              button.addClass('button-green');
-            else if (buttoncolour == 'black')
-              button.addClass('button-gray');
-            else if (buttoncolour == 'light-blue')
-              button.addClass("button-light-blue");
-            else if (buttoncolour == 'orange')
-              button.addClass("button-orange");
-
             var action = $('<div class="action" />').append(button);
 
             features.toggle(function() {
@@ -500,18 +488,6 @@
                 .append($('<span class="gray" />')
                         .text(localization.cancel));
 
-            var buttoncolour = model.buttoncolorclass();
-            if (buttoncolour == 'red')
-              button.addClass('button-red');
-            else if (buttoncolour == 'green')
-              button.addClass('button-green');
-            else if (buttoncolour == 'black')
-              button.addClass('button-gray');
-            else if (buttoncolour == 'light-blue')
-              button.addClass("button-light-blue");
-            else if (buttoncolour == 'orange')
-              button.addClass("button-orange");
-
             var action = $('<div class="action" />')
                 .append(button);
 
@@ -585,7 +561,6 @@
 
             var work = true;
             var handlechargeaccount = function(data) {
-                console.log(data);
                 // three cases
                 if(!data.user_exists) {
                     // create the user and charge the account

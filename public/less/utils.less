@@ -1,326 +1,341 @@
-/* Icons and simillar stuff */
+// Icons and simillar stuff
+// -------------------------
 
-.icon.status, .icon.small {
-    background: url(../img/spr-icons.png) 0 0 no-repeat;
-    display: inline-block;
-    height: 15px;
-    margin-right: 4px;
-    margin-bottom: -6px;
+.icon.status,
+.icon.small {
+  background: url(../img/spr-icons.png) 0 0 no-repeat;
+  display: inline-block;
+  height: 15px;
+  margin-bottom: -6px;
+  margin-right: 4px;
 
-    .tooltip-body & {
-        margin-bottom: -8px;
-    }
+  .tooltip-body & {
+    margin-bottom: -8px;
+  }
 }
 
 .icon.small.business {
-    background-position: 0 0;
-    width: 16px;
+  background-position: 0 0;
+  width: 16px;
 }
 
 .icon.small.add {
-    background-position: -71px 0;
-    width: 14px;
+  background-position: -71px 0;
+  width: 14px;
 }
 
 .icon.small.remove {
-    background-position: -85px 0;
-    width: 14px;
+  background-position: -85px 0;
+  width: 14px;
 }
 
 .icon.small.ok {
-    background-position: -171px 0;
-    width: 14px;
+  background-position: -171px 0;
+  width: 14px;
 }
-/* Status Icons */
+
+
+// Status Icons
+// -------------------------
 
 @icon-height: 26px;
 @icon-width: 26px;
 
 .icon.status {
-    height: @icon-height;
-    width: @icon-width;
-    background: url(../img/status-icons.png) 0 0 no-repeat;
+  background: url(../img/status-icons.png) 0 0 no-repeat;
+  height: @icon-height;
+  width: @icon-width;
 }
 
 .icon.signed {
-    background-position: (-@icon-width * 4) 0;
+  background-position: (-@icon-width * 4) 0;
 }
 
 .icon.sealed {
-    background-position: (-@icon-width * 14) 0;
+  background-position: (-@icon-width * 14) 0;
 }
 
 .icon.extended {
-    background-position: (-@icon-width * 15) 0;
+  background-position: (-@icon-width * 15) 0;
 }
 
 .icon.draft {
-    background-position: (-@icon-width * 11) 0;
+  background-position: (-@icon-width * 11) 0;
 }
 
 .icon.template {
-    background-position: (-@icon-width * 12) 0;
+  background-position: (-@icon-width * 12) 0;
 }
 
 .icon.rejected {
-    background-position: (-@icon-width * 5) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 5) 0;
+  margin-right: 7px;
 }
 
-.icon.deliveryproblem, .icon.problem {
-    background-position: (-@icon-width * 9) 0;
-    margin-right: 7px;
+.icon.deliveryproblem,
+.icon.problem {
+  background-position: (-@icon-width * 9) 0;
+  margin-right: 7px;
 }
 
 .icon.timeouted {
-    background-position: (-@icon-width * 7) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 7) 0;
+  margin-right: 7px;
 }
 
 .icon.cancelled {
-    background-position: (-@icon-width * 6) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 6) 0;
+  margin-right: 7px;
 }
 
 .icon.sent {
-    background-position: (-@icon-width * 0) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 0) 0;
+  margin-right: 7px;
 }
 
 .icon.delivered {
-    background-position: (-@icon-width * 1) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 1) 0;
+  margin-right: 7px;
 }
 
 .icon.read {
-    background-position: (-@icon-width * 2) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 2) 0;
+  margin-right: 7px;
 }
 
 .icon.opened {
-    background-position: (-@icon-width * 3) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 3) 0;
+  margin-right: 7px;
 }
 
 .icon.prolonged {
-    background-position: (-@icon-width * 8) 0;
-    margin-right: 7px;
+  background-position: (-@icon-width * 8) 0;
+  margin-right: 7px;
 }
 
 .icon.cross {
-    background: url(../img/x.png) 0 0 no-repeat;
-    display: inline-block;
-    height: 22px;
-    width: 31px;
-    margin-left: 10px;
-    position: relative;
-    top: 4px;
+  background: url(../img/x.png) 0 0 no-repeat;
+  display: inline-block;
+  height: 22px;
+  width: 31px;
+  margin-left: 10px;
+  position: relative;
+  top: 4px;
 }
 
 .icon.delete {
-    background: url(../img/icon-delete.png) 0 0 no-repeat;
-    width: 16px;
-    height: 16px;
-    display: block;
-    &.gray {
-        background: url(../img/icon-delete-gray.png) 0 0 no-repeat;
-    }
+  background: url(../img/icon-delete.png) 0 0 no-repeat;
+  display: block;
+  height: 16px;
+  width: 16px;
+
+  &.gray {
+    background: url(../img/icon-delete-gray.png) 0 0 no-repeat;
+  }
 }
 
 .icon.edit {
-    width: 14px;
-    height: 14px;
-    display: inline-block;
-    background-image: url(/img/iconPen.png);
+  background-image: url(/img/iconPen.png);
+  display: inline-block;
+  height: 14px;
+  width: 14px;
 }
 
 .icon.remind {
-    background: url(../img/remind.png) 0 0 no-repeat;
-    width: 16px;
-    height: 16px;
-    display: block;
+  background: url(../img/remind.png) 0 0 no-repeat;
+  display: block;
+  height: 16px;
+  width: 16px;
 }
 
 .backicon {
-    background: url(../img/back.png) no-repeat transparent;
-    height: 16px;
-    margin:auto;
-    width: 16px;
-    background-position: 0px 0px;
-    display: block;
+  background: url(../img/back.png) no-repeat transparent;
+  background-position: 0px 0px;
+  display: block;
+  height: 16px;
+  margin: auto;
+  width: 16px;
 }
 
 .gotodave {
-    display: block;
-    width: 15px;
-    height: 15px;
-    background-image: url(../img/iconPen.png);
-
+  display: block;
+  background-image: url(../img/iconPen.png);
+  height: 15px;
+  width: 15px;
 }
 
-.notSharedIcon
-{
-    display : block;
-    width: 14px;
-    height: 14px;
-    background-image: url(/img/notshared.png);
-    margin-left: 10px;
+.notSharedIcon {
+  background-image: url(/img/notshared.png);
+  display : block;
+  height: 14px;
+  margin-left: 10px;
+  width: 14px;
 }
 
-.sharedIcon
-{
-    display : block;
-    width: 17px;
-    height: 14px;
-    background-image: url(/img/shared.png);
-    margin-left: 10px;
+.sharedIcon {
+  background-image: url(/img/shared.png);
+  display: block;
+  height: 14px;
+  margin-left: 10px;
+  width: 17px;
 }
 
-.actionIcon.removefromqueue{
-        background-image: url(../img/icon-delete.png);
-        float: left;
-        height: 16px;
-        width: 16px;
+.actionIcon.removefromqueue {
+  background-image: url(../img/icon-delete.png);
+  float: left;
+  height: 16px;
+  width: 16px;
 }
 
-.actionIcon.addtoqueue{
-        background-image: url(../img/foreward.png);
-        float: left;
-        height: 14px;
-        width: 14px;
+.actionIcon.addtoqueue {
+  background-image: url(../img/foreward.png);
+  float: left;
+  height: 14px;
+  width: 14px;
 }
 
-
-.go-back-image{
-    display: block;
-    margin:1px;
-    height: 16px;
-    width: 16px;
-    background: url(/img/undo.png) 0 -0 no-repeat;
+.go-back-image {
+  background: url(/img/undo.png) 0 -0 no-repeat;
+  display: block;
+  margin: 1px;
+  height: 16px;
+  width: 16px;
 }
-.logout-image{
-    display: block;
-    margin:1px;
-    height: 16px;
-    width: 16px;
-    background: url(/img/exit.png) 0 -0 no-repeat;
 
+.logout-image {
+  background: url(/img/exit.png) 0 -0 no-repeat;
+  display: block;
+  height: 16px;
+  margin:1px;
+  width: 16px;
 }
 
 .editable {
+
   ol li {
     list-style: decimal;
   }
+
   ol {
-    padding-left: 40px;
     list-style: decimal outside none;
+    padding-left: 40px;
   }
+
   ul li {
     list-style: disc;
   }
+
   ul {
-    padding-left: 40px;
     list-style: disc outside none;
+    padding-left: 40px;
   }
 }
 
-.waiting4data
-{
-    margin-left:40%;
-    margin-right:40%;
-    height: 100px;
-    background-image: url(/img/wait30trans.gif);
-    background-repeat: no-repeat;
-    background-position: center center;
+.waiting4data {
+  background-image: url(/img/wait30trans.gif);
+  background-position: center center;
+  background-repeat: no-repeat;
+  height: 100px;
+  margin-left: 40%;
+  margin-right: 40%;
 }
-.loadingMail
-{
-    margin-left:40%;
-    margin-right:40%;
-    height: 400px;
-    background-image: url(/img/wait30trans.gif);
-    background-repeat: no-repeat;
-    background-position: center center;
+
+.loadingMail {
+  background-image: url(/img/wait30trans.gif);
+  background-repeat: no-repeat;
+  background-position: center center;
+  height: 400px;
+  margin-left: 40%;
+  margin-right: 40%;
+}
+
+
+// HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!!
+// -------------------------
+
+.button input.multiFileInput {
+  cursor: pointer;
+  -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+  filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+  float: right;
+  font-size: 90px;
+  left: 10;
+  min-height: 66px;
+  opacity: 0;
+  position: relative;
+  right: -30px;
+  top: -50px;
+  z-index: 10;
 }
 
 
-/* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
-.button input.multiFileInput
-{
-    position:relative;
-    z-index:10;
-    cursor:pointer;
-    float:right;
-    top:-50px;
-    left:10;
-    right:-30px;
-    font-size:90px;
-    cursor:pointer;
-    -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
-    filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
-    opacity: 0;
-    min-height: 66px;
-}
+// Use this class to mark some error
+// -------------------------
 
-/*Use this class to mark some error*/
-.redborder
-{
-    border:1px solid red;
+.redborder {
+  border:1px solid red;
 }
 
 .redborder input {
-    border-color: red;
+  border-color: red;
 }
-/*This are all bank icons, but since thay have strange shapes we need to manually inline them*/
+
+
+// This are all bank icons, but since thay have strange shapes we need to manually inline them
+// -------------------------
+
 .nordea {
-    padding-top: 11px;
-    margin-left: 15px;
-    margin-right: 15px;
-    float: right;
-    height: 33px;
-    overflow:none;
+  float: right;
+  height: 33px;
+  margin-left: 15px;
+  margin-right: 15px;
+  overflow: none;
+  padding-top: 11px;
 }
+
 .telia {
-    margin-left: 15px;
-    margin-right: 15px;
-    float: right;
-    height: 33px;
-    overflow:none;
+  float: right;
+  height: 33px;
+  margin-left: 15px;
+  margin-right: 15px;
+  overflow: none;
 }
 
 .bankid {
-    padding-top: 3px;
-    margin-left: 15px;
-    margin-right: 15px;
-    float: right;
-    height: 33px;
-    overflow:none;
-}
-.mbi {
-    padding-top: 11px;
-    margin-left: 15px;
-    margin-right: 15px;
-    float: right;
-    height: 33px;
-    overflow:none;
+  float: right;
+  height: 33px;
+  margin-left: 15px;
+  margin-right: 15px;
+  overflow: none;
+  padding-top: 3px;
 }
 
-.divider-line{
-  display: block;
-  margin: 10px auto;
+.mbi {
+  float: right;
+  height: 33px;
+  margin-left: 15px;
+  margin-right: 15px;
+  overflow: none;
+  padding-top: 11px;
+}
+
+.divider-line {
   background-image: url("/img/divider-line.png");
-  height:9px;
+  display: block;
+  height: 9px;
+  margin: 10px auto;
   width: 166px;
 }
 
 .label-with-link a {
-  font-weight: 400;
   color: #5C7599;
+  font-weight: 400;
+  
   &:visited {
     color: #425A7C;
   }
+
   &:hover {
     color: #668EDA;
   }
 }
-

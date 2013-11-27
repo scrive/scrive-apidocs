@@ -1,118 +1,118 @@
 @import 'util.less';
-@import '../branding/colors.less';
+@import '../branding/variables.less';
 
 .design-view-action-process {
-    .box-sizing(border-box);
-    font-size: 15px;
-    font-weight: 300;
-    width: 1018px;
-    margin: auto;
-    padding-bottom:14px;
-    background-color: @grey-background;
-    border-bottom: 4px solid #fff;
-    border-left: 4px solid #fff;
-    border-right: 4px solid #fff;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
-    .box-shadow(0 4px 0 rgba(0,0,0,0.05));
+  .box-sizing(border-box);
+  font-size: 15px;
+  font-weight: 300;
+  width: 1018px;
+  margin: auto;
+  padding-bottom:14px;
+  background-color: @grey-background;
+  border-bottom: 4px solid @white;
+  border-left: 4px solid @white;
+  border-right: 4px solid @white;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  .box-shadow(0 4px 0 rgba(0,0,0,0.05));
 }
 
 .design-view-action-process {
-    .design-view-action-process-right-column-invitation-wrapper.disabled {
-        .mce-panel {
-          border-color: #FFFFFF;
-        }
+  .design-view-action-process-right-column-invitation-wrapper.disabled {
+    .mce-panel {
+      border-color: @white;
     }
+  }
 }
 
 .design-view-action-process-left-column {
-    display: inline-block;
-    vertical-align: top;
-    width: 33%;
-    height: 170px;
-    margin-top: 19px;
+  display: inline-block;
+  vertical-align: top;
+  width: 33%;
+  height: 170px;
+  margin-top: 19px;
 }
 
 .design-view-action-row {
-    margin-bottom: 8px;
-    vertical-align: middle;
+  margin-bottom: 8px;
+  vertical-align: middle;
 }
 
 .design-view-action-label {
-    width: 156px;
-    display: inline-block;
-    text-align: right;
-    margin-right: 8px;
-    vertical-align: middle;
+  width: 156px;
+  display: inline-block;
+  text-align: right;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
 .design-view-action-process-left-column-document-name {
-    .design-view-action-row;
+  .design-view-action-row;
 }
 
 .design-view-action-process-left-column-document-name-label {
-    .design-view-action-label;
+  .design-view-action-label;
 }
 
 .design-view-action-process-left-column-document-name-field {
-    width: 148px;
-    display: inline-block;
-    vertical-align: middle;
+  width: 148px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .design-view-action-process-left-column-document-type {
-    .design-view-action-row;
+  .design-view-action-row;
 }
 
 .design-view-action-process-left-column-document-type-label {
-    .design-view-action-label;
+  .design-view-action-label;
 }
 
 .design-view-action-process-left-column-document-type-field {
-    width: 158px;
-    display: inline-block;
-    vertical-align: middle;
+  width: 158px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .design-view-action-process-left-column-language {
-    .design-view-action-row;
+  .design-view-action-row;
 }
 
 .design-view-action-process-left-column-language-label {
-    .design-view-action-label;
+  .design-view-action-label;
 }
 
 .design-view-action-process-left-column-language-field {
-    width: 158px;
-    display: inline-block;
-    vertical-align: middle;
+  width: 158px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .design-view-action-process-left-column-deadline {
-    .design-view-action-row;
+  .design-view-action-row;
 }
 
 .design-view-action-process-left-column-deadline-label {
-    .design-view-action-label;
+  .design-view-action-label;
 }
 
 .design-view-action-process-left-column-deadline-field {
-    width: 50px;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 8px;
+  width: 50px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
 }
 
 .design-view-action-process-left-column-deadline-tag {
-    display: inline-block;
+  display: inline-block;
 }
 
 .design-view-action-process-left-column-attachments {
-    display: inline-block;
-    width : 335px;
-    .ie8 & {
-	width:350px;
-    }
+  display: inline-block;
+  width : 335px;
+  .ie8 & {
+    width:350px;
+  }
 }
 
 .designview-attachemnts-list {
@@ -144,13 +144,13 @@
   .remove-td {
     width: 11px;
     .remove-icon {
-     width: 11px;
-     height: 11px;
-     display: inline-block;
-     background: url("/img/editor-view-remove-field.png") repeat scroll -5px -5px transparent;
-     cursor: pointer;
-     vertical-align : middle;
-     &:hover {
+      width: 11px;
+      height: 11px;
+      display: inline-block;
+      background: url("/img/editor-view-remove-field.png") repeat scroll -5px -5px transparent;
+      cursor: pointer;
+      vertical-align : middle;
+      &:hover {
         background: url("/img/editor-view-remove-field-hover.png") repeat scroll -5px -5px transparent;
       }
 
@@ -170,46 +170,46 @@
 }
 
 .design-view-action-process-middle-column {
-    display:inline-block;
-    .box-sizing(border-box);
-    width: 307px;
-    height: 200px;
-    margin-top: 15px;
-    padding: 4px 16px 8px 18px;
-    vertical-align: top;
+  display:inline-block;
+  .box-sizing(border-box);
+  width: 307px;
+  height: 200px;
+  margin-top: 15px;
+  padding: 4px 16px 8px 18px;
+  vertical-align: top;
 }
 
 .design-view-action-process-right-column {
-    display: inline-block;
-    .box-sizing(border-box);
-    margin-top: 19px;
-    width: 34%;
-    min-height: 170px;
-    padding: 0px 16px 8px 16px;
-    .ie8 & {
-	padding-left:10px;
-    }
-    vertical-align: top;
+  display: inline-block;
+  .box-sizing(border-box);
+  margin-top: 19px;
+  width: 34%;
+  min-height: 170px;
+  padding: 0px 16px 8px 16px;
+  .ie8 & {
+    padding-left:10px;
+  }
+  vertical-align: top;
 }
 
 .design-view-action-process-right-column-invitation-topline {
-    position: relative;
+  position: relative;
 }
 
 .design-view-action-process-right-column-invitation-link {
-    float: right;
-    margin-top: 10px;
+  float: right;
+  margin-top: 10px;
 }
 
 .design-view-action-process-right-column-invitation-wrapper {
-    display: inline-block;
-    width: 310px;
-    height: 140px;
-    vertical-align: top;
-    overflow: hidden;
+  display: inline-block;
+  width: 310px;
+  height: 140px;
+  vertical-align: top;
+  overflow: hidden;
 }
 
 .design-view-action-process-right-column-invitation-editor {
-    width: 470px;
-    height: 110px;
+  width: 470px;
+  height: 110px;
 }
