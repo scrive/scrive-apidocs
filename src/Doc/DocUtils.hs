@@ -22,7 +22,6 @@ module Doc.DocUtils(
   , isActivatedSignatory
   , isCurrentSignatory
   , isFieldCustom
-  , isAuthorAdmin
   , findCustomField
   , getSignatoryAttachment
   , documentfileM
@@ -266,10 +265,6 @@ getSignatoryAttachment :: Document -> SignatoryLinkID -> String -> Maybe Signato
 getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a)
                                        <$> signatoryattachments
                                        <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
-
-isAuthorAdmin :: User -> Document -> Bool
-isAuthorAdmin user doc =
-  useriscompanyadmin user && (getAuthorSigLink doc >>= maybesignatory) == Just (userid user)
 
 documentfileM :: MonadDB m => Document -> m (Maybe File)
 documentfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentfile

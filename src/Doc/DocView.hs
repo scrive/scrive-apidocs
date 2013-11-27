@@ -48,14 +48,12 @@ import Happstack.Server.SimpleHTTP
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe UserID) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
-documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
-    ctx <- getContext
+documentJSON :: (MonadDB m, MonadIO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     evidenceattachments <- if includeEvidenceAttachments then EvidenceAttachments.fetch doc else return []
-    let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
@@ -94,24 +92,24 @@ documentJSON mviewer includeEvidenceAttachments forapi forauthor pq msl doc = do
                                     J.value "name"  n
                                     J.value "value" v
       J.value "apicallbackurl" $ documentapicallbackurl doc
-      J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> mviewer
-      J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> mviewer
-      when (isJust mviewer) $
-        J.value "canperformsigning" $ userCanPerformSigningAction (fromJust mviewer) doc
+      J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> userid <$> muser
+      J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> userid <$>  muser
+      when (isJust muser) $
+        J.value "canperformsigning" $ userCanPerformSigningAction (userid $ fromJust muser) doc
       J.value "objectversion" $ documentobjectversion doc
       J.value "process" $ "Contract"
-      J.value "isviewedbyauthor" $ isSigLinkFor mviewer (getAuthorSigLink doc)
+      J.value "isviewedbyauthor" $ isSigLinkFor muser (getAuthorSigLink doc)
       when (not $ forapi) $ do
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
-        J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
-        J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
+        J.value "canbecanceled" $ (isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)) && documentstatus doc == Pending
+        J.value "canseeallattachments" $ isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)
 
 authenticationJSON :: AuthenticationMethod -> JSValue
 authenticationJSON StandardAuthentication = toJSValue "standard"
 authenticationJSON ELegAuthentication     = toJSValue "eleg"
 
-signatoryJSON :: (TemplatesMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON :: (MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent

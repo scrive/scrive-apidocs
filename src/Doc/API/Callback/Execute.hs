@@ -20,8 +20,12 @@ import Control.Monad.Reader
 import Control.Applicative
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
+import Text.JSON
+import Doc.DocView (documentJSON)
+import Amazon
+import Network.HTTP as HTTP
 
-execute :: (MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
+execute :: (AmazonMonad m, MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
   doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
   do
@@ -33,12 +37,16 @@ execute DocumentAPICallback{..} = do
                   Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
                   _ -> executeStandardCallback doc dacURL
 
-executeStandardCallback :: (MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
 executeStandardCallback doc url = do
+  dJSON <- documentJSON Nothing False False True Nothing Nothing doc
   (exitcode, _ , stderr) <- readCurl [
                 "-X", "POST"
-              , "-d", "documentid=" ++ show (documentid doc) ++ "&" ++
-                      "signedAndSealed=" ++ (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false")
+              , "-d", urlEncodeVars [
+                          ("documentid", show (documentid doc))
+                        , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false") )
+                        , ("json", encode dJSON)
+                      ]
               , url
               ] BSL.empty
   case exitcode of
@@ -53,8 +61,10 @@ executeSalesforceCallback doc rtoken url = do
        Just token -> do
         (exitcode, _ , stderr) <- readCurl [
                       "-X", "POST"
-                    , "-d", "documentid=" ++ show (documentid doc) ++ "&" ++
-                            "signedAndSealed=" ++ (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false")
+                    , "-d",  urlEncodeVars [
+                              ("documentid", show (documentid doc))
+                            , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false") )
+                          ]
                     , "-H", "Authorization: Bearer " ++ token
                     , url
                     ] BSL.empty

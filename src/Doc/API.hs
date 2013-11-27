@@ -185,7 +185,7 @@ apiCallCreateFromFile = api $ do
       dbUpdate $ AttachFile (documentid doc) fileid' actor
       return ()
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  Created <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
+  Created <$> documentJSON (Just $ user) False True True Nothing Nothing doc'
 
 
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
@@ -205,7 +205,7 @@ apiCallCreateFromTemplate did =  api $ do
                       dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
                     else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
   when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
-  Created <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdoc
+  Created <$> documentJSON (Just $ user) False True True Nothing Nothing newdoc
 
 
 apiCallClone :: Kontrakcja m => DocumentID -> m Response
@@ -218,7 +218,7 @@ apiCallClone did =  api $ do
          when (isNothing mndid) $
              throwIO . SomeKontraException $ serverError "Can't clone given document"
          newdoc <- dbQuery $ GetDocumentByDocumentID $ (fromJust mndid)
-         Created <$> documentJSON (Just $ userid user) False True  True Nothing Nothing newdoc
+         Created <$> documentJSON (Just $ user) False True  True Nothing Nothing newdoc
      else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
 
 
@@ -243,7 +243,7 @@ apiCallUpdate did = api $ do
   when (draftIsChangingDocument draftData doc) (checkObjectVersionIfProvided did) -- If we will change document, then we want to be sure that object version is ok.
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
   triggerAPICallbackIfThereIsOne newdocument
-  Ok <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+  Ok <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
 
 apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do
@@ -251,7 +251,7 @@ apiCallReady did =  api $ do
   doc <- dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   if (documentstatus doc == Pending && not (any hasSigned $ documentsignatorylinks doc))
-   then Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc
+   then Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing doc
    else do
     checkObjectVersionIfProvided did
     when (not $ (auid == userid user)) $ do
@@ -274,7 +274,7 @@ apiCallReady did =  api $ do
     skipauthorinvitation <- lift $ isFieldSet "skipauthorinvitation"
     lift $ postDocumentPreparationChange newdocument skipauthorinvitation
     newdocument' <- dbQuery $ GetDocumentByDocumentID $ did
-    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
+    Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument'
 
 apiCallCancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallCancel did =  api $ do
@@ -290,13 +290,13 @@ apiCallCancel did =  api $ do
     newdocument <- dbQuery $ GetDocumentByDocumentID $ did
     lift $ postDocumentCanceledChange newdocument
     newdocument' <- dbQuery $ GetDocumentByDocumentID $ did
-    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument'
+    Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument'
 
 
 apiCallReject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
 apiCallReject did slid = api $ do
   checkObjectVersionIfProvided did
-  (mh,muid) <- do
+  (mh,mu) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
       Just mh'' ->  return (mh'',Nothing)
@@ -305,7 +305,7 @@ apiCallReject did slid = api $ do
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Magic hash for signatory was not provided"
-           Just mh''' -> return (mh''',Just $ userid user)
+           Just mh''' -> return (mh''',Just $ user)
   doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
   do
       ctx <- getContext
@@ -320,7 +320,7 @@ apiCallReject did slid = api $ do
 
       lift $ postDocumentRejectedChange doc' slid
       doc'' <- dbQuery $ GetDocumentByDocumentID did
-      Accepted <$> documentJSON muid False True True Nothing Nothing doc''
+      Accepted <$> documentJSON mu False True True Nothing Nothing doc''
 
 
 apiCallSign :: Kontrakcja m
@@ -330,7 +330,7 @@ apiCallSign :: Kontrakcja m
 apiCallSign  did slid = api $ do
   checkObjectVersionIfProvided did
   Log.debug $ "Ready to sign a docment " ++ show did ++ " for signatory " ++ show slid
-  (mh,muid) <- do
+  (mh,mu) <- do
     mh' <- dbQuery $ GetDocumentSessionToken slid
     case mh' of
       Just mh'' ->  return (mh'',Nothing)
@@ -340,7 +340,7 @@ apiCallSign  did slid = api $ do
          mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
-           Just mh''' -> return (mh''',Just $ userid user)
+           Just mh''' -> return (mh''',Just $ user)
   Log.debug "We have magic hash for this operation"
   screenshots <- lift $ (fromMaybe emptySignatoryScreenshots) <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
   fields <- do
@@ -371,11 +371,11 @@ apiCallSign  did slid = api $ do
       udoc <- dbQuery $ GetDocumentByDocumentID did
       lift $ handleAfterSigning udoc slid
       udoc' <- dbQuery $ GetDocumentByDocumentID did
-      Accepted <$> documentJSON muid False True True Nothing Nothing udoc'
+      Accepted <$> documentJSON mu False True True Nothing Nothing udoc'
     Left msg -> do -- On eleg error we return document, but it will have status cancelled instead of closed.
       Log.error $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
       doc' <- dbQuery $ GetDocumentByDocumentID did
-      Accepted <$> documentJSON muid False True True Nothing Nothing doc'
+      Accepted <$> documentJSON mu False True True Nothing Nothing doc'
 
 
 {- | Utils for signing with eleg -}
@@ -423,7 +423,7 @@ apiCallRestart did =  api $ do
     when (documentstatus doc `elem` [Pending,Preparation, Closed] ) $ do
           throwIO . SomeKontraException $ (conflictError "Document can not be restarted")
     newdocument <- apiGuardJustM (serverError "Document can't be restarted") $ dbUpdate $ RestartDocument doc actor
-    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+    Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
 
 apiCallProlong :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
 apiCallProlong did =  api $ do
@@ -444,7 +444,7 @@ apiCallProlong did =  api $ do
     dbUpdate $ ProlongDocument (documentid doc) days actor
     triggerAPICallbackIfThereIsOne doc
     newdocument <- dbQuery $ GetDocumentByDocumentID $ did
-    Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+    Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
 
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
@@ -459,7 +459,7 @@ apiCallRemind did =  api $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
   _ <- lift $ sendAllReminderEmails ctx actor user did
   newdocument <- dbQuery $ GetDocumentByDocumentID $ did
-  Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+  Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
 
 apiCallDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallDelete did =  api $ do
@@ -524,7 +524,7 @@ apiCallGet did = api $ do
                          || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)
           then do
-            Ok <$> documentJSON (Just $ userid user) includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
+            Ok <$> documentJSON (Just $ user) includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
           else throwIO . SomeKontraException $ serverError "You do not have right to access document"
 
 apiCallList :: Kontrakcja m => m Response
@@ -671,7 +671,7 @@ apiCallChangeMainFile docid = api $ do
       apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename actor
     Nothing -> dbUpdate $ DetachFile docid actor
   doc' <- dbQuery $ GetDocumentByDocumentID $ docid
-  Accepted <$> documentJSON (Just $ userid user) False True True Nothing Nothing doc'
+  Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing doc'
 
 apiCallGetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
 apiCallGetBrandingForSignView did slid = api $ do
