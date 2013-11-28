@@ -412,24 +412,25 @@ testDeleteSigAttachmentAlreadySigned = do
   randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
   randomUpdate $ \t->SaveSigAttachment doc (signatorylinkid $ sl) sa file (systemActor t)
 
-  randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ sl) file (systemActor t)
+  randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ sl) sa (systemActor t)
   randomUpdate $ \t->SaveSigAttachment doc (signatorylinkid $ sl) sa file (systemActor t)
   randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
   assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
-    randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ sl) file (systemActor t)
+    randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ sl) sa (systemActor t)
 
 testDeleteSigAttachmentEvidenceLog :: TestEnv ()
 testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
-  _<-randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
-                        [SignatoryAttachment { signatoryattachmentfile        = Just file
+  let sa = SignatoryAttachment { signatoryattachmentfile        = Just file
                                              , signatoryattachmentname        = "attachment"
                                              , signatoryattachmentdescription = "gimme!"
-                                             }] (systemActor t)
-  randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) file (systemActor t)
+                                             }
+  _<-randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
+                        [sa] (systemActor t)
+  randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) sa (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current DeleteSigAttachmentEvidence) lg
@@ -1177,7 +1178,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   randomUpdate $ SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) [att1, att2] sa
 
   doc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  randomUpdate $ DeleteSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) file1 sa
+  randomUpdate $ DeleteSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) att1 sa
   ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   randomUpdate $ SaveSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) att1 file2 sa

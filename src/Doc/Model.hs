@@ -1415,16 +1415,16 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
     return ()
 
 
-data DeleteSigAttachment = DeleteSigAttachment Document SignatoryLinkID FileID Actor
+data DeleteSigAttachment = DeleteSigAttachment Document SignatoryLinkID SignatoryAttachment Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment () where
-  update (DeleteSigAttachment doc slid fid actor) = do
+  update (DeleteSigAttachment doc slid sa actor) = do
     let decode acc saname = acc ++ [saname]
     (saname::String) <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "signatory_attachments" $ do
       sqlFrom "signatory_links"
       sqlWhere "signatory_links.id = signatory_attachments.signatory_link_id"
       sqlSet "file_id" SqlNull
       sqlResult "signatory_attachments.name"
-      sqlWhereEq "file_id" fid
+      sqlWhereEq "signatory_attachments.name" (signatoryattachmentname sa)
       sqlWhereSignatoryLinkIDIs slid
       sqlWhereSignatoryHasNotSigned
     _ <- update $ InsertEvidenceEvent

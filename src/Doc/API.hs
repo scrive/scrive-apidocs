@@ -129,8 +129,7 @@ versionedAPI _version = choice [
 
   dir "documentbrandingforsignview" $ hGet $ toK2 $ apiCallGetBrandingForSignView,
 
-  dir "addsignatoryattachment"    $ hPost $ toK3 $ documentUploadSignatoryAttachment,
-  dir "deletesignatoryattachment" $ hDeleteAllowHttp  $ toK3 $ documentDeleteSignatoryAttachment
+  dir "setsignatoryattachment"    $ hPost $ toK3 $ apiCallSetSignatoryAttachment
   ]
 
 -- | Windows Explorer set the full path of a file, for example:
@@ -761,79 +760,49 @@ apiCallGetBrandingForSignView did slid = api $ do
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   Ok <$> signviewBrandingJSON ctx user company companyui
 
-getSigLinkID :: Kontrakcja m => APIMonad m (SignatoryLinkID, MagicHash)
-getSigLinkID = do
-  msignatorylink <- lift $ readField "signatorylinkid"
-  mmagichash <- lift $ maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
-  case (msignatorylink, mmagichash) of
-       (Just sl, Just mh) -> return (sl,mh)
-       _ -> throwIO . SomeKontraException $ badInput "The signatorylinkid or magichash were missing."
-
-documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
-documentUploadSignatoryAttachment did sid aname = api $ do
-  Log.debug $ "sigattachment ajax"
-  (slid, magichash) <- getSigLinkID
-  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
+-- Signatory Attachments handling
+apiCallSetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
+apiCallSetSignatoryAttachment did sid aname = api $ do
+  checkObjectVersionIfProvided did
+  Log.debug $ "Setting signatory attachments" ++ show did ++ " for signatory " ++ show sid ++ " name " ++ aname
+  (mh,mu) <- do
+    mh' <- dbQuery $ GetDocumentSessionToken sid
+    case mh' of
+      Just mh'' ->  return (mh'',Nothing)
+      Nothing -> do
+         (user, _ , _) <- getAPIUser APIPersonal
+         Log.debug $ "User is " ++ show user
+         mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did sid user
+         case mh'' of
+           Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
+           Just mh''' -> return (mh''',Just $ user)
+  Log.debug "We are authorized to set signatory attachment"
+  -- We check permission here - because we are able to get a valid magichash here
+  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
   sl  <- apiGuard (forbidden "There is no signatory by that id.") $ getSigLinkFor doc sid
-
-  sigattach <- apiGuard (forbidden "There is no signatory attachment request of that name.") $ getSignatoryAttachment doc slid aname
-
-  -- attachment must have no file
-  apiGuard (actionNotAvailable "There is already a file attached for that attachment request.") (isNothing $ signatoryattachmentfile sigattach)
-
-  -- pdf exists in input param "file"
-  (Input contentspec (Just filename) _contentType) <- apiGuardL (badInput "The attachment PDF must be in the MIME part named 'file'. It was not found.") $ getDataFn' (lookInput "file")
-
-  content1 <- case contentspec of
-    Left filepath -> liftIO $ BSL.readFile filepath
-    Right content -> return content
-
-  -- we need to downgrade the PDF to 1.4 that has uncompressed structure
-  -- we use gs to do that of course
-  ctx <- getContext
-
-  content <- if (".pdf" `isSuffixOf` (map toLower filename))
-              then apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
-              else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
-                then return $ Binary $ concatChunks content1
-                else throwIO . SomeKontraException $ badInput "Only pdf files or images can be attached."
-
-  let sanitizedFileName = dropFilePathFromWindows filename
-  fileid' <- dbUpdate $ NewFile sanitizedFileName content
-  let actor = signatoryActor ctx sl
-  d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
-    dbUpdate $ SaveSigAttachment doc sid sigattach fileid' actor
-    newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-    return newdoc
-
-  -- let's dig the attachment out again
-  sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
-
-  return $ Created $ jsonSigAttachmentWithFile sigattach' (Just (fileid',sanitizedFileName))
-
-documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  String -> m Response
-documentDeleteSignatoryAttachment did sid aname = api $ do
-  ctx <- getContext
-  (slid, magichash) <- getSigLinkID
-  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
-
-  sl <- apiGuard (forbidden "The signatory does not exist.") $ getSigLinkFor doc sid
-
-  -- sigattachexists
   sigattach <- apiGuard (forbidden "The attachment with that name does not exist for the signatory.") $ getSignatoryAttachment doc sid aname
+  filedata <- lift $ getDataFn' (lookInput "file")
+  mfileid <- case filedata of
+    (Just (Input contentspec (Just filename) _contentType)) ->  Just <$>  do
+              content1 <- case contentspec of
+                Left filepath -> liftIO $ BSL.readFile filepath
+                Right content -> return content
+              content <- if (".pdf" `isSuffixOf` (map toLower filename))
+                then apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
+                else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
+                  then return $ Binary $ concatChunks content1
+                  else throwIO . SomeKontraException $ badInput "Only pdf files or images can be attached."
+              (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
+    _ -> return Nothing
+  ctx <- getContext
+  case mfileid of
+    Just fileid -> lift $ (dbUpdate $ SaveSigAttachment doc sid sigattach fileid (signatoryActor ctx sl))
+                     `catchKontra` (\(DBBaseLineConditionIsFalse _) -> throwIO . SomeKontraException $ conflictError $ "Inconsistent state - attachment is already set")
+    Nothing -> dbUpdate $ DeleteSigAttachment doc sid sigattach (signatoryActor ctx sl)
 
-  -- attachment must have a file
-  fileid <- apiGuard (actionNotAvailable "That signatory attachment request does not have a file uploaded for it, or it has been previously deleted.") $ signatoryattachmentfile sigattach
+  newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  Accepted <$> documentJSON mu False True False Nothing (Just sl) newdoc
 
-  d <- apiGuardL (serverError "documentDeleteSignatoryAttachment: DeleteSigAttachment failed") . runMaybeT $ do
-    dbUpdate $ DeleteSigAttachment doc sid fileid (signatoryActor ctx sl)
-    newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-    return newdoc
-
-  -- let's dig the attachment out again
-  sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
-
-  return $ jsonSigAttachmentWithFile sigattach' Nothing
 
 
 checkObjectVersionIfProvided ::  (Kontrakcja m) => DocumentID -> APIMonad m ()
@@ -852,17 +821,3 @@ checkObjectVersionIfProvidedAndThrowError did err = lift $ do
                       `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
         Nothing -> return ()
     throwIO . SomeKontraException $ err
-
-
--- I really want to add a url to the file in the json, but the only
--- url at the moment requires a sigid/mh pair
-jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe (FileID,String) -> JSValue
-jsonSigAttachmentWithFile sa mfile =
-  runJSONGen $ do
-    value "name"        $ signatoryattachmentname sa
-    value "description" $ signatoryattachmentdescription sa
-    case mfile of
-      Nothing   -> value "requested" True
-      Just (fileid',filename') -> object "file" $ do
-        value "id"   $ show fileid'
-        value "name" $ filename'

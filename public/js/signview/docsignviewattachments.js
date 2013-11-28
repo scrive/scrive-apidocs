@@ -16,35 +16,35 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     }
     this.render();
   },
-  uploadURL: function() {
-    return "/api/frontend/addsignatoryattachment/" + this.model.document().documentid() + "/" + this.model.document().viewer().signatoryid() + "/" + encodeURIComponent(this.model.name()) + "" + this.model.document().viewer().urlPart();
-  },
-  deleteURL: function() {
-    return "/api/frontend/deletesignatoryattachment/" + this.model.document().documentid() + "/" + this.model.document().viewer().signatoryid() + "/" + encodeURIComponent(this.model.name()) + "" + this.model.document().viewer().urlPart();
+  setattachmentURL: function() {
+    return "/api/frontend/setsignatoryattachment/" + this.model.document().documentid() + "/" + this.model.document().viewer().signatoryid() + "/" + encodeURIComponent(this.model.name()) + "" + this.model.document().viewer().urlPart();
   },
   removeButton: function() {
+    var self = this;
     var attachment = this.model;
-    var deleteurl = this.deleteURL();
     var button = new Button({color: "red", text: localization.deletePDF, size:'small', onClick: function() {
             attachment.loading();
-            $.ajax(deleteurl, {
-              type: 'DELETE',
-              success: function(d) {
-                attachment.unset('file');
-                attachment.notLoading();
-              },
-              error: function() {
-                attachment.notLoading();
-                console.log("error");
-              }
-            });
+            new Submit({
+                    method: "POST",
+                    expectedType : "json",
+                    url: self.setattachmentURL(),
+                    ajax: true,
+                    expectedType : "text",
+                    ajaxerror: function(d, a) {
+                      attachment.notLoading();
+                    },
+                    ajaxsuccess: function(d) {
+                      attachment.unset('file');
+                      attachment.notLoading();
+                    }
+                  }).send();
             return false;
-          }});
+            }});
     return button;
   },
   uploadButton: function() {
+    var self = this;
     var attachment = this.model;
-    var uploadurl = this.uploadURL();
     return new UploadButton({
       width: 200,
       size : 'small',
@@ -61,18 +61,16 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
       },
       submit: new Submit({
         method: "POST",
-        url: uploadurl,
+        url: self.setattachmentURL(),
         attachname: attachment.name(),
         sigattachment: "YES",
         ajax: true,
-        expectedType : "text",
+        expectedType : "json",
         onSend: function() {
           attachment.loading();
         },
         ajaxerror: function(d, a) {
-          try {
-            var response = JSON.parse(d.responseText);
-            if (response.message == 'There is already a file attached for that attachment request.') {
+            if (d != undefined && d.status == 409) {
               var button =  new Button({color: 'blue',
                                          size: 'small',
                                          text: 'Reload page',
@@ -85,24 +83,20 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
               content.append($('<div style="margin-top: 40px;" />'));
               content.append(button.el());
               ScreenBlockingDialog.open({header: content});
-              return;
-            }
-          } catch (e) {
           }
-          if (a === 'parsererror') // file too large
+          else if (a === 'parsererror') // file too large
             new FlashMessage({content: localization.fileTooLarge, color: "red"});
           else
             new FlashMessage({content: localization.couldNotUpload, color: "red"});
           attachment.notLoading();
         },
-        ajaxsuccess: function(d) {
-             try {
-              var doc =  attachment.signatory().document();
-              var file = new File(_.extend(JSON.parse(d).file, {document: doc }));
-              attachment.setFile(file);
+        ajaxsuccess: function(docdata) {
+              var newdoc = new Document(new Document({}).parse(docdata));
+              _.each(newdoc.currentSignatory().attachments(), function(a) {
+                if (a.name() == attachment.name())
+                    attachment.setFile(a.file());
+              });
               attachment.notLoading();
-             } catch(e) { attachment.notLoading(); }
-
         }
       })
     });
