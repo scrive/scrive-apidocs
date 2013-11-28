@@ -264,7 +264,7 @@ apiCallSetAuthorAttachemnts did = api $ do
   forM_ attachments $ \att -> dbUpdate $ AddDocumentAttachment did att actor
   triggerAPICallbackIfThereIsOne doc
   newdocument <- dbQuery $ GetDocumentByDocumentID $ did
-  Ok <$> documentJSON (Just $ userid user) False True True Nothing Nothing newdocument
+  Ok <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
    where
         getAttachments :: Kontrakcja m => Document -> Int -> APIMonad m [FileID]
         getAttachments doc i = do

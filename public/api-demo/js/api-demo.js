@@ -44,6 +44,7 @@ var ApiDemoView = Backbone.View.extend({
             var changeFile = $("<option value='changeFile' >Change file</option>");
             var createFromTemplate = $("<option value='cft'>Create from template</option>");
             var update = $("<option value='u'>Update</option>");
+            var setattachments = $("<option value='setatt'>Set attachments</option>");
             var ready = $("<option value='g'>Ready</option>");
             var sendReminder = $("<option value='s'>Send reminder</option>");
             var cancel = $("<option value='cc'>Cancel</option>");
@@ -67,7 +68,7 @@ var ApiDemoView = Backbone.View.extend({
             var passwordreset = $("<option value='passwordreset'>Reset password</option>");
             var checkclient  = $("<option value='check'>Check client</option>");
 
-            select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update)
+            select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update).append(setattachments)
                   .append(ready).append(sendReminder).append(cancel).append(restart).append(prolong).append(del).append(check).append(history)
                   .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(sign)
                   .append($("<option>---------</option>"))
@@ -83,6 +84,8 @@ var ApiDemoView = Backbone.View.extend({
                     createFromTemplate.attr("selected", "true");
                 else if (model.selectedApiCall().isUpdate())
                     update.attr("selected", "true");
+                else if (model.selectedApiCall().isSetAttachments())
+                    setattachments.attr("selected", "true");
                 else if (model.selectedApiCall().isReady())
                     ready.attr("selected", "true");
                 else if (model.selectedApiCall().isSendReminder())
@@ -140,6 +143,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new CreateFromTemplateApiCall({oauth : oauth}));
                 else if (select.val() == "u")
                     model.setSelectedApiCall(new UpdateApiCall({oauth : oauth}));
+                else if (select.val() == "setatt")
+                    model.setSelectedApiCall(new SetAttachmentsApiCall({oauth : oauth}));
                 else if (select.val() == "g")
                     model.setSelectedApiCall(new ReadyApiCall({oauth : oauth}));
                 else if (select.val() == "s")

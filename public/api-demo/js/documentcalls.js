@@ -164,14 +164,15 @@ window.UpdateApiCall = ApiCall.extend({
 window.SetAttachmentsApiCall = ApiCall.extend({
         defaults: {
             name : "Change main file API call",
-            files : [],
             documentid : LocalStorage.get("api","documentid")
         },
         initialize: function (args) {
         },
         isSetAttachments : function() {return true;},
-        files : function() {return this.get("files");},
-        addFile : function(f) {}
+        multiFile : function() {return this.get("multiFile");},
+        setMultiFile : function(multiFile) {
+            return this.set({"multiFile" : multiFile});
+        },
         documentid : function() {return this.get("documentid");},
         setDocumentid : function(documentid) {
              LocalStorage.set("api","documentid",documentid);
@@ -181,7 +182,10 @@ window.SetAttachmentsApiCall = ApiCall.extend({
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
             $("body").append(form);
-            form.append(this.file());
+
+            var slaves = _.filter(this.multiFile()["slaves"],function(s) {return s != undefined;});
+            for(var i=0;i<slaves.length - 1;i++)
+              form.append($(slaves[i]).clone().attr('name',"attachment_"+ i));
             var formData = new FormData(form[0]);
             this.call("setattachments/" + this.documentid(), {
                 type: 'POST',
@@ -190,12 +194,10 @@ window.SetAttachmentsApiCall = ApiCall.extend({
                 contentType: false,
                 processData: false,
                 success : function(res) {
-                    model.file().detach();
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                     form.remove();
                 },
                 error : function(res) {
-                    model.file().detach();
                     model.setResult(JSON.stringify(res.responseText,undefined," "));
                     form.remove();
                 }
@@ -859,6 +861,46 @@ window.UpdateApiCallView = Backbone.View.extend({
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
+
+window.SetAttachmentsApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+
+            filebox = $("<div>");
+            if (this.list == undefined || this.fileinput == undefined || this.fileinput.data("MultiFile") == undefined) {
+              this.list = $("<div />");
+              this.fileinput = $("<input class='multiFileInput' type='file'/>");
+              this.fileinput.MultiFile({
+                    list: this.list,
+              });
+              model.setMultiFile(this.fileinput.data("MultiFile"));
+
+            }
+            boxLeft.append($("<div>Document # : <BR/></div>").append(documentidInput)).append($("<div> File: <BR/> </div>").append(filebox.append(this.list).append(this.fileinput))).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
 
 window.ReadyApiCallView = Backbone.View.extend({
         initialize: function(args) {
