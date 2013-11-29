@@ -96,7 +96,7 @@ ssh $TRGMH  "cd /tmp/"$SRV"_deployment && gtime -v -f $ZIP -i $signaturefile && 
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
 
-if [ ! -z "$SRV2" && ! -z "$TRGMH2"]; then
+if [[ ! -z "$SRV2" && ! -z "$TRGMH2"]]; then
    echo "Copying deployment file to /tmp on $SRV2 server"
    ssh $TRGMH2 "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
    cat "$TMP/$finalfile" | ssh $TRGMH2 "cd /tmp/"$SRV2"_deployment && tar -zx ; exit \$?"
