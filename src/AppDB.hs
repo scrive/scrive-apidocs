@@ -171,6 +171,7 @@ kontraMigrations = [
   , fixSignatureFieldsWithAnySize
   , migrateUsersUniqueIndexOnEmail
   , makeSealStatusNonNullInMainFiles
+  , migrateDocumentsAddDaysToRemind
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -160,6 +160,7 @@ instance FromJSValueWithUpdate Document where
         title <- fromJSValueField "title"
         (invitationmessage :: Maybe (Maybe String)) <-  fromJSValueField "invitationmessage"
         daystosign <- fromJSValueField "daystosign"
+        daystoremind <- fromJSValueField "daystoremind"
         authentication <-  fromJSValueField "authentication"
         delivery <-  fromJSValueField "delivery"
         signatories <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
@@ -168,6 +169,9 @@ instance FromJSValueWithUpdate Document where
         tags <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         (apicallbackurl :: Maybe (Maybe String)) <- fromJSValueField "apicallbackurl"
         authorattachments <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
+        let daystosign'  = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
+        let daystoremind' = min daystosign' <$> max 1 <$> updateWithDefaultAndField Nothing documentdaystoremind daystoremind
+
         return $ Just defaultValue {
             documenttitle = updateWithDefaultAndField "" documenttitle title,
             documentlang  = updateWithDefaultAndField LANG_SV documentlang lang,
@@ -175,7 +179,8 @@ instance FromJSValueWithUpdate Document where
                                      Nothing -> fromMaybe "" $ documentinvitetext <$> mdoc
                                      Just Nothing -> ""
                                      Just (Just s) -> fromMaybe "" (resultToMaybe $ asValidInviteText s),
-            documentdaystosign   = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign,
+            documentdaystosign   = daystosign',
+            documentdaystoremind = daystoremind',
             documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,
             documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap AuthorAttachment <$> authorattachments),
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
@@ -204,6 +209,7 @@ applyDraftDataToDocument doc draft actor = do
                                     documenttitle = documenttitle draft
                                   , documentinvitetext = documentinvitetext draft
                                   , documentdaystosign = documentdaystosign draft
+                                  , documentdaystoremind = documentdaystoremind draft
                                   , documentlang = documentlang draft
                                   , documenttags = documenttags draft
                                   , documentapicallbackurl = documentapicallbackurl draft
@@ -259,6 +265,7 @@ draftIsChangingDocument draft doc =
      || (documentapicallbackurl draft /= documentapicallbackurl doc)
      || (isTemplate draft /= isTemplate doc)
      || (documentdaystosign draft /= documentdaystosign doc)
+     || (documentdaystoremind draft /= documentdaystoremind doc)
      || (draftIsChangingDocumentSignatories (documentsignatorylinks draft) (documentsignatorylinks doc))
 
 draftIsChangingDocumentSignatories :: [SignatoryLink] -> [SignatoryLink] -> Bool

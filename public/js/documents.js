@@ -146,6 +146,12 @@ window.Document = Backbone.Model.extend({
     setDaystosign: function(daystosign) {
          this.set({"daystosign": daystosign}, {silent: true});
     },
+    daystoremind: function() {
+          return this.get("daystoremind");
+    },
+    setDaystoremind: function(daystoremind) {
+         this.set({"daystoremind": daystoremind == undefined ? undefined : Math.min(this.daystosign,daystoremind)}, {silent: true});
+    },
     infotext: function() {
         return this.get("infotext");
     },
@@ -327,6 +333,7 @@ window.Document = Backbone.Model.extend({
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
+          daystoremind: this.get("daystoremind"),
           apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
@@ -586,6 +593,7 @@ window.Document = Backbone.Model.extend({
        delivery: args.delivery,
        template: args.template,
        daystosign: args.daystosign,
+       daystoremind: args.daystoremind,
        invitationmessage: args.invitationmessage,
        ready: true
      };

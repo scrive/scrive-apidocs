@@ -403,6 +403,7 @@ data Document = Document {
   , documentctime                  :: MinutesTime
   , documentmtime                  :: MinutesTime
   , documentdaystosign             :: Int
+  , documentdaystoremind           :: Maybe Int
   , documenttimeouttime            :: Maybe MinutesTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
@@ -427,6 +428,7 @@ instance HasDefaultValue Document where
           , documentctime                = fromSeconds 0
           , documentmtime                = fromSeconds 0
           , documentdaystosign           = 14
+          , documentdaystoremind         = Nothing
           , documenttimeouttime          = Nothing
           , documentinvitetext           = ""
           , documentinvitetime           = Nothing

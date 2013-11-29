@@ -84,6 +84,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
                                    _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
+      J.value "daystoremind" $ documentdaystoremind doc
       J.value "invitationmessage" $ documentinvitetext doc
       J.value "lang" $  case (getLang doc) of
                              LANG_EN -> "gb"

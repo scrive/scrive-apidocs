@@ -496,6 +496,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentctime" documentctime
                    , checkEqualBy "documentmtime" documentmtime
                    , checkEqualBy "documentdaystosign" documentdaystosign
+                   , checkEqualBy "documentdaystoremind" documentdaystoremind
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
@@ -520,6 +521,7 @@ documentsSelectors =
   , "documents.ctime"
   , "documents.mtime"
   , "documents.days_to_sign"
+  , "documents.days_to_remind"
   , "documents.timeout_time"
   , "documents.invite_time"
   , "documents.invite_ip"
@@ -538,7 +540,7 @@ fetchDocuments = kFold decoder []
     -- Note: this function gets documents in reversed order, but all queries
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title status error_text doc_type
-      ctime mtime days_to_sign timeout_time invite_time
+      ctime mtime days_to_sign days_to_remind timeout_time invite_time
      invite_ip invite_text
      lang sharing apicallback objectversion status_class
        = Document {
@@ -554,6 +556,7 @@ fetchDocuments = kFold decoder []
        , documentctime = ctime
        , documentmtime = mtime
        , documentdaystosign = days_to_sign
+       , documentdaystoremind = days_to_remind
        , documenttimeouttime = timeout_time
        , documentinvitetime = case invite_time of
            Nothing -> Nothing
@@ -1061,6 +1064,7 @@ insertDocumentAsIs document@(Document
                    documentctime
                    documentmtime
                    documentdaystosign
+                   documentdaystoremind
                    documenttimeouttime
                    documentinvitetime
                    documentinvitetext
@@ -1082,6 +1086,7 @@ insertDocumentAsIs document@(Document
         sqlSet "ctime" documentctime
         sqlSet "mtime" documentmtime
         sqlSet "days_to_sign" documentdaystosign
+        sqlSet "days_to_remind" documentdaystoremind
         sqlSet "timeout_time" documenttimeouttime
         sqlSet "invite_time" $ signtime `fmap` documentinvitetime
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
@@ -1935,6 +1940,11 @@ data SetDaysToSign = SetDaysToSign DocumentID Int Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
   update (SetDaysToSign did days _actor) = updateWithoutEvidence did "days_to_sign" days
 
+data SetDaysToRemind = SetDaysToRemind DocumentID (Maybe Int) Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToRemind Bool where
+  update (SetDaysToRemind did days _actor) = updateWithoutEvidence did "days_to_remind" days
+
+
 data SetDocumentTitle = SetDocumentTitle DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
   update (SetDocumentTitle did doctitle _actor) = updateWithoutEvidence did "title" doctitle
@@ -2319,6 +2329,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
   update (UpdateDraft did document actor) = and `liftM` sequence [
       update $ SetDocumentTitle did (documenttitle document) actor
     , update $ SetDaysToSign  did (documentdaystosign document) actor
+    , update $ SetDaysToRemind  did (documentdaystoremind document) actor
     , update $ SetDocumentLang did (getLang document) actor
     -- , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
     , update $ SetInviteText did (documentinvitetext document) actor
