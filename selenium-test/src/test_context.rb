@@ -1,6 +1,7 @@
 require "rubygems"
 require "selenium-webdriver"
 require_relative "test_properties.rb"
+require "multi_json"
 
 class TestContext
 
@@ -8,6 +9,9 @@ class TestContext
 
   def initialize
     @props = TestProperties.new
+    # make sure we use default json adapter
+    # it's slow, but has no problems with utf-8
+    MultiJson.use :ok_json
   end
 
   def createWebDriver
