@@ -2,7 +2,7 @@ require "rubygems"
 gem "rspec"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
-require "selenium-test/src/helpers.rb"
+require_relative "../helpers.rb"
 
 describe "Sign a document and then cancel it" do
 

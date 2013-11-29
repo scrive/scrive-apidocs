@@ -1,6 +1,6 @@
 require "rubygems"
 require "selenium-webdriver"
-require "selenium-test/src/test_properties.rb"
+require_relative "test_properties.rb"
 
 class TestContext
 

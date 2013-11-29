@@ -1,11 +1,12 @@
 require "rubygems"
 gem "rspec"
 require "selenium-webdriver"
-require "selenium-test/src/test_properties.rb"
-require "selenium-test/src/test_context.rb"
-require "selenium-test/src/email_helper.rb"
-require "selenium-test/src/login_helper.rb"
-require "selenium-test/src/doc_helper.rb"
+
+require_relative "test_properties.rb"
+require_relative "test_context.rb"
+require_relative "email_helper.rb"
+require_relative "login_helper.rb"
+require_relative "doc_helper.rb"
 
 class Helpers
   attr_accessor :wait
