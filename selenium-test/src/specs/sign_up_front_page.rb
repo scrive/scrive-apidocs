@@ -1,7 +1,5 @@
 require "rubygems"
 gem "rspec"
-require "selenium/rspec/spec_helper"
-require "spec/test/unit"
 require_relative "../helpers.rb"
 
 describe "sign up on front page and modify account settings" do
@@ -164,7 +162,7 @@ describe "sign up on front page and modify account settings" do
 
     puts "make sure we get a confirmation"
     @h.wait_until { @h.driver.find_element :css => "div.flash.success" }
-    assert(((@h.wait_until { @h.driver.find_element :xpath => "//input[@name='companyposition']" }).attribute("value") == companyposition), "Values not equal in detail")
+    expect((@h.wait_until { @h.driver.find_element :xpath => "//input[@name='companyposition']" }).attribute("value")).to eq(companyposition)
     @h.loginhelper.logout
   end
 
