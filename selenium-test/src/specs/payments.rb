@@ -126,12 +126,15 @@ describe "subscribe with a credit card" do
     @h.driver.execute_script "$('.plan-container.team .field.cvv input').val('111');"
     #(@h.wait_until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
     puts "click subscribe"
+
     @h.driver.execute_script "$('.plan-container.team .s-subscribe').click();"
     #(@h.wait_until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
+    # the page should reload now, so wait for the subscribe button to disappear
+    (@h.wait_until { (@h.driver.find_elements :css => ".plan-container.team .s-subscribe").size == 0 })
+    # and wait for the page to finish [re]loading
+    @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
 
     puts "blocking info should disappear"
-    sleep 3
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/newdocument")
     @h.wait_until { (@h.driver.find_element :css => ".blocking-info").text == ""}
 
   end
