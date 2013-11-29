@@ -1,25 +1,12 @@
 require "rubygems"
 gem "rspec"
 require "selenium-webdriver"
-
-def require_helper(file)
-  begin
-      require file
-  rescue LoadError => e
-    # try using ruby 1.9 mechanism
-    begin
-      require_relative("../../" + file)
-    rescue
-      raise e
-    end
-  end
-end
-
-require_helper "selenium-test/src/test_properties.rb"
-require_helper "selenium-test/src/test_context.rb"
-require_helper "selenium-test/src/email_helper.rb"
-require_helper "selenium-test/src/login_helper.rb"
-require_helper "selenium-test/src/doc_helper.rb"
+require "selenium-test/src/test_properties.rb"
+require "selenium-test/src/test_context.rb"
+require "selenium-test/src/email_helper.rb"
+require "selenium-test/src/login_helper.rb"
+require "selenium-test/src/doc_helper.rb"
+require "selenium-test/src/helpers.rb"
 
 class Helpers
   attr_accessor :wait

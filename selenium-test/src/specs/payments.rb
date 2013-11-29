@@ -2,7 +2,7 @@ require "rubygems"
 gem "rspec"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
-require_helper "selenium-test/src/doc_helper.rb"
+require "selenium-test/src/helpers.rb"
 
 describe "subscribe with a credit card" do
 

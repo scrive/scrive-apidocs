@@ -2,7 +2,7 @@ require "rubygems"
 gem "rspec"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
-require_helper "selenium-test/src/doc_helper.rb"
+require "selenium-test/src/helpers.rb"
 
 describe "sign up after signing a document" do
 
