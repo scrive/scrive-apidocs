@@ -111,7 +111,7 @@ describe "subscribe with a credit card" do
     (@h.wait_until { @h.driver.find_element :css => "form.recurly" })
     puts "sign up for teamplan"
 
-    @h.driver.execute_script "$('.plan-container.team a.button-small.action-sign-up').click();"
+    @h.driver.execute_script "$('.plan-container.team a.button-green.action-sign-up').click();"
     puts "fill in cc"
     #(@h.wait_until { @h.driver.find_element :css => ".plan-container.team .field.card_number input" }).send_keys "4111 1111 1111 1111"
     @h.driver.execute_script "$('.plan-container.team .field.card_number input').val('4111 1111 1111 1111');"
