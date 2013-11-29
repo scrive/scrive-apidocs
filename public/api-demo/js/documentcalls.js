@@ -60,7 +60,7 @@ window.ChangeMainFileApiCall = ApiCall.extend({
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
             $("body").append(form);
-            form.append(this.file());
+            form.append(this.file().clone());
             var formData = new FormData(form[0]);
             this.call("changemainfile/" + this.documentid(), {
                 type: 'POST',
@@ -163,7 +163,7 @@ window.UpdateApiCall = ApiCall.extend({
 
 window.SetAttachmentsApiCall = ApiCall.extend({
         defaults: {
-            name : "Change main file API call",
+            name : "Set author attachments for given draft",
             documentid : LocalStorage.get("api","documentid")
         },
         initialize: function (args) {
@@ -670,6 +670,63 @@ window.RejectApiCall = ApiCall.extend({
             });
         }
 });
+
+window.SetSignatoryAttachmentApiCall = ApiCall.extend({
+        defaults: {
+            name : "Set a file for give signatory attachment",
+            documentid : LocalStorage.get("api","documentid"),
+            signatorylinkid : LocalStorage.get("api","signatorylinkid"),
+            attachmentName : "Attachment name",
+        },
+        initialize: function (args) {
+        },
+        isSetSignatoryAttachment : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+            LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        signatorylinkid : function() {return this.get("signatorylinkid");},
+        setSignatorylinkid : function(signatorylinkid) {
+            LocalStorage.set("api","signatorylinkid",signatorylinkid);
+            return this.set({"signatorylinkid" : signatorylinkid});
+        },
+        attachmentName : function() {return this.get("attachmentName");},
+        setAttachmentName : function(attachmentName) {
+            return this.set({"attachmentName" : attachmentName});
+        },
+        file : function() {return this.get("file");},
+        setFile : function(file) {
+            return this.set({"file" : file});
+        },
+        send : function() {
+            var model = this;
+            var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            $("body").append(form);
+            var slaves = _.filter(this.file()["slaves"],function(s) {return s != undefined;});
+            for(var i=0;i<slaves.length - 1;i++)
+              form.append($(slaves[i]).clone().attr('name',"file"));
+            var formData = new FormData(form[0]);
+            this.call("setsignatoryattachment/"+model.documentid() + "/" + model.signatorylinkid() + "/" + model.attachmentName(), {
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success : function(res) {
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                    form.remove();
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                    form.remove();
+                }
+            });
+
+        }
+});
+
+
 
 window.SignApiCall = ApiCall.extend({
         defaults: {
@@ -1312,19 +1369,7 @@ window.RejectApiCallView = Backbone.View.extend({
             signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
             var objectversionInput = $("<input type='text'/>").val(model.objectversion());
             objectversionInput.change(function() {model.setObjectversion(objectversionInput.val()); return false;})
-            var customTextImput = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px;width:300px;'/>").html(model.customtext());
-            customTextImput.tinymce({
-                      script_url: '/tiny_mce/tiny_mce.js',
-                      theme: "advanced",
-                      theme_advanced_toolbar_location: "top",
-                      theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-                      theme_advanced_buttons2: "",
-                      convert_urls: false,
-                      theme_advanced_toolbar_align: "middle",
-                      plugins: "noneditable,paste",
-                      valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
-            });
-
+            var customTextImput = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px;width:300px;'/>").text(model.customtext());
 
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.setCustomtext(customTextImput.val()); model.send(); return false;});
@@ -1342,6 +1387,65 @@ window.RejectApiCallView = Backbone.View.extend({
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
+
+
+window.SetSignatoryAttachmentApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+
+            var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
+            signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
+
+            var attachmentNameInput = $("<input type='text'/>").val(model.attachmentName());
+            attachmentNameInput.change(function() {model.setAttachmentName(attachmentNameInput.val()); return false;})
+
+
+            this.filebox = $("<div>");
+            if (this.list == undefined || this.fileinput == undefined || this.fileinput.data("MultiFile") == undefined) {
+              this.list = $("<div />");
+              this.fileinput = $("<input class='multiFileInput' type='file'/>");
+              this.fileinput.MultiFile({
+                    list: this.list,
+                    limit : 1
+              });
+              model.setFile(this.fileinput.data("MultiFile"));
+
+            }
+
+
+            this.filebox = $("<div>");
+
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                   .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div>Attachment name (need to be exact) : <BR/></div>").append(attachmentNameInput))
+                   .append($("<div>File (don't upload to delete)) : <BR/></div>").append(this.filebox.append(this.list).append(this.fileinput)))
+                   .append($("<div/>").append(button));
+
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
 
 window.SignApiCallView = Backbone.View.extend({
         initialize: function(args) {

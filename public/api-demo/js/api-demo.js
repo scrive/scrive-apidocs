@@ -58,6 +58,7 @@ var ApiDemoView = Backbone.View.extend({
             var downloadmf  = $("<option value='dlmf'>Download document file</option>");
             var addtopad  = $("<option value='pq'>Add to padqueue</option>");
             var reject  = $("<option value='reject'>Reject</option>");
+            var setsigatt  = $("<option value='setsigatt'>Set signatory attachment</option>");
             var sign  = $("<option value='sign'>Sign</option>");
             var profile  = $("<option value='gp'>Get profile</option>");
             var payments  = $("<option value='payments'>Get payments info</option>");
@@ -70,7 +71,7 @@ var ApiDemoView = Backbone.View.extend({
 
             select.append(none).append(createFromFile).append(changeFile).append(createFromTemplate).append(update).append(setattachments)
                   .append(ready).append(sendReminder).append(cancel).append(restart).append(prolong).append(del).append(check).append(history)
-                  .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(sign)
+                  .append(list).append(download).append(downloadmf).append(addtopad).append(reject).append(setsigatt).append(sign)
                   .append($("<option>---------</option>"))
                   .append(profile).append(payments).append(language).append(password).append(signup).append(passwordreset).append(updateprofile)
                   .append($("<option>---------</option>"))
@@ -112,6 +113,8 @@ var ApiDemoView = Backbone.View.extend({
                     addtopad.attr("selected", "true");
                 else if (model.selectedApiCall().isReject())
                     reject.attr("selected", "true");
+                else if (model.selectedApiCall().isSetSignatoryAttachment())
+                    setsigatt.attr("selected", "true");
                 else if (model.selectedApiCall().isSign())
                     sign.attr("selected", "true");
                 else if (model.selectedApiCall().isGetProfile())
@@ -171,6 +174,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new AddToPadQueueApiCall({oauth : oauth}));
                 else if (select.val() == "reject")
                     model.setSelectedApiCall(new RejectApiCall({oauth : oauth}));
+                else if (select.val() == "setsigatt")
+                    model.setSelectedApiCall(new SetSignatoryAttachmentApiCall({oauth : oauth}));
                 else if (select.val() == "sign")
                     model.setSelectedApiCall(new SignApiCall({oauth : oauth}));
                 else if (select.val() == "gp")

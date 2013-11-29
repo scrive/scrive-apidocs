@@ -36,12 +36,13 @@ window.ApiCall = Backbone.Model.extend({
         isUpdateProfile : function() {return false;},
         isCheckClient : function() {return false;},
         isReject : function() {return false;},
+        isSetSignatoryAttachment : function() {return false;},
         isSign : function() {return false;},
         name : function() {return this.get("name");},
         oauth : function() {return this.get("oauth");},
         authorization: function() { return this.oauth().authorizationForRequests();  },
         result : function() {return this.get("result");},
-        setResult : function(result) {return this.set({"result" : result});},
+        setResult : function(result) {this.set({"result" : result},{silent: true}); this.trigger("change");},
         _call : function(urlsuffix, arg, authenticate) {
           arg.headers = { 'Client-Name' : "api-demo",
                           'Client-Time' : new Date().toISOString()
@@ -98,6 +99,8 @@ window.ApiCallView = function(args) {
            return new AddToPadQueueApiCallView(args);
         else if (args.model.isReject())
            return new RejectApiCallView(args);
+        else if (args.model.isSetSignatoryAttachment())
+           return new SetSignatoryAttachmentApiCallView(args);
         else if (args.model.isSign())
            return new SignApiCallView(args);
         else if (args.model.isGetProfile())

@@ -779,8 +779,10 @@ apiCallSetSignatoryAttachment did sid aname = api $ do
   Log.debug "We are authorized to set signatory attachment"
   -- We check permission here - because we are able to get a valid magichash here
   doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
-  sl  <- apiGuard (forbidden "There is no signatory by that id.") $ getSigLinkFor doc sid
-  sigattach <- apiGuard (forbidden "The attachment with that name does not exist for the signatory.") $ getSignatoryAttachment doc sid aname
+  when (documentstatus doc /= Pending ) $ do
+          throwIO . SomeKontraException $ (badInput "Document is not pending")
+  sl  <- apiGuard (badInput "There is no signatory by that id.") $ getSigLinkFor doc sid
+  sigattach <- apiGuard (badInput "The attachment with that name does not exist for the signatory.") $ getSignatoryAttachment doc sid aname
   filedata <- lift $ getDataFn' (lookInput "file")
   mfileid <- case filedata of
     (Just (Input contentspec (Just filename) _contentType)) ->  Just <$>  do
