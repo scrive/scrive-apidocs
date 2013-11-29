@@ -4,7 +4,7 @@ errors=0
 
 function run {
   for t in "$@"; do
-    flvrec.py -o $(basename "$t" .rb).flv localhost:0 &
+    flvrec.py -P ~/.vnc_pwdfile -o $(basename "$t" .rb).flv localhost:1 &
     FLVREC_PID=$!
     rspec --colour --format documentation "$t" || errors=1
     kill -s SIGINT $FLVREC_PID
