@@ -1,8 +1,0 @@
-How to setup so that the GhostScript processes are constrained and safe, you just need to set this up the once:
-
-* cd to bin/gswrapper
-* install it as root by running "make install", it'll install by default to /usr/local/bin, and it installs two things: closefds and gswrapper.
-  (n.b. check this actually is ran as root, by ll'ing to see the s flag, if not you have to add it, for some reason it never seems to work out perfectly on my computer -- emily)
-* in kontrakcja.conf change from gsCmd = "gs" to gsCmd = "/usr/local/bin/gswrapper" or where the gswrapper was installed
-* setup a user ********more stuff needed*********
-
