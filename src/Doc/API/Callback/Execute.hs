@@ -42,6 +42,8 @@ executeStandardCallback doc url = do
   dJSON <- documentJSON Nothing False False True Nothing Nothing doc
   (exitcode, _ , stderr) <- readCurl [
                 "-X", "POST"
+              , "-f" -- make curl return exit code (22) if it got anything else but 2XX
+              , "-L" -- make curl follow redirects
               , "-d", urlEncodeVars [
                           ("documentid", show (documentid doc))
                         , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false") )
@@ -61,6 +63,8 @@ executeSalesforceCallback doc rtoken url = do
        Just token -> do
         (exitcode, _ , stderr) <- readCurl [
                       "-X", "POST"
+                    , "-f" -- make curl return exit code (22) if it got anything else but 2XX
+                    , "-L" -- make curl follow redirects
                     , "-d",  urlEncodeVars [
                               ("documentid", show (documentid doc))
                             , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc)) then "true" else "false") )
