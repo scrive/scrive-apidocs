@@ -12,7 +12,7 @@ window.Calendar = Backbone.Model.extend({
         var onchange = this.get("change");
         activator.dateinput({
             format: 'dd-mm-yy',
-            value : new Date(new Date().getTime() + args.days * 24 * 60 * 60 * 1000),
+            value : args.days == undefined ? undefined : new Date(new Date().getTime() + args.days * 24 * 60 * 60 * 1000),
             change: function() {
                 var ONE_DAY = 1000 * 60 * 60 * 24;
                 var date_ms = activator.data("dateinput").getValue().getTime();
@@ -28,8 +28,16 @@ window.Calendar = Backbone.Model.extend({
         });
     },
     setDays : function(days) {
-            this.get("on").data("dateinput").setValue(new Date());
-            this.get("on").data("dateinput").addDay(days);
+            if (days != undefined && !isNaN(days)) {
+              var date = new Date();
+              date.setDate(date.getDate() + days);
+              this.get("on").data("dateinput").setValue(date);
+            }
+    },
+    setMax : function(days) {
+            if (days != undefined && !isNaN(days)) {
+              this.get("on").data("dateinput").setMax(days);
+            }
     }
 });
 

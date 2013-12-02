@@ -18,7 +18,9 @@
             view.render();
             view.model.document().bind('change', view.render);
 	    view.emailDeliveryUsedTogglerWorker();
-	    view.model.document().bind('change:signatories', view.emailDeliveryUsedToggler);
+        view.model.document().bind('change:signatories', view.emailDeliveryUsedToggler);
+        view.model.document().bind('change:daystosign', view.updateDaysToSign);
+        view.model.document().bind('change:daystoremind', view.updateDaysToRemind);
         },
         render: function() {
             var view = this;
@@ -149,6 +151,13 @@
 
             return div.append(label).append(select.el());
         },
+        updateDaysToSign : function() {
+           var self = this;
+           var doc = self.model.document();
+           self.daystosigndaysinput.setValue(doc.daystosign());
+           self.daystosigncalendar.setDays(doc.daystosign());
+           self.daystoremindcalendar.setMax(doc.daystosign());
+        },
         deadline: function() {
             var view = this;
             var viewmodel = view.model;
@@ -164,18 +173,16 @@
             label.addClass('design-view-action-process-left-column-deadline-label');
             label.text(labelText + ':');
             var calendarbutton = $("<div class='calendarbutton'/>");
-            var calendar = new Calendar({on : calendarbutton,
+            view.daystosigncalendar = new Calendar({on : calendarbutton,
                                          days : doc.daystosign(),
                                          change: function(days) {
                                             if (days != doc.daystosign()) {
                                               doc.setDaystosign(days);
-                                              if (view.daysinputfield != undefined)
-                                                  view.daysinputfield.setValue(days);
                                             }
                                           }
                         });
 
-            view.daysinputfield = new InfoTextInput({
+            view.daystosigndaysinput = new InfoTextInput({
                 infotext: doc.daystosign(),
                 value: doc.daystosign(),
                 cssClass : 'design-view-action-process-left-column-deadline-field',
@@ -183,18 +190,24 @@
                     v = parseInt(v);
                     if (v != undefined && !isNaN(v) && v != doc.daystosign()) {
                       doc.setDaystosign(v);
-                      calendar.setDays(v);
                     }
                 }
             });
 
             div.append(label)
-               .append(view.daysinputfield.el())
+               .append(view.daystosigndaysinput.el())
                .append($("<div class='design-view-action-process-left-column-deadline-tag'/>").text(localization.designview.days))
                .append(calendarbutton);
 
 
             return div;
+        },
+        updateDaysToRemind : function() {
+           var self = this;
+           var doc = self.model.document();
+           console.log("Updating with value " + doc.daystoremind())
+           self.daystoreminddaysinput.setValue(doc.daystoremind() != undefined ? doc.daystoremind() : "");
+           self.daystoremindcalendar.setDays(doc.daystoremind());
         },
         autoreminder: function() {
             var view = this;
@@ -211,32 +224,38 @@
             label.addClass('design-view-action-process-left-column-deadline-label');
             label.text(labelText + ':');
             var calendarbutton = $("<div class='calendarbutton'/>");
-            var calendar = new Calendar({on : calendarbutton,
+            view.daystoremindcalendar = new Calendar({on : calendarbutton,
                                          days : doc.daystoremind(),
+                                         maxValue : doc.daystosign(),
                                          change: function(days) {
                                             if (days != doc.daystoremind()) {
                                               doc.setDaystoremind(days);
-                                              if (view.daystoremindinputfield != undefined)
-                                                  view.daystoremindinputfield.setValue(days);
                                             }
                                           }
                         });
 
-            view.daystoremindinputfield = new InfoTextInput({
+            view.daystoreminddaysinput = new InfoTextInput({
                 infotext: "-",
                 value: doc.daystoremind(),
                 cssClass : 'design-view-action-process-left-column-deadline-field',
                 onChange: function(v) {
-                    v = parseInt(v);
-                    if (v != undefined && !isNaN(v) && v != doc.daystoremind()) {
-                      doc.setDaystoremind(v);
-                      calendar.setDays(v);
+                    days = parseInt(v);
+                    if (isNaN(days))
+                      days = undefined;
+                    if (days != doc.daystoremind()) {
+                      doc.setDaystoremind(days);
+                    } else if (days == undefined && v != "") {
+                      view.daystoreminddaysinput.setValue("");
+                    } else if (days + "" != v && v != "") {
+                      view.daystoreminddaysinput.setValue(days + "");
                     }
+
+
                 }
             });
 
             div.append(label)
-               .append(view.daystoremindinputfield.el())
+               .append(view.daystoreminddaysinput.el())
                .append($("<div class='design-view-action-process-left-column-deadline-tag'/>").text(localization.designview.days))
                .append(calendarbutton);
 

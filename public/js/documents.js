@@ -144,13 +144,25 @@ window.Document = Backbone.Model.extend({
           return this.get("daystosign");
     },
     setDaystosign: function(daystosign) {
+         var old = this.get("daystosign")
          this.set({"daystosign": daystosign}, {silent: true});
+         if (old != this.get("daystosign"))
+           this.trigger('change:daystosign');
+         if (this.daystoremind() != undefined && this.daystoremind() > daystosign)
+           this.setDaystoremind(undefined);
     },
     daystoremind: function() {
           return this.get("daystoremind");
     },
     setDaystoremind: function(daystoremind) {
-         this.set({"daystoremind": daystoremind == undefined ? undefined : Math.min(this.daystosign,daystoremind)}, {silent: true});
+         console.log("Setting days to remind " + daystoremind);
+         var old = this.get("daystoremind")
+         this.set({"daystoremind": daystoremind == undefined || isNaN(daystoremind) ? undefined : Math.min(this.daystosign(),daystoremind)}, {silent: true});
+         console.log("Days to remind set to " + this.get("daystoremind"));
+
+         if (old != this.get("daystoremind") || daystoremind != this.get("daystoremind"))
+           this.trigger('change:daystoremind');
+
     },
     infotext: function() {
         return this.get("infotext");
