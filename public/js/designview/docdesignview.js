@@ -144,7 +144,7 @@
            if (this.sendButton != undefined) {
              if (this.model.document().hasProblems(true)) {
               this.sendButton.addClass('disabled');
-              this.sendButton.unbind('click');
+              this.sendButton.unbind('click').click(this.cantSignModal);
              } else  {
               this.sendButton.removeClass("disabled");
               this.sendButton.unbind('click').click(this.finalClick);
@@ -184,6 +184,32 @@
             });
 
             return removeDocumentButton.el();
+        },
+        cantSignModal: function() {
+          if(!this.model.document().hasProblems(true) || !this.model.document().mainfile()) {
+            return;
+          }
+
+          var content = $('<div class="designview-cant-sign-modal"/>');
+
+          content.append($('<p/>').html(localization.designview.cantSignModal.info));
+
+          var contentP2 = $('<p/>');
+          contentP2.text(localization.designview.cantSignModal.emailFormatInfo);
+          contentP2.append($('<br/>'));
+          contentP2.append($('<div class="sample" />').text(localization.designview.cantSignModal.emailSample));
+          content.append(contentP2);
+
+          var contentP3 = $('<p/>');
+          contentP3.html(localization.designview.cantSignModal.mobileFormatInfo);
+          contentP3.append($('<br/>'));
+          contentP3.append($('<div class="sample" />').text(localization.designview.cantSignModal.mobileSample));
+          content.append(contentP3);
+
+          Confirmation.popup({title: localization.designview.cantSignModal.title,
+                              cantCancel: true,
+                              cantClose: false,
+                              content: content});
         },
         finalClick: function() {
             var view = this;

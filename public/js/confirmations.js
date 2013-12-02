@@ -10,6 +10,7 @@ var ConfirmationModel = Backbone.Model.extend({
       acceptColor : "green",
       content  : jQuery("<p/>"),
       cantCancel : false,
+      cantClose  : false,
       width: BrowserInfo.isSmallScreen() ? 980 : 640,
       footerVisible : true,
       acceptVisible : true,
@@ -73,6 +74,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   canCancel : function() {
       return this.get("cantCancel") != true;
+  },
+  canClose : function() {
+      return this.get("cantClose") != true;
   },
   width: function() {
       return this.get("width");
@@ -164,7 +168,7 @@ var ConfirmationView = Backbone.View.extend({
          inner.append(title);
          inner.append(subtitle);
        }
-       if (model.canCancel())
+       if (model.canClose())
         header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
        header.append(inner);
        var body = $("<div class='modal-body'>");

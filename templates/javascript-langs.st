@@ -282,6 +282,14 @@ javascriptLocalisation =
                     , forThis : "$_checkboxFor()$"
                     , done : "$_checkboxDone()$"
              }
+             , cantSignModal : {
+                 title : "$_designviewCantSignModalTitle()$"
+               , info : "$_designviewCantSignModalInfo()$"
+               , emailFormatInfo : "$_designviewCantSignModalEmailFormatInfo()$"
+               , emailSample : "$_designviewCantSignModalEmailSample()$"
+               , mobileFormatInfo : "$_designviewCantSignModalMobileFormatInfo()$"
+               , mobileSample : "$_designviewCantSignModalMobileSample()$"
+             }
              , phonePlaceholder: "$_phonePlaceholder()$"
              , editParticipants: "$_designViewEditParticipants()$"
              , editDocument: "$_designViewEditDocument()$"
