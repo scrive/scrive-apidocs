@@ -186,7 +186,7 @@
             return removeDocumentButton.el();
         },
         cantSignModal: function() {
-          if(!this.model.document().hasProblems(true) || !this.model.document().mainfile()) {
+          if(!this.model.document().hasProblems(true)) {
             return;
           }
 
