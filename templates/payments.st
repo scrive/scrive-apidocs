@@ -73,6 +73,9 @@ $email$
 paymentsDeclinedEmail3=
 <p>
 $_paymentsDeclinedEmailCheck()$
+<br/>
+<br/>
+$nicebutton(link=concat(a1=ctxhostpart;a2="/account#subscription"); text=_paymentsDeclinedEmailButton())$
 </p>
 ##
 paymentsExpiredEmail=
