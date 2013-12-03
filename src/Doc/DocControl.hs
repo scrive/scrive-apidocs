@@ -31,7 +31,7 @@ module Doc.DocControl(
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import DB
-import Doc.Action
+import Doc.DocMails
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery

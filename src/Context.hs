@@ -95,6 +95,7 @@ class HasMailContext c where
 
 instance HasMailContext MailContext where
   mailContext = id
+
 instance HasMailContext Context where
   mailContext ctx = MailContext { mctxhostpart = ctxhostpart ctx
                                 , mctxmailsconfig = ctxmailsconfig ctx

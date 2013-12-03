@@ -191,16 +191,13 @@ signatoryFieldsFromUser user = do
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
-    The user must be the author, and the signatory musn't be the author.
-    Also the signatory must be next in the signorder, and also not be a viewer.
+    Signatory must be next in the signorder, and also not be a viewer.
     In addition the document must be in the correct state.  There's quite a lot to check!
 -}
-isEligibleForReminder :: User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder user document@Document{documentstatus} siglink =
+isEligibleForReminder :: Document -> SignatoryLink -> Bool
+isEligibleForReminder document@Document{documentstatus} siglink =
        documentDeliverableTosignatory
     && signatoryActivated
-    && userIsAuthor
-    && not (isAuthor siglink)
     && not dontShowAnyReminder
     && (signatorylinkdeliverymethod siglink /= EmailDelivery || (mailinvitationdeliverystatus siglink /= Undelivered && mailinvitationdeliverystatus siglink /= Deferred))
     && (signatorylinkdeliverymethod siglink /= MobileDelivery || (smsinvitationdeliverystatus siglink /= Undelivered && smsinvitationdeliverystatus siglink /= Deferred))
@@ -211,7 +208,6 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
     && wasNotSigned
     && signatoryispartner siglink
   where
-    userIsAuthor = isAuthor (document, user)
     wasNotSigned = isNothing (maybesigninfo siglink)
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder siglink
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]

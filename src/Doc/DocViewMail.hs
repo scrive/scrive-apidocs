@@ -49,9 +49,9 @@ import BrandedDomains
 para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
 
-mailDocumentRemind :: (MonadDB m, TemplatesMonad m)
+mailDocumentRemind :: (MonadDB m, TemplatesMonad m, HasMailContext c)
                    => Maybe String
-                   -> Context
+                   -> c
                    -> Document
                    -> SignatoryLink
                    -> Bool
@@ -60,9 +60,9 @@ mailDocumentRemind cm c d s ispreview = case s of
   SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm c d s ispreview
   _                                       -> remindMailSigned    True cm c d s ispreview
 
-mailDocumentRemindContent :: (MonadDB m, TemplatesMonad m)
+mailDocumentRemindContent :: (MonadDB m, TemplatesMonad m,HasMailContext c)
                           => Maybe String
-                          -> Context
+                          -> c
                           -> Document
                           -> SignatoryLink
                           -> Bool
@@ -71,10 +71,10 @@ mailDocumentRemindContent cm c d s ispreview = case s of
   SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSignedContent False cm c d s ispreview
   _                                       -> remindMailSignedContent False cm c d s ispreview
 
-remindMailNotSigned :: (MonadDB m, TemplatesMonad m)
+remindMailNotSigned :: (MonadDB m, TemplatesMonad m, HasMailContext c)
                     => Bool
                     -> Maybe String
-                    -> Context
+                    -> c
                     -> Document
                     -> SignatoryLink
                     -> Bool
@@ -106,10 +106,10 @@ remindMailNotSigned forMail customMessage ctx document signlink ispreview = do
         F.value "ispreview" ispreview
 
 
-remindMailSigned :: (MonadDB m, TemplatesMonad m)
+remindMailSigned :: (MonadDB m, TemplatesMonad m, HasMailContext c)
                  => Bool
                  -> Maybe String
-                 -> Context
+                 -> c
                  -> Document
                  -> SignatoryLink
                  -> Bool
@@ -121,10 +121,10 @@ remindMailSigned _forMail customMessage ctx document signlink ispreview = do
             F.value "ispreview" ispreview
 
 
-remindMailNotSignedContent :: (MonadDB m, TemplatesMonad m)
+remindMailNotSignedContent :: (MonadDB m, TemplatesMonad m, HasMailContext c)
                            => Bool
                            -> Maybe String
-                           -> Context
+                           -> c
                            -> Document
                            -> SignatoryLink
                            -> Bool
@@ -132,10 +132,10 @@ remindMailNotSignedContent :: (MonadDB m, TemplatesMonad m)
 remindMailNotSignedContent forMail customMessage ctx document signlink ispreview =
     content <$> remindMailNotSigned forMail customMessage ctx document signlink ispreview
 
-remindMailSignedContent :: (MonadDB m, TemplatesMonad m)
+remindMailSignedContent :: (MonadDB m, TemplatesMonad m, HasMailContext c)
                         => Bool
                         -> (Maybe String)
-                        -> Context
+                        -> c
                         -> Document
                         -> SignatoryLink
                         -> Bool
@@ -338,8 +338,8 @@ makeEditable name this = renderTemplate "makeEditable" $ do
   F.value "name" name
   F.value "this" this
 
-makeFullLink :: Context -> String -> String
-makeFullLink ctx link = ctxhostpart ctx ++ link
+makeFullLink :: HasMailContext c => c -> String -> String
+makeFullLink ctx link = (mctxhostpart (mailContext ctx)) ++ link
 
 documentMailWithDocLang :: (MonadDB m, TemplatesMonad m, HasMailContext c) => c -> Document -> String -> Fields m () -> m Mail
 documentMailWithDocLang ctx doc mailname otherfields = documentMail doc ctx doc mailname otherfields

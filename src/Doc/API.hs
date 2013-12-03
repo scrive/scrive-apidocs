@@ -91,6 +91,7 @@ import Data.List
 import Data.Char
 import Attachment.Model
 import Utils.Read
+import Doc.DocMails
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -532,7 +533,7 @@ apiCallRemind did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-  _ <- sendAllReminderEmails ctx actor user did
+  _ <- sendAllReminderEmailsExceptAuthor ctx actor did
   newdocument <- dbQuery $ GetDocumentByDocumentID $ did
   Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
 

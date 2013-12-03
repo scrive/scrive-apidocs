@@ -42,6 +42,7 @@ import ThirdPartyStats.Tables
 import ThirdPartyStats.Migrations
 import User.CallbackScheme.Tables
 import User.CallbackScheme.Migrations
+import Doc.AutomaticReminder.Tables
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
@@ -211,4 +212,5 @@ kontraTables = [
   , tableHostClock
   , tableUsersCallbackScheme
   , tableCompanyUIs
+  , tableDocumentAutomaticReminders
   ] ++ mailerTables

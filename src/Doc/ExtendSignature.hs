@@ -9,21 +9,21 @@ import AppConf (guardTimeConf, hostpart, mailsConfig, brandedDomains)
 import BrandedDomains (findBrandedDomain, bdurl)
 import Context (MailContext(..))
 import Control.Applicative ((<$>))
-import Control.Monad (forM_, when, void)
-import Control.Monad.Reader (MonadReader, asks)
+import Control.Monad (forM_, when, void, join)
+import Control.Monad.Reader (MonadReader, runReaderT, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
 import qualified Data.ByteString as BS
 import Data.Maybe (fromMaybe)
 import DB (getMinutesTime, MonadDB, dbQuery, kCommit)
-import Doc.Action (sendClosedEmails)
+import Doc.DocMails (sendClosedEmails)
 import Doc.DocSeal (digitallySealDocument, digitallyExtendDocument)
-import Doc.DocStateData (Document(..), DocumentStatus(..), documentsealstatus)
+import Doc.DocStateData (Document(..), DocumentStatus(..), documentsealstatus, maybesignatory)
 import Doc.DocUtils (documentsealedfileM)
 import Doc.Model (GetDocuments(..), DocumentDomain(..), DocumentFilter(..), GetDocumentByDocumentID(..))
 import Doc.SealStatus (SealStatus(..))
-import User.Model (GetUserByEmail(..), Email(..), userassociateddomain)
+import User.Model (GetUserByID(..), userassociateddomain)
 import File.File (filename)
 import File.Storage (getFileContents)
 import IPAddress (noIP)
@@ -33,7 +33,6 @@ import System.FilePath ((</>))
 import System.Time (toClockTime, CalendarTime(..), Month(..))
 import Templates (runTemplatesT)
 import User.Lang (getLang)
-import Util.HasSomeUserInfo (getEmail)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
 import Utils.Default (defaultValue)
 import Utils.Directory (withSystemTempDirectory')
@@ -112,8 +111,7 @@ sealDocument doc = do
     doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
     case documentsealstatus doc' of
       Just Guardtime{} -> do
-        mauthor <- maybe (return Nothing) (dbQuery . GetUserByEmail) $
-                   Email . getEmail <$> getAuthorSigLink doc'
+        mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc'
         let mbd = flip findBrandedDomain (brandedDomains appConf) =<< userassociateddomain =<< mauthor
         let mctx = MailContext { mctxhostpart = fromMaybe (hostpart appConf) (bdurl <$> mbd)
                                , mctxmailsconfig = mailsConfig appConf
