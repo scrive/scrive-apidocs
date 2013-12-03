@@ -25,7 +25,9 @@ data SenderConfig = SMTPSender {
   | LocalSender {
     localDirectory     :: FilePath
   , localOpenCommand   :: Maybe String
-  } deriving (Read, Show)
+  }
+  | NullSender
+  deriving (Read, Show)
 
 -- SMTPSender {
 --     serviceName = "SendGrid"

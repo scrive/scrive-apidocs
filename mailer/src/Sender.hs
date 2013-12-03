@@ -36,6 +36,7 @@ createSender :: SenderConfig -> Sender
 createSender mc = case mc of
   SMTPSender{}   -> createSMTPSender mc
   LocalSender{}  -> createLocalSender mc
+  NullSender     -> createNullSender mc
 
 createExternalSender :: String -> String -> (Mail -> [String]) -> Sender
 createExternalSender name program createargs = Sender { senderName = name, sendMail = send }
@@ -100,3 +101,7 @@ createLocalSender config = Sender { senderName = "localSender", sendMail = send 
             }
             return ()
         return True
+
+createNullSender :: SenderConfig -> Sender
+createNullSender _ = Sender { senderName = "nullSender", sendMail = const (return True) }
+
