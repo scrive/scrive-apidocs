@@ -1,5 +1,6 @@
 module Doc.AutomaticReminder.Model (
     documentAutomaticReminder
+  , scheduleAutoreminderIfThereIsOne
   ) where
 
 --import Control.Applicative
@@ -27,19 +28,24 @@ import Util.Actor
 import IPAddress (noIP)
 import qualified Log as Log
 import Crypto.RNG
+import Data.Typeable
+import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
+import qualified DB.TimeZoneName as TimeZoneName
+import Data.Time.Format (formatTime)
+import System.Locale (defaultTimeLocale)
+import Control.Monad.Trans.Control (MonadBaseControl)
 
 data DocumentAutomaticReminder = DocumentAutomaticReminder {
     reminderDocumentID :: DocumentID
   , reminderSentTime :: MinutesTime
-  } deriving (Show)
+  } deriving (Show,Typeable)
 
 
-documentAutomaticReminder :: Action DocumentID DocumentAutomaticReminder (DocumentID,MinutesTime) Scheduler
+documentAutomaticReminder :: Action DocumentID DocumentAutomaticReminder DocumentID Scheduler
 documentAutomaticReminder = Action {
     qaTable = tableDocumentAutomaticReminders
-  , qaFields = \(did,stime) -> [
+  , qaFields = \(did) -> [
         ("document_id", toSql did)
-      , ("expires", toSql stime)
      ]
   , qaSelectFields = ["document_id", "expires"]
   , qaIndexField = "document_id"
@@ -76,3 +82,19 @@ documentAutomaticReminder = Action {
 
 
 
+scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadBaseControl IO m) => Document -> (Maybe TimeZoneName) -> m ()
+scheduleAutoreminderIfThereIsOne doc mtzn = do
+      case (documentdaystoremind doc) of
+        Nothing   -> void $  dbUpdate $ DeleteAction documentAutomaticReminder (documentid doc)
+        Just days -> do
+            void $ dbUpdate $ DeleteAction documentAutomaticReminder (documentid doc)
+            time <- getMinutesTime
+            let timestamp = case mtzn of
+                  Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+                  Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
+            dstTz <- mkTimeZoneName "Europe/Stockholm"
+            withTimeZone dstTz $
+              void $ kRun $ sqlInsert "document_automatic_reminders" $ do
+                sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
+                                <+> "+ ((interval '1 day') * ?) + (interval '7 hours 30 minutes')"   <?> (show days)-- This interval add almoust one they from description above.
+                sqlSet "document_id" (documentid doc)
