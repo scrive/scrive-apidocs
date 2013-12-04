@@ -55,11 +55,6 @@ paymentsDeclinedEmail1=
 $_paymentsDeclinedEmailSorry()$
 </p>
 ###
-<p>
-$_paymenstEmailTransactionDate()$: $date$<br />
-$_paymentsEmailTotal()$: $total$ $currency$
-</p>
-###
 paymentsDeclinedEmail2=
 <p>
 $_paymentsEmailBilledTo()$:
