@@ -77,7 +77,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var name       = $("<div class='name' />").text(sigview.nameOrEmailOrMobile());
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle'/>");
-          var middle2    = $("<div class='middle' />");
+          var middle2    = $("<div class='middle' style='min-width: 150px;'/>");
           var middle3    = $("<div class='middle details' style='white-space: nowrap;'/>");
           var statusicon = $("<div class='icon status'/>").addClass(sigview.status());
           var status     = $("<div class='statustext' />").addClass(sigview.status()).html(sigview.signatoryViewerySummary());
