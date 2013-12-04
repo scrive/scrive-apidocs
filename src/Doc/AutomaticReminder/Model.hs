@@ -82,19 +82,17 @@ documentAutomaticReminder = Action {
 
 
 
-scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadBaseControl IO m) => Document -> (Maybe TimeZoneName) -> m ()
-scheduleAutoreminderIfThereIsOne doc mtzn = do
+scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadBaseControl IO m) => Document -> TimeZoneName -> m ()
+scheduleAutoreminderIfThereIsOne doc tzn = do
       case (documentdaystoremind doc) of
         Nothing   -> void $  dbUpdate $ DeleteAction documentAutomaticReminder (documentid doc)
         Just days -> do
             void $ dbUpdate $ DeleteAction documentAutomaticReminder (documentid doc)
             time <- getMinutesTime
-            let timestamp = case mtzn of
-                  Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
-                  Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
+            let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
             dstTz <- mkTimeZoneName "Europe/Stockholm"
             withTimeZone dstTz $
               void $ kRun $ sqlInsert "document_automatic_reminders" $ do
                 sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                                <+> "+ ((interval '1 day') * ?) + (interval '7 hours 30 minutes')"   <?> (show days)-- This interval add almoust one they from description above.
+                                <+> "+ ((interval '1 day') * " <?> (show days) <+> " ) + (interval '7 hours 30 minutes')"
                 sqlSet "document_id" (documentid doc)

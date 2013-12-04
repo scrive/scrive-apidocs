@@ -405,6 +405,7 @@ data Document = Document {
   , documentdaystosign             :: Int
   , documentdaystoremind           :: Maybe Int
   , documenttimeouttime            :: Maybe MinutesTime
+  , documentautoremindtime         :: Maybe MinutesTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
   , documentsharing                :: DocumentSharing
@@ -430,6 +431,7 @@ instance HasDefaultValue Document where
           , documentdaystosign           = 14
           , documentdaystoremind         = Nothing
           , documenttimeouttime          = Nothing
+          , documentautoremindtime       = Nothing
           , documentinvitetext           = ""
           , documentinvitetime           = Nothing
           , documentsharing              = Private

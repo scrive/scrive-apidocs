@@ -32,6 +32,7 @@ import Util.SignatoryLinkUtils
 import Util.Actor
 import Doc.API
 import ELegitimation.BankIDUtils
+import DB.TimeZoneName (mkTimeZoneName)
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
@@ -117,8 +118,8 @@ testLastPersonSigningADocumentClosesIt = do
                                       ]})
                ]) (systemActor $ documentctime doc')
 
-
-  randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
+  tz <- mkTimeZoneName "Europe/Stockholm"
+  randomUpdate $ PreparationToPending (documentid doc') tz (systemActor (documentctime doc'))
   doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)

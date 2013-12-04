@@ -46,6 +46,8 @@ import ForkAction
 import Doc.API.Callback.Model
 import Company.Model
 import Utils.Default (defaultValue)
+import Doc.AutomaticReminder.Model
+import DB.TimeZoneName
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: Kontrakcja m => EventName -> Document -> User -> [EventProperty] -> m ()
@@ -72,8 +74,8 @@ logDocEvent name doc user extraProps = do
     numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
     stringProp "Signup Method" (show $ usersignupmethod user)]
 
-postDocumentPreparationChange :: Kontrakcja m => Document -> Bool -> m ()
-postDocumentPreparationChange doc@Document{documenttitle} skipauthorinvitation = do
+postDocumentPreparationChange :: Kontrakcja m => Document -> Bool -> TimeZoneName -> m ()
+postDocumentPreparationChange doc@Document{documenttitle} skipauthorinvitation tzn = do
   let docid = documentid doc
   triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
@@ -104,7 +106,7 @@ postDocumentPreparationChange doc@Document{documenttitle} skipauthorinvitation =
 
   sendInvitationEmails ctx document' skipauthorinvitation
   sendInvitationEmailsToViewers ctx document'
-
+  scheduleAutoreminderIfThereIsOne document' tzn
   return ()
 
 postDocumentPendingChange :: Kontrakcja m => Document -> Document -> m ()

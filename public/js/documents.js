@@ -414,10 +414,12 @@ window.Document = Backbone.Model.extend({
     },
     datamismatch: function() {
         return _.any(this.signatory, function() {return this.datamismatch() == true;});
-
     },
     timeouttime: function() {
         return this.get("timeouttime");
+    },
+    autoremindtime: function() {
+        return this.get("autoremindtime");
     },
     file: function()
     {
@@ -600,6 +602,7 @@ window.Document = Backbone.Model.extend({
        canseeallattachments: args.canseeallattachments,
        status: args.status,
        timeouttime: args.timeouttime == undefined ? undefined : new Date(Date.parse(args.timeouttime)),
+       autoremindtime: args.autoremindtime == undefined ? undefined : new Date(Date.parse(args.autoremindtime)),
        signorder: args.signorder,
        authentication: args.authentication,
        delivery: args.delivery,

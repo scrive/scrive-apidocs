@@ -25,6 +25,14 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
       if (this.get("signatoriesViews")[i] != undefined)
         this.setCurrentSignview(this.get("signatoriesViews")[i]);
   },
+  automaticreminder :  function() {
+      if (this.get("automaticreminder") == undefined)
+        this.set({"automaticreminder" : new AuthorViewAutomaticReminders({authorview : this.authorview()})}, {silent : true});
+      return this.get("automaticreminder");
+  },
+  hasAutomaticReminder : function() {
+      return this.document().pending();
+  },
   authorview :function() {
      return this.get("authorview");
   },
@@ -50,6 +58,8 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   },
   destroy : function() {
     _.each(this.signatoriesViews(), function(s) {s.destroy();});
+    if (this.hasAutomaticReminder())
+      this.automaticreminder().destroy();
     this.clear();
   }
 });
@@ -105,16 +115,13 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       var header = $("<h2 style='width: 100px;' />");
       box.append(header.text(localization.authorview.signatoriesTitle));
 
-      var table = $("<table class='signatories-box' style='float: right;' />");
-      var tbody = $("<tbody/>");
-      var tr = $("<tr style='height: 220px;'/>");
-      var td1 = $("<td class='signatory-box' />");
-      var tdseparator = $("<td class='signatory-box-separator'/>");
-      var td2 = $("<td class='signatory-box' />");
-      var box1 = $('<div class="column spacing" />');
-      var box2 = $('<div class="column spacing" />');
-      table.append(tbody.append(tr.append(td1.append(box1)).append(tdseparator).append(td2.append(box2))));
-      box.append(table);
+      var container = $("<div class='signatories-box' style='float: right; width: 620px' />");
+
+      var leftcontainer = $("<div class='float-left' style='width:300px;margin-right:20px'>");
+      var box1 = $("<div class='signatory-box column spacing' style='width:260px' />");
+      var rightcontainer = $("<div class='float-right' style='width:300px';>");
+      var box2 = $("<div class='signatory-box column spacing float-right' style='width:260px'/>");
+      box.append(container.append(leftcontainer.append(box1)).append(rightcontainer.append(box2)));
 
       if (this.model.isSingleSignatory()) {
          td1.remove();
@@ -129,6 +136,10 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
          box2.append(this.model.signatoryView(1).el());
       }
 
+      if (this.model.hasAutomaticReminder()) {
+         var box3 = $("<div class='signatory-box column spacing float-right' style='margin-top:20px;width:260px'/>").append(this.model.automaticreminder().el());
+         rightcontainer.append(box3);
+      }
       return this;
   }
 

@@ -342,12 +342,12 @@ apiCallReady did =  api $ do
           throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
     newdocument <- do
               t <- ctxtime <$> getContext
-              dbUpdate $ PreparationToPending did actor (Just timezone)
+              dbUpdate $ PreparationToPending did timezone actor
               dbUpdate $ SetDocumentInviteTime did t actor
               dbQuery $ GetDocumentByDocumentID did
 
     skipauthorinvitation <- isFieldSet "skipauthorinvitation"
-    postDocumentPreparationChange newdocument skipauthorinvitation
+    postDocumentPreparationChange newdocument skipauthorinvitation timezone
     newdocument' <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument'
 
