@@ -463,7 +463,7 @@
 "_invitationSMSSentEntry":"Inbjudan att signera skickas via SMS till $partyList$.",
 "_invitationSMSUndeliveredContentBody":"Vi har inte kunnat leverera din inbjudan att signera dokumentet <strong>$documenttitle$</strong>. Det beror troligen på att mobilnumret är felaktigt.",
 "_invitationSMSUndeliveredContentBodyFirst":"För att ändra telefonnumret och skicka inbjudan igen:",
-"_invitationSMSUndeliveredContentInstruction":"<ol><li>Klicka på dokumentet i ditt arkiv eller på knappen nedan:<br/>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$</li><li>Klicka \"Ändra mobilnummer\"</li><li>Kontrollera mobilnumret och skicka igen</li></ol>",
+"_invitationSMSUndeliveredContentInstruction":"<ol><li>Klicka på dokumentet i ditt arkiv eller på knappen nedan:<br/><br/>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$<br/></li><li>Klicka \"Ändra mobilnummer\"</li><li>Kontrollera mobilnumret och skicka igen</li></ol>",
 "_invitationSMSUndeliveredTitle":"Misslyckad leverans",
 "_inviteTextFieldName":"inbjudningstext",
 "_january":"januari",

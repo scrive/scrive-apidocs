@@ -46,8 +46,11 @@ $_paymentsDeclinedEmailSubject()$
 $nicemail(
   mailheader=_paymentsDeclinedEmailHeader();
   mailp1=paymentsDeclinedEmail1();
+  mailspacing1="";
   mailp2=paymentsDeclinedEmail2();
-  mailp3=paymentsDeclinedEmail3()
+  mailspacing2 = "";
+  mailp3=paymentsDeclinedEmail3();
+  mailspacing3 = ""
 )$
 ###
 paymentsDeclinedEmail1=
@@ -66,12 +69,10 @@ $email$
 </p>
 ###
 paymentsDeclinedEmail3=
-<p>
 $_paymentsDeclinedEmailCheck()$
 <br/>
 <br/>
 $nicebutton(link=concat(a1=ctxhostpart;a2="/account#subscription"); text=_paymentsDeclinedEmailButton())$
-</p>
 ##
 paymentsExpiredEmail=
 $_paymentsEmailExpiredSubject()$

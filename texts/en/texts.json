@@ -463,7 +463,7 @@
 "_invitationSMSSentEntry":"The invitation to sign is sent by SMS to $partyList$.",
 "_invitationSMSUndeliveredContentBody":"We have not been able to deliver the invitation to e-sign the document <strong>$documenttitle$</strong> to <strong>$name$</strong> &lt;$mobile$&gt;. This may be because the phone number you have provided is incorrect.",
 "_invitationSMSUndeliveredContentBodyFirst":"To correct the phone number and resend the invitation:",
-"_invitationSMSUndeliveredContentInstruction":"<ol><li>Access the document from your archive or by clicking the button below:<br/>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$</li><li>Click \"Change phone number\"</li><li>Confirm the phone number and send again</li></ol>",
+"_invitationSMSUndeliveredContentInstruction":"<ol><li>Access the document from your archive or by clicking the button below:<br/><br/>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$<br/></li><li>Click \"Change phone number\"</li><li>Confirm the phone number and send again</li></ol>",
 "_invitationSMSUndeliveredTitle":"Delivery failure",
 "_inviteTextFieldName":"invite text",
 "_january":"January",
