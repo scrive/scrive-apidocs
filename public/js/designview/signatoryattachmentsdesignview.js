@@ -198,7 +198,7 @@ window.DesignSignatoryAttachmentsPopup = {
                   if (_.any(model.attachments(), function(a) {return  !a.ready() }))
                       return false;
                   var uniquelyNamedAttachments = _.uniq(model.attachments(), function(a) {
-                    return a.name();
+                    return a.signatory().id + a.name();
                   });
                   if (model.attachments().length > uniquelyNamedAttachments.length) {
                     new FlashMessage({color : 'red',
