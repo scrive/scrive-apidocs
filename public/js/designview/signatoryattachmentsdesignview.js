@@ -197,6 +197,14 @@ window.DesignSignatoryAttachmentsPopup = {
               onAccept : function() {
                   if (_.any(model.attachments(), function(a) {return  !a.ready() }))
                       return false;
+                  var uniquelyNamedAttachments = _.uniq(model.attachments(), function(a) {
+                    return a.name();
+                  });
+                  if (model.attachments().length > uniquelyNamedAttachments.length) {
+                    new FlashMessage({color : 'red',
+                                      content: localization.signatoryAttachments.uniqueAttachmentNamesError});
+                    return false;
+                  }
                   _.each(document.signatories(), function(sig) {
                       sig.clearAttachments();
                   });

@@ -630,6 +630,7 @@
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs":"Request from",
 "_pageDocumentForAuthorHelpersLocalDialogsDefineRequests":"Define the requested attachments",
 "_pageDocumentForAuthorHelpersLocalDialogsHead":"Request attachments",
+"_pageDocumentForAuthorHelpersLocalDialogsUniqueAttachmentNamesError":"Each attachment must have a unique name.",
 "_pageDocumentForSignContentElegBody1":"No e-ID? You can download an e-ID from your online bank or from Telia.",
 "_pageDocumentForSignContentElegBody2ClickHere":"Click here",
 "_pageDocumentForSignContentElegBody3":"to read more",

@@ -630,6 +630,7 @@
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs":"Begär från",
 "_pageDocumentForAuthorHelpersLocalDialogsDefineRequests":"Definiera de begärda bilagorna",
 "_pageDocumentForAuthorHelpersLocalDialogsHead":"Begär bilagor",
+"_pageDocumentForAuthorHelpersLocalDialogsUniqueAttachmentNamesError":"Varje bilaga måste ha ett unikt namn.",
 "_pageDocumentForSignContentElegBody1":"Har du ingen e-legitimation? Du kan ladda ned en            e-legitimation från din internetbank eller från              Telia.",
 "_pageDocumentForSignContentElegBody2ClickHere":"Klicka här",
 "_pageDocumentForSignContentElegBody3":"för att läsa mer.",
