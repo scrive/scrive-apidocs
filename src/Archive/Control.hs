@@ -90,7 +90,7 @@ handleSendReminders = do
     ctx <- getContext
     ids <- getCriticalField asValidDocIDList "documentids"
     actor <- guardJustM $ fmap mkAuthorActor getContext
-    remindedsiglinks <- fmap concat . sequence . map (\docid -> sendAllReminderEmailsExceptAuthor ctx actor docid) $ ids
+    remindedsiglinks <- fmap concat . sequence . map (\docid -> sendAllReminderEmailsExceptAuthor ctx actor docid False) $ ids
     case (length remindedsiglinks) of
       0 -> internalError
       _ -> J.runJSONGenT $ return ()

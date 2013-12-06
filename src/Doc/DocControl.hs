@@ -385,7 +385,7 @@ handleResend docid signlinkid  = withUserPost $ do
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getOptionalField  asValidInviteText "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
-  _ <- sendReminderEmail customMessage ctx actor doc signlink
+  _ <- sendReminderEmail customMessage ctx actor doc False signlink
   return (LinkIssueDoc docid)
 
 --This only works for undelivered mails. We shoulkd check if current user is author

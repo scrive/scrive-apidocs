@@ -31,7 +31,7 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
       return this.get("automaticreminder");
   },
   hasAutomaticReminder : function() {
-      return this.document().pending();
+      return this.document().pending() && (this.document().timeouttime().diffDays() > 0 || this.document().autoremindtime() != undefined);
   },
   authorview :function() {
      return this.get("authorview");
@@ -124,7 +124,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       box.append(container.append(leftcontainer.append(box1)).append(rightcontainer.append(box2)));
 
       if (this.model.isSingleSignatory()) {
-         td1.remove();
+         box1.removeClass("signatory-box");
          box2.append(this.model.signatoryView().el());
       }
       else if (this.model.hasList()) {

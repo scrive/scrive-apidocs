@@ -187,6 +187,13 @@ window.Document = Backbone.Model.extend({
               days : days
           });
     },
+    setautoreminder: function(days) {
+          return new Submit({
+              url: "/api/frontend/setautoreminder/" + this.documentid(),
+              method: "POST",
+              days : days
+          });
+    },
     canbecanceled: function() {
         return this.get("canbecanceled");
     },

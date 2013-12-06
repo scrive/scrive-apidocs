@@ -122,6 +122,15 @@ if (!Date.prototype.fullTime) {
     };
 }
 
+if (!Date.prototype.diffDays) {
+    Date.prototype.diffDays = function(time2) {
+    if (time2 == undefined) time2 = new Date();
+    var ONE_DAY = 1000 * 60 * 60 * 24;
+    var difference_ms = Math.abs(this.getTime() - time2.getTime());
+    return Math.floor(difference_ms / ONE_DAY);
+    };
+}
+
 
 
 })(window);

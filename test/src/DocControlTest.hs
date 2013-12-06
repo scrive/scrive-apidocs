@@ -240,7 +240,7 @@ testSendingReminderClearsDeliveryInformation = do
   _ <- dbUpdate $ MarkInvitationRead (documentid doc) (signatorylinkid sl) actor
   -- who cares which one, just pick the last one
   req <- mkRequest POST []
-  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx actor doc sl
+  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx actor doc False sl
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
   assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')

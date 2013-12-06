@@ -1,6 +1,7 @@
 module Doc.AutomaticReminder.Model (
     documentAutomaticReminder
   , scheduleAutoreminderIfThereIsOne
+  , setAutoreminder
   ) where
 
 --import Control.Applicative
@@ -77,17 +78,20 @@ documentAutomaticReminder = Action {
                                , mctxmaybeuser = Nothing
                                }
       gt <- getGlobalTemplates
-      _ <- runReaderT (sendAllReminderEmails mctx (systemActor now) (reminderDocumentID dar))  gt
+      _ <- runReaderT (sendAllReminderEmails mctx (systemActor now) (reminderDocumentID dar) True)  gt
       void $ dbUpdate $ DeleteAction documentAutomaticReminder (reminderDocumentID dar)
 
 
 
 scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadBaseControl IO m) => Document -> TimeZoneName -> m ()
-scheduleAutoreminderIfThereIsOne doc tzn = do
-      case (documentdaystoremind doc) of
-        Nothing   -> void $  dbUpdate $ DeleteAction documentAutomaticReminder (documentid doc)
+scheduleAutoreminderIfThereIsOne doc tzn = setAutoreminder (documentid doc) (documentdaystoremind doc)  tzn
+
+setAutoreminder :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> Maybe Int -> TimeZoneName -> m ()
+setAutoreminder did mdays tzn = do
+      void $  dbUpdate $ DeleteAction documentAutomaticReminder did
+      case (mdays) of
+        Nothing   -> return ()
         Just days -> do
-            void $ dbUpdate $ DeleteAction documentAutomaticReminder (documentid doc)
             time <- getMinutesTime
             let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
             dstTz <- mkTimeZoneName "Europe/Stockholm"
@@ -95,4 +99,6 @@ scheduleAutoreminderIfThereIsOne doc tzn = do
               void $ kRun $ sqlInsert "document_automatic_reminders" $ do
                 sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
                                 <+> "+ ((interval '1 day') * " <?> (show days) <+> " ) + (interval '7 hours 30 minutes')"
-                sqlSet "document_id" (documentid doc)
+                sqlSet "document_id" did
+
+

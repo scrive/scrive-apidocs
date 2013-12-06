@@ -198,8 +198,8 @@ sendInvitationEmail1 ctx document authorsiglink =
     Send a reminder email (and update the modification time on the document)
 -}
 sendReminderEmail :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, MonadDB m, HasMailContext c) =>
-                          Maybe String -> c -> Actor -> Document -> SignatoryLink -> m SignatoryLink
-sendReminderEmail custommessage ctx actor doc siglink = do
+                          Maybe String -> c -> Actor -> Document -> Bool -> SignatoryLink  -> m SignatoryLink
+sendReminderEmail custommessage ctx actor doc automatic siglink = do
   sent <- sendNotifications siglink
     (do
       mail <- mailDocumentRemind custommessage ctx doc siglink False
@@ -216,7 +216,7 @@ sendReminderEmail custommessage ctx actor doc siglink = do
     when (isPending doc &&  not (hasSigned siglink)) $ do
       -- Reset delivery status if the signatory has not signed yet
       Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
-      dbUpdate $ PostReminderSend doc siglink custommessage actor
+      dbUpdate $ PostReminderSend doc siglink custommessage automatic actor
     triggerAPICallbackIfThereIsOne doc
   return siglink
 
@@ -281,7 +281,7 @@ sendRejectEmails customMessage ctx document signalink = do
  -}
 
 sendAllReminderEmails :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, MonadDB m, HasMailContext c) =>
-                                c -> Actor -> DocumentID -> m [SignatoryLink]
+                                c -> Actor -> DocumentID -> Bool -> m [SignatoryLink]
 sendAllReminderEmails = sendAllReminderEmailsWithFilter (const True)
 
 
@@ -290,20 +290,20 @@ sendAllReminderEmails = sendAllReminderEmailsWithFilter (const True)
  -}
 
 sendAllReminderEmailsExceptAuthor :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, MonadDB m, HasMailContext c) =>
-                                        c -> Actor -> DocumentID -> m [SignatoryLink]
+                                        c -> Actor -> DocumentID -> Bool -> m [SignatoryLink]
 sendAllReminderEmailsExceptAuthor  = sendAllReminderEmailsWithFilter (not . isAuthor)
 
 {- |
    Send reminder to all parties in document - excluding ones that do not pass given filter
  -}
 sendAllReminderEmailsWithFilter :: (Log.MonadLog m, TemplatesMonad m,MonadIO m, CryptoRNG m, MonadDB m, HasMailContext c) =>
-                                        (SignatoryLink -> Bool) -> c -> Actor -> DocumentID -> m [SignatoryLink]
-sendAllReminderEmailsWithFilter f ctx actor docid = do
+                                        (SignatoryLink -> Bool) -> c -> Actor -> DocumentID -> Bool -> m [SignatoryLink]
+sendAllReminderEmailsWithFilter f ctx actor docid automatic = do
     doc <- dbQuery $ GetDocumentByDocumentID docid
     case (documentstatus doc) of
           Pending -> do
             let unsignedsiglinks = filter f $ filter (isEligibleForReminder doc) $ documentsignatorylinks doc
-            sequence . map (sendReminderEmail Nothing ctx actor doc) $ unsignedsiglinks
+            sequence . map (sendReminderEmail Nothing ctx actor doc automatic) $ unsignedsiglinks
           _ -> return []
 
 
