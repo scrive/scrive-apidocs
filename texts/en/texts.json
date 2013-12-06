@@ -314,7 +314,7 @@
 "_designviewCantSignModalMobileFormatInfo":"The phone number must include a “+” then the country code and the leading “0” should be removed.<br/>The phone number should also not contain any spaces. This is the format:",
 "_designviewCantSignModalMobileSample":"+46701234567",
 "_designviewCantSignModalTitle":"Something is missing",
-"_designviewdays":"Day(s)",
+"_designviewdays":"day(s)",
 "_designviewdraggablehelp1":"Drag and drop fields to add and move",
 "_designviewdraggablehelp2":"Click field to select and edit",
 "_designviewsaved":"Your document has been saved as a draft. You can find your drafts in your Archive.",

@@ -123,10 +123,14 @@ if (!Date.prototype.fullTime) {
 }
 
 if (!Date.prototype.diffDays) {
-    Date.prototype.diffDays = function(time2) {
-    if (time2 == undefined) time2 = new Date();
+    Date.prototype.diffDays = function(date2) {
+    var time2 = 0;
+    if (date2 != undefined)
+        time2 = date2.getTime();
+    else
+        time2 = new Date().getTime() +1; // This +1 removes a risk that diffDays depends on speed of browser.
     var ONE_DAY = 1000 * 60 * 60 * 24;
-    var difference_ms = Math.abs(this.getTime() - time2.getTime());
+    var difference_ms = Math.abs(this.getTime() - time2);
     return Math.floor(difference_ms / ONE_DAY);
     };
 }

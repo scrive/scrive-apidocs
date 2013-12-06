@@ -147,6 +147,23 @@ javascriptLocalisation =
                , days  : "$_prolongModalDays()$"
                , button : "$_prolongModalButton()$"
               }
+            , autoreminders : {
+                 days : "day(s)"
+               , dueDateIn  : "Due date is in "
+               , daysToRemind  : "Days to remind"
+               , automaticRemindersTitle : "Automatic Reminders"
+               , changeAutoReminderTitle : "Change reminder date"
+               , changeAutoreminderButton : "Change"
+               , setAutoreminderButton : "Set"
+               , removeAutoreminderButton : "Remove"
+               , setDate : "Set date"
+               , changeDate : "Change date"
+               , setAutoReminderTitle : "Set reminder date"
+               , changeAutoreminderDescription : "Reminders will be sent to the next participant <BR/> who has not yet signed by this date"
+               , willBeSentOn : "Will be sent on"
+               , sendReminderIn : "Send reminder in"
+              }
+
             , process : {
                sendbuttontext: "$_contractsendbuttontext()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",

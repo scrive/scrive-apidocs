@@ -155,11 +155,8 @@ window.Document = Backbone.Model.extend({
           return this.get("daystoremind");
     },
     setDaystoremind: function(daystoremind) {
-         console.log("Setting days to remind " + daystoremind);
          var old = this.get("daystoremind")
          this.set({"daystoremind": daystoremind == undefined || isNaN(daystoremind) ? undefined : Math.min(this.daystosign(),daystoremind)}, {silent: true});
-         console.log("Days to remind set to " + this.get("daystoremind"));
-
          if (old != this.get("daystoremind") || daystoremind != this.get("daystoremind"))
            this.trigger('change:daystoremind');
 

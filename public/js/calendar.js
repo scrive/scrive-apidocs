@@ -4,7 +4,6 @@ window.Calendar = Backbone.Model.extend({
     defaults: {
         on : $('<div/>'),
         change : function() {return false},
-        value : 0,
         maxValue : 90
     },
     initialize : function(args){
@@ -15,6 +14,8 @@ window.Calendar = Backbone.Model.extend({
             value : args.days == undefined ? undefined : new Date(new Date().getTime() + args.days * 24 * 60 * 60 * 1000),
             change: function() {
                 var dist = activator.data("dateinput").getValue().diffDays() + 1;
+                if (activator.data("dateinput").getValue() <= new Date())
+                  dist = undefined;
                 onchange(dist);
             },
             min: 0,
@@ -29,7 +30,8 @@ window.Calendar = Backbone.Model.extend({
               var date = new Date();
               date.setDate(date.getDate() + days);
               this.get("on").data("dateinput").setValue(date);
-            }
+            } else
+              this.get("on").data("dateinput").setValue(new Date());
     },
     setMax : function(days) {
             if (days != undefined && !isNaN(days)) {

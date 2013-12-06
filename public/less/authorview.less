@@ -136,38 +136,32 @@
       padding:10px;
     }
 
-    .signatory-box {
-      border: solid @dark-border 1px;
-      background: @grey-background;
-      vertical-align: top;
-      padding: 15px;
-      min-width:269px;
-    }
+    .grey-box {
+       border: solid @dark-border 1px;
+       background: @grey-background;
+       vertical-align: top;
+       padding: 15px;
+     }
 
-    .signatory-box-separator {
-      width: 20px;
-    }
+     .column {
+       display: inline-block;
+       min-height: 125px;
+       margin-right: 0px;
+       width:269px;
 
-    .column {
-      display: inline-block;
-      width: 100%;
-      min-height: 125px;
-      &.spacing {
-        margin-right: 0px;
-      }
       .sig {
+
         &:first-child {
           padding-top:0px;
         }
         padding: 10px;
         border-bottom: 1px dashed #ccc;
+
         &:last-child {
           padding-bottom:0px;
           border-bottom:none;
         }
       }
-
-    }
 
     .name {
       color: @text-dark;

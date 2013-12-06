@@ -31,7 +31,9 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
       return this.get("automaticreminder");
   },
   hasAutomaticReminder : function() {
-      return this.document().pending() && (this.document().timeouttime().diffDays() > 0 || this.document().autoremindtime() != undefined);
+      return this.document().pending()
+             && (this.document().timeouttime().diffDays() > 0 || this.document().autoremindtime() != undefined)
+             && _.any(this.document().signatories(), function(s) { return s.signs() && !s.hasSigned() && !s.padDelivery(); });
   },
   authorview :function() {
      return this.get("authorview");
@@ -118,26 +120,25 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       var container = $("<div class='signatories-box' style='float: right; width: 620px' />");
 
       var leftcontainer = $("<div class='float-left' style='width:300px;margin-right:20px'>");
-      var box1 = $("<div class='signatory-box column spacing' style='width:260px' />");
+      var box1 = $("<div class=' column' />");
       var rightcontainer = $("<div class='float-right' style='width:300px';>");
-      var box2 = $("<div class='signatory-box column spacing float-right' style='width:260px'/>");
+      var box2 = $("<div class='column float-right'/>");
       box.append(container.append(leftcontainer.append(box1)).append(rightcontainer.append(box2)));
 
       if (this.model.isSingleSignatory()) {
-         box1.removeClass("signatory-box");
-         box2.append(this.model.signatoryView().el());
+         box2.append(this.model.signatoryView().el()).addClass("grey-box");
       }
       else if (this.model.hasList()) {
-         box1.append(this.list());
-         box2.append(this.model.signatoryView().el());
+         box1.append(this.list()).addClass("grey-box");
+         box2.append(this.model.signatoryView().el()).addClass("grey-box");
 
       } else {
-         box1.append(this.model.signatoryView(0).el());
-         box2.append(this.model.signatoryView(1).el());
+         box1.append(this.model.signatoryView(0).el()).addClass("grey-box");
+         box2.append(this.model.signatoryView(1).el()).addClass("grey-box");
       }
 
       if (this.model.hasAutomaticReminder()) {
-         var box3 = $("<div class='signatory-box column spacing float-right' style='margin-top:20px;width:260px'/>").append(this.model.automaticreminder().el());
+         var box3 = $("<div class='column float-right' style='margin-top:20px;'/>").append(this.model.automaticreminder().el()).addClass("grey-box");;
          rightcontainer.append(box3);
       }
       return this;

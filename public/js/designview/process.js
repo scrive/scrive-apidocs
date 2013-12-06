@@ -163,15 +163,9 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var labelText = localization.designview.signingDeadline;
 
-            var div = $('<div />');
-            div.addClass('design-view-action-process-left-column-deadline');
-
-
-            var label = $('<div />');
-            label.addClass('design-view-action-process-left-column-deadline-label');
-            label.text(labelText + ':');
+            var div = $("<div class='design-view-action-process-left-column-deadline'/>");
+            var label = $("<div class='design-view-action-process-left-column-deadline-label'/>").text(localization.designview.signingDeadline + ':');
             var calendarbutton = $("<div class='calendarbutton'/>");
             view.daystosigncalendar = new Calendar({on : calendarbutton,
                                          days : doc.daystosign(),
@@ -205,7 +199,6 @@
         updateDaysToRemind : function() {
            var self = this;
            var doc = self.model.document();
-           console.log("Updating with value " + doc.daystoremind())
            self.daystoreminddaysinput.setValue(doc.daystoremind() != undefined ? doc.daystoremind() : "");
            self.daystoremindcalendar.setDays(doc.daystoremind());
         },
@@ -214,15 +207,8 @@
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var labelText = "Days to remind";
-
-            var div = $('<div />');
-            div.addClass('design-view-action-process-left-column-deadline');
-
-
-            var label = $('<div />');
-            label.addClass('design-view-action-process-left-column-deadline-label');
-            label.text(labelText + ':');
+            var div = $("<div class='design-view-action-process-left-column-remindline'/>");
+            var label = $("<div class='design-view-action-process-left-column-remindline-label'/>").text(localization.autoreminders.sendReminderIn + ':');
             var calendarbutton = $("<div class='calendarbutton'/>");
             view.daystoremindcalendar = new Calendar({on : calendarbutton,
                                          days : doc.daystoremind(),
@@ -237,7 +223,7 @@
             view.daystoreminddaysinput = new InfoTextInput({
                 infotext: "-",
                 value: doc.daystoremind(),
-                cssClass : 'design-view-action-process-left-column-deadline-field',
+                cssClass : 'design-view-action-process-left-column-remindline-field',
                 onChange: function(v) {
                     days = parseInt(v);
                     if (isNaN(days))
@@ -256,7 +242,7 @@
 
             div.append(label)
                .append(view.daystoreminddaysinput.el())
-               .append($("<div class='design-view-action-process-left-column-deadline-tag'/>").text(localization.designview.days))
+               .append($("<div class='design-view-action-process-left-column-remindline-tag'/>").text(localization.autoreminders.days))
                .append(calendarbutton);
 
 
