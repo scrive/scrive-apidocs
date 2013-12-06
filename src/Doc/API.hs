@@ -515,7 +515,8 @@ apiCallProlong did =  api $ do
          Just n -> if (n < 1 || n > 90)
                             then throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and 90")
                             else return n
-    dbUpdate $ ProlongDocument (documentid doc) days actor
+    timezone <- lift $ mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+    lift $ dbUpdate $ ProlongDocument (documentid doc) days (Just timezone) actor
     triggerAPICallbackIfThereIsOne doc
     newdocument <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument

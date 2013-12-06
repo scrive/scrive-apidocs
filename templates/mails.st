@@ -322,7 +322,8 @@ accessNewAccountMail=
     $_accessNewAccountMailTitle()$
     $nicemail(
         mailheader=_accessNewAccountMailTitle();
-        mailp1=accessNewAccountMailMainP()
+        mailp1=accessNewAccountMailMainP();
+        mailp2=nicebutton(link=concat(a1=ctxhostpart;a2=passwordlink); text=_accessNewAccountMailContentButton())
     )$
 ###
 accessNewAccountMailMainP=

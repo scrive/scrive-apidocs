@@ -200,17 +200,21 @@
           margin-bottom: 5px;
       }
       .statustext {
+          float: left;
           font-size: 14px;
       }
       .statusbox {
           border-top: 1px dashed #ccc;
           font-size: 13px;
           vertical-align: middle;
+          .statustext {
+              margin-top: 3px;
+          }
       }
 
       .statusbox .icon.status {
           display: inline-block;
-          float: none;
+          float: left;
           margin-top: 1px;
 	  margin-right:10px;
       }
@@ -218,10 +222,15 @@
       .line {
           overflow: hidden;
 	  margin-top: 2px;
+          display: table;
 	  .middle {
-	      display:inline-block;
+	      display:table-cell;
+              vertical-align: middle;
               a {
 		  cursor: pointer;
+              }
+              .icon.status {
+                  margin-right: 7px;
               }
 	  }
 	  .details {
@@ -232,6 +241,7 @@
       }
 
      .optionbox {
+        margin-top: 30px;
         height : 40px;
         border-top: 1px dashed #ccc;
         display: block;

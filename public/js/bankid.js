@@ -96,7 +96,7 @@ function failEleg(msg, personalNumber) {
 }
 
 function checkPlugin(iefn, otfn, msgfn) {
-    if (($.browser.msie && iefn()) || otfn())
+    if ((BrowserInfo.isIE() && iefn()) || otfn())
         return true;
     else
         msgfn();
@@ -139,7 +139,7 @@ window.Eleg = {
               if (data && data.status === 0)  {
 	       console.log(data.tbs);
                LoadingDialog.close(); // this was opened just before starting
-                if ($.browser.msie && hasSign2PluginIE())
+                if (BrowserInfo.isIE() && hasSign2PluginIE())
                     installSign2IE();
                 else if (hasSign2PluginMozilla())
                     installSign2Mozilla();
@@ -202,7 +202,7 @@ window.Eleg = {
             'success': function(data) {
               if (data && data.status === 0)  {
                LoadingDialog.close(); // this was opened just before starting
-                if ($.browser.msie && hasIESigner1Plugin())
+                if (BrowserInfo.isIE() && hasIESigner1Plugin())
                     IEInstallSigner1Object();
                 else if (hasMozillaSigner1Plugin())
                     mozillaInstallSigner1Object();
@@ -270,7 +270,7 @@ window.Eleg = {
             'success': function(data) {
             if (data && data.status === 0)  {
                 LoadingDialog.close();
-                if ($.browser.msie && hasNetIDPluginIE())
+                if (BrowserInfo.isIE() && hasNetIDPluginIE())
                      installNetIDIE();
                 else if (hasNetIDPluginMozilla())
                      installNetIDMozilla();

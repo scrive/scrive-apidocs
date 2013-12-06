@@ -165,6 +165,7 @@ window.Document = Backbone.Model.extend({
           return new Submit({
               url: "/api/frontend/prolong/" + this.documentid(),
               method: "POST",
+              timezone: jstz.determine().name(),
               days : days
           });
     },

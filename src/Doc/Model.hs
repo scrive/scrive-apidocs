@@ -2172,14 +2172,20 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
     updateMTimeAndObjectVersion did (actorTime actor)
     return ()
 
-data ProlongDocument = ProlongDocument DocumentID Int Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
-  update (ProlongDocument did days actor) = do
+data ProlongDocument = ProlongDocument DocumentID Int (Maybe TimeZoneName) Actor
+instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m ProlongDocument () where
+  update (ProlongDocument did days mtzn actor) = do
+    -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
     let time = actorTime actor
-    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+    let timestamp = case mtzn of
+                  Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+                  Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
+    dstTz <- mkTimeZoneName "Europe/Stockholm"
+    withTimeZone dstTz $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "status" Pending
        sqlSet "mtime" time
-       sqlSetCmd "timeout_time" ("now() + (interval '1 day') * " <?> (show days))
+       sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
+                            <+> "+ (interval '1 day') * " <?> (show days) <+> " + (interval '23 hours 59 minutes 59 seconds')"
        sqlWhereDocumentIDIs did
        sqlWhereDocumentTypeIs Signable
        sqlWhereDocumentStatusIs Timedout

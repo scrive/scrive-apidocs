@@ -206,6 +206,7 @@ javascriptLocalisation =
               , from :              "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$"
               , requestAttachments : "$_pageDocumentForAuthorHelpersLocalDialogsHead()$"
               , defineRequests :     "$_pageDocumentForAuthorHelpersLocalDialogsDefineRequests()$"
+              , uniqueAttachmentNamesError : "$_pageDocumentForAuthorHelpersLocalDialogsUniqueAttachmentNamesError()$"
             }
           , save : "$_save()$"
           , languages : {
@@ -281,6 +282,14 @@ javascriptLocalisation =
                     , obligatory: "$_checkboxObligatory()$"
                     , forThis : "$_checkboxFor()$"
                     , done : "$_checkboxDone()$"
+             }
+             , cantSignModal : {
+                 title : "$_designviewCantSignModalTitle()$"
+               , info : "$_designviewCantSignModalInfo()$"
+               , emailFormatInfo : "$_designviewCantSignModalEmailFormatInfo()$"
+               , emailSample : "$_designviewCantSignModalEmailSample()$"
+               , mobileFormatInfo : "$_designviewCantSignModalMobileFormatInfo()$"
+               , mobileSample : "$_designviewCantSignModalMobileSample()$"
              }
              , phonePlaceholder: "$_phonePlaceholder()$"
              , editParticipants: "$_designViewEditParticipants()$"
