@@ -66,18 +66,24 @@ then
   echo "Pushing to amazon"
   s3cmd --config=/home/builds/.s3cfg --acl-private put "$TMP/$finalfile" s3://production-builds
 
-  echo "Checking amazon md5 sum"
-  md5amazon=`s3cmd --config=/home/builds/.s3cfg info "s3://production-builds/$finalfile" | grep MD5 | awk '{print $3}'`
-  echo "MD5SUM from Amazon S3: "$md5amazon
-  md5local=`md5sum "$TMP/$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
-  echo "MD5SUM from local    : "$md5local
-  if [ "$md5amazon" = "$md5local" ]
-  then
-      echo "MD5 sum matches!"
-  else
-      echo "MD5 sum does not match. Please try again."
-      exit 1
-  fi
+  # Checking of MD5 sums temporarily disabled as s3cmd lost the ability to return proper MD5 sum from Amazon.
+  #
+  # Longer explanation: s3cmd info get 'ETag' and treats it as MD5. It
+  # was like this, now something has changed either in S3 or in s3cmd
+  # and it does not work.
+  #
+  # echo "Checking amazon md5 sum"
+  # md5amazon=`s3cmd --config=/home/builds/.s3cfg info "s3://production-builds/$finalfile" | grep MD5 | awk '{print $3}'`
+  # echo "MD5SUM from Amazon S3: "$md5amazon
+  # md5local=`md5sum "$TMP/$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+  # echo "MD5SUM from local    : "$md5local
+  # if [ "$md5amazon" = "$md5local" ]
+  # then
+  #     echo "MD5 sum matches!"
+  # else
+  #     echo "MD5 sum does not match. Please try again."
+  #     exit 1
+  # fi
 
   echo ""
   echo "Backed-up file on Amazon:"
