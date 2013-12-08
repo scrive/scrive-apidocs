@@ -11,36 +11,35 @@ module DB.Model.Index (
   ) where
 
 import Data.Monoid
-import qualified Data.Set as S
 
 import DB.SQL
 
 data TableIndex = TableIndex {
-  idxColumns :: S.Set RawSQL
+  idxColumns :: [RawSQL]
 , idxUnique  :: Bool
 } deriving (Eq, Ord, Show)
 
 tblIndex :: TableIndex
 tblIndex = TableIndex {
-  idxColumns = S.empty
+  idxColumns = []
 , idxUnique = False
 }
 
 indexOnColumn :: RawSQL -> TableIndex
-indexOnColumn column = tblIndex { idxColumns = S.singleton column }
+indexOnColumn column = tblIndex { idxColumns = [column] }
 
 indexOnColumns :: [RawSQL] -> TableIndex
-indexOnColumns columns = tblIndex { idxColumns = S.fromList columns }
+indexOnColumns columns = tblIndex { idxColumns = columns }
 
 uniqueIndexOnColumn :: RawSQL -> TableIndex
 uniqueIndexOnColumn column = TableIndex {
-  idxColumns = S.singleton column
+  idxColumns = [column]
 , idxUnique = True
 }
 
 uniqueIndexOnColumns :: [RawSQL] -> TableIndex
 uniqueIndexOnColumns columns = TableIndex {
-  idxColumns = S.fromList columns
+  idxColumns = columns
 , idxUnique = True
 }
 
@@ -49,7 +48,7 @@ indexName tname TableIndex{..} = mconcat [
     if idxUnique then "unique_idx__" else "idx__"
   , raw tname
   , "__"
-  , intersperseNoWhitespace "__" (map raw . S.toAscList $ idxColumns)
+  , intersperseNoWhitespace "__" (map raw idxColumns)
   ]
 
 sqlCreateIndex :: RawSQL -> TableIndex -> SQL
@@ -57,7 +56,7 @@ sqlCreateIndex tname idx@TableIndex{..} = mconcat [
     "CREATE "
   , if idxUnique then "UNIQUE " else ""
   , "INDEX" <+> indexName tname idx <+> "ON" <+> raw tname <+> "("
-  , intersperseNoWhitespace ", " (map raw . S.toAscList $ idxColumns)
+  , intersperseNoWhitespace ", " (map raw idxColumns)
   , ")"
   ]
 

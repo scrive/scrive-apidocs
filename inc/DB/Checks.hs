@@ -421,7 +421,7 @@ checkDBConsistency logger tables migrations = do
 
     fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> [(TableIndex, RawSQL)]
     fetchTableIndexes acc name columns unique = (TableIndex {
-        idxColumns = S.fromList . map unsafeFromString . split "," $ columns
+        idxColumns = map unsafeFromString . split "," $ columns
       , idxUnique = unique
       }, unsafeFromString name) : acc
 
