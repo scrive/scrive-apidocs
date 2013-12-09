@@ -414,15 +414,17 @@ checkDBConsistency logger tables migrations = do
       sqlResult "c.relname" -- index name
       sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid), ',')" -- array of affected columns
       sqlResult "i.indisunique" -- is it unique?
+      sqlResult "CASE WHEN pg_get_indexdef(i.indexrelid, 0, true) LIKE '%WHERE%' THEN regexp_replace(pg_get_indexdef(i.indexrelid, 0, true), '.*WHERE (.*)', '\\1') ELSE NULL END" -- if partial, get constraint def
       sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
       sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
       sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
       sqlWhereIsNULL "r.contype" -- fetch only "pure" indexes
 
-    fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> [(TableIndex, RawSQL)]
-    fetchTableIndexes acc name columns unique = (TableIndex {
+    fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> Maybe String -> [(TableIndex, RawSQL)]
+    fetchTableIndexes acc name columns unique mconstraint = (TableIndex {
         idxColumns = map unsafeFromString . split "," $ columns
       , idxUnique = unique
+      , idxWhere = unsafeFromString `liftM` mconstraint
       }, unsafeFromString name) : acc
 
     -- *** FOREIGN KEYS ***

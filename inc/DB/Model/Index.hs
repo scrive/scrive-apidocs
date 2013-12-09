@@ -10,19 +10,24 @@ module DB.Model.Index (
   , sqlDropIndex
   ) where
 
+import Crypto.Hash.RIPEMD160
+import Data.ByteString.Base16
 import Data.Monoid
+import qualified Data.ByteString.Char8 as BS
 
 import DB.SQL
 
 data TableIndex = TableIndex {
   idxColumns :: [RawSQL]
 , idxUnique  :: Bool
+, idxWhere   :: Maybe RawSQL
 } deriving (Eq, Ord, Show)
 
 tblIndex :: TableIndex
 tblIndex = TableIndex {
   idxColumns = []
 , idxUnique = False
+, idxWhere = Nothing
 }
 
 indexOnColumn :: RawSQL -> TableIndex
@@ -35,12 +40,14 @@ uniqueIndexOnColumn :: RawSQL -> TableIndex
 uniqueIndexOnColumn column = TableIndex {
   idxColumns = [column]
 , idxUnique = True
+, idxWhere = Nothing
 }
 
 uniqueIndexOnColumns :: [RawSQL] -> TableIndex
 uniqueIndexOnColumns columns = TableIndex {
   idxColumns = columns
 , idxUnique = True
+, idxWhere = Nothing
 }
 
 indexName :: RawSQL -> TableIndex -> SQL
@@ -49,7 +56,12 @@ indexName tname TableIndex{..} = mconcat [
   , raw tname
   , "__"
   , intersperseNoWhitespace "__" (map raw idxColumns)
+  , maybe "" (("__" <>) . hashWhere) idxWhere
   ]
+  where
+    -- hash WHERE clause and add it to index name so that indexes
+    -- with the same columns, but different constraints can coexist
+    hashWhere = raw . unsafeFromString . BS.unpack . encode . BS.take 10 . hash . BS.pack . unRawSQL
 
 sqlCreateIndex :: RawSQL -> TableIndex -> SQL
 sqlCreateIndex tname idx@TableIndex{..} = mconcat [
@@ -58,6 +70,7 @@ sqlCreateIndex tname idx@TableIndex{..} = mconcat [
   , "INDEX" <+> indexName tname idx <+> "ON" <+> raw tname <+> "("
   , intersperseNoWhitespace ", " (map raw idxColumns)
   , ")"
+  , maybe "" ((" WHERE" <+>) . raw) idxWhere
   ]
 
 sqlDropIndex :: RawSQL -> TableIndex -> SQL
