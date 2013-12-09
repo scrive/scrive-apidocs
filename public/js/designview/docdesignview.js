@@ -368,8 +368,9 @@
             var signatory = document.currentSignatory();
             var box = $('<div class="send-modal-body"/>');
 
-            var otherSignatories = _.filter(document.signatories(), function(sig) { return !sig.author(); });
-            var otherSignatoriesSignInPerson = _.every(otherSignatories, function(sig) { return sig.delivery() == 'pad'; });
+            var otherSignatoriesSignInPerson = _.every(document.signatories(), function(sig) {
+              return sig.padDelivery() || sig.author();
+            });
 
             var content;
             if (otherSignatoriesSignInPerson) {
