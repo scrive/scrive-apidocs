@@ -367,18 +367,28 @@
             var document = model.document();
             var signatory = document.currentSignatory();
             var box = $('<div class="send-modal-body"/>');
-            var content = $("<p/>").append($("<span/>").append(localization.process.confirmsendtext));
-            if (!document.authorIsOnlySignatory())
-                    content.append($("<span/>").text(localization.to + ': ')).append("<br /><span class='unsignedpartynotcurrent'/>");
-            box.append(DocumentDataFiller.fill(document,content));
+
+            var otherSignatories = _.filter(document.signatories(), function(sig) { return !sig.author(); });
+            var otherSignatoriesSignInPerson = _.every(otherSignatories, function(sig) { return sig.delivery() == 'pad'; });
+
+            var content;
+            if (otherSignatoriesSignInPerson) {
+               content = $("<p/>").append($("<span/>").append(localization.process.confirmstartsigningtext));
+              box.append(content);
+            } else {
+              content = $("<p/>").append($("<span/>").append(localization.process.confirmsendtext));
+              if (!document.authorIsOnlySignatory())
+                content.append($("<span/>").text(localization.to + ': ')).append("<br /><span class='unsignedpartynotcurrent'/>");
+              box.append(DocumentDataFiller.fill(document,content));
+            }
 
             Confirmation.popup({
-                title : localization.process.confirmsendtitle,
-                icon: '/img/modal-icons/send.png',
+                title : otherSignatoriesSignInPerson ? localization.process.startsigningtitle : localization.process.confirmsendtitle,
+                icon: otherSignatoriesSignInPerson ? '/img/modal-icons/start-signing.png' : '/img/modal-icons/send.png',
                 acceptButton : new Button({
                     color : "green",
                     shape : "rounded",
-                    text : localization.process.sendbuttontext,
+                    text : otherSignatoriesSignInPerson ? localization.process.startsigningbuttontext : localization.process.sendbuttontext,
                     oneClick : true,
                     onClick : function() {
                         mixpanel.track('Click accept sign', {

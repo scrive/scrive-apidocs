@@ -149,8 +149,11 @@ javascriptLocalisation =
               }
             , process : {
                sendbuttontext: "$_contractsendbuttontext()$",
+               startsigningbuttontext: "$_contractstartsigningbuttontext()$",
                confirmsendtext: "$_contractconfirmsendtext()$",
+               confirmstartsigningtext: "$_contractconfirmstartsigningtext()$",
                confirmsendtitle: "$_contractconfirmsendtitle()$",
+               startsigningtitle: "$_contractstartsigningtitle()$",
                restartbuttontext: "$_contractrestartbuttontext()$",
                prolongbuttontext: "$_contractprolongbuttontext()$",
                cancelbuttontext: "$_contractcancelbuttontext()$",
