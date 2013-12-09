@@ -156,7 +156,8 @@ window.Eleg = {
                signer.SetParam('TextToBeSigned', data.tbs);
                signer.SetParam('Nonce', data.nonce);
                signer.SetParam('ServerTime', data.servertime);
-               //signer.SetParam('TextCharacterEncoding', "UTF-8");
+               // Only show BankID's that are for the correct personal number
+               signer.SetParam('Subjects', window.btoa("2.5.4.5=" + signatory.personalnumber())); 
                var res = signer.PerformAction('Sign');
                if (res !== 0) // 0 means success
                 {
