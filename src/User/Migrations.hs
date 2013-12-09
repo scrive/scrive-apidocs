@@ -191,3 +191,14 @@ migrateUsersDeletedTime =
                   <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END)"
        return ()
     }
+
+migrateUsersUniqueIndexOnEmail :: MonadDB m => Migration m
+migrateUsersUniqueIndexOnEmail =
+  Migration {
+      mgrTable = tableUsers
+    , mgrFrom = 17
+    , mgrDo = do
+       kRun_ $ sqlDropIndex "users" (indexOnColumn "email")
+       kRun_ $ sqlCreateIndex "users" ((indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") })
+       return ()
+    }

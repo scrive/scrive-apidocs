@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 17
+  , tblVersion = 18
     , tblColumns = [
       tblColumn { colName = "id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "password", colType = BinaryT }
@@ -30,7 +30,7 @@ tableUsers = tblTable {
   , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
   , tblIndexes = [
       indexOnColumn "company_id"
-    , indexOnColumn "email"
+    , (indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") }
     ]
   , tblPutProperties = do
     kRunRaw "CREATE SEQUENCE users_id_seq"
