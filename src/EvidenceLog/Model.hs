@@ -245,7 +245,7 @@ data CurrentEvidenceEventType =
   AttachGuardtimeSealedFileEvidence               |
   AttachExtendedSealedFileEvidence                |
   ErrorSealingDocumentEvidence                    |
-  AutomaticReminderSend
+  AutomaticReminderSent
   deriving (Eq, Show, Read, Ord)
 
 data ObsoleteEvidenceEventType =
@@ -383,7 +383,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert (Current AttachGuardtimeSealedFileEvidence)                = return 78
   safeConvert (Current AttachExtendedSealedFileEvidence)                 = return 79
   safeConvert (Current ErrorSealingDocumentEvidence)                     = return 80
-  safeConvert (Current AutomaticReminderSend)                            = return 81
+  safeConvert (Current AutomaticReminderSent)                            = return 81
 
 
 instance Convertible Int EvidenceEventType where
@@ -467,7 +467,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 78 = return (Current AttachGuardtimeSealedFileEvidence)
     safeConvert 79 = return (Current AttachExtendedSealedFileEvidence)
     safeConvert 80 = return (Current ErrorSealingDocumentEvidence)
-    safeConvert 81 = return (Current AutomaticReminderSend)
+    safeConvert 81 = return (Current AutomaticReminderSent)
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

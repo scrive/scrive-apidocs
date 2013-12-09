@@ -2243,7 +2243,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
        sqlWhereDocumentStatusIs Pending
 
      _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-          (if automatic then AutomaticReminderSend else ReminderSend)
+          (if automatic then AutomaticReminderSent else ReminderSend)
           (value "author" $ getIdentifier <$> getAuthorSigLink doc)
           (Just $ documentid doc)
           (Just sl)

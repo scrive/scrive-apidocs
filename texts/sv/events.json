@@ -15,7 +15,7 @@
 "ProlongDocumentEvidenceText":"Förfallodatumet för signering förlängdes$if(!archive)$ av $actor$$endif$.",
 "RejectDocumentEvidenceText":"Inbjudan att signera avvisades$if(!archive)$ av $actor$$endif$. $_ThePossibilityToSignIsDisabled()$$if(text)$ Avvisningsmeddelandet$if(!archive)$ från $actor$$endif$ var: <BR/> <i>$text:noescape()$</i>$endif$",
 "ReminderSendText":"En påminnelse att signera skickades till $signatory$ via $_delivery_method()$$if(!archive)$på begäran av $actor$$endif$.$if(text)$ Meddelandet$if(!archive)$ från $actor$$endif$ var: <BR/><i>$text:noescape()$</i>$endif$",
-"AutomaticReminderSendText":"En automatisk påminnelse att signera skickades till $signatory$ via $_delivery_method()$$if(full)$ på begäran av $author$$endif$.",
+"AutomaticReminderSentText":"En automatisk påminnelse att signera skickades till $signatory$ via $_delivery_method()$$if(full)$ på begäran av $author$$endif$.",
 "ResealedPDFText":"$if(full)$Preparering av bevispaketet begärdes av $if(!archive)$$actor$, $endif$en person som var behörig att administrera $_TheScriveSystem()$.$endif$",
 "RestartDocumentEvidenceText":"Dokumentet öppnades$if(!archive)$ av $actor$ i $_theScriveSystem()$s gränssnitt för att utforma signeringsprocesser$endif$.",
 "SignDocumentEvidenceText":"Dokumentet signerades$if(!archive)$ av $actor$$endif$$_using_identification_method()$.",
