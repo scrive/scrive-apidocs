@@ -113,6 +113,13 @@
 "_authorviewSignedNotClosed":"Waiting for signatories to sign",
 "_authorviewTimeouted":"The due date to sign this document has passed",
 "_authorviewUploadedBy":" uploaded by ",
+"_authorsViewFTUEContact":"Get in touch with our friendly sales guy, Viktor",
+"_authorsViewFTUEUpload":"Upload my own document",
+"_authorsViewFTUEContactDetails":"Phone: +46 704 85 02 61 or email <a href='mailto:viktor@scrive.com'>viktor@scrive.com</a>",
+"_authorsViewFTUEBrand":"Brand Scrive with your colors and logo",
+"_authorsViewFTUETryYourself":"Would you like to give something else a try?",
+"_authorsViewFTUEDocSent":"Your document has been sent!",
+"_authorsViewFTUEDocHistory":"With Scrive, you can track the document and email reading and clicking. It could look like this:"
 "_autoreminderChangeButton":"Change",
 "_autoreminderChangeDate":"Change date",
 "_autoreminderChangeDescription":"Reminder(s) will be sent to the next participant(s) <BR/> who has not yet signed by this date",

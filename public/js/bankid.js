@@ -170,7 +170,6 @@ window.Eleg = {
                signer.SetParam('TextToBeSigned', data.tbs);
                signer.SetParam('Nonce', data.nonce);
                signer.SetParam('ServerTime', data.servertime);
-               //signer.SetParam('TextCharacterEncoding', "UTF-8");
                var res = signer.PerformAction('Sign');
                if (res !== 0) // 0 means success
                 {

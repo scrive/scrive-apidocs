@@ -138,6 +138,7 @@ set systemPage
  js   js/authorview/authorviewsignatories.js
  js   js/authorview/authorviewautomaticreminders.js
  js   js/authorview/authorview.js
+ js   js/authorview/authorviewfirsttime.js
  js   js/attachmentview.js
  js   js/tasks.js
  js   js/docsignviewframes.js

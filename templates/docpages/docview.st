@@ -6,20 +6,25 @@ pageDocumentView=
 </div>
 <script>
 jQuery(function(){
-  var authorView = new AuthorView({
-    id:"$documentid$"
-     $if(siglinkid)$
-    , viewer : new DocumentViewer({
-        signatoryid : "$siglinkid$"
-        })
-    $elseif(authorcompanyadmin)$
-    , viewer : new DocumentViewer({
-        authorcompanyadmin : true
-        })
-    $endif$
-  });
-  jQuery(".place-for-authorview").replaceWith(authorView.el());
+  if (AuthorViewFirstTime.isFromFTUE()) {
+    jQuery(".place-for-authorview").replaceWith(AuthorViewFirstTime.fromFTUEContent());
+  } else {
+    var authorView = new AuthorView({
+      id:"$documentid$"
+       $if(siglinkid)$
+      , viewer : new DocumentViewer({
+          signatoryid : "$siglinkid$"
+          })
+      $elseif(authorcompanyadmin)$
+      , viewer : new DocumentViewer({
+          authorcompanyadmin : true
+          })
+      $endif$
+    });
+    jQuery(".place-for-authorview").replaceWith(authorView.el());
+  }
 });
+
 mixpanel.register({DocumentID : "$documentid$"
                    $if(siglinkid)$
                    ,'Signatory ID' : "$siglinkid$"

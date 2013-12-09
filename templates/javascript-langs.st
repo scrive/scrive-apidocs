@@ -469,6 +469,21 @@ javascriptLocalisation =
              , pending  : "$_authorviewPending()$"
              , goToSignView : "$_authorviewGoToSignview()$"
              , downloadPdf : "$_DownloadPDF()$"
+             , firsttime : {
+                   counterpart: "you"
+                 , emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR')$"
+                 , emailRead : "$MarkInvitationReadEvidenceText(signatory_email='EMAIL')$"
+                 , tryYourself : "$_authorsViewFTUETryYourself()$"
+                 , linkOpened : "$SignatoryLinkVisitedText(actor='ACTOR')$"
+                 , documentSigned : "$SignDocumentEvidenceText(actor='ACTOR')$"
+                 , documentSealed : "$AttachGuardtimeSealedFileEvidenceText()$"
+                 , branding: "$_authorsViewFTUEBrand()$"
+                 , contact: "$_authorsViewFTUEContact()$"
+                 , contactdetails: "$_authorsViewFTUEContactDetails()$"
+                 , upload: "$_authorsViewFTUEUpload()$"
+                 , docsent: "$_authorsViewFTUEDocSent()$"
+                 , dochistory: "$_authorsViewFTUEDocHistory()$"
+             }
          }
          , history : {
                time  : "$_historyTime()$"
