@@ -44,10 +44,11 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
   initialize: function(args) {
     var self = this;
     _.bindAll(this, 'render', 'updateNewDaysToRemind');
-    this.model.bind('change:newdaystoremind', self.updateNewDaysToRemind);
+    this.listenTo(this.model,'change:newdaystoremind', self.updateNewDaysToRemind);
     this.render();
   },
   destroy : function() {
+    this.stopListening();
     $(this.el).remove();
   },
   updateNewDaysToRemind : function() {
@@ -58,15 +59,14 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
     var self = this;
     var model = self.model;
     var document = model.document();
-    var container = $("<div style='text-align: center;'/>");
+    var div = $("<div class='autoreminder-modal-content'/>");
 
-    var deadlinedecription = $("<div  style='text-align: center;'/>").text(localization.autoreminders.dueDateIn +" " + document.timeouttime().diffDays() + " " + localization.autoreminders.days+" (" +document.timeouttime().toYMDString()+ ")");
-    container.append(deadlinedecription);
-
-    var div = $("<div style='text-align: center;margin-top: 5px;'/>").addClass('design-view-action-process-left-column-deadline');
+    var deadlinedecription = $("<div  class='line-before-calendar'/>").text(localization.autoreminders.dueDateIn +" " + document.timeouttime().diffDays() + " " + localization.autoreminders.days+" (" +document.timeouttime().toYMDString()+ ")");
+    div.append(deadlinedecription);
 
 
-    var label = $("<div style='text-align: center;width:auto;'/>").addClass('design-view-action-process-left-column-deadline-label');
+
+    var label = $("<div class='text'/>");
     label.text(localization.autoreminders.daysToRemind + ':');
     var calendarbutton = $("<div class='calendarbutton'/>");
     self.calendar = new Calendar({on : calendarbutton,
@@ -82,7 +82,6 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
     self.daysinput = new InfoTextInput({
                 infotext: "-",
                 value: model.newdaystoremind(),
-                cssClass : 'design-view-action-process-left-column-deadline-field',
                 onChange: function(v) {
                     days = parseInt(v);
                     if (isNaN(days))
@@ -100,17 +99,16 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
 
   div.append(label)
       .append(self.daysinput.el())
-      .append($("<div class='design-view-action-process-left-column-deadline-tag'/>").text(localization.designview.days))
+      .append($("<div class='text'/>").text(localization.designview.days))
       .append(calendarbutton);
 
-  container.append(div);
-  return container;
+  return div;
   },
   startSetReminderDateModal : function() {
       var self = this;
       self.modal = Confirmation.popup({
                 title: localization.autoreminders.setAutoReminderTitle,
-                subtitle : $("<div/>").text(localization.autoreminders.changeAutoreminderDescription),
+                subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),
                 width: 382,
                 icon : '/img/modal-icons/extend-duedate.png',
@@ -156,7 +154,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
       var self = this;
       self.modal = Confirmation.popup({
                 title: localization.autoreminders.changeAutoReminderTitle,
-                subtitle : $("<div/>").text(localization.autoreminders.changeAutoreminderDescription),
+                subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),
                 width: 382,
                 icon : '/img/modal-icons/extend-duedate.png',

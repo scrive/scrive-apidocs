@@ -920,5 +920,19 @@
 "_youCantCancelThisDocuments":"Du kan inte återkalla valda dokument.",
 "_youCantSendRemindersToThisDocuments":"Det går inte att skicka påminnelser för några av de valda dokumenten.",
 "_yourSigningPluginFailed":"Din signerings-plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.",
-"_zip":"Postnummer"
+"_zip":"Postnummer",
+"_autoreminderDays": "day(s)",
+"_autoreminderDueDateIn": "Due date is in ",
+"_autoreminderDaysToRemind": "Days to remind",
+"_autoreminderTitle": "Automatic Reminders",
+"_autoreminderChangeTitle": "Change reminder date",
+"_autoreminderChangeButton":"Change",
+"_autoreminderSetTitle":"Set reminder date",
+"_autoreminderSetButton":"Set",
+"_autoreminderRemoveButton" :"Remove",
+"_autoreminderSetDate":"Set date",
+"_autoreminderChangeDate":"Change date",
+"_autoreminderChangeDescription": "Reminders will be sent to the next participant <BR/> who has not yet signed by this date",
+"_autoreminderWillBeSentOn": "Will be sent on",
+"_autoreminderSendIn": "Send reminder in"
 }

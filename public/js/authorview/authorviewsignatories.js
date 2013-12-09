@@ -33,7 +33,8 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   hasAutomaticReminder : function() {
       return this.document().pending()
              && (this.document().timeouttime().diffDays() > 0 || this.document().autoremindtime() != undefined)
-             && _.any(this.document().signatories(), function(s) { return s.signs() && !s.hasSigned() && !s.padDelivery(); });
+             && _.any(this.document().signatories(), function(s) { return s.signs() && !s.hasSigned() && !s.padDelivery(); })
+             && this.document().currentViewerIsAuthor();
   },
   authorview :function() {
      return this.get("authorview");

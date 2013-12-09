@@ -920,5 +920,19 @@
 "_youCantCancelThisDocuments":"You can't withdraw selected documents.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your e-ID provider.",
-"_zip":"Zip"
+"_zip":"Zip",
+"_autoreminderDays": "day(s)",
+"_autoreminderDueDateIn": "Due date is in ",
+"_autoreminderDaysToRemind": "Days to remind",
+"_autoreminderTitle": "Automatic Reminders",
+"_autoreminderChangeTitle": "Change reminder date",
+"_autoreminderChangeButton":"Change",
+"_autoreminderSetTitle":"Set reminder date",
+"_autoreminderSetButton":"Set",
+"_autoreminderRemoveButton" :"Remove",
+"_autoreminderSetDate":"Set date",
+"_autoreminderChangeDate":"Change date",
+"_autoreminderChangeDescription": "Reminders will be sent to the next participant <BR/> who has not yet signed by this date",
+"_autoreminderWillBeSentOn": "Will be sent on",
+"_autoreminderSendIn": "Send reminder in"
 }
