@@ -10,7 +10,7 @@ import BrandedDomains (findBrandedDomain, bdurl)
 import Context (MailContext(..))
 import Control.Applicative ((<$>))
 import Control.Monad (forM_, when, void)
-import Control.Monad.Reader (MonadReader, runReaderT, asks)
+import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
@@ -35,6 +35,7 @@ import Templates (runTemplatesT)
 import User.Lang (getLang)
 import Util.HasSomeUserInfo (getEmail)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
+import Utils.Default (defaultValue)
 import Utils.Directory (withSystemTempDirectory')
 import Doc.API.Callback.Model
 
@@ -107,7 +108,7 @@ sealDocument doc = do
     appConf <- asks sdAppConf
     let gtconf = guardTimeConf appConf
     templates <- getGlobalTemplates
-    _ <- flip runReaderT templates $ digitallySealDocument False now gtconf (documentid doc) mainpath (filename file)
+    _ <- runTemplatesT (defaultValue, templates) $ digitallySealDocument False now gtconf (documentid doc) mainpath (filename file)
     doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
     case documentsealstatus doc' of
       Just Guardtime{} -> do
@@ -137,7 +138,7 @@ extendDocumentSeal doc = do
     now <- getMinutesTime
     gtconf <- asks (guardTimeConf . sdAppConf)
     templates <- getGlobalTemplates
-    res <- flip runReaderT templates $ digitallyExtendDocument now gtconf (documentid doc) sealedpath (filename file)
+    res <- runTemplatesT (defaultValue, templates) $ digitallyExtendDocument now gtconf (documentid doc) sealedpath (filename file)
     when res $ triggerAPICallbackIfThereIsOne doc -- Users that get API callback on document change, also get information about sealed file being extended.
     return res
 

@@ -14,10 +14,8 @@ import Data.List (isSuffixOf)
 
 import Control.Monad.Trans
 import Control.Monad.Reader
-import Control.Monad.Base
 import Data.Time.Clock
 
-import Utils.Default
 import User.Lang
 import Crypto.RNG
 
@@ -51,21 +49,13 @@ localizedVersion lang = TL.localizedVersion $ codeFromLang lang
 getTemplatesModTime :: IO UTCTime
 getTemplatesModTime = TL.getTemplatesModTime textsDirectory templateFilesDir
 
-instance (Functor m, Monad m) => T.TemplatesMonad (ReaderT KontrakcjaGlobalTemplates m) where
-  getTemplates = T.getTextTemplatesByColumn $ codeFromLang defaultValue
-  getTextTemplatesByColumn lang = do
-      globaltemplates <- ask
-      return $ TL.localizedVersion lang globaltemplates
-
 renderLocalTemplate :: (HasLang a, T.TemplatesMonad m) => a -> String -> F.Fields m () -> m String
 renderLocalTemplate haslang name fields = do
-  ts <- T.getTextTemplatesByColumn $ codeFromLang $ getLang haslang
+  ts <- T.getTextTemplatesByLanguage $ codeFromLang $ getLang haslang
   T.renderHelper ts name fields
 
 instance CryptoRNG m => CryptoRNG (T.TemplatesT m) where
     getCryptoRNGState = T.TemplatesT $ ReaderT $ \_r -> getCryptoRNGState
-
-deriving instance (MonadBase IO m) => MonadBase IO (T.TemplatesT m)
 
 runTemplatesT :: (Functor m, Monad m) => (Lang, TL.GlobalTemplates) -> T.TemplatesT m a -> m a
 runTemplatesT (lang, ts) action = runReaderT (T.unTT action) (codeFromLang lang, ts)

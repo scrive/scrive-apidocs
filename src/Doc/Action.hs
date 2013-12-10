@@ -41,7 +41,8 @@ import User.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import qualified Log
-import Text.StringTemplates.Templates
+import Templates (runTemplatesT)
+import Text.StringTemplates.Templates (TemplatesMonad)
 import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
@@ -56,6 +57,7 @@ import qualified Data.ByteString as BS
 import ForkAction
 import Doc.API.Callback.Model
 import Company.Model
+import Utils.Default (defaultValue)
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: Kontrakcja m => EventName -> Document -> User -> [EventProperty] -> m ()
@@ -534,7 +536,7 @@ timeoutDocuments = do
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
   forM_ docs $ \doc -> do
     gt <- getGlobalTemplates
-    runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
+    runTemplatesT (defaultValue, gt) $ dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)
     triggerAPICallbackIfThereIsOne doc
     Log.debug $ "Document timedout " ++ (show $ documentid doc)
   when (not (null docs)) $ do

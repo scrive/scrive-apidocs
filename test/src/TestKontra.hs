@@ -105,8 +105,8 @@ instance MonadDB TestEnv where
   getMinutesTime = TestEnv $ getMinutesTime
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getTextTemplatesByColumn $ codeFromLang defaultValue
-  getTextTemplatesByColumn langStr = do
+  getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultValue
+  getTextTemplatesByLanguage langStr = do
     globaltemplates <- teGlobalTemplates <$> ask
     return $ TL.localizedVersion langStr globaltemplates
 

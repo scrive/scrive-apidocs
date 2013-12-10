@@ -67,7 +67,7 @@ instance KontraMonad KontraPlus where
 
 instance TemplatesMonad KontraPlus where
   getTemplates = ctxtemplates <$> getContext
-  getTextTemplatesByColumn langStr = do
+  getTextTemplatesByLanguage langStr = do
      Context{ctxglobaltemplates} <- getContext
      return $ TL.localizedVersion langStr ctxglobaltemplates
 
