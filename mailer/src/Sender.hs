@@ -23,7 +23,7 @@ import qualified Amazon as AWS
 
 data Sender = Sender {
     senderName :: String
-  , sendMail   :: (CryptoRNG m, MonadDB m, AWS.AmazonMonad m) => Mail -> m Bool
+  , sendMail   :: (CryptoRNG m, MonadDB m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
   }
 
 instance Show Sender where
@@ -41,7 +41,7 @@ createSender mc = case mc of
 createExternalSender :: String -> String -> (Mail -> [String]) -> Sender
 createExternalSender name program createargs = Sender { senderName = name, sendMail = send }
   where
-    send :: (CryptoRNG m, MonadDB m, AWS.AmazonMonad m) => Mail -> m Bool
+    send :: (CryptoRNG m, MonadDB m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       liftIO $ do
@@ -84,7 +84,7 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
 createLocalSender :: SenderConfig -> Sender
 createLocalSender config = Sender { senderName = "localSender", sendMail = send }
   where
-    send :: (CryptoRNG m, MonadDB m, AWS.AmazonMonad m) => Mail -> m Bool
+    send :: (CryptoRNG m, MonadDB m, Log.MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"

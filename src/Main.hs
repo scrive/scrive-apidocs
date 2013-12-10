@@ -15,6 +15,7 @@ import Configuration
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
+import DB.Checks
 import Utils.Default
 import Utils.IO
 import Utils.Network
@@ -23,13 +24,10 @@ import Templates
 import User.Model
 import Company.Model
 import AppDBTables (kontraTables)
-import DB.Checks
 import qualified Log
 import qualified MemCache
 import qualified Version
 import qualified Doc.JpegPages as JpegPages
-
-
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -46,7 +44,8 @@ main = Log.withLogger $ do
 
   checkExecutables
 
-  withPostgreSQL (dbConfig appConf) $
+  let connSettings = pgConnSettings $ dbConfig appConf
+  withPostgreSQL (defaultSource connSettings) $
     checkDatabase Log.mixlog_ kontraTables
 
   appGlobals <- do
@@ -54,13 +53,13 @@ main = Log.withLogger $ do
     filecache <- MemCache.new BS.length 50000000
     docs <- MemCache.new JpegPages.pagesCount 1000
     rng <- newCryptoRNGState
-    connpool <- createPostgreSQLConnectionPool (dbConfig appConf)
+    connpool <- createPoolSource connSettings
     return AppGlobals {
         templates = templates
       , filecache = filecache
       , docscache = docs
       , cryptorng = rng
-      , connectionpool = connpool
+      , connsource = connpool
       }
 
   startSystem appGlobals appConf
@@ -81,7 +80,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       forkIO . simpleHTTPWithSocket listensocket conf $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
+      withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
         initDatabaseEntries $ initialUsers appConf
       waitForTermination
       Log.mixlog_ $ "Termination request received"

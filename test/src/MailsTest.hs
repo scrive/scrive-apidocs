@@ -129,7 +129,7 @@ sendDocumentMails author = do
         checkMail "Closed" $ mailDocumentClosed Nothing sl False =<< theDocument
         -- Reminder after send
         checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) False d
-  kCommit
+  commit
 
 
 testUserMails :: TestEnv ()
@@ -153,7 +153,7 @@ testUserMails = do
     checkMail "Reset password mail" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
           resetPasswordMail ctx user al
-  kCommit
+  commit
 
 
 

@@ -13,7 +13,7 @@ import qualified Control.Exception.Lifted as E
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import DB.SQL2 (SomeKontraException(..))
+import DB.SQL (SomeKontraException(..))
 import Doc.Screenshot
 import Text.JSON(Result(..), decode, JSValue(..), fromJSString)
 import Text.JSON.FromJSValue

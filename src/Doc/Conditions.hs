@@ -4,10 +4,12 @@ module Doc.Conditions
 where
 
 import Doc.DocStateData
-import DB.SQL2
 import Control.Monad.State.Class
+import Data.Int
+import Data.Monoid
+import Data.Monoid.Space
 import Data.Typeable
-import DB.SQL
+import DB
 import Data.List
 import Company.CompanyID
 import User.UserID
@@ -252,7 +254,7 @@ instance ToJSValue DocumentObjectVersionDoesNotMatch where
 instance KontraException DocumentObjectVersionDoesNotMatch
 
 sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
-                                 => DocumentID -> Int -> m ()
+                                 => DocumentID -> Int64 -> m ()
 sqlWhereDocumentObjectVersionIs did object_version = sqlWhereE DocumentObjectVersionDoesNotMatch $
  ("documents.object_version = " <?> object_version)  <+> ("AND documents.id = " <?> did)
 

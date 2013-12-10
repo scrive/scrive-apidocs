@@ -51,16 +51,16 @@ main = Log.withLogger $ do
 
   checkExecutables
 
-  withPostgreSQL (dbConfig appConf) $
+  let connSource = defaultSource . pgConnSettings $ dbConfig appConf
+  withPostgreSQL connSource $
     checkDatabase Log.mixlog_ kontraTables
 
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   rng <- newCryptoRNGState
   filecache <- MemCache.new BS.length 52428800
 
-
   let runScheduler = inDB . CronEnv.runScheduler appConf filecache templates
-      inDB = liftIO . withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng
+      inDB = liftIO . withPostgreSQL connSource . runCryptoRNGT rng
   -- Asynchronous event dispatcher; if you want to add a consumer to the event
   -- dispatcher, please combine the two into one dispatcher function rather
   -- than creating a new thread or something like that, since
@@ -97,7 +97,7 @@ main = Log.withLogger $ do
          Log.mixlog_ "Evaluating UserAccountRequest actions..."
          runScheduler $ actionQueue userAccountRequest
      , forkCron False "Clock error collector" (60 * 60) $
-                       withPostgreSQL (dbConfig appConf) .
+                       withPostgreSQL connSource .
                        collectClockError (ntpServers appConf)
      , forkCron_ True "Sessions" (60 * 60) $ do
          Log.mixlog_ "Evaluating sessions..."

@@ -107,7 +107,7 @@ tablePrivilege = tblTable {
 tableTempCredential :: Table
 tableTempCredential = tblTable {
   tblName = "oauth_temp_credential"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "temp_token", colType = BigIntT, colNullable = False }

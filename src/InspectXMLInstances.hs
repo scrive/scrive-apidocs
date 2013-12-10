@@ -9,6 +9,7 @@
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where
+import Data.Int
 import Doc.DocStateData
 import Doc.SealStatus (SealStatus)
 import Company.Model
@@ -81,6 +82,8 @@ instance InspectXML BS.ByteString where
 instance InspectXML Bool where
 instance InspectXML Char where
 instance InspectXML Int where
+instance InspectXML Int32 where
+instance InspectXML Int64 where
 instance InspectXML Integer where
 instance InspectXML Float where
 instance InspectXML Double where

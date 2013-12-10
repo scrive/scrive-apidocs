@@ -181,7 +181,7 @@ listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, TemplatesMonad m, AWS.AmazonMonad m) => Document -> m [Seal.FileDesc]
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, Log.MonadLog m, TemplatesMonad m, AWS.AmazonMonad m) => Document -> m [Seal.FileDesc]
 findOutAttachmentDesc document = do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
@@ -255,7 +255,7 @@ findOutAttachmentDesc document = do
                  , fileAttachedBy = attachedByText
                  }
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
@@ -275,7 +275,7 @@ formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "
     tzoffset = ctTZ caltime `div` 60 -- convert seconds into minutes
     tzinfo = printf "%+03d%02d"  (tzoffset `div` 60) (tzoffset `mod` 60)
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, AWS.AmazonMonad m)
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, Log.MonadLog m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -295,7 +295,7 @@ sealSpecFromDocument boxImages hostpart document elog ces content inputpath outp
 
   sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath outputpath additionalAttachments docs
 
-sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -411,7 +411,7 @@ presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath 
             }
 
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m) => m ()
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m) => m ()
 sealDocument = theDocumentID >>= \did -> do
   mfile <- theDocument >>= documentfileM
   case mfile of
@@ -430,7 +430,7 @@ collectClockErrorStatistics elog = do
       starttime = minimum (map evTime elog) `min` (1 `daysBefore` endtime)
   dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
-sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, Log.MonadLog m, AWS.AmazonMonad m)
                  => File
                  -> m ()
 sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
@@ -480,7 +480,7 @@ sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
                             (systemActor mctxtime)
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, Log.MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)

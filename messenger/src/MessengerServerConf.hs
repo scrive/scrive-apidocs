@@ -5,10 +5,11 @@ module MessengerServerConf (
 
 import Data.Word
 import Configuration
+import qualified Data.ByteString as BS
 
 data MessengerServerConf = MessengerServerConf
   { mscHttpBindAddress :: (Word32, Word16)
-  , mscDBConfig        :: String
+  , mscDBConfig        :: BS.ByteString
   , mscMasterSender    :: SenderConfig
   } deriving (Read, Show)
 

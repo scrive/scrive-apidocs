@@ -6,7 +6,7 @@ module Doc.DigitalSignature
 import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
 import AppConf (guardTimeConf)
 import Amazon (AmazonMonad)
-import Control.Applicative (Applicative, (<$>))
+import Control.Applicative ((<$>))
 import Control.Arrow (first)
 import Control.Monad (when)
 import Control.Monad.Reader (MonadReader, asks)
@@ -14,7 +14,7 @@ import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
 import qualified Data.ByteString as BS
-import DB (getMinutesTime, MonadDB, Binary(..), dbUpdate)
+import DB (Binary(..), dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils (documentsealedfileM)
@@ -27,7 +27,7 @@ import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
 import qualified GuardTime as GT
 import Instances ()
 import qualified Log
-import MinutesTime (MinutesTime)
+import MinutesTime
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
 import Templates (runTemplatesT)
@@ -36,7 +36,7 @@ import Util.Actor (systemActor)
 import Utils.Default (defaultValue)
 import Utils.Directory (withSystemTempDirectory')
 
-addDigitalSignature :: (Applicative m, CryptoRNG m, MonadIO m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
+addDigitalSignature :: (CryptoRNG m, MonadIO m, Log.MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
 addDigitalSignature = theDocumentID >>= \did -> do
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
   Just file <- theDocument >>= documentsealedfileM
@@ -71,7 +71,7 @@ addDigitalSignature = theDocumentID >>= \did -> do
     dbUpdate $ AppendSealedFile sealedfileid status $ systemActor now
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
+extendDigitalSignature :: (MonadBaseControl IO m, Log.MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
 extendDigitalSignature = do
   Just file <- documentsealedfileM =<< theDocument
   did <- theDocumentID
@@ -99,7 +99,7 @@ extendDigitalSignature = do
     -- /verify service can detect and provide an extended version if
     -- the verified document was extensible.
 
-digitallyExtendFile :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, DocumentMonad m)
+digitallyExtendFile :: (TemplatesMonad m, CryptoRNG m, Log.MonadLog m, MonadIO m, DocumentMonad m)
                     => MinutesTime -> GuardTimeConf -> FilePath -> String -> m Bool
 digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
   documentid <- theDocumentID

@@ -112,7 +112,7 @@ companyUiFromJSON jsv = withJSValue jsv $ do
   , companycustombackgroundcolour = maybeS jsoncompanycustombackgroundcolour
   }
 
-handleCompanyLogo :: Kontrakcja m => (CompanyUI -> Maybe Binary) -> CompanyID -> m Response
+handleCompanyLogo :: Kontrakcja m => (CompanyUI -> Maybe (Binary BS.ByteString)) -> CompanyID -> m Response
 handleCompanyLogo field cid = do
   mimg <- field <$> (dbQuery $ GetCompanyUI cid)
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $

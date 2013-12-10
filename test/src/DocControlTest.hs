@@ -6,7 +6,7 @@ import Control.Applicative
 import qualified Data.ByteString as BS
 import Data.Maybe
 import Control.Monad
-import Control.Monad.Trans (liftIO)
+import Control.Monad.Trans
 import qualified Control.Exception.Lifted as E
 import Data.List
 import Happstack.Server
@@ -137,11 +137,11 @@ testLastPersonSigningADocumentClosesIt = do
 
     preq <- mkRequest GET [ ]
     (_,ctx') <- updateDocumentWithID $ \did ->
-                runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) (signatorymagichash siglink)
+                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) (signatorymagichash siglink)
 
     req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
     (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      runTestKontra req ctx' $ apiCallSign did (signatorylinkid siglink)
+                      lift . runTestKontra req ctx' $ apiCallSign did (signatorylinkid siglink)
 
     assertEqual "In closed state" Closed .documentstatus =<< theDocument
     --TODO: this should be commented out really, I guess it's a bug
@@ -246,7 +246,7 @@ testSendingReminderClearsDeliveryInformation = do
     -- who cares which one, just pick the last one
     req <- mkRequest POST []
     (_link, _ctx') <- do
-      updateDocumentWithID $ \did -> runTestKontra req ctx $ withDocumentID did $ sendReminderEmail Nothing actor False sl
+      updateDocumentWithID $ \did -> lift . runTestKontra req ctx $ withDocumentID did $ sendReminderEmail Nothing actor False sl
     Just sl' <- find (\t -> signatorylinkid t == signatorylinkid sl) . documentsignatorylinks <$> theDocument
     assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
 

@@ -16,7 +16,6 @@ import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Crypto.RNG
 import DB
-import DB.SQL2
 import KontraLink
 import MagicHash
 import MinutesTime
@@ -32,15 +31,19 @@ data PasswordReminder = PasswordReminder {
 passwordReminder :: Action UserID PasswordReminder (UserID, Int32, MagicHash) Scheduler
 passwordReminder = Action {
     qaTable = tablePasswordReminders
-  , qaFields = \(uid, remained_emails, token) -> [
-      ("user_id", toSql uid)
-    , ("remained_emails", toSql remained_emails)
-    , ("token", toSql token)
-    ]
+  , qaSetFields = \(uid, remained_emails, token) -> do
+      sqlSet "user_id" uid
+      sqlSet "remained_emails" remained_emails
+      sqlSet "token" token
   , qaSelectFields = ["user_id", "expires", "remained_emails", "token"]
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
-  , qaDecode = kFold decoder []
+  , qaDecode = \(user_id, expires, remained_emails, token) -> PasswordReminder {
+      prUserID = user_id
+    , prExpires = expires
+    , prRemainedEmails = remained_emails
+    , prToken = token
+    }
   , qaUpdateSQL = \PasswordReminder{..} -> toSQLCommand $ sqlUpdate "password_reminders" $ do
       sqlSet "expires" prExpires
       sqlSet "remained_emails" prRemainedEmails
@@ -50,13 +53,6 @@ passwordReminder = Action {
     _ <- dbUpdate $ DeleteAction passwordReminder prUserID
     return ()
   }
-  where
-    decoder acc user_id expires remained_emails token = PasswordReminder {
-        prUserID = user_id
-      , prExpires = expires
-      , prRemainedEmails = remained_emails
-      , prToken = token
-      } : acc
 
 getPasswordReminderUser :: MonadDB m => UserID -> MagicHash -> m (Maybe User)
 getPasswordReminderUser uid token = runMaybeT $ do

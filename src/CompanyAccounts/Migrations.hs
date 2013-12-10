@@ -1,35 +1,36 @@
 module CompanyAccounts.Migrations where
 
+import Data.Monoid
 import DB
 import CompanyAccounts.Tables
-import DB.SQL2
 import Control.Monad
 import Data.Maybe
 import User.Model
+
 normalizeCompanyInvites :: MonadDB m => Migration m
 normalizeCompanyInvites = Migration {
     mgrTable = tableCompanyInvites
   , mgrFrom = 1
   , mgrDo = do
-      kRun_ $ sqlSelect "companyinvites as ci LEFT JOIN users as u ON (ci.email = u.email AND u.deleted IS NULL)" $ do
+      runQuery_ $ sqlSelect "companyinvites as ci LEFT JOIN users as u ON (ci.email = u.email AND u.deleted IS NULL)" $ do
                   sqlResult "u.id, u.company_id,  ci.company_id, ci.email,ci.first_name, ci.last_name"
-      values <- kFold (\acc (uid :: Maybe UserID) ucid icid email fstname lstname -> (uid, ucid , icid, email, fstname, lstname) : acc) []
-      kRunRaw "DELETE FROM companyinvites"
-      kRunRaw "ALTER TABLE companyinvites ADD COLUMN user_id BIGINT NOT NULL"
-      kRun_ $ "ALTER TABLE companyinvites " <> sqlDropPK (tblName tableCompanyInvites)
-      kRun_ $ sqlDropIndex (tblName tableCompanyInvites) (indexOnColumn "email")
-      kRun_ $ sqlCreateIndex (tblName tableCompanyInvites) (indexOnColumn "user_id")
-      kRun_ $ "ALTER TABLE companyinvites " <> sqlAddPK (tblName tableCompanyInvites) (fromJust $ pkOnColumns ["company_id","user_id"])
-      kRun_ $ "ALTER TABLE companyinvites " <> sqlAddFK (tblName tableCompanyInvites) (fkOnColumn "user_id" "users" "id")
-      kRunRaw "ALTER TABLE companyinvites DROP COLUMN email"
-      kRunRaw "ALTER TABLE companyinvites DROP COLUMN first_name"
-      kRunRaw "ALTER TABLE companyinvites DROP COLUMN last_name"
+      values <- fetchMany id
+      runSQL_ "DELETE FROM companyinvites"
+      runSQL_ "ALTER TABLE companyinvites ADD COLUMN user_id BIGINT NOT NULL"
+      runQuery_ $ "ALTER TABLE companyinvites " <> sqlDropPK (tblName tableCompanyInvites)
+      runQuery_ $ sqlDropIndex (tblName tableCompanyInvites) (indexOnColumn "email")
+      runQuery_ $ sqlCreateIndex (tblName tableCompanyInvites) (indexOnColumn "user_id")
+      runQuery_ $ "ALTER TABLE companyinvites " <> sqlAddPK (tblName tableCompanyInvites) (fromJust $ pkOnColumns ["company_id","user_id"])
+      runQuery_ $ "ALTER TABLE companyinvites " <> sqlAddFK (tblName tableCompanyInvites) (fkOnColumn "user_id" "users" "id")
+      runSQL_ "ALTER TABLE companyinvites DROP COLUMN email"
+      runSQL_ "ALTER TABLE companyinvites DROP COLUMN first_name"
+      runSQL_ "ALTER TABLE companyinvites DROP COLUMN last_name"
       forM_ values $ \v -> case v of
         (_       , Just ucid , icid, _    , _      , _      ) | ucid == icid -> do
           -- We drop invitations that were already accepted
           return ()
-        (Just uid, Just ucid , icid, _, _, _) | ucid /= icid -> do
-              kRun_ $ sqlInsert "companyinvites" $ do
+        (Just uid :: Maybe UserID, Just ucid , icid, _, _, _) | ucid /= icid -> do
+              runQuery_ . sqlInsert "companyinvites" $ do
                 sqlSet "company_id" icid
                 sqlSet "user_id" uid
         (_ , _ , icid, email, fstname, lstname) -> do -- There should be Nothing,Nothing at the begining

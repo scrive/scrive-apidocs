@@ -24,6 +24,7 @@ import Templates
 import Control.Logic
 import Data.Char
 import MessageData
+import MinutesTime
 
 -- Needed only for FROM address
 import User.Lang
@@ -35,10 +36,10 @@ import Data.Maybe
 import BrandedDomains
 
 
-scheduleEmailSendout :: (CryptoRNG m, MonadDB m) => MailsConfig -> Mail -> m ()
+scheduleEmailSendout :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => MailsConfig -> Mail -> m ()
 scheduleEmailSendout c m =  scheduleEmailSendout' (originator m) c m
 
-scheduleEmailSendoutWithDocumentAuthorSender :: (CryptoRNG m, MonadDB m) => DocumentID  -> MailsConfig -> Mail -> m ()
+scheduleEmailSendoutWithDocumentAuthorSender :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => DocumentID  -> MailsConfig -> Mail -> m ()
 scheduleEmailSendoutWithDocumentAuthorSender did c m = do
   doc <- dbQuery $ GetDocumentByDocumentID did
   name <- case (documentlang doc, getAuthorName doc) of
@@ -47,7 +48,7 @@ scheduleEmailSendoutWithDocumentAuthorSender did c m = do
       (LANG_EN, an) -> return $ an ++ " through " ++ (originator m)
   scheduleEmailSendout' name c m
 
-scheduleEmailSendout' :: (CryptoRNG m, MonadDB m) => String -> MailsConfig -> Mail ->  m ()
+scheduleEmailSendout' :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => String -> MailsConfig -> Mail ->  m ()
 scheduleEmailSendout' authorname  MailsConfig{..} mail@Mail{..} = do
   Log.mixlog_ $ "Sending mail with originator " ++ show originator
   if unsendable to

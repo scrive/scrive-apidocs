@@ -7,5 +7,6 @@ asyncEventQueueChangePrimaryKeyToBigSerial :: MonadDB m => Migration m
 asyncEventQueueChangePrimaryKeyToBigSerial = Migration {
     mgrTable = tableAsyncEventQueue
   , mgrFrom = 0
-  , mgrDo = kRunRaw "ALTER TABLE async_event_queue ALTER COLUMN sequence_number TYPE BIGINT"
+  , mgrDo = do
+    runSQL_ "ALTER TABLE async_event_queue ALTER COLUMN sequence_number TYPE BIGINT"
 }

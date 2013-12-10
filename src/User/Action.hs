@@ -136,7 +136,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
         Log.mixlog_ $ "Create account attempt failed (params missing)"
         return Nothing
 
-scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m) => Context -> User -> m ()
+scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, Log.MonadLog m) => Context -> User -> m ()
 scheduleNewAccountMail ctx user = do
   link <- newAccessNewAccountLink $ userid user
   mail <- accessNewAccountMail ctx user link

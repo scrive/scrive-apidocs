@@ -28,8 +28,10 @@ import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
+import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import GuardTime (GuardTimeConfMonad(..))
 import Happstack.Server
+import Happstack.Server.Instances ()
 import KontraError
 import KontraMonad
 import MailContext (MailContextMonad(..))

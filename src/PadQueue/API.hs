@@ -15,7 +15,6 @@ import Control.Applicative
 
 import Util.SignatoryLinkUtils
 import DB
-import DB.SQL2
 import Kontra
 import User.Model
 import Doc.SignatoryLinkID

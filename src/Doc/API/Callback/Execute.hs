@@ -25,7 +25,7 @@ import Doc.DocView (documentJSON)
 import Amazon
 import Network.HTTP as HTTP
 
-execute :: (AmazonMonad m, MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
+execute :: (AmazonMonad m, MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = do
   doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
   do
@@ -37,7 +37,7 @@ execute DocumentAPICallback{..} = do
                   Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
                   _ -> executeStandardCallback doc dacURL
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
+executeStandardCallback :: (AmazonMonad m, MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String -> m Bool
 executeStandardCallback doc url = do
   dJSON <- documentJSON Nothing False False True Nothing Nothing doc
   (exitcode, _ , stderr) <- readCurl [
@@ -55,7 +55,7 @@ executeStandardCallback doc url = do
               ExitSuccess -> return True
               ExitFailure _ -> (Log.mixlog_ $ "API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
 
-executeSalesforceCallback :: (MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
+executeSalesforceCallback :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
 executeSalesforceCallback doc rtoken url = do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of

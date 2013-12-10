@@ -1,11 +1,13 @@
 module Doc.Tokens.Tables where
 
+import Data.Monoid
+
 import DB
 import DB.SQLFunction
 
 insertDocumentSessionToken :: SQLFunction
 insertDocumentSessionToken = SQLFunction {
-  sqlFunDef = SQL ("CREATE OR REPLACE FUNCTION"
+  sqlFunDef = "CREATE OR REPLACE FUNCTION"
   <> " insert_document_session_token(session_id_ BIGINT, signatory_link_id_ BIGINT,"
   <> "                               token_ BIGINT) RETURNS BOOLEAN AS $$"
   <> " BEGIN"
@@ -27,7 +29,7 @@ insertDocumentSessionToken = SQLFunction {
   <> "     END;"
   <> "   END LOOP;"
   <> " END;"
-  <> " $$ LANGUAGE plpgsql") []
+  <> " $$ LANGUAGE plpgsql"
 }
 
 tableDocumentSessionTokens :: Table

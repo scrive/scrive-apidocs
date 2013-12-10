@@ -9,12 +9,11 @@ module IPAddress (
   ) where
 
 import Data.Bits
-import Data.Convertible
 import Data.Int
 import Data.List
 import Data.Word
-import Database.HDBC
 import Data.Binary
+import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Numeric
 import Data.Char
 import Control.Monad
@@ -27,11 +26,16 @@ instance Binary IPAddress where
   get = IPAddress `fmap` get
 
 -- IP addresses are currently cast to signed Int32 in DB
-instance Convertible IPAddress SqlValue where
-  safeConvert = safeConvert . (\(IPAddress a) -> fromIntegral a :: Int32)
-
-instance Convertible SqlValue IPAddress where
-  safeConvert = fmap (IPAddress . (fromIntegral :: Int32 -> Word32)) . safeConvert
+instance PQFormat IPAddress where
+  pqFormat _ = pqFormat (undefined::Int32)
+instance FromSQL IPAddress where
+  type PQBase IPAddress = PQBase Int32
+  fromSQL mbase = do
+    n :: Int32 <- fromSQL mbase
+    return . IPAddress . fromIntegral $ n
+instance ToSQL IPAddress where
+  type PQDest IPAddress = PQDest Int32
+  toSQL (IPAddress n) = toSQL (fromIntegral n :: Int32)
 
 instance Show IPAddress where
   show (IPAddress n) = intercalate "." [

@@ -30,7 +30,7 @@ initAuthorizationWorkflowUrl mstate = do
                                                   _ -> "")
 
 {- Returns a refresh token, that we will get back when user agrees in salesforce to give us persmission (after following link from initAuthorizationWorkflowUrl) -}
-getRefreshTokenFromCode :: (MonadDB m, MonadIO m,MonadReader c m, HasSalesforceConf c) => String -> m (Maybe String)
+getRefreshTokenFromCode :: (MonadDB m, Log.MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => String -> m (Maybe String)
 getRefreshTokenFromCode code = do
   sc <- getSalesforceConfM
   (exitcode, stdout , stderr) <- readCurl [
@@ -49,7 +49,7 @@ getRefreshTokenFromCode code = do
                          _ -> (Log.mixlog_ $ "Parsing error with:" ++ show stdout) >> return Nothing
 
 {- Every time we do a salesforce callback, we need to get new access token. We get it using refresh token -}
-getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m,MonadReader c m, HasSalesforceConf c) => String -> m (Maybe String)
+getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m, Log.MonadLog m, MonadReader c m, HasSalesforceConf c) => String -> m (Maybe String)
 getAccessTokenFromRefreshToken rtoken = do
   sc <- getSalesforceConfM
   (exitcode, stdout , stderr) <- readCurl [

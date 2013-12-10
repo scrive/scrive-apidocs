@@ -56,14 +56,14 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import Doc.API.Callback.Model
 import Company.Model
-
+import MinutesTime
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
    Say sorry about this to them.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendDocumentErrorEmail :: (CryptoRNG m, MailContextMonad m, MonadDB m, TemplatesMonad m) => User -> Document -> m ()
+sendDocumentErrorEmail :: (CryptoRNG m, MailContextMonad m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => User -> Document -> m ()
 sendDocumentErrorEmail author document = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (\sl -> if isAuthor sl
@@ -98,7 +98,7 @@ sendDocumentErrorEmail author document = do
    Send emails to all of the invited parties.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendInvitationEmails :: (CryptoRNG m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
+sendInvitationEmails :: (CryptoRNG m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
 sendInvitationEmails skipauthorinvitation = do
   signlinks <- theDocument >>= \d -> return
                   [sl | sl <- documentsignatorylinks d
@@ -125,7 +125,7 @@ sendInvitationEmailsToViewers = do
    Helper function to send emails to invited parties
    ??: Should this be in DocControl or in an email-specific file?
  -}
-sendInvitationEmail1 :: (CryptoRNG m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => SignatoryLink -> m (Maybe String)
+sendInvitationEmail1 :: (CryptoRNG m, Log.MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => SignatoryLink -> m (Maybe String)
 sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   did <- theDocumentID
   mctx <- getMailContext
@@ -195,7 +195,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
 -- 'sealFixed', then there were earlier emails sent that contained a
 -- document that wasn't digitally sealed, so now we resend the
 -- document with digital seal.
-sendClosedEmails :: (CryptoRNG m, MailContextMonad m, MonadDB m, TemplatesMonad m) => Bool -> Document -> m ()
+sendClosedEmails :: (CryptoRNG m, MailContextMonad m, MonadDB m, Log.MonadLog m, TemplatesMonad m) => Bool -> Document -> m ()
 sendClosedEmails sealFixed document = do
     mctx <- getMailContext
     mailattachments <- makeMailAttachments document

@@ -62,10 +62,7 @@ data AmazonConfig = AmazonConfig { amazonConfig :: Maybe (String, String, String
                                  }
 
 newtype AmazonMonadT m a = AmazonMonadT { unAmazonMonadT :: ReaderT AmazonConfig m a }
-    deriving (Applicative, Functor, Monad, MonadIO, Log.MonadLog, CryptoRNG, MonadDB, MonadTrans, MonadPlus)
-
-instance MonadBase IO m => MonadBase IO (AmazonMonadT m) where
-    liftBase m = AmazonMonadT $ ReaderT (\_ -> liftBase m)
+    deriving (Applicative, Functor, Monad, MonadDB, MonadIO, Log.MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b)
 
 instance MonadTransControl AmazonMonadT where
   newtype StT AmazonMonadT m = StAmazonMonadT { unStAmazonMonadT :: StT (ReaderT AmazonConfig) m }
@@ -114,7 +111,7 @@ class AmazonMonad m where
 instance Monad m => AmazonMonad (AmazonMonadT m) where
     getAmazonConfig = AmazonMonadT $ ReaderT return
 
-uploadFilesToAmazon :: (Monad m, AmazonMonad m, MonadIO m, MonadDB m, Applicative m, CryptoRNG m) => m ()
+uploadFilesToAmazon :: (AmazonMonad m, MonadIO m, Log.MonadLog m, MonadDB m, CryptoRNG m) => m ()
 uploadFilesToAmazon = do
   mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
   case mfile of
@@ -123,9 +120,9 @@ uploadFilesToAmazon = do
       conf <- getAmazonConfig
       success <- exportFile (mkAWSAction $ amazonConfig conf) file
       if success
-        then kCommit
+        then commit
         else do
-          kRollback
+          rollback
           Log.attention_ "Uploading to Amazon failed, sleeping for 5 minutes."
           liftIO $ threadDelay $ 5 * 60 * 1000000
       uploadFilesToAmazon
@@ -151,7 +148,7 @@ urlFromFile File{filename, fileid} =
 --
 -- - upload a file to Amazon storage
 -- - do nothing and keep it in memory database
-exportFile :: (MonadIO m, MonadDB m, Applicative m, CryptoRNG m) => S3Action -> File -> m Bool
+exportFile :: (MonadIO m, MonadDB m, Log.MonadLog m, CryptoRNG m) => S3Action -> File -> m Bool
 exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
            file@File{fileid, filestorage = FileStorageMemory plainContent} = do
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
@@ -183,7 +180,7 @@ exportFile _ _ = do
   Log.mixlog_ "No uploading to Amazon as bucket is ''"
   return False
 
-deleteFile :: (MonadIO m, MonadDB m) => S3Action -> String -> String -> m Bool
+deleteFile :: (MonadIO m, MonadDB m, Log.MonadLog m) => S3Action -> String -> String -> m Bool
 deleteFile ctxs3action bucket url = do
   let action = ctxs3action {
         AWS.s3object    = url

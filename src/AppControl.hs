@@ -17,11 +17,10 @@ import AppView as V
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import Database.HDBC.Statement (SqlError(..))
 import IPAddress
 import Text.JSON.Gen
 import Kontra
-import MinutesTime (parseMinutesTimeRealISO)
+import MinutesTime
 import Utils.HTTP
 import Utils.Monoid
 import OurServerPart
@@ -56,8 +55,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import Salesforce.Conf
-import Data.Pool
-import Database.HDBC.PostgreSQL (Connection)
 
 {- |
   Global application data
@@ -67,7 +64,7 @@ data AppGlobals
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MemCache.MemCache FileID JpegPages
                  , cryptorng       :: CryptoRNGState
-                 , connectionpool  :: Pool Connection
+                 , connsource      :: ConnectionSource
                  }
 
 
@@ -126,7 +123,6 @@ logRequest rq maybeInputsBody = do
     value "http headers" $ concatMap showNamedHeader (Map.toList $ rqHeaders rq)
     value "http cookies" $ map showNamedCookie (rqCookies rq)
 
-
 -- | Long polling implementation.
 --
 -- The 'enhanceYourCalm' function checks for 420 Enhance Your Calm
@@ -153,7 +149,7 @@ enhanceYourCalm action = enhanceYourCalmWorker 100
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT . enhanceYourCalm $
-  withPostgreSQLConnectionPool (connectionpool appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
+  withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $
     AWS.runAmazonMonadT amazoncfg $ do
     startTime <- liftIO getClockTime
     let quota = 10000000
@@ -168,7 +164,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     -- some time, row remains locked and subsequent attempts to
     -- refresh the page will fail, because they will try to
     -- access/update session from a row that was previously locked.
-    kCommit
+    commit
     rq <- askRq
     Log.mixlog_ $ "Handling routes for : " ++ rqUri rq ++ rqQuery rq
 
@@ -193,7 +189,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     -- application control. That is good because we want to stress
     -- places that can be fixed.
 
-    stats <- getNexusStats =<< getNexus
+    stats <- getConnectionStats
     finishTime <- liftIO getClockTime
     let TOD ss sp = startTime
         TOD fs fp = finishTime
@@ -205,7 +201,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     case res of
       Right response -> return response
       Left response -> do
-        kRollback -- if exception was thrown, rollback everything
+        rollback -- if exception was thrown, rollback everything
         return response
   where
     amazoncfg = AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals)
@@ -235,13 +231,12 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , E.Handler $ \(FinishWith res ctx') -> do
             modifyContext $ const ctx'
             return $ Right res
-        , E.Handler $ \(e :: SqlError) -> Left <$> do
+        , E.Handler $ \DBException{..} -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-            Log.attention "SqlError" $ do
-              value "seState" (seState e)
-              value "seNativeError" (seNativeError e)
-              value "seErrorMsg" (lines (seErrorMsg e))
+            Log.attention "DBException" $ do
+              value "dbeQueryContext" $ show dbeQueryContext
+              value "dbeError" $ show dbeError
               logRequest rq mbody
             internalServerErrorPage >>= internalServerError
         , E.Handler $ \(e :: E.SomeException) -> Left <$> do

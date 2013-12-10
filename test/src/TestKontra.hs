@@ -26,7 +26,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Maybe
-import Data.Monoid
+import Database.PostgreSQL.PQTypes.Internal.Monad
+import Database.PostgreSQL.PQTypes.Internal.State
 import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
 import Happstack.Server.Internal.Monads
 import System.FilePath
@@ -42,6 +43,7 @@ import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConf(..))
 import Kontra
+import MinutesTime
 import Mails.MailsConfig
 import Utils.Default
 import Payments.Config (RecurlyConfig(..))
@@ -59,13 +61,16 @@ import qualified Control.Exception.Lifted as E
 import qualified Doc.JpegPages as JpegPages
 import qualified Log
 import Salesforce.Conf
+
 data TestEnvSt = TestEnvSt {
-    teNexus           :: Nexus
-  , teRNGState        :: CryptoRNGState
-  , teActiveTests     :: TVar (Bool, Int)
-  , teGlobalTemplates :: KontrakcjaGlobalTemplates
+    teConnSource        :: ConnectionSource
+  , teStaticConnSource  :: ConnectionSource
+  , teTransSettings     :: TransactionSettings
+  , teRNGState          :: CryptoRNGState
+  , teActiveTests       :: TVar (Bool, Int)
+  , teGlobalTemplates   :: KontrakcjaGlobalTemplates
   , teRejectedDocuments :: TVar Int
-  , teOutputDirectory :: Maybe String -- ^ Put test artefact output in this directory if given
+  , teOutputDirectory   :: Maybe String -- ^ Put test artefact output in this directory if given
   }
 
 type InnerTestEnv = ReaderT TestEnvSt (DBT IO)
@@ -78,7 +83,7 @@ runTestEnv st m = do
   can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
   when can_be_run $ do
     atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
-    E.finally (runDBT (teNexus st) (DBEnvSt Nothing [] Nothing (mempty :: SQL)) $ ununTestEnv st $ withTestDB m) $ do
+    E.finally (runDBT (teStaticConnSource st) (teTransSettings st) $ ununTestEnv st $ withTestDB m) $ do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
@@ -88,19 +93,27 @@ instance CryptoRNG TestEnv where
   getCryptoRNGState = teRNGState <$> ask
 
 instance MonadDB TestEnv where
-  getNexus     = teNexus <$> ask
-  localNexus f = local (\st -> st { teNexus = f (teNexus st) })
-  kCommit      = TestEnv $ kCommit
-  kRollback    = TestEnv $ kRollback
-  kClone       = TestEnv $ kClone
-  kRunSQL      = TestEnv . kRunSQL
-  kLastSQL     = TestEnv $ kLastSQL
-  kFinish      = TestEnv $ kFinish
-  kGetTables   = TestEnv $ kGetTables
-  kDescribeTable   = TestEnv . kDescribeTable
-  kFold2 decoder init_acc = TestEnv (kFold2 decoder init_acc)
-  kThrow       = TestEnv . kThrow
-  getMinutesTime = TestEnv $ getMinutesTime
+  runQuery = TestEnv . runQuery
+  getLastQuery = TestEnv getLastQuery
+  getConnectionStats = TestEnv getConnectionStats
+  getQueryResult = TestEnv getQueryResult
+  clearQueryResult = TestEnv clearQueryResult
+  getTransactionSettings = TestEnv getTransactionSettings
+  setTransactionSettings = TestEnv . setTransactionSettings
+  foldlM = foldLeftM
+  foldrM = foldRightM
+  throwDB = TestEnv . throwDB
+  withNewConnection (TestEnv m) = do
+    -- we run TestEnv with static connection source that uses
+    -- the same connection over and over again. however, when
+    -- withNewConnection is called, we actually want to spawn
+    -- a different one, thus we can't use current (static)
+    -- connection source, but the one that actually creates
+    -- new connection.
+    cs <- asks teConnSource
+    TestEnv . ReaderT $ \r -> DBT . StateT $ \st -> do
+    res <- runDBT cs (dbTransactionSettings st) (runReaderT m r)
+    return (res, st)
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultValue
@@ -115,34 +128,42 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runTestKontraHelper :: (CryptoRNG m, MonadDB m) => Request -> Context -> Kontra a -> m (a, Context, FilterFun Response)
-runTestKontraHelper rq ctx tk = do
+runTestKontraHelper :: (CryptoRNG m, MonadDB m, MonadBaseControl IO m) => ConnectionSource -> Request -> Context -> Kontra a -> m (a, Context, FilterFun Response)
+runTestKontraHelper cs rq ctx tk = do
   filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
       amazoncfg = AWS.AmazonConfig Nothing filecache
-  nex <- getNexus
   rng <- getCryptoRNGState
-  mres <- liftIO . ununWebT $ runServerPartT
-    (runOurServerPartT . runDBT nex (DBEnvSt Nothing [] Nothing (mempty :: SQL)) . runCryptoRNGT rng $
-      AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
+  ts <- getTransactionSettings
+  -- commit previous changes and do not begin new transaction as runDBT
+  -- does it and we don't want these pesky warnings about transaction
+  -- being already in progress
+  commit' ts { tsAutoTransaction = False }
+  mres <- E.finally (liftIO . ununWebT $ runServerPartT
+    (runOurServerPartT . runDBT cs ts . runCryptoRNGT rng $
+      AWS.runAmazonMonadT amazoncfg $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq)
+      -- runDBT commits and doesn't run another transaction, so begin new one
+      begin
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
     Just (Left _, _) -> fail "This should never happen since we don't use Happstack's finishWith"
     Just (Right (res, ctx'), fs) -> return (res, ctx', fs)
 
 -- | Typeclass for running handlers within TestKontra monad
-class RunnableTestKontra m a where
-  runTestKontra :: Request -> Context -> Kontra a -> m (a, Context)
+class RunnableTestKontra a where
+  runTestKontra :: Request -> Context -> Kontra a -> TestEnv (a, Context)
 
-instance (MonadBaseControl IO m, MonadDB m, CryptoRNG m) => RunnableTestKontra m a where
+instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
-    (res, ctx', _) <- runTestKontraHelper rq ctx tk
+    cs <- asks teConnSource
+    (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
       `E.catch` (\(FinishWith _ _) -> error "FinishWith thrown in function that doesn't return Response")
     return (res, ctx')
 
-instance (MonadBaseControl IO m, MonadDB m, CryptoRNG m) => RunnableTestKontra m Response where
+instance RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
-    (res, ctx', f) <- runTestKontraHelper rq ctx tk
+    cs <- asks teConnSource
+    (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
       `E.catch` (\(FinishWith res ctx') -> return (res, ctx', filterFun id))
     return (unFilterFun f res, ctx')
 
@@ -150,8 +171,8 @@ instance (MonadBaseControl IO m, MonadDB m, CryptoRNG m) => RunnableTestKontra m
 
 -- | Creates GET/POST input text variable
 inText :: String -> Input
-inText value = Input {
-      inputValue = Right $ BSLU.fromString value
+inText val = Input {
+      inputValue = Right $ BSLU.fromString val
     , inputFilename = Nothing
     , inputContentType = ContentType {
           ctType = "text"
@@ -280,30 +301,32 @@ mkContext lang = do
 -- | Runs set of sql queries within one transaction and clears all tables in the end
 withTestDB :: TestEnv () -> TestEnv ()
 withTestDB m = E.finally m $ do
+  -- if there was db error, fix transaction state
+  rollback
   clearTables
-  kCommit
+  commit
 
 clearTables :: TestEnv ()
 clearTables = do
-  kRunRaw "DELETE FROM evidence_log"
-  kRunRaw "DELETE FROM companyinvites"
-  kRunRaw "DELETE FROM payment_plans"
-  kRunRaw "DELETE FROM payment_stats"
+  runSQL_ "DELETE FROM evidence_log"
+  runSQL_ "DELETE FROM companyinvites"
+  runSQL_ "DELETE FROM payment_plans"
+  runSQL_ "DELETE FROM payment_stats"
 
-  kRunRaw "DELETE FROM email_change_requests"
-  kRunRaw "DELETE FROM password_reminders"
-  kRunRaw "DELETE FROM user_account_requests"
+  runSQL_ "DELETE FROM email_change_requests"
+  runSQL_ "DELETE FROM password_reminders"
+  runSQL_ "DELETE FROM user_account_requests"
 
-  kRunRaw "DELETE FROM mail_attachments"
-  kRunRaw "DELETE FROM author_attachments"
-  kRunRaw "DELETE FROM signatory_attachments"
-  kRunRaw "DELETE FROM signatory_links"
-  kRunRaw "DELETE FROM documents"
+  runSQL_ "DELETE FROM mail_attachments"
+  runSQL_ "DELETE FROM author_attachments"
+  runSQL_ "DELETE FROM signatory_attachments"
+  runSQL_ "DELETE FROM signatory_links"
+  runSQL_ "DELETE FROM documents"
 
-  kRunRaw "DELETE FROM users"
-  kRunRaw "DELETE FROM companies"
-  kRunRaw "DELETE FROM files"
+  runSQL_ "DELETE FROM users"
+  runSQL_ "DELETE FROM companies"
+  runSQL_ "DELETE FROM files"
 
-  kRunRaw "DELETE FROM sessions"
+  runSQL_ "DELETE FROM sessions"
 
-  kRunRaw "DELETE FROM mails"
+  runSQL_ "DELETE FROM mails"

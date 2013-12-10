@@ -32,7 +32,7 @@ getFileContents file = do
             MemCache.put (fileid file) contentAWS (AWS.fileCache ac)
             return contentAWS
 
-getFileIDContents :: (MonadDB m, MonadIO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
+getFileIDContents :: (MonadDB m, Log.MonadLog m, MonadIO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
 getFileIDContents fid = do
   file <- dbQuery $ GetFileByFileID fid
   getFileContents file

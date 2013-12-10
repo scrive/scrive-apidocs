@@ -1,5 +1,6 @@
 module MinutesTime
        ( MinutesTime
+       , getMinutesTime
        , asInt
        , fromSeconds
        , fromMinutes
@@ -39,11 +40,9 @@ module MinutesTime
        , fromClockTime
        ) where
 
-import Data.Convertible
 import Data.Time
 import Data.Time.Clock.POSIX
 import Data.Typeable
-import Database.HDBC
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
 import qualified System.Time as System.Time (toUTCTime, toCalendarTime,toClockTime)
@@ -51,6 +50,9 @@ import Text.Printf
 import System.IO.Unsafe
 import Data.Binary
 import Control.Monad
+import Database.PostgreSQL.PQTypes hiding (Binary, put)
+import Database.PostgreSQL.PQTypes.Internal.C.Types
+import Database.PostgreSQL.PQTypes.Internal.Utils
 
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
@@ -63,6 +65,11 @@ instance Binary MinutesTime where
 
 instance Show MinutesTime where
     show = formatMinutesTime "%Y-%m-%d, %H:%M:%S %Z"
+
+getMinutesTime :: MonadDB m => m MinutesTime
+getMinutesTime = do
+  runSQL_ "SELECT now()"
+  fetchOne unSingle
 
 -- | Show time in %Y-%m-%d %H:%M:%S %Z format.
 -- This change was requested by Upsales. Should not affect much.
@@ -211,8 +218,14 @@ showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 
 showAsMonth :: Int -> String
 showAsMonth int = printf "%04d-%02d" (int `div` 10000) (int `div` 100 `mod` 100)
 
-instance Convertible SqlValue MinutesTime where
-  safeConvert = either Left (Right . fromClockTime) . safeConvert
+instance PQFormat MinutesTime where
+  pqFormat _ = pqFormat (undefined::UTCTime)
 
-instance Convertible MinutesTime SqlValue where
-  safeConvert = safeConvert . toCalendarTimeInUTC
+instance FromSQL MinutesTime where
+  type PQBase MinutesTime = PGtimestamp
+  fromSQL Nothing = unexpectedNULL
+  fromSQL (Just PGtimestamp{..}) = return . MinutesTime . fromIntegral $ pgTimestampEpoch
+
+instance ToSQL MinutesTime where
+  type PQDest MinutesTime = PGtimestamp
+  toSQL mt = toSQL (toUTCTime mt)

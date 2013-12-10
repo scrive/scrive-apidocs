@@ -1,13 +1,11 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
 module User.Migrations where
 
+import Data.Monoid.Space
 import DB
-import DB.SQL2
 import User.Tables
 import User.Model (UserID)
 import Company.Model (CompanyID)
 import Control.Monad
-default (SQL)
 
 addUserCustomFooter :: MonadDB m => Migration m
 addUserCustomFooter =
@@ -15,9 +13,8 @@ addUserCustomFooter =
     mgrTable = tableUsers
   , mgrFrom = 3
   , mgrDo = do
-      kRunRaw "ALTER TABLE users ADD COLUMN customfooter TEXT"
-      _ <- kRun $ SQL "UPDATE users SET customfooter = ?" [SqlNull]
-      return ()
+      runSQL_ "ALTER TABLE users ADD COLUMN customfooter TEXT"
+      runSQL_ "UPDATE users SET customfooter = NULL"
   }
 
 removeSystemServer :: MonadDB m => Migration m
@@ -26,7 +23,7 @@ removeSystemServer =
     mgrTable = tableUsers
   , mgrFrom = 2
   , mgrDo = do
-      kRunRaw "ALTER TABLE users DROP COLUMN system_server CASCADE"
+      runSQL_ "ALTER TABLE users DROP COLUMN system_server CASCADE"
   }
 
 addRegionToUserSettings :: MonadDB m => Migration m
@@ -35,11 +32,10 @@ addRegionToUserSettings =
     mgrTable = tableUsers
   , mgrFrom = 1
   , mgrDo = do
-      kRunRaw "ALTER TABLE users ADD COLUMN region SMALLINT"
-      _ <- kRun $ SQL "UPDATE users SET region = ?" [defaultRegion]
-      kRunRaw "ALTER TABLE users ALTER COLUMN region SET NOT NULL"
+      runSQL_ "ALTER TABLE users ADD COLUMN region SMALLINT"
+      runSQL_ "UPDATE users SET region = 1" -- default region
+      runSQL_ "ALTER TABLE users ALTER COLUMN region SET NOT NULL"
   }
-  where defaultRegion = toSql (1 :: Integer)
 
 addIdSerialOnUsers :: MonadDB m => Migration m
 addIdSerialOnUsers =
@@ -47,10 +43,9 @@ addIdSerialOnUsers =
     mgrTable = tableUsers
   , mgrFrom = 4
   , mgrDo = do
-      _ <- kRunRaw $ "CREATE SEQUENCE users_id_seq"
-      _ <- kRunRaw $ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
-      _ <- kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
-      return ()
+      runSQL_ "CREATE SEQUENCE users_id_seq"
+      runSQL_ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
+      runSQL_ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
   }
 
 addCompanyNameNumberOnUsers :: MonadDB m => Migration m
@@ -59,9 +54,8 @@ addCompanyNameNumberOnUsers =
     mgrTable = tableUsers
   , mgrFrom = 5
   , mgrDo = do
-      _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN company_name   TEXT NOT NULL DEFAULT ''"
-      _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN company_number TEXT NOT NULL DEFAULT ''"
-      return ()
+      runSQL_ "ALTER TABLE users ADD COLUMN company_name   TEXT NOT NULL DEFAULT ''"
+      runSQL_ "ALTER TABLE users ADD COLUMN company_number TEXT NOT NULL DEFAULT ''"
   }
 
 addCheckLowercaseEmailsUsers :: MonadDB m => Migration m
@@ -70,9 +64,8 @@ addCheckLowercaseEmailsUsers =
     mgrTable = tableUsers
   , mgrFrom = 6
   , mgrDo = do
-      _ <- kRunRaw $ "UPDATE users SET email = lower(email)"
-      _ <- kRunRaw $ "ALTER TABLE users ADD CONSTRAINT users_email_lowercase_chk CHECK (email = lower(email))"
-      return ()
+      runSQL_ "UPDATE users SET email = lower(email)"
+      runSQL_ "ALTER TABLE users ADD CONSTRAINT users_email_lowercase_chk CHECK (email = lower(email))"
   }
 
 removePreferedDesignMode :: MonadDB m => Migration m
@@ -81,8 +74,7 @@ removePreferedDesignMode =
     mgrTable = tableUsers
   , mgrFrom = 7
   , mgrDo = do
-      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN preferred_design_mode"
-      return ()
+      runSQL_ "ALTER TABLE users DROP COLUMN preferred_design_mode"
   }
 
 addIsFree :: MonadDB m => Migration m
@@ -91,8 +83,7 @@ addIsFree =
       mgrTable = tableUsers
     , mgrFrom = 8
     , mgrDo = do
-      _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN is_free BOOL NOT NULL DEFAULT FALSE"
-      return ()
+      runSQL_ "ALTER TABLE users ADD COLUMN is_free BOOL NOT NULL DEFAULT FALSE"
     }
 
 removeServiceIDFromUsers :: MonadDB m => Migration m
@@ -101,35 +92,36 @@ removeServiceIDFromUsers = Migration {
   , mgrFrom = 9
   , mgrDo = do
     -- check if service_id field is empty for all users
-    check <- getMany "SELECT DISTINCT service_id IS NULL FROM users"
+    runSQL_ "SELECT DISTINCT service_id IS NULL FROM users"
+    check <- fetchMany unSingle
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
       _      -> error "Users have rows with non-null service_id"
-    kRunRaw "ALTER TABLE users DROP CONSTRAINT fk_users_services"
-    kRunRaw "DROP INDEX idx_users_service_id"
-    kRunRaw "ALTER TABLE users DROP COLUMN service_id"
+    runSQL_ "ALTER TABLE users DROP CONSTRAINT fk_users_services"
+    runSQL_ "DROP INDEX idx_users_service_id"
+    runSQL_ "ALTER TABLE users DROP COLUMN service_id"
 }
 
 removeRegionFromUsers :: MonadDB m => Migration m
 removeRegionFromUsers = Migration {
     mgrTable = tableUsers
   , mgrFrom = 10
-  , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN region"
+  , mgrDo = runSQL_ "ALTER TABLE users DROP COLUMN region"
 }
 
 dropCustomFooterFromUsers :: MonadDB m => Migration m
 dropCustomFooterFromUsers = Migration {
     mgrTable = tableUsers
   , mgrFrom = 11
-  , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN customfooter"
+  , mgrDo = runSQL_ "ALTER TABLE users DROP COLUMN customfooter"
 }
 
 addAssociatedDomainToUsers :: MonadDB m => Migration m
 addAssociatedDomainToUsers = Migration {
     mgrTable = tableUsers
   , mgrFrom = 12
-  , mgrDo = kRunRaw "ALTER TABLE users ADD COLUMN associated_domain TEXT NULL"
+  , mgrDo = runSQL_ "ALTER TABLE users ADD COLUMN associated_domain TEXT NULL"
 
 }
 
@@ -137,7 +129,7 @@ dropMobileFromUsers :: MonadDB m => Migration m
 dropMobileFromUsers = Migration {
     mgrTable = tableUsers
   , mgrFrom = 13
-  , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN mobile"
+  , mgrDo = runSQL_ "ALTER TABLE users DROP COLUMN mobile"
 
 }
 removeIsFree :: MonadDB m => Migration m
@@ -145,9 +137,7 @@ removeIsFree =
   Migration {
       mgrTable = tableUsers
     , mgrFrom = 14
-    , mgrDo = do
-      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN is_free"
-      return ()
+    , mgrDo = runSQL_ "ALTER TABLE users DROP COLUMN is_free"
     }
 
 allUsersMustHaveCompany :: MonadDB m => Migration m
@@ -156,27 +146,26 @@ allUsersMustHaveCompany =
       mgrTable = tableUsers
     , mgrFrom = 15
     , mgrDo = do
-       kRun_ $ sqlSelect "users" $ do
+       runQuery_ . sqlSelect "users" $ do
                   sqlResult "id, company_name, company_number"
                   sqlWhere "company_id IS NULL"
-       usersWithoutCompany <- kFold (\a u cn cnn -> (u,cn,cnn) : a) []
+       usersWithoutCompany <- fetchMany id
        forM_ usersWithoutCompany $ \(userid::UserID, companyname::String, companynumber::String) -> do
-            _ <- kRun $ sqlInsert "companies" $ do
+            runQuery_ . sqlInsert "companies" $ do
                             sqlSet "name" companyname
                             sqlSet "number" companynumber
                             sqlResult "id"
-            (companyidx :: CompanyID) <- kFold (flip (:)) [] >>= exactlyOneObjectReturnedGuard
+            companyidx :: CompanyID <- fetchOne unSingle
 
-            kRun_ $ sqlInsert "company_uis" $ do
+            runQuery_ . sqlInsert "company_uis" $ do
                 sqlSet "company_id" companyidx
 
-            kRun_ $ sqlUpdate "users" $ do
+            runQuery_ . sqlUpdate "users" $ do
                 sqlSet "company_id" companyidx
                 sqlSet "is_company_admin" True
                 sqlWhereEq "id" userid
-       _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_name"
-       _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN company_number"
-       return ()
+       runSQL_ "ALTER TABLE users DROP COLUMN company_name"
+       runSQL_ "ALTER TABLE users DROP COLUMN company_number"
     }
 
 migrateUsersDeletedTime :: MonadDB m => Migration m
@@ -185,11 +174,10 @@ migrateUsersDeletedTime =
       mgrTable = tableUsers
     , mgrFrom = 16
     , mgrDo = do
-       _ <- kRunRaw $ "ALTER TABLE users"
+       runSQL_ $ "ALTER TABLE users"
                   <+> "ALTER deleted DROP NOT NULL,"
                   <+> "ALTER deleted DROP DEFAULT,"
                   <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END)"
-       return ()
     }
 
 migrateUsersUniqueIndexOnEmail :: MonadDB m => Migration m
@@ -198,7 +186,7 @@ migrateUsersUniqueIndexOnEmail =
       mgrTable = tableUsers
     , mgrFrom = 17
     , mgrDo = do
-       kRun_ $ sqlDelete "users" $ do
+       runQuery_ . sqlDelete "users" $ do
                  sqlWhereNotExists (sqlSelect "signatory_links" $ do -- there are not documents connected to this account)
                                       sqlWhere "signatory_links.user_id = users.id")
                  -- but there is another account for this email address
@@ -209,7 +197,6 @@ migrateUsersUniqueIndexOnEmail =
          -- note: this may delete both accounts, but that is ok
 
 
-       kRun_ $ sqlDropIndex "users" (indexOnColumn "email")
-       kRun_ $ sqlCreateIndex "users" ((indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") })
-       return ()
+       runQuery_ $ sqlDropIndex "users" (indexOnColumn "email")
+       runQuery_ $ sqlCreateIndex "users" ((indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") })
     }

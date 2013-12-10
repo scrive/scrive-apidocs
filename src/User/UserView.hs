@@ -59,7 +59,6 @@ import BrandedDomains
 import Doc.DocViewMail
 import Control.Monad
 
-
 showAccount :: TemplatesMonad m => User -> m String
 showAccount user = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user

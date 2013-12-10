@@ -13,14 +13,15 @@ module DB.Model.Index (
 import Crypto.Hash.RIPEMD160
 import Data.ByteString.Base16
 import Data.Monoid
+import Data.Monoid.Space
+import Data.Monoid.Utils
+import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString.Char8 as BS
 
-import DB.SQL
-
 data TableIndex = TableIndex {
-  idxColumns :: [RawSQL]
+  idxColumns :: [RawSQL ()]
 , idxUnique  :: Bool
-, idxWhere   :: Maybe RawSQL
+, idxWhere   :: Maybe (RawSQL ())
 } deriving (Eq, Ord, Show)
 
 tblIndex :: TableIndex
@@ -30,48 +31,48 @@ tblIndex = TableIndex {
 , idxWhere = Nothing
 }
 
-indexOnColumn :: RawSQL -> TableIndex
+indexOnColumn :: RawSQL () -> TableIndex
 indexOnColumn column = tblIndex { idxColumns = [column] }
 
-indexOnColumns :: [RawSQL] -> TableIndex
+indexOnColumns :: [RawSQL ()] -> TableIndex
 indexOnColumns columns = tblIndex { idxColumns = columns }
 
-uniqueIndexOnColumn :: RawSQL -> TableIndex
+uniqueIndexOnColumn :: RawSQL () -> TableIndex
 uniqueIndexOnColumn column = TableIndex {
   idxColumns = [column]
 , idxUnique = True
 , idxWhere = Nothing
 }
 
-uniqueIndexOnColumns :: [RawSQL] -> TableIndex
+uniqueIndexOnColumns :: [RawSQL ()] -> TableIndex
 uniqueIndexOnColumns columns = TableIndex {
   idxColumns = columns
 , idxUnique = True
 , idxWhere = Nothing
 }
 
-indexName :: RawSQL -> TableIndex -> SQL
+indexName :: RawSQL () -> TableIndex -> RawSQL ()
 indexName tname TableIndex{..} = mconcat [
     if idxUnique then "unique_idx__" else "idx__"
-  , raw tname
+  , tname
   , "__"
-  , intersperseNoWhitespace "__" (map raw idxColumns)
+  , mintercalate "__" idxColumns
   , maybe "" (("__" <>) . hashWhere) idxWhere
   ]
   where
     -- hash WHERE clause and add it to index name so that indexes
     -- with the same columns, but different constraints can coexist
-    hashWhere = raw . unsafeFromString . BS.unpack . encode . BS.take 10 . hash . BS.pack . unRawSQL
+    hashWhere = flip rawSQL () . encode . BS.take 10 . hash . unRawSQL
 
-sqlCreateIndex :: RawSQL -> TableIndex -> SQL
+sqlCreateIndex :: RawSQL () -> TableIndex -> RawSQL ()
 sqlCreateIndex tname idx@TableIndex{..} = mconcat [
     "CREATE "
   , if idxUnique then "UNIQUE " else ""
-  , "INDEX" <+> indexName tname idx <+> "ON" <+> raw tname <+> "("
-  , intersperseNoWhitespace ", " (map raw idxColumns)
+  , "INDEX" <+> indexName tname idx <+> "ON" <+> tname <+> "("
+  , mintercalate ", " idxColumns
   , ")"
-  , maybe "" ((" WHERE" <+>) . raw) idxWhere
+  , maybe "" (" WHERE" <+>) idxWhere
   ]
 
-sqlDropIndex :: RawSQL -> TableIndex -> SQL
+sqlDropIndex :: RawSQL () -> TableIndex -> RawSQL ()
 sqlDropIndex tname idx = "DROP INDEX" <+> indexName tname idx

@@ -16,8 +16,8 @@ import MinutesTime
 import qualified Amazon as AWS
 import qualified Log
 
-dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> AWS.AmazonConfig -> IO ()
-dispatcher rng master msender dbconf amazonconf = withPostgreSQL dbconf . runCryptoRNGT rng . AWS.runAmazonMonadT amazonconf $ do
+dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> ConnectionSource -> AWS.AmazonConfig -> IO ()
+dispatcher rng master msender cs amazonconf = withPostgreSQL cs . runCryptoRNGT rng . AWS.runAmazonMonadT amazonconf $ do
   Log.mixlog_ $ "Dispatcher is starting"
   do
     mails <- dbQuery GetIncomingEmails
@@ -56,7 +56,7 @@ dispatcher rng master msender dbconf amazonconf = withPostgreSQL dbconf . runCry
                   res <- dbUpdate $ DeleteEmail mailID
                   when (not res) $
                     Log.mixlog_ $ "Deleting email #" ++ show mailID ++ " failed."
-      kCommit -- commit after email was handled properly
+      commit -- commit after email was handled properly
       Log.mixlog_ $ "Dispatcher is done"
   where
     isNotSendable Mail{..} =

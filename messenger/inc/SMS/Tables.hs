@@ -35,7 +35,7 @@ tableSMSEvents = tblTable {
     tblName = "sms_events"
   , tblVersion = 1
   , tblColumns = [
-    tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "sms_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "event", colType = TextT, colNullable = False }
     , tblColumn { colName = "event_read", colType = TimestampWithZoneT }

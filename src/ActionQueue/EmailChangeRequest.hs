@@ -17,7 +17,6 @@ import ActionQueue.Tables
 import Context
 import Crypto.RNG
 import DB
-import DB.SQL2
 import KontraMonad
 import KontraLink
 import MagicHash
@@ -34,15 +33,19 @@ data EmailChangeRequest = EmailChangeRequest {
 emailChangeRequest :: Action UserID EmailChangeRequest (UserID, Email, MagicHash) Scheduler
 emailChangeRequest = Action {
     qaTable = tableEmailChangeRequests
-  , qaFields = \(uid, new_email, token) -> [
-      ("user_id", toSql uid)
-    , ("new_email", toSql new_email)
-    , ("token", toSql token)
-    ]
+  , qaSetFields = \(uid, new_email, token) -> do
+      sqlSet "user_id" uid
+      sqlSet "new_email" new_email
+      sqlSet "token" token
   , qaSelectFields = ["user_id", "expires", "new_email", "token"]
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
-  , qaDecode = kFold decoder []
+  , qaDecode = \(user_id, expires, new_email, token) -> EmailChangeRequest {
+      ecrUserID = user_id
+    , ecrExpires = expires
+    , ecrNewEmail = new_email
+    , ecrToken = token
+    }
   , qaUpdateSQL = \EmailChangeRequest{..} -> toSQLCommand $ sqlUpdate "email_change_requests" $ do
       sqlSet "expires" ecrExpires
       sqlSet "new_email" ecrNewEmail
@@ -52,13 +55,6 @@ emailChangeRequest = Action {
     _ <- dbUpdate $ DeleteAction emailChangeRequest ecrUserID
     return ()
   }
-  where
-    decoder acc user_id expires new_email token = EmailChangeRequest {
-        ecrUserID = user_id
-      , ecrExpires = expires
-      , ecrNewEmail = new_email
-      , ecrToken = token
-      } : acc
 
 getEmailChangeRequestNewEmail :: (MonadDB m, KontraMonad m) => UserID -> MagicHash -> m (Maybe Email)
 getEmailChangeRequestNewEmail uid token = runMaybeT $ do

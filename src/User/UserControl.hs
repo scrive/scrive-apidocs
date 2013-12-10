@@ -313,8 +313,8 @@ handleAccountSetupPost uid token sm = do
   company <-  getCompanyForUser user
   if isJust $ userhasacceptedtermsofservice user
     then runJSONGenT $ do
-           value "ok" False
-           value "error" ("already_active" :: String)
+      value "ok" False
+      value "error" ("already_active" :: String)
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"

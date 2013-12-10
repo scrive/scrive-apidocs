@@ -8,16 +8,15 @@ module HostClock.Model
   ) where
 
 import Control.Monad (when)
-import DB (DBUpdate(..), DBQuery(..), kRun, kRun_, tblName, MonadDB, kFold, (<?>))
-import DB.SQL2 (sqlInsert, sqlSet, sqlSetCmd, sqlSelect, sqlWhere, sqlResult)
-import Data.Maybe (listToMaybe, isJust)
-import HostClock.Tables (tableHostClock)
+import Data.Int
+import DB
+import Data.Maybe (isJust)
 import MinutesTime (MinutesTime, toSeconds)
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
-instance MonadDB m => DBUpdate m InsertClockOffsetFrequency Integer where
+instance MonadDB m => DBUpdate m InsertClockOffsetFrequency Int where
   update (InsertClockOffsetFrequency moffset frequency) =
-    kRun $ sqlInsert (tblName tableHostClock) $ do
+    runQuery . sqlInsert "host_clock" $ do
       sqlSetCmd "time" "now()"
       sqlSet "clock_offset" moffset
       sqlSet "clock_frequency" frequency
@@ -32,13 +31,12 @@ data ClockErrorEstimate = ClockErrorEstimate
 data GetLatestClockErrorEstimate = GetLatestClockErrorEstimate
 instance MonadDB m => DBQuery m GetLatestClockErrorEstimate (Maybe ClockErrorEstimate) where
   query (GetLatestClockErrorEstimate) = do
-    kRun_ $ sqlSelect (tblName tableHostClock) $ do
+    runQuery_ . sqlSelect "host_clock" $ do
       sqlWhere "time = (SELECT MAX(time) FROM host_clock WHERE clock_offset IS NOT NULL)"
       sqlResult "time"
       sqlResult "clock_offset"
       sqlResult "clock_frequency"
-    es <- flip kFold [] $ \a t o f -> ClockErrorEstimate t o f:a
-    return $ listToMaybe es
+    fetchMaybe $ \(t, o, f) -> ClockErrorEstimate t o f
 
 -- | Estimate maximum clock error at a given time and a previous clock
 -- error estimate, assuming that the host clock had been
@@ -51,15 +49,15 @@ data ClockErrorStatistics = ClockErrorStatistics
   { max       :: Maybe Double -- ^ clock error maximum (ignoring frequency)
   , mean      :: Maybe Double -- ^ clock error sample mean
   , std_dev   :: Maybe Double -- ^ clock error sample standard deviation
-  , collected :: Int          -- ^ number of samples
-  , missed    :: Int          -- ^ missed number of samples
+  , collected :: Int64          -- ^ number of samples
+  , missed    :: Int64          -- ^ missed number of samples
   }
   deriving Show
 
 data GetClockErrorStatistics = GetClockErrorStatistics (Maybe MinutesTime) (Maybe MinutesTime)
 instance MonadDB m => DBQuery m GetClockErrorStatistics ClockErrorStatistics where
   query (GetClockErrorStatistics from to) = do
-    kRun_ $ sqlSelect (tblName tableHostClock) $ do
+    runQuery_ $ sqlSelect "host_clock" $ do
       when (isJust from) $ sqlWhere $ "time >=" <?> from
       when (isJust to)   $ sqlWhere $ "time <=" <?> to
       sqlResult "max(abs(clock_offset))"
@@ -67,8 +65,8 @@ instance MonadDB m => DBQuery m GetClockErrorStatistics ClockErrorStatistics whe
       sqlResult "stddev_samp(clock_offset)"
       sqlResult "count(clock_offset)"
       sqlResult "count(*)"
-    [s] <- flip kFold [] $ \a max' mean' std_dev' collected' total -> ClockErrorStatistics max' mean' std_dev' collected' (total - collected') : a
-    return s
+    fetchOne $ \(max', mean', std_dev', collected', total) ->
+      ClockErrorStatistics max' mean' std_dev' collected' (total - collected')
 
 {- 
 TODO: 

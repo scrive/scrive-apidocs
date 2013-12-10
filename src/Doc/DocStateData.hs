@@ -32,6 +32,7 @@ module Doc.DocStateData (
   ) where
 
 import Data.Data
+import Data.Int
 import Data.Maybe
 import DB.Derive
 import DB.RowCache (ID, HasID(..))
@@ -44,7 +45,7 @@ import File.FileID
 import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import Database.HDBC
+import Database.PostgreSQL.PQTypes
 import Data.List
 import ELegitimation.SignatureProvider
 import Text.JSON.FromJSValue
@@ -52,12 +53,19 @@ import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
 import Utils.Default
+import qualified Control.Exception as E
 import qualified Data.Set as S
 
-newtype SignOrder = SignOrder { unSignOrder :: Integer }
-  deriving (Eq, Ord)
+newtype SignOrder = SignOrder { unSignOrder :: Int32 }
+  deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''SignOrder)
 
+instance FromSQL SignOrder where
+  type PQBase SignOrder = PQBase Int32
+  fromSQL mbase = SignOrder <$> fromSQL mbase
+instance ToSQL SignOrder where
+  type PQDest SignOrder = PQDest Int32
+  toSQL (SignOrder n) = toSQL n
 
 {- |
     We want the documents to be ordered like the icons in the bottom
@@ -80,6 +88,50 @@ data StatusClass = SCDraft
                   | SCSealed -- has a digital seal
                   | SCExtended -- has an extended digital seal
                   deriving (Eq, Ord, Enum, Bounded)
+
+instance PQFormat StatusClass where
+  pqFormat _ = pqFormat (undefined::Int16)
+
+instance FromSQL StatusClass where
+  type PQBase StatusClass = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return SCDraft
+      2 -> return SCCancelled
+      3 -> return SCRejected
+      4 -> return SCTimedout
+      5 -> return SCError
+      6 -> return SCDeliveryProblem
+      7 -> return SCSent
+      8 -> return SCDelivered
+      9 -> return SCRead
+      10 -> return SCOpened
+      11 -> return SCSigned
+      12 -> return SCProlonged
+      13 -> return SCSealed
+      14 -> return SCExtended
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 14)]
+      , reValue = n
+      }
+
+instance ToSQL StatusClass where
+  type PQDest StatusClass = PQDest Int16
+  toSQL SCDraft           = toSQL (1::Int16)
+  toSQL SCCancelled       = toSQL (2::Int16)
+  toSQL SCRejected        = toSQL (3::Int16)
+  toSQL SCTimedout        = toSQL (4::Int16)
+  toSQL SCError           = toSQL (5::Int16)
+  toSQL SCDeliveryProblem = toSQL (6::Int16)
+  toSQL SCSent            = toSQL (7::Int16)
+  toSQL SCDelivered       = toSQL (8::Int16)
+  toSQL SCRead            = toSQL (9::Int16)
+  toSQL SCOpened          = toSQL (10::Int16)
+  toSQL SCSigned          = toSQL (11::Int16)
+  toSQL SCProlonged       = toSQL (12::Int16)
+  toSQL SCSealed          = toSQL (13::Int16)
+  toSQL SCExtended        = toSQL (14::Int16)
 
 instance Show StatusClass where
   show SCDraft = "draft"
@@ -104,6 +156,26 @@ instance Read StatusClass where
 data AuthenticationMethod = StandardAuthentication
                           | ELegAuthentication
   deriving (Eq, Ord, Show)
+
+instance PQFormat AuthenticationMethod where
+  pqFormat _ = pqFormat (undefined::Int16)
+
+instance FromSQL AuthenticationMethod where
+  type PQBase AuthenticationMethod = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return StandardAuthentication
+      2 -> return ELegAuthentication
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL AuthenticationMethod where
+  type PQDest AuthenticationMethod = PQDest Int16
+  toSQL StandardAuthentication = toSQL (1::Int16)
+  toSQL ELegAuthentication     = toSQL (2::Int16)
 
 instance FromJSValue AuthenticationMethod where
   fromJSValue = do
@@ -138,6 +210,32 @@ data DeliveryMethod = EmailDelivery
                     | EmailAndMobileDelivery
   deriving (Eq, Ord, Show)
 
+instance PQFormat DeliveryMethod where
+  pqFormat _ = pqFormat (undefined::Int16)
+
+instance FromSQL DeliveryMethod where
+  type PQBase DeliveryMethod = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return EmailDelivery
+      2 -> return PadDelivery
+      3 -> return APIDelivery
+      4 -> return MobileDelivery
+      5 -> return EmailAndMobileDelivery
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 5)]
+      , reValue = n
+      }
+
+instance ToSQL DeliveryMethod where
+  type PQDest DeliveryMethod = PQDest Int16
+  toSQL EmailDelivery          = toSQL (1::Int16)
+  toSQL PadDelivery            = toSQL (2::Int16)
+  toSQL APIDelivery            = toSQL (3::Int16)
+  toSQL MobileDelivery         = toSQL (4::Int16)
+  toSQL EmailAndMobileDelivery = toSQL (5::Int16)
+
 data SignatureInfo = SignatureInfo {
     signatureinfotext        :: String
   , signatureinfosignature   :: String
@@ -160,6 +258,44 @@ data FieldType = FirstNameFT
                | CheckboxFT String
                | MobileFT
   deriving (Eq, Ord, Show, Data, Typeable)
+
+instance PQFormat FieldType where
+  pqFormat _ = pqFormat (undefined::Int16)
+
+instance FromSQL FieldType where
+  type PQBase FieldType = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return FirstNameFT
+      2 -> return LastNameFT
+      3 -> return CompanyFT
+      4 -> return PersonalNumberFT
+      5 -> return CompanyNumberFT
+      6 -> return EmailFT
+      7 -> return $ CustomFT undefinedField undefinedField
+      8 -> return $ SignatureFT undefinedField
+      9 -> return $ CheckboxFT undefinedField
+      10 -> return MobileFT
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 10)]
+      , reValue = n
+      }
+    where
+      undefinedField = error "fromSQL (FieldType): field undefined"
+
+instance ToSQL FieldType where
+  type PQDest FieldType = PQDest Int16
+  toSQL FirstNameFT      = toSQL (1::Int16)
+  toSQL LastNameFT       = toSQL (2::Int16)
+  toSQL CompanyFT        = toSQL (3::Int16)
+  toSQL PersonalNumberFT = toSQL (4::Int16)
+  toSQL CompanyNumberFT  = toSQL (5::Int16)
+  toSQL EmailFT          = toSQL (6::Int16)
+  toSQL CustomFT{}       = toSQL (7::Int16)
+  toSQL SignatureFT{}    = toSQL (8::Int16)
+  toSQL CheckboxFT{}     = toSQL (9::Int16)
+  toSQL MobileFT         = toSQL (10::Int16)
 
 data SignatoryField = SignatoryField
   { sfType       :: FieldType
@@ -345,6 +481,35 @@ data DocumentStatus = Preparation
                     | DocumentError String
   deriving (Eq, Ord)
 
+instance PQFormat DocumentStatus where
+  pqFormat _ = pqFormat (undefined::Int16)
+
+instance FromSQL DocumentStatus where
+  type PQBase DocumentStatus = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return Preparation
+      2 -> return Pending
+      3 -> return Closed
+      4 -> return Canceled
+      5 -> return Timedout
+      6 -> return Rejected
+      7 -> return . DocumentError $ error "fromSQL (DocumentStatus): field undefined"
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 7)]
+      , reValue = n
+      }
+
+instance ToSQL DocumentStatus where
+  type PQDest DocumentStatus = PQDest Int16
+  toSQL Preparation     = toSQL (1::Int16)
+  toSQL Pending         = toSQL (2::Int16)
+  toSQL Closed          = toSQL (3::Int16)
+  toSQL Canceled        = toSQL (4::Int16)
+  toSQL Timedout        = toSQL (5::Int16)
+  toSQL Rejected        = toSQL (6::Int16)
+  toSQL DocumentError{} = toSQL (7::Int16)
 
 {- Used by API -}
 instance Show DocumentStatus where
@@ -360,31 +525,63 @@ instance Show DocumentStatus where
 data DocumentType = Signable | Template
   deriving (Eq, Ord, Show, Read)
 
-instance Convertible DocumentType SqlValue where
-  safeConvert v = Right . SqlInt32 $ case v of
-    Signable -> 1
-    Template -> 2
+instance PQFormat DocumentType where
+  pqFormat _ = pqFormat (undefined::Int16)
 
-instance Convertible SqlValue DocumentType where
-  safeConvert v = do
-    (val :: Int) <- safeConvert v
-    case val of
+instance FromSQL DocumentType where
+  type PQBase DocumentType = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
       1 -> return Signable
       2 -> return Template
-      x -> Left (ConvertError { convSourceValue = show v
-                              , convSourceType = show (typeOf v)
-                              , convDestType = "DocumentType"
-                              , convErrorMessage = "Value " ++ show x ++ " is not in [1,2]"
-                              })
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL DocumentType where
+  type PQDest DocumentType = PQDest Int16
+  toSQL Signable = toSQL (1::Int16)
+  toSQL Template = toSQL (2::Int16)
 
 data DocumentSharing = Private
                      | Shared -- means that the document is shared with subaccounts, and those with same parent accounts
   deriving (Eq, Ord, Show)
 
+instance PQFormat DocumentSharing where
+  pqFormat _ = pqFormat (undefined::Int16)
+
+instance FromSQL DocumentSharing where
+  type PQBase DocumentSharing = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return Private
+      2 -> return Shared
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL DocumentSharing where
+  type PQDest DocumentSharing = PQDest Int16
+  toSQL Private = toSQL (1::Int16)
+  toSQL Shared  = toSQL (2::Int16)
+
 data DocumentTag = DocumentTag {
     tagname :: String
   , tagvalue :: String
   } deriving (Eq, Show, Data, Typeable)
+
+instance PQFormat [DocumentTag] where
+  pqFormat _ = pqFormat (undefined::String)
+instance FromSQL [DocumentTag] where
+  type PQBase [DocumentTag] = PQBase String
+  fromSQL = jsonFromSQL
+instance ToSQL [DocumentTag] where
+  type PQDest [DocumentTag] = PQDest String
+  toSQL = jsonToSQL
 
  -- for inserting into set
 instance Ord DocumentTag where
@@ -407,8 +604,8 @@ data Document = Document {
   , documenttype                   :: DocumentType
   , documentctime                  :: MinutesTime
   , documentmtime                  :: MinutesTime
-  , documentdaystosign             :: Int
-  , documentdaystoremind           :: Maybe Int
+  , documentdaystosign             :: Int32
+  , documentdaystoremind           :: Maybe Int32
   , documenttimeouttime            :: Maybe MinutesTime
   , documentautoremindtime         :: Maybe MinutesTime
   , documentinvitetime             :: Maybe SignInfo
@@ -419,7 +616,7 @@ data Document = Document {
   , documentlang                   :: Lang
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
-  , documentobjectversion          :: Int
+  , documentobjectversion          :: Int64
   } deriving (Eq, Ord, Show)
 
 
@@ -479,6 +676,16 @@ data CancelationReason = ManualCancel
                         | ELegDataMismatch String SignatoryLinkID String String String
   deriving (Eq, Ord, Show, Data, Typeable)
 
+instance PQFormat CancelationReason where
+  pqFormat _ = pqFormat (undefined::String)
+
+instance FromSQL CancelationReason where
+  type PQBase CancelationReason = PQBase String
+  fromSQL = jsonFromSQL
+
+instance ToSQL CancelationReason where
+  type PQDest CancelationReason = PQDest String
+  toSQL = jsonToSQL
 
 newtype AuthorAttachment = AuthorAttachment { authorattachmentfile :: FileID }
   deriving (Eq, Ord, Show)
@@ -495,19 +702,29 @@ data DeliveryStatus = Delivered
                          | Deferred
                            deriving (Eq, Ord, Show)
 
--- stuff for converting to pgsql
+instance PQFormat DeliveryStatus where
+  pqFormat _ = pqFormat (undefined::Int16)
 
-$(enumDeriveConvertible ''DeliveryStatus)
-$(newtypeDeriveConvertible ''SignOrder)
-$(enumDeriveConvertible ''StatusClass)
-$(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
-$(enumDeriveConvertibleIgnoreFields ''FieldType)
-$(enumDeriveConvertible ''AuthenticationMethod)
-$(enumDeriveConvertible ''DeliveryMethod)
-$(enumDeriveConvertible ''DocumentSharing)
-$(jsonableDeriveConvertible [t| [DocumentTag] |])
-$(jsonableDeriveConvertible [t| CancelationReason |])
-$(jsonableDeriveConvertible [t| [[String]] |])
+instance FromSQL DeliveryStatus where
+  type PQBase DeliveryStatus = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return Delivered
+      2 -> return Undelivered
+      3 -> return Unknown
+      4 -> return Deferred
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 4)]
+      , reValue = n
+      }
+
+instance ToSQL DeliveryStatus where
+  type PQDest DeliveryStatus = PQDest Int16
+  toSQL Delivered = toSQL (1::Int16)
+  toSQL Undelivered = toSQL (2::Int16)
+  toSQL Unknown = toSQL (3::Int16)
+  toSQL Deferred = toSQL (4::Int16)
 
 instance FromJSValue FieldPlacement where
   fromJSValue = do
@@ -531,25 +748,41 @@ instance FromJSValue TipSide where
           _ ->            return $ Nothing
 
 
-instance Convertible  [FieldPlacement] SqlValue where
-    safeConvert = jsonToSqlValueCustom $ JSArray . (map placementJSON)
-        where
-         placementJSON placement = runJSONGen $ do
-                             value "xrel" $ placementxrel placement
-                             value "yrel" $ placementyrel placement
-                             value "wrel" $ placementwrel placement
-                             value "hrel" $ placementhrel placement
-                             value "fsrel" $ placementfsrel placement
-                             value "page" $ placementpage placement
-                             value "tip" $ case (placementtipside placement) of
-                                             Just LeftTip -> Just ("left" :: String)
-                                             Just RightTip -> Just "right"
-                                             _ -> Nothing
+instance PQFormat [FieldPlacement] where
+  pqFormat _ = pqFormat (undefined::String)
 
-instance Convertible  SqlValue [FieldPlacement] where
-    safeConvert = jsonFromSqlValueCustom $ nothingToResult . (fromJSValueCustomMany fromJSValue)
+instance FromSQL [FieldPlacement] where
+  type PQBase [FieldPlacement] = PQBase String
+  fromSQL = jsonFromSQL' $ nothingToResult . (fromJSValueCustomMany fromJSValue)
+
+instance ToSQL [FieldPlacement] where
+  type PQDest [FieldPlacement] = PQDest String
+  toSQL = jsonToSQL' $ JSArray . (map placementJSON)
+    where
+      placementJSON placement = runJSONGen $ do
+        value "xrel" $ placementxrel placement
+        value "yrel" $ placementyrel placement
+        value "wrel" $ placementwrel placement
+        value "hrel" $ placementhrel placement
+        value "fsrel" $ placementfsrel placement
+        value "page" $ placementpage placement
+        value "tip" $ case (placementtipside placement) of
+          Just LeftTip -> Just ("left" :: String)
+          Just RightTip -> Just "right"
+          _ -> Nothing
 
 type instance ID Document = DocumentID
 
 instance HasID Document where
   getID = documentid
+
+---------------------------------
+
+instance PQFormat [[String]] where
+  pqFormat _ = pqFormat (undefined::String)
+instance FromSQL [[String]] where
+  type PQBase [[String]] = PQBase String
+  fromSQL = jsonFromSQL
+instance ToSQL [[String]] where
+  type PQDest [[String]] = PQDest String
+  toSQL = jsonToSQL
