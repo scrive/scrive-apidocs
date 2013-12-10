@@ -96,6 +96,9 @@ if (!window.console) {
     log: function() {}
   };
 }
+if (!window.console.log) {
+  window.console.log = function() {};
+}
 
 //ie doesn't support trim naturally! maybe we should use underscore trim
 if (typeof String.prototype.trim !== 'function') {
