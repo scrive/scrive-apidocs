@@ -13,10 +13,6 @@ import Control.Monad.Trans.Control
 import Happstack.Server
 import Log
 
-instance (MonadLog m) => MonadLog (ServerPartT m) where
-  mixlogjs title js = lift (mixlogjs title js)
-
-
 -- | The purpose of this wrapper is to override ServerPartT implementation
 -- of fail in Monad instance, which immediately returns to Happstack (by
 -- internal usage of finishWith) and displays ugly "Internal Server Error"
@@ -25,8 +21,6 @@ instance (MonadLog m) => MonadLog (ServerPartT m) where
 
 newtype OurServerPartT m a = OurServerPartT { runOurServerPartT :: ServerPartT m a }
   deriving (Applicative, FilterMonad Response, Functor, HasRqData, MonadBase b, MonadIO, MonadPlus, MonadTrans, ServerMonad, WebMonad Response, MonadLog)
-
-
 
 instance Monad m => Monad (OurServerPartT m) where
   return  = OurServerPartT . return

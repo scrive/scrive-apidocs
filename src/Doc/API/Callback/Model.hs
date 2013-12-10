@@ -7,12 +7,11 @@ module Doc.API.Callback.Model (
 import Control.Applicative
 import ActionQueue.Core
 import ActionQueue.Scheduler
+import Data.Int
 import DB
-import DB.SQL2
 import Doc.API.Callback.Tables
 import Doc.DocumentID
 import Doc.DocStateData
-import Control.Monad.IO.Class
 import MinutesTime
 import qualified Log
 import Doc.API.Callback.DocumentAPICallback
@@ -24,15 +23,19 @@ import Control.Monad
 documentAPICallback :: Action DocumentID DocumentAPICallback (DocumentID, String) Scheduler
 documentAPICallback = Action {
     qaTable = tableDocumentApiCallbacks
-  , qaFields = \(did, url) -> [
-      ("document_id", toSql did)
-    , ("url", toSql url)
-    , ("attempt", toSql (1::Int))
-    ]
+  , qaSetFields = \(did, url) -> do
+      sqlSet "document_id" did
+      sqlSet "url" url
+      sqlSet "attempt" (1::Int32)
   , qaSelectFields = ["document_id", "expires", "url", "attempt"]
   , qaIndexField = "document_id"
   , qaExpirationDelay = "5 minutes" -- not really needed
-  , qaDecode = kFold decoder []
+  , qaDecode = \(document_id, expires, url, attempt) -> DocumentAPICallback {
+      dacDocumentID = document_id
+    , dacExpires = expires
+    , dacURL = url
+    , dacAttempt = attempt
+    }
   , qaUpdateSQL = \DocumentAPICallback{..} -> toSQLCommand $ sqlUpdate "document_api_callbacks" $ do
       sqlSet "expires" dacExpires
       sqlSet "url" dacURL
@@ -41,13 +44,6 @@ documentAPICallback = Action {
   , qaEvaluateExpired = evaluateDocumentCallback
   }
   where
-    decoder acc document_id expires url attempt = DocumentAPICallback {
-        dacDocumentID = document_id
-      , dacExpires = expires
-      , dacURL = url
-      , dacAttempt = attempt
-      } : acc
-
     evaluateDocumentCallback dac@DocumentAPICallback{..} = do
       res <- execute dac
       case res of
@@ -80,7 +76,7 @@ documentAPICallback = Action {
           return ()
 
 
-triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadIO m) => Document -> m ()
+triggerAPICallbackIfThereIsOne :: (MonadDB m, Log.MonadLog m) => Document -> m ()
 triggerAPICallbackIfThereIsOne doc = do
       case (documentapicallbackurl doc) of
         Nothing -> do

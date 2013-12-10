@@ -4,7 +4,7 @@ module Doc.Screenshot
 
 import Control.Applicative ((<$>), (<*>))
 import Data.Maybe (isJust)
-import DB.Binary (Binary(..))
+import Database.PostgreSQL.PQTypes (Binary(..))
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
 import MinutesTime (MinutesTime,parseMinutesTimeRealISO, formatMinutesTimeRealISO)
@@ -14,7 +14,7 @@ import Text.JSON.ToJSValue (ToJSValue(..))
 
 data Screenshot = Screenshot
  { time  :: MinutesTime
- , image :: Binary
+ , image :: Binary BS.ByteString
  }
  deriving (Show, Eq, Ord)
 

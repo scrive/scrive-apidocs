@@ -28,6 +28,7 @@ import SMS.Model
 import SMS.Data
 import Mails.SendMail
 import Mails.MailsConfig
+import MinutesTime
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import Templates
 import User.Model
@@ -81,14 +82,14 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
       _ <- dbUpdate $ MarkSMSEventAsRead eid
       return ()
 
-    deleteSMS :: MonadDB m => ShortMessageID -> m ()
+    deleteSMS :: (MonadDB m, Log.MonadLog m) => ShortMessageID -> m ()
     deleteSMS mid = do
       success <- dbUpdate $ DeleteSMS mid
       if (not success)
         then Log.attention_ $ "Couldn't delete sms #" ++ show mid
         else Log.mixlog_ $ "Deleted sms #" ++ show mid
 
-handleDeliveredInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
+handleDeliveredInvitation :: (CryptoRNG m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
 handleDeliveredInvitation signlinkid = do
   theDocumentID >>= \did -> Log.mixlog_ $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case
@@ -99,7 +100,7 @@ handleDeliveredInvitation signlinkid = do
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation :: (CryptoRNG m, Log.MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleUndeliveredSMSInvitation mbd hostpart mc signlinkid = do
   theDocumentID >>= \did -> Log.mixlog_ $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case

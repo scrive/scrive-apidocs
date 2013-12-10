@@ -2,6 +2,8 @@ module DB.Model.Migration (
     Migration(..)
   )  where
 
+import Data.Int
+
 import DB.Model.Table
 
 -- | Migration object. Fields description:
@@ -14,6 +16,6 @@ import DB.Model.Table
 
 data Migration m = Migration {
   mgrTable :: Table
-, mgrFrom  :: Int
+, mgrFrom  :: Int32
 , mgrDo    :: m ()
 }

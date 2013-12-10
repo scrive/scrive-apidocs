@@ -2,18 +2,18 @@ module AppDBMain (
    main
   ) where
 
-import DB.SQLFunction
 import Control.Monad.IO.Class
 import System.IO
 import System.Environment
 import AppConf
 import Configuration
+import DB
 import DB.Checks
 import DB.PostgreSQL
+import DB.SQLFunction
 
 import AppDBTables
 import AppDBMigrations
-
 
 main :: IO ()
 main = do
@@ -25,6 +25,7 @@ main = do
     args <- getArgs
     readConfig (liftIO . putStrLn) appname args "kontrakcja.conf"
 
-  withPostgreSQL (dbConfig appConf) $ do
+  let connSource = defaultSource . pgConnSettings $ dbConfig appConf
+  withPostgreSQL connSource $ do
     migrateDatabase (liftIO . putStrLn) kontraTables kontraMigrations
     defineMany kontraFunctions

@@ -12,15 +12,16 @@ module DB.Model.Table (
   , sqlAlterTable
   ) where
 
-import Data.Convertible
 import Data.Char
-import Database.HDBC.SqlValue
+import Data.Int
+import Data.Monoid.Space
+import Data.Monoid.Utils
+import Database.PostgreSQL.PQTypes
 
 import DB.Model.Check
 import DB.Model.Index
 import DB.Model.ForeignKey
 import DB.Model.PrimaryKey
-import DB.SQL
 
 data ColumnType
   = BigIntT
@@ -32,12 +33,16 @@ data ColumnType
   | IntegerT
   | SmallIntT
   | TextT
+  | VarCharT -- for compatibility, do not use this
   | TimestampWithZoneT
   deriving (Eq, Show)
 
-instance Convertible SqlValue ColumnType where
-  safeConvert v = do
-    t <- safeConvert v
+instance PQFormat ColumnType where
+  pqFormat _ = pqFormat (undefined::String)
+instance FromSQL ColumnType where
+  type PQBase ColumnType = PQBase String
+  fromSQL mbase = do
+    t <- fromSQL mbase
     case map toLower t of
       "bigint" -> return BigIntT
       "bytea" -> return BinaryT
@@ -47,16 +52,11 @@ instance Convertible SqlValue ColumnType where
       "integer" -> return IntegerT
       "smallint" -> return SmallIntT
       "text" -> return TextT
-      "character varying" -> return TextT
+      "character varying" -> return VarCharT
       "timestamp with time zone" -> return TimestampWithZoneT
-      _ -> Left ConvertError {
-          convSourceValue = t
-        , convSourceType = "String"
-        , convDestType = "ColumnType"
-        , convErrorMessage = "Unknown data type"
-        }
+      _ -> hpqTypesError $ "Unknown data type: " ++ t
 
-columnTypeToSQL :: ColumnType -> RawSQL
+columnTypeToSQL :: ColumnType -> RawSQL ()
 columnTypeToSQL BigIntT = "BIGINT"
 columnTypeToSQL BigSerialT = "BIGSERIAL"
 columnTypeToSQL BinaryT = "BYTEA"
@@ -66,15 +66,16 @@ columnTypeToSQL DoubleT = "DOUBLE PRECISION"
 columnTypeToSQL IntegerT = "INTEGER"
 columnTypeToSQL SmallIntT = "SMALLINT"
 columnTypeToSQL TextT = "TEXT"
+columnTypeToSQL VarCharT = "VARCHAR"
 columnTypeToSQL TimestampWithZoneT = "TIMESTAMPTZ"
 
 ----------------------------------------
 
 data TableColumn = TableColumn {
-  colName     :: RawSQL
+  colName     :: RawSQL ()
 , colType     :: ColumnType
 , colNullable :: Bool
-, colDefault  :: Maybe RawSQL
+, colDefault  :: Maybe (RawSQL ())
 } deriving Show
 
 tblColumn :: TableColumn
@@ -85,24 +86,26 @@ tblColumn = TableColumn {
 , colDefault = Nothing
 }
 
-sqlAddColumn :: TableColumn -> SQL
-sqlAddColumn TableColumn{..} = "ADD COLUMN"
-  <+> raw colName
-  <+> raw (columnTypeToSQL colType)
-  <+> (if colNullable then "NULL" else "NOT NULL")
-  <+> raw (maybe "" ("DEFAULT" <+>) colDefault)
+sqlAddColumn :: TableColumn -> RawSQL ()
+sqlAddColumn TableColumn{..} = smconcat [
+    "ADD COLUMN"
+  , colName
+  , columnTypeToSQL colType
+  , if colNullable then "NULL" else "NOT NULL"
+  , maybe "" ("DEFAULT" <+>) colDefault
+  ]
 
-sqlAlterColumn :: RawSQL -> RawSQL -> SQL
-sqlAlterColumn cname alter = "ALTER COLUMN" <+> raw cname <+> raw alter
+sqlAlterColumn :: RawSQL () -> RawSQL () -> RawSQL ()
+sqlAlterColumn cname alter = "ALTER COLUMN" <+> cname <+> alter
 
-sqlDropColumn :: RawSQL -> SQL
-sqlDropColumn cname = "DROP COLUMN" <+> raw cname
+sqlDropColumn :: RawSQL () -> RawSQL ()
+sqlDropColumn cname = "DROP COLUMN" <+> cname
 
 ----------------------------------------
 
 data Table = Table {
-  tblName          :: RawSQL
-, tblVersion       :: Int
+  tblName          :: RawSQL ()
+, tblVersion       :: Int32
 , tblColumns       :: [TableColumn]
 , tblPrimaryKey    :: Maybe PrimaryKey
 , tblChecks        :: [TableCheck]
@@ -121,10 +124,12 @@ tblTable = Table {
 , tblIndexes = []
 }
 
-sqlCreateTable :: RawSQL -> SQL
-sqlCreateTable tname = "CREATE TABLE" <+> raw tname <+> "()"
+sqlCreateTable :: RawSQL () -> RawSQL ()
+sqlCreateTable tname = "CREATE TABLE" <+> tname <+> "()"
 
-sqlAlterTable :: RawSQL -> [SQL] -> SQL
-sqlAlterTable tname alter_statements = "ALTER TABLE"
-  <+> raw tname
-  <+> intersperseNoWhitespace ", " alter_statements
+sqlAlterTable :: RawSQL () -> [RawSQL ()] -> RawSQL ()
+sqlAlterTable tname alter_statements = smconcat [
+    "ALTER TABLE"
+  , tname
+  , mintercalate ", " alter_statements
+  ]

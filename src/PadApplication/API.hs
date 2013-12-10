@@ -2,7 +2,7 @@ module PadApplication.API (
     padApplicationAPI
   ) where
 
-
+import DB.SQL
 import Happstack.StaticRouting
 import KontraMonad
 import Happstack.Server.Types
@@ -10,7 +10,6 @@ import Routing
 import API.APIVersion (APIVersion(..))
 import Kontra
 import API.Monad
-import DB.SQL2
 import Control.Exception.Lifted
 import Control.Monad
 import Happstack.Fields

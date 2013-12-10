@@ -12,6 +12,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import File.Storage (getFileIDContents)
 import Control.Monad.IO.Class
+import qualified Log
 import qualified PdfModel as P
 import qualified Amazon as AWS
 import Control.Monad
@@ -22,7 +23,7 @@ data Attachment = Attachment
   , content  :: BSL.ByteString
   } deriving (Eq, Ord, Show)
 
-fetch :: (MonadDB m, MonadIO m, AWS.AmazonMonad m) => Document -> m [Attachment]
+fetch :: (Log.MonadLog m, MonadDB m, MonadIO m, AWS.AmazonMonad m) => Document -> m [Attachment]
 fetch doc = do
   case documentsealedfile doc of
     Nothing -> return []

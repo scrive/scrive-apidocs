@@ -69,5 +69,5 @@ addAttemptCountToSMSes =
     mgrTable = tableSMSes
   , mgrFrom = 1
   , mgrDo = do
-      kRunRaw "ALTER TABLE smses ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0"
+      runSQL_ "ALTER TABLE smses ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0"
   }

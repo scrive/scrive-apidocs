@@ -9,5 +9,5 @@ removeDuplicateIndexFromDocumentApiCallbacks = Migration {
 , mgrFrom = 1
 , mgrDo = do
   let Table{..} = tableDocumentApiCallbacks
-  kRun_ . sqlDropIndex tblName $ indexOnColumn "document_id"
+  runQuery_ . sqlDropIndex tblName $ indexOnColumn "document_id"
 }

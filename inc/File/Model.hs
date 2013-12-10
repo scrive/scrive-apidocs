@@ -8,12 +8,11 @@ module File.Model (
     ) where
 
 import Control.Applicative
-import Database.HDBC
+import Data.Int
 
 import Crypto
 import Crypto.RNG
 import DB
-import DB.SQL2
 import File.File
 import File.FileID
 import File.Conditions
@@ -23,29 +22,27 @@ import qualified Crypto.Hash.SHA1 as SHA1
 data GetFileByFileID = GetFileByFileID FileID
 instance MonadDB m => DBQuery m GetFileByFileID File where
   query (GetFileByFileID fid) = do
-    kRunAndFetch1OrThrowWhyNot fetchFilesDecoder $ sqlSelect "files" $ do
-      mapM_ (sqlResult . raw) filesSelectors
+    kRunAndFetch1OrThrowWhyNot fetchFile $ sqlSelect "files" $ do
+      mapM_ sqlResult filesSelectors
       sqlWhereFileIDIs fid
       sqlWhereFileWasNotPurged
 
-data NewFile = NewFile String Binary
+data NewFile = NewFile String (Binary BS.ByteString)
 instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile FileID where
   update (NewFile filename content) = do
-    kRun_ $ sqlInsert "files" $ do
+    runQuery_ $ sqlInsert "files" $ do
         sqlSet "name" filename
         sqlSet "content" $ content
-        sqlSet "checksum" $ SHA1.hash `binApp` content
-        sqlSet "size" $ BS.length $ unBinary content
+        sqlSet "checksum" $ SHA1.hash <$> content
+        sqlSet "size" (fromIntegral . BS.length $ unBinary content :: Int32)
         sqlResult "id"
-    let fetchIDs = kFold decoder []
-        decoder acc fid = fid : acc
-    fetchIDs >>= exactlyOneObjectReturnedGuard
+    fetchOne unSingle
 
 data FileMovedToAWS = FileMovedToAWS FileID String String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
   update (FileMovedToAWS fid bucket url aes) =
-    kRun_ $ sqlUpdate "files" $ do
-        sqlSet "content" SqlNull
+    runQuery_ $ sqlUpdate "files" $ do
+        sqlSet "content" (Nothing :: Maybe (Binary BS.ByteString))
         sqlSet "amazon_bucket" bucket
         sqlSet "amazon_url" url
         sqlSet "aes_key" $ aesKey aes
@@ -56,11 +53,11 @@ instance MonadDB m => DBUpdate m FileMovedToAWS () where
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
   query GetFileThatShouldBeMovedToAmazon = do
-    kRun_ $ sqlSelect "files" $ do
+    runQuery_ $ sqlSelect "files" $ do
       sqlWhere "content IS NOT NULL"
       sqlLimit 1
-      mapM_ (sqlResult . raw) filesSelectors
-    fetchFiles >>= oneObjectReturnedGuard
+      mapM_ sqlResult filesSelectors
+    fetchMaybe fetchFile
 
 data PurgeFile = PurgeFile FileID
 instance MonadDB m => DBUpdate m PurgeFile () where
@@ -70,8 +67,7 @@ instance MonadDB m => DBUpdate m PurgeFile () where
       sqlSetCmd "content" "NULL"
       sqlWhereFileIDIs fid
 
-
-filesSelectors :: [RawSQL]
+filesSelectors :: [SQL]
 filesSelectors = [
     "id"
   , "name"
@@ -83,21 +79,8 @@ filesSelectors = [
   , "aes_iv"
   ]
 
-fetchFiles :: MonadDB m => m [File]
-fetchFiles = kFold fetchFilesDecoder []
-
-fetchFilesDecoder :: [File]
-                  -> FileID
-                  -> String
-                  -> Maybe Binary
-                  -> Maybe String
-                  -> Maybe String
-                  -> Maybe Binary
-                  -> Maybe Binary
-                  -> Maybe Binary
-                  -> [File]
-fetchFilesDecoder acc fid fname content amazon_bucket
-      amazon_url checksum maes_key maes_iv = File {
+fetchFile :: (FileID, String, Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString)) -> File
+fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, maes_iv) = File {
         fileid = fid
       , filename = fname
       , filestorage =
@@ -124,7 +107,7 @@ fetchFilesDecoder acc fid fname content amazon_bucket
             (Just _,      Just _,   Just (Left msg))  -> err msg
             d                                  -> error $ "Invalid AWS data for file with id = " ++ show fid ++ ": " ++ show d
       , filechecksum = unBinary `fmap` checksum
-    } : acc
+    }
       where
         err :: String -> FileStorage
         err msg = error $ "File with id = " ++ show fid ++ " has invalid aes/iv pair: " ++ msg

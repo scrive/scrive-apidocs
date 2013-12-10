@@ -3,10 +3,11 @@ module Doc.SealStatus
   , HasGuardtimeSignature(..)
   ) where
 
-import Database.HDBC (SqlValue)
-import Data.Convertible (Convertible(..), convError)
 import Data.Function (on)
+import Data.Int
 import Data.Typeable (Typeable)
+import Database.PostgreSQL.PQTypes
+import qualified Control.Exception as E
 
 data SealStatus =
    UnknownSealStatus   -- ^ The file's digital signature status has not been determined
@@ -49,11 +50,20 @@ instance Enum SealStatus where
 instance Ord SealStatus where
   compare = compare `on` fromEnum
 
-instance Convertible SqlValue SealStatus where
-  safeConvert s = do
-    i :: Int <- safeConvert s
-    if i < -1 || i > 5 then convError "Doc.SealStatus" i
-                      else return (toEnum i)
+instance PQFormat SealStatus where
+  pqFormat _ = pqFormat (undefined::Int16)
 
-instance Convertible SealStatus SqlValue where
-  safeConvert = safeConvert . fromEnum
+instance FromSQL SealStatus where
+  type PQBase SealStatus = PQBase Int16
+  fromSQL mbase = do
+    n :: Int16 <- fromSQL mbase
+    if n < -1 || n > 5
+      then E.throwIO $ RangeError {
+          reRange = [(-1, 5)]
+        , reValue = n
+      }
+      else return . toEnum . fromIntegral $ n
+
+instance ToSQL SealStatus where
+  type PQDest SealStatus = PQDest Int16
+  toSQL ss = toSQL (fromIntegral (fromEnum ss) :: Int16)

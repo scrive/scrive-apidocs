@@ -1,18 +1,14 @@
 module DB.SQLFunction where
 
 import Data.Foldable as F
-
-import DB.Core
-
-import DB.Functions
-import DB.SQL
+import Database.PostgreSQL.PQTypes
 
 -- | Basic SQL functions handling
 
-newtype SQLFunction = SQLFunction { sqlFunDef :: SQL }
+newtype SQLFunction = SQLFunction { sqlFunDef :: RawSQL () }
 
 define :: MonadDB m => SQLFunction -> m ()
-define SQLFunction{..} = kRun_ sqlFunDef
+define SQLFunction{..} = runQuery_ sqlFunDef
 
 defineMany :: (Foldable f, MonadDB m) => f SQLFunction -> m ()
 defineMany = F.mapM_ define

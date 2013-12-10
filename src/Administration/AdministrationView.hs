@@ -24,7 +24,6 @@ import MinutesTime
 import Kontra
 import qualified Text.StringTemplates.Fields as F
 
-
 adminMainPage :: TemplatesMonad m => Context -> m String
 adminMainPage ctx = renderTemplate "adminsmain" $ F.value "admin" $ isAdmin ctx
 
@@ -38,9 +37,9 @@ statisticsFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F
 statisticsFields formatTime = map f
   where f uus = do
                 F.value "date" $ formatTime (fst $ uusTimeSpan uus)
-                F.value "closed" (uusDocumentsClosed uus)
-                F.value "signatures" (uusSignaturesClosed uus)
-                F.value "sent" (uusDocumentsSent uus)
+                F.value "closed" $ uusDocumentsClosed uus
+                F.value "signatures" $ uusSignaturesClosed uus
+                F.value "sent" $ uusDocumentsSent uus
 
 statisticsCompanyFields :: Monad m => (MinutesTime -> String) -> [UserUsageStats] -> [F.Fields m ()]
 statisticsCompanyFields formatTime = map f . appendTotalsPerTimespan . filter nonZero

@@ -11,6 +11,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Data.Maybe
+import Data.Monoid.Space
 import Happstack.Server hiding (Session)
 
 import ActionQueue.Core
@@ -59,7 +60,7 @@ getCurrentSession = withDataFn currentSessionInfoCookie $ \msc -> case msc of
       Nothing  -> emptySession
   Nothing -> emptySession
 
-updateSession :: (FilterMonad Response m, MonadDB m, ServerMonad m, MonadIO m)
+updateSession :: (FilterMonad Response m, Log.MonadLog m, MonadDB m, ServerMonad m, MonadIO m)
               => Session -> Session -> m ()
 updateSession old_ses ses = do
   case sesID ses == tempSessionID of
@@ -112,6 +113,6 @@ getSession sid token = runMaybeT $ do
 -- because we do deletion BEFORE inserting new session. This is better
 -- because this way we can be sure that newest session will always end
 -- up in the database.
-deleteSuperfluousUserSessions :: MonadDB m => UserID -> m Integer
+deleteSuperfluousUserSessions :: MonadDB m => UserID -> m Int
 deleteSuperfluousUserSessions uid = do
-  kRun $ SQL "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? ORDER BY expires DESC OFFSET 4)" [toSql uid]
+  runQuery $ "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id =" <?> uid <+> "ORDER BY expires DESC OFFSET 4)"

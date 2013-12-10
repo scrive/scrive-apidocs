@@ -13,7 +13,8 @@ import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (MonadReader, ReaderT(..), lift, runReaderT, ask, MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
 import Crypto.RNG (CryptoRNG)
-import DB (MonadDB, kRun_, (<?>), (<+>))
+import Data.Monoid.Space
+import DB
 import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, runRowCacheTM, rowCache, rowCacheID, updateRow, updateRowWithID)
 import Doc.DocStateData (Document)
 import Doc.DocumentID (DocumentID)
@@ -79,7 +80,7 @@ withDocumentM dm = runRowCacheTM dm . unDocumentT . (lockDocument >>)
 -- | Lock a document so that other transactions that attempt to lock or update the document will wait until the current transaction is done.
 lockDocument :: DocumentMonad m => m ()
 lockDocument = updateDocumentWithID $ \did ->
-  kRun_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"
+  runQuery_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"
 
 --  The interesting instance
 

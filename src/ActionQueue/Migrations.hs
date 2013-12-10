@@ -9,7 +9,7 @@ removeDuplicateIndexFromAccessNewAccounts = Migration {
 , mgrFrom = 1
 , mgrDo = do
   let Table{..} = tableAccessNewAccounts
-  kRun_ . sqlDropIndex tblName $ indexOnColumn "user_id"
+  runQuery_ . sqlDropIndex tblName $ indexOnColumn "user_id"
 }
 
 removeDuplicateIndexFromPasswordReminders :: MonadDB m => Migration m
@@ -18,7 +18,7 @@ removeDuplicateIndexFromPasswordReminders = Migration {
 , mgrFrom = 1
 , mgrDo = do
   let Table{..} = tablePasswordReminders
-  kRun_ . sqlDropIndex tblName $ indexOnColumn "user_id"
+  runQuery_ . sqlDropIndex tblName $ indexOnColumn "user_id"
 }
 
 removeDuplicateIndexFromEmailChangeRequests :: MonadDB m => Migration m
@@ -27,7 +27,7 @@ removeDuplicateIndexFromEmailChangeRequests = Migration {
 , mgrFrom = 1
 , mgrDo = do
   let Table{..} = tableEmailChangeRequests
-  kRun_ . sqlDropIndex tblName $ indexOnColumn "user_id"
+  runQuery_ . sqlDropIndex tblName $ indexOnColumn "user_id"
 }
 
 removeDuplicateIndexFromUserAccountRequests :: MonadDB m => Migration m
@@ -36,5 +36,5 @@ removeDuplicateIndexFromUserAccountRequests = Migration {
 , mgrFrom = 1
 , mgrDo = do
   let Table{..} = tableUserAccountRequests
-  kRun_ . sqlDropIndex tblName $ indexOnColumn "user_id"
+  runQuery_ . sqlDropIndex tblName $ indexOnColumn "user_id"
 }

@@ -44,7 +44,6 @@ import DB
 import Kontra
 import User.Model
 import EvidenceLog.Model
-import DB.SQL2
 
 import OAuth.Util
 import OAuth.Model

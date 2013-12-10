@@ -6,6 +6,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent.STM
 import Data.Char
 import Data.Word
@@ -26,7 +27,6 @@ import Control.Monad.Reader.Class
 import File.FileID
 import Crypto.RNG
 import DB
-import DB.SQL2
 import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage
@@ -185,14 +185,14 @@ instance Arbitrary SignatureInfo where
     f <- arbitrary
     g <- arbitrary
     h <- arbitrary
-    return $ SignatureInfo { signatureinfotext        = a
-                           , signatureinfosignature   = b
-                           , signatureinfocertificate = c
+    return $ SignatureInfo { signatureinfotext        = fromSNN a
+                           , signatureinfosignature   = fromSNN b
+                           , signatureinfocertificate = fromSNN c
                            , signatureinfoprovider    = d
                            , signaturefstnameverified = e
                            , signaturelstnameverified = f
                            , signaturepersnumverified = g
-                           , signatureinfoocspresponse = h
+                           , signatureinfoocspresponse = fromSNN <$> h
                            }
 
 instance Arbitrary CSVUpload where
@@ -338,7 +338,7 @@ instance Arbitrary UserInfo where
 instance Arbitrary Password where
   arbitrary = Password <$> arbitrary <*> arbitrary
 
-instance Arbitrary Binary where
+instance Arbitrary (Binary BS.ByteString) where
   arbitrary = Binary <$> arbitrary
 
 instance Arbitrary SignupMethod where
@@ -363,15 +363,15 @@ instance Arbitrary CollectResponse where
   arbitrary = oneof [outstanding, usersign, complete]
     where
       outstanding = do
-        tid <- arbitrary
+        tid <- fromSNN <$> arbitrary
         return $ CROutstanding tid
       usersign = do
-        tid <- arbitrary
+        tid <- fromSNN <$> arbitrary
         return $ CRUserSign tid
       complete = do
-        tid <- arbitrary
-        sig <- arbitrary
-        attrs <- arbitrary
+        tid <- fromSNN <$> arbitrary
+        sig <- fromSNN <$> arbitrary
+        attrs <- map (fromSNN *** fromSNN) <$> arbitrary
         return $ CRComplete tid sig attrs
 
 instance Arbitrary ELegTransaction where
@@ -384,15 +384,15 @@ instance Arbitrary ELegTransaction where
     status <- arbitrary
     ref <- arbitrary
     return ELegTransaction {
-        transactiontransactionid = tid
-      , transactionnonce = nonce
-      , transactiontbs = tbs
-      , transactionencodedtbs = encodedtbs
+        transactiontransactionid = fromSNN tid
+      , transactionnonce = fromSNN <$> nonce
+      , transactiontbs = fromSNN tbs
+      , transactionencodedtbs = fromSNN <$> encodedtbs
       , transactionsignatorylinkid = Nothing
       , transactiondocumentid = unsafeDocumentID 0
       , transactionmagichash = token
-      , transactionstatus = status
-      , transactionoref = ref
+      , transactionstatus = either (Left . fromSNN) Right status
+      , transactionoref = fromSNN <$> ref
     }
 
 -- generate (byte)strings without \NUL in them since
@@ -495,7 +495,7 @@ addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe U
 addNewCompanyUser firstname secondname email cid =
   dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue Nothing
 
-addNewRandomUser :: (CryptoRNG m, MonadDB m) => m User
+addNewRandomUser :: (CryptoRNG m, MonadDB m, Log.MonadLog m) => m User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
@@ -815,21 +815,27 @@ assertString = liftIO . T.assertString
 assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
 assertionPredicate = liftIO . T.assertionPredicate
 
-
 assertRaisesKontra :: forall e v m. (KontraException e, Show v, MonadIO m, MonadBaseControl IO m)
              => (e -> Bool) -> m v -> m ()
 assertRaisesKontra correctException action =
-  helper `handle` (action >>= \r -> assertString $ "Expected KontraException " ++ show (typeOf (undefined :: e)) ++
-                    ", instead returned result " ++ show r)
+  (action >>= \r -> assertString $ "Expected KontraException " ++ typeOfE ++ ", instead returned result " ++ show r) `catches` [
+    Handler helper
+  -- support also KontraException nested within DBException
+  , Handler $ \e@DBException{..} -> case cast dbeError of
+    Just e' -> helper e'
+    Nothing -> invExc e
+  ]
   where
-    helper (SomeKontraException e) =
-      case cast e of
-        Just e1 -> if correctException e1
-                   then return ()
-                   else assertString $ "KontraException " ++ show (typeOf (undefined :: e)) ++
-                          " is not correct " ++ show e1
-        Nothing -> assertString $ "Expected KontraException " ++ show (typeOf (undefined :: e)) ++
-                          ", instead got exception " ++ show (typeOf e)
+    helper (SomeKontraException e) = case cast e of
+      Just e' -> if correctException e'
+        then return ()
+        else assertString $ "KontraException " ++ typeOfE ++ " is not correct " ++ show e'
+      Nothing -> invExc e
+
+    invExc :: (Show a, Typeable a) => a -> m ()
+    invExc e = assertString $ "Expected KontraException " ++ typeOfE ++ ", instead got exception " ++ show e
+
+    typeOfE = show $ typeOf (undefined :: e)
 
 -- other helpers
 

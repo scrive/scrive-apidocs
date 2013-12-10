@@ -21,10 +21,12 @@ module Mails.Model (
 
 import Control.Monad
 import Control.Applicative
-import Control.Monad.State.Lazy
+import Control.Monad.State
+import Data.Int
+import Data.Maybe hiding (fromJust)
+import Data.Monoid.Space
 
 import DB
-import DB.SQL2
 import MagicHash
 import Mails.Data
 import MinutesTime
@@ -39,16 +41,16 @@ instance MonadDB m => DBUpdate m CreateEmail MailID where
 data AddContentToEmail = AddContentToEmail MailID String String [Attachment] XSMTPAttrs
 instance MonadDB m => DBUpdate m AddContentToEmail Bool where
   update (AddContentToEmail mid title content attachments xsmtpapi) = do
-    result <- kRun01 $ sqlUpdate "mails" $ do
-        sqlSet "title" title
-        sqlSet "content" content
-        sqlSet "x_smtp_attrs" xsmtpapi
-        sqlWhereEq "id" mid
+    result <- runQuery01 $ sqlUpdate "mails" $ do
+      sqlSet "title" title
+      sqlSet "content" content
+      sqlSet "x_smtp_attrs" xsmtpapi
+      sqlWhereEq "id" mid
     when result $ do
-      kRun_ $ sqlDelete "mail_attachments" $
+      runQuery_ $ sqlDelete "mail_attachments" $
         sqlWhereEq "mail_id" mid
-      when( not (null attachments)) $ do
-        kRun_ $ sqlInsert "mail_attachments" $ do
+      when (not $ null attachments) $ do
+        runQuery_ $ sqlInsert "mail_attachments" $ do
           sqlSet "mail_id" mid
           sqlSetList "name" $ attName <$> attachments
           sqlSetList "content" $ either (Just . Binary) (const Nothing) . attContent <$> attachments
@@ -58,21 +60,22 @@ instance MonadDB m => DBUpdate m AddContentToEmail Bool where
 data MarkEventAsRead = MarkEventAsRead EventID MinutesTime
 instance MonadDB m => DBUpdate m MarkEventAsRead Bool where
   update (MarkEventAsRead eid time) =
-    kRun01 $ sqlUpdate "mail_events" $ do
+    runQuery01 $ sqlUpdate "mail_events" $ do
       sqlSet "event_read" time
       sqlWhereEq "id" eid
 
 data DeleteEmail = DeleteEmail MailID
 instance MonadDB m => DBUpdate m DeleteEmail Bool where
   update (DeleteEmail mid) = do
-    kRun01 $ sqlDelete "mails" $ do
+    runQuery01 $ sqlDelete "mails" $ do
       sqlWhereEq "id" mid
 
 data DeleteMailsOlderThenDays = DeleteMailsOlderThenDays Integer
-instance MonadDB m => DBUpdate m DeleteMailsOlderThenDays Integer where
+instance MonadDB m => DBUpdate m DeleteMailsOlderThenDays Int where
   update (DeleteMailsOlderThenDays days) = do
-    kRun $ sqlDelete "mails" $ do
-      sqlWhere $ "(now() > to_be_sent + interval" <+> raw (unsafeFromString ("'"++show days++" days'")) <+> ")" -- Sorry but it did not work as param.
+    runQuery . sqlDelete "mails" $ do
+      -- can't inject interval as a parameter, unfortunately.
+      sqlWhere $ "now() > to_be_sent + interval '" <+> unsafeSQL (show days) <+> "days'"
 
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
@@ -80,22 +83,22 @@ instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, E
 
 selectMails :: MonadDB m => SqlSelect -> m [Mail]
 selectMails query' = do
-  kRun_ $ "CREATE TEMP TABLE mails_tmp AS" <+> toSQLCommand query'
-  kRun_ $ ("SELECT * FROM mails_tmp" :: SQL)
-  mails <- fetchMails
+  runQuery_ $ "CREATE TEMP TABLE mails_tmp AS" <+> toSQLCommand query'
+  runSQL_ "SELECT * FROM mails_tmp"
+  mails <- fetchMany fetchMail
 
-  kRun_ $ sqlSelect "mail_attachments" $ do
+  runQuery_ . sqlSelect "mail_attachments" $ do
     sqlResult "mail_id"
     sqlResult "name"
     sqlResult "content"
     sqlResult "file_id"
-    sqlOrderBy "id DESC"
+    sqlOrderBy "id"
     sqlWhereExists $ sqlSelect "mails_tmp" $
       sqlWhere "mails_tmp.id = mail_attachments.mail_id"
 
   attachments <- fetchMailAttachments
 
-  kRun_ $ ("DROP TABLE mails_tmp" :: SQL)
+  runSQL_ "DROP TABLE mails_tmp"
 
   return (flip map mails $ \mail -> mail { mailAttachments = Map.findWithDefault [] (mailID mail) attachments })
 
@@ -137,66 +140,71 @@ instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, XSMTPAtt
 data GetEmail = GetEmail MailID MagicHash
 instance MonadDB m => DBQuery m GetEmail (Maybe Mail) where
   query (GetEmail mid token) = do
-    mails <- selectMails $ sqlSelectMails $ sqlWhereEq "id" mid >> sqlWhereEq "token" token
-    oneObjectReturnedGuard mails
+    mails <- selectMails . sqlSelectMails $ do
+      sqlWhereEq "id" mid
+      sqlWhereEq "token" token
+    return $ listToMaybe mails
 
 data ResendEmailsSentSince = ResendEmailsSentSince MinutesTime
-instance MonadDB m => DBUpdate m ResendEmailsSentSince Integer where
+instance MonadDB m => DBUpdate m ResendEmailsSentSince Int where
   update (ResendEmailsSentSince time) =
-    kRun $ sqlUpdate "mails" $ do
-      sqlSet "sent" SqlNull
-      sqlWhere "service_test = FALSE"
+    runQuery $ sqlUpdate "mails" $ do
+      sqlSet "sent" (Nothing :: Maybe MinutesTime)
+      sqlWhereEq "service_test" False
       sqlWhere $ "sent >= " <?> time
 
 data DeferEmail = DeferEmail MailID MinutesTime
 instance MonadDB m => DBUpdate m DeferEmail Bool where
   update (DeferEmail mid time) =
-    kRun01 $ sqlUpdate "mails" $ do
-        sqlSet "to_be_sent" time
-        sqlSetCmd "attempt" "attempt + 1"
-        sqlWhereEq "id" mid
+    runQuery01 $ sqlUpdate "mails" $ do
+      sqlSet "to_be_sent" time
+      sqlSetCmd "attempt" "attempt + 1"
+      sqlWhereEq "id" mid
 
 data MarkEmailAsSent = MarkEmailAsSent MailID MinutesTime
 instance MonadDB m => DBUpdate m MarkEmailAsSent Bool where
   update (MarkEmailAsSent mid time) = do
-    kRun01 $ SQL "UPDATE mails SET sent = ? WHERE id = ?"
-             [toSql time, toSql mid]
+    runQuery01 . sqlUpdate "mails" $ do
+      sqlSet "sent" time
+      sqlWhereEq "id" mid
 
 data UpdateWithEvent = UpdateWithEvent MailID Event
 instance MonadDB m => DBUpdate m UpdateWithEvent Bool where
   update (UpdateWithEvent mid ev) = do
-    kRun01 $ SQL "INSERT INTO mail_events (mail_id, event) VALUES (?, ?)"
-             [toSql mid, toSql ev]
+    runQuery01 . sqlInsert "mail_events" $ do
+      sqlSet "mail_id" mid
+      sqlSet "event" ev
 
 sqlSelectMails :: State SqlSelect () -> SqlSelect
 sqlSelectMails refine = sqlSelect "mails" $ do
-                    sqlResult "mails.id"
-                    sqlResult "mails.token"
-                    sqlResult "mails.sender"
-                    sqlResult "mails.receivers"
-                    sqlResult "mails.title"
-                    sqlResult "mails.content"
-                    sqlResult "mails.x_smtp_attrs"
-                    sqlResult "mails.service_test"
-                    sqlResult "mails.attempt"
-                    sqlOrderBy "service_test ASC"
-                    sqlOrderBy "id DESC"
-                    refine
+  sqlResult "mails.id"
+  sqlResult "mails.token"
+  sqlResult "mails.sender"
+  sqlResult "mails.receivers"
+  sqlResult "mails.title"
+  sqlResult "mails.content"
+  sqlResult "mails.x_smtp_attrs"
+  sqlResult "mails.service_test"
+  sqlResult "mails.attempt"
+  sqlOrderBy "service_test ASC"
+  sqlOrderBy "id"
+  refine
 
-insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> Int -> m (Maybe MailID)
-insertEmail service_test token sender to to_be_sent attempt =
-  getOne $ sqlInsert "mails" $ do
-      sqlSet "token" token
-      sqlSet "sender" sender
-      sqlSet "receivers" to
-      sqlSet "to_be_sent" to_be_sent
-      sqlSet "service_test" service_test
-      sqlSet "attempt" attempt
-      sqlResult "id"
+insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> Int32 -> m (Maybe MailID)
+insertEmail service_test token sender to to_be_sent attempt = do
+  runQuery_ . sqlInsert "mails" $ do
+    sqlSet "token" token
+    sqlSet "sender" sender
+    sqlSet "receivers" to
+    sqlSet "to_be_sent" to_be_sent
+    sqlSet "service_test" service_test
+    sqlSet "attempt" attempt
+    sqlResult "id"
+  fetchMaybe unSingle
 
 getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, XSMTPAttrs, Event)]
 getUnreadEvents service_test = do
-  kRun_ $ sqlSelect "mails" $ do
+  runQuery_ . sqlSelect "mails" $ do
     sqlResult "mail_events.id"
     sqlResult "mail_events.mail_id"
     sqlResult "mails.x_smtp_attrs"
@@ -206,38 +214,29 @@ getUnreadEvents service_test = do
     sqlWhere "mail_events.event_read IS NULL"
     sqlOrderBy "mails.id DESC"
     sqlOrderBy "mail_events.id DESC"
-  kFold fetchEvents []
-  where
-    fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc
+  fetchMany id
 
-fetchMails :: MonadDB m => m [Mail]
-fetchMails = kFold decoder []
-  where
-    -- Note: this function gets mails in reversed order, but all queries
-    -- use ORDER BY DESC, so in the end everything is properly ordered.
-    decoder acc mid token sender receivers title content
-     x_smtp_attrs service_test attampt = Mail {
-          mailID = mid
-        , mailToken = token
-        , mailFrom = sender
-        , mailTo = receivers
-        , mailTitle = title
-        , mailContent = content
-        , mailAttachments = []
-        , mailXSMTPAttrs = x_smtp_attrs
-        , mailServiceTest = service_test
-        , mailAttempt = attampt
-        } : acc
+fetchMail :: (MailID, MagicHash, Address, [Address], String, String, XSMTPAttrs, Bool, Int32) -> Mail
+fetchMail (mid, token, sender, receivers, title, content, x_smtp_attrs, service_test, attempt) = Mail {
+  mailID = mid
+, mailToken = token
+, mailFrom = sender
+, mailTo = receivers
+, mailTitle = title
+, mailContent = content
+, mailAttachments = []
+, mailXSMTPAttrs = x_smtp_attrs
+, mailServiceTest = service_test
+, mailAttempt = attempt
+}
 
 fetchMailAttachments :: MonadDB m => m (Map.Map MailID [Attachment])
-fetchMailAttachments = kFold decoder Map.empty
+fetchMailAttachments = foldrM decoder Map.empty
   where
-    -- Note: this function gets mails in reversed order, but all queries
-    -- use ORDER BY DESC, so in the end everything is properly ordered.
-    decoder acc mid name content file_id = Map.insertWith' (++) mid
-            [Attachment { attName = name
-                        , attContent = case (content, file_id) of
-                                         (Just content', Nothing) -> Left $ unBinary content'
-                                         (Nothing, Just file_id') -> Right file_id'
-                                         _ -> error "fetchMailAttachments: content/file_id mismatch"
-                        }] acc
+    decoder (mid, name, content, file_id) acc = return $ Map.insertWith' (++) mid [Attachment {
+      attName = name
+    , attContent = case (content, file_id) of
+      (Just content', Nothing) -> Left $ unBinary content'
+      (Nothing, Just file_id') -> Right file_id'
+      _ -> error "fetchMailAttachments: content/file_id mismatch"
+    }] acc

@@ -28,7 +28,6 @@ import Doc.DocInfo
 import Utils.Default
 import TestingUtil
 import TestKontra
-import DB.SQL2
 import Company.Model
 import Doc.TestInvariants
 import MinutesTime
@@ -1586,7 +1585,7 @@ assertInvariants document = do
 
 testGetDocumentsByCompanyWithFilteringCompany :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
-  (name, value) <- rand 10 arbitrary
+  (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
@@ -1603,7 +1602,7 @@ testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
 
 testGetDocumentsByCompanyWithFilteringFilters :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
-  (name, value) <- rand 10 arbitrary
+  (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
@@ -1644,7 +1643,7 @@ testSetDocumentUnsavedDraft = doTimes 10 $ do
 
 testGetDocumentsByCompanyWithFilteringFinds :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
-  (name, value) <- rand 10 arbitrary
+  (StringNoNUL name, StringNoNUL value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
@@ -1661,9 +1660,9 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
 
 testGetDocumentsByCompanyWithFilteringFindsMultiple :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
-  (name1, value1) <- rand 10 arbitrary
-  (name2, value2) <- rand 10 arbitrary
-  (name3, value3) <- rand 10 arbitrary
+  (StringNoNUL name1, StringNoNUL value1) <- rand 10 arbitrary
+  (StringNoNUL name2, StringNoNUL value2) <- rand 10 arbitrary
+  (StringNoNUL name3, StringNoNUL value3) <- rand 10 arbitrary
   if (name1 /= name2 && name1 /= name2 && name2 /= name3)
    then do
     company <- addNewCompany

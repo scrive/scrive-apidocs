@@ -8,6 +8,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Either
+import Database.PostgreSQL.PQTypes.Internal.Connection
 import System.Directory (createDirectoryIfMissing)
 import System.Environment.UTF8
 import System.IO
@@ -22,7 +23,6 @@ import Crypto.RNG
 import DB
 import DB.Checks
 import DB.SQLFunction
-import DB.PostgreSQL
 import Templates (readGlobalTemplates)
 import TestKontra
 
@@ -54,7 +54,6 @@ import LangTest
 import CompanyAccountsTest
 import MailsTest
 import JSONUtilTest
-import SQLUtilsTest
 import SessionsTest
 import FileTest
 import EvidenceLogTest
@@ -92,7 +91,6 @@ allTests = tail tests
       , ("mails", mailsTests )
       , ("jsonutil", jsonUtilTests )
       , ("file", fileTests )
-      , ("sqlutil", sqlUtilsTests )
       , ("evidencelog", evidenceLogTests)
       , ("evidencetexts", dumpAllEvidenceTexts)
       , ("pad", padTests)
@@ -127,18 +125,24 @@ testMany (allargs, ts) = Log.withLogger $ do
   let (args, envf) =  modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  pgconf <- readFile "kontrakcja_test.conf"
+  pgconf <- BS.readFile "kontrakcja_test.conf"
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   templates <- readGlobalTemplates
-  withPostgreSQL pgconf $ do
+  let connSettings = defaultSettings { csConnInfo = pgconf }
+  conn <- connect connSettings
+  let staticSource = ConnectionSource { withConnection = ($ conn) }
+      connSource = defaultSource connSettings
+      dts = defaultTransactionSettings
+  runDBT connSource dts $ do
     migrateDatabase Log.mixlog_ kontraTables kontraMigrations
     defineMany kontraFunctions
 
-    nex <- getNexus
     active_tests <- liftIO . atomically $ newTVar (True, 0)
     rejected_documents <- liftIO . atomically $ newTVar 0
     let env = envf $ TestEnvSt {
-          teNexus = nex
+          teConnSource = connSource
+        , teStaticConnSource = staticSource
+        , teTransSettings = dts
         , teRNGState = rng
         , teGlobalTemplates = templates
         , teActiveTests = active_tests
@@ -155,8 +159,9 @@ testMany (allargs, ts) = Log.withLogger $ do
       atomically $ do
         n <- snd <$> readTVar active_tests
         when (n /= 0) retry
-      stats <- getNexusStats nex
-      putStrLn $ "SQL: " ++ show stats
+      runDBT staticSource dts { tsAutoTransaction = False } $ do
+        stats <- getConnectionStats
+        liftIO . putStrLn $ "SQL: " ++ show stats
       rejs <- atomically (readTVar rejected_documents)
       putStrLn $ "Documents generated but rejected: " ++ show rejs
 

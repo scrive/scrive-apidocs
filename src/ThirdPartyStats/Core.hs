@@ -17,15 +17,14 @@ module ThirdPartyStats.Core (
   ) where
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString as B
+import Data.Int
 import Data.Monoid
 import Data.Binary
 import Data.String
 import Control.Monad.IO.Class
 import Control.Applicative
 import qualified DB (Binary (..))
-import DB hiding (Binary)
-import DB.SQL2
-import ThirdPartyStats.Tables
+import DB hiding (Binary, put)
 import qualified Log
 import MinutesTime
 import User.UserID (UserID, unsafeUserID)
@@ -244,7 +243,7 @@ instance Monad m => Monoid (EventProcessor m) where
   mconcat = catEventProcs
 
 -- | Remove a number of events from the queue and process them.
-asyncProcessEvents :: (MonadIO m, MonadDB m)
+asyncProcessEvents :: (MonadIO m, Log.MonadLog m, MonadDB m)
                    => (EventName -> [EventProperty] -> m ProcRes)
                       -- ^ Event processing function.
                    -> NumEvents
@@ -265,26 +264,25 @@ asyncProcessEvents process numEvts = do
           _  | otherwise ->
             return ()
 
-    decoder (evts, max_seq) seqnum evt =
+    decoder (evts, max_seq) (seqnum, evt) = return
         (decode (BL.fromChunks [DB.unBinary evt]) : evts, max seqnum max_seq)
 
     -- Delete all events with a sequence number less than or equal to lastEvt.
     deleteEvents lastEvt = do
-          _ <- kRun $ sqlDelete (tblName tableAsyncEventQueue) $ do
-                      sqlWhere $ SQL "sequence_number <= ?" [toSql lastEvt]
-          return ()
+          runQuery_ . sqlDelete "async_event_queue" $ do
+                      sqlWhere $ "sequence_number <=" <?> lastEvt
 
     -- Fetch events from database and turn them into a pair of
     -- (events, highest sequence number in fetched list).
     fetchEvents = do
-            _ <- kRun_ $ sqlSelect (tblName tableAsyncEventQueue) $ do
+            runQuery_ . sqlSelect "async_event_queue" $ do
                 sqlResult "sequence_number"
                 sqlResult "event"
                 sqlOrderBy "sequence_number ASC"
                 case numEvts of
                   NoMoreThan n -> sqlLimit n
                   _            -> return ()
-            kFold decoder ([], 0 :: Integer)
+            foldlM decoder ([], 0 :: Int64)
 
 
 -- | Send a message off to the async queue for later processing.
@@ -297,7 +295,7 @@ asyncProcessEvents process numEvts = do
 --   constructor, whereas others may be arbitrarily named using `someProp`.
 asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> m ()
 asyncLogEvent name props = do
-  kRun_ $ sqlInsert "async_event_queue" $ do
+  runQuery_ $ sqlInsert "async_event_queue" $ do
     sqlSet "event" $ mkBinary $ AsyncEvent name props
   where
     mkBinary = DB.Binary . B.concat . BL.toChunks . encode

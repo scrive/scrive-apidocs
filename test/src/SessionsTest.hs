@@ -1,6 +1,7 @@
 module SessionsTest (sessionsTests) where
 
 import Control.Applicative
+import Data.Int
 import Data.Maybe
 import Happstack.Server
 import Test.Framework
@@ -40,8 +41,8 @@ testNewSessionInsertion = do
   doTimes 12 $ do
     (msess, _) <- insertNewSession uid
     assertBool "session successfully taken from the database" (isJust msess)
-  Just (user_sessions::Int) <- getOne
-    $ SQL "SELECT COUNT(*) FROM sessions WHERE user_id = ?" [toSql uid]
+  runSQL_ $ "SELECT COUNT(*) FROM sessions WHERE user_id =" <?> uid
+  user_sessions :: Int64 <- fetchOne unSingle
   assertEqual "there are only 5 sessions for one user" 5 user_sessions
 
 testSessionUpdate :: TestEnv ()
@@ -59,7 +60,8 @@ testSessionUpdate = do
 testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = doTimes 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
-  Just (tokens::Int) <- getOne $ SQL "SELECT COUNT(*) FROM document_session_tokens WHERE session_id = ?" [toSql $ ctxsessionid ctx]
+  runSQL_ $ "SELECT COUNT(*) FROM document_session_tokens WHERE session_id =" <?> ctxsessionid ctx
+  tokens :: Int64 <- fetchOne unSingle
   assertEqual "token successfully inserted into the database" 1 tokens
 
 testDocumentTicketReinsertion :: TestEnv ()
@@ -100,7 +102,8 @@ insertNewSession uid = do
   -- FIXME: this sucks, but there is no way to get id of newly inserted
   -- session and modifying normal code to get access to it seems like
   -- a bad idea
-  Just sid <- getOne $ SQL "SELECT id FROM sessions ORDER BY id DESC LIMIT 1" []
+  runSQL_ "SELECT id FROM sessions ORDER BY id DESC LIMIT 1"
+  sid <- fetchOne unSingle
   msess <- getSession sid (sesToken sess)
   return (msess, ctx)
 

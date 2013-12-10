@@ -42,7 +42,7 @@ import Instances ()
 import Kontra
 import qualified Log
 import MailContext (MailContextMonad(..), MailContext(..))
-import MinutesTime (MinutesTime, toCalendarTimeInUTC, fromClockTime, minutesBefore)
+import MinutesTime (MinutesTime, getMinutesTime, toCalendarTimeInUTC, fromClockTime, minutesBefore)
 import OurPrelude
 import System.Time (toClockTime, CalendarTime(..), Month(..))
 import Templates (runTemplatesT)
@@ -145,7 +145,7 @@ postDocumentCanceledChange doc@Document{..} = do
 
 -- | After a party has signed - check if we need to close document and
 -- take further actions.
-postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, MonadBase IO m, DocumentMonad m, MonadIO m, KontraMonad m, GuardTimeConfMonad m, MailContextMonad m)
+postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, MonadBase IO m, DocumentMonad m, Log.MonadLog m, MonadIO m, KontraMonad m, GuardTimeConfMonad m, MailContextMonad m)
                           => Document -> m ()
 postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
@@ -160,7 +160,7 @@ postDocumentPendingChange olddoc = do
       theDocument >>= logDocEvent "Doc Closed" author []
       asyncLogEvent SetUserProps [UserIDProp (userid author),
                                   someProp "Last Doc Closed" time]
-      kCommit -- ... so that the forked thread can see our changes
+      commit -- ... so that the forked thread can see our changes
       theDocument >>= \d -> forkAction ("Sealing document #" ++ show (documentid d) ++ ": " ++ (documenttitle d)) $ do
         -- We fork so that the client can get the response to the
         -- signing request without having to wait for the sealing
@@ -177,7 +177,7 @@ postDocumentPendingChange olddoc = do
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
 -- closed or in error.
-postDocumentClosedActions :: ( TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, AmazonMonad m
+postDocumentClosedActions :: ( TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, Log.MonadLog m, AmazonMonad m
                              , MonadBaseControl IO m, DocumentMonad m , GuardTimeConfMonad m)
                           => Bool -> Bool -> m ()
 postDocumentClosedActions
@@ -204,7 +204,7 @@ postDocumentClosedActions
     -- mail we actually send out, after design of adding digital
     -- signature to appendices.
 
-    when commitAfterSealing kCommit -- so that post-sign view can render pages as soon as possible
+    when commitAfterSealing commit -- so that post-sign view can render pages as soon as possible
 
   whenM ((\d -> isDocumentError d && not (isDocumentError doc0)) <$> theDocument) $ do
 
@@ -234,7 +234,7 @@ postDocumentClosedActions
       theDocument >>= triggerAPICallbackIfThereIsOne
 
 -- | Post-process documents that lack final PDF or digital signature
-findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, AmazonMonad m) => Maybe Int -> m ()
+findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, Log.MonadLog m, AmazonMonad m) => Maybe Int -> m ()
 findAndDoPostDocumentClosedActions
   mhours -- ^ Only consider documents signed within the latest number of hours given.
   = do
@@ -255,10 +255,10 @@ findAndDoPostDocumentClosedActions
   gtConf <- asks (guardTimeConf . sdAppConf)
   forM_ docs $ \doc -> do
     void $ runMailTInScheduler doc $ runGuardTimeConfT gtConf $ withDocument doc $ postDocumentClosedActions False False
-    kCommit
+    commit
 
 -- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
-findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m) => m ()
+findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, Log.MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
   Log.mixlog_ $ "extendSignatures: latest publication time is " ++ show lpt
@@ -277,7 +277,7 @@ findAndExtendDigitalSignatures = do
     case documentsealstatus d of
       Just (Guardtime{ extended = False }) -> do
         void $ withDocument d extendDigitalSignature
-        kCommit
+        commit
       _ -> return ()
 
 -- | Estimate when the latest Guardtime publication code was published
@@ -339,7 +339,7 @@ saveDocumentForSignatories =
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
-findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m) => m ()
+findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, Log.MonadLog m) => m ()
 findAndTimeoutDocuments = do
   now <- getMinutesTime
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
@@ -349,5 +349,5 @@ findAndTimeoutDocuments = do
     triggerAPICallbackIfThereIsOne =<< theDocument
     theDocumentID >>= \did -> Log.mixlog_ $ "Document timedout " ++ (show did)
   when (not (null docs)) $ do
-    kCommit
+    commit
     findAndTimeoutDocuments

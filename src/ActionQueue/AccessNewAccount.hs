@@ -15,7 +15,6 @@ import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Crypto.RNG
 import DB
-import DB.SQL2
 import KontraLink
 import MagicHash
 import MinutesTime
@@ -30,14 +29,17 @@ data AccessNewAccount = AccessNewAccount {
 accessNewAccount :: Action UserID AccessNewAccount (UserID, MagicHash) Scheduler
 accessNewAccount = Action {
     qaTable = tableAccessNewAccounts
-  , qaFields = \(uid, token) -> [
-      ("user_id", toSql uid)
-    , ("token", toSql token)
-    ]
+  , qaSetFields = \(uid, token) -> do
+      sqlSet "user_id" uid
+      sqlSet "token" token
   , qaSelectFields = ["user_id", "expires", "token"]
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
-  , qaDecode = kFold decoder []
+  , qaDecode = \(user_id, expires, token) -> AccessNewAccount {
+        aUserID = user_id
+      , aExpires = expires
+      , aToken = token
+      }
   , qaUpdateSQL = \AccessNewAccount{..} -> toSQLCommand $ sqlUpdate "access_new_accounts" $ do
       sqlSet "expires" aExpires
       sqlSet "token" aToken
@@ -46,12 +48,6 @@ accessNewAccount = Action {
     _ <- dbUpdate $ DeleteAction accessNewAccount aUserID
     return ()
   }
-  where
-    decoder acc user_id expires token = AccessNewAccount {
-        aUserID = user_id
-      , aExpires = expires
-      , aToken = token
-      } : acc
 
 getAccessNewAccountUser :: MonadDB m => UserID -> MagicHash -> m (Maybe User)
 getAccessNewAccountUser uid token = runMaybeT $ do

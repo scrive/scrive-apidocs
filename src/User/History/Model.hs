@@ -15,13 +15,15 @@ module User.History.Model (
   , GetUserHistoryByUserID(..)
   ) where
 
+import Data.Int
 import Data.Monoid
+import Data.Monoid.Space
 import Text.JSON
 import Text.JSON.Gen
-import qualified Version as Version
+import qualified Version
+import qualified Control.Exception as E
 
-import DB hiding (intersperse)
-import DB.SQL2
+import DB
 import IPAddress
 import MinutesTime
 
@@ -60,40 +62,46 @@ data UserHistoryEventType = UserLoginAttempt
   UserPasswordSetup is a successful change but UserPasswordSetupReq is
   only a request, not successful change.
  -}
-instance Convertible UserHistoryEventType SqlValue where
-  safeConvert UserLoginAttempt     = return . toSql $ (1 :: Int)
-  safeConvert UserLoginSuccess     = return . toSql $ (2 :: Int)
-  safeConvert UserPasswordSetup    = return . toSql $ (3 :: Int)
-  safeConvert UserPasswordSetupReq = return . toSql $ (4 :: Int)
-  safeConvert UserAccountCreated   = return . toSql $ (5 :: Int)
-  safeConvert UserDetailsChange    = return . toSql $ (6 :: Int)
-  safeConvert UserTOSAccept        = return . toSql $ (7 :: Int)
-  safeConvert UserPadLoginAttempt  = return . toSql $ (8 :: Int)
-  safeConvert UserPadLoginSuccess  = return . toSql $ (9 :: Int)
-instance Convertible SqlValue UserHistoryEventType where
-  safeConvert a = case (fromSql a :: Int) of
-    1 -> return UserLoginAttempt
-    2 -> return UserLoginSuccess
-    3 -> return UserPasswordSetup
-    4 -> return UserPasswordSetupReq
-    5 -> return UserAccountCreated
-    6 -> return UserDetailsChange
-    7 -> return UserTOSAccept
-    8 -> return UserPadLoginAttempt
-    9 -> return UserPadLoginSuccess
-    n -> Left ConvertError {
-        convSourceValue = show n
-      , convSourceType = "Int"
-      , convDestType = "UserHistoryEventType"
-      , convErrorMessage = "Convertion error: value " ++ show n ++ " not mapped"
-    }
+instance PQFormat UserHistoryEventType where
+  pqFormat _ = pqFormat (undefined::Int32)
+
+instance FromSQL UserHistoryEventType where
+  type PQBase UserHistoryEventType = PQBase Int32
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int32 of
+      1 -> return UserLoginAttempt
+      2 -> return UserLoginSuccess
+      3 -> return UserPasswordSetup
+      4 -> return UserPasswordSetupReq
+      5 -> return UserAccountCreated
+      6 -> return UserDetailsChange
+      7 -> return UserTOSAccept
+      8 -> return UserPadLoginAttempt
+      9 -> return UserPadLoginSuccess
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 9)]
+      , reValue = n
+      }
+
+instance ToSQL UserHistoryEventType where
+  type PQDest UserHistoryEventType = PQDest Int32
+  toSQL UserLoginAttempt     = toSQL (1::Int32)
+  toSQL UserLoginSuccess     = toSQL (2::Int32)
+  toSQL UserPasswordSetup    = toSQL (3::Int32)
+  toSQL UserPasswordSetupReq = toSQL (4::Int32)
+  toSQL UserAccountCreated   = toSQL (5::Int32)
+  toSQL UserDetailsChange    = toSQL (6::Int32)
+  toSQL UserTOSAccept        = toSQL (7::Int32)
+  toSQL UserPadLoginAttempt  = toSQL (8::Int32)
+  toSQL UserPadLoginSuccess  = toSQL (9::Int32)
 
 data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
   query (GetUserHistoryByUserID uid) = do
-    _ <- kRun $ selectUserHistorySQL
-      <> SQL "WHERE user_id = ? ORDER BY time" [toSql uid]
-    fetchUserHistory
+    runQuery_ $ selectUserHistorySQL
+      <+> "WHERE user_id =" <?> uid <+> "ORDER BY time"
+    fetchMany fetchUserHistory
 
 data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime
 instance MonadDB m => DBUpdate m LogHistoryLoginAttempt Bool where
@@ -227,40 +235,37 @@ diffUserInfos old new = fstNameDiff
 
 addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> m Bool
 addUserHistory user event ip time mpuser =
-  kRun01 $ sqlInsert "users_history" $ do
-      sqlSet "user_id" user
-      sqlSet "event_type" $ uheventtype event
-      sqlSet "event_data" $ maybe "" encode $ uheventdata event
-      sqlSet "ip" ip
-      sqlSet "time" time
-      sqlSet "system_version" $ Version.versionID
-      sqlSet "performing_user_id" mpuser
+  runQuery01 $ sqlInsert "users_history" $ do
+    sqlSet "user_id" user
+    sqlSet "event_type" $ uheventtype event
+    sqlSet "event_data" $ maybe "" encode $ uheventdata event
+    sqlSet "ip" ip
+    sqlSet "time" time
+    sqlSet "system_version" $ Version.versionID
+    sqlSet "performing_user_id" mpuser
 
 selectUserHistorySQL :: SQL
-selectUserHistorySQL = SQL ("SELECT"
- <> "  user_id"
- <> ", event_type"
- <> ", event_data"
- <> ", ip"
- <> ", time"
- <> ", system_version"
- <> ", performing_user_id"
- <> "  FROM users_history"
- <> " ") []
+selectUserHistorySQL = "SELECT"
+  <> "  user_id"
+  <> ", event_type"
+  <> ", event_data"
+  <> ", ip"
+  <> ", time"
+  <> ", system_version"
+  <> ", performing_user_id"
+  <> "  FROM users_history"
 
-fetchUserHistory :: MonadDB m => m [UserHistory]
-fetchUserHistory = kFold decoder []
-  where
-    decoder acc userid eventtype meventdata ip time sysver mpuser = UserHistory {
-        uhuserid = userid
-      , uhevent = UserHistoryEvent {
-          uheventtype = eventtype
-        , uheventdata = maybe Nothing (\d -> case decode d of
-                                        Ok a -> Just a
-                                        _    -> Nothing) meventdata
-        }
-      , uhip = ip
-      , uhtime = time
-      , uhsystemversion = sysver
-      , uhperforminguserid = mpuser
-      } : acc
+fetchUserHistory :: (UserID, UserHistoryEventType, Maybe String, IPAddress, MinutesTime, String, Maybe UserID) -> UserHistory
+fetchUserHistory (userid, eventtype, meventdata, ip, time, sysver, mpuser) = UserHistory {
+  uhuserid = userid
+, uhevent = UserHistoryEvent {
+    uheventtype = eventtype
+  , uheventdata = maybe Nothing (\d -> case decode d of
+    Ok a -> Just a
+    _    -> Nothing) meventdata
+  }
+, uhip = ip
+, uhtime = time
+, uhsystemversion = sysver
+, uhperforminguserid = mpuser
+}

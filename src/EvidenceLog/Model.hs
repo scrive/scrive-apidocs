@@ -17,8 +17,11 @@ module EvidenceLog.Model (
   ) where
 
 import Control.Applicative ((<$>), (<*>))
+import Data.Int
+import Data.Monoid
+import Data.Monoid.Space
 import DB
-import DB.SQL2
+import qualified Control.Exception as E
 import qualified HostClock.Model as HC
 import IPAddress
 import MinutesTime
@@ -86,7 +89,7 @@ evidenceLogText event textFields masl mmsg actor = do
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor did) = do
    text <- evidenceLogText event textFields masl mmsg actor
-   kRun01 $ sqlInsert "evidence_log" $ do
+   runQuery01 . sqlInsert "evidence_log" $ do
       sqlSet "document_id" did
       sqlSet "time" $ actorTime actor
       sqlSet "text" text
@@ -122,7 +125,6 @@ data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
   , evEmail      :: Maybe String
   , evUserID     :: Maybe UserID
   , evIP4        :: Maybe IPAddress
-  , evIP6        :: Maybe IPAddress
   , evSigLink    :: Maybe s
   , evAPI        :: Maybe String
   , evAffectedSigLink :: Maybe s -- Some events affect only one signatory, but actor is out system or author. We express it here, since we can't with evType.
@@ -133,7 +135,7 @@ data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
 data GetEvidenceLog = GetEvidenceLog DocumentID
 instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
   query (GetEvidenceLog docid) = do
-    _ <- kRun $ SQL ("SELECT "
+    runQuery_ $ "SELECT "
       <> "  document_id"
       <> ", evidence_log.time"
       <> ", text"
@@ -142,7 +144,6 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", user_id"
       <> ", email"
       <> ", request_ip_v4"
-      <> ", request_ip_v6"
       <> ", signatory_link_id"
       <> ", api_user"
       <> ", affected_signatory_link_id"
@@ -153,13 +154,11 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", host_clock.clock_offset"
       <> ", host_clock.clock_frequency"
       <> "  FROM evidence_log LEFT JOIN host_clock ON host_clock.time = (SELECT max(host_clock.time) FROM host_clock WHERE host_clock.time <= evidence_log.time)"
-      <> "  WHERE document_id = ?"
-      <> "  ORDER BY evidence_log.time DESC, id DESC") [
-        toSql docid
-      ]
-    kFold fetchEvidenceLog []
+      <> "  WHERE document_id =" <?> docid
+      <> "  ORDER BY evidence_log.time DESC, id DESC"
+    fetchMany fetchEvidenceLog
     where
-      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg ctime cname hctime offset frequency =
+      fetchEvidenceLog (did', tm, txt, tp, vid, uid, eml, ip4, slid, api, aslid, emsg, ctime, cname, hctime, offset, frequency) =
         DocumentEvidenceEvent {
             evDocumentID = did'
           , evTime       = tm
@@ -172,12 +171,11 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
           , evUserID     = uid
           , evEmail      = eml
           , evIP4        = ip4
-          , evIP6        = ip6
           , evSigLink    = slid
           , evAPI        = api
           , evAffectedSigLink = aslid
           , evMessageText = emsg
-          } : acc
+          }
 
 copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> m ()
 copyEvidenceLogToNewDocument fromdoc todoc = do
@@ -185,7 +183,7 @@ copyEvidenceLogToNewDocument fromdoc todoc = do
 
 copyEvidenceLogToNewDocuments :: MonadDB m => DocumentID -> [DocumentID] -> m ()
 copyEvidenceLogToNewDocuments fromdoc todocs = do
-  kRun_ $ "INSERT INTO evidence_log ("
+  runQuery_ $ "INSERT INTO evidence_log ("
     <> "  document_id"
     <> ", time"
     <> ", text"
@@ -194,7 +192,6 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", user_id"
     <> ", email"
     <> ", request_ip_v4"
-    <> ", request_ip_v6"
     <> ", signatory_link_id"
     <> ", api_user"
     <> ", affected_signatory_link_id"
@@ -210,7 +207,6 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", user_id"
     <> ", email"
     <> ", request_ip_v4"
-    <> ", request_ip_v6"
     <> ", signatory_link_id"
     <> ", api_user"
     <> ", affected_signatory_link_id"
@@ -312,186 +308,184 @@ data ObsoleteEvidenceEventType =
   AuthorUsesCSVEvidence                           |
   ErrorDocumentEvidence                           |
   SetDocumentInviteTimeEvidence
-  deriving (Eq, Show, Read, Ord)
+  deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
-instance Convertible EvidenceEventType Int where
-  safeConvert (Obsolete AddSigAttachmentEvidence)                        = return 1
-  safeConvert (Obsolete RemoveSigAttachmentsEvidence)                    = return 2
-  safeConvert (Obsolete RemoveDocumentAttachmentEvidence)                = return 3
-  safeConvert (Obsolete AddDocumentAttachmentEvidence)                   = return 4
-  safeConvert (Obsolete PendingToAwaitingAuthorEvidence)                 = return 5
-  safeConvert (Obsolete UpdateFieldsEvidence)                            = return 6
-  safeConvert (Obsolete SetElegitimationIdentificationEvidence)          = return 7
-  safeConvert (Obsolete SetEmailIdentificationEvidence)                  = return 8
-  safeConvert (Current TimeoutDocumentEvidence)                          = return 9
-  safeConvert (Current SignDocumentEvidence)                             = return 10
-  safeConvert (Obsolete SetInvitationDeliveryStatusEvidence)             = return 11
-  safeConvert (Obsolete SetDocumentUIEvidence)                           = return 12
-  safeConvert (Obsolete SetDocumentLangEvidence)                         = return 13
-  safeConvert (Obsolete SetDocumentTitleEvidence)                        = return 14
-  safeConvert (Obsolete SetDocumentAdvancedFunctionalityEvidence)        = return 15
-  safeConvert (Obsolete RemoveDaysToSignEvidence)                        = return 16
-  safeConvert (Obsolete SetDaysToSignEvidence)                           = return 17
-  safeConvert (Obsolete SetInvitationTextEvidence)                       = return 18
-  safeConvert (Obsolete RemoveSignatoryUserEvidence)                     = return 19
-  safeConvert (Obsolete SetSignatoryUserEvidence)                        = return 20
-  safeConvert (Obsolete RemoveSignatoryCompanyEvidence)                  = return 21
-  safeConvert (Obsolete SetSignatoryCompanyEvidence)                     = return 22
-  safeConvert (Obsolete SetDocumentTagsEvidence)                         = return 23
-  safeConvert (Current SaveSigAttachmentEvidence)                        = return 24
-  safeConvert (Obsolete SaveDocumentForUserEvidence)                     = return 25
-  safeConvert (Current RestartDocumentEvidence)                          = return 26
-  safeConvert (Obsolete ReallyDeleteDocumentEvidence)                    = return 27
-  safeConvert (Obsolete NewDocumentEvidence)                             = return 28
-  safeConvert (Current MarkInvitationReadEvidence)                       = return 29
-  safeConvert (Current CloseDocumentEvidence)                            = return 30
-  safeConvert (Current ChangeSignatoryEmailWhenUndeliveredEvidence)      = return 31
-  safeConvert (Obsolete ChangeMainfileEvidence)                          = return 32
-  safeConvert (Current CancelDocumenElegEvidence)                        = return 33
-  safeConvert (Current CancelDocumentEvidence)                           = return 34
-  safeConvert (Obsolete AttachFileEvidence)                              = return 35
-  safeConvert (Current AttachSealedFileEvidence)                         = return 36
-  safeConvert (Current PreparationToPendingEvidence)                     = return 37
-  safeConvert (Current DeleteSigAttachmentEvidence)                      = return 38
-  safeConvert (Obsolete AuthorUsesCSVEvidence)                           = return 39
-  safeConvert (Obsolete ErrorDocumentEvidence)                           = return 40
-  safeConvert (Obsolete MarkDocumentSeenEvidence)                        = return 41
-  safeConvert (Current RejectDocumentEvidence)                           = return 42
-  safeConvert (Obsolete SetDocumentInviteTimeEvidence)                   = return 43
-  safeConvert (Obsolete SetDocumentTimeoutTimeEvidence)                  = return 44
-  safeConvert (Obsolete RestoreArchivedDocumentEvidence)                 = return 45
-  safeConvert (Current InvitationEvidence)                               = return 46
-  safeConvert (Obsolete SignableFromDocumentIDWithUpdatedAuthorEvidence) = return 47
-  safeConvert (Obsolete ArchiveDocumentEvidence)                         = return 48
-  safeConvert (Obsolete ResetSignatoryDetailsEvidence)                   = return 49
-  safeConvert (Obsolete AdminOnlySaveForUserEvidence)                    = return 50
-  safeConvert (Obsolete SignableFromDocumentEvidence)                    = return 51
-  safeConvert (Obsolete TemplateFromDocumentEvidence)                    = return 52
-  safeConvert (Obsolete AttachCSVUploadEvidence)                         = return 53
-  safeConvert (Current SendToPadDevice)                                  = return 54
-  safeConvert (Current RemovedFromPadDevice)                             = return 55
-  safeConvert (Obsolete AddSignatoryEvidence)                            = return 56
-  safeConvert (Obsolete RemoveSignatoryEvidence)                         = return 57
-  safeConvert (Obsolete AddFieldEvidence)                                = return 58
-  safeConvert (Obsolete RemoveFieldEvidence)                             = return 59
-  safeConvert (Obsolete ChangeFieldEvidence)                             = return 60
-  safeConvert (Current ResealedPDF)                                      = return 61
-  safeConvert (Obsolete OldDocumentHistory)                              = return 62
-  safeConvert (Obsolete SetStandardAuthenticationMethodEvidence)         = return 63
-  safeConvert (Obsolete SetELegAuthenticationMethodEvidence)             = return 64
-  safeConvert (Obsolete SetEmailDeliveryMethodEvidence)                  = return 65
-  safeConvert (Obsolete SetPadDeliveryMethodEvidence)                    = return 66
-  safeConvert (Obsolete SetAPIDeliveryMethodEvidence)                    = return 67
-  safeConvert (Current ReminderSend)                                     = return 68
-  safeConvert (Obsolete SetDocumentProcessEvidence)                      = return 69
-  safeConvert (Obsolete DetachFileEvidence)                              = return 70
-  safeConvert (Current InvitationDeliveredByEmail)                       = return 71
-  safeConvert (Current InvitationUndeliveredByEmail)                     = return 72
-  safeConvert (Current SignatoryLinkVisited)                             = return 73
-  safeConvert (Current ProlongDocumentEvidence)                          = return 74
-  safeConvert (Current ChangeSignatoryPhoneWhenUndeliveredEvidence)      = return 75
-  safeConvert (Current InvitationDeliveredBySMS)                         = return 76
-  safeConvert (Current InvitationUndeliveredBySMS)                       = return 77
-  safeConvert (Current AttachGuardtimeSealedFileEvidence)                = return 78
-  safeConvert (Current AttachExtendedSealedFileEvidence)                 = return 79
-  safeConvert (Current ErrorSealingDocumentEvidence)                     = return 80
-  safeConvert (Current AutomaticReminderSent)                            = return 81
-  safeConvert (Current SignWithELegFailureEvidence)                      = return 82
+instance PQFormat EvidenceEventType where
+  pqFormat _ = pqFormat (undefined::Int16)
 
+instance ToSQL EvidenceEventType where
+  type PQDest EvidenceEventType = PQDest Int16
+  toSQL (Obsolete AddSigAttachmentEvidence)                        = toSQL (1::Int16)
+  toSQL (Obsolete RemoveSigAttachmentsEvidence)                    = toSQL (2::Int16)
+  toSQL (Obsolete RemoveDocumentAttachmentEvidence)                = toSQL (3::Int16)
+  toSQL (Obsolete AddDocumentAttachmentEvidence)                   = toSQL (4::Int16)
+  toSQL (Obsolete PendingToAwaitingAuthorEvidence)                 = toSQL (5::Int16)
+  toSQL (Obsolete UpdateFieldsEvidence)                            = toSQL (6::Int16)
+  toSQL (Obsolete SetElegitimationIdentificationEvidence)          = toSQL (7::Int16)
+  toSQL (Obsolete SetEmailIdentificationEvidence)                  = toSQL (8::Int16)
+  toSQL (Current TimeoutDocumentEvidence)                          = toSQL (9::Int16)
+  toSQL (Current SignDocumentEvidence)                             = toSQL (10::Int16)
+  toSQL (Obsolete SetInvitationDeliveryStatusEvidence)             = toSQL (11::Int16)
+  toSQL (Obsolete SetDocumentUIEvidence)                           = toSQL (12::Int16)
+  toSQL (Obsolete SetDocumentLangEvidence)                         = toSQL (13::Int16)
+  toSQL (Obsolete SetDocumentTitleEvidence)                        = toSQL (14::Int16)
+  toSQL (Obsolete SetDocumentAdvancedFunctionalityEvidence)        = toSQL (15::Int16)
+  toSQL (Obsolete RemoveDaysToSignEvidence)                        = toSQL (16::Int16)
+  toSQL (Obsolete SetDaysToSignEvidence)                           = toSQL (17::Int16)
+  toSQL (Obsolete SetInvitationTextEvidence)                       = toSQL (18::Int16)
+  toSQL (Obsolete RemoveSignatoryUserEvidence)                     = toSQL (19::Int16)
+  toSQL (Obsolete SetSignatoryUserEvidence)                        = toSQL (20::Int16)
+  toSQL (Obsolete RemoveSignatoryCompanyEvidence)                  = toSQL (21::Int16)
+  toSQL (Obsolete SetSignatoryCompanyEvidence)                     = toSQL (22::Int16)
+  toSQL (Obsolete SetDocumentTagsEvidence)                         = toSQL (23::Int16)
+  toSQL (Current SaveSigAttachmentEvidence)                        = toSQL (24::Int16)
+  toSQL (Obsolete SaveDocumentForUserEvidence)                     = toSQL (25::Int16)
+  toSQL (Current RestartDocumentEvidence)                          = toSQL (26::Int16)
+  toSQL (Obsolete ReallyDeleteDocumentEvidence)                    = toSQL (27::Int16)
+  toSQL (Obsolete NewDocumentEvidence)                             = toSQL (28::Int16)
+  toSQL (Current MarkInvitationReadEvidence)                       = toSQL (29::Int16)
+  toSQL (Current CloseDocumentEvidence)                            = toSQL (30::Int16)
+  toSQL (Current ChangeSignatoryEmailWhenUndeliveredEvidence)      = toSQL (31::Int16)
+  toSQL (Obsolete ChangeMainfileEvidence)                          = toSQL (32::Int16)
+  toSQL (Current CancelDocumenElegEvidence)                        = toSQL (33::Int16)
+  toSQL (Current CancelDocumentEvidence)                           = toSQL (34::Int16)
+  toSQL (Obsolete AttachFileEvidence)                              = toSQL (35::Int16)
+  toSQL (Current AttachSealedFileEvidence)                         = toSQL (36::Int16)
+  toSQL (Current PreparationToPendingEvidence)                     = toSQL (37::Int16)
+  toSQL (Current DeleteSigAttachmentEvidence)                      = toSQL (38::Int16)
+  toSQL (Obsolete AuthorUsesCSVEvidence)                           = toSQL (39::Int16)
+  toSQL (Obsolete ErrorDocumentEvidence)                           = toSQL (40::Int16)
+  toSQL (Obsolete MarkDocumentSeenEvidence)                        = toSQL (41::Int16)
+  toSQL (Current RejectDocumentEvidence)                           = toSQL (42::Int16)
+  toSQL (Obsolete SetDocumentInviteTimeEvidence)                   = toSQL (43::Int16)
+  toSQL (Obsolete SetDocumentTimeoutTimeEvidence)                  = toSQL (44::Int16)
+  toSQL (Obsolete RestoreArchivedDocumentEvidence)                 = toSQL (45::Int16)
+  toSQL (Current InvitationEvidence)                               = toSQL (46::Int16)
+  toSQL (Obsolete SignableFromDocumentIDWithUpdatedAuthorEvidence) = toSQL (47::Int16)
+  toSQL (Obsolete ArchiveDocumentEvidence)                         = toSQL (48::Int16)
+  toSQL (Obsolete ResetSignatoryDetailsEvidence)                   = toSQL (49::Int16)
+  toSQL (Obsolete AdminOnlySaveForUserEvidence)                    = toSQL (50::Int16)
+  toSQL (Obsolete SignableFromDocumentEvidence)                    = toSQL (51::Int16)
+  toSQL (Obsolete TemplateFromDocumentEvidence)                    = toSQL (52::Int16)
+  toSQL (Obsolete AttachCSVUploadEvidence)                         = toSQL (53::Int16)
+  toSQL (Current SendToPadDevice)                                  = toSQL (54::Int16)
+  toSQL (Current RemovedFromPadDevice)                             = toSQL (55::Int16)
+  toSQL (Obsolete AddSignatoryEvidence)                            = toSQL (56::Int16)
+  toSQL (Obsolete RemoveSignatoryEvidence)                         = toSQL (57::Int16)
+  toSQL (Obsolete AddFieldEvidence)                                = toSQL (58::Int16)
+  toSQL (Obsolete RemoveFieldEvidence)                             = toSQL (59::Int16)
+  toSQL (Obsolete ChangeFieldEvidence)                             = toSQL (60::Int16)
+  toSQL (Current ResealedPDF)                                      = toSQL (61::Int16)
+  toSQL (Obsolete OldDocumentHistory)                              = toSQL (62::Int16)
+  toSQL (Obsolete SetStandardAuthenticationMethodEvidence)         = toSQL (63::Int16)
+  toSQL (Obsolete SetELegAuthenticationMethodEvidence)             = toSQL (64::Int16)
+  toSQL (Obsolete SetEmailDeliveryMethodEvidence)                  = toSQL (65::Int16)
+  toSQL (Obsolete SetPadDeliveryMethodEvidence)                    = toSQL (66::Int16)
+  toSQL (Obsolete SetAPIDeliveryMethodEvidence)                    = toSQL (67::Int16)
+  toSQL (Current ReminderSend)                                     = toSQL (68::Int16)
+  toSQL (Obsolete SetDocumentProcessEvidence)                      = toSQL (69::Int16)
+  toSQL (Obsolete DetachFileEvidence)                              = toSQL (70::Int16)
+  toSQL (Current InvitationDeliveredByEmail)                       = toSQL (71::Int16)
+  toSQL (Current InvitationUndeliveredByEmail)                     = toSQL (72::Int16)
+  toSQL (Current SignatoryLinkVisited)                             = toSQL (73::Int16)
+  toSQL (Current ProlongDocumentEvidence)                          = toSQL (74::Int16)
+  toSQL (Current ChangeSignatoryPhoneWhenUndeliveredEvidence)      = toSQL (75::Int16)
+  toSQL (Current InvitationDeliveredBySMS)                         = toSQL (76::Int16)
+  toSQL (Current InvitationUndeliveredBySMS)                       = toSQL (77::Int16)
+  toSQL (Current AttachGuardtimeSealedFileEvidence)                = toSQL (78::Int16)
+  toSQL (Current AttachExtendedSealedFileEvidence)                 = toSQL (79::Int16)
+  toSQL (Current ErrorSealingDocumentEvidence)                     = toSQL (80::Int16)
+  toSQL (Current AutomaticReminderSent)                            = toSQL (81::Int16)
+  toSQL (Current SignWithELegFailureEvidence)                      = toSQL (82::Int16)
 
-
-instance Convertible Int EvidenceEventType where
-    safeConvert 1  = return (Obsolete AddSigAttachmentEvidence)
-    safeConvert 2  = return (Obsolete RemoveSigAttachmentsEvidence)
-    safeConvert 3  = return (Obsolete RemoveDocumentAttachmentEvidence)
-    safeConvert 4  = return (Obsolete AddDocumentAttachmentEvidence)
-    safeConvert 5  = return (Obsolete PendingToAwaitingAuthorEvidence)
-    safeConvert 6  = return (Obsolete UpdateFieldsEvidence)
-    safeConvert 7  = return (Obsolete SetElegitimationIdentificationEvidence)
-    safeConvert 8  = return (Obsolete SetEmailIdentificationEvidence)
-    safeConvert 9  = return (Current TimeoutDocumentEvidence)
-    safeConvert 10 = return (Current SignDocumentEvidence)
-    safeConvert 11 = return (Obsolete SetInvitationDeliveryStatusEvidence)
-    safeConvert 12 = return (Obsolete SetDocumentUIEvidence)
-    safeConvert 13 = return (Obsolete SetDocumentLangEvidence)
-    safeConvert 14 = return (Obsolete SetDocumentTitleEvidence)
-    safeConvert 15 = return (Obsolete SetDocumentAdvancedFunctionalityEvidence)
-    safeConvert 16 = return (Obsolete RemoveDaysToSignEvidence)
-    safeConvert 17 = return (Obsolete SetDaysToSignEvidence)
-    safeConvert 18 = return (Obsolete SetInvitationTextEvidence)
-    safeConvert 19 = return (Obsolete RemoveSignatoryUserEvidence)
-    safeConvert 20 = return (Obsolete SetSignatoryUserEvidence)
-    safeConvert 21 = return (Obsolete RemoveSignatoryCompanyEvidence)
-    safeConvert 22 = return (Obsolete SetSignatoryCompanyEvidence)
-    safeConvert 23 = return (Obsolete SetDocumentTagsEvidence)
-    safeConvert 24 = return (Current SaveSigAttachmentEvidence)
-    safeConvert 25 = return (Obsolete SaveDocumentForUserEvidence)
-    safeConvert 26 = return (Current RestartDocumentEvidence)
-    safeConvert 27 = return (Obsolete ReallyDeleteDocumentEvidence)
-    safeConvert 28 = return (Obsolete NewDocumentEvidence)
-    safeConvert 29 = return (Current MarkInvitationReadEvidence)
-    safeConvert 30 = return (Current CloseDocumentEvidence)
-    safeConvert 31 = return (Current ChangeSignatoryEmailWhenUndeliveredEvidence)
-    safeConvert 32 = return (Obsolete ChangeMainfileEvidence)
-    safeConvert 33 = return (Current CancelDocumenElegEvidence)
-    safeConvert 34 = return (Current CancelDocumentEvidence)
-    safeConvert 35 = return (Obsolete AttachFileEvidence)
-    safeConvert 36 = return (Current AttachSealedFileEvidence)
-    safeConvert 37 = return (Current PreparationToPendingEvidence)
-    safeConvert 38 = return (Current DeleteSigAttachmentEvidence)
-    safeConvert 39 = return (Obsolete AuthorUsesCSVEvidence)
-    safeConvert 40 = return (Obsolete ErrorDocumentEvidence)
-    safeConvert 41 = return (Obsolete MarkDocumentSeenEvidence)
-    safeConvert 42 = return (Current RejectDocumentEvidence)
-    safeConvert 43 = return (Obsolete SetDocumentInviteTimeEvidence)
-    safeConvert 44 = return (Obsolete SetDocumentTimeoutTimeEvidence)
-    safeConvert 45 = return (Obsolete RestoreArchivedDocumentEvidence)
-    safeConvert 46 = return (Current InvitationEvidence)
-    safeConvert 47 = return (Obsolete SignableFromDocumentIDWithUpdatedAuthorEvidence)
-    safeConvert 48 = return (Obsolete ArchiveDocumentEvidence)
-    safeConvert 49 = return (Obsolete ResetSignatoryDetailsEvidence)
-    safeConvert 50 = return (Obsolete AdminOnlySaveForUserEvidence)
-    safeConvert 51 = return (Obsolete SignableFromDocumentEvidence)
-    safeConvert 52 = return (Obsolete TemplateFromDocumentEvidence)
-    safeConvert 53 = return (Obsolete AttachCSVUploadEvidence)
-    safeConvert 54 = return (Current SendToPadDevice)
-    safeConvert 55 = return (Current RemovedFromPadDevice)
-    safeConvert 56 = return (Obsolete AddSignatoryEvidence)
-    safeConvert 57 = return (Obsolete RemoveSignatoryEvidence)
-    safeConvert 58 = return (Obsolete AddFieldEvidence)
-    safeConvert 59 = return (Obsolete RemoveFieldEvidence)
-    safeConvert 60 = return (Obsolete ChangeFieldEvidence)
-    safeConvert 61 = return (Current ResealedPDF)
-    safeConvert 62 = return (Obsolete OldDocumentHistory)
-    safeConvert 63 = return (Obsolete SetStandardAuthenticationMethodEvidence)
-    safeConvert 64 = return (Obsolete SetELegAuthenticationMethodEvidence)
-    safeConvert 65 = return (Obsolete SetEmailDeliveryMethodEvidence)
-    safeConvert 66 = return (Obsolete SetPadDeliveryMethodEvidence)
-    safeConvert 67 = return (Obsolete SetAPIDeliveryMethodEvidence)
-    safeConvert 68 = return (Current ReminderSend)
-    safeConvert 69 = return (Obsolete SetDocumentProcessEvidence)
-    safeConvert 70 = return (Obsolete DetachFileEvidence)
-    safeConvert 71 = return (Current InvitationDeliveredByEmail)
-    safeConvert 72 = return (Current InvitationUndeliveredByEmail)
-    safeConvert 73 = return (Current SignatoryLinkVisited)
-    safeConvert 74 = return (Current ProlongDocumentEvidence)
-    safeConvert 75 = return (Current ChangeSignatoryPhoneWhenUndeliveredEvidence)
-    safeConvert 76 = return (Current InvitationDeliveredBySMS)
-    safeConvert 77 = return (Current InvitationUndeliveredBySMS)
-    safeConvert 78 = return (Current AttachGuardtimeSealedFileEvidence)
-    safeConvert 79 = return (Current AttachExtendedSealedFileEvidence)
-    safeConvert 80 = return (Current ErrorSealingDocumentEvidence)
-    safeConvert 81 = return (Current AutomaticReminderSent)
-    safeConvert 82 = return (Current SignWithELegFailureEvidence)
-
-    safeConvert s  = Left ConvertError { convSourceValue = show s
-                                       , convSourceType = "Int"
-                                       , convDestType = "EvidenceEventType"
-                                       , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
-                                       }
-
-instance Convertible EvidenceEventType SqlValue where
-  safeConvert e = fmap toSql (safeConvert e :: Either ConvertError Int)
-
-instance Convertible SqlValue EvidenceEventType where
-  safeConvert s = safeConvert (fromSql s :: Int)
+instance FromSQL EvidenceEventType where
+  type PQBase EvidenceEventType = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return (Obsolete AddSigAttachmentEvidence)
+      2 -> return (Obsolete RemoveSigAttachmentsEvidence)
+      3 -> return (Obsolete RemoveDocumentAttachmentEvidence)
+      4 -> return (Obsolete AddDocumentAttachmentEvidence)
+      5 -> return (Obsolete PendingToAwaitingAuthorEvidence)
+      6 -> return (Obsolete UpdateFieldsEvidence)
+      7 -> return (Obsolete SetElegitimationIdentificationEvidence)
+      8 -> return (Obsolete SetEmailIdentificationEvidence)
+      9 -> return (Current TimeoutDocumentEvidence)
+      10 -> return (Current SignDocumentEvidence)
+      11 -> return (Obsolete SetInvitationDeliveryStatusEvidence)
+      12 -> return (Obsolete SetDocumentUIEvidence)
+      13 -> return (Obsolete SetDocumentLangEvidence)
+      14 -> return (Obsolete SetDocumentTitleEvidence)
+      15 -> return (Obsolete SetDocumentAdvancedFunctionalityEvidence)
+      16 -> return (Obsolete RemoveDaysToSignEvidence)
+      17 -> return (Obsolete SetDaysToSignEvidence)
+      18 -> return (Obsolete SetInvitationTextEvidence)
+      19 -> return (Obsolete RemoveSignatoryUserEvidence)
+      20 -> return (Obsolete SetSignatoryUserEvidence)
+      21 -> return (Obsolete RemoveSignatoryCompanyEvidence)
+      22 -> return (Obsolete SetSignatoryCompanyEvidence)
+      23 -> return (Obsolete SetDocumentTagsEvidence)
+      24 -> return (Current SaveSigAttachmentEvidence)
+      25 -> return (Obsolete SaveDocumentForUserEvidence)
+      26 -> return (Current RestartDocumentEvidence)
+      27 -> return (Obsolete ReallyDeleteDocumentEvidence)
+      28 -> return (Obsolete NewDocumentEvidence)
+      29 -> return (Current MarkInvitationReadEvidence)
+      30 -> return (Current CloseDocumentEvidence)
+      31 -> return (Current ChangeSignatoryEmailWhenUndeliveredEvidence)
+      32 -> return (Obsolete ChangeMainfileEvidence)
+      33 -> return (Current CancelDocumenElegEvidence)
+      34 -> return (Current CancelDocumentEvidence)
+      35 -> return (Obsolete AttachFileEvidence)
+      36 -> return (Current AttachSealedFileEvidence)
+      37 -> return (Current PreparationToPendingEvidence)
+      38 -> return (Current DeleteSigAttachmentEvidence)
+      39 -> return (Obsolete AuthorUsesCSVEvidence)
+      40 -> return (Obsolete ErrorDocumentEvidence)
+      41 -> return (Obsolete MarkDocumentSeenEvidence)
+      42 -> return (Current RejectDocumentEvidence)
+      43 -> return (Obsolete SetDocumentInviteTimeEvidence)
+      44 -> return (Obsolete SetDocumentTimeoutTimeEvidence)
+      45 -> return (Obsolete RestoreArchivedDocumentEvidence)
+      46 -> return (Current InvitationEvidence)
+      47 -> return (Obsolete SignableFromDocumentIDWithUpdatedAuthorEvidence)
+      48 -> return (Obsolete ArchiveDocumentEvidence)
+      49 -> return (Obsolete ResetSignatoryDetailsEvidence)
+      50 -> return (Obsolete AdminOnlySaveForUserEvidence)
+      51 -> return (Obsolete SignableFromDocumentEvidence)
+      52 -> return (Obsolete TemplateFromDocumentEvidence)
+      53 -> return (Obsolete AttachCSVUploadEvidence)
+      54 -> return (Current SendToPadDevice)
+      55 -> return (Current RemovedFromPadDevice)
+      56 -> return (Obsolete AddSignatoryEvidence)
+      57 -> return (Obsolete RemoveSignatoryEvidence)
+      58 -> return (Obsolete AddFieldEvidence)
+      59 -> return (Obsolete RemoveFieldEvidence)
+      60 -> return (Obsolete ChangeFieldEvidence)
+      61 -> return (Current ResealedPDF)
+      62 -> return (Obsolete OldDocumentHistory)
+      63 -> return (Obsolete SetStandardAuthenticationMethodEvidence)
+      64 -> return (Obsolete SetELegAuthenticationMethodEvidence)
+      65 -> return (Obsolete SetEmailDeliveryMethodEvidence)
+      66 -> return (Obsolete SetPadDeliveryMethodEvidence)
+      67 -> return (Obsolete SetAPIDeliveryMethodEvidence)
+      68 -> return (Current ReminderSend)
+      69 -> return (Obsolete SetDocumentProcessEvidence)
+      70 -> return (Obsolete DetachFileEvidence)
+      71 -> return (Current InvitationDeliveredByEmail)
+      72 -> return (Current InvitationUndeliveredByEmail)
+      73 -> return (Current SignatoryLinkVisited)
+      74 -> return (Current ProlongDocumentEvidence)
+      75 -> return (Current ChangeSignatoryPhoneWhenUndeliveredEvidence)
+      76 -> return (Current InvitationDeliveredBySMS)
+      77 -> return (Current InvitationUndeliveredBySMS)
+      78 -> return (Current AttachGuardtimeSealedFileEvidence)
+      79 -> return (Current AttachExtendedSealedFileEvidence)
+      80 -> return (Current ErrorSealingDocumentEvidence)
+      81 -> return (Current AutomaticReminderSent)
+      82 -> return (Current SignWithELegFailureEvidence)
+      _ -> E.throwIO $ RangeError {
+        reRange = [(1, 82)]
+      , reValue = n
+      }

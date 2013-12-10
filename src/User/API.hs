@@ -26,7 +26,6 @@ import OAuth.Model
 import OAuth.View
 import Data.Maybe
 import DB
-import DB.SQL2
 import User.UserView
 import User.Utils
 import Control.Logic

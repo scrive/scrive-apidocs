@@ -15,13 +15,11 @@ import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Crypto.RNG
 import DB
-import DB.SQL2
 import KontraLink
 import MagicHash
 import MinutesTime
 import User.Model
 import qualified Log
-
 
 data UserAccountRequest = UserAccountRequest {
     uarUserID :: UserID
@@ -32,14 +30,17 @@ data UserAccountRequest = UserAccountRequest {
 userAccountRequest :: Action UserID UserAccountRequest (UserID, MagicHash) Scheduler
 userAccountRequest = Action {
     qaTable = tableUserAccountRequests
-  , qaFields = \(user_id, token) -> [
-      ("user_id", toSql user_id)
-    , ("token", toSql token)
-    ]
+  , qaSetFields = \(user_id, token) -> do
+      sqlSet "user_id" user_id
+      sqlSet "token" token
   , qaSelectFields = ["user_id", "expires", "token"]
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
-  , qaDecode = kFold decoder []
+  , qaDecode = \(user_id, expires, token) -> UserAccountRequest {
+      uarUserID = user_id
+    , uarExpires = expires
+    , uarToken = token
+    }
   , qaUpdateSQL = \UserAccountRequest{..} -> toSQLCommand $ sqlUpdate "user_account_requests" $ do
       sqlSet "expires" uarExpires
       sqlSet "token" uarToken
@@ -51,12 +52,6 @@ userAccountRequest = Action {
             Log.mixlog_ $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
 
   }
-  where
-    decoder acc user_id expires token = UserAccountRequest {
-        uarUserID = user_id
-      , uarExpires = expires
-      , uarToken = token
-      } : acc
 
 getUserAccountRequestUser :: MonadDB m => UserID -> MagicHash -> m (Maybe User)
 getUserAccountRequestUser uid token = runMaybeT $ do

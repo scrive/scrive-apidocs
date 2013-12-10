@@ -12,7 +12,8 @@ module Attachment.Model
   )
 where
 
-import DB.SQL2
+import Data.ByteString (ByteString)
+import Data.Monoid.Space
 import DB
 import Attachment.AttachmentID
 import File.FileID
@@ -21,7 +22,6 @@ import User.UserID
 import MinutesTime
 import Crypto.RNG
 import Util.Actor
-import Control.Applicative
 import Control.Monad.State.Class
 
 data Attachment = Attachment
@@ -35,7 +35,6 @@ data Attachment = Attachment
   , attachmentdeleted :: Bool
   }
 
-
 sqlAttachmentResults :: (MonadState v m, SqlResult v) => m ()
 sqlAttachmentResults = do
   sqlResult "id"
@@ -47,27 +46,24 @@ sqlAttachmentResults = do
   sqlResult "shared"
   sqlResult "deleted"
 
-fetchAttachments :: MonadDB m => m [Attachment]
-fetchAttachments = kFold decoder []
-  where
-    decoder acc aid title ctime mtime file_id user_id shared deleted =
-      Attachment { attachmentid      = aid
-                 , attachmenttitle   = title
-                 , attachmentctime   = ctime
-                 , attachmentmtime   = mtime
-                 , attachmentfile    = file_id
-                 , attachmentuser    = user_id
-                 , attachmentshared  = shared
-                 , attachmentdeleted = deleted
-                 } : acc
+fetchAttachment :: (AttachmentID, String, MinutesTime, MinutesTime, FileID, UserID, Bool, Bool) -> Attachment
+fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = Attachment {
+  attachmentid      = aid
+, attachmenttitle   = title
+, attachmentctime   = ctime
+, attachmentmtime   = mtime
+, attachmentfile    = file_id
+, attachmentuser    = user_id
+, attachmentshared  = shared
+, attachmentdeleted = deleted
+}
 
-
-data NewAttachment = NewAttachment UserID String String Binary Actor
-instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m NewAttachment (Either String Attachment) where
+data NewAttachment = NewAttachment UserID String String (Binary ByteString) Actor
+instance (CryptoRNG m, MonadDB m) => DBUpdate m NewAttachment Attachment where
   update (NewAttachment uid title filename filecontents actor) = do
     let ctime = actorTime actor
     fileid <- update $ NewFile filename filecontents
-    kRun_ $ sqlInsert "attachments" $ do
+    runQuery_ . sqlInsert "attachments" $ do
       sqlSet "user_id" uid
       sqlSet "title" title
       sqlSet "ctime" ctime
@@ -76,16 +72,13 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m NewAttachment (Ei
       sqlSet "deleted" False
       sqlSet "file_id" fileid
       sqlAttachmentResults
-    atts <- fetchAttachments
-    case atts of
-      [att] -> return (Right att)
-      _ -> return (Left $ "NewAttachment of file " ++ title ++ " failed")
+    fetchOne fetchAttachment
 
 data DeleteAttachments = DeleteAttachments UserID [AttachmentID] Actor
-instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments () where
+instance (CryptoRNG m, MonadDB m) => DBUpdate m DeleteAttachments () where
   update (DeleteAttachments uid attids actor) = do
     let atime = actorTime actor
-    kRun_ $ sqlUpdate "attachments" $ do
+    runQuery_ . sqlUpdate "attachments" $ do
       sqlSet "mtime" atime
       sqlSet "deleted" True
       sqlWhereIn "id" attids
@@ -93,10 +86,10 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments
       sqlWhereEq "deleted" False
 
 data SetAttachmentTitle = SetAttachmentTitle AttachmentID String Actor
-instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m SetAttachmentTitle () where
+instance (CryptoRNG m, MonadDB m) => DBUpdate m SetAttachmentTitle () where
   update (SetAttachmentTitle attid title actor) = do
     let atime = actorTime actor
-    kRun_ $ sqlUpdate "attachments" $ do
+    runQuery_ . sqlUpdate "attachments" $ do
       sqlSet "mtime" atime
       sqlSet "title" title
       sqlWhereEq "id" attid
@@ -139,14 +132,14 @@ data AttachmentOrderBy
 data GetAttachments = GetAttachments [AttachmentDomain] [AttachmentFilter] [AscDesc AttachmentOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetAttachments [Attachment] where
   query (GetAttachments domains filters orderbys (offset,limit)) = do
-    kRun_ $ sqlSelect "attachments" $ do
+    runQuery_ . sqlSelect "attachments" $ do
       sqlAttachmentResults
       sqlWhereAny (mapM_ (sqlWhere . domainToSQLCommand) domains)
       mapM_ sqlWhereAttachmentFilter filters
       mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
       sqlOffset $ fromIntegral offset
       sqlLimit $ fromIntegral limit
-    fetchAttachments
+    fetchMany fetchAttachment
    where
     domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
       "attachments.user_id =" <?> uid <+> "AND attachments.deleted =" <?> del
@@ -165,7 +158,7 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
 data SetAttachmentsSharing = SetAttachmentsSharing UserID [AttachmentID] Bool
 instance (MonadDB m) => DBUpdate m SetAttachmentsSharing () where
   update (SetAttachmentsSharing uid atts flag) = do
-    kRun_ $ sqlUpdate "attachments" $ do
-          sqlSet "shared" flag
-          sqlWhereIn "id" atts
-          sqlWhereEq "user_id" uid
+    runQuery_ . sqlUpdate "attachments" $ do
+      sqlSet "shared" flag
+      sqlWhereIn "id" atts
+      sqlWhereEq "user_id" uid

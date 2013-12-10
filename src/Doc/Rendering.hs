@@ -60,7 +60,7 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: forall m . (KontraMonad m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
+convertPdfToJpgPages :: forall m . (KontraMonad m, Log.MonadLog m, MonadDB m, MonadIO m, AWS.AmazonMonad m)
                      => FileID
                      -> Int
                      -> m JpegPages
@@ -215,16 +215,15 @@ preCheckPDFHelper content tmppath =
 -- content or 'FileError' enumeration stating what is going on.
 --
 preCheckPDF :: BS.ByteString
-            -> IO (Either FileError Binary)
+            -> IO (Either FileError (Binary BS.ByteString))
 preCheckPDF content =
   withSystemTempDirectory "precheck" $ \tmppath -> do
-    value <- preCheckPDFHelper content tmppath
+    res <- preCheckPDFHelper content tmppath
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
-    case value of
+    case res of
       Left x -> Log.attention_ $ "preCheckPDF: " ++ show x
       Right _ -> return ()
-    return $ Binary <$> value
-
+    return $ Binary <$> res
 
 findStringAfterKey :: String -> BS.ByteString -> [String]
 findStringAfterKey key content =

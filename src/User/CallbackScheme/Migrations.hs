@@ -9,5 +9,5 @@ removeDuplicateIndexFromUsersCallbackScheme = Migration {
 , mgrFrom = 1
 , mgrDo = do
   let Table{..} = tableUsersCallbackScheme
-  kRun_ . sqlDropIndex tblName $ indexOnColumn "user_id"
+  runQuery_ . sqlDropIndex tblName $ indexOnColumn "user_id"
 }

@@ -7,6 +7,7 @@ import DB
 import SMS.Model
 import qualified Log
 import MessageData
+import MinutesTime
 import Data.Char
 import Data.String.Utils
 
@@ -22,7 +23,7 @@ data SMS = SMS {
 -- Transliterate is used since eg. polish characters are not supported by
 -- latin1, but we still want messages containing such characters to be sent
 -- successfully.
-scheduleSMS :: MonadDB m => SMS -> m ()
+scheduleSMS :: (Log.MonadLog m, MonadDB m) => SMS -> m ()
 scheduleSMS msg@SMS{..} = do
     if (smsMSISDN /= "")
        then do

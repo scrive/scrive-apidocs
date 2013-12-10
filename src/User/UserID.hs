@@ -4,17 +4,17 @@ module User.UserID (
   , unUserID
   ) where
 
+import Control.Applicative
 import Data.Int
 import Data.Typeable
+import Database.PostgreSQL.PQTypes hiding (Binary, put)
+import DB.Derive
 import Happstack.Server
 import Data.Binary
-
-import DB.Derive
 import Utils.Read
 
 newtype UserID = UserID Int64
-  deriving (Eq, Ord, Typeable)
-$(newtypeDeriveConvertible ''UserID)
+  deriving (Eq, Ord, PQFormat, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''UserID)
 
 instance FromReqURI UserID where
@@ -23,6 +23,14 @@ instance FromReqURI UserID where
 instance Binary UserID where
   put (UserID uid) = put uid
   get = fmap UserID get
+
+instance FromSQL UserID where
+  type PQBase UserID = PQBase Int64
+  fromSQL mbase = UserID <$> fromSQL mbase
+
+instance ToSQL UserID where
+  type PQDest UserID = PQDest Int64
+  toSQL (UserID n) = toSQL n
 
 unsafeUserID :: Int64 -> UserID
 unsafeUserID = UserID

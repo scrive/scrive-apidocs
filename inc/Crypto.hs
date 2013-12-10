@@ -11,7 +11,7 @@ import Codec.Crypto.AES
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 
-import DB.Binary
+import DB
 
 data AESConf = AESConf ByteString ByteString -- key, iv
   deriving (Eq, Ord, Show)
@@ -33,8 +33,8 @@ aesEncrypt (AESConf key iv) = crypt' CFB key iv Encrypt
 aesDecrypt :: AESConf -> ByteString -> ByteString
 aesDecrypt (AESConf key iv) = crypt' CFB key iv Decrypt
 
-aesKey :: AESConf -> Binary
+aesKey :: AESConf -> Binary BS.ByteString
 aesKey (AESConf key _) = Binary key
 
-aesIV :: AESConf -> Binary
+aesIV :: AESConf -> Binary BS.ByteString
 aesIV (AESConf _ iv) = Binary iv

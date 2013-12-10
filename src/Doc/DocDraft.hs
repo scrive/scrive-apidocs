@@ -18,7 +18,6 @@ import Data.List
 import User.Lang
 import Doc.Model
 import DB
-import DB.SQL2 (SomeKontraException(..))
 import Util.Actor
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
@@ -34,7 +33,6 @@ import Doc.DocUtils
 import Data.String.Utils (strip)
 import Doc.SignatoryLinkID
 -- JSON instances
-
 
 instance MatchWithJSValue SignatoryLink where
     matchesWithJSValue s = do

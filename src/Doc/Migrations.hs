@@ -1,18 +1,16 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
 import Control.Monad
-import Control.Monad.IO.Class
 import Data.Int
 import Data.Monoid
+import Data.Monoid.Space
 import Data.Maybe
 import Text.JSON
 import Text.JSON.FromJSValue
 
 import DB
 import DB.Checks
-import DB.SQL2
 import Doc.Tables
 import qualified Log
 import Doc.DocumentID
@@ -32,18 +30,33 @@ import Data.String.Utils (split)
 import Utils.Prelude
 import Text.JSON as JSON
 
-default (SQL)
+instance PQFormat [SignatoryField] where
+  pqFormat _ = pqFormat (undefined::String)
+instance FromSQL [SignatoryField] where
+  type PQBase [SignatoryField] = PQBase String
+  fromSQL = jsonFromSQL
+instance ToSQL [SignatoryField] where
+  type PQDest [SignatoryField] = PQDest String
+  toSQL = jsonToSQL
 
-$(jsonableDeriveConvertible [t| [SignatoryField] |])
+signatoryLinksChangeVarcharColumnsToText :: MonadDB m => Migration m
+signatoryLinksChangeVarcharColumnsToText = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 23
+  , mgrDo = do
+    runSQL_ "ALTER TABLE signatory_links ALTER COLUMN signinfo_ocsp_response TYPE TEXT"
+    runSQL_ "ALTER TABLE signatory_links ALTER COLUMN sign_redirect_url TYPE TEXT"
+    runSQL_ "ALTER TABLE signatory_links ALTER COLUMN reject_redirect_url TYPE TEXT"
+}
 
 addSealStatusToDocument :: MonadDB m => Migration m
 addSealStatusToDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 23
-  , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN seal_status SMALLINT NULL"
+  , mgrDo = runSQL_ "ALTER TABLE documents ADD COLUMN seal_status SMALLINT NULL"
 }
 
-setMandatoryExpirationTimeInDocument :: (MonadDB m, MonadIO m) => Migration m
+setMandatoryExpirationTimeInDocument :: MonadDB m => Migration m
 setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 12
@@ -54,13 +67,13 @@ setMandatoryExpirationTimeInDocument = Migration {
     --   All other documents => set days to sign to 0
     let pendingDaysToSign = 90
     timeout <- (pendingDaysToSign `daysAfter`) `liftM` getMinutesTime
-    kRun_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign defaultValue
+    runQuery_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign defaultValue
         <+> "WHERE status =" <?> Preparation <+> "AND days_to_sign IS NULL"
-    kRun_ $ "UPDATE documents SET days_to_sign =" <?> pendingDaysToSign
+    runQuery_ $ "UPDATE documents SET days_to_sign =" <?> (fromIntegral pendingDaysToSign :: Int32)
                            <+> ", timeout_time =" <?> timeout
         <+> "WHERE status =" <?> Pending <+> "AND timeout_time IS NULL"
-    kRun_ "UPDATE documents SET days_to_sign = 0 WHERE days_to_sign IS NULL"
-    kRunRaw "ALTER TABLE documents ALTER days_to_sign SET NOT NULL"
+    runSQL_ "UPDATE documents SET days_to_sign = 0 WHERE days_to_sign IS NULL"
+    runSQL_ "ALTER TABLE documents ALTER days_to_sign SET NOT NULL"
 }
 
 removeDeletedFromDocuments :: MonadDB m => Migration m
@@ -68,7 +81,7 @@ removeDeletedFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 14
   , mgrDo = do
-    kRunRaw "ALTER TABLE documents DROP COLUMN deleted"
+    runSQL_ "ALTER TABLE documents DROP COLUMN deleted"
 }
 
 removeSignatoryLinksInternalInsertOrder :: MonadDB m => Migration m
@@ -76,13 +89,13 @@ removeSignatoryLinksInternalInsertOrder = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 14
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE signatory_link_fields "
+      runSQL_ $ "ALTER TABLE signatory_link_fields "
              <> "DROP CONSTRAINT fk_signatory_link_fields_signatory_links, "
              <> "ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY (signatory_link_id) "
              <> "REFERENCES signatory_links (id) MATCH SIMPLE "
              <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE"
 
-      kRunRaw $ "ALTER TABLE signatory_attachments "
+      runSQL_ $ "ALTER TABLE signatory_attachments "
              <> "DROP CONSTRAINT fk_signatory_attachments_signatory_links,  "
              <> "ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY (signatory_link_id)  "
              <> "REFERENCES signatory_links (id) MATCH SIMPLE  "
@@ -104,7 +117,7 @@ removeSignatoryLinksInternalInsertOrder = Migration {
       -- unspecified order of updates and it cannot be made
       -- deterministic. Generator nextval('') has to be used in a
       -- SELECT query.
-      kRunRaw $ "WITH RECURSIVE "
+      runSQL_ $ "WITH RECURSIVE "
              <> "problematic_signatory_links(id,internal_insert_order,document_id) AS ( "
              <> "    SELECT signatory_links.id, signatory_links.internal_insert_order, signatory_links.document_id "
              <> "      FROM signatory_links, signatory_links AS sl2 "
@@ -128,7 +141,7 @@ removeSignatoryLinksInternalInsertOrder = Migration {
              <> "            AS problematic_signatory_links_with_new_ids "
              <> " WHERE signatory_links.id = problematic_signatory_links_with_new_ids.id "
 
-      kRunRaw $ "ALTER TABLE signatory_links "
+      runSQL_ $ "ALTER TABLE signatory_links "
              <> "DROP COLUMN internal_insert_order"
 }
 
@@ -137,21 +150,21 @@ removeSignatoryRoles = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 11
   , mgrDo = do
-    kRunRaw "ALTER TABLE signatory_links ADD COLUMN is_author BOOL NULL"
-    kRunRaw "ALTER TABLE signatory_links ADD COLUMN is_partner BOOL NULL"
-    kRunRaw $ "UPDATE signatory_links SET"
+    runSQL_ "ALTER TABLE signatory_links ADD COLUMN is_author BOOL NULL"
+    runSQL_ "ALTER TABLE signatory_links ADD COLUMN is_partner BOOL NULL"
+    runSQL_ $ "UPDATE signatory_links SET"
       <> "  is_author  = (roles & 2)::BOOL"
       <> ", is_partner = (roles & 1)::BOOL"
-    kRunRaw "ALTER TABLE signatory_links DROP COLUMN roles"
-    kRunRaw "ALTER TABLE signatory_links ALTER is_author SET NOT NULL"
-    kRunRaw "ALTER TABLE signatory_links ALTER is_partner SET NOT NULL"
+    runSQL_ "ALTER TABLE signatory_links DROP COLUMN roles"
+    runSQL_ "ALTER TABLE signatory_links ALTER is_author SET NOT NULL"
+    runSQL_ "ALTER TABLE signatory_links ALTER is_partner SET NOT NULL"
 }
 
 addApiCallbackUrlToDocument :: MonadDB m => Migration m
 addApiCallbackUrlToDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 10
-  , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN api_callback_url TEXT NULL"
+  , mgrDo = runSQL_ "ALTER TABLE documents ADD COLUMN api_callback_url TEXT NULL"
 }
 
 addUnsavedDraftToDocument :: MonadDB m => Migration m
@@ -159,8 +172,8 @@ addUnsavedDraftToDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 15
   , mgrDo = do
-      kRunRaw "ALTER TABLE documents ADD COLUMN unsaved_draft BOOL NOT NULL DEFAULT FALSE"
-      kRunRaw "UPDATE documents SET unsaved_draft = true WHERE (title ILIKE 'Namnlös%' OR title ILIKE  'Untitled%') AND type = 1 AND status = 1"
+      runSQL_ "ALTER TABLE documents ADD COLUMN unsaved_draft BOOL NOT NULL DEFAULT FALSE"
+      runSQL_ "UPDATE documents SET unsaved_draft = true WHERE (title ILIKE 'Namnlös%' OR title ILIKE  'Untitled%') AND type = 1 AND status = 1"
 }
 
 dropTrustWeaverReferenceFromDocuments :: MonadDB m => Migration m
@@ -168,7 +181,7 @@ dropTrustWeaverReferenceFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 16
   , mgrDo = do
-      kRunRaw "ALTER TABLE documents DROP COLUMN trust_weaver_reference"
+      runSQL_ "ALTER TABLE documents DROP COLUMN trust_weaver_reference"
 }
 
 moveRejectionInfoFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
@@ -176,10 +189,10 @@ moveRejectionInfoFromDocumentsToSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 16
   , mgrDo = do
-      kRunRaw $  "ALTER TABLE signatory_links"
+      runSQL_ $  "ALTER TABLE signatory_links"
               <+> "ADD COLUMN rejection_time    TIMESTAMPTZ,"
               <+> "ADD COLUMN rejection_reason  TEXT"
-      kRunRaw $   "UPDATE signatory_links"
+      runSQL_ $   "UPDATE signatory_links"
               <+> "   SET rejection_time = documents.rejection_time,"
               <+> "       rejection_reason = documents.rejection_reason"
               <+> "FROM documents"
@@ -191,7 +204,7 @@ dropRejectionInfoFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 17
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE documents"
+      runSQL_ $ "ALTER TABLE documents"
               <+> "DROP COLUMN rejection_time,"
               <+> "DROP COLUMN rejection_reason,"
               <+> "DROP COLUMN rejection_signatory_link_id"
@@ -202,11 +215,11 @@ moveAuthenticationMethodFromDocumentsToSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 17
   , mgrDo = do
-      kRunRaw $   "ALTER TABLE signatory_links"
+      runSQL_ $   "ALTER TABLE signatory_links"
               <+> "ADD COLUMN authentication_method         SMALLINT     NULL"
-      kRunRaw $   "UPDATE signatory_links"
+      runSQL_ $   "UPDATE signatory_links"
               <+> "   SET authentication_method = (SELECT authentication_method FROM documents WHERE documents.id = signatory_links.document_id)"
-      kRunRaw $   "ALTER TABLE signatory_links"
+      runSQL_ $   "ALTER TABLE signatory_links"
               <+> "ALTER COLUMN authentication_method SET NOT NULL"
 }
 
@@ -215,7 +228,7 @@ dropAuthenticationMethodFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 18
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE documents"
+      runSQL_ $ "ALTER TABLE documents"
               <+> "DROP COLUMN authentication_method"
 }
 
@@ -224,11 +237,11 @@ moveDeliveryMethodFromDocumentsToSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 19
   , mgrDo = do
-      kRunRaw $   "ALTER TABLE signatory_links"
+      runSQL_ $   "ALTER TABLE signatory_links"
               <+> "ADD COLUMN delivery_method         SMALLINT     NULL"
-      kRunRaw $   "UPDATE signatory_links"
+      runSQL_ $   "UPDATE signatory_links"
               <+> "   SET delivery_method = (SELECT delivery_method FROM documents WHERE documents.id = signatory_links.document_id)"
-      kRunRaw $   "ALTER TABLE signatory_links"
+      runSQL_ $   "ALTER TABLE signatory_links"
               <+> "ALTER COLUMN delivery_method SET NOT NULL"
 }
 
@@ -237,7 +250,7 @@ dropDeliveryMethodFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 21
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE documents"
+      runSQL_ $ "ALTER TABLE documents"
               <+> "DROP COLUMN delivery_method"
 }
 
@@ -246,24 +259,24 @@ addObjectVersionToDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 22
   , mgrDo = do
-      kRunRaw $   "ALTER TABLE documents"
+      runSQL_ $   "ALTER TABLE documents"
               <+> "ADD COLUMN object_version BIGINT NOT NULL DEFAULT 0"
 }
 
 
-moveCancelationReasonFromDocumentsToSignatoryLinks :: MonadDB m => Migration m
+moveCancelationReasonFromDocumentsToSignatoryLinks :: (MonadDB m, Log.MonadLog m) => Migration m
 moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 18
   , mgrDo = do
-      kRunRaw $   "ALTER TABLE signatory_links"
+      runSQL_ $ "ALTER TABLE signatory_links"
               <+> "ADD COLUMN eleg_data_mismatch_message          TEXT     NULL,"
               <+> "ADD COLUMN eleg_data_mismatch_first_name       TEXT     NULL,"
               <+> "ADD COLUMN eleg_data_mismatch_last_name        TEXT     NULL,"
               <+> "ADD COLUMN eleg_data_mismatch_personal_number  TEXT     NULL"
-      _ <- kRun $ SQL "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE '%ELegDataMismatch%'" []
+      runSQL_ "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE '%ELegDataMismatch%'"
 
-      let fetch acc docid fieldsstr = v : acc
+      let fetch (docid, fieldsstr) = v
              where
                Ok value = decode fieldsstr
                v = fromJSValue1 (value :: JSValue)
@@ -284,11 +297,11 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
                                        , fromJSString personal_number)
                    _ -> error $ "Could not parse what is in ELegDataMismatch: " ++ fieldsstr ++ ", value is " ++ show g
 
-      values <- kFold fetch []
-      forM_ values $ \v@( did :: Integer, slid :: Integer, message :: String
+      values <- fetchMany fetch
+      forM_ values $ \v@( did :: Int64, slid :: Int64, message :: String
                         , first_name :: String, last_name :: String
                         , personal_number :: String) -> do
-        r <- kRun $ sqlUpdate "signatory_links" $ do
+        r <- runQuery . sqlUpdate "signatory_links" $ do
           sqlSet "eleg_data_mismatch_message" message
           sqlSet "eleg_data_mismatch_first_name" first_name
           sqlSet "eleg_data_mismatch_last_name" last_name
@@ -297,32 +310,31 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
           sqlWhereEq "document_id" did
         when (r /= 1) $
           Log.mixlog_ $ "Migration failed at " ++ show v
-      kRun_ $ sqlUpdate "documents" $ do
-        sqlSet "cancelation_reason" SqlNull
+      runQuery_ $ sqlUpdate "documents" $ do
+        sqlSetCmd "cancelation_reason" "NULL"
         sqlWhere "cancelation_reason = '\"ManualCancel\"'"
-      kRun_ $ sqlUpdate "documents" $ do
-        sqlSet "cancelation_reason" SqlNull
+      runQuery_ $ sqlUpdate "documents" $ do
+        sqlSetCmd "cancelation_reason" "NULL"
         sqlWhereExists $ sqlSelect "signatory_links" $ do
           sqlWhere "signatory_links.document_id = documents.id"
           sqlWhere "signatory_links.eleg_data_mismatch_message IS NOT NULL"
 }
 
-dropCancelationReasonFromDocuments :: MonadDB m => Migration m
+dropCancelationReasonFromDocuments :: (MonadDB m, Log.MonadLog m) => Migration m
 dropCancelationReasonFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 19
   , mgrDo = do
-      let fetch acc ids title eleg = (ids :: Integer, title :: String, eleg :: String) : acc
-      kRun_ $ sqlSelect "documents" $ do
+      runQuery_ $ sqlSelect "documents" $ do
                  sqlResult "id, title, cancelation_reason"
                  sqlWhere "cancelation_reason IS NOT NULL"
-      values <- kFold fetch []
+      values :: [(Int64, String, String)] <- fetchMany id
       mapM_ (\(a,b,c) -> Log.mixlog_ $ "ID: " ++ show a ++ " (" ++ b ++ "): " ++ c) $ values
 
       --when (not (null values)) $
       --     error "There are some useful cancelation_reason fields in documents still"
 
-      kRunRaw $ "ALTER TABLE documents"
+      runSQL_ $ "ALTER TABLE documents"
               <+> "DROP COLUMN cancelation_reason"
 }
 
@@ -331,7 +343,7 @@ dropMailFooterFromDocuments = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 20
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE documents"
+      runSQL_ $ "ALTER TABLE documents"
               <+> "DROP COLUMN mail_footer"
 }
 
@@ -340,14 +352,14 @@ dropCSVSignatoryIndexFromSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 15
   , mgrDo = do
-      kRunRaw "ALTER TABLE signatory_links DROP COLUMN csv_signatory_index"
+      runSQL_ "ALTER TABLE signatory_links DROP COLUMN csv_signatory_index"
 }
 
 addSequenceOwnerToDocumentsId :: MonadDB m => Migration m
 addSequenceOwnerToDocumentsId = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 11
-  , mgrDo = kRunRaw "ALTER SEQUENCE documents_id_seq OWNED BY documents.id"
+  , mgrDo = runSQL_ "ALTER SEQUENCE documents_id_seq OWNED BY documents.id"
 }
 
 addSequenceOwnerToSignatoryLinks :: MonadDB m => Migration m
@@ -355,8 +367,8 @@ addSequenceOwnerToSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 12
   , mgrDo = do
-      kRunRaw "ALTER SEQUENCE signatory_links_internal_insert_order_seq OWNED BY signatory_links.internal_insert_order"
-      kRunRaw "ALTER SEQUENCE signatory_links_id_seq OWNED BY signatory_links.id"
+      runSQL_ "ALTER SEQUENCE signatory_links_internal_insert_order_seq OWNED BY signatory_links.internal_insert_order"
+      runSQL_ "ALTER SEQUENCE signatory_links_id_seq OWNED BY signatory_links.id"
 }
 
 removeCompanyIdFromSignatoryLinks :: MonadDB m => Migration m
@@ -364,7 +376,7 @@ removeCompanyIdFromSignatoryLinks = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 13
   , mgrDo = do
-      kRunRaw "ALTER TABLE signatory_links DROP COLUMN company_id"
+      runSQL_ "ALTER TABLE signatory_links DROP COLUMN company_id"
 }
 
 removeServiceIDFromDocuments :: MonadDB m => Migration m
@@ -373,14 +385,15 @@ removeServiceIDFromDocuments = Migration {
   , mgrFrom = 9
   , mgrDo = do
     -- check if service_id field is empty for all documents
-    check <- getMany "SELECT DISTINCT service_id IS NULL FROM documents"
+    runSQL_ "SELECT DISTINCT service_id IS NULL FROM documents"
+    check <- fetchMany unSingle
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
       _      -> error "Documents have rows with non-null service_id"
-    kRunRaw "ALTER TABLE documents DROP CONSTRAINT fk_documents_services"
-    kRunRaw "DROP INDEX idx_documents_service_id"
-    kRunRaw "ALTER TABLE documents DROP COLUMN service_id"
+    runSQL_ "ALTER TABLE documents DROP CONSTRAINT fk_documents_services"
+    runSQL_ "DROP INDEX idx_documents_service_id"
+    runSQL_ "ALTER TABLE documents DROP COLUMN service_id"
 }
 
 addObligatoryColumnToSignatoryLinkFields :: MonadDB m => Migration m
@@ -388,11 +401,11 @@ addObligatoryColumnToSignatoryLinkFields = Migration {
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 1
   , mgrDo = do
-    kRunRaw "ALTER TABLE signatory_link_fields ADD COLUMN obligatory BOOL NOT NULL DEFAULT TRUE"
+    runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN obligatory BOOL NOT NULL DEFAULT TRUE"
     -- Change CheckboxOptionalFT to CheckboxFT and set obligatory to false
-    kRunRaw "UPDATE signatory_link_fields SET obligatory = FALSE WHERE type = 9"
+    runSQL_ "UPDATE signatory_link_fields SET obligatory = FALSE WHERE type = 9"
     -- Change CheckboxMandatoryFT to CheckboxFT and do not change obligatory (will stay true)
-    kRunRaw "UPDATE signatory_link_fields SET type = 9 WHERE type = 10"
+    runSQL_ "UPDATE signatory_link_fields SET type = 9 WHERE type = 10"
   }
 
 
@@ -403,39 +416,39 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
   , mgrFrom = 2
   , mgrDo = do
     -- Normalize of fields jsons
-    kRun_ $ sqlSelect "signatory_link_fields" $ do
+    runQuery_ $ sqlSelect "signatory_link_fields" $ do
                  sqlResult "id, placements"
                  sqlWhere "placements != '[]'"
-    values <- kFold (\acc ids placements -> (ids :: Integer, placements :: String) : acc) []
-    forM_ values $ \(fid, placements) -> do
+    values <- fetchMany id
+    forM_ values $ \(fid :: Int64, placements :: String) -> do
        let placementsJSON = case (JSON.decode placements) of
                                Ok js -> js
                                _ -> JSNull
        let (placements' :: [FieldPlacement]) = fromMaybe (error $ "Could not parse placements from " ++ placements) $
                                                fromJSValueCustomMany parseFields placementsJSON
-       kRun $ sqlUpdate "signatory_link_fields" $ do
+       runQuery . sqlUpdate "signatory_link_fields" $ do
           sqlSet "placements" placements'
           sqlWhereEq "id" fid
 
 
     -- Now clean checkboxes
-    kRun_ $ sqlSelect "signatory_link_fields" $ do
+    runQuery_ $ sqlSelect "signatory_link_fields" $ do
                  sqlResult "id, placements"
                  sqlWhereEq "type" (CheckboxFT undefined)
-    values' <- kFold (\acc ids placements -> (ids :: Integer, placements :: [FieldPlacement]) : acc) []
+    values' :: [(Int64, [FieldPlacement])] <- fetchMany id
     forM_ values' $ \(fid,  placements) -> do
                  let placements' = for placements (\p -> if (placementwrel p > 0 || placementhrel p >0)
                                                       then p
                                                       else p {placementwrel = 12 / 943, placementhrel = 12 / 1335 }  )
-                 kRun_ $ sqlUpdate "signatory_link_fields" $ do
+                 runQuery_ $ sqlUpdate "signatory_link_fields" $ do
                    sqlSet "placements" placements'
                    sqlWhereEq "id" fid
 
     -- Now clean images
-    kRun_ $ sqlSelect "signatory_link_fields" $ do
+    runQuery_ $ sqlSelect "signatory_link_fields" $ do
                  sqlResult "id, value, placements"
                  sqlWhereEq "type" (SignatureFT undefined)
-    values'' <- kFold (\acc ids value placements -> (ids :: Integer, value :: String, placements :: [FieldPlacement]) : acc) []
+    values'' :: [(Int64, String, [FieldPlacement])] <- fetchMany id
     forM_ values'' $ \(fid, value, placements) -> do
       case split "|" value of
         [ws,hs,content] ->
@@ -444,11 +457,11 @@ dropPixelSizeFormSignatureSignatoryLinkFieldsAndNormalizeFields = Migration {
                  let placements' = for placements (\p -> if (placementwrel p > 0 || placementhrel p >0)
                                                       then p
                                                       else p {placementwrel = fromIntegral w / 943, placementhrel = fromIntegral h / 1335 }  )
-                 kRun_ $ sqlUpdate "signatory_link_fields" $ do
+                 runQuery_ $ sqlUpdate "signatory_link_fields" $ do
                    sqlSet "placements" placements'
                    sqlSet "value" content
                    sqlWhereEq "id" fid
-               _ ->  kRun_ $ sqlUpdate "signatory_link_fields" $ do
+               _ ->  runQuery_ $ sqlUpdate "signatory_link_fields" $ do
                         sqlSet "value" content
                         sqlWhereEq "id" fid
         _ -> return ()
@@ -500,7 +513,7 @@ addShouldBeFilledBySenderColumnToSignatoryLinkFields :: MonadDB m => Migration m
 addShouldBeFilledBySenderColumnToSignatoryLinkFields = Migration {
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 3
-  , mgrDo = kRunRaw "ALTER TABLE signatory_link_fields ADD COLUMN should_be_filled_by_author BOOL NOT NULL DEFAULT FALSE"
+  , mgrDo = runSQL_ "ALTER TABLE signatory_link_fields ADD COLUMN should_be_filled_by_author BOOL NOT NULL DEFAULT FALSE"
   }
 
 splitIdentificationTypes :: MonadDB m => Migration m
@@ -508,33 +521,23 @@ splitIdentificationTypes = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 8
   , mgrDo = do
-    kRunRaw "ALTER TABLE documents ADD COLUMN authentication_method SMALLINT NULL"
-    kRunRaw "ALTER TABLE documents ADD COLUMN delivery_method SMALLINT NULL"
-    kRun_ $ mconcat [
-        SQL "UPDATE documents SET" []
-      , SQL "  authentication_method = (CASE WHEN allowed_id_types = 0 THEN ? WHEN allowed_id_types = 1 THEN ? WHEN allowed_id_types = 2 THEN ? WHEN allowed_id_types = 4 THEN ? END)::SMALLINT" [
-          toSql StandardAuthentication -- 0 (nothing, was defaulting to email)
-        , toSql StandardAuthentication -- 1 (email)
-        , toSql ELegAuthentication     -- 2 (eleg)
-        , toSql StandardAuthentication -- 4 (pad, it implied email)
-        ]
-      , SQL ", delivery_method = (CASE WHEN allowed_id_types = 0 THEN ? WHEN allowed_id_types = 1 THEN ? WHEN allowed_id_types = 2 THEN ? WHEN allowed_id_types = 4 THEN ? END)::SMALLINT" [
-          toSql EmailDelivery -- 0 (nothing, was defaulting to email)
-        , toSql EmailDelivery -- 1 (email)
-        , toSql EmailDelivery -- 2 (eleg, couldn't mix eleg with pad previously)
-        , toSql PadDelivery   -- 4 (pad)
-        ]
+    runSQL_ "ALTER TABLE documents ADD COLUMN authentication_method SMALLINT NULL"
+    runSQL_ "ALTER TABLE documents ADD COLUMN delivery_method SMALLINT NULL"
+    runQuery_ $ mconcat [
+        "UPDATE documents SET"
+      , "  authentication_method = (CASE WHEN allowed_id_types = 0 THEN " <?> StandardAuthentication <> " WHEN allowed_id_types = 1 THEN " <?> StandardAuthentication <> " WHEN allowed_id_types = 2 THEN " <?> ELegAuthentication <> " WHEN allowed_id_types = 4 THEN " <?> StandardAuthentication <> " END)::SMALLINT"
+      , ", delivery_method = (CASE WHEN allowed_id_types = 0 THEN " <?> EmailDelivery <> " WHEN allowed_id_types = 1 THEN " <?> EmailDelivery <> " WHEN allowed_id_types = 2 THEN " <?> EmailDelivery <> " WHEN allowed_id_types = 4 THEN " <?> PadDelivery <> " END)::SMALLINT"
       ]
-    kRunRaw "ALTER TABLE documents ALTER authentication_method SET NOT NULL"
-    kRunRaw "ALTER TABLE documents ALTER delivery_method SET NOT NULL"
-    kRunRaw "ALTER TABLE documents DROP COLUMN allowed_id_types"
+    runSQL_ "ALTER TABLE documents ALTER authentication_method SET NOT NULL"
+    runSQL_ "ALTER TABLE documents ALTER delivery_method SET NOT NULL"
+    runSQL_ "ALTER TABLE documents DROP COLUMN allowed_id_types"
 }
 
 addForeignKeyToDocumentTags :: MonadDB m => Migration m
 addForeignKeyToDocumentTags = Migration {
     mgrTable = tableDocumentTags
   , mgrFrom = 1
-  , mgrDo = kRunRaw $ "ALTER TABLE document_tags"
+  , mgrDo = runSQL_ $ "ALTER TABLE document_tags"
       <> " ADD CONSTRAINT fk_document_tags_document_id FOREIGN KEY(document_id)"
       <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       <> " DEFERRABLE INITIALLY IMMEDIATE"
@@ -545,7 +548,7 @@ deprecateDocFunctionalityCol = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 5
   , mgrDo = do
-    kRunRaw "ALTER TABLE documents DROP COLUMN functionality"
+    runSQL_ "ALTER TABLE documents DROP COLUMN functionality"
 }
 
 setCascadeOnSignatoryAttachments :: MonadDB m => Migration m
@@ -554,7 +557,7 @@ setCascadeOnSignatoryAttachments = Migration {
   , mgrFrom = 3
   , mgrDo = do
     -- this is supposed to aid in the signatory_links renumeration step that follows
-    kRunRaw $ "ALTER TABLE signatory_attachments"
+    runSQL_ $ "ALTER TABLE signatory_attachments"
               <> " DROP CONSTRAINT fk_signatory_attachments_signatory_links,"
               <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(document_id,signatory_link_id)"
               <> " REFERENCES signatory_links(document_id,id) ON DELETE RESTRICT ON UPDATE CASCADE"
@@ -566,7 +569,7 @@ renumerateSignatoryLinkIDS = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 6
   , mgrDo = do
-    kRunRaw $ "UPDATE signatory_links"
+    runSQL_ $ "UPDATE signatory_links"
               <> " SET id = DEFAULT"
               <> " FROM signatory_links AS sl2"
               <> " WHERE signatory_links.id = sl2.id"
@@ -579,7 +582,7 @@ dropSLForeignKeyOnSignatoryAttachments = Migration {
     mgrTable = tableSignatoryAttachments
   , mgrFrom = 4
   , mgrDo = do
-    kRunRaw $ "ALTER TABLE signatory_attachments"
+    runSQL_ $ "ALTER TABLE signatory_attachments"
            <> " DROP CONSTRAINT fk_signatory_attachments_signatory_links"
   }
 
@@ -588,7 +591,7 @@ setSignatoryLinksPrimaryKeyToIDOnly = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 7
   , mgrDo = do
-    kRunRaw $ "ALTER TABLE signatory_links"
+    runSQL_ $ "ALTER TABLE signatory_links"
               <> " DROP CONSTRAINT pk_signatory_links,"
               <> " ADD CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
   }
@@ -598,7 +601,7 @@ setSignatoryAttachmentsForeignKeyToSLIDOnly = Migration {
     mgrTable = tableSignatoryAttachments
   , mgrFrom = 5
   , mgrDo = do
-    kRunRaw $ "ALTER TABLE signatory_attachments"
+    runSQL_ $ "ALTER TABLE signatory_attachments"
       <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
       <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       <> " DEFERRABLE INITIALLY IMMEDIATE"
@@ -609,7 +612,7 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
     mgrTable = tableSignatoryAttachments
   , mgrFrom = 6
   , mgrDo = do
-    kRunRaw $ "ALTER TABLE signatory_attachments"
+    runSQL_ $ "ALTER TABLE signatory_attachments"
       <> " DROP COLUMN document_id"
   }
 
@@ -630,8 +633,8 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 8
   , mgrDo = do
-    _ <- kRun $ SQL "SELECT id, fields FROM signatory_links WHERE fields <> '' AND fields <> '[]'" [];
-    values <- kFold fetch []
+    runSQL_ "SELECT id, fields FROM signatory_links WHERE fields <> '' AND fields <> '[]'"
+    values <- fetchMany fetch
     forM_ values $ \(slid, fields) -> do
       forM_ fields $ \field -> do
         let (xtypestr :: String, custom_name :: String, is_author_filled :: Bool) =
@@ -647,7 +650,7 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
 
             Just (JSString x_sfValue) = lookup "sfValue" field
             Just placement = lookup "sfPlacements" field
-            (xtype :: Int) = case xtypestr of
+            (xtype :: Int16) = case xtypestr of
                       "FirstNameFT"      -> 1
                       "LastNameFT"       -> 2
                       "CompanyFT"        -> 3
@@ -658,7 +661,7 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
                       "SignatureFT"      -> 8
                       _                  -> error $ "Unknown field type: " ++ xtypestr
 
-        _ <- kRun $ sqlInsert "signatory_link_fields" $ do
+        runQuery_ . sqlInsert "signatory_link_fields" $ do
                 sqlSet "type" xtype
                 sqlSet "value" $ fromJSString x_sfValue
                 sqlSet "signatory_link_id" slid
@@ -668,10 +671,10 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
 
         return ()
       return ()
-    kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN fields"
+    runSQL_ $ "ALTER TABLE signatory_links DROP COLUMN fields"
   }
   where
-    fetch acc slid fieldsstr = (slid :: Int64, fields) : acc
+    fetch (slid, fieldsstr) = (slid :: Int64, fields)
       where
         Ok (JSArray arr) = decode fieldsstr
         fromJSVal (JSObject obj) = fromJSObject obj
@@ -684,21 +687,21 @@ moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 4
   , mgrDo = do
-    _ <- kRun $ SQL "SELECT id, tags FROM documents WHERE tags <> '' AND tags <> '[]'" [];
-    values <- kFold fetch []
+    runSQL_ "SELECT id, tags FROM documents WHERE tags <> '' AND tags <> '[]'"
+    values <- fetchMany fetch
     forM_ values $ \(docid, tags) -> do
       forM_ tags $ \tag -> do
         let Just (JSString tagname) = lookup "tagname" tag
             Just (JSString tagvalue) = lookup "tagvalue" tag
-        kRun $ sqlInsert "document_tags" $ do
+        runQuery . sqlInsert "document_tags" $ do
                    sqlSet "name" $ fromJSString tagname
                    sqlSet "value" $ fromJSString tagvalue
                    sqlSet "document_id" docid
       return ()
-    kRunRaw $ "ALTER TABLE documents DROP COLUMN tags"
+    runSQL_ $ "ALTER TABLE documents DROP COLUMN tags"
   }
   where
-    fetch acc docid tagsstr = (docid :: Int64, tags) : acc
+    fetch (docid, tagsstr) = (docid :: Int64, tags)
       where
         Ok (JSArray arr) = decode tagsstr
         fromJSVal (JSObject obj) = fromJSObject obj
@@ -712,9 +715,9 @@ updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
   , mgrFrom = 3
   , mgrDo = do
     -- change AwaitingAuthor to Pending
-    kRunRaw "UPDATE documents SET status = 2 WHERE status = 7"
+    runSQL_ "UPDATE documents SET status = 2 WHERE status = 7"
     -- update DocumentError so it has proper value
-    kRunRaw "UPDATE documents SET status = 7 WHERE status = 8"
+    runSQL_ "UPDATE documents SET status = 7 WHERE status = 8"
   }
 
 removeOldSignatoryLinkIDFromCancelationReason :: MonadDB m => Migration m
@@ -722,18 +725,17 @@ removeOldSignatoryLinkIDFromCancelationReason = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 1
   , mgrDo = do
-    _ <- kRun $ SQL "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE ?" [toSql ("{\"ELegDataMismatch%"::String)]
-    values <- kFold fetch []
+    runSQL_ $ "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE" <?> ("{\"ELegDataMismatch%"::String)
+    values <- fetchMany fetch
     forM_ values $ \(slid, params) -> do
       let (x : JSObject link : xs) = params
           [("unSignatoryLinkID", newlink)] = fromJSObject link
           newparams = toJSObject [("ELegDataMismatch", x : newlink : xs)]
-      1 <- kRun $ SQL "UPDATE documents SET cancelation_reason = ? WHERE id = ?"
-        [toSql $ encode newparams, toSql slid]
+      1 <- runQuery $ "UPDATE documents SET cancelation_reason = " <?> encode newparams <> " WHERE id = " <?> slid
       return ()
   }
   where
-    fetch acc slid reason = (slid :: Int64, params) : acc
+    fetch (slid, reason) = (slid :: Int64, params)
       where
         Ok (JSObject o) = decode reason
         [("ELegDataMismatch", JSArray params)] = fromJSObject o
@@ -744,8 +746,8 @@ addColumnToRecordInternalInsertionOrder =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 2
   , mgrDo = do
-      kRunRaw "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
-      kRunRaw $ "ALTER TABLE signatory_links"
+      runSQL_ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
+      runSQL_ $ "ALTER TABLE signatory_links"
         <> " ADD COLUMN internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
       return ()
   }
@@ -756,40 +758,40 @@ addDocumentIdIndexOnSignatoryLinks =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 3
   , mgrDo = do
-      kRunRaw $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
+      runSQL_ $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
       return ()
   }
 
-addIdSerialOnSignatoryLinks :: MonadDB m => Migration m
+addIdSerialOnSignatoryLinks :: (MonadDB m, Log.MonadLog m) => Migration m
 addIdSerialOnSignatoryLinks =
   Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 4
   , mgrDo = do
       -- create the sequence
-      _ <- kRunRaw $ "CREATE SEQUENCE signatory_links_id_seq"
+      runSQL_ "CREATE SEQUENCE signatory_links_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      Just n <- getOne $ SQL "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))" []
+      runSQL_ "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))"
+      n <- fetchOne unSingle
       Log.mixlog_ $ "Table signatory_links has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
-      _ <- kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
-      return ()
+      runSQL_ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
   }
 
-addIdSerialOnDocuments :: MonadDB m => Migration m
+addIdSerialOnDocuments :: (MonadDB m, Log.MonadLog m) => Migration m
 addIdSerialOnDocuments =
   Migration {
     mgrTable = tableDocuments
   , mgrFrom = 2
   , mgrDo = do
       -- create the sequence
-      _ <- kRunRaw $ "CREATE SEQUENCE documents_id_seq"
+      runSQL_ "CREATE SEQUENCE documents_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      Just n <- getOne $ SQL "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))" []
+      runSQL_ "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))"
+      n <- fetchOne unSingle
       Log.mixlog_ $ "Table documents has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
-      _ <- kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
-      return ()
+      runSQL_ $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
   }
 
 addNameColumnInSignatoryAttachments :: MonadDB m => Migration m
@@ -798,7 +800,7 @@ addNameColumnInSignatoryAttachments =
     mgrTable = tableSignatoryAttachments
   , mgrFrom = 1
   , mgrDo = do
-      kRunRaw "ALTER TABLE signatory_attachments ADD COLUMN name TEXT NOT NULL DEFAULT ''"
+      runSQL_ "ALTER TABLE signatory_attachments ADD COLUMN name TEXT NOT NULL DEFAULT ''"
   }
 
 addCSVUploadDataFromDocumentToSignatoryLink :: MonadDB m => Migration m
@@ -807,51 +809,48 @@ addCSVUploadDataFromDocumentToSignatoryLink =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 1
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE signatory_links"
+      runSQL_ $ "ALTER TABLE signatory_links"
         <> " ADD COLUMN csv_title TEXT NULL,"
         <> " ADD COLUMN csv_contents TEXT NULL,"
         <> " ADD COLUMN csv_signatory_index INTEGER NULL"
   }
 
-addSignatoryLinkIdToSignatoryAttachment :: MonadDB m => Migration m
+addSignatoryLinkIdToSignatoryAttachment :: (MonadDB m, Log.MonadLog m) => Migration m
 addSignatoryLinkIdToSignatoryAttachment =
   Migration {
     mgrTable = tableSignatoryAttachments
   , mgrFrom = 2
   , mgrDo = do
-    kRunRaw $ "ALTER TABLE signatory_attachments"
+    runSQL_ $ "ALTER TABLE signatory_attachments"
       <> " ADD COLUMN signatory_link_id BIGINT NOT NULL DEFAULT 0"
     -- set the new column signatory_link_id from signatory_links that have the same email and document_id
-    kRunRaw $ "UPDATE signatory_attachments "
+    runSQL_ $ "UPDATE signatory_attachments "
       <> "SET signatory_link_id = sl.id "
       <> "FROM signatory_links sl "
       <> "WHERE sl.document_id = signatory_attachments.document_id "
       <> "AND regexp_replace(sl.fields, '^.*EmailFT\",\"sfValue\":\"([a-zA-Z0-9@-_.]+)\".*$', E'\\\\1') = signatory_attachments.email"
-    kRunRaw $ "ALTER TABLE signatory_attachments DROP CONSTRAINT pk_signatory_attachments"
+    runSQL_ $ "ALTER TABLE signatory_attachments DROP CONSTRAINT pk_signatory_attachments"
     -- delete attachments which have emails and document_id that don't exist in signatory_links
     logAndDeleteBadAttachments
-    kRunRaw $ "ALTER TABLE signatory_attachments DROP COLUMN email"
-    kRunRaw $ "ALTER TABLE signatory_attachments ADD CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
-    kRunRaw $ "ALTER TABLE signatory_attachments"
+    runSQL_ $ "ALTER TABLE signatory_attachments DROP COLUMN email"
+    runSQL_ $ "ALTER TABLE signatory_attachments ADD CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
+    runSQL_ $ "ALTER TABLE signatory_attachments"
       <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
       <> " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
       <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
+    runSQL_ $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
   }
   where
     logAndDeleteBadAttachments = do
-      kRunRaw $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
-      atts <- kFold decoder []
-      kRunRaw $ "DELETE FROM signatory_attachments WHERE signatory_link_id = 0"
+      runSQL_ $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
+      atts :: [(Int64, BS.ByteString, BS.ByteString, BS.ByteString)] <- fetchMany id
+      runSQL_ $ "DELETE FROM signatory_attachments WHERE signatory_link_id = 0"
       mapM_ (\(d, n, e, s) ->
         Log.mixlog_ $ "Deleted bad attachment: document_id = " ++ show d
                  ++ ", name = " ++ show n
                  ++ ", email = " ++ show e
                  ++ ", description = " ++ show s) atts
       return ()
-      where
-        decoder acc docid name email desc = (docid :: Int64, name :: BS.ByteString, email :: BS.ByteString, desc :: BS.ByteString) : acc
-
 
 fixSignatoryLinksSwedishChars :: MonadDB m => Migration m
 fixSignatoryLinksSwedishChars =
@@ -859,22 +858,17 @@ fixSignatoryLinksSwedishChars =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 5
   , mgrDo = do
-     _ <- kRun $ SQL "SELECT id, document_id, fields FROM signatory_links" []
-     sls <- kFold decoder []
+     runSQL_ "SELECT id, document_id, fields FROM signatory_links"
+     sls :: [(SignatoryLinkID, DocumentID, [SignatoryField])] <- fetchMany id
      forM_ sls $ \(sid,did,fields) -> do
        let fixedfields = fixSwedishChars fields
        when (fields /= fixedfields) $ do
-         _ <- kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?"
-                [ toSql fixedfields
-                , toSql sid
-                , toSql did
-                ]
-         return ()
-
+         runQuery_ . sqlUpdate "signatory_links" $ do
+         sqlSet "fields" fixedfields
+         sqlWhereEq "id" sid
+         sqlWhereEq "document_id" did
   }
     where
-        decoder :: [(SignatoryLinkID, DocumentID, [SignatoryField])] ->  SignatoryLinkID ->  DocumentID -> [SignatoryField] -> [(SignatoryLinkID, DocumentID, [SignatoryField])]
-        decoder !acc sid did fields = (sid,did,fields) : acc
         fixSwedishChars :: [SignatoryField] ->  [SignatoryField]
         fixSwedishChars = map fixSwedishCharsForAField
         fixSwedishCharsForAField :: SignatoryField -> SignatoryField
@@ -895,7 +889,7 @@ addOCSPResponse =
   Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 9
-  , mgrDo = kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
+  , mgrDo = runSQL_ $ "ALTER TABLE signatory_links ADD COLUMN signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
   }
 
 addSignRedirectURL :: MonadDB m => Migration m
@@ -904,34 +898,34 @@ addSignRedirectURL =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 10
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sign_redirect_url VARCHAR NULL DEFAULT NULL"
+      runSQL_ $ "ALTER TABLE signatory_links ADD COLUMN sign_redirect_url VARCHAR NULL DEFAULT NULL"
   }
 
-moveAttachmentsFromDocumentsToAttachments :: MonadDB m => Migration m
+moveAttachmentsFromDocumentsToAttachments :: (MonadDB m, Log.MonadLog m) => Migration m
 moveAttachmentsFromDocumentsToAttachments =
   Migration
   { mgrTable = tableDocuments
   , mgrFrom = 6
   , mgrDo = do
-      inserted <- kRun $ SQL ("INSERT INTO attachments(title,file_id,deleted,shared,ctime,mtime, user_id)"
+      inserted <- runSQL $ "INSERT INTO attachments(title,file_id,deleted,shared,ctime,mtime, user_id)"
                               <> " SELECT title, file_id, signatory_links.deleted, sharing=2, ctime, mtime, user_id"
                               <> " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0 AND (documents.file_id IS NOT NULL)"
-                              <> " WHERE type = 3") []
-      deleted <- kRun $ SQL ("DELETE FROM documents WHERE type = 3") []
+                              <> " WHERE type = 3"
+      deleted <- runSQL "DELETE FROM documents WHERE type = 3"
       when (deleted /= inserted) $
          Log.mixlog_  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
   }
 
-removeOldDocumentLog :: (MonadDB m, MonadIO m) => Migration m
+removeOldDocumentLog :: MonadDB m => Migration m
 removeOldDocumentLog =
   Migration
   { mgrTable = tableDocuments
   , mgrFrom = 7
   , mgrDo = do
       now <- getMinutesTime
-      _ <- kRun $ SQL ("INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
-                              <> " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql (Obsolete OldDocumentHistory), toSql versionID]
-      kRunRaw "ALTER TABLE documents DROP COLUMN log"
+      runSQL_ $ "INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
+        <> " SELECT id, " <?> now <> ", log, " <?> Obsolete OldDocumentHistory <> ", " <?> versionID <> " FROM documents"
+      runSQL_ "ALTER TABLE documents DROP COLUMN log"
   }
 
 changeRegionToLang :: MonadDB m => Migration m
@@ -939,7 +933,7 @@ changeRegionToLang =
   Migration
   { mgrTable = tableDocuments
   , mgrFrom = 13
-  , mgrDo = kRunRaw "ALTER TABLE documents RENAME COLUMN region TO lang"
+  , mgrDo = runSQL_ "ALTER TABLE documents RENAME COLUMN region TO lang"
   }
 
 removeStatsTables :: MonadDB m => Migration m
@@ -947,7 +941,7 @@ removeStatsTables =
   Migration
   { mgrTable = tableDocuments
   , mgrFrom = 24
-  , mgrDo = kRunRaw "DROP TABLE doc_stat_events, sign_stat_events, user_stat_events CASCADE"
+  , mgrDo = runSQL_ "DROP TABLE doc_stat_events, sign_stat_events, user_stat_events CASCADE"
   }
 
 removeProcessFromDocuments :: MonadDB m => Migration m
@@ -955,30 +949,30 @@ removeProcessFromDocuments =
   Migration
   { mgrTable = tableDocuments
   , mgrFrom = 25
-  , mgrDo = kRunRaw "ALTER TABLE documents DROP COLUMN process"
+  , mgrDo = runSQL_ "ALTER TABLE documents DROP COLUMN process"
   }
 
-moveBinaryDataForSignatoryScreenshotsToFilesTable :: MonadDB m => Migration m
+moveBinaryDataForSignatoryScreenshotsToFilesTable :: (MonadDB m, Log.MonadLog m) => Migration m
 moveBinaryDataForSignatoryScreenshotsToFilesTable =
   Migration
   { mgrTable = tableSignatoryScreenshots
   , mgrFrom = 1
   , mgrDo = do
-      kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
-      kRunRaw "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
+      runSQL_ "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
+      runSQL_ "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
       Log.mixlog_ $ "This is a long running migration with O(n^2) complexity. Please wait!"
-      kRunRaw "CREATE INDEX ON signatory_screenshots((digest(image,'sha1')))"
-      filesInserted <- kRun $ sqlInsertSelect "files" "signatory_screenshots" $ do
+      runSQL_ "CREATE INDEX ON signatory_screenshots((digest(image,'sha1')))"
+      filesInserted <- runQuery . sqlInsertSelect "files" "signatory_screenshots" $ do
           sqlSetCmd "content" "signatory_screenshots.image"
           sqlSetCmd "name" "signatory_screenshots.type || '_screenshot.jpeg'"
           sqlSetCmd "size" "octet_length(signatory_screenshots.image)"
           sqlSetCmd "checksum" "digest(signatory_screenshots.image,'sha1')"
           sqlDistinct
-      screenshotsUpdated <- kRun $ sqlUpdate "signatory_screenshots" $ do
+      screenshotsUpdated <- runQuery . sqlUpdate "signatory_screenshots" $ do
 
         sqlSetCmd "file_id" "(SELECT id FROM files WHERE content = signatory_screenshots.image AND name=signatory_screenshots.type || '_screenshot.jpeg' LIMIT 1)"
 
-      kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN image"
+      runSQL_ "ALTER TABLE signatory_screenshots DROP COLUMN image"
       Log.mixlog_ $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
   }
 
@@ -988,7 +982,7 @@ migrateSignatoryLinksDeletedTime =
       mgrTable = tableSignatoryLinks
     , mgrFrom = 20
     , mgrDo = do
-       _ <- kRunRaw $ "ALTER TABLE signatory_links"
+       _ <- runSQL_ $ "ALTER TABLE signatory_links"
                   <+> "ALTER deleted DROP NOT NULL,"
                   <+> "ALTER deleted DROP DEFAULT,"
                   <+> "ALTER deleted TYPE TIMESTAMPTZ USING (CASE WHEN deleted THEN now() ELSE NULL END),"
@@ -1032,15 +1026,15 @@ migrateSeparateDeliveryStatuses =
       mgrTable = tableSignatoryLinks
     , mgrFrom = 21
     , mgrDo = do
-       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN mail_invitation_delivery_status SMALLINT NOT NULL DEFAULT 3"
-       _ <- kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sms_invitation_delivery_status  SMALLINT NOT NULL DEFAULT 3"
-       _ <- kRunRaw $ "UPDATE signatory_links "
+       _ <- runSQL_ $ "ALTER TABLE signatory_links ADD COLUMN mail_invitation_delivery_status SMALLINT NOT NULL DEFAULT 3"
+       _ <- runSQL_ $ "ALTER TABLE signatory_links ADD COLUMN sms_invitation_delivery_status  SMALLINT NOT NULL DEFAULT 3"
+       _ <- runSQL_ $ "UPDATE signatory_links "
              <> "      SET mail_invitation_delivery_status = invitation_delivery_status "
              <> "      WHERE delivery_method = 1 OR delivery_method = 5"
-       _ <- kRunRaw $ "UPDATE signatory_links "
+       _ <- runSQL_ $ "UPDATE signatory_links "
              <> "      SET sms_invitation_delivery_status = invitation_delivery_status "
              <> "      WHERE delivery_method = 4 OR delivery_method = 5"
-       _ <- kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN invitation_delivery_status"
+       _ <- runSQL_ $ "ALTER TABLE signatory_links DROP COLUMN invitation_delivery_status"
        return ()
     }
 
@@ -1050,7 +1044,7 @@ removeCSVStuffFromDocuments =
       mgrTable = tableDocuments
     , mgrFrom = 26
     , mgrDo = do
-       _ <- kRunRaw $ "ALTER TABLE documents DROP COLUMN csv_title, DROP COLUMN csv_contents, DROP COLUMN csv_signatory_index"
+       _ <- runSQL_ $ "ALTER TABLE documents DROP COLUMN csv_title, DROP COLUMN csv_contents, DROP COLUMN csv_signatory_index"
        return ()
     }
 
@@ -1060,7 +1054,7 @@ migrateDocumentsAddPurgedTime =
       mgrTable = tableDocuments
     , mgrFrom = 27
     , mgrDo = do
-       _ <- kRunRaw $ "ALTER TABLE documents"
+       _ <- runSQL_ $ "ALTER TABLE documents"
                   <+> "ADD COLUMN purged_time TIMESTAMPTZ"
        return ()
     }
@@ -1071,7 +1065,7 @@ addRejectRedirectURL =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 22
   , mgrDo = do
-      kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN reject_redirect_url VARCHAR NULL DEFAULT NULL"
+      runSQL_ $ "ALTER TABLE signatory_links ADD COLUMN reject_redirect_url VARCHAR NULL DEFAULT NULL"
   }
 
 migrateDocumentsMoveFilesToMainFilesTable :: MonadDB m => Migration m
@@ -1080,13 +1074,13 @@ migrateDocumentsMoveFilesToMainFilesTable =
     { mgrTable = tableDocuments
     , mgrFrom = 28
     , mgrDo = do
-        docsWithFile <- kRun $ sqlInsertSelect "main_files" "documents" $ do
+        docsWithFile <- runQuery . sqlInsertSelect "main_files" "documents" $ do
           sqlSetCmd "document_id" "documents.id"
           sqlSetCmd "file_id" "documents.file_id"
           sqlSet "document_status" Preparation
           --sqlSetCmd "seal_status" "NULL"
           sqlWhere "documents.file_id IS NOT NULL"
-        docsWithSealedFile <- kRun $ sqlInsertSelect "main_files" "documents" $ do
+        docsWithSealedFile <- runQuery . sqlInsertSelect "main_files" "documents" $ do
           sqlSetCmd "document_id" "documents.id"
           sqlSetCmd "file_id" "documents.sealed_file_id"
           sqlSet "document_status" Closed
@@ -1096,19 +1090,21 @@ migrateDocumentsMoveFilesToMainFilesTable =
         -- Sanity checks: for each documents.file_id, there should be
         -- a matching element in main_files, and similar for documents.sealed_file_id
 
-        Just migratedFiles <- getOne $ sqlSelect "main_files" $ do
+        runQuery_ . sqlSelect "main_files" $ do
           sqlResult "count(*)"
           sqlWhereEq "document_status" Preparation
           sqlWhereExists $ sqlSelect "documents" $ do
             sqlWhere "documents.id = main_files.document_id"
             sqlWhere "documents.file_id = main_files.file_id"
-        Just migratedSealedFiles <- getOne $ sqlSelect "main_files" $ do
+        migratedFiles <- (fromIntegral :: Int64 -> Int) <$> fetchOne unSingle
+        runQuery_ . sqlSelect "main_files" $ do
           sqlResult "count(*)"
           sqlWhereEq "document_status" Closed
           sqlWhereExists $ sqlSelect "documents" $ do
             sqlWhere "documents.id = main_files.document_id"
             sqlWhere "documents.sealed_file_id = main_files.file_id"
             sqlWhere "documents.seal_status IS NOT DISTINCT FROM main_files.seal_status"
+        migratedSealedFiles <- (fromIntegral :: Int64 -> Int) <$> fetchOne unSingle
         when (migratedFiles /= docsWithFile) $ do
           fail $ "Doc.Migrations.migrateDocumentsRemoveFiles: #migratedFiles is not #docsWithFile: " ++ show (migratedFiles, docsWithFile)
         when (migratedSealedFiles /= docsWithSealedFile) $ do
@@ -1116,9 +1112,9 @@ migrateDocumentsMoveFilesToMainFilesTable =
 
         -- Drop redundant columns
 
-        kRun_ $ "ALTER TABLE documents DROP COLUMN file_id"
-        kRun_ $ "ALTER TABLE documents DROP COLUMN sealed_file_id"
-        kRun_ $ "ALTER TABLE documents DROP COLUMN seal_status"
+        runSQL_ $ "ALTER TABLE documents DROP COLUMN file_id"
+        runSQL_ $ "ALTER TABLE documents DROP COLUMN sealed_file_id"
+        runSQL_ $ "ALTER TABLE documents DROP COLUMN seal_status"
     }
 
 migrateDocumentsAddDaysToRemind :: MonadDB m => Migration m
@@ -1127,7 +1123,7 @@ migrateDocumentsAddDaysToRemind =
       mgrTable = tableDocuments
     , mgrFrom = 29
     , mgrDo = do
-       _ <- kRunRaw $ "ALTER TABLE documents"
+       _ <- runSQL_ $ "ALTER TABLE documents"
                   <+> "ADD COLUMN days_to_remind INTEGER NULL DEFAULT NULL"
        return ()
     }
@@ -1139,17 +1135,17 @@ fixSignatureFieldsWithAnySize =
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 4
   , mgrDo =  do
-    kRun_ $ sqlSelect "signatory_link_fields" $ do
+    runQuery_ $ sqlSelect "signatory_link_fields" $ do
                  sqlResult "id, placements"
                  sqlWhere "placements ILIKE '%\"wrel\":0,%'"
                  sqlWhereEq "type" (SignatureFT undefined)
-    values <- kFold (\acc ids placements -> (ids :: Integer, placements :: [FieldPlacement]) : acc) []
+    values :: [(Int64, [FieldPlacement])] <- fetchMany id
     forM_ values $ \(fid,  placements) -> do
       let placements' = for placements (\p -> if (placementwrel p == 0 || placementhrel p == 0)
                                                 then  p {placementwrel = 260 / 943, placementhrel = 102 / 1335 }
                                                 else p )
 
-      kRun_ $ sqlUpdate "signatory_link_fields" $ do
+      runQuery_ $ sqlUpdate "signatory_link_fields" $ do
                   sqlSet "placements" placements'
                   sqlWhereEq "id" fid
   }
@@ -1160,14 +1156,14 @@ makeSealStatusNonNullInMainFiles =
       mgrTable = tableMainFiles
     , mgrFrom = 1
     , mgrDo = do
-       kRun_ $ sqlUpdate "main_files" $ do
+       runQuery_ $ sqlUpdate "main_files" $ do
          sqlSet "seal_status" UnknownSealStatus
          sqlWhereIsNULL "seal_status"
          sqlWhereEq "document_status" Closed
-       kRun_ $ sqlUpdate "main_files" $ do
+       runQuery_ $ sqlUpdate "main_files" $ do
          sqlSet "seal_status" Missing
          sqlWhereIsNULL "seal_status"
          sqlWhereEq "document_status" Preparation
-       _ <- kRunRaw $ "ALTER TABLE main_files ALTER seal_status SET NOT NULL"
+       _ <- runSQL_ $ "ALTER TABLE main_files ALTER seal_status SET NOT NULL"
        return ()
     }
