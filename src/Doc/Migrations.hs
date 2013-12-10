@@ -16,6 +16,7 @@ import DB.SQL2
 import Doc.Tables
 import qualified Log
 import Doc.DocumentID
+import Doc.SealStatus (SealStatus(..))
 import Utils.Default
 import Doc.DocStateData
 import qualified Data.ByteString as BS
@@ -1113,3 +1114,22 @@ fixSignatureFieldsWithAnySize =
                   sqlSet "placements" placements'
                   sqlWhereEq "id" fid
   }
+
+makeSealStatusNonNullInMainFiles  :: MonadDB m => Migration m
+makeSealStatusNonNullInMainFiles =
+  Migration {
+      mgrTable = tableMainFiles
+    , mgrFrom = 1
+    , mgrDo = do
+       kRun_ $ sqlUpdate "main_files" $ do
+         sqlSet "seal_status" UnknownSealStatus
+         sqlWhereIsNULL "seal_status"
+         sqlWhereEq "document_status" Closed
+       kRun_ $ sqlUpdate "main_files" $ do
+         sqlSet "seal_status" Missing
+         sqlWhereIsNULL "seal_status"
+         sqlWhereEq "document_status" Preparation
+       _ <- kRunRaw $ "ALTER TABLE main_files ALTER seal_status SET NOT NULL"
+       return ()
+    }
+

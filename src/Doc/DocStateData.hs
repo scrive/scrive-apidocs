@@ -443,9 +443,9 @@ instance HasLang Document where
   getLang = documentlang
 
 data MainFile = MainFile
-  { mainfileid             :: FileID           -- ^ pointer to the actual file
-  , mainfiledocumentstatus :: DocumentStatus   -- ^ Preparation if and only if this is not a sealed file
-  , mainfilesealstatus     :: Maybe SealStatus -- ^ for files in Preparation and sealed files with unknown status: Nothing
+  { mainfileid             :: FileID         -- ^ pointer to the actual file
+  , mainfiledocumentstatus :: DocumentStatus -- ^ Preparation if and only if this is not a sealed file
+  , mainfilesealstatus     :: SealStatus     -- ^ for files in Preparation: Missing.
   } deriving (Eq, Ord, Show)
 
 documentfile :: Document -> Maybe FileID
@@ -459,7 +459,7 @@ documentsealedfile :: Document -> Maybe FileID
 documentsealedfile = fmap mainfileid . documentsealedfile'
 
 documentsealstatus :: Document -> Maybe SealStatus
-documentsealstatus = (>>=mainfilesealstatus) . documentsealedfile'
+documentsealstatus = fmap mainfilesealstatus . documentsealedfile'
 
 data CancelationReason = ManualCancel
                         -- The data returned by ELeg server

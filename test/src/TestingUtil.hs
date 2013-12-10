@@ -629,11 +629,11 @@ addRandomDocumentWithFile file rda = do
 
 
       let closedfile = if documentstatus doc == Closed
-                       then [MainFile file Closed (Just Missing)]
+                       then [MainFile file Closed Missing]
                        else []
       let adoc = doc { documentsignatorylinks = alllinks
                      , documentlang = getLang user
-                     , documentmainfiles = closedfile ++ [MainFile file Preparation Nothing]
+                     , documentmainfiles = closedfile ++ [MainFile file Preparation Missing]
                      }
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc

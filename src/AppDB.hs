@@ -170,6 +170,7 @@ kontraMigrations = [
   , addClientTimeNameToEvidenceLog
   , fixSignatureFieldsWithAnySize
   , migrateUsersUniqueIndexOnEmail
+  , makeSealStatusNonNullInMainFiles
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
