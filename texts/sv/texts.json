@@ -892,7 +892,7 @@
 "_usageStatsDate":"Datum",
 "_usageStatsMonth":"Månad",
 "_validationPleaseSelectField":"Var vänlig fyll i eller ta bort fälten i dokumentet.",
-"_verificationDescription":"Genom att ladda pup dokumentet här kan du kontrollera huruvida ditt dokument är äkta och har en giltig digital signatur.",
+"_verificationDescription":"Genom att ladda upp dokumentet här kan du kontrollera huruvida ditt dokument är äkta och har en giltig digital signatur.",
 "_verificationError":"Problem",
 "_verificationErrorMessage":"Ett fel uppstod under tiden vi försökte verifiera documenters äkthet. Vänligen försök igen.",
 "_verificationFailed":"Verifiering har misslyckats",
