@@ -25,7 +25,6 @@ import qualified Text.JSON.Gen as J
 import Text.JSON
 
 import Happstack.Server.RqData
-import Control.Monad.Trans
 import Control.Applicative
 import Happstack.Server.Types
 import Data.Maybe
@@ -55,7 +54,7 @@ tempCredRequest :: Kontrakcja m => m Response
 tempCredRequest = api $ do
   time <- ctxtime <$> getContext
 
-  etcr <- lift $ getTempCredRequest
+  etcr <- getTempCredRequest
   case etcr of
     Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tcr -> do
@@ -111,7 +110,7 @@ authorizationGranted = do
 tokenCredRequest :: Kontrakcja m => m Response
 tokenCredRequest = api $ do
   time <- ctxtime <$> getContext
-  etr <- lift $ getTokenRequest
+  etr <- getTokenRequest
   case etr of
     Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tr -> do

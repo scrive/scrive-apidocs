@@ -145,9 +145,9 @@ apiCallCreateFromFile :: Kontrakcja m => m Response
 apiCallCreateFromFile = api $ do
   ctx <- getContext
   (user, actor, external) <- getAPIUser APIDocCreate
-  isTpl <- lift $ isFieldSet "template"
+  isTpl <- isFieldSet "template"
   let doctype = (Template <| isTpl |> Signable)
-  minput <- lift $ getDataFn' (lookInput "file")
+  minput <- getDataFn' (lookInput "file")
   (mfile, title) <- case minput of
     Nothing -> do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
@@ -265,7 +265,7 @@ apiCallSetAuthorAttachemnts did = api $ do
   newdocument <- dbQuery $ GetDocumentByDocumentID $ did
   Ok <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
    where
-        getAttachments :: Kontrakcja m => Document -> Int -> APIMonad m [FileID]
+        getAttachments :: Kontrakcja m => Document -> Int -> m [FileID]
         getAttachments doc i = do
             mf <- tryGetFile doc i
             case mf of
@@ -275,9 +275,9 @@ apiCallSetAuthorAttachemnts did = api $ do
                               then return atts
                               else return $ f: atts
                  Nothing -> return []
-        tryGetFile ::  Kontrakcja m => Document -> Int -> APIMonad m  (Maybe FileID)
+        tryGetFile ::  Kontrakcja m => Document -> Int -> m  (Maybe FileID)
         tryGetFile doc i = do
-            inp <- lift $ getDataFn' (lookInput $ "attachment_" ++ show i)
+            inp <- getDataFn' (lookInput $ "attachment_" ++ show i)
             case inp of
                  Just (Input (Left filepath) (Just filename) _contentType) -> do
                      content <- liftIO $ BSL.readFile filepath
@@ -299,7 +299,7 @@ apiCallSetAuthorAttachemnts did = api $ do
                           Nothing -> throwIO . SomeKontraException $ (badInput $ "Can parse attachment id for attachment " ++ show i)
                  _ -> return Nothing
 
-        hasAccess ::  Kontrakcja m => Document -> FileID -> APIMonad m Bool
+        hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
         hasAccess doc fid = do
           user <- fromJust <$> ctxmaybeuser <$> getContext
           if (fid `elem` (authorattachmentfile <$> documentauthorattachments doc))
@@ -334,19 +334,19 @@ apiCallReady did =  api $ do
           checkObjectVersionIfProvidedAndThrowError did $ (conflictError "Document is not a draft")
     when (isTemplate doc) $ do
           checkObjectVersionIfProvidedAndThrowError did $ (serverError "Document is not a draft")
-    timezone <- lift $ mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+    timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
     when (not $ all ((/=EmailDelivery) . signatorylinkdeliverymethod ||^ isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
           throwIO . SomeKontraException $ serverError "Some signatories don't have a valid email address set."
     when (isNothing $ documentfile doc) $ do
           throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
-    newdocument <- lift $ do
+    newdocument <- do
               t <- ctxtime <$> getContext
               dbUpdate $ PreparationToPending did actor (Just timezone)
               dbUpdate $ SetDocumentInviteTime did t actor
               dbQuery $ GetDocumentByDocumentID did
 
-    skipauthorinvitation <- lift $ isFieldSet "skipauthorinvitation"
-    lift $ postDocumentPreparationChange newdocument skipauthorinvitation
+    skipauthorinvitation <- isFieldSet "skipauthorinvitation"
+    postDocumentPreparationChange newdocument skipauthorinvitation
     newdocument' <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument'
 
@@ -362,7 +362,7 @@ apiCallCancel did =  api $ do
           throwIO . SomeKontraException $ (conflictError "Document is not pending")
     dbUpdate $ CancelDocument (documentid doc) actor
     newdocument <- dbQuery $ GetDocumentByDocumentID $ did
-    lift $ postDocumentCanceledChange newdocument
+    postDocumentCanceledChange newdocument
     newdocument' <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument'
 
@@ -376,23 +376,23 @@ apiCallReject did slid = api $ do
       Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
-         mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
+         mh'' <- getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Magic hash for signatory was not provided"
            Just mh''' -> return (mh''',Just $ user)
-  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
   do
       ctx <- getContext
       let Just sll = getSigLinkFor doc slid
           actor = signatoryActor ctx sll
-      customtext <- lift $ getOptionalField  asValidInviteText "customtext"
-      lift $ switchLang (getLang doc)
-      lift $ (dbUpdate $ RejectDocument did slid customtext actor)
+      customtext <- getOptionalField  asValidInviteText "customtext"
+      switchLang (getLang doc)
+      (dbUpdate $ RejectDocument did slid customtext actor)
           `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
           `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
       doc' <- dbQuery $ GetDocumentByDocumentID did
 
-      lift $ postDocumentRejectedChange doc' slid
+      postDocumentRejectedChange doc' slid
       doc'' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON mu False True True Nothing Nothing doc''
 
@@ -411,14 +411,14 @@ apiCallSign  did slid = api $ do
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
          Log.debug $ "User is " ++ show user
-         mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did slid user
+         mh'' <- getMagicHashForDocumentSignatoryWithUser  did slid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
            Just mh''' -> return (mh''',Just $ user)
   Log.debug "We have magic hash for this operation"
-  screenshots <- lift $ (fromMaybe emptySignatoryScreenshots) <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
+  screenshots <- (fromMaybe emptySignatoryScreenshots) <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
   fields <- do
-      eFieldsJSON <- lift $ getFieldJSON "fields"
+      eFieldsJSON <- getFieldJSON "fields"
       case eFieldsJSON of
            Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
            Just fieldsJSON -> do
@@ -431,9 +431,9 @@ apiCallSign  did slid = api $ do
              case mvalues of
                Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
                Just values -> return values
-  mprovider <- lift $ readField "eleg"
+  mprovider <- readField "eleg"
   Log.debug $ "All parameters read and parsed"
-  edoc <- lift $ (case mprovider of
+  edoc <- (case mprovider of
             Nothing -> Right <$> (signDocumentWithEmailOrPad did slid mh fields screenshots)
             Just provider -> handleSignWithEleg did slid mh fields screenshots provider)
               `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
@@ -441,9 +441,9 @@ apiCallSign  did slid = api $ do
   Log.debug $ "Signing done, result is " ++ show (isRight edoc)
   case edoc of
     Right (doc, olddoc) -> do
-      lift $ postDocumentPendingChange doc olddoc
+      postDocumentPendingChange doc olddoc
       udoc <- dbQuery $ GetDocumentByDocumentID did
-      lift $ handleAfterSigning udoc slid
+      handleAfterSigning udoc slid
       udoc' <- dbQuery $ GetDocumentByDocumentID did
       Accepted <$> documentJSON mu False True True Nothing Nothing udoc'
     Left msg -> do -- On eleg error we return document, but it will have status cancelled instead of closed.
@@ -509,14 +509,14 @@ apiCallProlong did =  api $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     when (documentstatus doc /= Timedout ) $ do
           throwIO . SomeKontraException $ (conflictError "Document is not timedout")
-    mdays <- lift $ getDefaultedField 1 asValidNumber "days"
+    mdays <- getDefaultedField 1 asValidNumber "days"
     days <- case mdays of
          Nothing -> throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and 90")
          Just n -> if (n < 1 || n > 90)
                             then throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and 90")
                             else return n
-    timezone <- lift $ mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
-    lift $ dbUpdate $ ProlongDocument (documentid doc) days (Just timezone) actor
+    timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+    dbUpdate $ ProlongDocument (documentid doc) days (Just timezone) actor
     triggerAPICallbackIfThereIsOne doc
     newdocument <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
@@ -532,7 +532,7 @@ apiCallRemind did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-  _ <- lift $ sendAllReminderEmails ctx actor user did
+  _ <- sendAllReminderEmails ctx actor user did
   newdocument <- dbQuery $ GetDocumentByDocumentID $ did
   Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument
 
@@ -558,9 +558,9 @@ apiCallDelete did =  api $ do
 apiCallGet :: Kontrakcja m => DocumentID -> m Response
 apiCallGet did = api $ do
   ctx <- getContext
-  (msignatorylink :: Maybe SignatoryLinkID) <- lift $ readField "signatoryid"
+  (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
-  includeEvidenceAttachments <- lift $ (=="true") <$> getField' "evidenceAttachments"
+  includeEvidenceAttachments <- (=="true") <$> getField' "evidenceAttachments"
   case (msignatorylink,mmagichashh) of
       (Just slid,Just mh) -> do
          doc <- dbQuery $ GetDocumentByDocumentID did
@@ -569,7 +569,7 @@ apiCallGet did = api $ do
          when (not (isTemplate doc) && (not (isPreparation doc)) && (not (isClosed doc)) ) $
            dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                          (signatoryActor ctx sl)
-         lift $ switchLang (getLang doc)
+         switchLang (getLang doc)
 
          mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
@@ -607,7 +607,7 @@ apiCallList = api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   ctx <- getContext
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-  res <- lift $ jsonDocumentsList
+  res <- jsonDocumentsList
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
 
@@ -616,9 +616,9 @@ apiCallHistory did = api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   ctx <- getContext
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-  mlang <- lift $  (join . (fmap langFromCode)) <$> getField "lang"
-  lift $ switchLang $ fromMaybe (lang $ usersettings user) mlang
-  res <- lift $ jsonDocumentEvidenceLog did
+  mlang <-  (join . (fmap langFromCode)) <$> getField "lang"
+  switchLang $ fromMaybe (lang $ usersettings user) mlang
+  res <- jsonDocumentEvidenceLog did
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
 
@@ -629,22 +629,22 @@ apiCallHistory did = api $ do
 apiCallDownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
 apiCallDownloadMainFile did _nameForBrowser = api $ do
 
-  (msid :: Maybe SignatoryLinkID) <- lift $ readField "signatorylinkid"
+  (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
 
   doc <- do
            case (msid, mmh) of
-            (Just sid, Just mh) -> lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+            (Just sid, Just mh) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)
                     then do
                       ctx <- getContext
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-                      res <- lift $ getDocByDocID did
+                      res <- getDocByDocID did
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
                       return res;
-                    else lift $ getDocByDocID did
+                    else getDocByDocID did
 
   content <- case documentstatus doc of
                 Closed -> do
@@ -663,21 +663,21 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
 
 apiCallDownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 apiCallDownloadFile did fileid nameForBrowser = api $ do
-  (msid :: Maybe SignatoryLinkID) <- lift $ readField "signatorylinkid"
+  (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
   doc <- do
            case (msid, mmh) of
-            (Just sid, Just mh) -> lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+            (Just sid, Just mh) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)
                     then do
                       ctx <- getContext
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-                      res <- lift $ getDocByDocID did
+                      res <- getDocByDocID did
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
                       return res;
-                    else lift $ getDocByDocID did
+                    else getDocByDocID did
   let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
                       (catMaybes $ Prelude.map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
@@ -710,7 +710,7 @@ apiCallChangeMainFile docid = api $ do
   when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
 
-  fileinput <- lift $ getDataFn' (lookInput "file")
+  fileinput <- getDataFn' (lookInput "file")
 
   mft <- case fileinput of
     Nothing -> return Nothing
@@ -773,18 +773,18 @@ apiCallSetSignatoryAttachment did sid aname = api $ do
       Nothing -> do
          (user, _ , _) <- getAPIUser APIPersonal
          Log.debug $ "User is " ++ show user
-         mh'' <- lift $ getMagicHashForDocumentSignatoryWithUser  did sid user
+         mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
          case mh'' of
            Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
            Just mh''' -> return (mh''',Just $ user)
   Log.debug "We are authorized to set signatory attachment"
   -- We check permission here - because we are able to get a valid magichash here
-  doc <- lift $ dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
   when (documentstatus doc /= Pending ) $ do
           throwIO . SomeKontraException $ (badInput "Document is not pending")
   sl  <- apiGuard (badInput "There is no signatory by that id.") $ getSigLinkFor doc sid
   sigattach <- apiGuard (badInput "The attachment with that name does not exist for the signatory.") $ getSignatoryAttachment doc sid aname
-  filedata <- lift $ getDataFn' (lookInput "file")
+  filedata <- getDataFn' (lookInput "file")
   mfileid <- case filedata of
     (Just (Input contentspec (Just filename) _contentType)) ->  Just <$>  do
               content1 <- case contentspec of
@@ -799,7 +799,7 @@ apiCallSetSignatoryAttachment did sid aname = api $ do
     _ -> return Nothing
   ctx <- getContext
   case mfileid of
-    Just fileid -> lift $ (dbUpdate $ SaveSigAttachment doc sid sigattach fileid (signatoryActor ctx sl))
+    Just fileid -> (dbUpdate $ SaveSigAttachment doc sid sigattach fileid (signatoryActor ctx sl))
                      `catchKontra` (\(DBBaseLineConditionIsFalse _) -> throwIO . SomeKontraException $ conflictError $ "Inconsistent state - attachment is already set")
     Nothing -> dbUpdate $ DeleteSigAttachment doc sid sigattach (signatoryActor ctx sl)
 
@@ -808,16 +808,16 @@ apiCallSetSignatoryAttachment did sid aname = api $ do
 
 
 
-checkObjectVersionIfProvided ::  (Kontrakcja m) => DocumentID -> APIMonad m ()
-checkObjectVersionIfProvided did = lift $ do
+checkObjectVersionIfProvided ::  (Kontrakcja m) => DocumentID -> m ()
+checkObjectVersionIfProvided did = do
     mov <- readField "objectversion"
     case mov of
         Just ov -> dbQuery $ CheckDocumentObjectVersionIs did ov
         Nothing -> return ()
   `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
 
-checkObjectVersionIfProvidedAndThrowError ::  (Kontrakcja m) => DocumentID -> APIError -> APIMonad m ()
-checkObjectVersionIfProvidedAndThrowError did err = lift $ do
+checkObjectVersionIfProvidedAndThrowError ::  (Kontrakcja m) => DocumentID -> APIError -> m ()
+checkObjectVersionIfProvidedAndThrowError did err = do
     mov <- readField "objectversion"
     case mov of
         Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did ov)

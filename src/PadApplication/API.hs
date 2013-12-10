@@ -12,7 +12,6 @@ import Kontra
 import API.Monad
 import DB.SQL2
 import Control.Exception.Lifted
-import Control.Monad.Trans
 import Control.Monad
 import Happstack.Fields
 import Text.JSON.Gen
@@ -34,7 +33,7 @@ versionedAPI _version = choice [
 
 apiCallCheckClient :: Kontrakcja m => m Response
 apiCallCheckClient = api $ do
-    mclient  <- lift $ getField "client"
+    mclient  <- getField "client"
     when (isNothing mclient) $ do
       throwIO . SomeKontraException $ serverError "No client description"
     runJSONGenT $ do
