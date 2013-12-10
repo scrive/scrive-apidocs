@@ -72,6 +72,7 @@ module Doc.Model
   , GetDocsSent(..)
   , GetSignatoriesByEmail(..)
   , CheckDocumentObjectVersionIs(..)
+  , lockDocument
 
    -- useful in tests
   , updateMTimeAndObjectVersion
@@ -2471,4 +2472,9 @@ updateMTimeAndObjectVersion did mtime = do
        sqlSetInc "object_version"
        sqlSet "mtime" mtime
        sqlWhereEq "id" did
+
+-- | Lock a document so that other transactions that attempt to lock or update the document will wait until the current transaction is done.
+lockDocument :: MonadDB m => DocumentID -> m ()
+lockDocument did = do
+  kRun_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"
 

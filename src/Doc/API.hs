@@ -402,6 +402,14 @@ apiCallSign :: Kontrakcja m
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
              -> m Response
 apiCallSign  did slid = api $ do
+  lockDocument did
+
+  -- The lock ensures that all of
+  --    1. signing,
+  --    2. checking if all signatories have signed, and
+  --    3. closing
+  -- are performed atomically.
+
   checkObjectVersionIfProvided did
   Log.debug $ "Ready to sign a docment " ++ show did ++ " for signatory " ++ show slid
   (mh,mu) <- do
