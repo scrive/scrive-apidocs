@@ -91,13 +91,13 @@ window.createfromtemplate = function(event) {
 };
 
 //make sure we've got console logging
-if (!window.console) {
+if (!window.console || !window.console.log) {
+  if (window.console && !window.console.log) {
+    mixpanel.track('window.console is defined, but not log method');
+  }
   window.console = {
     log: function() {}
   };
-}
-if (!window.console.log) {
-  window.console.log = function() {};
 }
 
 //ie doesn't support trim naturally! maybe we should use underscore trim
