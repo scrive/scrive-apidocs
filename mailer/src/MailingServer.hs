@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module MailingServer where
 
 import Control.Concurrent

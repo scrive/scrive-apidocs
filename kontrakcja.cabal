@@ -325,9 +325,8 @@ Executable cron
   if os(windows)
     cpp-options: -DWINDOWS
 
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is CronMain
 
-  cpp-options: -DCronMain=Main
   Main-is: CronMain.hs
 
   Extensions: BangPatterns,
@@ -369,9 +368,8 @@ Executable mailing-server
   if os(windows)
     cpp-options: -DWINDOWS
 
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is MailingServer
 
-  cpp-options: -DMailingServer=Main
   Main-is: MailingServer.hs
 
   Extensions: BangPatterns,
@@ -413,9 +411,8 @@ Executable messenger-server
   if os(windows)
     cpp-options: -DWINDOWS
 
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is MessengerServer
 
-  cpp-options: -DMessengerServer=Main
   Main-is: MessengerServer.hs
 
   Extensions: BangPatterns,
@@ -460,7 +457,7 @@ Executable kontrakcja-test
   if os(windows)
     cpp-options: -DWINDOWS
 
-  cpp-options: -DTestMain=Main
+  GHC-Options: -main-is TestMain
   Main-is: TestMain.hs
 
   Extensions: BangPatterns,

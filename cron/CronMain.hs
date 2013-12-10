@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module CronMain where
 
 import Control.Concurrent

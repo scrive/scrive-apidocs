@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module MessengerServer where
 
 import Control.Concurrent
