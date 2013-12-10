@@ -24,14 +24,13 @@ module API.Monad (
                  Ok(..),
                  Created(..),
                  Accepted(..),
-                 APIMonad(..),
+                 APIMonad,
                  getAPIUser,
                  getAPIUserWithPad,
                  FormEncoded(..)
                  )
   where
 
-import Control.Monad.Trans
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Text.JSON hiding (Ok)
@@ -41,7 +40,6 @@ import Control.Monad.Error
 import Control.Applicative
 import Network.HTTP (urlEncodeVars)
 
-import Crypto.RNG
 import DB
 import Kontra
 import User.Model
@@ -52,14 +50,11 @@ import OAuth.Util
 import OAuth.Model
 import Doc.Rendering
 import Util.Actor
-import Text.StringTemplates.Templates
 import Util.CSVUtil
 import Util.ZipUtil
 import Control.Exception.Lifted
 import Control.Monad.Base
 import Data.Typeable
-import qualified Log as Log
-import qualified Amazon as AWS
 
 -- | Respond with a 200 Created status
 data Ok a = Ok a
@@ -194,18 +189,9 @@ instance ToAPIResponse FormEncoded where
     let r1 = Web.toResponse $ urlEncodeVars kvs
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
 
-newtype APIMonad m a = AM { runAPIMonad :: m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadIO, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad)
-
-instance MonadTrans APIMonad where
-  lift = AM
-
-deriving instance (MonadBase IO m) => MonadBase IO (APIMonad m)
-deriving instance (MonadDB m) => MonadDB (APIMonad m)
-
-instance KontraMonad m => KontraMonad (APIMonad m) where
-  getContext = lift getContext
-  modifyContext = lift . modifyContext
+type APIMonad m a = m a
+runAPIMonad :: APIMonad m a -> m a
+runAPIMonad = id
 
 jsonError :: JSONGen () -> JSValue
 jsonError rest = runJSONGen $ do
@@ -224,10 +210,10 @@ api acc = (toAPIResponse <$> runAPIMonad acc)
 
 
 apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> APIMonad m b
-apiGuardL' acc = apiGuard' =<< lift acc
+apiGuardL' acc = apiGuard' =<< acc
 
 apiGuardL :: (Kontrakcja m, APIGuard m a b) => APIError -> m a -> APIMonad m b
-apiGuardL e acc = apiGuard e =<< lift acc
+apiGuardL e acc = apiGuard e =<< acc
 
 apiGuard' :: (MonadBase IO m, APIGuard m a b) => a -> APIMonad m b
 apiGuard' a = guardEither a >>= either (throwIO . SomeKontraException) return
@@ -310,7 +296,7 @@ getSessionUserWithPad = do
 getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (Either String (User, Actor)))
 getOAuthUser priv = do
   ctx <- getContext
-  eauth <- lift $ getAuthorization
+  eauth <- getAuthorization
   case eauth of
     Nothing       -> return Nothing
     Just (Left l) -> return $ Just $ Left l
