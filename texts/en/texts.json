@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -458,7 +458,6 @@
 "_invitationMailDeliveredAfterDeferredContentBody":"We notified you in an earlier email that we were having difficulties delivering an email. After subsequent attempts we have successfully delivered the invitation for the document <strong>$documenttitle$</strong> to $email$.",
 "_invitationMailDeliveredAfterDeferredTitle":"Successfully delivered",
 "_invitationMailUndeliveredContentBody":"We have not been able to deliver the invitation to e-sign the document  <strong>$documenttitle$</strong> to <strong>$name$</strong> &lt;$email$&gt;. This may be because the recipient's mail server is experiencing difficulties, or because the email address you have provided is incorrect.",
-"_invitationMailUndeliveredContentBodyButton":"Open document",
 "_invitationMailUndeliveredContentBodyButton":"Open document",
 "_invitationMailUndeliveredContentBodyFirst":"To correct the email address and resend the invitation:",
 "_invitationMailUndeliveredContentInstruction":"<ol><li>Access the document from your archive or by clicking the button below:\n<br/>$nicebutton(link=concat(a1=ctxhostpart;a2=unsigneddoclink); text=_invitationMailUndeliveredContentBodyButton())$</li><li>Click \"Change email\"</li><li>Confirm the email address and send again</li></ol>",

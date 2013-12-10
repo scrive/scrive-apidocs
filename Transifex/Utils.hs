@@ -1,4 +1,4 @@
-module Transifex.Utils (translationFile, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse, applyChange) where
+module Transifex.Utils (TranslationResource(..), translationFile, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse, applyChange) where
 
 
 import Data.CSV (csvFile)
@@ -18,8 +18,11 @@ import Control.Monad.Identity
 import Data.Maybe
 
 
-translationFile:: String -> String
-translationFile lang = "texts/" ++ lang ++ "/texts.json"
+data TranslationResource = Texts | Events deriving Show
+
+translationFile:: String -> TranslationResource -> String
+translationFile lang Texts = "texts/" ++ lang ++ "/texts.json"
+translationFile lang Events = "texts/" ++ lang ++ "/events.json"
 
 sourceLang :: String
 sourceLang = "en"

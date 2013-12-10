@@ -24,41 +24,42 @@ apiURL = "http://www.transifex.com/api/2/"
 project :: String
 project = "kontrakcja"
 
-resourceslug :: String
-resourceslug = "textsjson"
+resourceslug :: TranslationResource -> String
+resourceslug Texts = "textsjson"
+resourceslug Events = "eventsjson"
 
 
 
-fetch :: String -> String -> String -> IO [(String,String)]
-fetch user password lang = do
-  mjson <- readProcess "curl" ["--user", user++":" ++ password, "-s" ,"-X", "GET" , apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug ++ "/translation/"++lang++"/strings/"] ""
+fetch :: String -> String -> String -> TranslationResource -> IO [(String,String)]
+fetch user password lang resource = do
+  mjson <- readProcess "curl" ["--user", user++":" ++ password, "-s" ,"-X", "GET" , apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/translation/"++lang++"/strings/"] ""
   case decode mjson of
      Ok js -> return $ sort $ textsFromStringJSON $ js
      _ -> error $ "Can't parse response from Transifex: " ++ mjson
 
 
-fetchLocal  :: String -> IO [(String,String)]
-fetchLocal lang = do
-  mjson <- readFile $ translationFile lang
+fetchLocal  :: String -> TranslationResource -> IO [(String,String)]
+fetchLocal lang resource = do
+  mjson <- readFile $ translationFile lang resource
   case decode mjson of
      Ok js -> return $ sort $ textsFromJSON $ js
      _ -> error $ "Can't parse response from Transifex: " ++ mjson
 
 
-push :: String -> String ->  String -> IO ()
-push user password lang = do
+push :: String -> String ->  String -> TranslationResource -> IO ()
+push user password lang resource = do
   let url = if (sourceLang == lang)
-              then  apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug ++ "/content/"
-              else  apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug ++ "/translation/"++lang ++ "/"
-  resp  <- readProcess "curl" ["--user", user++":" ++ password,"-s", "-X", "PUT" ,"-F", "file=@" ++ translationFile lang, url] ""
+              then  apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/content/"
+              else  apiURL ++ "project/" ++ project ++ "/resource/" ++ resourceslug resource ++ "/translation/"++lang ++ "/"
+  resp  <- readProcess "curl" ["--user", user++":" ++ password,"-s", "-X", "PUT" ,"-F", "file=@" ++ translationFile lang resource, url] ""
   case (parsePushResponse resp) of
-    Nothing -> putStrLn $ "Push of lang " ++ lang++ " failed. Error message " ++ resp
-    Just (r,u,a) -> putStrLn $ "Push of lang " ++ lang ++ " done. " ++ show r ++ " removed, " ++ show u ++ " updated and " ++ show a ++ " added."
+    Nothing -> putStrLn $ "Push of lang " ++ lang++ " resource "++ show resource ++ " failed. Error message " ++ resp
+    Just (r,u,a) -> putStrLn $ "Push of lang " ++ lang ++ " resource "++ show resource ++ " done. " ++ show r ++ " removed, " ++ show u ++ " updated and " ++ show a ++ " added."
 
-merge :: String -> String -> String -> IO ()
-merge user password lang = do
-  external <- fetch user password lang
-  local <- fetchLocal lang
+merge :: String -> String -> String -> TranslationResource -> IO ()
+merge user password lang resource = do
+  external <- fetch user password lang resource
+  local <- fetchLocal lang resource
   let changes = compareTranslations external local
   if (length changes == 0)
     then putStrLn "Up to date."
@@ -69,7 +70,7 @@ merge user password lang = do
       case c of
         'o' -> do
                   putStrLn "Overwriting local file."
-                  withFile (translationFile lang) WriteMode $ \h -> do
+                  withFile (translationFile lang resource) WriteMode $ \h -> do
                     hSetEncoding h utf8
                     hPutStr h (encodeTranslationJSON $ textsToJSON $ sort external)
                     hClose h
@@ -79,7 +80,7 @@ merge user password lang = do
                   newtexts <- foldM askAndApply external changes
                   putStrLn $ ""
                   putStrLn $ "Done with changes. Saving to file"
-                  withFile (translationFile lang) WriteMode $ \h -> do
+                  withFile (translationFile lang resource) WriteMode $ \h -> do
                     hSetEncoding h utf8
                     hPutStr h (encodeTranslationJSON $ textsToJSON $ sort newtexts)
                     hClose h
@@ -111,27 +112,27 @@ askAndApply l ch = do
     'y' -> return $ applyChange ch l
     'n' -> return l
 
-diff :: String -> String -> String -> IO ()
-diff user password lang = do
-  external <- fetch user password lang
-  local <- fetchLocal lang
+diff :: String -> String -> String -> TranslationResource ->  IO ()
+diff user password lang resource = do
+  external <- fetch user password lang resource
+  local <- fetchLocal lang resource
   mapM_  (putStrLn . show) $ compareTranslations external local
 
 
 fix :: IO ()
-fix = fix' "en" >> fix' "sv" >> putStrLn "Done."
-  where fix' lang = do
-          mjson <- readFile $ translationFile lang
+fix = fix' "en" Texts >>  fix' "en" Events >> fix' "sv" Texts >> fix' "sv" Events >> putStrLn "Done."
+  where fix' lang resource = do
+          mjson <- readFile $ translationFile lang resource
           local <- case decode mjson of
             Ok js -> return $ textsFromJSON $ js
-            _ -> error $ "Can't read translation for lang " ++ lang ++ "."
+            _ -> error $ "Can't read translation for lang " ++ lang ++ " resource "++ show resource ++ "."
           if (local == sort local)
-             then putStrLn $ "No fix is needed for language " ++ lang ++"."
-             else withFile (translationFile lang) WriteMode $ \h -> do
+             then putStrLn $ "No fix is needed for language " ++ lang ++" resource "++ show resource ++"."
+             else withFile (translationFile lang resource) WriteMode $ \h -> do
                           hSetEncoding h utf8
                           hPutStr h (encodeTranslationJSON $ textsToJSON $ sort local)
                           hClose h
-                          putStrLn $ "Language "++ lang ++ " fixed."
+                          putStrLn $ "Language "++ lang ++ " resource "++ show resource ++" fixed."
 
 
 main :: IO ()
@@ -140,10 +141,13 @@ main = main' =<< getArgs
 
 main' :: [String] -> IO ()
 main' ("fix":_) = fix
-main' ("diff":(user:(password:(lang:_))))  = diff user password lang
-main' ("diff":_)   = error "Invalid parameters. Usage: transifex.sh diff user password lang"
-main' ("merge":(user:(password:(lang:_)))) = merge user password lang
+main' ("diff":(user:(password:(lang:("texts":_)))))  = diff user password lang Texts
+main' ("diff":(user:(password:(lang:("events":_)))))  = diff user password lang Events
+main' ("diff":_)   = error "Invalid parameters. Usage: transifex.sh diff user password lang resource"
+main' ("merge":(user:(password:(lang:("texts":_))))) = merge user password lang Texts
+main' ("merge":(user:(password:(lang:("events":_))))) = merge user password lang Events
 main' ("merge":_)  = error "Invalid parameters. Usage: transifex.sh merge user password lang"
-main' ("push":(user:(password:(lang:_))))  = push user password lang
+main' ("push":(user:(password:(lang:("texts":_)))))  = push user password lang Texts
+main' ("push":(user:(password:(lang:("events":_)))))  = push user password lang Events
 main' ("push":_)   = error "Invalid parameters. Usage: transifex.sh push user password lang"
 main' _ = error "Invalid command. Valid commands are fix, diff, marge and push."
