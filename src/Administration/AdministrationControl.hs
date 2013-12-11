@@ -17,17 +17,18 @@ import Control.Monad.State
 import Data.Functor
 import Happstack.Server hiding (simpleHTTP,dir,path,https)
 import Happstack.Fields
-import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
 import IPAddress ()
 import Kontra
 import Administration.AdministrationView
 import Administration.AddPaymentPlan
+import Doc.Action (postDocumentClosedActions)
 import Doc.Model
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import Doc.DocumentID
+import Doc.DocumentMonad (withDocumentID)
 import Company.Model
 import KontraLink
 import MinutesTime
@@ -42,7 +43,6 @@ import Util.FlashUtil
 import Data.List
 import Util.MonadUtils
 import qualified Log
-import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
@@ -562,28 +562,18 @@ sendInviteAgain = onlySalesOrAdmin $ do
   addFlashM flashMessageNewActivationLinkSend
   return LoopBack
 
--- This method can be used do reseal a document
+-- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
-resealFile docid = onlyAdmin $ do
+resealFile docid = onlyAdmin $ withDocumentID docid $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   ctx <- getContext
   actor <- guardJust $ mkAdminActor ctx
   _ <- dbUpdate $ InsertEvidenceEvent
           ResealedPDF
           (return ())
-          (Just docid)
           actor
-  return ()
-  doc <- do
-    doc' <- dbQuery $ GetDocumentByDocumentID docid
-    when_ (isDocumentError doc') $ do
-       dbUpdate $ FixClosedErroredDocument docid actor
-    dbQuery $ GetDocumentByDocumentID docid
-  res <- sealDocument doc
-  case res of
-      Nothing -> Log.debug "We failed to reseal the document"
-      Just _ -> do
-        Log.debug "Ok, so the document has been resealed"
+          docid
+  postDocumentClosedActions False True
   return LoopBack
 
 
@@ -616,7 +606,7 @@ daveDocument documentid = onlyAdmin $ do
 daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
 daveSignatoryLink documentid siglinkid = onlyAdmin $ do
     document <- dbQuery $ GetDocumentByDocumentID documentid
-    siglink <- guardJust $ getSigLinkFor document siglinkid
+    siglink <- guardJust $ getSigLinkFor siglinkid document
     renderTemplate  "daveSignatoryLink" $ do
         F.value "daveBody" $ inspectXML siglink
         F.value "docid" $ show documentid

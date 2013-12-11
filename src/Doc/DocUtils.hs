@@ -261,8 +261,8 @@ isFieldCustom _ = False
 findCustomField :: HasFields a => String -> a -> Maybe SignatoryField
 findCustomField name = find (matchingFieldType (CustomFT name False)) . getAllFields
 
-getSignatoryAttachment :: Document -> SignatoryLinkID -> String -> Maybe SignatoryAttachment
-getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a)
+getSignatoryAttachment :: SignatoryLinkID -> String -> Document -> Maybe SignatoryAttachment
+getSignatoryAttachment slid name doc = join $ find (\a -> name == signatoryattachmentname a)
                                        <$> signatoryattachments
                                        <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
@@ -281,15 +281,15 @@ fileInDocument doc fid =
 
 
 documentDeletedForUser :: Document -> UserID -> Bool
-documentDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatorylinkdeleted) $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
+documentDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatorylinkdeleted) $ (getSigLinkFor uid doc `mplus` getAuthorSigLink doc))
 
 documentReallyDeletedForUser :: Document -> UserID -> Bool
-documentReallyDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatorylinkreallydeleted) $ (getSigLinkFor doc uid `mplus` getAuthorSigLink doc))
+documentReallyDeletedForUser doc uid = fromMaybe False (fmap (isJust . signatorylinkreallydeleted) $ (getSigLinkFor uid doc `mplus` getAuthorSigLink doc))
 
 userCanPerformSigningAction :: UserID -> Document  -> Bool
 userCanPerformSigningAction uid doc =
       (isJust msl && (canSignatorySignNow doc sl))
    || (isJust msl && isAuthor sl && any (canSignatorySignNow doc &&^ ((== PadDelivery) . signatorylinkdeliverymethod)) (documentsignatorylinks doc))
   where
-    msl = getSigLinkFor doc uid
+    msl = getSigLinkFor uid doc
     sl  = fromJust msl

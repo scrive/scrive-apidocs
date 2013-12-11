@@ -2,7 +2,6 @@ module User.Action (
     handleAccountSetupFromSign
   , handleActivate
   , createUser
-  , createUser'
   , phoneMeRequest
   , checkPasswordsMatch
   ) where
@@ -14,10 +13,12 @@ import Data.Maybe
 import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
 import Company.CompanyID
 import DB
+import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra
+import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import Happstack.Fields
 import Text.StringTemplates.Templates
@@ -37,8 +38,8 @@ import MinutesTime
 import BrandedDomains
 import Company.Model
 
-handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
-handleAccountSetupFromSign document signatorylink = do
+handleAccountSetupFromSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe User)
+handleAccountSetupFromSign signatorylink = do
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
       cname = getCompanyName signatorylink
@@ -56,12 +57,12 @@ handleAccountSetupFromSign document signatorylink = do
                     companyname = cname
                   , companynumber = cnumber
                 }
-               guardJustM $ createUser (Email email) (firstname, lastname) (companyid company,True) (documentlang document)
+               guardJustM $ documentlang <$> theDocument >>= createUser (Email email) (firstname, lastname) (companyid company,True)
   company <- dbQuery $ GetCompanyByUserID (userid user)
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
   case mactivateduser of
     Just activateduser -> do
-      _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink)
+      _ <- dbUpdate $ SaveDocumentForUser activateduser (signatorylinkid signatorylink)
 
       return $ Just activateduser
     Nothing -> return Nothing
@@ -106,7 +107,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
               ds <- dbQuery $ GetSignatoriesByEmail (Email $ getEmail actvuser) (14 `daysBefore` ctxtime ctx)
 
               forM_ ds $ \(d, s) -> do
-                dbUpdate $ SaveDocumentForUser d actvuser s
+                withDocumentID d $ dbUpdate $ SaveDocumentForUser actvuser s
 
               when (haspassword) $ do
                 mpassword <- getOptionalField asValidPassword "password"
@@ -141,14 +142,9 @@ scheduleNewAccountMail ctx user = do
   mail <- accessNewAccountMail ctx user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
+createUser :: (CryptoRNG m, MailContextMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
 createUser email names companyandrole lang = do
-  ctx <- getContext
-  createUser' ctx email names companyandrole lang
-
-createUser' :: (CryptoRNG m, HasMailContext c, MonadDB m, TemplatesMonad m) => c -> Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
-createUser' ctx email names companyandrole lang = do
-  let mctx = mailContext ctx
+  mctx <- getMailContext
   passwd <- createPassword =<< randomPassword
   muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdurl <$> mctxcurrentBrandedDomain mctx)
   case muser of

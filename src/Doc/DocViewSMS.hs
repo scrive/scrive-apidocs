@@ -14,8 +14,8 @@ import Control.Logic
 import Control.Applicative
 import Doc.DocStateData
 import Doc.DocUtils
-import Kontra
 import KontraLink
+import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import Text.StringTemplates.Templates
 import Templates
@@ -31,72 +31,63 @@ import Company.Model
 import BrandedDomains
 import Utils.Monoid
 
-mkSMS :: (KontraMonad m,MonadDB m) => Document -> SignatoryLink -> MessageData -> String -> (m SMS)
+mkSMS :: (MonadDB m, MailContextMonad m) => Document -> SignatoryLink -> MessageData -> String -> (m SMS)
 mkSMS doc sl msgData msgBody = do
-  ctx <- getContext
-  mkSMS' (mailContext ctx) doc sl msgData msgBody
-
-
-mkSMS' :: (MonadDB m,HasMailContext c) => c -> Document -> SignatoryLink -> MessageData -> String -> (m SMS)
-mkSMS' ctx doc sl msgData msgBody = do
+  mctx <- getMailContext
   moriginator <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
        Just uid -> fmap Just $ companysmsoriginator <$> companyinfo <$> (dbQuery $ GetCompanyByUserID uid)
        Nothing -> return Nothing
-  let originator = (fromMaybe (fromMaybe "Scrive" (bdsmsoriginator <$> mctxcurrentBrandedDomain (mailContext ctx))) (joinEmpty  moriginator))
+  let originator = fromMaybe (fromMaybe "Scrive" (bdsmsoriginator <$> mctxcurrentBrandedDomain mctx)) (joinEmpty  moriginator)
   return $ SMS (getMobile sl) msgData msgBody originator
 
 
 
-smsMismatchSignatory :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
+smsMismatchSignatory :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsMismatchSignatory doc sl = do
   mkSMS doc sl None =<< renderLocalTemplate doc "_smsMismatchSignatory" (smsFields doc sl)
 
-smsMismatchAuthor :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
+smsMismatchAuthor :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsMismatchAuthor doc sl = do
   mkSMS doc sl None =<< renderLocalTemplate doc "_smsMismatchAuthor" (smsFields doc sl)
 
-smsDocumentErrorAuthor :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
+smsDocumentErrorAuthor :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsDocumentErrorAuthor doc sl = do
   mkSMS doc sl None =<< renderLocalTemplate doc "smsDocumentErrorAuthor" (smsFields doc sl)
 
-smsDocumentErrorSignatory :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
+smsDocumentErrorSignatory :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsDocumentErrorSignatory doc sl = do
   mkSMS doc sl None =<< renderLocalTemplate doc "smsDocumentErrorSignatory" (smsFields doc sl)
 
-smsInvitation :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
-smsInvitation doc sl = do
+smsInvitation :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => SignatoryLink -> Document -> m SMS
+smsInvitation sl doc = do
   mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<<
     renderLocalTemplate doc (templateName "_smsInvitationToSign" <| isSignatory sl |> templateName "_smsInvitationToView") (smsFields doc sl)
 
-smsInvitationToAuthor :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
+smsInvitationToAuthor :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsInvitationToAuthor doc sl = do
   mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc sl)
 
-smsReminder :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
+smsReminder :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
 smsReminder doc sl = do
   mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsReminder" (smsFields doc sl)
 
-smsClosedNotification :: (HasMailContext c,MonadDB m, TemplatesMonad m) => c -> Document -> SignatoryLink -> Bool -> Bool -> m SMS
-smsClosedNotification ctx doc sl withEmail sealFixed = do
-  mkSMS' ctx doc sl None =<< (renderLocalTemplate doc (if sealFixed then templateName "_smsCorrectedNotification" else templateName "_smsClosedNotification") $ do
-    smsFields' ctx doc sl
+smsClosedNotification :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> Bool -> Bool -> m SMS
+smsClosedNotification doc sl withEmail sealFixed = do
+  mkSMS doc sl None =<< (renderLocalTemplate doc (if sealFixed then templateName "_smsCorrectedNotification" else templateName "_smsClosedNotification") $ do
+    smsFields doc sl
     F.value "withEmail" withEmail)
 
-smsRejectNotification :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> SignatoryLink -> m SMS
+smsRejectNotification :: (MailContextMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> SignatoryLink -> m SMS
 smsRejectNotification doc sl rejector = do
   mkSMS doc sl None =<< renderLocalTemplate doc "_smsRejectNotification" (smsFields doc sl >> F.value "rejectorName" (getSmartName rejector))
 
-smsFields :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
+smsFields :: (MailContextMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
 smsFields document siglink = do
-  ctx <- lift getContext
-  smsFields' ctx document siglink
-
-smsFields' :: (TemplatesMonad m, HasMailContext c) => c -> Document -> SignatoryLink -> Fields m ()
-smsFields' ctx document siglink = do
+    mctx <- lift $ getMailContext
     partylist <- lift $ renderListTemplateNormal $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
     F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
     F.value "partylist" partylist
-    F.value "link" $ mctxhostpart (mailContext ctx) ++ show (LinkSignDoc document siglink)
+    F.value "link" $ mctxhostpart mctx ++ show (LinkSignDoc document siglink)
 

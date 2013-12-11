@@ -23,7 +23,6 @@ import DB.SQLFunction
 import DB.PostgreSQL
 import Doc.API.Callback.Model
 import Doc.Action
-import Doc.ExtendSignature (extendSignatures, sealMissingSignaturesNewerThan)
 import qualified MemCache
 import Utils.Cron
 import Utils.IO
@@ -71,18 +70,18 @@ main = Log.withLogger $ do
     token -> return $ Just $ processMixpanelEvent token
 
   withCronJobs
-    ([ forkCron_ True "extendSignatures" (60 * 60 * 3) $ do
-         Log.cron "Running extendSignatures..."
-         runScheduler extendSignatures
-     , forkCron_ True "sealMissingSignatures (new)" (60 * 10) $ do
-         Log.cron "Running sealMissingSignatures (new)..."
-         runScheduler $ sealMissingSignaturesNewerThan (Just 6) -- hours
-     , forkCron_ True "sealMissingSignatures" (60 * 60 * 6) $ do
-         Log.cron "Running sealMissingSignatures..."
-         runScheduler $ sealMissingSignaturesNewerThan Nothing
-     , forkCron_ True "timeoutDocuments" (60 * 10) $ do
-         Log.cron "Running timeoutDocuments..."
-         runScheduler timeoutDocuments
+    ([ forkCron_ True "findAndExtendDigitalSignatures" (60 * 60 * 3) $ do
+         Log.cron "Running findAndExtendDigitalSignatures..."
+         runScheduler findAndExtendDigitalSignatures
+     , forkCron_ True "findAndDoPostDocumentClosedActions (new)" (60 * 10) $ do
+         Log.cron "Running findAndDoPostDocumentClosedActions (new)..."
+         runScheduler $ findAndDoPostDocumentClosedActions (Just 6) -- hours
+     , forkCron_ True "findAndDoPostDocumentClosedActions" (60 * 60 * 6) $ do
+         Log.cron "Running findAndDoPostDocumentClosedActions..."
+         runScheduler $ findAndDoPostDocumentClosedActions Nothing
+     , forkCron_ True "findAndTimeoutDocuments" (60 * 10) $ do
+         Log.cron "Running findAndTimeoutDocuments..."
+         runScheduler findAndTimeoutDocuments
      , forkCron_ False "PurgeDocuments" (60 * 10) $ do
          Log.cron "Running PurgeDocuments..."
          runScheduler $ do

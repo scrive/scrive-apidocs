@@ -25,6 +25,7 @@ import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
 import Archive.Control
+import Doc.DocumentMonad (withDocumentM, withDocumentID, theDocument, updateDocumentWithID)
 import Doc.DocUtils
 import Company.Model
 import User.Model
@@ -93,55 +94,56 @@ testLastPersonSigningADocumentClosesIt = do
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
 
-  doc' <- addRandomDocumentWithAuthorAndConditionAndFile
+  addRandomDocumentWithAuthorAndConditionAndFile
             user
             (\d -> documentstatus d == Preparation
                      && (case documenttype d of
                           Signable -> True
                           _ -> False)
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
-            file
+            file `withDocumentM` do
 
-  True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                    (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink doc')
-                                    , signatoryisauthor = True
-                                    , signatoryispartner = False
-                                    , maybesignatory = Just $ userid user })
-                  , (defaultValue {   signatorysignorder = SignOrder 1
-                                    , signatoryisauthor = False
-                                    , signatoryispartner = True
-                                    , signatoryfields = [
-                                        SignatoryField FirstNameFT "Fred" True False []
-                                      , SignatoryField LastNameFT "Frog"  True False []
-                                      , SignatoryField EmailFT "fred@frog.com" True False []
-                                      ]})
-               ]) (systemActor $ documentctime doc')
+    True <- do d <- theDocument
+               randomUpdate $ ResetSignatoryDetails ([
+                      (defaultValue {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
+                                      , signatoryisauthor = True
+                                      , signatoryispartner = False
+                                      , maybesignatory = Just $ userid user })
+                    , (defaultValue {   signatorysignorder = SignOrder 1
+                                      , signatoryisauthor = False
+                                      , signatoryispartner = True
+                                      , signatoryfields = [
+                                          SignatoryField FirstNameFT "Fred" True False []
+                                        , SignatoryField LastNameFT "Frog"  True False []
+                                        , SignatoryField EmailFT "fred@frog.com" True False []
+                                        ]})
+                 ]) (systemActor $ documentctime d)
 
 
-  randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
-  doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
+    do t <- documentctime <$> theDocument
+       randomUpdate $ PreparationToPending (systemActor t) Nothing
+    let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
+    siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
 
-  let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-      siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
+    do t <- documentctime <$> theDocument
+       randomUpdate $ MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
+                 (signatoryActor ctx{ ctxtime = t } siglink)
 
-  randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
-               (signatoryActor ctx{ ctxtime = documentctime doc' } siglink)
-  doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
+    assertEqual "One left to sign" 1 . length . filter isUnsigned . documentsignatorylinks =<< theDocument
 
-  assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
+    preq <- mkRequest GET [ ]
+    (_,ctx') <- updateDocumentWithID $ \did ->
+                runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) (signatorymagichash siglink)
 
-  preq <- mkRequest GET [ ]
-  (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
+    req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
+    (_link, _ctx') <- updateDocumentWithID $ \did ->
+                      runTestKontra req ctx' $ apiCallSign did (signatorylinkid siglink)
 
-  req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
-  (_link, _ctx') <- runTestKontra req ctx' $ apiCallSign (documentid doc) (signatorylinkid siglink)
-
-  signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "In closed state" Closed (documentstatus signeddoc)
-  --TODO: this should be commented out really, I guess it's a bug
-  --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
-  --emails <- dbQuery GetEmails
-  --assertEqual "Confirmation email sent" 1 (length emails)
+    assertEqual "In closed state" Closed .documentstatus =<< theDocument
+    --TODO: this should be commented out really, I guess it's a bug
+    --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
+    --emails <- dbQuery GetEmails
+    --assertEqual "Confirmation email sent" 1 (length emails)
 
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do
@@ -228,21 +230,21 @@ testSendingReminderClearsDeliveryInformation = do
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
 
-  doc <- addRandomDocumentWithAuthorAndCondition
+  addRandomDocumentWithAuthorAndCondition
             user
             (\d -> documentstatus d == Pending
                      && case documenttype d of
                          Signable -> True
-                         _ -> False)
-  let sl = head . reverse $ documentsignatorylinks doc
-      actor  =  systemActor $ ctxtime ctx
-  _ <- dbUpdate $ MarkInvitationRead (documentid doc) (signatorylinkid sl) actor
-  -- who cares which one, just pick the last one
-  req <- mkRequest POST []
-  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx actor doc sl
-  updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
-  assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
+                         _ -> False) `withDocumentM` do
+    sl <- head . reverse . documentsignatorylinks <$> theDocument
+    let actor  =  systemActor $ ctxtime ctx
+    _ <- dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
+    -- who cares which one, just pick the last one
+    req <- mkRequest POST []
+    (_link, _ctx') <- do
+      updateDocumentWithID $ \did -> runTestKontra req ctx $ withDocumentID did $ sendReminderEmail Nothing actor sl
+    Just sl' <- find (\t -> signatorylinkid t == signatorylinkid sl) . documentsignatorylinks <$> theDocument
+    assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
 
 
 testDocumentFromTemplate :: TestEnv ()

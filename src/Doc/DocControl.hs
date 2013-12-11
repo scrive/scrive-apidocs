@@ -35,6 +35,7 @@ import Doc.Action
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery
+import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument, theDocumentID)
 import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
@@ -46,6 +47,7 @@ import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import Doc.Tokens.Model
 import Attachment.Model
 import InputValidation
+import Instances ()
 import File.Model
 import Kontra
 import KontraLink
@@ -64,7 +66,9 @@ import Util.MonadUtils
 import User.Utils
 import Control.Applicative
 import Control.Concurrent
+import Control.Conditional (unlessM, whenM)
 import qualified Control.Exception.Lifted as E
+import Control.Logic ((||^))
 import Control.Monad
 import Control.Monad.Reader
 import Data.List
@@ -98,7 +102,7 @@ handleNewDocument = do
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
         Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) Signable 0 actor
-        _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
+        withDocument doc $ dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry
 {-
@@ -119,26 +123,26 @@ handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> 
 handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
-  document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
-  signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  muser <- User.Action.handleAccountSetupFromSign document signatorylink
-  case muser of
-    Just user -> runJSONGenT $ do
-      J.value "userid" (show $ userid user)
-    Nothing -> runJSONGenT $ do
-      return ()
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
+    signatorylink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
+    muser <- User.Action.handleAccountSetupFromSign signatorylink
+    case muser of
+      Just user -> runJSONGenT $ do
+        J.value "userid" (show $ userid user)
+      Nothing -> runJSONGenT $ do
+        return ()
 
 {- |
     Call after signing in order to save the document for any user, and
     put up the appropriate modal.
 -}
-handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m ()
-handleAfterSigning document@Document{documentid} signatorylinkid = do
-  signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
+handleAfterSigning :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+handleAfterSigning signatorylinkid = do
+  signatorylink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
   maybeuser <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
   case maybeuser of
     Just user | isJust $ userhasacceptedtermsofservice user-> do
-      _ <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid
+      _ <- dbUpdate $ SaveDocumentForUser user signatorylinkid
       return ()
     _ -> return ()
 
@@ -169,12 +173,12 @@ handleSignShowSaveMagicHash did sid mh = do
 
   -- Getting some evidence
   ctx <- getContext
-  document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
-  invitedlink <- guardJust $ getSigLinkFor document sid
-  dbUpdate $ AddSignatoryLinkVisitedEvidence did (signatoryActor ctx invitedlink)
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+    invitedlink <- guardJust . getSigLinkFor sid =<< theDocument
+    dbUpdate . AddSignatoryLinkVisitedEvidence (signatoryActor ctx invitedlink) =<< theDocumentID
 
-  -- Redirect to propper page
-  return $ LinkSignDocNoMagicHash did sid
+    -- Redirect to propper page
+    return $ LinkSignDocNoMagicHash did sid
 
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow documentid
@@ -184,18 +188,17 @@ handleSignShow documentid
   mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
 
   case mmagichash of
-    Just magichash -> do
-      document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
-      invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
-      switchLangWhenNeeded  (Just invitedlink) document
-      when (not (isTemplate document) && (not (isPreparation document)) && (not (isClosed document))) $
-        dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
-           (signatoryActor ctx invitedlink)
-      document' <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash
+    Just magichash -> 
+      dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
+        invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
+        switchLangWhenNeeded  (Just invitedlink) =<< theDocument
+        unlessM ((isTemplate ||^ isPreparation ||^ isClosed) <$> theDocument) $
+          dbUpdate $ MarkDocumentSeen signatorylinkid magichash
+             (signatoryActor ctx invitedlink)
 
-      ad <- getAnalyticsData
-      content <- pageDocumentSignView ctx document' invitedlink ad
-      simpleHtmlResonseClrFlash content
+        ad <- getAnalyticsData
+        content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
+        simpleHtmlResonseClrFlash content
     Nothing -> do
       -- There is not magic hash in session. It may mean that the
       -- session expired and we deleted the credentials already or it
@@ -379,13 +382,12 @@ showPage' fileid pageno = do
       notFound (toResponse "temporarily unavailable (document has files pending for process)")
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-handleResend docid signlinkid  = withUserPost $ do
-  ctx <- getContext
-  doc <- getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid
-  signlink <- guardJust $ getSigLinkFor doc signlinkid
+handleResend docid signlinkid  = withUserPost $
+  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
+  signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
   customMessage <- getOptionalField  asValidInviteText "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
-  _ <- sendReminderEmail customMessage ctx actor doc signlink
+  _ <- sendReminderEmail customMessage actor signlink
   return (LinkIssueDoc docid)
 
 --This only works for undelivered mails. We shoulkd check if current user is author
@@ -393,17 +395,12 @@ handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m
 handleChangeSignatoryEmail docid slid = withUserPost $ do
   memail <- getOptionalField asValidEmail "email"
   case memail of
-    Just email -> do
-      _ <- getDocByDocIDForAuthor docid
+    Just email -> getDocByDocIDForAuthor docid `withDocumentM` do
       muser <- dbQuery $ GetUserByEmail (Email email)
       actor <- guardJustM $ mkAuthorActor <$> getContext
-      dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
-      newdoc <- dbQuery $ GetDocumentByDocumentID docid
-
-      -- get (updated) siglink from updated document
-      sl <- guardJust (getSigLinkFor newdoc slid)
-      ctx <- getContext
-      _ <- sendInvitationEmail1 ctx newdoc sl
+      dbUpdate $ ChangeSignatoryEmailWhenUndelivered slid muser email actor
+      sl <- guardJust . getSigLinkFor slid =<< theDocument
+      _ <- sendInvitationEmail1 sl
       return $ LoopBack
     _ -> return LoopBack
 
@@ -412,16 +409,12 @@ handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m
 handleChangeSignatoryPhone docid slid = withUserPost $ do
   mphone <- getOptionalField asValidPhone "phone"
   case mphone of
-    Just phone -> do
-      _ <- getDocByDocIDForAuthor docid
+    Just phone -> getDocByDocIDForAuthor docid `withDocumentM` do
       actor <- guardJustM $ mkAuthorActor <$> getContext
-      dbUpdate $ ChangeSignatoryPhoneWhenUndelivered docid slid phone actor
-      newdoc <- dbQuery $ GetDocumentByDocumentID docid
-
+      dbUpdate $ ChangeSignatoryPhoneWhenUndelivered slid phone actor
       -- get (updated) siglink from updated document
-      sl <- guardJust (getSigLinkFor newdoc slid)
-      ctx <- getContext
-      _ <- sendInvitationEmail1 ctx newdoc sl
+      sl <- guardJust . getSigLinkFor slid =<< theDocument
+      _ <- sendInvitationEmail1 sl
       return $ LoopBack
     _ -> return LoopBack
 
@@ -483,21 +476,20 @@ checkFileAccessWith fid msid mmh mdid mattid =
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
     mailtype <- getField' "mailtype"
-    ctx <- getContext
     content <- flip E.catch (\(E.SomeException _) -> return "") $ case mailtype of
          "remind" -> do
              doc <- getDocByDocID docid
-             Just sl <- return $ getSigLinkFor doc slid
-             mailDocumentRemindContent  Nothing ctx doc sl True
+             Just sl <- return $ getSigLinkFor slid doc
+             mailDocumentRemindContent  Nothing doc sl True
          "reject" -> do
              Just mh <- dbQuery $ GetDocumentSessionToken slid
              doc <- dbQuery $ GetDocumentByDocumentID docid
-             Just sl <- return $ getSigLinkFor doc (slid,mh)
-             x :: String <- mailDocumentRejectedContent Nothing ctx  doc sl True
+             Just sl <- return $ getSigLinkFor (slid,mh) doc
+             x :: String <- mailDocumentRejectedContent Nothing sl True doc
              return x
          "invite" -> do
              doc <- getDocByDocID docid
-             mailInvitationContent False ctx Sign doc Nothing True
+             mailInvitationContent False Sign Nothing True doc
          _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
 
@@ -530,6 +522,6 @@ handleVerify = do
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = do
   guardLoggedIn
-  doc <- getDocByDocID docid
-  when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
-  runJSONGenT $ return ()
+  getDocByDocID docid `withDocumentM` do
+    whenM (isPreparation <$> theDocument) $ dbUpdate $ SetDocumentUnsavedDraft False
+    runJSONGenT $ return ()

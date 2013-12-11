@@ -34,10 +34,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
                 update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 SendToPadDevice
                 (return ())
-                (Just did)
-                (getSigLinkFor doc slid)
+                (getSigLinkFor slid doc)
                 Nothing
                 a
+                did
     return ()
 
 data ClearPadQueue = ClearPadQueue UserID Actor
@@ -56,10 +56,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
            _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                 RemovedFromPadDevice
                 (return ())
-                (Just did)
-                (getSigLinkFor doc slid)
+                (getSigLinkFor slid doc)
                 Nothing
                 a
+                did
            return ()
 
 data GetPadQueue = GetPadQueue UserID

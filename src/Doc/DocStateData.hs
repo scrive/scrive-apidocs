@@ -34,13 +34,14 @@ module Doc.DocStateData (
 import Data.Data
 import Data.Maybe
 import DB.Derive
+import DB.RowCache (ID, HasID(..))
 import IPAddress
 import MagicHash
 import MinutesTime
 import User.UserID
 import User.Lang
 import File.FileID
-import Doc.SealStatus (SealStatus)
+import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import Database.HDBC
@@ -451,7 +452,7 @@ data MainFile = MainFile
 documentfile :: Document -> Maybe FileID
 documentfile = fmap mainfileid . find ((==Preparation) . mainfiledocumentstatus) . documentmainfiles
 
--- Here, we assume that the most recently sealed file is closed to the head of the list
+-- Here, we assume that the most recently sealed file is closest to the head of the list
 documentsealedfile' :: Document -> Maybe MainFile
 documentsealedfile' = find ((/=Preparation) . mainfiledocumentstatus) . documentmainfiles
 
@@ -460,6 +461,9 @@ documentsealedfile = fmap mainfileid . documentsealedfile'
 
 documentsealstatus :: Document -> Maybe SealStatus
 documentsealstatus = fmap mainfilesealstatus . documentsealedfile'
+
+instance HasGuardtimeSignature Document where
+  hasGuardtimeSignature doc = (hasGuardtimeSignature <$> documentsealstatus doc) == Just True
 
 data CancelationReason = ManualCancel
                         -- The data returned by ELeg server
@@ -539,3 +543,8 @@ instance Convertible  [FieldPlacement] SqlValue where
 
 instance Convertible  SqlValue [FieldPlacement] where
     safeConvert = jsonFromSqlValueCustom $ nothingToResult . (fromJSValueCustomMany fromJSValue)
+
+type instance ID Document = DocumentID
+
+instance HasID Document where
+  getID = documentid

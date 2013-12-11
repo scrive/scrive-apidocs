@@ -35,17 +35,17 @@ import Control.Monad.Identity
 data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAffectedSignatoryAndMsg
                            CurrentEvidenceEventType -- A code for the event
                            (F.Fields Identity ()) -- Text for evidence
-                           (Maybe DocumentID)     -- The documentid if this event is about a document
                            (Maybe SignatoryLink)  -- Affected signatory
                            (Maybe String)         -- Message text
                            Actor                  -- Actor
+                           DocumentID             -- Affected document
     deriving (Typeable)
 
 data InsertEvidenceEvent = InsertEvidenceEvent
                            CurrentEvidenceEventType -- A code for the event
                            (F.Fields Identity ()) -- Text for evidence
-                           (Maybe DocumentID)     -- The documentid if this event is about a document
                            Actor                  -- Actor
+                           DocumentID             -- Affected document
     deriving (Typeable)
 
 eventTextTemplateName :: CurrentEvidenceEventType -> String
@@ -65,7 +65,7 @@ signatoryLinkTemplateFields sl = do
   F.value "signing"     $ signatoryispartner sl
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
-  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid masl mmsg actor) = do
+  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor did) = do
    ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
    let fields = do
          F.value "full" True
@@ -80,7 +80,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
          textFields
    let text = runIdentity $ renderHelper ts (eventTextTemplateName event) fields
    kRun01 $ sqlInsert "evidence_log" $ do
-      sqlSet "document_id" mdid
+      sqlSet "document_id" did
       sqlSet "time" $ actorTime actor
       sqlSet "text" text
       sqlSet "event_type" (Current event)
@@ -96,7 +96,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
       sqlSet "client_name" $ actorClientName actor
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
-  update (InsertEvidenceEvent event textFields mdid actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid Nothing Nothing actor)
+  update (InsertEvidenceEvent event textFields actor did) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor did)
 
 type DocumentEvidenceEvent = DocumentEvidenceEvent' SignatoryLinkID
 data DocumentEvidenceEvent' s = DocumentEvidenceEvent {

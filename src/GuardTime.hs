@@ -1,5 +1,3 @@
-
-
 module GuardTime
        ( digitallySign
        , digitallyExtend
@@ -8,6 +6,9 @@ module GuardTime
        , VerifyResult(..)
        , GuardtimeSignature(..)
        , GuardTimeConf(..)
+       , GuardTimeConfMonad(..)
+       , GuardTimeConfT(..)
+       , runGuardTimeConfT
        , privateGateway
        ) where
 
@@ -23,7 +24,13 @@ import Text.JSON.String
 import Text.JSON.FromJSValue
 import Text.JSON.ToJSValue
 import Text.JSON.Gen
+import Control.Applicative (Applicative)
 import Control.Monad
+import Control.Monad.Base (MonadBase)
+import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
+import Control.Monad.State (StateT(..))
+import Control.Monad.Trans (MonadTrans, lift)
+import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
 
 data GuardTimeConf = GuardTimeConf
     { guardTimeURL ::  String
@@ -31,6 +38,37 @@ data GuardTimeConf = GuardTimeConf
     , guardTimeControlPublicationsURL :: String
     } deriving (Eq, Ord, Show, Read)
 
+class GuardTimeConfMonad m where
+  getGuardTimeConf :: m GuardTimeConf
+
+instance (Monad m, GuardTimeConfMonad m) => GuardTimeConfMonad (ReaderT r m) where
+  getGuardTimeConf = lift $ getGuardTimeConf
+
+instance (Monad m, GuardTimeConfMonad m) => GuardTimeConfMonad (StateT s m) where
+  getGuardTimeConf = lift $ getGuardTimeConf
+
+newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
+    deriving (Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b)
+
+runGuardTimeConfT :: GuardTimeConf -> GuardTimeConfT m a -> m a
+runGuardTimeConfT ts m = runReaderT (unGuardTimeConfT m) ts
+
+instance Monad m => GuardTimeConfMonad (GuardTimeConfT m) where
+  getGuardTimeConf = GuardTimeConfT ask
+
+instance MonadBaseControl b m => MonadBaseControl b (GuardTimeConfT m) where
+  newtype StM (GuardTimeConfT m) a = StM { unStM :: ComposeSt GuardTimeConfT m a }
+  liftBaseWith = defaultLiftBaseWith StM
+  restoreM     = defaultRestoreM unStM
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
+
+instance MonadTransControl GuardTimeConfT where
+  newtype StT GuardTimeConfT m = StT { unStT :: StT (ReaderT GuardTimeConf) m }
+  liftWith = defaultLiftWith GuardTimeConfT unGuardTimeConfT StT
+  restoreT = defaultRestoreT GuardTimeConfT unStT
+  {-# INLINE liftWith #-}
+  {-# INLINE restoreT #-}
 
 invokeGuardtimeTool :: MonadIO m => String -> [String] -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 invokeGuardtimeTool tool args = do

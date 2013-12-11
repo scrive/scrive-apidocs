@@ -22,6 +22,7 @@ import Crypto.RNG
 import DB
 import Doc.Model
 import Doc.DocStateData
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
 import KontraLink
 import SMS.Model
 import SMS.Data
@@ -55,7 +56,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
           Log.cron $ "No document with signatory link id = " ++ show slid
           deleteSMS smsid
         Just doc -> do
-          let msl = getSigLinkFor doc slid
+          let msl = getSigLinkFor slid doc
           let signphone = maybe "" getMobile msl
           templates <- getGlobalTemplates
           appConf <- sdAppConf <$> ask
@@ -72,9 +73,9 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
               -- addresses here (for dropped/bounce events)
               handleEv (SMSEvent phone ev) = do
                 Log.cron $ signphone ++ " == " ++ phone
-                runTemplatesT (getLang doc, templates) $ case ev of
-                  SMSDelivered -> handleDeliveredInvitation doc slid
-                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation mbd host mc doc slid
+                runTemplatesT (getLang doc, templates) $ withDocument doc $ case ev of
+                  SMSDelivered -> handleDeliveredInvitation slid
+                  SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation mbd host mc slid
           handleEv eventType
     processEvent (eid, _ , _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
@@ -87,28 +88,28 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
         then Log.error $ "Couldn't delete email #" ++ show mid
         else Log.debug $ "Deleted email #" ++ show mid
 
-handleDeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLinkID -> m ()
-handleDeliveredInvitation doc signlinkid = do
-  Log.cron $ "handleDeliveredInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
-  case getSigLinkFor doc signlinkid of
+handleDeliveredInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
+handleDeliveredInvitation signlinkid = do
+  theDocumentID >>= \did -> Log.cron $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+  getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
-      _ <- dbUpdate $ SetSMSInvitationDeliveryStatus (documentid doc) signlinkid Delivered actor
+      _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Delivered actor
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m, MonadBase IO m) => Maybe BrandedDomain -> String -> MailsConfig -> Document -> SignatoryLinkID -> m ()
-handleUndeliveredSMSInvitation mbd hostpart mc doc signlinkid = do
-  Log.cron $ "handleUndeliveredSMSInvitation: docid=" ++ show (documentid doc) ++ ", siglinkid=" ++ show signlinkid
-  case getSigLinkFor doc signlinkid of
+handleUndeliveredSMSInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation mbd hostpart mc signlinkid = do
+  theDocumentID >>= \did -> Log.cron $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+  getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- getMinutesTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
-      _ <- dbUpdate $ SetSMSInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
-      mail <- smsUndeliveredInvitation mc mbd hostpart doc signlink
-      scheduleEmailSendout mc $ mail {
-        to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
+      _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
+      mail <- theDocument >>= \d -> smsUndeliveredInvitation mc mbd hostpart d signlink
+      theDocument >>= \d -> scheduleEmailSendout mc $ mail {
+        to = [getMailAddress $ fromJust $ getAuthorSigLink d]
       }
     Nothing -> return ()
 

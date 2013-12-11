@@ -55,7 +55,7 @@ pageArchive user mt = renderTemplate "pageDocumentsList" $ do
 
 docForListJSON :: TemplatesMonad m => User -> PadQueue ->  Document -> m JSValue
 docForListJSON user padqueue doc = do
-  let link = case getSigLinkFor doc user of
+  let link = case getSigLinkFor user doc of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)

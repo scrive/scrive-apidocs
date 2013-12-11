@@ -3,12 +3,12 @@ module Context (
       anonymousContext,
       currentBrandedDomain,
       userBrandedDomain,
-      MailContext(..),
-      HasMailContext(..)
+      contextToMailContext
     ) where
 
 import File.FileID
 import Doc.JpegPages
+import MailContext (MailContext(..))
 import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
@@ -75,35 +75,15 @@ currentBrandedDomain ctx = findBrandedDomain (ctxhostpart ctx) (ctxbrandeddomain
 userBrandedDomain ::  Context -> User -> Maybe BrandedDomain
 userBrandedDomain ctx user = findBrandedDomain (fromMaybe "" $ userassociateddomain user) (ctxbrandeddomains ctx)
 
--- TODO: consider breaking KontraMonad into smaller parts for more
--- fine-grained access to context, because some parts are needed
--- outside request handlers.
--- | Subset of context that is used in cron process
-data MailContext = MailContext
-  { mctxhostpart :: String
-  , mctxmailsconfig :: MailsConfig
-  , mctxlang :: Lang
-  , mctxcurrentBrandedDomain :: Maybe BrandedDomain
-  , mctxipnumber :: IPAddress
-  , mctxtime :: MinutesTime
-  , mctxmaybeuser :: Maybe User
-  }
-  deriving Show
-
-class HasMailContext c where
-  mailContext :: c -> MailContext
-
-instance HasMailContext MailContext where
-  mailContext = id
-instance HasMailContext Context where
-  mailContext ctx = MailContext { mctxhostpart = ctxhostpart ctx
-                                , mctxmailsconfig = ctxmailsconfig ctx
-                                , mctxlang = ctxlang ctx
-                                , mctxcurrentBrandedDomain = currentBrandedDomain ctx
-                                , mctxipnumber = ctxipnumber ctx
-                                , mctxtime = ctxtime ctx
-                                , mctxmaybeuser = ctxmaybeuser ctx
-                                }
+contextToMailContext :: Context -> MailContext
+contextToMailContext ctx = MailContext { mctxhostpart = ctxhostpart ctx
+                                       , mctxmailsconfig = ctxmailsconfig ctx
+                                       , mctxlang = ctxlang ctx
+                                       , mctxcurrentBrandedDomain = currentBrandedDomain ctx
+                                       , mctxipnumber = ctxipnumber ctx
+                                       , mctxtime = ctxtime ctx
+                                       , mctxmaybeuser = ctxmaybeuser ctx
+                                       }
 
 instance HasSalesforceConf Context where
   getSalesforceConf = ctxsalesforceconf

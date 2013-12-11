@@ -17,9 +17,11 @@ module ELegitimation.Control
 
 import DB
 import qualified Log
+import Control.Conditional (unlessM)
 import Control.Logic
 import Control.Monad.State
 import Doc.DocStateData
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.Tokens.Model
 import ELegitimation.ELegTransaction.Model
 import Happstack.Server
@@ -30,7 +32,7 @@ import Doc.DocumentID
 import MagicHash (MagicHash)
 import MinutesTime
 import Happstack.Fields
-import Text.XML.HaXml.XmlContent.Parser
+import Text.XML.HaXml.XmlContent.Parser hiding (Document)
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
@@ -159,23 +161,21 @@ data VerifySignatureResult  = Problem String
                             | Sign SignatureInfo
 
 -- Just a note: we should not pass these in the url; these url parameters should be passed as JSON
-verifySignatureAndGetSignInfo ::  Kontrakcja m =>
-                                   DocumentID
-                                   -> SignatoryLinkID
+verifySignatureAndGetSignInfo ::  (Kontrakcja m, DocumentMonad m) =>
+                                   SignatoryLinkID
                                    -> MagicHash
                                    -> [(FieldType, String)]
                                    -> SignatureProvider
                                    -> String
                                    -> String
                                    -> m VerifySignatureResult
-verifySignatureAndGetSignInfo docid signid magic fields provider signature transactionid = do
+verifySignatureAndGetSignInfo signid magic fields provider signature transactionid = do
     ELegTransaction{..} <- guardJustM  $ dbQuery $ GetELegTransaction transactionid
-    document            <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid signid magic
-    siglink             <- guardJust   $ getSigLinkFor document signid
+    siglink             <- guardJustM  $ getSigLinkFor signid <$> theDocument
     logicaconf          <-               ctxlogicaconf <$> getContext
 
     -- valid transaction?
-    unless (transactiondocumentid == docid) internalError -- Error if document does not match
+    unlessM ((==transactiondocumentid) <$> theDocumentID) internalError -- Error if document does not match
 
     if (isJust transactionsignatorylinkid && isJust transactionmagichash)
        -- Either we have siglink and magichash in transaction and it matches current one
@@ -318,7 +318,7 @@ initiateMobileBankID docid slid = do
 
     mpn <- getField "personnummer"
 
-    sl <- guardJust $ getSigLinkFor document slid
+    sl <- guardJust $ getSigLinkFor slid document
     let pn = fromMaybe (getPersonalNumber sl) mpn
 
     tbs <- getTBS document
@@ -387,7 +387,7 @@ collectMobileBankID docid slid = do
           transactionmagichash       == Just magic &&
           transactiondocumentid      == docid) internalError
 
-  sl <- guardJust $ getSigLinkFor document slid
+  sl <- guardJust $ getSigLinkFor slid document
   let pn = getPersonalNumber sl
 
   case transactionstatus of
@@ -483,7 +483,7 @@ verifySignatureAndGetSignInfoMobile :: Kontrakcja m
                                        -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
     document <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid signid magic
-    siglink <- guardJust $ getSigLinkFor document signid
+    siglink <- guardJust $ getSigLinkFor signid document
     -- valid transaction?
     ELegTransaction { transactionsignatorylinkid = mtsignid
                     , transactionmagichash       = mtmagic

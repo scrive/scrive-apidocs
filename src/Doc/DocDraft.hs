@@ -5,7 +5,9 @@ module Doc.DocDraft (
     draftIsChangingDocument
   ) where
 
-import Control.Monad.Trans.Maybe
+import API.Monad (serverError)
+import Control.Exception.Lifted (throwIO)
+import Doc.DocInfo (isPreparation)
 import Doc.DocStateData
 import Utils.Monad
 import Data.Maybe
@@ -16,15 +18,18 @@ import Data.List
 import User.Lang
 import Doc.Model
 import DB
+import DB.SQL2 (SomeKontraException(..))
 import Util.Actor
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
 import Utils.Read
 import qualified Log
+import Control.Conditional (whenM, unlessM)
 import Control.Monad
 import InputValidation
 import Data.Functor
 import Utils.Default
+import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.DocUtils
 import Data.String.Utils (strip)
 import Doc.SignatoryLinkID
@@ -193,37 +198,31 @@ instance FromJSValueWithUpdate Document where
        mapAuth (Just au) sls = map (\sl -> sl {signatorylinkauthenticationmethod = au}) sls
 
 
-applyDraftDataToDocument :: Kontrakcja m =>  Document -> Document -> Actor -> m (Either String Document)
-applyDraftDataToDocument doc draft actor = do
-    if (documentstatus doc /= Preparation)
-     then do
-       Log.error $ "Document is not in preparation, is in " ++ show (documentstatus doc)
-       return $ Left $ "applyDraftDataToDocument failed"
-     else do
-      _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
-                                    documenttitle = documenttitle draft
-                                  , documentinvitetext = documentinvitetext draft
-                                  , documentdaystosign = documentdaystosign draft
-                                  , documentlang = documentlang draft
-                                  , documenttags = documenttags draft
-                                  , documentapicallbackurl = documentapicallbackurl draft
-                              }) actor
-      when_ (isTemplate draft && (not $ isTemplate doc)) $ do
-           dbUpdate $ TemplateFromDocument (documentid doc) actor
-      forM_ (documentauthorattachments doc) $ \att -> do
-              when_ (not $ att `elem` (documentauthorattachments draft)) $ do
-                dbUpdate $ RemoveDocumentAttachment (documentid doc) (authorattachmentfile att) actor
+applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Actor -> m ()
+applyDraftDataToDocument draft actor = do
+    unlessM (isPreparation <$> theDocument) $ do
+      theDocument >>= \doc -> Log.error $ "Document is not in preparation, is in " ++ show (documentstatus doc)
+      throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
+    _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
+                                  documenttitle = documenttitle draft
+                                , documentinvitetext = documentinvitetext draft
+                                , documentdaystosign = documentdaystosign draft
+                                , documentlang = documentlang draft
+                                , documenttags = documenttags draft
+                                , documentapicallbackurl = documentapicallbackurl draft
+                                } actor
+    whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
+         dbUpdate $ TemplateFromDocument actor
+    documentauthorattachments <$> theDocument >>= \atts -> forM_ atts $ \att -> do
+            when_ (not $ att `elem` (documentauthorattachments draft)) $ do
+              dbUpdate $ RemoveDocumentAttachment (authorattachmentfile att) actor
 
-      case (mergeAuthorDetails (documentsignatorylinks doc) (sortBy compareSL $ documentsignatorylinks draft)) of
-           Nothing   -> return $ Left "Problem with author details while sending draft"
-           Just sigs -> do
-             mdoc <- runMaybeT $ do
-               True <- dbUpdate $ ResetSignatoryDetails (documentid doc) (sortBy compareSL $ sigs) actor
-               newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-               return newdoc
-             return $ case mdoc of
-               Nothing  -> Left "applyDraftDataToDocument failed"
-               Just newdoc -> Right newdoc
+    documentsignatorylinks <$> theDocument >>= \siglinks -> case (mergeAuthorDetails siglinks (sortBy compareSL $ documentsignatorylinks draft)) of
+         Nothing   -> throwIO $ SomeKontraException $ serverError "Problem with author details while sending draft"
+         Just sigs -> do
+           res <- dbUpdate $ ResetSignatoryDetails (sortBy compareSL $ sigs) actor
+           unless res $ throwIO $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
+
 
 compareSL :: SignatoryLink -> SignatoryLink -> Ordering
 compareSL s1 s2 | signatoryisauthor s1 = LT

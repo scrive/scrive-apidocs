@@ -54,7 +54,7 @@ padQueueToSignatoryData Nothing = return Nothing
 padQueueToSignatoryData (Just (did,slid)) = do
         Log.debug $ "Some document for padqueue found"
         doc <- dbQuery $ GetDocumentByDocumentID did
-        sl <- guardJust $ getSigLinkFor doc slid
+        sl <- guardJust $ getSigLinkFor slid doc
         if (Preparation /= documentstatus doc)
          then return $ Just (doc,sl)
          else return Nothing

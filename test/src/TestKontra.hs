@@ -117,7 +117,7 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runTestKontraHelper :: Request -> Context -> Kontra a -> TestEnv (a, Context, FilterFun Response)
+runTestKontraHelper :: (CryptoRNG m, MonadDB m) => Request -> Context -> Kontra a -> m (a, Context, FilterFun Response)
 runTestKontraHelper rq ctx tk = do
   filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
@@ -133,16 +133,16 @@ runTestKontraHelper rq ctx tk = do
     Just (Right (res, ctx'), fs) -> return (res, ctx', fs)
 
 -- | Typeclass for running handlers within TestKontra monad
-class RunnableTestKontra a where
-  runTestKontra :: Request -> Context -> Kontra a -> TestEnv (a, Context)
+class RunnableTestKontra m a where
+  runTestKontra :: Request -> Context -> Kontra a -> m (a, Context)
 
-instance RunnableTestKontra a where
+instance (MonadBaseControl IO m, MonadDB m, CryptoRNG m) => RunnableTestKontra m a where
   runTestKontra rq ctx tk = do
     (res, ctx', _) <- runTestKontraHelper rq ctx tk
       `E.catch` (\(FinishWith _ _) -> error "FinishWith thrown in function that doesn't return Response")
     return (res, ctx')
 
-instance RunnableTestKontra Response where
+instance (MonadBaseControl IO m, MonadDB m, CryptoRNG m) => RunnableTestKontra m Response where
   runTestKontra rq ctx tk = do
     (res, ctx', f) <- runTestKontraHelper rq ctx tk
       `E.catch` (\(FinishWith res ctx') -> return (res, ctx', filterFun id))
@@ -198,10 +198,10 @@ getCookie :: String -> [(String, Cookie)] -> Maybe String
 getCookie name cookies = cookieValue <$> lookup name cookies
 
 -- | Constructs initial request with given data (POST or GET)
-mkRequest :: Method -> [(String, Input)] -> TestEnv Request
+mkRequest :: MonadIO m => Method -> [(String, Input)] -> m Request
 mkRequest method vars = mkRequestWithHeaders method vars []
 
-mkRequestWithHeaders :: Method -> [(String, Input)] -> [(String, [String])]-> TestEnv Request
+mkRequestWithHeaders :: MonadIO m => Method -> [(String, Input)] -> [(String, [String])]-> m Request
 mkRequestWithHeaders method vars headers = liftIO $ do
     rqbody <- newEmptyMVar
     ib <- newMVar vars

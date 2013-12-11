@@ -137,7 +137,7 @@ arbitraryAuthorActor = do
   ctx <- mkContext defaultValue
   authorActor ctx <$> rand 10 arbitrary
 
-arbitrarySystemActor :: TestEnv Actor
+arbitrarySystemActor :: (Functor m, CryptoRNG m) => m Actor
 arbitrarySystemActor = systemActor <$> rand 10 arbitrary
 
 arbitrarySignatoryActor :: TestEnv Actor
@@ -478,16 +478,16 @@ addNewCompany = do
     Just company <- dbQuery $ GetCompany cid
     return company
 
-addNewFile :: String -> BS.ByteString -> TestEnv FileID
+addNewFile :: (Applicative m, CryptoRNG m, MonadDB m) => String -> BS.ByteString -> m FileID
 addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
 
-addNewRandomFile :: TestEnv FileID
+addNewRandomFile :: (Applicative m, CryptoRNG m, MonadDB m) => m FileID
 addNewRandomFile = do
   fn <- rand 10 $ arbString 3 30
   cnt <- rand 10 $ arbString 3 30
   addNewFile fn (BS.fromString cnt)
 
-addNewUser :: String -> String -> String -> TestEnv (Maybe User)
+addNewUser :: MonadDB m => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
   company <- dbUpdate $ CreateCompany
   dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) defaultValue Nothing
@@ -496,7 +496,7 @@ addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe U
 addNewCompanyUser firstname secondname email cid =
   dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) defaultValue Nothing
 
-addNewRandomUser :: TestEnv User
+addNewRandomUser :: (CryptoRNG m, MonadDB m) => m User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
@@ -653,7 +653,7 @@ addRandomDocumentWithFile file rda = do
           worker now user p mcompany
 
 
-rand :: Int -> Gen a -> TestEnv a
+rand :: CryptoRNG m => Int -> Gen a -> m a
 rand i a = do
   stdgn <- random
   return $ unGen a stdgn i
@@ -688,13 +688,13 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
     randomQuery $ f a
 
 --Random update
-class RandomUpdate a b where
-  randomUpdate :: a -> TestEnv b
+class RandomUpdate a b m where
+  randomUpdate :: a -> m b
 
-instance (DBUpdate TestEnv ev res) => RandomUpdate ev res where
+instance (DBUpdate m ev res) => RandomUpdate ev res m where
   randomUpdate = dbUpdate
 
-instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
+instance (CryptoRNG m, Arbitrary a, RandomUpdate c b m) => RandomUpdate (a -> c) b m where
   randomUpdate f = do
     a <- rand 10 arbitrary
     randomUpdate $ f a

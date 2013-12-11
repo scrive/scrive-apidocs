@@ -12,8 +12,6 @@
 module Doc.DocSeal
   ( sealDocument
   , presealDocumentFile
-  , digitallySealDocument
-  , digitallyExtendDocument
   ) where
 
 import Control.Monad.Trans.Control
@@ -22,7 +20,7 @@ import Data.Function (on)
 import Data.Maybe
 import Data.List
 import Doc.DocStateData
-import Doc.DocumentID (DocumentID)
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.Model
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
@@ -30,8 +28,8 @@ import File.Storage
 import File.File
 import Doc.DocView
 import Doc.DocUtils
-import GuardTime (GuardTimeConf)
 import qualified HostClock.Model as HC
+import MailContext (MailContext(..), MailContextMonad, getMailContext)
 import MinutesTime (MinutesTime, daysBefore, toCalendarTime)
 import Utils.Directory
 import Utils.Read
@@ -54,7 +52,6 @@ import qualified Data.ByteString.Lazy as BSL (empty)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Base64 as B64
 import qualified Doc.SealSpec as Seal
-import qualified GuardTime as GT
 import qualified Log
 import System.IO.Temp
 import System.IO hiding (stderr)
@@ -65,7 +62,6 @@ import File.Model
 import Crypto.RNG
 import DB
 import Control.Applicative
-import Control.Arrow (first)
 import EvidenceLog.Model
 import EvidenceLog.View
 import Util.Actor
@@ -73,7 +69,6 @@ import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Utils.Prelude
 import qualified Amazon as AWS
-import Doc.API.Callback.Model
 import Data.Char
 
 personFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryLink -> Seal.Person
@@ -186,7 +181,7 @@ listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
-findOutAttachmentDesc :: (KontraMonad m, MonadIO m, MonadDB m, TemplatesMonad m, AWS.AmazonMonad m) => Document -> m [Seal.FileDesc]
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, TemplatesMonad m, AWS.AmazonMonad m) => Document -> m [Seal.FileDesc]
 findOutAttachmentDesc document = do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
@@ -280,7 +275,7 @@ formatMinutesTimeForVerificationPage mt = formatCalendarTime defaultTimeLocale "
     tzoffset = ctTZ caltime `div` 60 -- convert seconds into minutes
     tzinfo = printf "%+03d%02d"  (tzoffset `div` 60) (tzoffset `mod` 60)
 
-sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m, AWS.AmazonMonad m)
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, AWS.AmazonMonad m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -417,20 +412,17 @@ presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath 
             }
 
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
-             => Document
-             -> m (Maybe Document)
-sealDocument document = do
-  mfile <- documentfileM document
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m) => m ()
+sealDocument = theDocumentID >>= \did -> do
+  mfile <- theDocument >>= documentfileM
   case mfile of
     Just file -> do
-      Log.debug $ "Sealing document #" ++ show (documentid document)
-      result <- sealDocumentFile document file
-      Log.debug $ "Sealing of document #" ++ show (documentid document) ++ " should be done now"
-      return result
+      Log.debug $ "Sealing document #" ++ show did
+      sealDocumentFile file
+      Log.debug $ "Sealing of document #" ++ show did ++ " should be done now"
     Nothing -> do
-      Log.debug $ "Sealing of document #" ++ show (documentid document) ++ " failed because it has no main file attached"
-      return Nothing
+      Log.debug $ "Sealing of document #" ++ show did ++ " failed because it has no main file attached"
+      internalError
 
 collectClockErrorStatistics :: MonadDB m => [DocumentEvidenceEvent] -> m HC.ClockErrorStatistics
 collectClockErrorStatistics [] = return $ HC.ClockErrorStatistics Nothing Nothing Nothing 0 0
@@ -439,18 +431,19 @@ collectClockErrorStatistics elog = do
       starttime = minimum (map evTime elog) `min` (1 `daysBefore` endtime)
   dbQuery $ HC.GetClockErrorStatistics (Just starttime) (Just endtime)
 
-sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
-                 => Document
-                 -> File
-                 -> m (Maybe Document)
-sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
+sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MailContextMonad m, DocumentMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)
+                 => File
+                 -> m ()
+sealDocumentFile file@File{fileid, filename} = theDocumentID >>= \documentid ->
   withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-    Context{ctxhostpart, ctxtime, ctxgtconf} <- getContext
+    MailContext{mctxhostpart, mctxtime} <- getMailContext
+    -- We generate this event before we attempt the sealing process so
+    -- that the event gets included in the evidence package
     _ <- update $ InsertEvidenceEvent
         AttachSealedFileEvidence
         (return ())
-        (Just documentid)
-        (systemActor ctxtime)
+        (systemActor mctxtime)
+        documentid
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
@@ -459,7 +452,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
     elog <- dbQuery $ GetEvidenceLog documentid
     ces <- collectClockErrorStatistics elog
-    config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog ces content tmpin tmpout
+    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) mctxhostpart d elog ces content tmpin tmpout
 
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
@@ -469,10 +462,8 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
-        Just _sealedfileid <- digitallySealDocument True ctxtime ctxgtconf documentid tmpout filename
-        triggerAPICallbackIfThereIsOne document -- Callback does not depend on sealed file
-        res <- dbQuery $ GetDocumentByDocumentID documentid
-        return $ (Just res)
+        sealedfileid <- dbUpdate . NewFile filename . Binary =<< liftIO (BS.readFile tmpout)
+        dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor mctxtime)
       ExitFailure _ -> do
         -- error handling
         liftIO $ do
@@ -484,79 +475,10 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
           Log.error $ "Sealing configuration: " ++ show config
           BS.hPutStr handle content
           hClose handle
-        void $ dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid)
+        void $ dbUpdate $ ErrorDocument ("Could not seal document because of file #" ++ show fileid)
                             ErrorSealingDocumentEvidence
                             (return ())
-                            (systemActor ctxtime)
-        triggerAPICallbackIfThereIsOne document
-        return Nothing
-
-digitallySealDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
-                      => Bool -> MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m (Maybe FileID)
-digitallySealDocument forceAttach ctxtime ctxgtconf documentid pdfpath pdfname = do
-  -- GuardTime signs in place
-  code <- liftIO $ GT.digitallySign ctxgtconf pdfpath
-  (newfilepdf, status) <- first Binary <$> case code of
-    ExitSuccess -> do
-      vr <- liftIO $ GT.verify ctxgtconf pdfpath
-      case vr of
-           GT.Valid gsig -> do
-                res <- liftIO $ BS.readFile pdfpath
-                Log.debug $ "GuardTime verification result: " ++ show vr
-                Log.debug $ "GuardTime signed successfully #" ++ show documentid
-                return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
-           _ -> do
-                res <- liftIO $ BS.readFile pdfpath
-                Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
-                Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid ++ ": " ++ show vr
-                return (res, Missing)
-    ExitFailure c -> do
-      res <- liftIO $ BS.readFile pdfpath
-      Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
-      Log.error $ "GuardTime failed for document #" ++ show documentid
-      return (res, Missing)
-  if status /= Missing || forceAttach then do
-    Log.debug $ "Adding new sealed file to DB"
-    sealedfileid <- dbUpdate $ NewFile pdfname newfilepdf
-    Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-    dbUpdate $ AppendFirstSealedFile documentid sealedfileid status $ systemActor ctxtime
-    return (Just sealedfileid)
-   else do
-    return Nothing
-
-digitallyExtendDocument :: (TemplatesMonad m, Applicative m, CryptoRNG m, MonadIO m, MonadDB m)
-                      => MinutesTime -> GuardTimeConf -> DocumentID -> FilePath -> String -> m Bool
-digitallyExtendDocument ctxtime ctxgtconf documentid pdfpath pdfname = do
-  code <- liftIO $ GT.digitallyExtend ctxgtconf pdfpath
-  mr <- case code of
-    ExitSuccess -> do
-      vr1 <- liftIO $ GT.verify ctxgtconf pdfpath
-      vr <- case vr1 of
-        GT.Invalid "SYNTACTIC_CHECK_FAILURE" -> do
-          Log.debug "Verification failed with SYNTACTIC_CHECK_FAILURE - trying temporary Guardtime extension tool"
-          _ <- liftIO $ GT.digitallyExtendCore1 pdfpath
-          liftIO $ GT.verify ctxgtconf pdfpath
-        _ -> return vr1
-      case vr of
-           GT.Valid gsig | GT.extended gsig -> do
-                res <- liftIO $ BS.readFile pdfpath
-                Log.debug $ "GuardTime verification result: " ++ show vr
-                Log.debug $ "GuardTime extended successfully #" ++ show documentid
-                return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
-           _ -> do
-                Log.error $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
-                return Nothing
-    ExitFailure c -> do
-      Log.error $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
-      return Nothing
-  case mr of
-    Nothing -> return False
-    Just (extendedfilepdf, status) -> do
-      Log.debug $ "Adding new extended file to DB"
-      sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
-      Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-      dbUpdate $ AppendExtendedSealedFile documentid sealedfileid status $ systemActor ctxtime
-      return True
+                            (systemActor mctxtime)
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
 presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m)

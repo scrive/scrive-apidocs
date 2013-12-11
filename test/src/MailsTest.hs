@@ -7,6 +7,7 @@ import Test.Framework
 import ActionQueue.UserAccountRequest
 import DB
 import Context
+import Crypto.RNG (CryptoRNG)
 import TestingUtil
 import TestKontra as T
 import User.Model
@@ -14,6 +15,7 @@ import Utils.Default
 import Doc.Model
 import Doc.DocViewMail
 import Doc.DocStateData
+import Doc.DocumentMonad (withDocumentM, theDocument)
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import Mails.SendMail
 import Company.Model
@@ -76,57 +78,54 @@ testDocumentMails mailTo = do
 sendDocumentMails :: Maybe String -> User -> TestEnv ()
 sendDocumentMails mailTo author = do
   forM_ allLangs $ \l ->  do
-        -- make  the context, user and document all use the same lang
-        ctx <- mailingContext l
-        _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
-        let aa = authorActor ctx author
-        Just d <- randomUpdate $ NewDocument author "Document title" Signable 0 aa
-        True <- dbUpdate $ SetDocumentLang (documentid d) l (systemActor $ ctxtime ctx)
+      -- make  the context, user and document all use the same lang
+      ctx <- mailingContext l
+      _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
+      let aa = authorActor ctx author
+      req <- mkRequest POST []
+      runTestKontra req ctx $ (fromJust <$> randomUpdate (NewDocument author "Document title" Signable 0 aa)) `withDocumentM` do
+        True <- dbUpdate $ SetDocumentLang l (systemActor $ ctxtime ctx)
 
-        let docid = documentid d
-        let asl = head $ documentsignatorylinks d
+        asl <- head . documentsignatorylinks <$> theDocument
         file <- addNewRandomFile
-        randomUpdate $ AttachFile docid file (systemActor $ ctxtime ctx)
+        randomUpdate $ AttachFile file (systemActor $ ctxtime ctx)
 
         islf <- rand 10 arbitrary
 
         now <- getMinutesTime
         let sigs = [defaultValue {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True} , defaultValue {signatoryfields = islf, signatoryispartner = True}]
-        True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
-        randomUpdate $ PreparationToPending docid (systemActor now) Nothing
-        d2 <- dbQuery $ GetDocumentByDocumentID docid
-        let asl2 = head $ documentsignatorylinks d2
-        randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
+        True <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
+        randomUpdate $ PreparationToPending (systemActor now) Nothing
+        asl2 <- head . documentsignatorylinks <$> theDocument
+        randomUpdate $ MarkDocumentSeen (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor ctx asl2)
-        randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
-        doc <- dbQuery $ GetDocumentByDocumentID docid
-        let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
-        req <- mkRequest POST []
+        randomUpdate $ SignDocument (signatorylinkid asl2) (signatorymagichash asl2) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
+        [sl] <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
         --Invitation Mails
         let checkMail s mg = do
                               Log.debug $ "Checking mail " ++ s
-                              m <- fst <$> (runTestKontra req ctx $ mg)
+                              m <- mg
                               validMail s m
-                              sendoutForManualChecking s req ctx mailTo m
-        checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl) False
+                              sendoutForManualChecking ctx mailTo m
+        checkMail "Invitation" $ mailInvitation True Sign (Just sl) False =<< theDocument
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailsconfig ctx) Nothing (ctxhostpart ctx) doc sl
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) doc sl
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) doc sl
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailsconfig ctx) Nothing (ctxhostpart ctx) sl =<< theDocument
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailsconfig ctx)  Nothing (ctxhostpart ctx) sl =<< theDocument
         --remind mails
-        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl False
+        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl False =<< theDocument
         --reject mail
-        checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl False
+        checkMail "Reject"  $ mailDocumentRejected  Nothing sl False =<< theDocument
         -- awaiting author email
-        checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
+        checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (defaultValue :: Lang) =<< theDocument
         -- Virtual signing
-        randomUpdate $ SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
+        randomUpdate $ SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    (signatoryActor ctx{ ctxtime = 10 `minutesAfter` now } sl)
-        sdoc <- randomQuery $ GetDocumentByDocumentID docid
+
         -- Sending closed email
-        checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl False
+        checkMail "Closed" $ mailDocumentClosed Nothing sl False =<< theDocument
         -- Reminder after send
-        checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc) False
+        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) False d
   kCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"
@@ -146,7 +145,7 @@ testUserMails mailTo = do
                            Log.debug $ "Checking mail " ++ s
                            m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
-                           sendoutForManualChecking s req ctx mailTo m
+                           sendoutForManualChecking ctx mailTo m
     checkMail "New account" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
           newUserMail ctx (getEmail user) (getEmail user) al
@@ -165,7 +164,7 @@ testUserMails mailTo = do
 
 
 -- MAIL TESTING UTILS
-validMail :: String -> Mail -> TestEnv ()
+validMail :: MonadIO m => String -> Mail -> m ()
 validMail name m = do
     let c = content m
     let exml = xmlParse' name c
@@ -191,17 +190,14 @@ mailingContext lang = do
     return $ ctx { ctxhostpart = "http://dev.skrivapa.se" }
 
 
-sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> TestEnv ()
-sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
-sendoutForManualChecking _ req ctx (Just email) m = do
-    _ <- runTestKontra req ctx $ do
+sendoutForManualChecking :: (CryptoRNG m, MonadDB m) => Context ->  Maybe String -> Mail -> m ()
+sendoutForManualChecking _ Nothing _ = assertSuccess
+sendoutForManualChecking ctx (Just email) m = do
            _ <- scheduleEmailSendout (ctxmailsconfig ctx) $ m {
                   to = [MailAddress { fullname = "Tester",
                                       email = email}]
            }
            assertSuccess
-    assertSuccess
-
 
 toMailAddress :: [String] -> Maybe String
 toMailAddress [] = Nothing

@@ -103,7 +103,7 @@ instance (MaybeSignatoryLink msl) => MaybeSignatoryLink (Maybe msl) where
   getMaybeSignatoryLink Nothing   = Nothing
 
 instance (SignatoryLinkIdentity a, HasSignatoryLinks b) => MaybeSignatoryLink (b, a) where
-  getMaybeSignatoryLink (d, a) = getSigLinkFor d a
+  getMaybeSignatoryLink (d, a) = getSigLinkFor a d
 
 {- |
   A source of signatory links
@@ -130,7 +130,7 @@ instance (HasSignatoryLinks a, SignatoryLinkIdentity b) => HasSignatoryLinks (a,
    Get the author's signatory link.
  -}
 getAuthorSigLink :: HasSignatoryLinks a => a -> Maybe SignatoryLink
-getAuthorSigLink doc = getSigLinkFor doc signatoryisauthor
+getAuthorSigLink doc = getSigLinkFor signatoryisauthor doc
 
 {- |
    Given a Document, return the best guess at the author's name:
@@ -176,7 +176,7 @@ isDeletedFor msl = maybe False (isJust . signatorylinkdeleted) (getMaybeSignator
 -}
 
 validSigLink ::  SignatoryLinkID -> MagicHash-> Maybe Document -> Bool
-validSigLink a mh (Just doc) =  joinB $ (== mh)  <$> signatorymagichash <$> (getSigLinkFor doc a)
+validSigLink a mh (Just doc) =  joinB $ (== mh)  <$> signatorymagichash <$> (getSigLinkFor a doc)
 validSigLink _ _ _ = False
 
 {- |
@@ -209,10 +209,10 @@ filterSigLinksFor i sls = filter (isSigLinkFor i) (getSignatoryLinks sls)
    True if one or more signatory links matches the query
  -}
 hasSigLinkFor :: (SignatoryLinkIdentity i, HasSignatoryLinks sls) => i -> sls -> Bool
-hasSigLinkFor i sls = isJust $ getSigLinkFor sls i
+hasSigLinkFor i sls = isJust $ getSigLinkFor i sls
 
 {- |
   Get the SignatoryLink from a document given a matching value.
  -}
-getSigLinkFor :: (SignatoryLinkIdentity a, HasSignatoryLinks b) => b -> a -> Maybe SignatoryLink
-getSigLinkFor d a = find (isSigLinkFor a) (getSignatoryLinks d)
+getSigLinkFor :: (SignatoryLinkIdentity a, HasSignatoryLinks b) => a -> b -> Maybe SignatoryLink
+getSigLinkFor a d = find (isSigLinkFor a) (getSignatoryLinks d)

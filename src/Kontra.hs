@@ -29,9 +29,11 @@ import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
+import GuardTime (GuardTimeConfMonad(..))
 import Happstack.Server
 import KontraError
 import KontraMonad
+import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
 import OurServerPart
 import qualified Text.StringTemplates.TemplatesLoader as TL
@@ -71,13 +73,19 @@ instance TemplatesMonad KontraPlus where
      Context{ctxglobaltemplates} <- getContext
      return $ TL.localizedVersion langStr ctxglobaltemplates
 
+instance GuardTimeConfMonad KontraPlus where
+  getGuardTimeConf = ctxgtconf <$> getContext
+
+instance MailContextMonad KontraPlus where
+  getMailContext = contextToMailContext <$> getContext
+
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not MonadZero and WebMonad.
 --
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad, MonadLog, AWS.AmazonMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad, MonadLog, AWS.AmazonMonad, MailContextMonad, GuardTimeConfMonad)
 
 instance Kontrakcja Kontra
 

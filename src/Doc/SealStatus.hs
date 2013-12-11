@@ -1,5 +1,6 @@
 module Doc.SealStatus
   ( SealStatus(..)
+  , HasGuardtimeSignature(..)
   ) where
 
 import Database.HDBC (SqlValue)
@@ -19,6 +20,13 @@ data SealStatus =
     , private  :: Bool -- ^ The signature was created using Scrive's own gateway
     }
   deriving (Eq, Show, Typeable)
+
+class HasGuardtimeSignature a where
+  hasGuardtimeSignature :: a -> Bool
+
+instance HasGuardtimeSignature SealStatus where
+  hasGuardtimeSignature Guardtime{} = True
+  hasGuardtimeSignature _           = False
 
 instance Enum SealStatus where
   toEnum (-1) = UnknownSealStatus

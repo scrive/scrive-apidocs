@@ -18,12 +18,14 @@ import KontraLink
 import Kontra
 import DB
 import Doc.DocStateData
+import Doc.DocumentMonad (withDocument, withDocumentID, theDocument, theDocumentID)
 import Doc.Model
 import User.Model
 import User.Utils
 import Util.MonadUtils
 
 import Control.Applicative
+import Control.Conditional (whenM, unlessM)
 import Util.SignatoryLinkUtils
 import Util.Actor
 import Text.JSON
@@ -35,6 +37,7 @@ import Data.Maybe
 import Text.JSON.Gen as J
 import Text.JSON.FromJSValue
 import Doc.Action
+import Doc.DocInfo (isPending)
 import Doc.DocStateQuery
 import Control.Monad
 import Codec.Archive.Zip
@@ -60,36 +63,30 @@ handleDelete = do
     docids <- getCriticalField asValidDocIDList "documentids"
     let actor = userActor ctx user
     docs <- getDocsByDocIDs docids
-    forM_ docs $ \doc -> do
-              let usl = getSigLinkFor doc user
-                  csl = (getAuthorSigLink $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
-                  msl =  usl `mplus` csl
+    forM_ docs $ flip withDocument $ do
+              usl <- getSigLinkFor user <$> theDocument
+              csl <- (\d -> (getAuthorSigLink $ documentsignatorylinks d) <| (useriscompanyadmin user) |> Nothing) <$> theDocument
+              let msl =  usl `mplus` csl
               when (isNothing msl) $ do
-                Log.debug $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show (documentid doc)
+                theDocumentID >>= \did -> Log.debug $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show did
                 internalError
-              case (documentstatus doc) of
-                  Pending -> if (isAuthor msl)
-                                then do
-                                   dbUpdate $ CancelDocument (documentid doc) actor
-                                   doc' <- getDocByDocID (documentid doc)
-                                   postDocumentCanceledChange doc'
-                                else do
-                                   dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
-                                   doc' <- getDocByDocID (documentid doc)
-                                   postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl)
-                  _ -> return ()
-              dbUpdate $ ArchiveDocument (userid user) (documentid doc) actor
-
+              whenM (isPending <$> theDocument) $
+                 if (isAuthor msl)
+                 then do
+                   dbUpdate $ CancelDocument actor
+                   postDocumentCanceledChange =<< theDocument
+                 else do
+                   dbUpdate $ RejectDocument (signatorylinkid $ fromJust msl) Nothing actor
+                   theDocument >>= postDocumentRejectedChange (signatorylinkid $ fromJust msl)
+              dbUpdate $ ArchiveDocument (userid user) actor
     J.runJSONGenT $ return ()
-
-
 
 handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders = do
-    ctx@Context{ctxmaybeuser = Just user } <- getContext
+    Context{ctxmaybeuser = Just user } <- getContext
     ids <- getCriticalField asValidDocIDList "documentids"
     actor <- guardJustM $ fmap mkAuthorActor getContext
-    remindedsiglinks <- fmap concat . sequence . map (\docid -> sendAllReminderEmails ctx actor user docid) $ ids
+    remindedsiglinks <- fmap concat . sequence . map (flip withDocumentID (sendAllReminderEmails actor user)) $ ids
     case (length remindedsiglinks) of
       0 -> internalError
       _ -> J.runJSONGenT $ return ()
@@ -97,15 +94,11 @@ handleSendReminders = do
 handleCancel :: Kontrakcja m =>  m JSValue
 handleCancel = do
   docids <- getCriticalField asValidDocIDList "documentids"
-  forM_ docids $ \docid -> do
-      doc <- getDocByDocID docid
-      actor <- guardJustM $ mkAuthorActor <$> getContext
-      if (documentstatus doc == Pending)
-        then do
-           dbUpdate $ CancelDocument (documentid doc) actor
-           doc' <- getDocByDocID $ docid
-           postDocumentCanceledChange doc'
-        else internalError
+  forM_ docids $ flip withDocumentID $ do
+    actor <- guardJustM $ mkAuthorActor <$> getContext
+    unlessM (isPending <$> theDocument) internalError
+    dbUpdate $ CancelDocument actor
+    postDocumentCanceledChange =<< theDocument
   J.runJSONGenT $ return ()
 
 handleRestore :: Kontrakcja m => m JSValue
@@ -113,7 +106,7 @@ handleRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
   docids <- getCriticalField asValidDocIDList "documentids"
-  mapM_ (\did -> dbUpdate $ RestoreArchivedDocument user did actor) docids
+  mapM_ (flip withDocumentID $ dbUpdate $ RestoreArchivedDocument user actor) docids
   J.runJSONGenT $ return ()
 
 handleShare :: Kontrakcja m => m JSValue

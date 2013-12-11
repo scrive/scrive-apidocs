@@ -45,7 +45,7 @@ addToQueue did slid = api $ do
     auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
     when (not $ (auid == userid user)) $ do
         throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-    sl <-  apiGuardJustM (serverError "Not a signatory") $ return $ getSigLinkFor doc slid
+    sl <-  apiGuardJustM (serverError "Not a signatory") $ return $ getSigLinkFor slid doc
     if (signatorylinkdeliverymethod sl == PadDelivery)
         then do
             Log.debug $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show $ userid user)
