@@ -76,8 +76,8 @@ versionedAPI _version = choice [
 
 apiCallGetUserPersonalToken :: Kontrakcja m => m Response
 apiCallGetUserPersonalToken = api $ do
-    memail  <- lift $ getField "email"
-    mpasswd <- lift $ getField "password"
+    memail  <- getField "email"
+    mpasswd <- getField "password"
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
@@ -114,8 +114,8 @@ apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
-  oldpassword <- lift $ getField' "oldpassword"
-  mpassword <- lift $ getOptionalField asValidPassword "password"
+  oldpassword <- getField' "oldpassword"
+  mpassword <- getOptionalField asValidPassword "password"
   case (mpassword) of
      (Just password) ->
           if (verifyPassword (userpassword user) oldpassword)
@@ -133,7 +133,7 @@ apiCallChangeUserPassword = api $ do
 apiCallChangeUserLanguage :: Kontrakcja m => m Response
 apiCallChangeUserLanguage = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
-  mlang <- lift $  (join . (fmap langFromCode)) <$> getField "lang"
+  mlang <- (join . (fmap langFromCode)) <$> getField "lang"
   case mlang of
        Just lang -> do
          _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
@@ -148,9 +148,9 @@ apiCallUpdateUserProfile :: Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   ctx <- getContext
-  infoUpdate <- lift $ getUserInfoUpdate
+  infoUpdate <- getUserInfoUpdate
 
-  mlang <- lift $  (join . (fmap langFromCode)) <$> getField "lang"
+  mlang <- (join . (fmap langFromCode)) <$> getField "lang"
   when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = fromJust mlang  }
 
   _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
@@ -160,7 +160,7 @@ apiCallUpdateUserProfile = api $ do
   if (useriscompanyadmin user)
     then do
       company <- getCompanyForUser user
-      companyinfoupdate <- lift $ getCompanyInfoUpdate
+      companyinfoupdate <- getCompanyInfoUpdate
       _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
       Ok <$> (runJSONGenT $ value "changed" True)
     else  Ok <$> (runJSONGenT $ value "changed" True)
@@ -169,13 +169,13 @@ apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
-  mnewemail <- lift $ getOptionalField asValidEmail "newemail"
+  mnewemail <- getOptionalField asValidEmail "newemail"
   case (Email <$> mnewemail) of
     (Just newemail) -> do
        mexistinguser <- dbQuery $ GetUserByEmail newemail
        case mexistinguser of
          Just _existinguser -> do
-           lift $ sendChangeToExistingEmailInternalWarningMail user newemail
+           sendChangeToExistingEmailInternalWarningMail user newemail
            Ok <$> (runJSONGenT $ value "send" False)
          Nothing -> do
             changeemaillink <- newEmailChangeRequestLink (userid user) newemail
@@ -200,24 +200,24 @@ apiCallChangeEmail = api $ do
 apiCallSignup :: Kontrakcja m => m Response
 apiCallSignup = api $ do
   ctx <- getContext
-  memail <- lift $ getOptionalField asValidEmail "email"
+  memail <- getOptionalField asValidEmail "email"
   when (isNothing memail) $ do
     throwIO . SomeKontraException $ serverError "Email not provided or invalid"
   let email = fromJust memail
-  firstname <- lift $ fromMaybe "" <$> getOptionalField asValidName "firstName"
-  lastname <- lift $ fromMaybe "" <$> getOptionalField asValidName "lastName"
-  lang <- lift $ fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
-  lift $ switchLang lang
+  firstname <- fromMaybe "" <$> getOptionalField asValidName "firstName"
+  lastname <- fromMaybe "" <$> getOptionalField asValidName "lastName"
+  lang <- fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
+  switchLang lang
   muser <- dbQuery $ GetUserByEmail $ Email email
   muser' <- case muser of
                Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
                Nothing ->  do
                  company <- dbUpdate $ CreateCompany
-                 lift $ createUser (Email email) (firstname,lastname) (companyid company,True) lang
+                 createUser (Email email) (firstname,lastname) (companyid company,True) lang
   case muser' of
     Nothing -> runJSONGenT $ value "sent" $ False
     Just user -> do
-          lift $ sendNewUserMail user
+          sendNewUserMail user
           l <- newUserAccountRequestLink lang (userid user) AccountRequest
           asyncLogEvent "Send account confirmation email" [
                 UserIDProp $ userid user,
@@ -239,7 +239,7 @@ apiCallSignup = api $ do
 apiCallSendPasswordReminder :: Kontrakcja m => m Response
 apiCallSendPasswordReminder = api $ do
   ctx <- getContext
-  memail <- lift $ getOptionalField asValidEmail "email"
+  memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> runJSONGenT $ value "send" False >> value "badformat" True
     Just email -> do
@@ -267,12 +267,12 @@ apiCallSendPasswordReminder = api $ do
 
 apiCallAddFlash :: Kontrakcja m => m Response
 apiCallAddFlash = api $  do
-  color <- lift $ getField' "color"
-  content <- lift $ getField' "content"
+  color <- getField' "color"
+  content <- getField' "content"
   case color of
-       "red"   -> lift $ addFlashMsg (FlashMessage OperationFailed content)
-       "green" -> lift $ addFlashMsg (FlashMessage OperationDone content)
-       "blue"  -> lift $ addFlashMsg (FlashMessage SigningRelated content)
+       "red"   -> addFlashMsg (FlashMessage OperationFailed content)
+       "green" -> addFlashMsg (FlashMessage OperationDone content)
+       "blue"  -> addFlashMsg (FlashMessage SigningRelated content)
        _ -> return ()
   Ok <$> (runJSONGenT $ return ())
 
@@ -282,8 +282,8 @@ apiCallPaymentInfo = api $ do
   admin <- isAdmin <$> getContext
   time <- ctxtime <$> getContext
 
-  docsusedthismonth <- lift $ dbQuery $ GetDocsSentBetween (userid user) (beginingOfMonth time) time
-  mpaymentplan <- lift $ dbQuery $ GetPaymentPlan $ (usercompany user)
+  docsusedthismonth <- dbQuery $ GetDocsSentBetween (userid user) (beginingOfMonth time) time
+  mpaymentplan <- dbQuery $ GetPaymentPlan $ (usercompany user)
   quantity <- dbQuery $ GetCompanyQuantity (usercompany user)
 
   let paymentplan = maybe "free" (getNonTrialPlanName . ppPricePlan) mpaymentplan

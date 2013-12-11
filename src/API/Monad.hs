@@ -24,14 +24,12 @@ module API.Monad (
                  Ok(..),
                  Created(..),
                  Accepted(..),
-                 APIMonad(..),
                  getAPIUser,
                  getAPIUserWithPad,
                  FormEncoded(..)
                  )
   where
 
-import Control.Monad.Trans
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Text.JSON hiding (Ok)
@@ -41,7 +39,6 @@ import Control.Monad.Error
 import Control.Applicative
 import Network.HTTP (urlEncodeVars)
 
-import Crypto.RNG
 import DB
 import Kontra
 import User.Model
@@ -52,14 +49,11 @@ import OAuth.Util
 import OAuth.Model
 import Doc.Rendering
 import Util.Actor
-import Text.StringTemplates.Templates
 import Util.CSVUtil
 import Util.ZipUtil
 import Control.Exception.Lifted
 import Control.Monad.Base
 import Data.Typeable
-import qualified Log as Log
-import qualified Amazon as AWS
 
 -- | Respond with a 200 Created status
 data Ok a = Ok a
@@ -194,19 +188,6 @@ instance ToAPIResponse FormEncoded where
     let r1 = Web.toResponse $ urlEncodeVars kvs
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
 
-newtype APIMonad m a = AM { runAPIMonad :: m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadIO, TemplatesMonad, Log.MonadLog, AWS.AmazonMonad)
-
-instance MonadTrans APIMonad where
-  lift = AM
-
-deriving instance (MonadBase IO m) => MonadBase IO (APIMonad m)
-deriving instance (MonadDB m) => MonadDB (APIMonad m)
-
-instance KontraMonad m => KontraMonad (APIMonad m) where
-  getContext = lift getContext
-  modifyContext = lift . modifyContext
-
 jsonError :: JSONGen () -> JSValue
 jsonError rest = runJSONGen $ do
   value "status" "error"
@@ -216,32 +197,32 @@ jsonError rest = runJSONGen $ do
 
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
-api :: (Kontrakcja m, ToAPIResponse v) => APIMonad m v -> m Response
-api acc = (toAPIResponse <$> runAPIMonad acc)
+api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
+api acc = (toAPIResponse <$> acc)
           `catches` [ Handler $ \ex@(SomeKontraException e) ->
                         return $ ((toAPIResponse $ toJSValue e) { rsCode = httpCodeFromSomeKontraException ex })
                     ]
 
 
-apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> APIMonad m b
-apiGuardL' acc = apiGuard' =<< lift acc
+apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> m b
+apiGuardL' acc = apiGuard' =<< acc
 
-apiGuardL :: (Kontrakcja m, APIGuard m a b) => APIError -> m a -> APIMonad m b
-apiGuardL e acc = apiGuard e =<< lift acc
+apiGuardL :: (Kontrakcja m, APIGuard m a b) => APIError -> m a -> m b
+apiGuardL e acc = apiGuard e =<< acc
 
-apiGuard' :: (MonadBase IO m, APIGuard m a b) => a -> APIMonad m b
+apiGuard' :: (MonadBase IO m, APIGuard m a b) => a -> m b
 apiGuard' a = guardEither a >>= either (throwIO . SomeKontraException) return
 
-apiGuard :: (MonadBase IO m, APIGuard m a b) => APIError -> a -> APIMonad m b
+apiGuard :: (MonadBase IO m, APIGuard m a b) => APIError -> a -> m b
 apiGuard e a = guardEither a >>= either (const $ (throwIO . SomeKontraException) e) return
 
-apiGuardJustM :: (MonadBase IO m) => APIError -> APIMonad m (Maybe a) -> APIMonad m a
+apiGuardJustM :: (MonadBase IO m) => APIError -> m (Maybe a) -> m a
 apiGuardJustM e a = a >>= maybe ((throwIO . SomeKontraException) e) return
 
 
 -- | Unify the different types of guards with this class
 class MonadBase IO m => APIGuard m a b | a -> b where
-  guardEither :: a -> APIMonad m (Either APIError b)
+  guardEither :: a -> m (Either APIError b)
 
 instance MonadBase IO m => APIGuard m (Maybe b) b where
   guardEither Nothing = return $ Left $ forbidden "The resource you are trying to access does not exist or you do not have permission to access it."
@@ -268,7 +249,7 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
 -- get the user for the api; it can either be
 --  1. OAuth using Authorization header
 --  2. Session for Ajax client. ! Only if authorization header is empty !
-getAPIUser :: Kontrakcja m => APIPrivilege -> APIMonad m (User, Actor, Bool)
+getAPIUser :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUser priv = do
   moauthuser <- getOAuthUser priv
   case moauthuser of
@@ -280,7 +261,7 @@ getAPIUser priv = do
         Just (user, actor) -> return (user, actor, False)
         Nothing -> (throwIO . SomeKontraException) notLoggedIn'
 
-getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> APIMonad m (User, Actor, Bool)
+getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
   moauthuser <- getOAuthUser priv
   case moauthuser of
@@ -293,24 +274,24 @@ getAPIUserWithPad priv = do
         Nothing -> (throwIO . SomeKontraException) notLoggedIn'
 
 
-getSessionUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
+getSessionUser :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)
 
-getSessionUserWithPad :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
+getSessionUserWithPad :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUserWithPad = do
   ctx <- getContext
   case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)
 
-getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (Either String (User, Actor)))
+getOAuthUser :: Kontrakcja m => APIPrivilege -> m (Maybe (Either String (User, Actor)))
 getOAuthUser priv = do
   ctx <- getContext
-  eauth <- lift $ getAuthorization
+  eauth <- getAuthorization
   case eauth of
     Nothing       -> return Nothing
     Just (Left l) -> return $ Just $ Left l
