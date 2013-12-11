@@ -1061,6 +1061,10 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);
+                if (s.author())
+                  field.setValue("checked");
+                else
+                  field.setValue("");
                 return true;
 
             }
