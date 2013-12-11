@@ -268,6 +268,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                         });
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.setShouldBeFilledBySender(false);
                             field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();

@@ -629,6 +629,7 @@ window.Signatory = Backbone.Model.extend({
                 pn.setShouldBeFilledBySender(false);
             } else if(pn && pn.authorObligatory == 'optional') {
                 pn.makeOptional();
+                pn.setShouldBeFilledBySender(false);
             }
         }
     },
@@ -662,6 +663,7 @@ window.Signatory = Backbone.Model.extend({
                 pn.setShouldBeFilledBySender(false);
             } else if(pn && pn.authorObligatory == 'optional') {
                 pn.makeOptional();
+                pn.setShouldBeFilledBySender(false);
             }
         }
     },
@@ -692,6 +694,7 @@ window.Signatory = Backbone.Model.extend({
             email.setShouldBeFilledBySender(false);
         } else if(email.authorObligatory == 'optional') {
             email.makeOptional();
+            email.setShouldBeFilledBySender(false);
         }
     },
     needsSignature: function() {
