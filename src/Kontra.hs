@@ -20,7 +20,6 @@ module Kontra
 
 import Context
 import Control.Applicative
-import Control.Conditional (ifM)
 import Control.Logic
 import Control.Monad.Base
 import Control.Monad.Reader
@@ -100,13 +99,21 @@ isSales ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxsalesacc
    Will 404 if not logged in as an admin.
 -}
 onlyAdmin :: Kontrakcja m => m a -> m a
-onlyAdmin m = ifM (isAdmin <$> getContext) m respond404
+onlyAdmin m = do
+  admin <- isAdmin <$> getContext
+  if admin
+    then m
+    else respond404
 
 {- |
    Will 404 if not logged in as a sales admin.
 -}
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
-onlySalesOrAdmin m = ifM ((isAdmin ||^ isSales) <$> getContext) m respond404
+onlySalesOrAdmin m = do
+  admin <- (isAdmin ||^ isSales) <$> getContext
+  if admin
+    then m
+    else respond404
 
 {- |
     Will 404 if the testing backdoor isn't open.
