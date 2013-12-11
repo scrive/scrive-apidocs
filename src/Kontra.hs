@@ -20,6 +20,7 @@ module Kontra
 
 import Context
 import Control.Applicative
+import Control.Conditional (ifM)
 import Control.Logic
 import Control.Monad.Base
 import Control.Monad.Reader
@@ -38,7 +39,6 @@ import Text.StringTemplates.Templates
 import Templates
 import User.Model
 import Utils.List
-import Utils.Monad
 import Log
 import qualified Amazon as AWS
 
