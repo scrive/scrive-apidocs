@@ -1162,7 +1162,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where
       sqlSet "file_id" fid
       sqlSet "document_id" did
       sqlSet "document_status" Preparation
-      sqlSetCmd "seal_status" "NULL"
+      sqlSet "seal_status" Missing
       sqlWhereExists $ sqlSelect "documents" $ do
         sqlWhereDocumentIDIs did
         sqlWhereDocumentStatusIs Preparation
