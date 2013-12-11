@@ -32,13 +32,13 @@ tableDocuments = tblTable {
 tableMainFiles :: Table
 tableMainFiles = tblTable {
     tblName = "main_files"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "document_status", colType = SmallIntT, colNullable = False }
-    , tblColumn { colName = "seal_status", colType = SmallIntT }
+    , tblColumn { colName = "seal_status", colType = SmallIntT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
