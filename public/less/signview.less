@@ -395,8 +395,15 @@
       margin-top: 6px;
       color: black;
     }
+
     .file {
       vertical-align : top;
+
+      .item {
+        // We want this item to have constant size. Arrow is pointing at it, and we want
+        // arrow not to jump while this box is filled with loading box
+        height: 42px;
+      }
     }
 
     .loading {
