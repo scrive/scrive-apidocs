@@ -154,7 +154,7 @@
         updateDaysToSign : function() {
            var self = this;
            var doc = self.model.document();
-           self.daystosigndaysinput.setValue(doc.daystosign());
+           self.daystosigndaysinput.setValue((doc.daystosign() == 1 && self.daystosigndaysinput.value() == "") ? "" :  doc.daystosign() );
            self.daystosigncalendar.setDays(doc.daystosign());
            self.daystoremindcalendar.setMax(doc.daystosign());
         },
@@ -177,13 +177,20 @@
                         });
 
             view.daystosigndaysinput = new InfoTextInput({
-                infotext: doc.daystosign(),
+                infotext: "1",
                 value: doc.daystosign(),
                 cssClass : 'design-view-action-process-left-column-deadline-field',
+                onBlur: function() {
+                  view.daystosigndaysinput.setValue(doc.daystosign());
+                },
                 onChange: function(v) {
-                    v = parseInt(v);
-                    if (v != undefined && !isNaN(v) && v != doc.daystosign()) {
-                      doc.setDaystosign(v);
+                    days = parseInt(v);
+                    if (days != undefined && !isNaN(days) && (days + "" == v) && days != doc.daystosign()) {
+                      doc.setDaystosign(days);
+                    } else if (v == "" && doc.daystosign() != 1) {
+                      doc.setDaystosign(1);
+                    } else if (v != "" && doc.daystosign() + "" != v) {
+                      view.daystosigndaysinput.setValue(doc.daystosign());
                     }
                 }
             });

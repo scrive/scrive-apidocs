@@ -536,14 +536,14 @@ apiCallSetAutoReminder did =  api $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     when (documentstatus doc /= Pending ) $ do
           throwIO . SomeKontraException $ (conflictError "Document is not pending")
-    mdays <- lift $ getOptionalField asValidNumber "days"
+    mdays <- getOptionalField asValidNumber "days"
     days <- case mdays of
          Nothing -> return Nothing
          Just n -> if (n < 1 || (isJust (documenttimeouttime doc) && n `daysAfter` (ctxtime ctx) > fromJust (documenttimeouttime doc)))
                             then throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and number of days left till document deadline")
                             else return $ Just n
-    timezone <- lift $ mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
-    lift $ setAutoreminder (documentid doc) days timezone
+    timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+    setAutoreminder (documentid doc) days timezone
     triggerAPICallbackIfThereIsOne doc
     newdocument <- dbQuery $ GetDocumentByDocumentID $ did
     Accepted <$> documentJSON (Just $ user) False True True Nothing Nothing newdocument

@@ -15,7 +15,6 @@ import MinutesTime
 import Doc.Model
 import Doc.AutomaticReminder.Tables
 import AppConf
-import Control.Monad.Trans
 import Context
 import Doc.DocStateData
 import Data.Functor
@@ -35,6 +34,10 @@ import qualified DB.TimeZoneName as TimeZoneName
 import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Base
+
+import Templates
+import Utils.Default (defaultValue)
 
 data DocumentAutomaticReminder = DocumentAutomaticReminder {
     reminderDocumentID :: DocumentID
@@ -62,7 +65,7 @@ documentAutomaticReminder = Action {
         reminderDocumentID = document_id
       , reminderSentTime = stime
       } : acc
-    sentReminder :: (Log.MonadLog m, CryptoRNG m, MonadDB m, MonadIO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
+    sentReminder :: (Log.MonadLog m, CryptoRNG m, MonadDB m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
     sentReminder dar = do
       now <- getMinutesTime
       appConf <- asks sdAppConf
@@ -78,7 +81,7 @@ documentAutomaticReminder = Action {
                                , mctxmaybeuser = Nothing
                                }
       gt <- getGlobalTemplates
-      _ <- runReaderT (sendAllReminderEmails mctx (systemActor now) (reminderDocumentID dar) True)  gt
+      _ <- runTemplatesT (defaultValue, gt) (sendAllReminderEmails mctx (systemActor now) (reminderDocumentID dar) True)
       void $ dbUpdate $ DeleteAction documentAutomaticReminder (reminderDocumentID dar)
 
 
