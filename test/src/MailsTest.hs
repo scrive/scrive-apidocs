@@ -32,6 +32,7 @@ import Util.Actor
 import qualified Log as Log
 import Control.Concurrent
 import Data.Maybe
+import DB.TimeZoneName (mkTimeZoneName)
 
 mailsTests :: [String] -> TestEnvSt -> Test
 mailsTests params env  = testGroup "Mails" [
@@ -93,7 +94,8 @@ sendDocumentMails mailTo author = do
         now <- getMinutesTime
         let sigs = [defaultValue {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True} , defaultValue {signatoryfields = islf, signatoryispartner = True}]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
-        randomUpdate $ PreparationToPending docid (systemActor now) Nothing
+        tz <- mkTimeZoneName "Europe/Stockholm"
+        randomUpdate $ PreparationToPending docid tz (systemActor now)
         d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
         randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)

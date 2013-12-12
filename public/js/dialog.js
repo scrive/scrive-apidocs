@@ -44,11 +44,6 @@ var buildDialog = function(cfg) {
   fillWith(content, cfg.content);
   center.append(content);
 
-  modalcontainer.css('top', $(window).scrollTop());
-  modalcontainer.css('margin-top', ($(window).height()- 200) /2);
-  modalcontainer.css('left', $(window).scrollLeft());
-  modalcontainer.css('margin-left', ($(window).width() - 650) / 2);
-
   $('body').append(dialog);
   return dialog;
 };
@@ -62,26 +57,34 @@ window.ScreenBlockingDialog = {
         return dialog;
       }
     },
+    fixposition : function(dialog) {
+      var modalcontainer = $('.modal-container', dialog);
+      modalcontainer.css('top', $(window).scrollTop());
+      modalcontainer.css('margin-top', ($(window).height()- 200) /2);
+      modalcontainer.css('left', $(window).scrollLeft());
+      modalcontainer.css('margin-left', ($(window).width() - 650) / 2);
+    },
     open: function (cfg) {
-         var dialog = ScreenBlockingDialog.dialog(cfg);
-         var header = $('.screenblockingheader', dialog);
-         fillWith(header, cfg.header);
-         var subheader = $('.screenblockingsubheader', dialog);
-         fillWith(subheader, cfg.subheader);
-         var content = $('.screenblockingcontent', dialog);
-         fillWith(content, cfg.content);
-         dialog.css('display','block');
-         dialog.addClass('active');
-         return dialog;
+      var dialog = ScreenBlockingDialog.dialog(cfg);
+      this.fixposition(dialog);
+      var header = $('.screenblockingheader', dialog);
+      fillWith(header, cfg.header);
+      var subheader = $('.screenblockingsubheader', dialog);
+      fillWith(subheader, cfg.subheader);
+      var content = $('.screenblockingcontent', dialog);
+      fillWith(content, cfg.content);
+      dialog.css('display','block');
+      dialog.addClass('active');
+      return dialog;
     },
     close : function() {
-       var dialog = $('.screenblockingdialog');
-       if (dialog.size() > 0 ) {
-         dialog.removeClass("active");
-         if (BrowserInfo.isIE())
-           dialog.css('display','none');
-         else // We need to hide this dialog, else it will cause screen to expand if size changed.
-           setTimeout(function() { if (!dialog.hasClass('active')) dialog.css('display','none');}, 500);
+      var dialog = $('.screenblockingdialog');
+      if (dialog.size() > 0 ) {
+        dialog.removeClass("active");
+        if (BrowserInfo.isIE())
+          dialog.css('display','none');
+        else // We need to hide this dialog, else it will cause screen to expand if size changed.
+          setTimeout(function() { if (!dialog.hasClass('active')) dialog.css('display','none');}, 500);
       }
     }
 };

@@ -88,22 +88,30 @@
   vertical-align: middle;
 }
 
-.design-view-action-process-left-column-deadline {
+.design-view-action-process-left-column-deadline,
+.design-view-action-process-left-column-remindline {
   .design-view-action-row;
 }
 
-.design-view-action-process-left-column-deadline-label {
+.design-view-action-process-left-column-deadline-label,
+.design-view-action-process-left-column-remindline-label {
   .design-view-action-label;
 }
 
-.design-view-action-process-left-column-deadline-field {
-  width: 50px;
+.design-view-action-process-left-column-deadline-field,
+.design-view-action-process-left-column-remindline-field {
   display: inline-block;
-  vertical-align: middle;
   margin-right: 8px;
+  width: 30px;
+  vertical-align: middle;
+
+  input {
+    text-align: center;
+  }
 }
 
-.design-view-action-process-left-column-deadline-tag {
+.design-view-action-process-left-column-deadline-tag,
+.design-view-action-process-left-column-remindline-tag  {
   display: inline-block;
 }
 

@@ -34,6 +34,7 @@ import MinutesTime
 import Test.HUnit.Base (Assertion)
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
+import DB.TimeZoneName (mkTimeZoneName)
 
 import Data.Functor
 import Data.Maybe
@@ -348,7 +349,8 @@ testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
-  randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
+  tz <- mkTimeZoneName "Europe/Stockholm"
+  randomUpdate $ \t->PreparationToPending (documentid doc) tz (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current PreparationToPendingEvidence) lg
@@ -387,7 +389,8 @@ testSaveSigAttachmentEvidenceLog = do
                                }
   randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
                         [sa] (systemActor t)
-  randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
+  tz <- mkTimeZoneName "Europe/Stockholm"
+  randomUpdate $ \t->PreparationToPending (documentid doc) tz (systemActor t)
   randomUpdate $ \t->SaveSigAttachment doc (signatorylinkid $ (documentsignatorylinks doc) !! 0) sa file (systemActor t)
 
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -409,7 +412,8 @@ testDeleteSigAttachmentAlreadySigned = do
                                }
   _<-randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ sl)
                         [sa] (systemActor t)
-  randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
+  tz <- mkTimeZoneName "Europe/Stockholm"
+  randomUpdate $ \t->PreparationToPending (documentid doc) tz (systemActor t)
   randomUpdate $ \t->SaveSigAttachment doc (signatorylinkid $ sl) sa file (systemActor t)
 
   randomUpdate $ \t->DeleteSigAttachment doc (signatorylinkid $ sl) sa (systemActor t)
@@ -1279,7 +1283,8 @@ testPreparationToPendingNotSignableLeft = doTimes 10 $ do
          }
   time <- rand 10 arbitrary
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
-    randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
+    tz <- mkTimeZoneName "Europe/Stockholm"
+    randomUpdate $ PreparationToPending (documentid doc) tz (systemActor time)
 
 testPreparationToPendingSignableNotPreparationLeft :: TestEnv ()
 testPreparationToPendingSignableNotPreparationLeft = doTimes 10 $ do
@@ -1290,13 +1295,15 @@ testPreparationToPendingSignableNotPreparationLeft = doTimes 10 $ do
          }
   time <- rand 10 arbitrary
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
-    randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
+    tz <- mkTimeZoneName "Europe/Stockholm"
+    randomUpdate $ PreparationToPending (documentid doc) tz (systemActor time)
 
 testPreparationToPendingNotLeft :: TestEnv ()
 testPreparationToPendingNotLeft = doTimes 100 $ do
   (time, did) <- rand 10 arbitrary
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    randomUpdate $ PreparationToPending did (systemActor time) Nothing
+    tz <- mkTimeZoneName "Europe/Stockholm"
+    randomUpdate $ PreparationToPending did tz (systemActor time)
 
 testPreparationToPendingSignablePreparationRight :: TestEnv ()
 testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
@@ -1309,7 +1316,8 @@ testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
           ((==) 1 . length . filter isAuthor . documentsignatorylinks)
          }
   time <- rand 10 arbitrary
-  randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
+  tz <- mkTimeZoneName "Europe/Stockholm"
+  randomUpdate $ PreparationToPending (documentid doc) tz (systemActor time)
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   assertInvariants ndoc

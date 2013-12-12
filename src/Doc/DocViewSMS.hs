@@ -72,9 +72,9 @@ smsInvitationToAuthor :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Documen
 smsInvitationToAuthor doc sl = do
   mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc sl)
 
-smsReminder :: (KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS
-smsReminder doc sl = do
-  mkSMS doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsReminder" (smsFields doc sl)
+smsReminder :: (HasMailContext c, MonadDB m, TemplatesMonad m) =>  c ->  Document -> SignatoryLink -> m SMS
+smsReminder ctx doc sl = do
+  mkSMS' ctx doc sl (Invitation (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsReminder" (smsFields' ctx doc sl)
 
 smsClosedNotification :: (HasMailContext c,MonadDB m, TemplatesMonad m) => c -> Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification ctx doc sl withEmail sealFixed = do
