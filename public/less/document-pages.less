@@ -1,66 +1,76 @@
 @import 'branding/variables';
 @import 'designview/util';
 
+// TODO: move to variables.less?
 @page-div-width: 943px;
-
 @a4-width-in-pt: 595px;
 @a4-height-in-pt: 842px;
 
 .document-pages {
-  text-align: center;
-  margin: 0 auto;
+  margin:0 auto;
   position: relative;
-  width:943px;
+  text-align: center;
+  width: 943px;
+
   .pagediv {
-    width: @page-div-width;
-    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
     position: relative;
+    width: @page-div-width;
+
+    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
   }
 
   .waiting4page {
-    margin: 10px auto;
-    width: @page-div-width;
-    height: 100px;
-    border: 1px solid #777;
-    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
     background-color: #fafafa;
     background-image: url(/img/wait30trans.gif);
-    background-repeat: no-repeat;
     background-position: center center;
+    background-repeat: no-repeat;
+    border: 1px solid #777;
+    height: 100px;
+    margin: 10px auto;
+    width: @page-div-width;
+
+    .box-shadow(0px 0px 8px rgba(80, 80, 80, 0.31));
   }
 
   .nofilediv {
-    width: @page-div-width;
-    min-height : 600px;
-    text-align: center;
     margin: 10px auto;
+    min-height: 600px;
+    text-align: center;
+    width: @page-div-width;
   }
+
   .nofilediv .innerbox {
-    width: 900px;
     margin:60px auto;
+    width: 900px;
+
     .button-box {
-      width : 320px;
-      height : 30px;
-      margin : 20px auto;
+      height: 30px;
+      margin: 20px auto;
+      width: 320px;
     }
+
     .inner-description-left {
-      width : 400px;
-      margin : 30px auto 40px auto;
-      float : left;
+      float: left;
+      margin: 30px auto 40px auto;
+      width: 400px;
     }
+
     .inner-description-right{
-      width : 400px;
-      margin : 30px auto 40px auto;
-      float : right;
+      float: right;
+      margin: 30px auto 40px auto;
+      width: 400px;
     }
+
     h4 {
-      color : #000000;
+      color: @black;
     }
   }
+
   .pagejpg {
-    /* Show page image in full width and height comes from aspect ratio of bitmap */
-    width: 100%;
+    // Show page image in full width and height comes from aspect ratio of bitmap
+    
     background-color: #fafafa;
+    width: 100%;
   }
 
   .hline {
@@ -69,108 +79,120 @@
   }
 
   .nofilediv {
-    width: @page-div-width;
-    min-height : 600px;
-    text-align: center;
     margin: 10px auto;
+    min-height: 600px;
+    text-align: center;
+    width: @page-div-width;
   }
+
   .nofilediv .innerbox {
+    margin: 60px auto;
     width: 900px;
-    margin:60px auto;
+
     .button-box {
-      width : 320px;
-      height : 30px;
-      margin : 20px auto;
+      margin: 20px auto;
+      height: 30px;
+      width: 320px;
     }
+
     .inner-description-left {
-      width : 400px;
-      margin : 30px auto 40px auto;
-      float : left;
+      float: left;
+      margin: 30px auto 40px auto;
+      width: 400px;
     }
+
     .inner-description-right{
-      width : 400px;
-      margin : 30px auto 40px auto;
-      float : right;
+      float: right;
+      margin: 30px auto 40px auto;
+      width: 400px;
     }
+
     h4 {
-      color : #000000;
+      color: @black;
     }
   }
+
   .pagejpg {
-    /* Show page image in full width and height comes from aspect ratio of bitmap */
-    width: 100%;
+    // Show page image in full width and height comes from aspect ratio of bitmap
+
     background-color: #fafafa;
+    width: 100%;
   }
 
   .hline {
-    height: 1px;
-    left: 0px;
     background: #dedede;
+    height: 1px;
+    left: 0px;
     position: absolute;
   }
 
   .vline {
-    width: 1px;
-    top: 0px;
     background: #dedede;
+    top: 0px;
     position: absolute;
+    width: 1px;
   }
 
   .placedfield {
     position: absolute;
+
     &.active {
-      z-index : 1;
+      z-index: 1;
     }
   }
 }
 
-/* This .placedfieldvalue and .placedcheckbox have to be outside of
- * everything as this is used for draggables which are direct children
- * of BODY.
- */
+
+// This .placedfieldvalue and .placedcheckbox have to be outside of
+// everything as this is used for draggables which are direct children of BODY.
+// -------------------------
 
 .placedfieldvalue {
-  white-space: nowrap;
+  background-color: @white;
   font-size: 10px * @page-div-width / @a4-width-in-pt;
   line-height: 10px * @page-div-width / @a4-width-in-pt;
   margin: 8px 7px 6px 7px;
-  background-color: @white;
-  filter: ~"alpha(opacity=95)";
   -moz-opacity: 0.95;
+  filter: ~"alpha(opacity=95)";
   opacity: 0.95;
+  white-space: nowrap;
 }
-/*  In design view we have also border so we want to change margin to padding.
- *  But in other view we don't want fields overlaping if texts are not overlaping.
- */
+
+
+// In design view we have also border so we want to change margin to padding.
+// But in other view we don't want fields overlaping if texts are not overlaping.
+// -------------------------
+
 .designview .placedfieldvalue {
   margin: 0;
   padding: 8px 7px 6px 7px;
 }
 
 .placedcheckbox {
-  background: url("../img/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
+  background: url(../img/checkbox-blue-unchecked.png) no-repeat scroll 0 0;
   height: 12px;
   width: 12px;
 }
 
 .placedcheckbox:active {
-  background: url("../img/checkbox-blue-active.png") no-repeat scroll 0 0;
+  background: url(../img/checkbox-blue-active.png) no-repeat scroll 0 0;
 }
 
 .placedcheckbox.checked {
-  background: url("../img/checkbox-blue-checked.png") no-repeat scroll 0 0;
+  background: url(../img/checkbox-blue-checked.png) no-repeat scroll 0 0;
 }
 
 .signatureBox {
-  min-width: 10px;
-  text-align: center;
-  border: 1px solid #999999;
-  filter: ~"alpha(opacity=95)";
-  -moz-opacity: 0.95;
-  opacity: 0.95;
   background-color: @white;
+  border: 1px solid #999999;
+  min-width: 10px;
+  -moz-opacity: 0.95;
+  filter: ~"alpha(opacity=95)";
+  opacity: 0.95;
   -moz-border-radius: 2px;
   -webkit-border-radius: 2px;
+  border-radius: 2px;
+  text-align: center;
 }
 
 .signatureBox.forDrawing{
@@ -178,15 +200,15 @@
 }
 
 .signatureBox .signatureHeader {
-  background-image: url("/img/drag.png");
-  background-position: 2px 2px;
+  background-image: url(/img/drag.png);
   background-repeat: no-repeat;
-  width: 100%;
+  background-position: 2px 2px;
+  color: #666666;
   font-size: 12px;
   font-style: italic;
-  color: #666666;
-  padding-top:2px;
-  padding-bottom:2px;
   min-height: 10px;
   overflow: auto;
+  padding-bottom: 2px;
+  padding-top: 2px;
+  width: 100%;
 }

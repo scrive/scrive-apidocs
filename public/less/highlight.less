@@ -1,41 +1,50 @@
-/* Highlight styling */
+// Highlight styling
+// -------------------------
 
 .element-highlight {
-  position: fixed;
-  top: 0; left: 0; bottom: 0; right: 0; // overriden by js
-  z-index: 2000;
   background: url(/img/highlight-bg.png);
   background-repeat: repeat;
+  bottom: 0; // overriden by js
   height: 100%;
+  left: 0; // overriden by js
+  position: fixed;
+  right: 0; // overriden by js
+  top: 0; // overriden by js
   width: 100%;
+  z-index: 2000;
 }
 
 .highlight-explanation {
   position: fixed;
   z-index: 55000;
 
-  .text-shadow { text-shadow: black -1px 1px; }
+  .text-shadow {
+    text-shadow: black -1px 1px;
+  }
 
   h1 {
     color: #f7f7f7;
-    font-weight: 300;
     font-size: 32px;
+    font-weight: 300;
     letter-spacing: 0px;
     line-height: 42px;
+    
     .text-shadow;
+
     &.arrowed:before {
       content: url('/img/highlight-arrow.png');
-      position: absolute;
       left: -50px;
+      position: absolute;
       top: 0;
     }
   }
 
   h3 {
     color: #f7f7f7;
-    font-weight: 400;
     font-size: 16px;
+    font-weight: 400;
     line-height: 20px;
+    
     .text-shadow;
   }
 }

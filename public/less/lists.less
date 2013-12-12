@@ -3,14 +3,16 @@
 .list-container {
 
   .table {
-    border-radius: 0 0 5px 5px;
     -moz-border-radius: 0 0 5px 5px;
     -webkit-border-radius: 0 0 5px 5px;
+    border-radius: 0 0 5px 5px;
+    
     table {
-      background: #fff;
+      background: @white;
       border: 1px solid @dark-border;
-      width: 100%;
       table-layout: fixed;
+      width: 100%;
+
       th {
         background-color: @slightly-darker-grey-background;
         height: 33px;
@@ -18,21 +20,24 @@
         padding-left: 15px;
         text-align: left;
         vertical-align: bottom;
+
         span {
-          color: #000 !important;
+          color: @black !important;
           font-family: @font-family-source;
           font-size : 15px;
           font-weight: 300;
           text-decoration: none;
+
           &.sortable {
             cursor: pointer;
+            
             &:hover {
               color: @blue-dark !important;
             }
           }
         }
-
       }
+
       td {
         color: #666;
         height: 31px;
@@ -40,45 +45,52 @@
         font-size: 15px;
         font-weight: 300;
         margin-bottom: 1px;
-        padding-left: 15px;
-        padding-bottom: 3px;
-        padding-top: 3px;
-        padding-right: 5px;
-        overflow-x:hidden;
+        padding: 3px 5px 3px 15px;
+        overflow-x: hidden;
+        
         &.right {
           padding-right: 12px;
           text-align: right;
         }
+
         a {
           color: #666;
+
           &:hover {
-            color: #000;
+            color: @black;
           }
         }
       }
+
       tr {
         border-top: 1px solid #e0e0e0;
+
         &.odd td {
           background: #f6f6f6;
         }
       }
     }
+
     .table-paginate {
+
       .pages {
         color: #999;
+        font-size: 13px;
         margin: 10px auto 5px;
         text-align: center;
         width: 600px;
-        font-size: 13px;
       }
+
       strong {
-        color: #000;
+        color: @black;
         display: block;
       }
+
       .page-change{
-        padding: 3px;
-        color: #007CAC;
+        color: #007cac;
         cursor: pointer;
+        padding: 3px;
+
         &.current{
           color: #333333;
           cursor: default;
@@ -87,57 +99,66 @@
     }
   }
 
-
-
   .col {
     margin: 0 20px;
-    padding-top: 5px;
-    padding-bottom: 14px;
     max-width: 800px;
+    padding-bottom: 14px;
+    padding-top: 5px;
+    
     &.float-right {
       margin: 0 20px 0 0;
     }
+
     &.float-left {
       margin: 0 0 0 20px;
+      
       a {
-        margin-right:7px;
+        margin-right: 7px;
       }
     }
   }
 
-  /* Select boxes and search boxes for lists */
+
+  // Select boxes and search boxes for lists
+  // -------------------------
+
   .list-search {
     margin-right: 8px;
     width: 230px;
   }
 
   .subbox {
-    padding-top: 10x;
+    display: block;
     height : 40px;
     padding-bottom: 15px;
-    display : block;
-    padding-right: 10px;
     padding-left: 20px;
+    padding-right: 10px;
+    padding-top: 10x; // TODO: should this be px, or should it be removed?
+    
     .empty {
-      height : 0px;
+      height: 0px;
     }
-    .options-box  {
-      float: right;
 
+    .options-box {
+      float: right;
     }
   }
-  .actionButton, .select  {
-    margin-right : 8px;
+
+  .actionButton,
+  .select  {
+    margin-right: 8px;
+
     .select-button .select-button-label{
-      color : #000;
+      color : @black;
     }
+
     .select-opts {
-      color : #000;
+      color : @black;
     }
   }
 
   th .checkbox {
-    margin-top: 20px;
     margin-bottom: 6px;
+    margin-top: 20px;
   }
 }

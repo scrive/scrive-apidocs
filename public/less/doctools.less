@@ -1,6 +1,7 @@
 @import 'branding/variables';
 
 .authorattachments {
+  
   &.small-screen {
 
     > h2 {
@@ -9,7 +10,6 @@
       font-size: x-large !important;
       font-weight: bold !important;
     }
-
 
     .list .desc {
       width: 500px;
@@ -31,23 +31,25 @@
   }
 
   .icon {
-    float: left;
-    width: 13px;
-    height: 14px;
-    margin-top: 3px;
-    margin-right: 2px;
     background: url(../img/attachment-icon.png);
+    float: left;
+    height: 14px;
+    margin-right: 2px;
+    margin-top: 3px;
+    width: 13px;
   }
 
   .item {
-    margin-bottom : 18px;
-    margin-right  : 10px;
+    margin-bottom: 18px;
+    margin-right: 10px;
   }
 
-  .desc .item .label { margin-top: 6px; }
+  .desc .item .label {
+    margin-top: 6px;
+  }
 
   .item .name {
-    color: black;
+    color: @black;
   }
 
   .item a {
@@ -59,42 +61,47 @@
     width: 580px;
     margin-left: 23px;
     margin-right: 20px;
+
     & .signview {
       margin-right: -10px;
       width: 610px;
     }
+
     .desc {
       width: 420px;
+      
       .description {
         font-style: italic;
       }
     }
     .file {
-      vertical-align:top
+      vertical-align: top;
     }
   }
 }
 
 .document-history-container {
-  margin-top: 10px;
   background-color: @white;
-  width: 1018px;
   border: 1px solid #868686;
   margin: 0 auto 25px;
   min-height: 100px;
+  width: 1018px;
 
   .tab-container {
     border-color: transparent;
   }
 
   .list-container .table {
-    border: none;
     background-color: @white;
+    border: none;
 
     thead {
       background-color: #f3f3f3;
+      
       tr {
+        
         th {
+          
           span {
             font-size: 14px;
           }
@@ -103,51 +110,50 @@
     }
 
     tbody {
+      
       tr td.row {
         line-height: 24px;
-        padding-top: 5px;
         padding-bottom: 5px;
+        padding-top: 5px;
       }
     }
   }
 
-  .list-container{
+  .list-container {
     border: none;
   }
 
-  .document-history-footer{
+  .document-history-footer {
+    height: 30px;
+    padding: 5px;
     width: 100%;
-    padding : 5px;
-    height : 30px;
   }
 
-
-  .document-history-footer .option{
-    margin: 8px 12px;
-    height : 14px;
-    display: inline-block;
-    float : right;
+  .document-history-footer .option {
     cursor: pointer;
+    display: inline-block;
+    float: right;
+    height: 14px;
+    margin: 8px 12px;
   }
 
-  .document-history-footer .option .label{
-    font-size: 12px;
-    color: #007CAC;
+  .document-history-footer .option .label {
+    color: #007cac;
     display: inline-block;
-    margin-left : 2px;
-    float : left;
+    float: left;
+    font-size: 12px;
+    margin-left: 2px;
   }
 
   .document-history-footer .option .expandable {
-    background: url("../img/iconPlus.png") no-repeat scroll 0 0 transparent;
-    height: 16px;
-    width: 16px;
+    background: url(../img/iconPlus.png) no-repeat scroll 0 0 transparent;
     display: inline-block;
     float: left;
+    height: 16px;
+    width: 16px;
   }
 
-  .document-history-footer .option .expandable.expanded{
-    background: url("../img/iconMinus.png") no-repeat scroll 0 0 transparent;
+  .document-history-footer .option .expandable.expanded {
+    background: url(../img/iconMinus.png) no-repeat scroll 0 0 transparent;
   }
-
 }
