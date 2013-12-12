@@ -173,6 +173,41 @@
       margin-bottom: 5px;
     }
 
+    .column {
+      display: inline-block;
+      min-height: 125px;
+      margin-right: 0px;
+      width:269px;
+
+       &.auto-reminder {
+        // Fix for the auto reminder case, if used in more places,
+        // this class name should be renambed to something more generic
+
+        margin-top: 20px;
+        min-height: 0;
+
+        .inner {
+          min-height: 0;
+
+        .details {
+          padding-bottom: 8px;
+        }
+      }
+    }
+
+    .sig {
+      &:first-child {
+          padding-top:0px;
+        }
+      padding: 10px;
+      border-bottom: 1px dashed #ccc;
+        &:last-child {
+          padding-bottom:0px;
+          border-bottom:none;
+        }
+      }
+    }
+
     .inner {
       min-height: 75px;
       color : #505050;

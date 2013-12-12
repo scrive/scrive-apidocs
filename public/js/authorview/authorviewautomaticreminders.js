@@ -61,7 +61,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
     var document = model.document();
     var div = $("<div class='autoreminder-modal-content'/>");
 
-    var deadlinedecription = $("<div  class='line-before-calendar'/>").text(localization.autoreminders.dueDateIn +" " + document.timeouttime().diffDays() + " " + localization.autoreminders.days+" (" +document.timeouttime().toYMDString()+ ")");
+    var deadlinedecription = $("<div class='line-before-calendar'/>").text(localization.autoreminders.dueDateIn +" " + document.timeouttime().diffDays() + " " + localization.autoreminders.days+" (" +document.timeouttime().toYMDString()+ ")");
     div.append(deadlinedecription);
 
 
@@ -110,7 +110,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                 title: localization.autoreminders.setAutoReminderTitle,
                 subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),
-                width: 382,
+                width: 424,
                 icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
                   if (this.calendar != undefined)
@@ -156,7 +156,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                 title: localization.autoreminders.changeAutoReminderTitle,
                 subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),
-                width: 382,
+                width: 424,
                 icon : '/img/modal-icons/extend-duedate.png',
                 onReject : function() {
                   if (this.calendar != undefined)

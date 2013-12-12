@@ -118,9 +118,9 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       var header = $("<h2 style='width: 100px;' />");
       box.append(header.text(localization.authorview.signatoriesTitle));
 
-      var container = $("<div class='signatories-box' style='float: right; width: 620px' />");
+      var container = $("<div class='signatories-box' style='float: right; width: 622px' />");
 
-      var leftcontainer = $("<div class='float-left' style='width:300px;margin-right:20px'>");
+      var leftcontainer = $("<div class='float-left' style='width:300px;margin-right:22px'>");
       var box1 = $("<div class=' column' />");
       var rightcontainer = $("<div class='float-right' style='width:300px';>");
       var box2 = $("<div class='column float-right'/>");
@@ -139,7 +139,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       }
 
       if (this.model.hasAutomaticReminder()) {
-         var box3 = $("<div class='column float-right' style='margin-top:20px;'/>").append(this.model.automaticreminder().el()).addClass("grey-box");;
+         var box3 = $("<div class='column float-right auto-reminder'/>").append(this.model.automaticreminder().el()).addClass("grey-box");;
          rightcontainer.append(box3);
       }
       return this;
