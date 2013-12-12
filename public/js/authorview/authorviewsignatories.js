@@ -139,7 +139,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       }
 
       if (this.model.hasAutomaticReminder()) {
-         var box3 = $("<div class='column float-right auto-reminder'/>").append(this.model.automaticreminder().el()).addClass("grey-box");;
+         var box3 = $("<div class='column float-right auto-reminder'/>").append(this.model.automaticreminder().el()).addClass("grey-box");
          rightcontainer.append(box3);
       }
       return this;

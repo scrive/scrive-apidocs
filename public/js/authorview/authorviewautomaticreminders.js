@@ -20,7 +20,7 @@ var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
      return this.get("newdaystoremind");
   },
   setNewdaystoremind: function(newdaystoremind) {
-     var old = this.get("newdaystoremind")
+     var old = this.get("newdaystoremind");
      if (newdaystoremind == undefined || (1 <= newdaystoremind || newdaystoremind <= this.maxdays())) {
       this.set({"newdaystoremind": newdaystoremind}, {silent: true});
      }
@@ -163,7 +163,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
                     this.calendar.close();
                 },
                 acceptButton : function() {
-                  var box = $("<div>")
+                  var box = $("<div>");
                   return box.append(self.buttonClearForModal()).append(self.buttonChangeForModal());
                 }()
         });
