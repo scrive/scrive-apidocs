@@ -497,7 +497,6 @@
             view.topBar.css({position:'fixed',
                              top: 0,
                              left: $(view.topBar).offset().left});
-            view.docView.css({'padding-top' : 20 + view.topBarHeight});
         },
         unfix: function() {
             var view = this;
@@ -508,8 +507,6 @@
             view.topBar.css({position:'relative',
                              top: '',
                              left: ''});
-	    // needs to be the same value, as the padding-top value set in frame.less on '.design-view-document-container'
-            view.docView.css({'padding-top' : 20});
         },
         affix: function() {
             var view = this;

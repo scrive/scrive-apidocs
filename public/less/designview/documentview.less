@@ -8,19 +8,19 @@
 }
 
 .design-view-document-buttons-wrapper-outer {
-  width: 1018px;
-  margin: auto;
   background: @white;
-  padding-top: 18px;
-  margin-top: -20px; // don't leave any space when the document is not uploaded yet
+  margin: 0 auto 64px; // 64 is a size of bottom footer in designview
+  min-height: 220px; // must be synced with refreshMargins() in documentview.js
+  padding: 18px 0; // must be synced with refreshMargins() in documentview.js
+  width: 1018px;
 }
 
 .design-view-document-buttons-wrapper {
-  width: 943px;
-  height: 97%;
   border: 1px dashed #B3B3B3;
+  height: 100%;
+  margin: 0 auto;
+  width: 943px;
   .rounded(8px);
-  margin: 18px auto;
 }
 
 .design-view-document-buttons-inner {
@@ -119,5 +119,5 @@
 }
 
 .design-view-document-pages {
-  margin-bottom: 90px;
+  margin: 20px 0 90px;
 }
