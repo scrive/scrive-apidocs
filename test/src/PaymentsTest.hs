@@ -14,7 +14,6 @@ import Test.Framework
 import Control.Monad.Trans
 
 import CompanyAccounts.Model
-import Util.HasSomeUserInfo
 
 --import Utils.Either
 
@@ -139,15 +138,12 @@ testPaymentPlansNoProviderRequiringSync = do
     user <- addNewRandomUser
     _ <- dbUpdate $ SetUserCompany (userid user) (companyid company)
     when (i < 5) $ do
-      _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite {invitedemail = Email $ getEmail user
-                                                       ,invitedfstname = getFirstName user
-                                                       ,invitedsndname = getLastName user
+      _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite {inviteduserid =  (userid user)
                                                        ,invitingcompany = companyid company}
       return ()
-  forM_ [0..4] $ \(i::Int) -> do
-    _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite {invitedemail = Email $ "a" ++ show i ++ "@poo.com"
-                                                     ,invitedfstname = "F" ++ show i
-                                                     ,invitedsndname = "L" ++ show i
+  forM_ [0..4] $ \_ -> do
+    user <- addNewRandomUser
+    _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite {inviteduserid =  (userid user)
                                                      ,invitingcompany = companyid company}
     return ()
   ac <- dbUpdate $ GetAccountCode
@@ -157,8 +153,8 @@ testPaymentPlansNoProviderRequiringSync = do
                        , ppPendingPricePlan    = TeamPricePlan
                        , ppStatus              = ActiveStatus
                        , ppPendingStatus       = ActiveStatus
-                       , ppQuantity            = 10
-                       , ppPendingQuantity     = 10
+                       , ppQuantity            = 6
+                       , ppPendingQuantity     = 6
                        , ppPaymentPlanProvider = NoProvider
                        , ppDunningStep         = Nothing
                        , ppDunningDate         = Nothing
@@ -168,7 +164,7 @@ testPaymentPlansNoProviderRequiringSync = do
   rs <- dbQuery $ PaymentPlansRequiringSync NoProvider now
   assert $ length rs == 1
   q <- dbQuery $ GetCompanyQuantity (companyid company)
-  assert $ q == 15
+  assert $ q == 10 -- We count only users that actually are in company | Skip invites
   handleSyncNoProvider now
   rs' <- dbQuery $ PaymentPlansRequiringSync NoProvider now
   assert $ length rs' == 0

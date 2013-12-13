@@ -16,11 +16,11 @@ normalizeCompanyInvites = Migration {
       values <- kFold (\acc (uid :: Maybe UserID) ucid icid email fstname lstname -> (uid, ucid , icid, email, fstname, lstname) : acc) []
       kRunRaw "DELETE FROM companyinvites"
       kRunRaw "ALTER TABLE companyinvites ADD COLUMN user_id BIGINT NOT NULL"
-      kRun_ $ sqlDropPK (tblName tableCompanyInvites)
+      kRun_ $ "ALTER TABLE companyinvites " <> sqlDropPK (tblName tableCompanyInvites)
       kRun_ $ sqlDropIndex (tblName tableCompanyInvites) (indexOnColumn "email")
       kRun_ $ sqlCreateIndex (tblName tableCompanyInvites) (indexOnColumn "user_id")
-      kRun_ $ sqlAddPK (tblName tableCompanyInvites) (fromJust $ pkOnColumns ["company_id","user_id"])
-      kRun_ $ sqlAddFK (tblName tableCompanyInvites) (fkOnColumn "user_id" "users" "id")
+      kRun_ $ "ALTER TABLE companyinvites " <> sqlAddPK (tblName tableCompanyInvites) (fromJust $ pkOnColumns ["company_id","user_id"])
+      kRun_ $ "ALTER TABLE companyinvites " <> sqlAddFK (tblName tableCompanyInvites) (fkOnColumn "user_id" "users" "id")
       kRunRaw "ALTER TABLE companyinvites DROP COLUMN email"
       kRunRaw "ALTER TABLE companyinvites DROP COLUMN first_name"
       kRunRaw "ALTER TABLE companyinvites DROP COLUMN last_name"
@@ -29,7 +29,7 @@ normalizeCompanyInvites = Migration {
           -- We drop invitations that were already accepted
           return ()
         (Just uid, Just ucid , icid, _, _, _) | ucid /= icid -> do
-              kRun_ $ sqlInsert "attachments" $ do
+              kRun_ $ sqlInsert "companyinvites" $ do
                 sqlSet "company_id" icid
                 sqlSet "user_id" uid
         (_ , _ , icid, email, fstname, lstname) -> do -- There should be Nothing,Nothing at the begining

@@ -75,13 +75,7 @@ instance MonadDB m => DBQuery m GetCompanyQuantity Int where
                 "       FROM users " <+>
                 "       WHERE users.company_id = " <?> cid <+>
                 "         AND users.deleted IS NULL)" <+>
-                "      UNION " <+>
-                "      (SELECT companyinvites.email " <+>
-                "       FROM companyinvites " <+>
-                "       WHERE companyinvites.company_id = " <?> cid <+>
-                "         AND NOT EXISTS (SELECT 1 FROM users " <+>
-                "                         WHERE email = companyinvites.email " <+>
-                "                           AND company_id = " <?> cid <+> "))) AS emails"
+                ") AS emails"
     res <- kFold (flip (:)) []
     case res of
       (x:_) -> return x
@@ -176,12 +170,7 @@ instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
              "                   FROM ((SELECT company_id, users.email " <>
              "                          FROM users " <>
              "                          WHERE users.deleted IS NULL) " <>
-             "                         UNION " <>
-             "                         (SELECT companyinvites.company_id, companyinvites.email " <>
-             "                          FROM companyinvites " <>
-             "                          WHERE NOT EXISTS (SELECT 1 FROM users " <>
-             "                                            WHERE users.email = companyinvites.email " <>
-             "                                              AND users.company_id = companyinvites.company_id))) as c" <>
+             "                         ) as c" <>
              "                   GROUP BY c.company_id) AS ccount" <>
              "              ON (ccount.company_id = payment_plans.company_id)" <>
              "  WHERE provider = ? " <>

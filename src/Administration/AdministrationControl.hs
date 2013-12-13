@@ -360,7 +360,7 @@ handleMergeToOtherCompany scid = onlySalesOrAdmin $ do
       return ()
   invites <- dbQuery $ GetCompanyInvites scid
   forM_ invites $ \i-> do
-      _ <- dbUpdate $ RemoveCompanyInvite scid (invitedemail i)
+      _ <- dbUpdate $ RemoveCompanyInvite scid (inviteduserid i)
       return ()
 
 

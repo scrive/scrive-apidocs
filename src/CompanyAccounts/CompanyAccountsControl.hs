@@ -65,33 +65,32 @@ handleCompanyAccountsInternal cid = do
   Context{ctxmaybeuser = Just user} <- getContext
   companyusers <- dbQuery $ GetCompanyAccounts cid
   deletableuserids <- map userid <$> filterM isUserDeletable companyusers
-  companyinvites <- dbQuery $ GetCompanyInvites cid
-  let isUser CompanyInvite{invitedemail} = unEmail invitedemail `elem` map getEmail companyusers
+  companyinvites <- dbQuery $ GetCompanyInvitesWithUsersData cid
+  let isUser (civ,_,_,_) = (inviteduserid civ) `elem` map userid companyusers
   let
     companyaccounts =
       map mkAccountFromUser companyusers
       ++ map mkAccountFromInvite (filter (not . isUser) companyinvites)
     mkAccountFromUser u = CompanyAccount {
-        camaybeuserid = Just $ userid u
+        camaybeuserid = userid u
       , cafstname = getFirstName u
       , casndname = getLastName u
       , cafullname = getFullName u
       , caemail = getEmail u
-      , carole = case (userhasacceptedtermsofservice u, useriscompanyadmin u) of
-                  (Nothing, _) -> RolePending
-                  (Just _, True) -> RoleAdmin
-                  (Just _, False) -> RoleStandard
+      , carole = if (useriscompanyadmin u)
+                  then RoleAdmin
+                  else RoleStandard
       , cadeletable = userid u `elem` deletableuserids
       , caactivated = isJust $ userhasacceptedtermsofservice u
       , catos = userhasacceptedtermsofservice u
       }
-    mkAccountFromInvite i = CompanyAccount {
-        camaybeuserid = Nothing
-      , cafstname = invitedfstname i
-      , casndname = invitedsndname i
-      , cafullname = invitedfstname i ++ " " ++ invitedsndname i
-      , caemail = unEmail $ invitedemail i
-      , carole = RolePending
+    mkAccountFromInvite (i,fn,ln,em) = CompanyAccount {
+        camaybeuserid = inviteduserid i
+      , cafstname = fn
+      , casndname = ln
+      , cafullname = fn ++ " " ++ ln
+      , caemail = em
+      , carole = RoleInvite
       , cadeletable = True
       , caactivated = False
       , catos = Nothing
@@ -100,15 +99,15 @@ handleCompanyAccountsInternal cid = do
   let companypage = companyAccountsSortSearchPage params companyaccounts
   runJSONGenT $ do
     objects "list" $ for (take companyAccountsPageSize $ list companypage) $ \f -> do
-           value "link" $ show <$> LinkUserAdmin <$> camaybeuserid f            -- Used in admins only
+           value "link" $ show $ LinkUserAdmin $ camaybeuserid f            -- Used in admins only
            object "fields" $ do
-                value "id" $ show <$> camaybeuserid f
+                value "id" $ show $ camaybeuserid f
                 value "fullname" $ cafullname f
                 value "email" $ caemail f
                 value "role" $ show $ carole f
                 value "deletable" $ cadeletable f
                 value "activated" $ caactivated f
-                value "isctxuser" $ Just (userid user) == camaybeuserid f
+                value "isctxuser" $ userid user == camaybeuserid f
                 value "tos"       $ formatMinutesTimeRealISO <$> (catos f)
 
     value "paging" $ pagingParamsJSON companypage
@@ -118,20 +117,20 @@ handleCompanyAccountsInternal cid = do
     this lets make a unified list of users and pending invites
 -}
 data CompanyAccount = CompanyAccount
-  { camaybeuserid :: Maybe UserID -- ^ the account's userid if they have one & not if they're a pending takeover invite
-  , cafstname     :: String       -- ^ the account's first name
-  , casndname     :: String       -- ^ the account's last name
-  , cafullname    :: String       -- ^ the account's fullname
-  , caemail       :: String       -- ^ the account's email
-  , carole        :: Role         -- ^ the account's role
-  , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents?
-  , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos?
-  , catos         :: Maybe MinutesTime -- ^ TOS time if any
+  { camaybeuserid :: UserID       -- ^ the account's or invites userid
+  , cafstname     :: String       -- ^ the account's or invitesfirst name
+  , casndname     :: String       -- ^ the account's or inviteslast name
+  , cafullname    :: String       -- ^ the account's or invites fullname
+  , caemail       :: String       -- ^ the account's or invites email
+  , carole        :: Role         -- ^ the account's role (always Standard for invites)
+  , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents (always True for invites)?
+  , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos? (always False for invites)
+  , catos         :: Maybe MinutesTime -- ^ TOS time if any (always Nothing for invites)
   }
 
 data Role = RoleAdmin    -- ^ an admin user
           | RoleStandard -- ^ a standard user
-          | RolePending  -- ^ a pending takeover request (didn't want to implement role switching for invites!)
+          | RoleInvite   -- ^ an invite of a user that is in different company
   deriving (Eq, Ord, Show)
 
 -- Searching, sorting and paging
@@ -192,12 +191,6 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
                                        (userid <$> ctxmaybeuser ctx)
         newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
-        _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
-                invitedemail = Email email
-              , invitedfstname = fstname
-              , invitedsndname = sndname
-              , invitingcompany = companyid company
-              }
         runJSONGenT $ value "added" True
       (Just existinguser) ->
         if (usercompany existinguser == companyid company)
@@ -209,12 +202,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
             case (users,fromMaybe NoProvider (ppPaymentPlanProvider <$> mpaymentplan)) of
               ([_],NoProvider) -> do
                         _ <- sendTakeoverSingleUserMail user company existinguser
-                        _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
-                            invitedemail = Email email
-                          , invitedfstname = fstname
-                          , invitedsndname = sndname
-                          , invitingcompany = companyid company
-                          }
+                        _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite  (userid existinguser) (companyid company)
                         runJSONGenT $ value "added" True
               _ -> runJSONGenT $ value "added" False
 
@@ -224,12 +212,16 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 -}
 handleResendToCompanyAccount :: Kontrakcja m => m JSValue
 handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
-  resendemail <- getCriticalField asValidEmail "resendemail"
-  _ <- guardJustM $ dbQuery $ GetCompanyInvite (companyid company) (Email resendemail)
-  newuser <- guardJustM $ dbQuery $ GetUserByEmail (Email resendemail)
+  resendid <- getCriticalField asValidUserID "resendid"
+  newuser <- guardJustM $ dbQuery $ GetUserByID resendid
   if (usercompany newuser /= companyid company)
-     then  sendTakeoverSingleUserMail user company newuser
-     else  sendNewCompanyUserMail user company newuser
+     then  do
+       -- We need to check if there is a company invitation, and if it is we send email again
+       _ <- guardJustM $ dbQuery $ GetCompanyInvite (companyid company) resendid
+       sendTakeoverSingleUserMail user company newuser
+     else  do
+       -- Else we just send an email
+       sendNewCompanyUserMail user company newuser
   runJSONGenT $ value "resent" True
 
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
@@ -269,25 +261,19 @@ handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
 -}
 handleRemoveCompanyAccount :: Kontrakcja m => m JSValue
 handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
-  removeemail <- getCriticalField asValidEmail "removeemail"
-  mremoveuser <- dbQuery $ GetUserByEmail $ Email removeemail
-  mremovecompany <- case mremoveuser of
-                           Just u -> Just <$> getCompanyForUser u
-                           Nothing -> return Nothing
-  isdeletable <- maybe (return False) isUserDeletable mremoveuser
-  case (mremoveuser, mremovecompany) of
-    (Just removeuser, Just removecompany) | company == removecompany ->
-         --there's an actual user to delete
-         if isdeletable
-           then do
-             _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email $ getEmail removeuser)
+  removeuid <- getCriticalField asValidUserID "removeid"
+  removeuser <- guardJustM $ dbQuery $ GetUserByID $ removeuid
+  isdeletable <- isUserDeletable removeuser
+  case (companyid company == usercompany removeuser,isdeletable) of
+    (True,True) -> do
+             _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (userid removeuser)
              _ <- dbUpdate $ DeleteUser (userid removeuser)
              runJSONGenT $ value "removed" True
-           else
+    (True,False) -> do
              runJSONGenT $ value "removed" False
-    _ -> do
-      _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email removeemail)
-      runJSONGenT $ value "removed" True
+    _            -> do
+             _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (userid removeuser)
+             runJSONGenT $ value "removed" True
 
 {- |
     This handles the company account takeover links, and replaces
@@ -297,7 +283,7 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
 handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either KontraLink (Either KontraLink String))
 handleGetBecomeCompanyAccount companyid = withUserGet $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
-  invite <- dbQuery $ GetCompanyInvite companyid (Email $ getEmail user)
+  invite <- dbQuery $ GetCompanyInvite companyid (userid user)
   case invite of
        Nothing -> do
         addFlashM $ flashMessageBecomeCompanyLogInDifferentUser
@@ -309,7 +295,7 @@ handleGetBecomeCompanyAccount companyid = withUserGet $ do
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
-  _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (Email $ getEmail user)
+  _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (userid user)
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
   _ <- dbUpdate $ SetUserCompany (userid user) (companyid newcompany)

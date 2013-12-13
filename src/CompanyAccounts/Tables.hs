@@ -19,6 +19,6 @@ tableCompanyInvites = tblTable {
     ]
   , tblIndexes = [
       indexOnColumn "company_id"
-    , indexOnColumn "email"
+    , indexOnColumn "user_id"
     ]
   }

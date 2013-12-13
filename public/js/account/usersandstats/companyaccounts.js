@@ -123,10 +123,10 @@ var CompanyAccountsModel = Backbone.Model.extend({
                               label = localization.account.companyAccounts.roleAdmin;
                             } else if (user.field("role")=="RoleStandard") {
                               label =  localization.account.companyAccounts.roleStandard;
-                            } else if (user.field("role")=="RolePending") {
+                            } else if (user.field("role")=="RoleInvite") {
                               label =  localization.account.companyAccounts.rolePending;
                             }
-                            if (user.field("isctxuser") || user.field("role")=="RolePending") {
+                            if (user.field("isctxuser") || user.field("role")=="RoleInvite") {
                               return  $("<span>").text(label);
                             } else {
                               return $("<a>").text(label)
@@ -162,7 +162,6 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                         },
                                         method: "POST",
                                         resendid: user.field("id"),
-                                        resendemail: user.field("email"),
                                         mixpanel : {name : 'Accept',
                                                       props : {'Accept' : 'resend confirmation'}}
                                       }).sendAjax();
