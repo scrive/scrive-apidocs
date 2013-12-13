@@ -1,15 +1,17 @@
 .select{
+  background: @white;
+  color: @black;
+  cursor: pointer;
   font-family: @font-family-source;
   font-weight: 300;
-  color: #000;
   position: relative;
-  cursor: pointer;
-  text-align : left;
-  background: @white;
+  text-align: left;
+
   .select-button {
+    background: @white;
     height: 38px;
     position: relative;
-    background: @white;
+    
     .select-button-left {
       float: left;
       height: 34px;
@@ -18,65 +20,73 @@
     }
 
     .select-button-right {
-      background: url('/img/select-arrow.png') no-repeat;
+      background: url(/img/select-arrow.png) no-repeat;
       background-position: 0px 11px;
-      height: 34px;
-      width: 21px;
-      position: relative;
       float: right;
+      height: 34px;
+      position: relative;
+      width: 21px;
     }
 
     .select-button-label {
-      background-repeat:repeat-y;
-      text-decoration: none;
+      background-repeat: repeat-y;
+      color: @black;
       float: left;
-      padding-top: 9px;
-      white-space:nowrap;
-      overflow: hidden;
-      text-indent: 5px;
       line-height: 21px;
-      color: black;
+      overflow: hidden;
+      padding-top: 9px;
+      text-decoration: none;
+      text-indent: 5px;
+      white-space: nowrap;
     }
+
     .closer {
-      width: 24px;
-      height: 22px;
-      display: inline-block;
-      position: absolute;
-      top: -9px;
-      left: -9px;
-      background: url("/img/editor-view-remove-party.png");
+      background: url(/img/editor-view-remove-party.png);
       background-position: 0px 0px;
       cursor: pointer;
+      display: inline-block;
+      height: 22px;
+      left: -9px;
+      position: absolute;
+      top: -9px;
+      width: 24px;
+
       &:hover {
         background-position: -24px 0px;
       }
     }
   }
+
   &.select-exp {
-    z-index: 5000;
-    position: absolute;
     display: block;
+    position: absolute;
+    z-index: 5000;
+
     .select-button {
       z-index: 5002;
     }
+
     .select-opts {
       background: @white;
+      left: -1px ;
+      padding: 0px;
       position: absolute;
+      text-align: left;
       top: 37px;
       z-index: 5001;
-      left : -1px ;
-      text-align : left;
-      padding:0px;
+
       &.right {
         left: auto;
         right: -1px;
         text-align: right;
       }
+
       li {
-        text-indent: 5px;
-        padding: 6px;
         height: 20px;
-        line-height :  22px;
+        line-height:  22px;
+        padding: 6px;
+        text-indent: 5px;
+
         &:hover {
           background: @slightly-darker-grey-background;
         }

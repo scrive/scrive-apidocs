@@ -1,25 +1,28 @@
-/// @GLOBAL ///
+/// @GLOBAL
+// --------------------------------------------------
 
 .hidden {
   display: none;
 }
 
-.center-vh(@width,@height){
-  width: @width;
+.center-vh(@width,@height) {
   height: @height;
-  position: absolute;
   left: 50%;
-  top: 50%;
   margin: (@height / -2.0) 0 0 (@width / -2.0);
+  top: 50%;
+  position: absolute;
+  width: @width;
 }
 
 .clearfix {
   *zoom: 1;
+
   &:before,
   &:after {
-    display: table;
     content: "";
+    display: table;
   }
+
   &:after {
     clear: both;
   }
@@ -38,10 +41,10 @@
 }
 
 .rounded(@radius: 2px) {
-  -webkit-border-radius: @radius;
-  -moz-border-radius: @radius;
-  border-radius: @radius;
   -moz-background-clip: padding;
   -webkit-background-clip: padding-box;
   background-clip: padding-box;
+  -webkit-border-radius: @radius;
+  -moz-border-radius: @radius;
+  border-radius: @radius;
 }

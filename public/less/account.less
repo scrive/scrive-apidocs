@@ -6,6 +6,7 @@
 }
 
 .account {
+
   .tab-viewer-header .tabs li.active > h5{
     font-weight: 400;
   }
@@ -17,27 +18,29 @@
 
 .account input.emailinput[type="text"],
 .account input.newpassword[type="text"] {
-  width: 125px;
-  margin-right: 10px;
-  border-color: transparent;
+  color: #222222;
   background: transparent;
-  color: #222;
+  border-color: transparent;
+  margin-right: 10px;
+  width: 125px;
 }
+
 .account input[type="text"],
 .account input[type="password"] {
-  width: 225px;
-  height: 26px;
   font-weight: 300;
+  height: 26px;
+  width: 225px;
 }
+
 .account input[type="checkbox"]{
-  margin-right : 6px;
-  margin-top : -3px;
+  margin-right: 6px;
+  margin-top: -3px;
 }
 
 .account-body table td {
-  padding: 5px;
-  text-align: left;
   font-weight: 300;
+  text-align: left;
+  padding: 5px;
 
   input {
     height: 28px;
@@ -54,13 +57,14 @@
 .companybranding > .col  {
   margin: 0 20px 20px 0;
 }
+
 .account > .col {
   float: left;
   width: 430px;
 
   .account-header.company {
     border-bottom: none;
-    width:100%;
+    width: 100%;
   }
 }
 
@@ -74,27 +78,27 @@
 }
 
 .account {
-  .col.float-right, .col.float-left {
+  
+  .col.float-right,
+  .col.float-left {
     margin: 0;
   }
 }
 
 .account-header {
-  width: 1018px;
+  border-bottom: 2px solid #eeeeee;
+  color: #333333;
+  display: block;
+  font-family: @font-family-source;
+  font-size: 25px;
+  font-weight: 300;
+  line-height: 21px;
   min-height: 32px;
   padding-bottom: 10px;
   position: relative;
-  color: #333333;
-  display: block;
   text-align: left;
-  border-bottom: 2px solid #EEE;
-  font-family: @font-family-source;
-  font-size: 25px;
-  line-height: 21px;
-  font-weight: 300;
+  width: 1018px;
 }
-
-
 
 .account-body {
   margin-top: 20px;
@@ -115,40 +119,51 @@
 }
 
 .account-body label {
+  color: @primary-font-color;
   font-size: 15px;
   font-weight: 300;
-  color: @primary-font-color;
 }
 
 
-/* This are used in account and admin sections, so need to be toplevel*/
+// This are used in account and admin sections, so need to be toplevel
+// -------------------------
+
 .usagestats {
+  
   .tab-content {
     display: none;
   }
-  .jsdaytable .tab-container, .usagestats .jsmonthtable .tab-container, .usagestats .tab-table {
+  
+  .jsdaytable .tab-container,
+  .usagestats .jsmonthtable .tab-container,
+  .usagestats .tab-table {
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
     border-radius: 5px 5px 5px 5px;
   }
+
   .tab-table {
     border-top: 0;
   }
+
   .option-top-box {
     display: none;
   }
+
   .jsdaytable {
-    margin-top: 20px;
     margin-bottom: 40px;
+    margin-top: 20px;
   }
+
   .jsmonthtable {
     margin-top: 20px;
   }
+
   h2 {
-    text-align: center;
+    color: #333333;
     font-family: @font-family-sans;
     font-size: 1.5em;
     line-height: 25px;
-    color: #333333;
+    text-align: center;
   }
 }

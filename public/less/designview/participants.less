@@ -1,108 +1,115 @@
 @import 'util.less';
 @import '../branding/variables.less';
 
-/// @PARTICIPANT ///
+
+/// @PARTICIPANT
+// --------------------------------------------------
 
 .design-view-action-participant-container {
-  .box-sizing(border-box);
-  margin: 0px auto;
-  width: 1018px;
-  position: relative;
   background-color: #f2f2f2;
   border-bottom: 4px solid @white;
   border-left: 4px solid @white;
   border-right: 4px solid @white;
   border-bottom-left-radius: 15px;
   border-bottom-right-radius: 15px;
+  margin: 0px auto;
+  position: relative;
+  width: 1018px;
+
   .box-shadow(0 4px 0 rgba(0, 0, 0, 0.05));
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-box {
-  .box-sizing(border-box);
-  padding-top: 14px;
   margin: 0px 6px 0px 16px;
+  padding-top: 14px;
   position: relative;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant {
+
   .design-view-action-participant-box;
 }
 
 .design-view-action-participant-inner {
-  .box-sizing(border-box);
-  overflow: hidden;
   border: 2px solid @white;
-  width: 970px;
-  height: 58px;
-  position: relative;
   border-radius: 4px;
+  height: 58px;
+  overflow: hidden;
+  position: relative;
+  width: 970px;
 
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-close {
-  position: absolute;
-  left : 959px;
-  margin-top: -5px;
-  width: 24px;
-  height: 22px;
-  background: url("/img/editor-view-remove-party.png");
+  background: url(/img/editor-view-remove-party.png);
   display: inline-block;
   cursor: pointer;
+  height: 22px;
+  left: 959px;
+  margin-top: -5px;
+  position: absolute;
+  width: 24px;
   z-index : 501;
+
   &:hover {
     background-position: -24px 0px;
   }
 }
 
 .design-view-action-participant-info-box {
-  .box-sizing(border-box);
-  position: absolute;
-  left: 0;
-  top: 0px;
-  height: 42px;
-  width: 100%;
   background: #fafafa;
-  z-index: 100;
   cursor: pointer;
+  height: 42px;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+
+  .box-sizing(border-box);
 }
 
-
 .design-view-action-participant-info-color {
-  height: 15px;
-  width: 15px;
   background-color: green;
+  border: 2px solid @white;
+  height: 15px;
+  left: 13px;
   position: absolute;
   top: 12px;
-  left: 13px;
-  border: 2px solid @white;
+  width: 15px;
 }
 
 .design-view-action-participant-info-name {
-  .box-sizing(border-box);
-  position: absolute;
-  top: 0px;
-  left: 44px;
-  width: 200px;
-  height: 100%;
   border-left: 2px solid @white;
+  height: 100%;
+  left: 44px;
+  position: absolute;
+  top: 0;
+  width: 200px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-info-name-inner {
   margin: 10px 0 0 15px;
-  width: 180px;
   overflow: hidden;
+  width: 180px;
 }
 
-
 .design-view-action-participant-info-email {
-  .box-sizing(border-box);
+  border-left: 2px solid @white;
+  height: 100%;
+  left: 244px;
+  margin-left: 3px;
   position: absolute;
   top: 0px;
-  left: 244px;
   width: 320px;
-  height: 100%;
-  border-left: 2px solid @white;
-  margin-left: 3px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-info-email-inner {
@@ -112,33 +119,35 @@
 }
 
 .design-view-action-participant-info-company {
-  .box-sizing(border-box);
+  border-left: 2px solid @white;
+  left: 564px;
+  height: 100%;
   position: absolute;
   top: 0px;
-  left: 564px;
   width: 200px;
-  height: 100%;
-  border-left: 2px solid @white;
 
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-info-company-inner {
-  line-height: 1.3em;
-  .center-vh(180px, 1.3em);
   left: 10px;
-  overflow: hidden;
+  line-height: 1.3em;
   margin-left: 0;
+  overflow: hidden;
+
+  .center-vh(180px, 1.3em);
 }
 
 .design-view-action-participant-icon-order {
-  .box-sizing(border-box);
   border-left: 2px solid @white;
-  width: 44px;
   height: 100%;
-  position: absolute;
-  top: 0;
-  right: 132px;
   line-height: 1em;
+  position: absolute;
+  right: 132px;
+  top: 0;
+  width: 44px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-icon-order-inner {
@@ -147,151 +156,150 @@
 }
 
 .design-view-action-participant-icon-role {
-  .box-sizing(border-box);
-  display: inline-block;
   border-left: 2px solid @white;
-  width: 44px;
+  display: inline-block;
   height: 100%;
   position: absolute;
-  top:0;
   right: 44px;
+  top: 0;
+  width: 44px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-icon-role-icon-viewer {
-  width: 36px;
-  height: 36px;
-  background-position: -1*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -1*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-role-icon-signatory {
-  width: 36px;
-  height: 36px;
-  background-position: -0*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -0*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-role-inner {
-  margin-top: 2px;
   margin-left: 3px;
+  margin-top: 2px;
   text-align: center;
 }
 
 .design-view-action-participant-icon-device {
-  .box-sizing(border-box);
   display: inline-block;
   border-left: 2px solid @white;
-  width: 44px;
   height: 100%;
+  right: 88px;
   position: absolute;
   top: 0;
-  right: 88px;
+  width: 44px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-icon-device-icon-email {
-  width: 36px;
-  height: 36px;
-  background-position: -3*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -3*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-pad {
-  width: 36px;
-  height: 36px;
-  background-position: -2*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -2*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-email {
-  width: 36px;
-  height: 36px;
-  background-position: -3*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -3*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-phone {
-  width: 36px;
-  height: 36px;
-  background-position: -4*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -4*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-email-mobile {
-  width: 36px;
-  height: 36px;
-  background-position: -5*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -5*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-device-inner {
-  margin-top: 2px;
   margin-left: 3px;
+  margin-top: 2px;
   text-align: center;
 }
 
 .design-view-action-participant-icon-auth {
-  .box-sizing(border-box);
-  display: inline-block;
   border-left: 2px solid @white;
-  width: 44px;
+  display: inline-block;
   height: 100%;
   position: absolute;
-  top: 0;
   right: 0;
+  top: 0;
+  width: 44px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-icon-auth-icon-noauth {
-  width: 36px;
-  height: 36px;
-  background-position: -7*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -7*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-auth-icon-eleg {
-  width: 36px;
-  height: 36px;
-  background-position: -6*36px 0px;
   background-image: url(../../img/sprite-participation-icons.png);
+  background-position: -6*36px 0px;
+  height: 36px;
+  width: 36px;
 }
 
 .design-view-action-participant-icon-auth-inner {
+  margin-left: 3px;
   margin-top: 2px;
-  margin-left:3px;
   text-align: center;
 }
 
 
-
 // input boxes in participants
+// -------------------------
+
 .design-view-action-participant-details-field {
   border: 1px solid #ccc;
   width: 194px;
+  
   &:focus {
     border: 1px solid #ccc;
   }
 }
 
 
-
-/// @NEW BOX ///
-
-
-.design-view-action-participant-container-participants-box {
-  // overflow-y : auto;
-  // overflow-x : visible;
-}
+/// @NEW BOX
+// -------------------------
 
 .design-view-action-participant-new-box {
-  position: relative;
-  overflow: hidden;
   line-height: 1em;
   padding-top: 16px;
+  position: relative;
+  overflow: hidden;
 }
 
 .design-view-action-participant-new-box-buttons {
-  z-index: 100;
-  text-align: right;
   margin: 0px 32px 16px 0px;
+  text-align: right;
+  z-index: 100;
 }
 
 .design-view-action-participant-new-single {
@@ -300,8 +308,9 @@
 }
 
 .design-view-action-participant-new-single-text {
-  .center-vh(100%, 1em);
   text-align: left;
+  
+  .center-vh(100%, 1em);
 }
 
 .design-view-action-participant-new-multi {
@@ -311,26 +320,30 @@
 }
 
 .design-view-action-participant-new-multi-text {
-  .center-vh(100%, 1em);
   text-align: right;
+
+  .center-vh(100%, 1em);
 }
 
 
-/// @DETAILS ///
+/// @DETAILS
+// -------------------------
 
 .design-view-action-participant-details-common {
-  .box-sizing(border-box);
   background-color: #fafafa;
-  position: absolute;
   bottom: 0;
   left: 0;
+  position: absolute;
   width: 970px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-details {
   .design-view-action-participant-details-common;
-  width: 100%;
+
   border-top: 2px solid @white;
+  width: 100%;
 }
 
 .design-view-action-participant-new-single-details {
@@ -342,58 +355,52 @@
 }
 
 .design-view-action-participant-details-information {
-  .box-sizing(border-box);
   margin: 16px 0 0 16px;
+
+  .box-sizing(border-box);
   .clearfix;
 }
 
-.design-view-action-participant-details-information-header {
-
-}
-
-.design-view-action-participant-details-information-fields {
-
-}
-
-.design-view-action-participant-new-field-name-input-wrapper {
-
-}
-
 .design-view-action-participant-new-field-name-input {
-  width: 197px;
   display: inline-block;
-  vertical-align: top;
   margin-bottom: 8px;
+  vertical-align: top;
+  width: 197px;
+
   &.redborder {
     border: 1px solid @brand-secondary;
   }
 }
 
 .design-view-action-participant-new-field-select {
-  width: 297px;
   display: inline-block;
-  vertical-align: top;
   margin-bottom: 8px;
+  vertical-align: top;
+  width: 297px;
+
   &.select .select-opts {
     width : 297px;
   }
-  &.redborder, &.select .select-opts {
+
+  &.redborder,
+  &.select .select-opts {
     border:1px solid @brand-secondary;
   }
 }
 
 .design-view-action-participant-details-information-field-wrapper {
   display: inline-block;
-  position: relative;
   margin-right: 15px;
+  position: relative;
   vertical-align: top;
 }
 
 .design-view-action-participant-details-information-field {
   .design-view-action-participant-details-field;
+  
   margin-bottom: 8px;
-  //border-right-color : transparent;
   width: 287px;
+
   &.redborder {
     border:1px solid @brand-secondary;
   }
@@ -403,30 +410,28 @@
   display: inline-block;
 }
 
-
 .design-view-action-participant-details-information-field-options {
-  .box-sizing(border-box);
   display: inline-block;
-  width: 65px;
-  vertical-align: middle;
   margin-bottom: 8px;
+  vertical-align: middle;
+  width: 65px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-new-field-selector {
-  .box-sizing(border-box);
-  height: 36px;
   display: inline-block;
+  height: 36px;
   vertical-align: middle;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-details-participation {
-  .box-sizing(border-box);
   display: block;
   margin: 16px 0 16px 16px;
-}
 
-.design-view-action-participant-details-participation-header {
-
+  .box-sizing(border-box);
 }
 
 .design-view-action-participant-details-participation-fields {
@@ -435,27 +440,27 @@
 }
 
 .design-view-action-participant-details-participation-order {
-  width: 225px;
-  margin-right: 8px;
   float: left;
+  margin-right: 8px;
+  width: 225px;
 }
 
 .design-view-action-participant-details-participation-delivery {
-  width: 225px;
-  margin-right: 8px;
   float: left;
+  margin-right: 8px;
+  width: 225px;
 }
 
 .design-view-action-participant-details-participation-role {
-  width: 225px;
-  margin-right: 8px;
   float: left;
+  margin-right: 8px;
+  width: 225px;
 }
 
 .design-view-action-participant-details-participation-auth {
-  width: 225px;
-  margin-right: 8px;
   float: left;
+  margin-right: 8px;
+  width: 225px;
 }
 
 .design-view-action-participant-buttons {
@@ -463,19 +468,20 @@
   text-align: right;
 }
 
-
 .design-view-action-participant-details-information-closer {
-  width: 24px;
-  height: 22px;
   display: inline-block;
+  height: 22px;
+  left: -8px;
   position: absolute;
   top: -8px;
-  left: -8px;
+  width: 24px;
   z-index: 2;
+
   &.active {
-    background: url("/img/editor-view-remove-party.png");
+    background: url(/img/editor-view-remove-party.png);
     background-position: 0px 0px;
     cursor: pointer;
+
     &:hover {
       background-position: -24px 0px;
     }
@@ -483,14 +489,13 @@
 }
 
 .design-view-action-participant-new-field-popup-content-top {
-  width: 250px;
   margin: auto;
+  width: 250px;
 }
 
 .design-view-action-participant-new-field-popup-content-bottom {
-  width: 250px;
   margin: 8px auto 0 auto;
-
+  width: 250px;
 }
 
 .design-view-action-participant-new-field-popup-content-bottom-input {

@@ -49,7 +49,7 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
   text: function() {
     if ( this.document().timeouttime() != undefined && this.document().signingInProcess() )
       return this.statusText() + " - " + this.dueDateDescription();
-    else 
+    else
       return this.statusText();
   },
   history : function() {
@@ -67,9 +67,10 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
   },
   checkIfHistoryHasChangedAndRefresh : function() {
     var self = this;
-    this.history().checkIfHistoryChangedAndCallback( function() {
-                                        self.authorview().reload();
-                                      });
+    this.history().checkIfHistoryChangedAndCallback(
+          function() {self.authorview().reload();}, // Success
+          function() {self.setDontRefresh();}       // Error
+    );
   },
   ready : function() {
     return this.history().ready() && this.document().ready();

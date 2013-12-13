@@ -268,6 +268,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                         });
                         if(v === 'optional') {
                             field.makeOptional();
+                            field.setShouldBeFilledBySender(false);
                             field.authorObligatory = 'optional';
                         } else if(v === 'signatory') {
                             field.makeObligatory();
@@ -1061,6 +1062,10 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                 field.signatory().deleteField(field);
                 field.setSignatory(s);
                 s.addField(field);
+                if (s.author())
+                  field.setValue("checked");
+                else
+                  field.setValue("");
                 return true;
 
             }

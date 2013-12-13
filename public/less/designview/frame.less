@@ -8,51 +8,54 @@ body.designview > footer {
 }
 
 body.designview .mainContainer {
-  margin-top: 0;
   margin-bottom: 0;
-  min-height : 0;
+  margin-top: 0;
+  min-height: 0;
   width: 100%;
 }
 
 .design-view-frame {
-  .box-sizing(border-box);
   border-bottom: none;
   position: relative;
+
+  .box-sizing(border-box);
 }
 
 .design-view-frame-top-bar {
-  width: 100%;
   height: 60px;
-  z-index: 1000;
   left: 0;
   position: relative;
   top: 0;
+  width: 100%;
+  z-index: 1000;
 }
 
 .design-view-tab-container {
-  .box-sizing(border-box);
-  height: 60px;
-  font-size:16px;
-  cursor: pointer;
-  width: 1018px;
-  margin: 0 auto;
   background: @white;
+  cursor: pointer;
+  font-size:16px;
+  height: 60px;
+  margin: 0 auto;
+  width: 1018px;
+  
+  .box-sizing(border-box);
 }
 
 .tab-active {
-  border-top: 4px solid #7a94b8;
   border-bottom: 4px solid @white;
+  border-top: 4px solid #7a94b8;
 }
 
 .tab-hover {
-  border-top: 4px solid #7a94b8;
   border-bottom: 4px solid @white;
+  border-top: 4px solid #7a94b8;
 }
 
-
 .designview {
+  
   .pagediv {
     margin-top: 15px;
+    
     &#page1 {
       margin-top: 0px;
     }
@@ -60,107 +63,117 @@ body.designview .mainContainer {
 
   .tab-viewer {
     width: 100%;
+    
     .tab-viewer-header {
-      .box-sizing(border-box);
       margin-bottom: 0px;
-      z-index:999;
       position:relative;
+      z-index:999;
+
+      .box-sizing(border-box);
     }
+
     .tabs {
-      margin: auto;
-      width: 1018px;
       border: none;
       height: 60px;
+      margin: auto;
+      width: 1018px;
+
       li {
-        padding: 22px 24px 18px 24px;
         line-height: 32px;
-        &.inactive, &.inactive:hover{
+        padding: 22px 24px 18px 24px;
+        
+        &.inactive,
+        &.inactive:hover {
+          
           .design-view-tab-text {
-            color: #AAAAAA;
+            color: #aaaaaa;
+
             .design-view-tab-text-optional {
-              color: #AAAAAA;
+              color: #aaaaaa;
             }
           }
         }
-        &.active, &:hover {
+
+        &.active,
+        &:hover {
+          background: none repeat scroll 0 0 @white;
           border-top: 4px solid @brand-primary-darker;
           padding: 18px 24px 18px 24px;
-          background: none repeat scroll 0 0 @white;
+          
           h5 {
             color : #333333;
           }
         }
 
         .design-view-tab-text {
-          display: inline-block;
-          width: 290px;
-          height: 100%;
-          font-size: 18px;
           color:#262626;
+          display: inline-block;
+          font-size: 18px;
+          height: 100%;
           position: relative;
           text-align : center;
+          width: 290px;
+
           &.grayed {
             background-color: @disabled-grey-background;
-            color: #AAAAAA;
-            .design-view-tab-text-optional {
-              color: #AAAAAA;
-            }
+            color: #aaaaaa;
 
+            .design-view-tab-text-optional {
+              color: #aaaaaa;
+            }
           }
+
           .design-view-tab-text-optional {
-            font-size: 15px;
             color: #808080;
+            font-size: 15px;
           }
         }
+
         &.float-left.last-tab {
-          border-left: 1px solid #CCCCCC;
+          border-left: 1px solid #cccccc;
+          
           .design-view-tab-text {
             width: 291px;
           }
         }
+
         &.float-left:first-child {
-          border-right: 1px solid #CCCCCC;
           border-left: none;
+          border-right: 1px solid #cccccc;
         }
       }
     }
-
   }
 }
 
 
-/// @ACTION CONTAINER ///
+// @ACTION CONTAINER
+// -------------------------
 
 .design-view-action-container {
-  .clearfix();
-  width: 1018px;
   margin: 0 auto;
   position: relative;
+  width: 1018px;
+
+  .clearfix();
 }
 
 .design-view-action-container-shadow {
+  height: 10px;
+  left: 0;
   position: absolute;
   top: 0;
-  left: 0;
   width: 100%;
-  height: 10px;
+
   .box-shadow(0 4px 0 rgba(0,0,0,0.05) inset);
 }
 
 
-
-
-
-
-
-
-
-
-
-
-/// @DOCUMENT ///
+// @DOCUMENT
+// -------------------------
 
 .design-view-document-container {
+
   .box-sizing(border-box);
   overflow: auto;
   min-height: 300px;
@@ -169,37 +182,40 @@ body.designview .mainContainer {
 }
 
 
-
-/// @BUTTONS ///
+// @BUTTONS
+// -------------------------
 
 .design-view-button-bar {
-  width: 100%;
-  height: 64px;
-  bottom: 0;
-  left: 0;
-  position: absolute;
-  position: fixed;
-  z-index: 1001;
   background: @brand-primary;
+  bottom: 0;
+  height: 64px;
+  left: 0;
+  position: fixed;
+  width: 100%;
+  z-index: 1001;
+  
   .box-shadow(0px -4px rgba(0, 0, 0, 0.05));
 }
 
 .design-view-button-bar-inner {
-  width: 1018px;
   height: 100%;
   margin: auto;
+  width: 1018px;
 
   a.button {
-    margin-top: 15px;
     margin-right: 15px;
+    margin-top: 15px;
   }
 
   a.sendButton {
     float: right;
+
     &.disabled {
       @disabled: @brand-primary-darker;
-      color: #6B6B6B !important;
+
+      color: #6b6b6b !important;
       background-color: @disabled;
+
       &:hover {
         background-color: darken(@disabled, 10%);
       }
@@ -208,12 +224,13 @@ body.designview .mainContainer {
 }
 
 .design-view-button-remove {
-  .box-sizing(border-box);
-  height: 100%;
-  width: 20%;
+  background-color: @white;
+  border-right: 1px solid #cccccc;
   cursor: pointer;
   display: inline-block;
+  height: 100%;
   position: relative;
-  border-right: 1px solid #ccc;
-  background-color: @white;
+  width: 20%;
+
+  .box-sizing(border-box);
 }

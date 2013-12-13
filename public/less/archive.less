@@ -1,18 +1,22 @@
 @import 'designview/util.less';
 @import 'branding/variables.less';
 
-.archive, .admin {
-  .list-container {
-    border: none;
-    width: 1018px;
-    margin: auto;
-    background: transparent;
+.archive,
+.admin {
 
+  .list-container {
+    background: transparent;
+    border: none;
+    margin: auto;
+    width: 1018px;
+    
     .table {
       border: none;
+      
       thead {
         background: @grey;
       }
+
       tr:hover {
         background: @slightly-darker-grey-background;
       }
@@ -21,10 +25,13 @@
 
   .option-top-box {
     border-bottom: none;
+    
     // align to menu and the list.
-    .col.float-left, .col.float-right {
+    .col.float-left,
+    .col.float-right {
       margin: 0;
     }
+
     .subbox {
       padding-left: 0px;
       padding-right: 0px;
@@ -36,22 +43,24 @@
     }
   }
 
-  .tab-viewer-header .tabs li.active > h5{
+  .tab-viewer-header .tabs li.active > h5 {
     font-weight: 400;
   }
 }
 
 .archive .scrolled {
+
   .option-top-box {
     height: 121px;
+
     .subbox {
-      position: fixed;
-      top: 0px;
-      padding: 13px 0;
-      width: 1018px;
-      height: 42px;
       background: @grey-background;
       border-bottom: 1px solid #e0e0e0;
+      height: 42px;
+      padding: 13px 0;
+      position: fixed;
+      top: 0px;
+      width: 1018px;
     }
   }
 }
@@ -59,21 +68,24 @@
 .table-statuses {
   background: #fff;
   border: 1px solid #e0e0e0;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
   border-radius: 3px;
   color: @text-medium;
   font-size: 13px;
-  margin-top: 10px;
-  padding: 10px 10px;
   height: 13px;
   line-height: 13px;
-  -moz-border-radius: 3px;
-  -webkit-border-radius: 3px;
+  margin-top: 10px;
+  padding: 10px 10px;
 }
 
 .table-statuses .icon {
-  margin-top: -7px;
   margin-left: 30px;
-  &.first { margin-left: 4px }
+  margin-top: -7px;
+  
+  &.first { 
+    margin-left: 4px;
+  }
 }
 
 .new-post-sign-view-user {
@@ -84,22 +96,22 @@
   }
 
   h2 {
-    margin-top: 5px;
     font-weight: 400;
     font-size: 26px;
+    margin-top: 5px;
   }
 
   .subtitle {
-    margin-top: 70px;
     margin-bottom: 20px;
+    margin-top: 70px;
   }
 
   div.subtitle {
-    width: 420px;
-    text-align: left;
     margin-left: auto;
     margin-right: auto;
     margin-top: 40px;
+    text-align: left;
+    width: 420px;
 
     h5 {
       font-size: 16px;
@@ -107,53 +119,70 @@
     }
 
     h5.great-thing {
-      margin-left: 15px;
       font-weight: 300;
+      margin-left: 15px;
+      
       &:before {
         content: url(/img/arrow-list.png);
         margin-right: 5px;
       }
     }
-
   }
 }
 
-/* Welcome new user in document archive view - EXPERIMENT */
-.new-post-sign-view-user-first-row-highlighted .archive .list-container .table tbody tr:first-child { border: 2px #53B688 solid; }
-.new-post-sign-view-user-first-row-highlighted .archive .list-container .option-top-box { display: none; }
-.new-post-sign-view-user-first-row-highlighted .archive .list-container { margin-top: 50px; }
-.new-post-sign-view-user-first-row-highlighted .archive .tab-viewer-header { display: none; }
+
+// Welcome new user in document archive view - EXPERIMENT
+// -------------------------
+
+.new-post-sign-view-user-first-row-highlighted .archive .list-container .table tbody tr:first-child {
+  border: 2px #53b688 solid;
+}
+
+.new-post-sign-view-user-first-row-highlighted .archive .list-container .option-top-box {
+  display: none;
+}
+
+.new-post-sign-view-user-first-row-highlighted .archive .list-container {
+  margin-top: 50px;
+}
+
+.new-post-sign-view-user-first-row-highlighted .archive .tab-viewer-header {
+  display: none;
+}
 
 .new-post-sign-view-user-first-row-highlighted .archive {
 
   .mark-document-overlay {
-    width: 1015px;
-    height: 41px;
     background-color: rgba(83, 182, 136, 0.24);
+    height: 41px;
     position: absolute;
+    width: 1015px;
   }
 
   .inner-container.experiment4 {
+    background-color: #fafafa;
+    border: 2px solid #f2f2f2;
+    -webkit-border-radius: 10px 10px;
+    border-radius: 10px 10px;
+    display: inline-block;
+    margin-bottom: 400px;
+    margin-top: 40px;
+    padding: 46px 20px 53px 100px;
+    
     .subtitle {
       width: 489px;
     }
-    margin-top: 40px;
-    margin-bottom: 400px;
-    background-color: #FAFAFA;
-    border: 2px solid #F2F2F2;
-    -webkit-border-radius: 10px 10px;
-    border-radius: 10px 10px;
-    padding: 46px 20px 53px 100px;
-    display: inline-block;
+
     .subtitle {
-      margin-top:0px !important;
+      margin-top: 0px !important;
     }
 
     .explanation {
-      font-weight: 400;
-      color: #4A4949;
+      color: #4a4949;
       font-size: 20px;
+      font-weight: 400;
       margin-bottom: 3px;
+
       &.second-h5 {
         font-size: 17px;
         margin-top: 9px;
@@ -161,29 +190,30 @@
     }
 
     .design-view-document-buttons-upload-button {
-      float:left;
+      float: left;
     }
   }
 
   .document-description {
-
+    left: -37px;
     position: relative;
     top: -39px;
-    left: -37px;
 
-    img, h3 {
+    img,
+    h3 {
       display: inline-block;
     }
 
     h3 {
-      top: 32px;
-      left: 6px;
+      color: @brand-secondary;
       font-size: 25px;
       font-weight: 400;
+      left: 6px;
+      top: 32px;
       position: relative;
-      color: @brand-secondary;
+      
       span {
-        color: #4A4949;
+        color: #4a4949;
         font-size: 17px;
         font-weight: 300;
         line-height: 28px;
@@ -196,4 +226,6 @@
     }
   }
 }
-/* END - Welcome new user in document archive view - EXPERIMENT */
+
+// END - Welcome new user in document archive view - EXPERIMENT
+// -------------------------

@@ -11,48 +11,50 @@
   }
 
   .branding-container {
-    width: 723px;
+    background-color: @white;
     border: 2px solid #eee;
     display: inline-block;
-    background-color: @white;
-    padding: 25px;
     margin-top: 8px;
+    padding: 25px;
+    width: 723px;
 
     .sample-sign-view-header {
+      border-bottom: 1px solid #dee4ed;
       display: table;
       min-height: 50px;
       width: 100%;
-      border-bottom: 1px solid #dee4ed;
 
       .logo {
-        padding: 10px 10px 10px 41px;
         display: table-cell;
+        padding: 10px 10px 10px 41px;
         vertical-align: middle;
       }
+
       .header-text {
         display: table-cell;
         font-size: 10px;
-        vertical-align: middle;
-        text-align: right;
         padding-right: 38px;
+        text-align: right;
+        vertical-align: middle;
       }
     }
   }
 
   div.option label {
     font-size: 17px;
-    line-height: 20px;
     font-weight: 300;
+    line-height: 20px;
   }
 
   .checkboxtoggle {
     width: 30px;
   }
+
   .checkbox-box {
-    vertical-align : top;
+    vertical-align: top;
 
     .checkbox {
-      margin-top:5px;
+      margin-top: 5px;
       vertical-align: top;
     }
 
@@ -67,117 +69,117 @@
   }
 
   .colourdisplay {
-    width: 0px;
+    background: url(/img/colorpicker/select2.png) repeat scroll center center transparent;
+    border: solid 1px #eeeeee;
+    display: inline-block;
     margin-left: 20px;
     margin-top: 1px;
     padding: 14px 14px;
-    border: solid 1px #EEEEEE;
-    vertical-align : top;
-    display : inline-block;
-    background: url("/img/colorpicker/select2.png") repeat scroll center center transparent;
+    vertical-align: top;
+    width: 0px;
   }
 
   .logocustomise {
+    padding-bottom: 10px;
     padding-left: 23px;
     padding-right: 30px;
-    padding-bottom: 10px;
   }
 
   .sample {
-    width: 650px;
-    margin: 10px 30px;
     background-color: @white;
+    border:1px solid #dddddd;
     padding: 10px;
-    border:1px solid #DDDDDD;
-
+    margin: 10px 30px;
+    width: 650px;
 
     .header {
       padding: 10px;
     }
 
     hr {
-      height:1px;
-      border:none;
-      background:#fff;
-      width:330px;
+      background: @white;
+      border: none;
+      height: 1px;
+      width: 330px;
     }
 
     .logo {
       min-height: 33px;
-      text-align: center;
       padding: 20px;
+      text-align: center;
     }
 
     .header {
+
       .subject {
-        width: 100%;
-        text-align: center;
-        font-weight: 100;
         font-size: 24px;
+        font-weight: 100;
         letter-spacing: 0.04em;
-        padding: 0px;
         margin: 0px;
+        padding: 0px;
+        text-align: center;
         text-transform: none;
+        width: 100%;
       }
 
       .strapline {
-        width: 100%;
-        text-align: center;
         display: block;
-        font-weight: 100;
         font-size: 11px;
-        margin: 0px;
-        margin-bottom: 20px;
+        font-weight: 100;
+        margin: 0 0 20px 0;
+        text-align: center;
         text-transform: none;
+        width: 100%;
       }
     }
   }
+
   .save {
     margin: 4px 2px 0px 0px;
   }
 
   .hue-display {
-    text-decoration: none;
-    max-height: 16px;
+    color: @white;
+    cursor: pointer;
+    display: inline-block;
     font: 16px/16px Helvetica Neue, Arial, sans-serif;
+    margin: 0 0 0 20px;
+    max-height: 16px;
     padding: 6px 10px;
-    margin: 0;
-    color: #fff;
-    text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0;
     text-align: center;
-    -webkit-transition: 0.15s ease-in-out;
+    text-decoration: none;
+    text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0;
+    -moz-transform: translatez(0);
+    -ms-transform: translatez(0);
+    -o-transform: translatez(0);
+    -webkit-transform: translatez(0);
+    transform: translatez(0);
     -moz-transition: 0.15s ease-in-out;
     -ms-transition: 0.15s ease-in-out;
     -o-transition: 0.15s ease-in-out;
+    -webkit-transition: 0.15s ease-in-out;
     transition: 0.15s, ease-in-out;
-    cursor: pointer;
     -moz-user-select: none;
     -ms-user-select: none;
     -o-user-select: none;
     -webkit-user-select: none;
     user-select: none;
-    display: inline-block;
-    -webkit-transform: translatez(0);
-    -moz-transform: translatez(0);
-    -ms-transform: translatez(0);
-    -o-transform: translatez(0);
-    transform: translatez(0);
     zoom: 1;
-    margin-left: 20px;
   }
+
   .mail-sample {
-    width: 608px;
     margin: auto;
+    width: 608px;
 
     td {
-      padding : 4px 0;
+      padding: 4px 0;
     }
 
     .emailpreviewlogo {
       border: none;
-      max-width: 600px;
-      margin-top: 20px;
       margin-left: 7px;
+      margin-top: 20px;
+      max-width: 600px;
     }
 
     .maintable {
@@ -221,31 +223,31 @@
     }
 
     .emailpreviewbutton {
-      background: hsl(215, 30%, 35%);
-      text-decoration: none;
-      max-height: 16px;
-      font: 16px/16px Helvetica Neue, Arial, sans-serif;
-      padding: 12px 20px;
-      margin: 0 0 0 3px;
+      background: hsl(215, 30%, 35%); // TODO: change to variable or hex
       color: @white;
+      cursor: pointer;
+      display: inline-block;
+      font: 16px/16px Helvetica Neue, Arial, sans-serif;
+      margin: 0 0 0 3px;
+      max-height: 16px;
+      padding: 12px 20px;
       text-align: center;
-      -webkit-transition: 0.15s ease-in-out;
+      text-decoration: none;
+      -moz-transform: translatez(0);
+      -ms-transform: translatez(0);
+      -o-transform: translatez(0);
+      -webkit-transform: translatez(0);
+      transform: translatez(0);
       -moz-transition: 0.15s ease-in-out;
       -ms-transition: 0.15s ease-in-out;
       -o-transition: 0.15s ease-in-out;
+      -webkit-transition: 0.15s ease-in-out;
       transition: 0.15s, ease-in-out;
-      cursor: pointer;
       -moz-user-select: none;
       -ms-user-select: none;
       -o-user-select: none;
       -webkit-user-select: none;
       user-select: none;
-      display: inline-block;
-      -webkit-transform: translatez(0);
-      -moz-transform: translatez(0);
-      -ms-transform: translatez(0);
-      -o-transform: translatez(0);
-      transform: translatez(0);
       zoom: 1;
     }
 
@@ -256,35 +258,35 @@
 
     .documentpreview {
       border: none;
-      max-width:150px;
+      max-width: 150px;
     }
 
     .documentpreviewdiv {
+      border: 1px solid #dee4ed;
       float: left;
       margin: 2px 26px 42px 46px;
-      border: 1px solid #dee4ed;
     }
 
     .documentcontent {
       color: #333;
       font-family: @font-family-sans;
       font-size: 16px;
+      margin-top: 24px;
       line-height: 150%;
       text-align: left;
-      margin-top: 24px;
     }
 
     .contenttable {
       border-bottom-color: #dee4ed;
-      border-bottom-width: 1px;
       border-bottom-style: solid;
+      border-bottom-width: 1px;
     }
 
     .emailpreviewfooter {
       color: #999;
       font-family: @font-family-sans;
-      font-style: italic;
       font-size: 13px;
+      font-style: italic;
       line-height: 125%;
       text-align: justify;
       padding: 4px 40px 8px;
@@ -296,9 +298,9 @@
     }
 
     .maincontenttable {
+      background-color: @white;
       border: 4px solid #dee4ed;
       border-top: auto;
-      background-color: @white;
     }
   }
 }
@@ -311,7 +313,7 @@
 .tab-viewer .tab-container .companybranding .sample .content {
   color: #212121;
   font-size: 12px;
-  text-transform: none;
-  margin-top: 30px;
   margin-bottom: 20px;
+  margin-top: 30px;
+  text-transform: none;  
 }
