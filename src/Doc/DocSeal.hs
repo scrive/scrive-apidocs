@@ -339,8 +339,7 @@ sealSpecFromDocument2 boxImages hostpart document elog ces content inputpath out
   in do
       -- Log.debug "Creating seal spec from file."
       -- Remove events induced by resealing and non-signing party activities
-      let eventsForHistory = filter (not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType)
-                           . filter (not . viewingParty)
+      let eventsForHistory = filter eventForVerificationPage . filter (not . viewingParty)
           viewingParty e = viewer (evAffectedSigLink e) || viewer (evSigLink e)
                where viewer s = (signatoryispartner <$> s) == Just False
       history <- (mapM mkHistEntry . eventsForHistory) =<< getSignatoryLinks (eventsForLog elog)

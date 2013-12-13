@@ -9,6 +9,7 @@ module EvidenceLog.View (
     , htmlSkipedEvidenceType
     , evidenceOfIntentHTML
     , simpleEvents
+    , eventForVerificationPage
   ) where
 
 
@@ -177,6 +178,9 @@ emptyEvent :: DocumentEvidenceEvent -> Bool
 emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffectedSigLink = Nothing }) = True
 emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
+
+eventForVerificationPage :: DocumentEvidenceEvent' a -> Bool
+eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType
 
 -- | Produce simplified text for an event.  If actor is provided, the
 -- text is for the verification page, otherwise it is for the archive.
