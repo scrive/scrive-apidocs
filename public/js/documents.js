@@ -144,7 +144,22 @@ window.Document = Backbone.Model.extend({
           return this.get("daystosign");
     },
     setDaystosign: function(daystosign) {
+         var old = this.get("daystosign");
          this.set({"daystosign": daystosign}, {silent: true});
+         if (old != this.get("daystosign"))
+           this.trigger('change:daystosign');
+         if (this.daystoremind() != undefined && this.daystoremind() > daystosign)
+           this.setDaystoremind(undefined);
+    },
+    daystoremind: function() {
+          return this.get("daystoremind");
+    },
+    setDaystoremind: function(daystoremind) {
+         var old = this.get("daystoremind");
+         this.set({"daystoremind": daystoremind == undefined || isNaN(daystoremind) ? undefined : Math.min(this.daystosign(),daystoremind)}, {silent: true});
+         if (old != this.get("daystoremind") || daystoremind != this.get("daystoremind"))
+           this.trigger('change:daystoremind');
+
     },
     infotext: function() {
         return this.get("infotext");
@@ -166,6 +181,13 @@ window.Document = Backbone.Model.extend({
               url: "/api/frontend/prolong/" + this.documentid(),
               method: "POST",
               timezone: jstz.determine().name(),
+              days : days
+          });
+    },
+    setautoreminder: function(days) {
+          return new Submit({
+              url: "/api/frontend/setautoreminder/" + this.documentid(),
+              method: "POST",
               days : days
           });
     },
@@ -327,6 +349,7 @@ window.Document = Backbone.Model.extend({
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
+          daystoremind: this.get("daystoremind") != undefined ? this.get("daystoremind") : null,
           apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           lang: this.lang().draftData(),
@@ -395,10 +418,12 @@ window.Document = Backbone.Model.extend({
     },
     datamismatch: function() {
         return _.any(this.signatory, function() {return this.datamismatch() == true;});
-
     },
     timeouttime: function() {
         return this.get("timeouttime");
+    },
+    autoremindtime: function() {
+        return this.get("autoremindtime");
     },
     file: function()
     {
@@ -581,11 +606,13 @@ window.Document = Backbone.Model.extend({
        canseeallattachments: args.canseeallattachments,
        status: args.status,
        timeouttime: args.timeouttime == undefined ? undefined : new Date(Date.parse(args.timeouttime)),
+       autoremindtime: args.autoremindtime == undefined ? undefined : new Date(Date.parse(args.autoremindtime)),
        signorder: args.signorder,
        authentication: args.authentication,
        delivery: args.delivery,
        template: args.template,
        daystosign: args.daystosign,
+       daystoremind: args.daystoremind,
        invitationmessage: args.invitationmessage,
        ready: true
      };

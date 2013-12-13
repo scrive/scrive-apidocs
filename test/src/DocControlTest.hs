@@ -33,6 +33,7 @@ import Util.SignatoryLinkUtils
 import Util.Actor
 import Doc.API
 import ELegitimation.BankIDUtils
+import DB.TimeZoneName (mkTimeZoneName)
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
@@ -121,7 +122,8 @@ testLastPersonSigningADocumentClosesIt = do
 
 
     do t <- documentctime <$> theDocument
-       randomUpdate $ PreparationToPending (systemActor t) Nothing
+       tz <- mkTimeZoneName "Europe/Stockholm"
+       randomUpdate $ PreparationToPending (systemActor t) tz
     let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
     siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
 
@@ -242,7 +244,7 @@ testSendingReminderClearsDeliveryInformation = do
     -- who cares which one, just pick the last one
     req <- mkRequest POST []
     (_link, _ctx') <- do
-      updateDocumentWithID $ \did -> runTestKontra req ctx $ withDocumentID did $ sendReminderEmail Nothing actor sl
+      updateDocumentWithID $ \did -> runTestKontra req ctx $ withDocumentID did $ sendReminderEmail Nothing actor False sl
     Just sl' <- find (\t -> signatorylinkid t == signatorylinkid sl) . documentsignatorylinks <$> theDocument
     assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
 

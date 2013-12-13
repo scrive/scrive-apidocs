@@ -31,7 +31,7 @@ module Doc.DocControl(
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import DB
-import Doc.Action
+import Doc.DocMails
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery
@@ -387,7 +387,7 @@ handleResend docid signlinkid  = withUserPost $
   signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
   customMessage <- getOptionalField  asValidInviteText "customtext"
   actor <- guardJustM $ fmap mkAuthorActor getContext
-  _ <- sendReminderEmail customMessage actor signlink
+  _ <- sendReminderEmail customMessage actor False signlink
   return (LinkIssueDoc docid)
 
 --This only works for undelivered mails. We shoulkd check if current user is author

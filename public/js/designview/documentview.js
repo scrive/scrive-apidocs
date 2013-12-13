@@ -23,7 +23,6 @@
             $(window).resize(function() {
                 var myTop = view.$el.offset().top;
                 var winHeight = $(window).height();
-                view.$el.css('min-height', Math.max(winHeight - myTop, 300));
                 view.refreshMargins();
             });
             view.viewmodel.bind('change:step', function() {
@@ -78,12 +77,36 @@
             div.append(this.file.view.el);
             return div;
         },
+        // this is called when designview window resizes and fixes
+        // the size of the empty document space (before document upload)
         refreshMargins : function() {
-          // where do these constants come from?
-          if (this.wrapperDiv != undefined)
-            this.wrapperDiv.css("height", ($(window).height() - 216 - $('.blocking-info').height()) + "px");
-          if (this.wrapperDiv != undefined)
-            this.innerDiv.css("margin-top", (Math.floor($(window).height() - 256)/2) - 60) + "px";
+          var designViewFrameTopBar = $('.design-view-frame-top-bar');
+          var designViewButtonBar = $('.design-view-button-bar');
+          if (designViewFrameTopBar.length == 0 || designViewButtonBar.length == 0) {
+            // content not displayed yet, skip margin fixing
+            return;
+          }
+
+          var sizeOfEverythingAboveEmptyDocSpace = designViewFrameTopBar.height() + designViewFrameTopBar.offset().top;
+          var sizeOfFooter = $(window).height() - designViewButtonBar.offset().top; // size of everything that is below the empty document space
+          var paddingSize = 36; // 2 * documentview.less: .design-view-document-buttons-wrapper-outer[padding-(top|bottom)]
+          var docHeight = Math.floor($(window).height() - sizeOfEverythingAboveEmptyDocSpace - sizeOfFooter - paddingSize);
+
+          if (this.wrapperDiv != undefined) {
+            this.wrapperDiv.css('height', docHeight + 'px');
+          }
+
+          if (this.innerDiv != undefined) {
+            // shift upload button to the middle of empty space (if there's enough of it)
+            var uploadButtonDivHeight = $('.design-view-document-buttons').height();
+            if (docHeight >= uploadButtonDivHeight) {
+              var docMinHeight = 220; // documentview.less: .design-view-document-buttons-wrapper-outer[min-height]
+              var realDocSize = Math.max(docHeight, docMinHeight);
+              this.innerDiv.css('margin-top', (Math.floor((realDocSize - uploadButtonDivHeight) / 2)) + 'px');
+            } else {
+              this.innerDiv.css('margin-top', '');
+            }
+          }
         },
         uploadButtons: function() {
             var view = this;

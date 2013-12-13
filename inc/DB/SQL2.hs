@@ -155,6 +155,7 @@ module DB.SQL2
   , sqlTurnIntoWhyNotSelect
 
   , sqlSelect
+  , sqlSelect2
   , SqlSelect(..)
   , sqlInsert
   , SqlInsert(..)

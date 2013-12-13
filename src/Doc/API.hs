@@ -91,6 +91,8 @@ import Data.List
 import Data.Char
 import Attachment.Model
 import Utils.Read
+import Doc.DocMails
+import Doc.AutomaticReminder.Model
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -114,6 +116,7 @@ versionedAPI _version = choice [
 
   dir "restart"            $ hPost $ toK1 $ apiCallRestart,
   dir "prolong"            $ hPost $ toK1 $ apiCallProlong,
+  dir "setautoreminder"    $ hPost $ toK1 $ apiCallSetAutoReminder,
 
 
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
@@ -327,11 +330,11 @@ apiCallReady did =  api $ do
       whenM (isNothing . documentfile <$> theDocument) $ do
             throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
       t <- ctxtime <$> getContext
-      dbUpdate $ PreparationToPending actor (Just timezone)
+      dbUpdate $ PreparationToPending actor timezone
       dbUpdate $ SetDocumentInviteTime t actor
 
       skipauthorinvitation <- isFieldSet "skipauthorinvitation"
-      postDocumentPreparationChange skipauthorinvitation
+      postDocumentPreparationChange skipauthorinvitation timezone
       Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
 
 apiCallCancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
@@ -501,14 +504,40 @@ apiCallProlong did =  api $ do
             throwIO . SomeKontraException $ (conflictError "Document is not timedout")
       mdays <- getDefaultedField 1 asValidNumber "days"
       days <- case mdays of
-           Nothing -> throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and 90")
+           Nothing -> throwIO . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
            Just n -> if (n < 1 || n > 90)
-                              then throwIO . SomeKontraException $ (badInput "Number of days to sing must be a valid number, between 1 and 90")
+                              then throwIO . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
                               else return n
       timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
       dbUpdate $ ProlongDocument days (Just timezone) actor
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
+
+
+apiCallSetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallSetAutoReminder did =  api $ do
+    ctx <- getContext
+    checkObjectVersionIfProvided did
+    (user, _actor, _) <- getAPIUser APIDocSend
+    withDocumentID did $ do
+      auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+      when (not $ (auid == userid user)) $ do
+            throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+      unlessM (isPending <$> theDocument) $ do
+            throwIO . SomeKontraException $ (conflictError "Document is not pending")
+      mdays <- getOptionalField asValidNumber "days"
+      days <- case mdays of
+           Nothing -> return Nothing
+           Just n -> do tot <- documenttimeouttime <$> theDocument
+                        if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > fromJust tot)
+                          then throwIO . SomeKontraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
+                          else return $ Just n
+      timezone <- mkTimeZoneName =<< (fromMaybe "Europe/Stockholm" <$> getField "timezone")
+      setAutoreminder did days timezone
+      triggerAPICallbackIfThereIsOne =<< theDocument
+      Accepted <$> (documentJSON (Just $ user) False True True Nothing Nothing =<< theDocument)
+
+
 
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
@@ -520,7 +549,7 @@ apiCallRemind did =  api $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
     when (not $ (auid == userid user)) $ do
           throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
-    _ <- sendAllReminderEmails actor user
+    _ <- sendAllReminderEmailsExceptAuthor actor False
     Accepted <$> (documentJSON (Just user) False True True Nothing Nothing =<< theDocument)
 
 apiCallDelete :: Kontrakcja m => DocumentID -> m Response

@@ -1,117 +1,117 @@
 @import 'util.less';
 @import '../branding/elements.less';
-@import '../branding/colors.less';
+@import '../branding/variables.less';
 
 // hide the page footer in design view
 body.designview > footer {
-    display: none;
+  display: none;
 }
 
 body.designview .mainContainer {
-    margin-top: 0;
-    margin-bottom: 0;
-    min-height : 0;
-    width: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
+  min-height : 0;
+  width: 100%;
 }
 
 .design-view-frame {
-    .box-sizing(border-box);
-    border-bottom: none;
-    position: relative;
+  .box-sizing(border-box);
+  border-bottom: none;
+  position: relative;
 }
 
 .design-view-frame-top-bar {
-    width: 100%;
-    height: 60px;
-    z-index: 1000;
-    left: 0;
-    position: relative;
-    top: 0;
+  width: 100%;
+  height: 60px;
+  z-index: 1000;
+  left: 0;
+  position: relative;
+  top: 0;
 }
 
 .design-view-tab-container {
-    .box-sizing(border-box);
-    height: 60px;
-    font-size:16px;
-    cursor: pointer;
-    width: 1018px;
-    margin: 0 auto;
-    background: white;
+  .box-sizing(border-box);
+  height: 60px;
+  font-size:16px;
+  cursor: pointer;
+  width: 1018px;
+  margin: 0 auto;
+  background: @white;
 }
 
 .tab-active {
-    border-top: 4px solid #7a94b8;
-    border-bottom: 4px solid #fff;
+  border-top: 4px solid #7a94b8;
+  border-bottom: 4px solid @white;
 }
 
 .tab-hover {
-    border-top: 4px solid #7a94b8;
-    border-bottom: 4px solid #fff;
+  border-top: 4px solid #7a94b8;
+  border-bottom: 4px solid @white;
 }
 
 
 .designview {
   .pagediv {
-      margin-top: 15px;
-      &#page1 {
-	  margin-top: 0px;
-      }
+    margin-top: 15px;
+    &#page1 {
+      margin-top: 0px;
+    }
   }
 
   .tab-viewer {
     width: 100%;
     .tab-viewer-header {
-        .box-sizing(border-box);
-        margin-bottom: 0px;
-	z-index:999;
-	position:relative;
+      .box-sizing(border-box);
+      margin-bottom: 0px;
+      z-index:999;
+      position:relative;
     }
     .tabs {
-        margin: auto;
-        width: 1018px;
-        border: none;
-        height: 60px;
-        li {
-          padding: 22px 24px 18px 24px;
-          line-height: 32px;
-          &.inactive, &.inactive:hover{
-            .design-view-tab-text {
-              color: #AAAAAA;
-              .design-view-tab-text-optional {
-                color: #AAAAAA;
-              }
-            }
-          }
-          &.active, &:hover {
-              border-top: 4px solid @blue;
-              padding: 18px 24px 18px 24px;
-              background: none repeat scroll 0 0 white;
-              h5 {
-                  color : #333333;
-              }
-            }
-
+      margin: auto;
+      width: 1018px;
+      border: none;
+      height: 60px;
+      li {
+        padding: 22px 24px 18px 24px;
+        line-height: 32px;
+        &.inactive, &.inactive:hover{
           .design-view-tab-text {
-              display: inline-block;
-              width: 290px;
-              height: 100%;
-              font-size: 18px;
-	      color:#262626;
-              position: relative;
-              text-align : center;
-              &.grayed {
-                  background-color: @disabled-grey-background;
-                  color: #AAAAAA;
-                  .design-view-tab-text-optional {
-                    color: #AAAAAA;
-                  }
-
-              }
-              .design-view-tab-text-optional {
-                font-size: 15px;
-                color: #808080;
+            color: #AAAAAA;
+            .design-view-tab-text-optional {
+              color: #AAAAAA;
             }
           }
+        }
+        &.active, &:hover {
+          border-top: 4px solid @brand-primary-darker;
+          padding: 18px 24px 18px 24px;
+          background: none repeat scroll 0 0 @white;
+          h5 {
+            color : #333333;
+          }
+        }
+
+        .design-view-tab-text {
+          display: inline-block;
+          width: 290px;
+          height: 100%;
+          font-size: 18px;
+          color:#262626;
+          position: relative;
+          text-align : center;
+          &.grayed {
+            background-color: @disabled-grey-background;
+            color: #AAAAAA;
+            .design-view-tab-text-optional {
+              color: #AAAAAA;
+            }
+
+          }
+          .design-view-tab-text-optional {
+            font-size: 15px;
+            color: #808080;
+          }
+        }
         &.float-left.last-tab {
           border-left: 1px solid #CCCCCC;
           .design-view-tab-text {
@@ -132,19 +132,19 @@ body.designview .mainContainer {
 /// @ACTION CONTAINER ///
 
 .design-view-action-container {
-    .clearfix();
-    width: 1018px;
-    margin: 0 auto;
-    position: relative;
+  .clearfix();
+  width: 1018px;
+  margin: 0 auto;
+  position: relative;
 }
 
 .design-view-action-container-shadow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 10px;
-    .box-shadow(0 4px 0 rgba(0,0,0,0.05) inset);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  .box-shadow(0 4px 0 rgba(0,0,0,0.05) inset);
 }
 
 
@@ -161,12 +161,11 @@ body.designview .mainContainer {
 /// @DOCUMENT ///
 
 .design-view-document-container {
-    .box-sizing(border-box);
-    overflow: auto;
-    min-height: 300px;
-    margin: auto;
-    position: relative;
-    padding-top: 20px; // needs to be the same value, as the padding-top value in DesignView.unfix()
+  .box-sizing(border-box);
+  overflow: auto;
+  min-height: 300px;
+  margin: auto;
+  position: relative;
 }
 
 
@@ -174,47 +173,47 @@ body.designview .mainContainer {
 /// @BUTTONS ///
 
 .design-view-button-bar {
-    width: 100%;
-    height: 64px;
-    bottom: 0;
-    left: 0;
-    position: absolute;
-    position: fixed;
-    z-index: 1001;
-    background: #495259;
-    .box-shadow(0px -4px rgba(0, 0, 0, 0.05));
+  width: 100%;
+  height: 64px;
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  position: fixed;
+  z-index: 1001;
+  background: @brand-primary;
+  .box-shadow(0px -4px rgba(0, 0, 0, 0.05));
 }
 
 .design-view-button-bar-inner {
-    width: 1018px;
-    height: 100%;
-    margin: auto;
+  width: 1018px;
+  height: 100%;
+  margin: auto;
 
-    a.button {
-        margin-top: 15px;
-        margin-right: 15px;
+  a.button {
+    margin-top: 15px;
+    margin-right: 15px;
+  }
+
+  a.sendButton {
+    float: right;
+    &.disabled {
+      @disabled: @brand-primary-darker;
+      color: #6B6B6B !important;
+      background-color: @disabled;
+      &:hover {
+        background-color: darken(@disabled, 10%);
+      }
     }
-    
-    a.sendButton {
-        float: right;
-        &.disabled {
-            @disabled: @blue;
-            color: #6B6B6B !important;
-            background-color: @disabled;
-            &:hover {
-                background-color: darken(@disabled, 10%);
-            }
-        }
-    }
+  }
 }
 
 .design-view-button-remove {
-    .box-sizing(border-box);
-    height: 100%;
-    width: 20%;
-    cursor: pointer;
-    display: inline-block;
-    position: relative;
-    border-right: 1px solid #ccc;
-    background-color: white;
+  .box-sizing(border-box);
+  height: 100%;
+  width: 20%;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  border-right: 1px solid #ccc;
+  background-color: @white;
 }

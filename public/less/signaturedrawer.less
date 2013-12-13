@@ -1,10 +1,13 @@
 @import 'designview/util.less';
+@import 'branding/variables.less';
 
 .drawing-modal {
-  z-index : 5001;
+  z-index: 5001;
+  
   .modal-close {
-      background-image: url("/img/sprite-grey-X.png");
+    background-image: url("/img/sprite-grey-X.png");
   }
+
   .modal-footer {
     border-top: medium none;
     margin: 0;
@@ -12,25 +15,25 @@
   }
 
   .signatureDrawingBoxWrapper {
-    margin: 10px auto 0;
     border: 1px solid #CCCCCC;
+    margin: 10px auto 0;    
   }
 
   .signatureDrawingBox {
-    position: relative; /*Important for dealing with drawing events*/
-    background-color: #ffffff;
+    background-color: @white;
+    position: relative; // Important for dealing with drawing events
+    
     canvas {
       position:absolute;
-      z-index: 1000;
       -ms-touch-action: none;
+      z-index: 1000;
     }
   }
 
-
   .header h1 {
-    text-align: center;
+    color : @black;
     font-size : 20pt;
-    color : #000000;
     margin: 20px auto;
+    text-align: center;
   }
 }

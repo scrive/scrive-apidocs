@@ -1,80 +1,85 @@
 @media all and (max-width: 1160px) {
-    aside.contact nav.contact  { display: none; }
+  aside.contact nav.contact  { display: none; }
 }
 
 aside.contact nav.contact {
-  position : fixed;
-  top : 50%;
-  left : 0;
-  margin-top : -90px;
-  height : 180px;
-  width : 60px;
-  margin-left : 4px;
-  z-index : 1097;
+  left: 0;
+  height: 180px;
+  margin-left: 4px;
+  margin-top: -90px;
+  position: fixed;
+  top: 50%;
+  z-index: 1097;
+  width: 60px;
   ul {
     li {
       &:last-child a .hover { height: 36px;}
-      width : 60px;
-      height : 60px;
-      position : relative;
+      height: 60px;
+      position: relative;
+      width: 60px;
+
       a {
-        width : 64px;
-        border-left : 4px solid transparent;
-        margin-left : -4px;
-        margin-top : -1px;
-        display : block;
-        transition : .15s ease-in-out all;
+        display: block;
+        border-left: 4px solid transparent;
+        margin-left: -4px;
+        margin-top: -1px;
+        transition: .15s ease-in-out all;
+        width: 64px;
 
         .icon {
-          border : 1px solid @blue-border;
-          text-align : center;
-          position : relative;
-          background : #fff;
-          width : 60px;
-          height : 60px;
-          z-index : 10;
+          border: 1px solid @blue-border;
+          text-align: center;
+          position: relative;
+          background: @white;
+          width: 60px;
+          height: 60px;
+          z-index: 10;
+
           img {
-            opacity : .66;
-            transition : .15s ease-in-out all;
-            margin : 14px;
+            margin: 14px;
+            opacity: .66;
+            transition: .15s ease-in-out all;
           }
         }
         .hover {
-          position : absolute;
-          z-index : 0;
-          top : 0;
-          left : -180px;
-          height : 34px;
-          width : 180px;
-          padding : 12px 16px;
-          opacity : 0;
-          background : #fff;
-          border : 1px solid @blue-border;
-          border-left : none;
+          background: @white;
+          border: 1px solid @blue-border;
+          border-left: none;
+          left: -180px;
+          height: 34px;
+          padding: 12px 16px;
+          position: absolute;
+          opacity: 0;
+          top: 0;
+          width: 180px;
+          z-index: 0;
+
           p {
-            margin-bottom : 0;
-            font : 14px/1 @source;
-            color : @text-very-dark;
-            margin : 0;
+            color: @primary-font-color;
+            font: 14px/1 @font-family-source;
+            margin: 0;
+            margin-bottom: 0;
           }
           small {
-            font : .75em/1 @source;
             color : @text-dark;
+            font : .75em/1 @font-family-source;
           }
         }
         &:hover {
           border-color : @blue-medium;
+
           .icon {
             img {
               opacity : 1;
             }
           }
+
           .hover {
-            opacity : 1;
             left :60px;
+            opacity : 1;
           }
         }
+      }
     }
-  }
   }
 }

@@ -4,7 +4,7 @@ body {
   margin: 0;
   position: relative;
   z-index: 10;
-  background: #fff;
+  background: @white;
 }
 .clearfix {
   &:before, &:after {
@@ -12,7 +12,7 @@ body {
     display: table;
   }
   &:after {
-      clear: both;
+    clear: both;
   }
 }
 .container {
@@ -83,7 +83,7 @@ ul.color {
   width: 184px;
   height: 184px;
   float: left;
-  color: #fff;
+  color: @white;
   background: #000;
   margin: 8px;
 }
@@ -93,14 +93,14 @@ ul.color.blue-light {background: @blue-light}
 ul.color.blue-border {background: @blue-border}
 ul.color.blue-border li {color: @blue-dark}
 ul.color.blue-border li:last-of-type {color: @blue-medium}
-ul.color.red {background: @red}
-ul.color.hover {background: @red-dark}
+ul.color.red {background: @brand-negative}
+ul.color.hover {background: @brand-negative-darker}
 ul.color.text-dark {background: @text-dark}
 ul.color.text-medium {background: @text-medium}
 ul.color.text-light {background: @text-light}
 ul.color li {
   line-height: 32px;
-  color: #fff;
+  color: @white;
   margin: 0;
 }
 ul.color li.title {

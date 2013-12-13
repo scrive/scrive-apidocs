@@ -2,7 +2,7 @@
 .change-language {
     .select-opts, .select-button, .select-button-label {
 	background: #29313c !important;
-	color: #fff !important;
+	color: @white !important;
 	font-weight: 600;
     }
 
@@ -24,7 +24,7 @@ footer.site {
   width:100%;
   &.thin { min-width: 960px; }
   &.logged-in {
-    background: #ffffff;
+    background: @white;
     border-top: 1px solid #DEE4ED;
     padding-top: 40px;
     padding-bottom: 35px;
@@ -35,7 +35,7 @@ footer.site {
   font-size : 16px;
   padding-top: 67px;
   padding-bottom: 36px;
-  background: @blue-header;
+  background: @brand-primary;
   z-index: 90;
   .clearfix;
   .ct {
@@ -46,7 +46,7 @@ footer.site {
       }
   }
   .visions p {
-      font-family: @source;
+      font-family: @font-family-source;
       font-size: 24px;
       color: #1d2231;
       margin: 0 0 28px;

@@ -1,5 +1,7 @@
+@import 'branding/variables';
+
 .companybranding {
-    
+
   .tab-viewer {
     width: 100%;
   }
@@ -9,12 +11,12 @@
   }
 
   .branding-container {
-    width:723px;
+    width: 723px;
     border: 2px solid #eee;
-    display:inline-block;
-    background-color:white;
-    padding:25px;
-    margin-top:8px;
+    display: inline-block;
+    background-color: @white;
+    padding: 25px;
+    margin-top: 8px;
 
     .sample-sign-view-header {
       display: table;
@@ -46,8 +48,9 @@
   .checkboxtoggle {
     width: 30px;
   }
- .checkbox-box {
+  .checkbox-box {
     vertical-align : top;
+
     .checkbox {
       margin-top:5px;
       vertical-align: top;
@@ -83,7 +86,7 @@
   .sample {
     width: 650px;
     margin: 10px 30px;
-    background-color: white;
+    background-color: @white;
     padding: 10px;
     border:1px solid #DDDDDD;
 
@@ -126,49 +129,50 @@
         margin: 0px;
         margin-bottom: 20px;
         text-transform: none;
+      }
     }
   }
- }
- .save {
-		margin: 4px 2px 0px 0px;
- }
+  .save {
+    margin: 4px 2px 0px 0px;
+  }
 
- .hue-display {
-   text-decoration: none;
-   max-height: 16px;
-   font: 16px/16px Helvetica Neue, Arial, sans-serif;
-   padding: 6px 10px;
-   margin: 0;
-   color: #fff;
-   text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0;
-   text-align: center;
-   -webkit-transition: 0.15s ease-in-out;
-   -moz-transition: 0.15s ease-in-out;
-   -ms-transition: 0.15s ease-in-out;
-   -o-transition: 0.15s ease-in-out;
-   transition: 0.15s, ease-in-out;
-   cursor: pointer;
-   -moz-user-select: none;
-   -ms-user-select: none;
-   -o-user-select: none;
-   -webkit-user-select: none;
-   user-select: none;
-   display: inline-block;
-   -webkit-transform: translatez(0);
-   -moz-transform: translatez(0);
-   -ms-transform: translatez(0);
-   -o-transform: translatez(0);
-   transform: translatez(0);
-   zoom: 1;
-   margin-left: 20px;
- }
- .mail-sample {
+  .hue-display {
+    text-decoration: none;
+    max-height: 16px;
+    font: 16px/16px Helvetica Neue, Arial, sans-serif;
+    padding: 6px 10px;
+    margin: 0;
+    color: #fff;
+    text-shadow: hsla(0, 0, 0, 0.5) 0 1px 0;
+    text-align: center;
+    -webkit-transition: 0.15s ease-in-out;
+    -moz-transition: 0.15s ease-in-out;
+    -ms-transition: 0.15s ease-in-out;
+    -o-transition: 0.15s ease-in-out;
+    transition: 0.15s, ease-in-out;
+    cursor: pointer;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    display: inline-block;
+    -webkit-transform: translatez(0);
+    -moz-transform: translatez(0);
+    -ms-transform: translatez(0);
+    -o-transform: translatez(0);
+    transform: translatez(0);
+    zoom: 1;
+    margin-left: 20px;
+  }
+  .mail-sample {
     width: 608px;
     margin: auto;
 
     td {
       padding : 4px 0;
     }
+
     .emailpreviewlogo {
       border: none;
       max-width: 600px;
@@ -183,13 +187,13 @@
     .emailpreviewcontenttable {
       border: 4px solid #dee4ed;
       border-top: auto;
-      background-color: #FFFFFF;
+      background-color: @white;
     }
 
     .emailpreviewsubject {
       color: #364963;
       display: block;
-      font-family: Helvetica Neue, Arial, sans-serif;
+      font-family: @font-family-sans;
       font-size: 28px;
       line-height: 120%;
       margin-bottom: 8px;
@@ -199,7 +203,7 @@
     .emailpreviewpoweredbyscrive {
       color: #7a94b8;
       display: block;
-      font-family: Helvetica Neue, Arial, sans-serif;
+      font-family: @font-family-sans;
       font-size: 16px;
       font-weight: normal;
       line-height: 150%;
@@ -207,7 +211,7 @@
     }
 
     .emailpreviewheadersubtablecell {
-      background-color: #fff;
+      background-color: @white;
     }
 
     .emailpreviewheadertable {
@@ -223,7 +227,7 @@
       font: 16px/16px Helvetica Neue, Arial, sans-serif;
       padding: 12px 20px;
       margin: 0 0 0 3px;
-      color: #fff;
+      color: @white;
       text-align: center;
       -webkit-transition: 0.15s ease-in-out;
       -moz-transition: 0.15s ease-in-out;
@@ -263,7 +267,7 @@
 
     .documentcontent {
       color: #333;
-      font-family: Helvetica Neue, Arial, sans-serif;
+      font-family: @font-family-sans;
       font-size: 16px;
       line-height: 150%;
       text-align: left;
@@ -278,7 +282,7 @@
 
     .emailpreviewfooter {
       color: #999;
-      font-family: Helvetica Neue, Arial, sans-serif;
+      font-family: @font-family-sans;
       font-style: italic;
       font-size: 13px;
       line-height: 125%;
@@ -287,16 +291,16 @@
     }
 
     .emailpreviewfootertable {
-      background-color: #fff;
+      background-color: @white;
       border-top: 0;
     }
 
     .maincontenttable {
       border: 4px solid #dee4ed;
       border-top: auto;
-      background-color: #FFFFFF;
+      background-color: @white;
     }
- }
+  }
 }
 
 .tab-viewer .companybranding .col {

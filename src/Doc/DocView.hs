@@ -67,6 +67,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
       J.value "time" $ jsonDate (Just $ documentmtime doc)
       J.value "ctime" $ jsonDate (Just $ documentctime doc)
       J.value "timeouttime" $ jsonDate $ documenttimeouttime doc
+      J.value "autoremindtime" $ jsonDate $ documentautoremindtime doc
       J.value "status" $ show $ documentstatus doc
       J.value "state" $ show $ documentstatus doc
       J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)
@@ -84,6 +85,7 @@ documentJSON muser includeEvidenceAttachments forapi forauthor pq msl doc = do
                                    _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
+      J.value "daystoremind" $ documentdaystoremind doc
       J.value "invitationmessage" $ documentinvitetext doc
       J.value "lang" $  case (getLang doc) of
                              LANG_EN -> "gb"

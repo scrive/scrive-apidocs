@@ -1,44 +1,44 @@
 @import 'designview/util.less';
-@import 'branding/colors.less';
+@import 'branding/variables.less';
 
 .archive, .admin {
-    .list-container {
-        border: none;
-        width: 1018px;
-        margin: auto;
-        background: transparent;
+  .list-container {
+    border: none;
+    width: 1018px;
+    margin: auto;
+    background: transparent;
 
-        .table {
-            border: none;
-            thead {
-                background: @grey;
-            }
-            tr:hover {
-                background: @slightly-darker-grey-background;
-            }
-        }
+    .table {
+      border: none;
+      thead {
+        background: @grey;
+      }
+      tr:hover {
+        background: @slightly-darker-grey-background;
+      }
     }
+  }
 
-    .option-top-box {
-        border-bottom: none;
-        // align to menu and the list.
-        .col.float-left, .col.float-right {
-            margin: 0;
-        }
-        .subbox {
-            padding-left: 0px;
-            padding-right: 0px;
-
-            .options-box .select {
-                height: 40px;
-                margin-right: 0px;
-            }
-        }
+  .option-top-box {
+    border-bottom: none;
+    // align to menu and the list.
+    .col.float-left, .col.float-right {
+      margin: 0;
     }
+    .subbox {
+      padding-left: 0px;
+      padding-right: 0px;
 
-    .tab-viewer-header .tabs li.active > h5{
-        font-weight: 400;
+      .options-box .select {
+        height: 40px;
+        margin-right: 0px;
+      }
     }
+  }
+
+  .tab-viewer-header .tabs li.active > h5{
+    font-weight: 400;
+  }
 }
 
 .archive .scrolled {
@@ -57,65 +57,65 @@
 }
 
 .table-statuses {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 3px;
-    color: @text-medium;
-    font-size: 13px;
-    margin-top: 10px;
-    padding: 10px 10px;
-    height: 13px;
-    line-height: 13px;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  color: @text-medium;
+  font-size: 13px;
+  margin-top: 10px;
+  padding: 10px 10px;
+  height: 13px;
+  line-height: 13px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
 }
 
 .table-statuses .icon {
-    margin-top: -7px;
-    margin-left: 30px;
-    &.first { margin-left: 4px }
+  margin-top: -7px;
+  margin-left: 30px;
+  &.first { margin-left: 4px }
 }
 
 .new-post-sign-view-user {
-    text-align: center;
+  text-align: center;
 
-    .grey-arrow {
-        margin-top: 15px;
+  .grey-arrow {
+    margin-top: 15px;
+  }
+
+  h2 {
+    margin-top: 5px;
+    font-weight: 400;
+    font-size: 26px;
+  }
+
+  .subtitle {
+    margin-top: 70px;
+    margin-bottom: 20px;
+  }
+
+  div.subtitle {
+    width: 420px;
+    text-align: left;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 40px;
+
+    h5 {
+      font-size: 16px;
+      line-height: 25px;
     }
 
-    h2 {
-        margin-top: 5px;
-        font-weight: 400;
-        font-size: 26px;
+    h5.great-thing {
+      margin-left: 15px;
+      font-weight: 300;
+      &:before {
+        content: url(/img/arrow-list.png);
+        margin-right: 5px;
+      }
     }
 
-    .subtitle {
-        margin-top: 70px;
-        margin-bottom: 20px;
-    }
-
-    div.subtitle {
-        width: 420px;
-        text-align: left;
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: 40px;
-
-        h5 {
-            font-size: 16px;
-            line-height: 25px;
-        }
-
-        h5.great-thing {
-            margin-left: 15px;
-            font-weight: 300;
-            &:before {
-                content: url(/img/arrow-list.png);
-                margin-right: 5px;
-            }
-        }
-
-    }
+  }
 }
 
 /* Welcome new user in document archive view - EXPERIMENT */
@@ -126,74 +126,74 @@
 
 .new-post-sign-view-user-first-row-highlighted .archive {
 
-    .mark-document-overlay {
-        width: 1015px;
-        height: 41px;
-        background-color: rgba(83, 182, 136, 0.24);
-        position: absolute;
+  .mark-document-overlay {
+    width: 1015px;
+    height: 41px;
+    background-color: rgba(83, 182, 136, 0.24);
+    position: absolute;
+  }
+
+  .inner-container.experiment4 {
+    .subtitle {
+      width: 489px;
+    }
+    margin-top: 40px;
+    margin-bottom: 400px;
+    background-color: #FAFAFA;
+    border: 2px solid #F2F2F2;
+    -webkit-border-radius: 10px 10px;
+    border-radius: 10px 10px;
+    padding: 46px 20px 53px 100px;
+    display: inline-block;
+    .subtitle {
+      margin-top:0px !important;
     }
 
-    .inner-container.experiment4 {
-	.subtitle {
-	    width: 489px;
-	}
-        margin-top: 40px;
-        margin-bottom: 400px;
-        background-color: #FAFAFA;
-        border: 2px solid #F2F2F2;
-        -webkit-border-radius: 10px 10px;
-        border-radius: 10px 10px;
-        padding: 46px 20px 53px 100px;
-        display: inline-block;
-        .subtitle {
-            margin-top:0px !important;
-        }
-
-        .explanation {
-            font-weight: 400;
-            color: #4A4949;
-            font-size: 20px;
-            margin-bottom: 3px;
-            &.second-h5 {
-                font-size: 17px;
-                margin-top: 9px;
-            }
-        }
-
-        .design-view-document-buttons-upload-button {
-            float:left;
-        }
+    .explanation {
+      font-weight: 400;
+      color: #4A4949;
+      font-size: 20px;
+      margin-bottom: 3px;
+      &.second-h5 {
+        font-size: 17px;
+        margin-top: 9px;
+      }
     }
 
-    .document-description {
-
-        position: relative;
-        top: -39px;
-        left: -37px;
-
-        img, h3 {
-            display: inline-block;
-        }
-
-        h3 {
-            top: 32px;
-            left: 6px;
-            font-size: 25px;
-            font-weight: 400;
-            position: relative;
-            color: @green;
-            span {
-                color: #4A4949;
-                font-size: 17px;
-                font-weight: 300;
-                line-height: 28px;
-                margin-left: 5px;
-            }
-        }
-
-        img {
-            width: 29px;
-        }
+    .design-view-document-buttons-upload-button {
+      float:left;
     }
+  }
+
+  .document-description {
+
+    position: relative;
+    top: -39px;
+    left: -37px;
+
+    img, h3 {
+      display: inline-block;
+    }
+
+    h3 {
+      top: 32px;
+      left: 6px;
+      font-size: 25px;
+      font-weight: 400;
+      position: relative;
+      color: @brand-secondary;
+      span {
+        color: #4A4949;
+        font-size: 17px;
+        font-weight: 300;
+        line-height: 28px;
+        margin-left: 5px;
+      }
+    }
+
+    img {
+      width: 29px;
+    }
+  }
 }
 /* END - Welcome new user in document archive view - EXPERIMENT */

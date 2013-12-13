@@ -1,171 +1,164 @@
-/**
-   Styles for Payments form outside.
-   Author: Eric Normand
+// Styles for Payments form outside (not logged in)
+// -------------------------
 
-**/
-@import 'branding/colors';
-@import 'branding/typography';
+@import 'branding/variables';
 
 .payments.loading {
-    background-image: url(/img/wait30trans.gif);
-    background-position: center;
-    background-repeat: no-repeat;
-    height: 50px;
-    width: 240px;
+  background-image: url(/img/wait30trans.gif);
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 50px;
+  width: 240px;
 }
 
 .price-plan {
-    /* Define some colors */
-    @blue            : #35a4d6;
-    @darkblue        : #137DAD;
-    @gray            : #666;
-    @green           : #9bd567;
-    @lightgrayborder : #d3d3d3;
-    @lightgrayshadow : #d2d2d2;
-    @lightgraybg     : #fafafa;
-    @charcoal        : #676767;
-    @steel           : #a5a5a5;
-    @pricedescr      : #9a9a9a;
-    @pricecolor      : black;
-    @fieldcolor      : #fff;
+  // Define some colors
+  // TODO: replce or move colors
 
-    width: 918px;
+  @blue            : #35a4d6;
+  @darkblue        : #137DAD;
+  @gray            : #666;
+  @lightgrayborder : #d3d3d3;
+  @lightgrayshadow : #d2d2d2;
+  @lightgraybg     : #fafafa;
+  @charcoal        : #676767;
+  @steel           : #a5a5a5;
+  @pricedescr      : #9a9a9a;
+  @pricecolor      : black;
+  @fieldcolor      : #fff;
 
-    h1 {
-        // Keep this consistent with the outside of the system.
-        color: #4A4949;
-        font-size: 42px;
-        font-weight: 400;
-        padding-bottom: 30px;
+  color: @gray;
+  font-family: @font-family-source;
+  margin: auto;
+  width: 918px;
+
+  h1 {
+    // Keep this consistent with the outside of the system.
+
+    color: #4A4949;
+    font-size: 42px;
+    font-weight: 400;
+    padding-bottom: 30px;
+  }
+
+  // @amount is between 0.0 and 1.0
+  .opacity(@amount) {    
+    @forie: @amount * 100;
+
+    -khtml-opacity: @amount;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=@{forie})"; // IE 8
+    -moz-opacity: @amount;
+    opacity: @amount;
+  }
+
+  .drop-shadow(@xoffset, @yoffset, @blur, @color) {
+    -moz-box-shadow: @xoffset @yoffset @blur @color;
+    -webkit-box-shadow: @xoffset @yoffset @blur @color;
+    box-shadow: @xoffset @yoffset @blur @color;
+  }
+
+  .rounded-corners(@radius) {
+    -moz-border-radius: @radius;
+    -webkit-border-radius: @radius;
+    border-radius: @radius @radius @radius @radius;
+  }
+
+  .payments {
+    min-height: 740px;
+    padding-top: 44px;
+
+    header {
+      text-align: center;
     }
-
-    /* @amount is between 0.0 and 1.0 */
-    .opacity(@amount) {
-        /* BEGIN .opacity */
-        /* Defined in paymentesoutside.less */
-        /* IE 8 */
-        @forie: @amount * 100;
-        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=@{forie})";
-                    
-        /* Netscape */
-        -moz-opacity: @amount;
-        
-        /* Safari 1.x */
-        -khtml-opacity: @amount;
-        
-        /* Good browsers */
-        opacity: @amount;
-        /* END .opacity */
-    }
-
-    .drop-shadow(@xoffset, @yoffset, @blur, @color) {
-        /* BEGIN .drop-shadow */
-        /* Defined in paymentsoutside.less */
-        -moz-box-shadow: @xoffset @yoffset @blur @color;
-        -webkit-box-shadow: @xoffset @yoffset @blur @color;
-        box-shadow: @xoffset @yoffset @blur @color;
-        /* END .drop-shadow */
-    }
-
-    .rounded-corners(@radius) {
-        /* BEGIN .rounded-corners */
-        /* defined in paymentsoutsdie.less */
-        -moz-border-radius: @radius;
-        -webkit-border-radius: @radius;
-        border-radius: @radius @radius @radius @radius;
-        /* END .rounded-corners */
-    }
-
-    margin: auto;
-
-    color: @gray;
-    font-family: @source;
-
-    .payments {
-        min-height: 740px;
-        padding-top: 44px;
-
-        header {
-            text-align: center;
-        }
-    }
+  }
 }
 
-/* This stuff comes from Peng in pricing.styl */
+
+// This stuff comes from Peng in pricing.styl
+// -------------------------
 
 section.pricing-cases {
   padding-bottom: 4.5em;
 }
+
 section.pricing-cases header {
   padding-bottom: 4em;
   width: 640px;
 }
+
 .plan-container {
-  width: 288px;
-  height: 410px;
-  position: relative;
   float: left;
+  height: 410px;
   margin: 0 0 1.5em 1.5em;
+  position: relative;
+  width: 288px;
+  
   &.on-top {
-      z-index: 1000;
+    z-index: 1000;
   }
 }
+
 .plan-container.team {
   margin: 0em 0 1.5em 0;
 }
+
 .plan-container.form .plan.active {
   left: -312px;
 }
+
 .plan-container.enterprise .plan.active {
   left: -624px;
 }
+
 .plan-container > .plan {
+  background: @white;
   border: 1px solid #DDD;
-  width: 280px;
   height: 412px;
+  left: 0;
+  overflow: hidden;
   position: absolute;
   top: 0;
-  left: 0;
-  background: #fff;
-  -webkit-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
-  -moz-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
-
   -ms-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
+  -moz-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
+  -webkit-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
   transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
-  overflow: hidden;
+  width: 280px;
 }
+
 .plan-container > .plan.active {
+  height: 475px;
   width: 912px;
   z-index: 100;
-  height: 475px;
 }
-.plan-container > .plan form {
-    
-}
+
 .plan-container > .plan.active form {
   display: block;
 }
+
 .plan-container > .plan .features {
-  width: 248px;
+  background: @white;
+  float: left;
   height: 100%;
   padding: 0 1em;
-  float: left;
   position: relative;
+  width: 248px;
   z-index: 10;
-  background: #fff;
 }
+
 .plan-container > .plan .features div {
-  padding: 32px 24px;
   border-bottom: 1px solid @blue-border;
+  padding: 32px 24px;
   text-align: center;
 }
+
 .plan-container > .plan .features div p {
-  font-family: @source;
-  color: @text-very-dark;
-  margin: 0;
+  color: @primary-font-color;
+  font-family: @font-family-source;
   line-height: 1.25em;
+  margin: 0;
   min-height: 36px;
 }
+
 .plan-container > .plan .features div.title h2 {
   color: @text-dark;
   font-size: 2em;
@@ -173,401 +166,434 @@ section.pricing-cases header {
   line-height: 2.25em;
   margin: 0 0 0.5em;
 }
+
 .plan-container > .plan .features div.cost {
   display: block;
-  font-family: @source;
+  font-family: @font-family-source;
+
   .lte8 & {
-      padding-left: 10px;
-      padding-right: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }
+
 .plan-container > .plan .features div.cost .price {
+  color: @text-dark;
   display: block;
   font-size: 32px;
-  color: @text-dark;
-  line-height: 1.5em;
   font-weight: 400;
+  line-height: 1.5em;
 }
+
 .plan-container > .plan .features div.action {
-  padding: 2em 3em;
   border: none;
   margin-top: 18px;
+  padding: 2em 3em;
 }
+
 .plan-container > .plan .features div.action a {
   width: 108px;
 }
+
 .plan-container > .plan .features div.action a span {
-  font-family: @source;
+  font-family: @font-family-source;
 }
+
 .plan-container > .plan .features div.action a span.gray {
   display: none;
 }
+
 .plan-container > .plan .features div.action a.button-gray span.blue {
   display: none;
 }
+
 .plan-container > .plan .features div.action a.button-gray span.gray {
   display: block;
 }
+
 .plan-container form {
-  position: absolute;
-  top: 0;
-  right: 0;
   border-left: 1px solid @blue-border;
-  width: 591px;
-  padding: 1em 1em 0;
   margin: 1em 0;
   min-height: 395.5px;
+  padding: 1em 1em 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 591px;
 
-  h3, h4 {
-      width: 460px;
-      margin: auto;
+  h3,
+  h4 {
+    margin: auto;
+    width: 460px;
   }
 
   h4 {
-      margin-top: 32px;
+    margin-top: 32px;
   }
 }
+
 .plan-container form ul.fields {
   padding: 0 1em;
 }
+
 .plan-container form ul.fields li.field {
+  display: table;
   padding: 0.5em 0;
   padding-left: 120px;
-  display: table;
 }
+
 .plan-container form ul.fields li.field label {
-  float: left;
-  width: 120px;
   color: @blue-medium;
-  font: 75%/32px @sans;
   display: none;
-}
-.plan-container form ul.fields li.field .input {
-  width: 320px;
   float: left;
+  font: 75%/32px @font-family-sans;
+  width: 120px;
 }
+
+.plan-container form ul.fields li.field .input {
+  float: left;
+  width: 320px;
+}
+
 .plan-container form ul.fields li.field .input input[type=text],
 .plan-container form ul.fields li.field .input input[type=email],
 .plan-container form ul.fields li.field .input input[type=password],
 .plan-container form ul.fields li.field .input input[type=number],
 .plan-container form ul.fields li.field .input textarea {
-  display: block;
-  margin: 0;
   border: 1px solid #ccc;
-  font: 16px/16px @sans;
-  padding: 7px 10px;
+  color: @primary-font-color;
+  display: block;
+  font: 16px/16px @font-family-sans;
   height: 16px;
-  color: @txt;
+  margin: 0;
+  padding: 7px 10px;
   width: 298px;
 }
 
-   /* These need to be separate because browsers suck */
-    .plan-container form ul.fields li.field .input textarea::-webkit-input-placeholder {
-        color: @text-light;
-    }
+// These need to be separate because browsers suck
+.plan-container form ul.fields li.field .input textarea::-webkit-input-placeholder {
+  color: @text-light;
+}
 
-    .plan-container form ul.fields li.field .input input::-webkit-input-placeholder {
-        color: @text-light;
-    }
+.plan-container form ul.fields li.field .input input::-webkit-input-placeholder {
+  color: @text-light;
+}
 
-    .plan-container form ul.fields li.field .input textarea:-moz-placeholder {
-        color: @text-light;
-    }
-    .plan-container form ul.fields li.field .input textarea::-moz-placeholder {
-        color: @text-light;
-    } 
+.plan-container form ul.fields li.field .input textarea:-moz-placeholder {
+  color: @text-light;
+}
 
-    .plan-container form ul.fields li.field .input input:-moz-placeholder {
-        color: @text-light;
-    }
-    .plan-container form ul.fields li.field .input input::-moz-placeholder {
-        color: @text-light;
-    } 
+.plan-container form ul.fields li.field .input textarea::-moz-placeholder {
+  color: @text-light;
+}
 
-    .plan-container form ul.fields li.field .input textarea:-ms-input-placeholder {
-        color: @text-light;
-    }
-    .plan-container form ul.fields li.field .input input:-ms-input-placeholder {
-        color: @text-light;
-    }
+.plan-container form ul.fields li.field .input input:-moz-placeholder {
+  color: @text-light;
+}
+.plan-container form ul.fields li.field .input input::-moz-placeholder {
+  color: @text-light;
+}
 
+.plan-container form ul.fields li.field .input textarea:-ms-input-placeholder {
+  color: @text-light;
+}
+.plan-container form ul.fields li.field .input input:-ms-input-placeholder {
+  color: @text-light;
+}
 
-    div.plan-container form div.field textarea::-webkit-input-placeholder {
-        color: @text-light;
-    }
+div.plan-container form div.field textarea::-webkit-input-placeholder {
+  color: @text-light;
+}
 
-    div.plan-container form div.field input::-webkit-input-placeholder {
-        color: @text-light;
-    }
+div.plan-container form div.field input::-webkit-input-placeholder {
+  color: @text-light;
+}
 
-    div.plan-container form div.field textarea:-moz-placeholder {
-        color: @text-light;
-    }
-    div.plan-container form div.field textarea::-moz-placeholder {
-        color: @text-light;
-    } 
+div.plan-container form div.field textarea:-moz-placeholder {
+  color: @text-light;
+}
 
-    div.plan-container form div.field input:-moz-placeholder {
-        color: @text-light;
-    }
-    div.plan-container form div.field input::-moz-placeholder {
-        color: @text-light;
-    } 
+div.plan-container form div.field textarea::-moz-placeholder {
+  color: @text-light;
+}
 
-    div.plan-container form div.field textarea:-ms-input-placeholder {
-        color: @text-light;
-    }
-    div.plan-container form div.field input:-ms-input-placeholder {
-        color: @text-light;
-    }
+div.plan-container form div.field input:-moz-placeholder {
+  color: @text-light;
+}
 
+div.plan-container form div.field input::-moz-placeholder {
+  color: @text-light;
+}
 
+div.plan-container form div.field textarea:-ms-input-placeholder {
+  color: @text-light;
+}
+
+div.plan-container form div.field input:-ms-input-placeholder {
+  color: @text-light;
+}
 
 .plan-container form ul.fields li.field .input textarea {
   height: 159px;
   line-height: 1.5em;
 }
+
 .plan-container form ul.fields li.field .input input:focus,
 .plan-container form ul.fields li.field .input input:hover {
   border-color: @blue-medium;
   outline: none;
 }
+
 .plan-container form ul.fields li.field .input input::-webkit-outer-spin-button,
 .plan-container form ul.fields li.field .input input::-webkit-inner-spin-button {
-/* display: none; <- Crashes Chrome on hover */
+  // display: none; // Crashes Chrome on hover
   -webkit-appearance: none;
-  margin: 0;
-/* <-- Apparently some margin are still there even though it's hidden */
+  margin: 0; // Apparently some margin are still there even though it's hidden
 }
+
 .plan-container form ul.fields li.field.select .input label {
-  width: 120px;
-  float: left;
-  font: 16px/2em @sans;
-  display: block;
   color: @light;
+  display: block;
+  float: left;
+  font: 16px/2em @font-family-sans;
+  width: 120px;
 }
+
 .plan-container form ul.fields li.field.select .input .selects {
   float: left;
-  width: 200px;
   text-align: right;
+  width: 200px;
 }
+
 .plan-container form ul.fields li.field.select .input .selects select {
-  width: 90px;
-  vertical-align: bottom;
   margin: 0;
   margin-left: 6px;
+  vertical-align: bottom;
+  width: 90px;
 }
+
 .plan-container form ul.fields li.field.submit {
-  margin-top: 53px;
   height: 48px;
+  margin-top: 53px;
 }
+
 .plan-container form ul.fields li.field.submit input {
-  width: 100%;
   height: 52px;
   max-height: 52px;
+  width: 100%;
 }
+
 .plan-container form ul.fields li.field.submit {
   margin-top: 0;
 }
 
-/** Replace recurly styles **/
-
+// Replace recurly styles
 .plan-container form.recurly {
-    margin: 16px 0;
-    width: 591px;
-    padding: 0 16px 0 16px;
-    height: 405px;
+  font-size: 18px;
+  height: 405px;
+  margin: 16px 0;
+  padding: 0 16px 0 16px;
+  width: 591px;
+
+  // If there is no contact information (normal case)
+  // We need more spacing
+  &.nocontact {
+    padding: 32px 16px 0 16px;
+    
+    .billing_info {
+      margin: 54px auto 32px auto;
+    }
+
+    .field {
+      padding: 6px 0px;
+    }
+  }
+
+  div.server_errors {
+    color: @brand-negative;
+    display: none;
+    height: 36px;
+    line-height: 18px;
+    margin: 16px auto 12px auto;
+    width: 320px;
+  }
+
+  div.title {
+    display: none;
+
+    h4 {
+      font-weight: 400;
+      padding-bottom: 10px;
+    }
+  }
+
+  div.subscription {
+    color: @text-dark;
     font-size: 18px;
-
-    /* If there is no contact information (normal case) */
-    /* We need more spacing */
-    &.nocontact {
-        padding: 32px 16px 0 16px;
-        .billing_info {
-            margin: 54px auto 32px auto;
-        }
-        .field {
-            padding: 6px 0px;
-        }
+    
+    .name {
+      display: none;
     }
 
-    div.server_errors {
-        height: 36px;
-        width: 320px;
-        margin: 16px auto 12px auto;
-        color: @red;
-        line-height: 18px;
+    .quantity {
+      display: inline-block;
+      margin:0;
+      padding: 0;
+      width: 100px;
+    }
+
+    .recurring_cost {
+      color: @text-dark;
+      display: inline-block;
+      padding: 0;
+      text-align: right;
+      width: 220px;
+      
+      div {
+        display: inline-block;
+        margin: 0 0 0 8px;
+      }
+
+      .interval {
         display: none;
+      }
     }
 
-    div.title {
-        display: none;
+    .plan {
+      margin: auto;
+      width: 320px;
+    }
+  }
 
-        h4 {
-            padding-bottom: 10px;
-            font-weight: 400;
-        }
+  div.vat.applicable {
+    color: @text-dark;
+    margin: auto;
+    width: 320px;
+
+    .title {
+      display: inline-block;
+      width: 100px;
     }
 
-    div.subscription {
+    .cost {
+      color: @text-dark;
+      display: inline-block;
+      text-align: right;
+      width: 220px;
+    }
+  }
 
-        font-size: 18px;
-        color: @text-dark;
-        .name {
-            display: none;
-        }
-        .quantity {
-            padding: 0;
-            width: 100px;
-            margin:0;
-            display: inline-block;
-        }
-        .recurring_cost {
-            text-align: right;
-            display: inline-block;
-            width: 220px;
-            padding: 0;
+  div.due_now {
+    border-top: 1px solid @dark-border;
+    color: @text-dark;
+    font-size: 18px;
+    line-height: 22px;
+    margin: 8px auto;
+    width: 320px;
 
-            color: @text-dark;
-            div {
-                display: inline-block;
-                margin: 0 0 0 8px;
-            }
-            .interval {
-                display: none;
-            }
-        }
-        .plan {
-            width: 320px;
-            margin: auto;
-        }
+    .title {
+      display: inline-block;
+      width: 160px;
     }
 
-    div.vat.applicable {
-        width: 320px;
-        color: @text-dark;
-        margin: auto;
-        .title {
-            display: inline-block;
-            width: 100px;
-        }
-        .cost {
-            display: inline-block;
-            text-align: right;
-            width: 220px;
-            color: @text-dark;
-        }
+    .cost {
+      color: @brand-secondary;
+      display: inline-block;
+      font-weight: 600;
+      padding: 0;
+      text-align:right;
+      width: 160px;
+    }
+  }
+
+  div.accepted_cards {
+    display:none;
+  }
+
+  div.contact_info {
+    margin: auto;
+    width: 320px;
+  }
+
+  div.billing_info {
+    margin: auto;
+    width: 320px;
+  }
+
+  div.field {
+    display: table;
+    height: 32px;
+    margin: auto;
+    padding: 4px 0;
+    width: 320px;
+    
+    input:focus, input:hover {
+      border-color: @blue-medium;
+      outline: none;
     }
 
-    div.due_now {
-        width: 320px;
-        border-top: 1px solid @dark-border;
-        color: @text-dark;
-        font-size: 18px;
-        line-height: 22px;
-        margin: 8px auto;
-        .title {
-            display: inline-block;
-            width: 160px;
-        }
-        .cost {
-            width: 160px;
-            padding: 0 0 0 0;
-            text-align:right;
-            display: inline-block;
-            color: @green;
-            font-weight: 600;
-        }
+    input {
+      border: 1px solid #ccc;
+      color: @primary-font-color;
+      display: block;
+      font: 16px/16px @font-family-sans;
+      height: 16px;
+      margin: 0;
+      padding: 7px 10px;
+      width: 298px;
+
+      &.invalid {
+        border-color: @brand-negative;
+      }
     }
 
-    div.accepted_cards {
-        display:none;
+    div.placeholder {
+      display: none;
     }
 
-    div.contact_info {
-        width: 320px;
-        margin: auto;
+    &.expires div {
+      display: inline-block;
+
+      &.title {
+        margin: 0 6px 0 0;
+        width: 100px;
+      }
+
+      select {
+        width: 90px;
+      }
     }
 
-    div.billing_info {
-        width: 320px;
-        margin: auto;
+    &.vat_number {
+      display: none;
     }
 
-    div.field {
-        padding: 4px 0;
-        margin: auto;
-        display: table;
-
-        width: 320px;
-        height: 32px;
-        input:focus, input:hover {
-            border-color: @blue-medium;
-            outline: none;
-        }
-        input {
-            border-width: 1px;
-            padding: 7px 10px;
-            height: 16px;
-            width: 298px;
-            display: block;
-            margin: 0;
-            border: 1px solid #ccc;
-            font: 16px/16px @sans;
-            padding: 7px 10px;
-            height: 16px;
-            color: @txt;
-            width: 298px;
-
-            &.invalid {
-                border-color: @red;
-            }
-        }
-
-        div.placeholder {
-            display: none;
-        }
-
-        &.expires div {
-            display: inline-block;
-            &.title {
-                margin: 0 6px 0 0;
-                width: 100px;
-            }
-            select {
-                width: 90px;
-            }
-        }
-        &.vat_number {
-            display: none;
-        }
-
-        .error {
-            margin: -30px 0 0 330px;
-            color: @red;
-            width: 120px;
-        }       
+    .error {
+      color: @brand-negative;
+      margin: -30px 0 0 330px;
+      width: 120px;
     }
+  }
 
-    div.address {
-        display:none;
+  div.address {
+    display: none;
+  }
+
+  div.footer {
+    width: 320px;
+    margin: auto;
+
+    .green.button {
+      margin: 16px 0 0 0;
+      width: 276px;
     }
+  }
 
-    div.footer {
-        width: 320px;
-        margin: auto;
-        .green.button {
-            margin: 16px 0 0 0;
-            width: 276px;
-        }
-    }
-
-    .coupon {
-        display: none;
-    }
-
+  .coupon {
+    display: none;
+  }
 }
 
 .price-plan-outside {
-    margin: 0 auto !important;
+  margin: 0 auto !important;
 }

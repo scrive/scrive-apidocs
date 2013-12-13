@@ -38,6 +38,7 @@ import Text.JSON.Gen as J
 import Text.JSON.FromJSValue
 import Doc.Action
 import Doc.DocInfo (isPending)
+import Doc.DocMails
 import Doc.DocStateQuery
 import Control.Monad
 import Codec.Archive.Zip
@@ -83,10 +84,9 @@ handleDelete = do
 
 handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders = do
-    Context{ctxmaybeuser = Just user } <- getContext
     ids <- getCriticalField asValidDocIDList "documentids"
     actor <- guardJustM $ fmap mkAuthorActor getContext
-    remindedsiglinks <- fmap concat . sequence . map (flip withDocumentID (sendAllReminderEmails actor user)) $ ids
+    remindedsiglinks <- fmap concat . sequence . map (flip withDocumentID (sendAllReminderEmailsExceptAuthor actor False)) $ ids
     case (length remindedsiglinks) of
       0 -> internalError
       _ -> J.runJSONGenT $ return ()

@@ -33,9 +33,6 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
   },
   attachmentFile : function(attachment) {
     var container = $("<div class='item' />");
-    //var text = attachment.hasFile() ? localization.authorview.uploadedBy : localization.authorview.requestedFrom;
-    //var label = $("<div class='label' />").append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
-    //container.append(label);
     if (attachment.hasFile()) {
         var button = new Button({color: "signview-blue", text: localization.reviewPDF, cssClass: 'float-right', size:'small', onClick: function() {
                         window.open(attachment.file().downloadLink(), '_blank');

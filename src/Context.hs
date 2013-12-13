@@ -77,6 +77,7 @@ userBrandedDomain ctx user = findBrandedDomain (fromMaybe "" $ userassociateddom
 
 contextToMailContext :: Context -> MailContext
 contextToMailContext ctx = MailContext { mctxhostpart = ctxhostpart ctx
+
                                        , mctxmailsconfig = ctxmailsconfig ctx
                                        , mctxlang = ctxlang ctx
                                        , mctxcurrentBrandedDomain = currentBrandedDomain ctx

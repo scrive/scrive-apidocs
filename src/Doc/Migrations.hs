@@ -1094,6 +1094,18 @@ migrateDocumentsMoveFilesToMainFilesTable =
         kRun_ $ "ALTER TABLE documents DROP COLUMN seal_status"
     }
 
+migrateDocumentsAddDaysToRemind :: MonadDB m => Migration m
+migrateDocumentsAddDaysToRemind =
+  Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 29
+    , mgrDo = do
+       _ <- kRunRaw $ "ALTER TABLE documents"
+                  <+> "ADD COLUMN days_to_remind INTEGER NULL DEFAULT NULL"
+       return ()
+    }
+
+
 fixSignatureFieldsWithAnySize :: MonadDB m => Migration m
 fixSignatureFieldsWithAnySize =
   Migration {

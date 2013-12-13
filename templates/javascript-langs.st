@@ -147,6 +147,23 @@ javascriptLocalisation =
                , days  : "$_prolongModalDays()$"
                , button : "$_prolongModalButton()$"
               }
+            , autoreminders : {
+                 days : "$_autoreminderDays()$"
+               , dueDateIn  : "$_autoreminderDueDateIn()$"
+               , daysToRemind  : "$_autoreminderDaysToRemind()$"
+               , automaticRemindersTitle : "$_autoreminderTitle()$"
+               , changeAutoReminderTitle : "$_autoreminderChangeTitle()$"
+               , changeAutoreminderButton : "$_autoreminderChangeButton()$"
+               , setAutoReminderTitle : "$_autoreminderSetTitle()$"
+               , setAutoreminderButton : "$_autoreminderSetButton()$"
+               , removeAutoreminderButton : "$_autoreminderRemoveButton()$"
+               , setDate : "$_autoreminderSetDate()$"
+               , changeDate : "$_autoreminderChangeDate()$"
+               , changeAutoreminderDescription : "$_autoreminderChangeDescription()$"
+               , willBeSentOn : "$_autoreminderWillBeSentOn()$"
+               , sendReminderIn : "$_autoreminderSendIn()$"
+              }
+
             , process : {
                sendbuttontext: "$_contractsendbuttontext()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",

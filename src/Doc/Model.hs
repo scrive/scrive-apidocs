@@ -495,6 +495,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentctime" documentctime
                    , checkEqualBy "documentmtime" documentmtime
                    , checkEqualBy "documentdaystosign" documentdaystosign
+                   , checkEqualBy "documentdaystoremind" documentdaystoremind
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
@@ -508,6 +509,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    ] ++
                    concat (zipWith checkSigLink sl1 sl2)
 
+selectTablesForDocumentSelectors :: State.State SqlSelect () -> SqlSelect
+selectTablesForDocumentSelectors = sqlSelect2 "documents as documents LEFT JOIN document_automatic_reminders as document_automatic_reminders ON documents.id = document_automatic_reminders.document_id"
 
 documentsSelectors :: [SQL]
 documentsSelectors =
@@ -519,7 +522,9 @@ documentsSelectors =
   , "documents.ctime"
   , "documents.mtime"
   , "documents.days_to_sign"
+  , "documents.days_to_remind"
   , "documents.timeout_time"
+  , "document_automatic_reminders.expires"
   , "documents.invite_time"
   , "documents.invite_ip"
   , "documents.invite_text"
@@ -531,13 +536,14 @@ documentsSelectors =
   ]
 
 
+
 fetchDocuments :: MonadDB m => m [Document]
 fetchDocuments = kFold decoder []
   where
     -- Note: this function gets documents in reversed order, but all queries
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title status error_text doc_type
-      ctime mtime days_to_sign timeout_time invite_time
+      ctime mtime days_to_sign days_to_remind timeout_time auto_remind_time invite_time
      invite_ip invite_text
      lang sharing apicallback objectversion status_class
        = Document {
@@ -553,7 +559,11 @@ fetchDocuments = kFold decoder []
        , documentctime = ctime
        , documentmtime = mtime
        , documentdaystosign = days_to_sign
+       , documentdaystoremind = days_to_remind
        , documenttimeouttime = timeout_time
+       , documentautoremindtime = case status of
+                                    Pending -> auto_remind_time
+                                    _ -> Nothing
        , documentinvitetime = case invite_time of
            Nothing -> Nothing
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
@@ -1060,7 +1070,9 @@ insertDocumentAsIs document@(Document
                    documentctime
                    documentmtime
                    documentdaystosign
+                   documentdaystoremind
                    documenttimeouttime
+                   _documentautoremindtime
                    documentinvitetime
                    documentinvitetext
                    documentsharing
@@ -1081,6 +1093,7 @@ insertDocumentAsIs document@(Document
         sqlSet "ctime" documentctime
         sqlSet "mtime" documentmtime
         sqlSet "days_to_sign" documentdaystosign
+        sqlSet "days_to_remind" documentdaystoremind
         sqlSet "timeout_time" documenttimeouttime
         sqlSet "invite_time" $ signtime `fmap` documentinvitetime
         sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
@@ -1089,21 +1102,17 @@ insertDocumentAsIs document@(Document
         sqlSet "sharing" documentsharing
         sqlSet "object_version" documentobjectversion
         sqlSet "api_callback_url" documentapicallbackurl
-        mapM_ (sqlResult) documentsSelectors
+        sqlResult "documents.id"
 
-    mdoc <- fetchDocuments >>= oneObjectReturnedGuard
-    case mdoc of
+    mdid <-  (kFold (\acc did -> did:acc) []) >>= oneObjectReturnedGuard
+    case mdid of
       Nothing -> return Nothing
-      Just doc -> do
-        links <- insertSignatoryLinksAsAre (documentid doc) documentsignatorylinks
-        authorattachments <- insertAuthorAttachmentsAsAre (documentid doc) documentauthorattachments
-        newtags <- S.fromList <$> insertDocumentTagsAsAre (documentid doc) (S.toList documenttags)
-        mainfiles <- insertMainFilesAsAre (documentid doc) documentmainfiles
-        let newdocument = doc { documentsignatorylinks    = links
-                              , documentauthorattachments = authorattachments
-                              , documenttags              = newtags
-                              , documentmainfiles         = mainfiles
-                              }
+      Just did -> do
+        void $ insertSignatoryLinksAsAre did documentsignatorylinks
+        void $ insertAuthorAttachmentsAsAre did documentauthorattachments
+        void $ S.fromList <$> insertDocumentTagsAsAre did (S.toList documenttags)
+        void $ insertMainFilesAsAre did documentmainfiles
+        newdocument <- dbQuery $ GetDocumentByDocumentID did
         assertEqualDocuments document newdocument
         return (Just newdocument)
 
@@ -1341,9 +1350,9 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneW
       updateMTimeAndObjectVersion (actorTime actor)
       return ()
 
-data PreparationToPending = PreparationToPending Actor (Maybe TimeZoneName)
+data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate m PreparationToPending () where
-  update (PreparationToPending actor mtzn) = updateDocumentWithID $ \docid -> do
+  update (PreparationToPending actor tzn) = updateDocumentWithID $ \docid -> do
             let time = actorTime actor
 
             -- If we know actor's time zone:
@@ -1356,9 +1365,7 @@ instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate 
             --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 12:59:59
             --   Rationale: Signatories will have at least until the end of the intended last day to sign.
             -- We try to match expectation when one day after 24 december is understood as till last minute of 25 december.
-            let timestamp = case mtzn of
-                  Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
-                  Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
+            let timestamp = formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
             -- Need to temporarily set session timezone to any one
             -- that recognizes daylight savings so that the day
             -- interval addition advances the time properly across DST changes
@@ -1383,7 +1390,7 @@ instance (MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m) => DBUpdate 
               Just tot <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
               _ <- update $ InsertEvidenceEvent
                 PreparationToPendingEvidence
-                (  value "timezone" (maybe "" TimeZoneName.toString mtzn)
+                (  value "timezone" (TimeZoneName.toString tzn)
                 >> value "lang" (show lang)
                 >> value "timeouttime" (formatMinutesTimeUTC tot))
                 actor
@@ -1547,21 +1554,21 @@ instance (MonadDB m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID Document where
   query (GetDocumentByDocumentID did) = do
-    selectDocument $ sqlSelect "documents" $ do
+    selectDocument $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
 
 data GetDocumentsByDocumentIDs = GetDocumentsByDocumentIDs [DocumentID]
 instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
   query (GetDocumentsByDocumentIDs dids) = do
-    selectDocuments $ sqlSelect "documents" $ do
+    selectDocuments $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereIn "documents.id" dids
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) where
   query (GetDocumentBySignatoryLinkID slid) =
-     (Just <$> (selectDocument $ sqlSelect "documents" $ do
+     (Just <$> (selectDocument $ selectTablesForDocumentSelectors $ do
        mapM_ sqlResult documentsSelectors
        sqlWhereExists $ sqlSelect "signatory_links" $ do
          sqlWhereEq "signatory_links.id" slid
@@ -1570,7 +1577,7 @@ instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) wh
 data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
 instance MonadDB m => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
   query (GetDocumentsBySignatoryLinkIDs slids) =
-     selectDocuments $ sqlSelect "documents" $ do
+     selectDocuments $ selectTablesForDocumentSelectors $ do
        mapM_ sqlResult documentsSelectors
        sqlWhereExists $ sqlSelect "signatory_links" $ do
          sqlWhereIn "signatory_links.id" slids
@@ -1579,7 +1586,7 @@ instance MonadDB m => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
-    selectDocument $ sqlSelect "documents" $ do
+    selectDocument $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
       sqlWhereExists $ sqlSelect "signatory_links" $ do
@@ -1610,7 +1617,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
 data GetDocuments2 = GetDocuments2 Bool [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int,Maybe Int)
 instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
   query (GetDocuments2 allowZeroResults domains filters orderbys (offset,limit,softlimit)) = do
-    selectDocumentsWithSoftLimit allowZeroResults softlimit $ sqlSelect "documents" $ do
+    selectDocumentsWithSoftLimit allowZeroResults softlimit $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
       mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
       sqlOffset $ fromIntegral offset
@@ -1648,7 +1655,7 @@ instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk MinutesTime Int
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
   query (GetTimeoutedButPendingDocumentsChunk mtime size) = do
-    selectDocuments $ sqlSelect "documents" $ do
+    selectDocuments $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereEq "documents.status" Pending
       sqlWhere $ "timeout_time IS NOT NULL AND timeout_time < " <?> mtime
@@ -1929,6 +1936,10 @@ data SetDaysToSign = SetDaysToSign Int Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
   update (SetDaysToSign days _actor) = updateWithoutEvidence "days_to_sign" days
 
+data SetDaysToRemind = SetDaysToRemind (Maybe Int) Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDaysToRemind Bool where
+  update (SetDaysToRemind days _actor) = updateWithoutEvidence "days_to_remind" days
+
 data SetDocumentTitle = SetDocumentTitle String Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
   update (SetDocumentTitle doctitle _actor) = updateWithoutEvidence "title" doctitle
@@ -2208,9 +2219,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddSignatoryLinkVisitedEvid
           did
         return ()
 
-data PostReminderSend = PostReminderSend SignatoryLink (Maybe String) Actor
+data PostReminderSend = PostReminderSend SignatoryLink (Maybe String) Bool Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
-   update (PostReminderSend sl mmsg actor) = updateDocumentWithID $ \docid -> do
+   update (PostReminderSend sl mmsg automatic actor) = updateDocumentWithID $ \docid -> do
      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
        sqlFrom "documents"
        sqlSet "read_invitation" SqlNull
@@ -2224,7 +2235,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () w
        sqlWhereDocumentStatusIs Pending
 
      _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-          ReminderSend
+          (if automatic then AutomaticReminderSent else ReminderSend)
           (return ())
           (Just sl)
           mmsg
@@ -2312,6 +2323,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool wher
   update (UpdateDraft document actor) = updateDocument $ const $ and `liftM` sequence [
       update $ SetDocumentTitle (documenttitle document) actor
     , update $ SetDaysToSign (documentdaystosign document) actor
+    , update $ SetDaysToRemind (documentdaystoremind document) actor
     , update $ SetDocumentLang (getLang document) actor
     , update $ SetInviteText (documentinvitetext document) actor
     , update $ SetDocumentTags (documenttags document) actor

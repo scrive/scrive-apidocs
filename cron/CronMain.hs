@@ -22,6 +22,7 @@ import DB.Checks
 import DB.SQLFunction
 import DB.PostgreSQL
 import Doc.API.Callback.Model
+import Doc.AutomaticReminder.Model
 import Doc.Action
 import qualified MemCache
 import Utils.Cron
@@ -108,6 +109,8 @@ main = Log.withLogger $ do
          runScheduler SMS.Events.processEvents
      , forkCron_ True "DocumentAPICallback" 10 $ do
          runScheduler $ actionQueue documentAPICallback
+     , forkCron_ True "DocumentAutomaticReminders" 60 $ do
+         runScheduler $ actionQueue documentAutomaticReminder
      , forkCron_ True "RecurlySync" (55 * 60) . inDB $ do
          mtime <- getMinutesTime
          ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)

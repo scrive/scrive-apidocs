@@ -25,6 +25,17 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
       if (this.get("signatoriesViews")[i] != undefined)
         this.setCurrentSignview(this.get("signatoriesViews")[i]);
   },
+  automaticreminder :  function() {
+      if (this.get("automaticreminder") == undefined)
+        this.set({"automaticreminder" : new AuthorViewAutomaticReminders({authorview : this.authorview()})}, {silent : true});
+      return this.get("automaticreminder");
+  },
+  hasAutomaticReminder : function() {
+      return this.document().pending()
+             && (this.document().timeouttime().diffDays() > 0 || this.document().autoremindtime() != undefined)
+             && _.any(this.document().signatories(), function(s) { return s.signs() && !s.hasSigned() && !s.padDelivery(); })
+             && this.document().currentViewerIsAuthor();
+  },
   authorview :function() {
      return this.get("authorview");
   },
@@ -50,6 +61,8 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   },
   destroy : function() {
     _.each(this.signatoriesViews(), function(s) {s.destroy();});
+    if (this.hasAutomaticReminder())
+      this.automaticreminder().destroy();
     this.clear();
   }
 });
@@ -105,30 +118,30 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       var header = $("<h2 style='width: 100px;' />");
       box.append(header.text(localization.authorview.signatoriesTitle));
 
-      var table = $("<table class='signatories-box' style='float: right;' />");
-      var tbody = $("<tbody/>");
-      var tr = $("<tr style='height: 220px;'/>");
-      var td1 = $("<td class='signatory-box' />");
-      var tdseparator = $("<td class='signatory-box-separator'/>");
-      var td2 = $("<td class='signatory-box' />");
-      var box1 = $('<div class="column spacing" />');
-      var box2 = $('<div class="column spacing" />');
-      table.append(tbody.append(tr.append(td1.append(box1)).append(tdseparator).append(td2.append(box2))));
-      box.append(table);
+      var container = $("<div class='signatories-box' style='float: right; width: 622px' />");
+
+      var leftcontainer = $("<div class='float-left' style='width:300px;margin-right:22px'>");
+      var box1 = $("<div class=' column' />");
+      var rightcontainer = $("<div class='float-right' style='width:300px';>");
+      var box2 = $("<div class='column float-right'/>");
+      box.append(container.append(leftcontainer.append(box1)).append(rightcontainer.append(box2)));
 
       if (this.model.isSingleSignatory()) {
-         td1.remove();
-         box2.append(this.model.signatoryView().el());
+         box2.append(this.model.signatoryView().el()).addClass("grey-box");
       }
       else if (this.model.hasList()) {
-         box1.append(this.list());
-         box2.append(this.model.signatoryView().el());
+         box1.append(this.list()).addClass("grey-box");
+         box2.append(this.model.signatoryView().el()).addClass("grey-box");
 
       } else {
-         box1.append(this.model.signatoryView(0).el());
-         box2.append(this.model.signatoryView(1).el());
+         box1.append(this.model.signatoryView(0).el()).addClass("grey-box");
+         box2.append(this.model.signatoryView(1).el()).addClass("grey-box");
       }
 
+      if (this.model.hasAutomaticReminder()) {
+         var box3 = $("<div class='column float-right auto-reminder'/>").append(this.model.automaticreminder().el()).addClass("grey-box");
+         rightcontainer.append(box3);
+      }
       return this;
   }
 

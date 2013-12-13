@@ -1,84 +1,94 @@
-/**
-  Styles for Payments form and dashboard.
-  Author: Eric Normand
+// Styles for Payments form and dashboard.
+// Author: Eric Normand
+// -------------------------
 
-**/
-@import 'branding/colors';
-@import 'branding/typography';
+@import 'branding/variables';
 
 .payments.loading {
-    background-image: url(/img/wait30trans.gif);
-    background-position: center;
-    background-repeat: no-repeat;
-    height: 50px;
-    width: 240px;
+  background-image: url(/img/wait30trans.gif);
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 50px;
+  width: 240px;
 }
 
 .body-container.pricing {
   background-color: @grey-background;
-
 }
 
 .price-plan {
-    margin: 35px 0px 0px 0px !important;
-    &.tab-content.account .noprovider { // for people who're using the free plan
-        margin: auto !important;
+  margin: 35px 0px 0px 0px !important;
+
+  &.tab-content.account .noprovider { // for people who're using the free plan
+    margin: auto !important;
+  }
+
+  &.price-plan-branded {
+    margin: auto !important;
+
+    .payments {
+      padding-top: 0;
     }
 
-    &.price-plan-branded {
-        margin: auto !important;
-        .payments { padding-top: 0; }
-        .vat-box { margin-left: 188px; }
+    .vat-box {
+      margin-left: 188px;
     }
+  }
 }
 
-
 .surround-content {
-    padding: 20px;  
-    background-color:white;
-    border: 1px solid #ddd;
+  background-color: @white;
+  border: 1px solid #ddd;
+  padding: 20px;
 }
 
 .payments-dashboard {
-    .subscription-plan {
-	margin-bottom:50px;
-	.plan-information {
-	    .surround-content;
-	    text-align: center;
-	    padding-bottom: 35px;
-	    width: 320px;
-	}
-	.plan-name {
-	    font-size: 24px;
-	    border-bottom: 1px solid #ddd;
-	    padding-bottom: 12px;
-	    margin-bottom: 35px;
-	}
-	.askviktor {
-	    padding-top: 10px;
-	    padding-left: 5px;
-            a {
-                color: @blue;
-                font-weight: 400;
-            }
-	}
+
+  .subscription-plan {
+    margin-bottom:50px;
+	
+    .plan-information {
+      .surround-content;
+      padding-bottom: 35px;
+      text-align: center;
+      width: 320px;
     }
+
+    .plan-name {
+      border-bottom: 1px solid #ddd;
+      font-size: 24px;
+      margin-bottom: 35px;
+      padding-bottom: 12px;
+    }
+
+    .askviktor {
+      padding-top: 10px;
+      padding-left: 5px;
+
+      a {
+        color: @brand-primary-darker;
+        font-weight: 400;
+      }
+    }
+  }
 }
 
 .payments {
-    padding-bottom: 50px;
-    padding-top: 38px;
-    .price-plan.tab-content.account & { // for inside the system
-        padding-bottom: 10px;
-        padding-top: 10px;
-    }
-    h4 {
-	font-size: 26px;
-	line-height: 21px;
-	font-weight: 400;
-        padding-bottom: 10px;
-	color: #000;
-    }
+  padding-bottom: 50px;
+  padding-top: 38px;
+
+  .price-plan.tab-content.account & { // for inside the system
+      padding-bottom: 10px;
+      padding-top: 10px;
+  }
+
+  h4 {
+    color: #000;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 21px;
+    padding-bottom: 10px;
+  }
 }
 
 .payments-dashboard .features{
@@ -86,320 +96,304 @@
 }
 
 .payments-dashboard .subscribed {
+   
+  .payments {
+    height: 650px;
+    margin: auto;
+  }
 
-    @blue: #35a4d6;
-    @darkblue: #137DAD;
-    @green: #9bd567;
-    
-    .payments {
-        margin: auto;
-        height: 650px;
-    }
+  .header {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
 
-    .header {
-        font-size: 18px;
-        margin-bottom: 12px;
-    }
+  .table {
+    padding: 12px;
+  }
 
+  .btn-small {
+    float:right;
+  }
 
-    .table {
-        padding: 12px;
-    }
+  .changesubscription select {
+    font-size: 14px;
+  }
 
+  .changesubscription .totaltable {
+    margin-top: 16px;
+  }
 
-    .btn-small {
-        float:right;
-    }
+  .payments .payments .header {
+    margin-top:80px;
+  }
 
-    .changesubscription select {
-        font-size: 14px;
-    }
+  .plan .header {
+    margin-top:0px;
+  }
 
-    .changesubscription .totaltable {
-        margin-top: 16px;
-    }
+  .changesubscription .header {
+    margin-top:0px;
+  }
 
-    .payments .payments .header {
-        margin-top:80px;
-    }
+  .cancel-subscription {
+    margin-top: 38px;
+  }
 
+  .cancel-button {
+    float: left;
+    margin: 0 16px 0 0;
+  }
 
-    .plan .header {
-        margin-top:0px;
-    }
+  .savechanges {
+    margin-top: 12px;
+  }
 
-    .changesubscription .header {
-        margin-top:0px;
-    }
+  .plan-pending {
+    margin-top: 8px;
+  }
 
-    .cancel-subscription {
-	margin-top: 38px;
-    }
+  .invoice-date {
+    display: inline-block;
+    width: 120px;
+  }
 
-    .cancel-button {
-        float: left;
-        margin: 0 16px 0 0;
-    }
+  .plan-price {
+    margin-top: 16px;
+  }
 
-    .savechanges {
-        margin-top: 12px;
-    }
+  .select-plan {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: bold;    
+    width: 90px;
+  }
 
-    .plan-pending {
-        margin-top: 8px;
-    }
+  .select-users {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: bold;
+    width: 90px;
+  }
 
-    .invoice-date {
-        width: 120px;
+  .recurly.update_billing_info {
+    width: 458px;
+  }
+
+  .changebilling .header {
+    margin-top: 32px;
+  }
+
+  .recurly .accepted_cards {
+    right: 28px;
+  }
+
+  .recurly .contact_info {
+    background: transparent;
+  }
+
+  .recurly div.title {
+    color: #666;
+    font-size: 14px;
+    font-weight: bold;
+    padding-bottom: 0;
+  }
+
+  .payments.subscribing {
+    margin: auto;
+    width: 740px;
+  }
+
+  .payments.subscribing .col {
+    width: 460px;
+  }
+
+  .recurly .field .placeholder {
+    display: none;
+    font-size: 10px;
+  }
+
+  .recurly .footer {
+    padding: 0px 0px 12px 0;
+  }
+
+  .payments.subscribing {
+    height: 1240px;
+  }
+
+  .btn-big {
+    display: inline-block;
+    margin: auto;
+  }
+
+  .subscribed {
+    height: 650px;
+    margin: auto;
+  }
+
+  .billing_info .title {
+    display: none;
+    font-size: 0px;
+    height: 16px;
+    padding: 0;
+  }
+
+  span.subscription-chooser {
+    display: block;
+    padding-top: 16px;
+  }
+
+  .current-subscription {
+    height: 350px;
+  }
+
+  .change-subscription {
+    height: 350px;
+  }
+
+  .subscribed .recurly .footer {
+    height: 0px;
+    padding: 0px;
+    position: relative;
+    width: 443px;
+  }
+
+  .recurly {
+
+    .field {
+      margin: 8px 0;
+      width: 430px;
+
+      input[type=text] {
+        background-color: @white;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        box-shadow: none;
+        color: @primary-font-color;
         display: inline-block;
-    }
-
-    .plan-price {
-        margin-top: 16px;
-    }
-
-    .select-plan {
-        font-weight: bold;
-        font-size: 14px;
-        display: inline-block;
-        width: 90px;
-    }
-
-    .select-users {
-        font-weight: bold;
-        font-size: 14px;
-        display: inline-block;
-        width: 90px;
-    }
-
-    .recurly.update_billing_info {
-        width: 458px;
-    }
-
-    .changebilling .header {
-        margin-top: 32px;
-    }
-
-    .recurly .accepted_cards {
-        right: 28px;
-    }
-
-    .recurly .contact_info {
-        background: transparent;
-    }
-
-    .recurly div.title {
-        color: #666;
-        font-weight: bold;
-        padding-bottom: 0;
-        font-size: 14px;
-    }
-
-    .payments.subscribing {
-        width: 740px;
-        margin: auto;
-    }
-
-    .payments.subscribing .col {
-        width:460px;
-    }
-
-
-    .recurly .field .placeholder {
-        font-size: 10px;
-        display: none;
-    }
-
-
-    .recurly .footer {
-        padding:0px;
-        padding-bottom:12px;
-    }
-
-    .payments.subscribing {
-        height: 1240px;
-    }
-
-    .btn-big {
-        display:inline-block;
-        margin:auto;
-    }
-
-    .subscribed {
-        height: 650px;
-        margin: auto;
-    }
-
-    .billing_info .title {
-        font-size: 0px;
-        padding: 0;
+        font: 16px/16px @font-family-sans;
         height: 16px;
+        margin: 0;
+        padding: 7px 10px;
+        width: 260px;
+      }
+
+      &.vat_number {
         display: none;
+      }
     }
 
-    span.subscription-chooser {
-        padding-top: 16px;
-        display: block;
+    .field.expires .title {
+      line-height: 25px;
+      width: 100px;
     }
 
-
-    .current-subscription {
-        height: 350px;
-    }
-
-    .change-subscription {
-        height: 350px;
-    }
-
-    .subscribed .recurly .footer {
-        height: 0px;
-        padding: 0px;
-        width: 443px;
-        position: relative;
-    }
-
-    .recurly {
-        .field {
-            width: 430px;
-            margin: 8px 0;
-            input[type=text] {
-                padding: 1px;
-                background-color: #fff;
-                border: 1px solid lightgray;
-                border-radius: 2px;
-                margin: 3px auto 3px 0;
-                height: 17px;
-                padding: 1px;
-                box-shadow: none;
-                width: 298px;
-                
-                border-width: 1px;
-                padding: 7px 10px;
-                height: 16px;
-                
-                display: inline-block;
-                margin: 0;
-                border: 1px solid #ccc;
-                font: 16px/16px @sans;
-                padding: 7px 10px;
-                height: 16px;
-                color: @txt;
-                width: 260px;
-            }
-
-            &.vat_number {
-                display: none;
-            }
- 
-        }
-        .field.expires .title {
-            line-height: 25px;
-            width: 100px;
-        }
-
-        .field.expires {
-            padding-bottom: 6px;
-            div {
-                display: inline-block;
-                margin: 0 8px 0 0;
-            }
-        }
-
-        
-    }
-
-    .payments .recurly .field {
-        margin-bottom: 0;
-        margin-left: 0;
-    }
-
-    .recurly .contact_info, .recurly .billing_info, .recurly .accept_tos {
-        padding: 0;
-        margin-top: 0;
-    }
-
-    .recurly .field .placeholder {
-        line-height: 30px;
-        padding-left: 4px;
-    }
-
-    .recurly .server_errors.any {
-        margin: 16px 28px 0 0;
-        color: @red;
-    }
-
-    .recurly .field .error {
+    .field.expires {
+      padding-bottom: 6px;
+  
+      div {
         display: inline-block;
-        color: @red;
-        margin-left: 16px;
-    }
+        margin: 0 8px 0 0;
+      }
+    }      
+  }
 
-    .changebilling-form {
-        min-height: 124px;
-    }
+  .payments .recurly .field {
+    margin-bottom: 0;
+    margin-left: 0;
+  }
 
-    .recurly .field.card_number .error {
-        left: 280px;
-    }
+  .recurly .contact_info,
+  .recurly .billing_info,
+  .recurly .accept_tos {
+    padding: 0;
+    margin-top: 0;
+  }
 
-    .changebilling-form .btn-small {
-        position: relative;
-        bottom: -14px;
-        right: 0px;
-    }
+  .recurly .field .placeholder {
+    line-height: 30px;
+    padding-left: 4px;
+  }
 
-    .accepted_cards {
-        display: none;
-    }
+  .recurly .server_errors.any {
+    color: @brand-negative;
+    margin: 16px 28px 0 0;  
+  }
 
-    .subscription-payments {
-	margin-bottom:50px;
-	.account-body {
+  .recurly .field .error {
+    color: @brand-negative;
+    display: inline-block;
+    margin-left: 16px;
+  }
+
+  .changebilling-form {
+    min-height: 124px;
+  }
+
+  .recurly .field.card_number .error {
+    left: 280px;
+  }
+
+  .changebilling-form .btn-small {
+    bottom: -14px;
+    position: relative;
+    right: 0px;
+  }
+
+  .accepted_cards {
+    display: none;
+  }
+
+  .subscription-payments {
+    margin-bottom:50px;
+    
+    .account-body {
 	    .surround-content;
 	    display:inline-block;
 	    min-height:0px;
-            min-width: 320px;
+      min-width: 320px;
             
-	    .subheader, .line {
-		display: block;
+	    .subheader,
+      .line {
+		    display: block;
 	    }
-	    .subheader {
-		width: 150px;
+	    
+      .subheader {
+		    width: 150px;
 	    }
-	    .total {
-		width: 100px;
-		display: inline-block;
-	    }
-	    .plan-total {
-		border-top: 1px dashed #CCC;
-		width: 100%;
-		margin-top:16px;
-		padding-top: 12px;
-		font-weight: bold;
+	    
+      .total {		    
+		    display: inline-block;
+        width: 100px;
 	    }
 
+	    .plan-total {
+    		border-top: 1px dashed #ccc;
+    		font-weight: bold;
+    		margin-top: 16px;
+        padding-top: 12px;
+        width: 100%;
+      }
+
 	    .next-payment {
-		border-bottom: 1px solid #CCC;
-		padding-bottom: 12px;
+    		border-bottom: 1px solid #ccc;
+    		padding-bottom: 12px;
 	    }
 
 	    .previous-payments {
-		margin-top: 12px;
+		    margin-top: 12px;
 	    }
-
-	}
     }
+  }
 
-    .renew-subscription {
-	margin-bottom:50px;
-	.renew-button {
-            margin-top: 18px;
-	    
-	}
+  .renew-subscription {
+    margin-bottom: 50px;
+    
+    .renew-button {
+      margin-top: 18px;  
     }
+  }
 }
 
 .contact-admin {
-    margin-top: 32px;
+  margin-top: 32px;
 }
-

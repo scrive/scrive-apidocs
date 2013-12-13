@@ -18,7 +18,9 @@
             view.render();
             view.model.document().bind('change', view.render);
 	    view.emailDeliveryUsedTogglerWorker();
-	    view.model.document().bind('change:signatories', view.emailDeliveryUsedToggler);
+        view.model.document().bind('change:signatories', view.emailDeliveryUsedToggler);
+        view.model.document().bind('change:daystosign', view.updateDaysToSign);
+        view.model.document().bind('change:daystoremind', view.updateDaysToRemind);
         },
         render: function() {
             var view = this;
@@ -41,7 +43,7 @@
             div.append(view.documentName());
             div.append(view.language());
             div.append(view.deadline());
-            //div.append(view.attachments());
+            div.append(view.autoreminder());
 
             return div;
         },
@@ -149,48 +151,105 @@
 
             return div.append(label).append(select.el());
         },
+        updateDaysToSign : function() {
+           var self = this;
+           var doc = self.model.document();
+           self.daystosigndaysinput.setValue((doc.daystosign() == 1 && self.daystosigndaysinput.value() == "") ? "" :  doc.daystosign() );
+           self.daystosigncalendar.setDays(doc.daystosign());
+           self.daystoremindcalendar.setMax(doc.daystosign());
+        },
         deadline: function() {
             var view = this;
             var viewmodel = view.model;
             var doc = viewmodel.document();
 
-            var labelText = localization.designview.signingDeadline;
 
-            var div = $('<div />');
-            div.addClass('design-view-action-process-left-column-deadline');
-
-
-            var label = $('<div />');
-            label.addClass('design-view-action-process-left-column-deadline-label');
-            label.text(labelText + ':');
+            var div = $("<div class='design-view-action-process-left-column-deadline'/>");
+            var label = $("<div class='design-view-action-process-left-column-deadline-label'/>").text(localization.designview.signingDeadline + ':');
             var calendarbutton = $("<div class='calendarbutton'/>");
-            var calendar = new Calendar({on : calendarbutton,
+            view.daystosigncalendar = new Calendar({on : calendarbutton,
                                          days : doc.daystosign(),
                                          change: function(days) {
                                             if (days != doc.daystosign()) {
                                               doc.setDaystosign(days);
-                                              if (view.daysinputfield != undefined)
-                                                  view.daysinputfield.setValue(days);
                                             }
                                           }
                         });
 
-            view.daysinputfield = new InfoTextInput({
-                infotext: doc.daystosign(),
+            view.daystosigndaysinput = new InfoTextInput({
+                infotext: "1",
                 value: doc.daystosign(),
                 cssClass : 'design-view-action-process-left-column-deadline-field',
+                onBlur: function() {
+                  view.daystosigndaysinput.setValue(doc.daystosign());
+                },
                 onChange: function(v) {
-                    v = parseInt(v);
-                    if (v != undefined && !isNaN(v) && v != doc.daystosign()) {
-                      doc.setDaystosign(v);
-                      calendar.setDays(v);
+                    days = parseInt(v);
+                    if (days != undefined && !isNaN(days) && (days + "" == v) && days != doc.daystosign()) {
+                      doc.setDaystosign(days);
+                    } else if (v == "" && doc.daystosign() != 1) {
+                      doc.setDaystosign(1);
+                    } else if (v != "" && doc.daystosign() + "" != v) {
+                      view.daystosigndaysinput.setValue(doc.daystosign());
                     }
                 }
             });
 
             div.append(label)
-               .append(view.daysinputfield.el())
+               .append(view.daystosigndaysinput.el())
                .append($("<div class='design-view-action-process-left-column-deadline-tag'/>").text(localization.designview.days))
+               .append(calendarbutton);
+
+
+            return div;
+        },
+        updateDaysToRemind : function() {
+           var self = this;
+           var doc = self.model.document();
+           self.daystoreminddaysinput.setValue(doc.daystoremind() != undefined ? doc.daystoremind() : "");
+           self.daystoremindcalendar.setDays(doc.daystoremind());
+        },
+        autoreminder: function() {
+            var view = this;
+            var viewmodel = view.model;
+            var doc = viewmodel.document();
+
+            var div = $("<div class='design-view-action-process-left-column-remindline'/>");
+            var label = $("<div class='design-view-action-process-left-column-remindline-label'/>").text(localization.autoreminders.sendReminderIn + ':');
+            var calendarbutton = $("<div class='calendarbutton'/>");
+            view.daystoremindcalendar = new Calendar({on : calendarbutton,
+                                         days : doc.daystoremind(),
+                                         maxValue : doc.daystosign(),
+                                         change: function(days) {
+                                            if (days != doc.daystoremind()) {
+                                              doc.setDaystoremind(days);
+                                            }
+                                          }
+                        });
+
+            view.daystoreminddaysinput = new InfoTextInput({
+                infotext: "-",
+                value: doc.daystoremind(),
+                cssClass : 'design-view-action-process-left-column-remindline-field',
+                onChange: function(v) {
+                    days = parseInt(v);
+                    if (isNaN(days))
+                      days = undefined;
+                    if (days != doc.daystoremind()) {
+                      doc.setDaystoremind(days);
+                    } else if (days == undefined && v != "") {
+                      view.daystoreminddaysinput.setValue("");
+                    } else if (days + "" != v && v != "") {
+                      view.daystoreminddaysinput.setValue(days + "");
+                    }
+
+
+                }
+            });
+
+            div.append(label)
+               .append(view.daystoreminddaysinput.el())
+               .append($("<div class='design-view-action-process-left-column-remindline-tag'/>").text(localization.autoreminders.days))
                .append(calendarbutton);
 
 
@@ -347,7 +406,7 @@
                     editor.on('change', function () {
 			doc.setInvitationMessage(editor.getContent());
                     });
-		    
+
 
 		    /* Imitate a HTML5 placeholder on the TinyMCE textarea */
 		    var placeholder = $('#' + editor.id).attr('placeholder');
@@ -356,19 +415,19 @@
 			editor.on('init', function() {
 			    // get the current content
 			    var cont = editor.getContent();
-			    
+
 			    // If its empty and we have a placeholder set the value
 			    if (cont.length === 0) {
 				editor.setContent(placeholder);
 			    }
 
-  			    var $message = $(editor.getWin().document).find("p");   
+  			    var $message = $(editor.getWin().document).find("p");
 			    // change placeholder text color, if it's the 'placeholder text'
 			    if($message.text() == localization.designview.editInvitation) {
 				$message.css("color", "#999999");
 			    }
 			}).on('focus', function() {
-			      // replace the default content on focus if the 
+			      // replace the default content on focus if the
 			      // same as original placeholder
 			      var $message = $(editor.getWin().document).find("p");
 				if ($message.text() == localization.designview.editInvitation) {
