@@ -8,6 +8,7 @@ module EvidenceLog.View (
     , suppressRepeatedEvents
     , htmlSkipedEvidenceType
     , evidenceOfIntentHTML
+    , simpleEvents
   ) where
 
 
@@ -179,7 +180,7 @@ emptyEvent _ = False
 
 -- | Produce simplified text for an event.  If actor is provided, the
 -- text is for the verification page, otherwise it is for the archive.
-simplyfiedEventText :: TemplatesMonad m => Maybe String -> Document -> DocumentEvidenceEvent' SignatoryLink -> m String
+simplyfiedEventText :: (HasLang doc, TemplatesMonad m) => Maybe String -> doc -> DocumentEvidenceEvent' SignatoryLink -> m String
 simplyfiedEventText mactor doc dee = case evType dee of
   Obsolete _ -> return ""
   Current et -> (if isJust mactor then renderLocalTemplate doc else renderTemplate) (eventTextTemplateName et) $ do

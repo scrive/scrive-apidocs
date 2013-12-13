@@ -36,6 +36,7 @@ import DocStateTest
 import DocControlTest
 import DocAPITest
 import DocStateQueryTest
+import DumpEvidenceTexts
 import EvidenceAttachmentsTest
 import HtmlTest
 import LocalizationTest
@@ -91,6 +92,7 @@ allTests = tail tests
       , ("file", const fileTests )
       , ("sqlutil", const sqlUtilsTests )
       , ("evidencelog", const evidenceLogTests)
+      , ("evidencetexts", const dumpAllEvidenceTexts)
       , ("pad", const padTests)
 --      , ("livedocx", const $ const liveDocxTests)
       , ("oauth", const oauthTest)

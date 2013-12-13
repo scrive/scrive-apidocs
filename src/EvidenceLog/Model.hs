@@ -9,6 +9,7 @@ module EvidenceLog.Model (
   , GetEvidenceLog(..)
   , DocumentEvidenceEvent
   , DocumentEvidenceEvent'(..)
+  , evidenceLogText
   , copyEvidenceLogToNewDocument
   , copyEvidenceLogToNewDocuments
   , signatoryLinkTemplateFields
@@ -64,9 +65,9 @@ signatoryLinkTemplateFields sl = do
   F.value "viewing"     $ not $ signatoryispartner sl
   F.value "signing"     $ signatoryispartner sl
 
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
-  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor did) = do
-   ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
+-- | Create evidence text that goes into evidence log
+evidenceLogText :: TemplatesMonad m => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Actor -> m String
+evidenceLogText event textFields masl mmsg actor = do
    let fields = do
          F.value "full" True
          F.value "actor" $ actorWho actor
@@ -78,7 +79,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffe
              F.value "signatory_email" $ getEmail sl
              signatoryLinkTemplateFields sl
          textFields
-   let text = runIdentity $ renderHelper ts (eventTextTemplateName event) fields
+   ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
+   return $ runIdentity $ renderHelper ts (eventTextTemplateName event) fields
+
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
+  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor did) = do
+   text <- evidenceLogText event textFields masl mmsg actor
    kRun01 $ sqlInsert "evidence_log" $ do
       sqlSet "document_id" did
       sqlSet "time" $ actorTime actor
@@ -246,7 +252,7 @@ data CurrentEvidenceEventType =
   AttachExtendedSealedFileEvidence                |
   ErrorSealingDocumentEvidence                    |
   AutomaticReminderSent
-  deriving (Eq, Show, Read, Ord)
+  deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 data ObsoleteEvidenceEventType =
   AddSigAttachmentEvidence                        |
