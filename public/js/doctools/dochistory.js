@@ -58,13 +58,13 @@ var DocumentHistoryModel = Backbone.Model.extend({
         return this.get('historyList');
 
   },
-  checkIfHistoryChangedAndCallback : function(callback) {
+  checkIfHistoryChangedAndCallback : function(callback, errorcallback) {
       if (!this.historyList().ready()) { console.log("Not reloading, because list is not ready"); return; }// If we don't have current history, we can't really say that it changed
       this.historyList().fetchWithCallback(function(currentlist,newlist) {
          console.log("List fetched, and it is changed: " + (currentlist.length != newlist.length));
          if (currentlist.length != newlist.length)
            callback();
-      });
+      }, errorcallback);
   },
   expanded : function() {
       return this.get("expanded");
@@ -155,7 +155,7 @@ window.DocumentHistory = function(args){
         this.setExpanded = function(expanded) {model.setExpanded(expanded);};
         this.ready  = function() {return model.ready()};
         this.destroy = function() {view.destroy();this.checkIfHistoryChangedAndCallback = function() {};};
-        this.checkIfHistoryChangedAndCallback = function(callback) {return model.checkIfHistoryChangedAndCallback(callback);};
+        this.checkIfHistoryChangedAndCallback = function(callback,errorcallback) {return model.checkIfHistoryChangedAndCallback(callback,errorcallback);};
 };
 
 })(window);

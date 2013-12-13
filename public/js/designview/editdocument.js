@@ -70,8 +70,10 @@
 	    var fieldOrPlacementFN = function() {
                 return new Field({fresh: false,
                                   type: 'checkbox',
-				  signatory: model.document().author(),
-				  name: model.document().newCheckboxName()});
+                                  value : "checked",
+                                  signatory: model.document().author(),
+                                  name: model.document().newCheckboxName()
+                });
             };
 
 	    return this.createDraggable(fieldOrPlacementFN, localization.designview.checkbox, 'checkbox');

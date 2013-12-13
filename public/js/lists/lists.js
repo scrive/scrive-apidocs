@@ -535,9 +535,15 @@
 
             this.model = function() {return model;};
             this.el = function() {return $(view.el);};
-            this.fetchWithCallback = function(callback) {
-                $.get(schema.url(),schema.getSchemaUrlParams(),function(res) {
+            this.fetchWithCallback = function(callback,errorcallback) {
+                $.ajax({
+                  url : schema.url(),
+                  method: "GET",
+                  data : schema.getSchemaUrlParams(),
+                  success : function(res) {
                     callback(model, JSON.parse(res).list);
+                  },
+                  error : function() { if (errorcallback != undefined) errorcallback(); }
                 });
             };
             this.recall = function() {

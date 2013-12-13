@@ -55,7 +55,7 @@
         vertical-align: middle;
 
         // IE7 has problems with margin top. But this should make it look not too bad.
-        .ie7 & { 
+        .ie7 & {
           display: block;
           height: auto;
           margin-top: 40px;
@@ -161,7 +161,7 @@
           left: 10px;
           padding-left: 20px;
       	  position: relative;
-      	  
+
           .docname {
             color: grey;
             font-weight: normal;
@@ -322,7 +322,7 @@
     margin: 0 auto;
     padding: 36px 36px 36px 37px;
     width: 943px;
-    
+
     .border-radius(0, 5px, 5px, 0);
     .box-shadow(inset 0px 0px 8px rgba(80, 80, 80, 0.21));
     .rounded(5px);
@@ -360,7 +360,7 @@
 
   .authorattachments .list,
   .signatoryattachments .list {
-    float: right;  
+    float: right;
     margin-left: 23px;
     margin-right: -10px; // line up with the signatory boxes
     width: 610px;
@@ -408,6 +408,12 @@
 
     .file {
       vertical-align: top;
+
+      .item {
+        // We want this item to have constant size. Arrow is pointing at it, and we want
+        // arrow not to jump while this box is filled with loading box
+        height: 42px;
+      }
     }
 
     .loading {
@@ -439,7 +445,7 @@
   }
 
   .signatories {
-      
+
     .columns-container {
   	  display: inline-block;
       *display: inline; // IE7 hack - http://stackoverflow.com/a/6545033/337587
@@ -466,7 +472,7 @@
     .name {
       font-size: 16px;
       word-wrap: break-word;
-    } 
+    }
 
     h2 {
       float: left;
@@ -492,12 +498,12 @@
   	  font-size: 13px;
   	  line-height: 17px;
   	  padding: 10px;
-  	  
+
       .spacing {
         margin-left: auto;
         margin-right: auto;
       }
-      
+
       .statustext {
         float: left;
         margin-top: 5px;
@@ -550,7 +556,7 @@
   }
 
   .pagefooter.small-screen .poweredbyscrive {
-    
+
     .logo {
       margin-top: 0px;
     }
@@ -586,7 +592,7 @@
 
     &:last-child {
       border-bottom: none;
-    }  
+    }
   }
 
   .sig .name {
@@ -598,7 +604,7 @@
   }
 
   .section {
-  
+
     &.spacing {
       padding: 30px;
     }
@@ -661,7 +667,7 @@
   }
 
   .extradetails {
-  
+
     .title {
       float: left;
       width: 260px;
@@ -675,7 +681,7 @@
     .fillbox {
       float: right;
       width: 260px;
-	  
+
       .info-text-input {
   	    margin-bottom: 15px;
         padding: 8px;
@@ -700,7 +706,7 @@
     border-width: 0px;
     margin-top: 5px;
     padding-bottom: 4px;
-    padding-top: 2px;    
+    padding-top: 2px;
   }
 
   .document-pages {
@@ -717,11 +723,11 @@
 
       &.to-fill-now {
         border: 2px solid @brand-primary-complementary;
-        
+
         .placedcheckbox {
           padding: 9px;
         }
-        
+
         &.obligatory {
           border: 2px solid @brand-secondary;
         }
