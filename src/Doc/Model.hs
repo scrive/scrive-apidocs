@@ -72,7 +72,6 @@ module Doc.Model
   , GetDocsSent(..)
   , GetSignatoriesByEmail(..)
   , CheckDocumentObjectVersionIs(..)
-  , lockDocument
 
    -- only for use in tests
   , updateMTimeAndObjectVersion
@@ -2446,9 +2445,4 @@ updateMTimeAndObjectVersion mtime = updateDocumentWithID $ \did -> do
 
 instance MonadDB m => GetRow Document m where
   getRow did = dbQuery $ GetDocumentByDocumentID did
-
--- | Lock a document so that other transactions that attempt to lock or update the document will wait until the current transaction is done.
-lockDocument :: MonadDB m => DocumentID -> m ()
-lockDocument did = do
-  kRun_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"
 

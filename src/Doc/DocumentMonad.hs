@@ -13,7 +13,7 @@ import Control.Monad.Base (MonadBase)
 import Control.Monad.Reader (MonadReader, ReaderT(..), lift, runReaderT, ask, MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
 import Crypto.RNG (CryptoRNG)
-import DB (MonadDB)
+import DB (MonadDB, kRun_, (<?>), (<+>))
 import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, runRowCacheTM, rowCache, rowCacheID, updateRow, updateRowWithID)
 import Doc.DocStateData (Document)
 import Doc.DocumentID (DocumentID)
@@ -50,18 +50,26 @@ class MonadDB m => DocumentMonad m where
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
   deriving (Applicative, Monad, Functor, MonadIO, MonadDB, MonadLog, MonadTrans, MonadBase b)
 
--- | Run an operation that modifies a document in the database, given a document
-withDocument :: Monad m => Document -> DocumentT m a -> m a
-withDocument d = runRowCacheT d . unDocumentT
+-- | Lock a document and perform an operation that modifies the
+-- document in the database, given the document
+withDocument :: (MonadDB m, GetRow Document m) => Document -> DocumentT m a -> m a
+withDocument d = runRowCacheT d . unDocumentT . (lockDocument >>)
 
--- | Run an operation that modifies a document in the database, given its document ID
-withDocumentID :: Monad m => DocumentID -> DocumentT m a -> m a
-withDocumentID d = runRowCacheTID d . unDocumentT
+-- | Lock a document and perform an operation that modifies the
+-- document in the database, given the document ID
+withDocumentID :: (MonadDB m, GetRow Document m) => DocumentID -> DocumentT m a -> m a
+withDocumentID d = runRowCacheTID d . unDocumentT . (lockDocument >>)
 
--- | Run an operation that modifies a document in the database, given an operation that obtains the document
-withDocumentM :: Monad m => m Document -> DocumentT m a -> m a
-withDocumentM dm = runRowCacheTM dm . unDocumentT
+-- | Lock a document and perform an operation that modifies the
+-- document in the database, given an operation that obtains the
+-- document
+withDocumentM :: (MonadDB m, GetRow Document m) => m Document -> DocumentT m a -> m a
+withDocumentM dm = runRowCacheTM dm . unDocumentT . (lockDocument >>)
 
+-- | Lock a document so that other transactions that attempt to lock or update the document will wait until the current transaction is done.
+lockDocument :: DocumentMonad m => m ()
+lockDocument = updateDocumentWithID $ \did ->
+  kRun_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"
 
 --  The interesting instance
 
