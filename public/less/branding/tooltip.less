@@ -1,19 +1,24 @@
 .tooltip-container {
-  color: #666;
+  color: #666666;
   position: absolute;
   width: 250px;
   z-index: 1001;
+
   .tooltip-body {
     background: @white;
     margin: 5px;
     padding: 13px 20px 13px;
     width: 200px;
+    
     p {
       display: inline;
     }
   }
+
   &:before {
-    border: 5px solid #000;
+    border: 5px solid #000000;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
     border-radius: 5px;
     bottom: 0;
     content: " ";
@@ -22,9 +27,8 @@
     position: absolute;
     right: 0;
     top: 0;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
   }
+
   .tooltip-arrow {
     background: url(/img/tooltip-arrow.png);
     height: 33px;
@@ -36,15 +40,16 @@
   }
 
   &.black-theme {
-    color: #EFEFEF;
+    color: #efefef;
+
     .tooltip-body {
-      opacity: 0.55;
-      background: #000000;
-    }
-    &:before {
-      background : #000000
+      background: @black;
       opacity: 0.55;
     }
 
+    &:before {
+      background : @black;
+      opacity: 0.55;
+    }
   }
 }

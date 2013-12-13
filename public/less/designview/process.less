@@ -2,23 +2,26 @@
 @import '../branding/variables.less';
 
 .design-view-action-process {
-  .box-sizing(border-box);
-  font-size: 15px;
-  font-weight: 300;
-  width: 1018px;
-  margin: auto;
-  padding-bottom:14px;
   background-color: @grey-background;
   border-bottom: 4px solid @white;
-  border-left: 4px solid @white;
-  border-right: 4px solid @white;
   border-bottom-left-radius: 15px;
   border-bottom-right-radius: 15px;
+  border-left: 4px solid @white;
+  border-right: 4px solid @white;
+  font-size: 15px;
+  font-weight: 300;
+  margin: auto;
+  padding-bottom: 14px;
+  width: 1018px;
+
   .box-shadow(0 4px 0 rgba(0,0,0,0.05));
+  .box-sizing(border-box);
 }
 
 .design-view-action-process {
+
   .design-view-action-process-right-column-invitation-wrapper.disabled {
+    
     .mce-panel {
       border-color: @white;
     }
@@ -27,10 +30,10 @@
 
 .design-view-action-process-left-column {
   display: inline-block;
-  vertical-align: top;
-  width: 33%;
   height: 170px;
   margin-top: 19px;
+  vertical-align: top;
+  width: 33%;
 }
 
 .design-view-action-row {
@@ -39,11 +42,11 @@
 }
 
 .design-view-action-label {
-  width: 156px;
   display: inline-block;
-  text-align: right;
   margin-right: 8px;
+  text-align: right;
   vertical-align: middle;
+  width: 156px;
 }
 
 .design-view-action-process-left-column-document-name {
@@ -55,8 +58,8 @@
 }
 
 .design-view-action-process-left-column-document-name-field {
-  width: 148px;
   display: inline-block;
+  width: 148px;
   vertical-align: middle;
 }
 
@@ -69,9 +72,9 @@
 }
 
 .design-view-action-process-left-column-document-type-field {
-  width: 158px;
   display: inline-block;
   vertical-align: middle;
+  width: 158px;
 }
 
 .design-view-action-process-left-column-language {
@@ -83,8 +86,8 @@
 }
 
 .design-view-action-process-left-column-language-field {
-  width: 158px;
   display: inline-block;
+  width: 158px;
   vertical-align: middle;
 }
 
@@ -117,87 +120,95 @@
 
 .design-view-action-process-left-column-attachments {
   display: inline-block;
-  width : 335px;
+  width: 335px;
+  
   .ie8 & {
-    width:350px;
+    width: 350px;
   }
 }
 
 .designview-attachemnts-list {
   margin-top: 55px;
+  
   .icon-td {
-    width:24px;
+    width: 24px;
+    
     .author-attachment-icon {
-      width: 18px;
-      height: 20px;
+      background: url(/img/editor-view-attachment-added.png);
       display: inline-block;
+      height: 20px;
       margin-right: 6px;
-      background: url("/img/editor-view-attachment-added.png");
       vertical-align : middle;
+      width: 18px;
     }
-    .signatory-attachment-icon{
-      width: 18px;
-      height: 20px;
-      display: inline-block;
-      margin-right: 6px;
-      background: url("/img/editor-view-attachment-requested.png");
-      vertical-align : middle;
 
+    .signatory-attachment-icon {
+      background: url(/img/editor-view-attachment-requested.png);
+      display: inline-block;
+      height: 20px;
+      margin-right: 6px;
+      vertical-align : middle;
+      width: 18px;
     }
   }
+
   .name-td {
-    width: 300px;
     line-height: 16px;
+    width: 300px;
   }
+
   .remove-td {
     width: 11px;
+    
     .remove-icon {
-      width: 11px;
-      height: 11px;
-      display: inline-block;
-      background: url("/img/editor-view-remove-field.png") repeat scroll -5px -5px transparent;
+      background: url(/img/editor-view-remove-field.png) repeat scroll -5px -5px transparent;
       cursor: pointer;
+      display: inline-block;
+      height: 11px;
       vertical-align : middle;
-      &:hover {
-        background: url("/img/editor-view-remove-field-hover.png") repeat scroll -5px -5px transparent;
-      }
+      width: 11px;
 
+      &:hover {
+        background: url(/img/editor-view-remove-field-hover.png) repeat scroll -5px -5px transparent;
+      }
     }
   }
 }
 
 .design-view-action-process-left-column-attachments-author-button {
   float: left;
-  min-width:116px;
+  min-width: 116px;
 }
 
 .design-view-action-process-left-column-attachments-signatory-button {
   float: right;
   min-width: 116px;
-
 }
 
 .design-view-action-process-middle-column {
   display:inline-block;
-  .box-sizing(border-box);
-  width: 307px;
   height: 200px;
   margin-top: 15px;
   padding: 4px 16px 8px 18px;
   vertical-align: top;
+  width: 307px;
+
+  .box-sizing(border-box);
 }
 
 .design-view-action-process-right-column {
   display: inline-block;
-  .box-sizing(border-box);
   margin-top: 19px;
-  width: 34%;
   min-height: 170px;
   padding: 0px 16px 8px 16px;
-  .ie8 & {
-    padding-left:10px;
-  }
   vertical-align: top;
+  width: 34%;
+
+  .box-sizing(border-box);
+
+  .ie8 & {
+    padding-left: 10px;
+  }
 }
 
 .design-view-action-process-right-column-invitation-topline {
@@ -211,13 +222,13 @@
 
 .design-view-action-process-right-column-invitation-wrapper {
   display: inline-block;
-  width: 310px;
   height: 140px;
-  vertical-align: top;
   overflow: hidden;
+  vertical-align: top;
+  width: 310px;
 }
 
 .design-view-action-process-right-column-invitation-editor {
-  width: 470px;
   height: 110px;
+  width: 470px;
 }

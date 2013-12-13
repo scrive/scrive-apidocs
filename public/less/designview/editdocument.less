@@ -1,115 +1,129 @@
 @import 'util.less';
 @import '../branding/variables.less';
 
-/// @DRAGGABLES ///
+// @DRAGGABLES
+// -------------------------
 
-@draggables-border:2px dashed #e4e4e4;
+@draggables-border: 2px dashed #e4e4e4;
 
 // TODO: remove some overlap with the process box.
 .design-view-action-document-draggables {
-  .box-sizing(border-box);
-  width: 1018px;
-  margin: auto;
-  height: 96px;
   background-color: @grey-background;
   border-bottom: 4px solid @white;
-  border-left: 4px solid @white;
-  border-right: 4px solid @white;
   border-bottom-left-radius: 15px;
   border-bottom-right-radius: 15px;
-  padding-top:16px;
+  border-left: 4px solid @white;
+  border-right: 4px solid @white;
+  height: 96px;
+  margin: auto;
+  padding-top: 16px;
+  width: 1018px;
+
   .box-shadow(0 4px 0 rgba(0,0,0,0.05));
+  .box-sizing(border-box);
 }
 
 .design-view-action-document-draggables-help {
-  .box-sizing(border-box);
   display: inline-block;
   position: relative;
-  text-align:center;
+  text-align: center;
+  
+  .box-sizing(border-box);
 
   .icon {
-    height: 35px;
-    width: 38px;
-    background-image:url("../../img/Add-field-help-sprite.png");
+    background-image: url(../../img/Add-field-help-sprite.png);
     display: inline-block;
+    height: 35px;
     position: relative;
     top: 3px;
+    width: 38px;
   }
 
   &.help1 {
-    margin-left:35px;
-    width:196px;
+    margin-left: 35px;
+    width: 196px;
+
     .icon {
-      background-position:0px 0px;
+      background-position: 0px 0px;
     }
+
     .text {
-      min-width: 123px;
       max-width: 135px;
+      min-width: 123px;
       margin-left: 10px;
     }
   }
+
   &.help2 {
-    margin-left:12px;
-    min-width: 156px;
+    margin-left: 12px;
     max-width: 190px;
+    min-width: 156px;
+    
     .icon {
-      background-position:38px 0px;
+      background-position: 38px 0px;
     }
     .text {
-      min-width: 83px;
-      max-width: 125px;
       margin-left: 4px;
       margin-right: 14px;
+      max-width: 125px;
+      min-width: 83px;
     }
   }
+
   .wrapper {
-    border:@draggables-border;
+    border: @draggables-border;
     border-radius: 2px;
+    height: 42px;
     padding: 6px 0px 6px 5px;
-    height:42px;
 
     .text {
-      display : inline-block;
+      display: inline-block;
       line-height: 16px;
       text-align : left;
     }
   }
 }
 
-@draggable-background: #FAFAFA;
+@draggable-background: #fafafa;
 
 .design-view-action-document-draggable {
-  .box-sizing(border-box);
-  height: 100%;
   display: inline-block;
-  position: relative;
   margin-right:12px;
+  height: 100%;
+  position: relative;
   vertical-align:top;
+  
+  .box-sizing(border-box);
 
   &.design-view-action-document-draggable-textbox {
     margin-left: 30px;
+
     .design-view-action-document-draggable-icon {
       background-position: 0px 0px;
     }
+
     .design-view-action-document-draggable-text {
-      width:110px;
+      width: 110px;
     }
   }
 
   &.design-view-action-document-draggable-signature {
+    
     .design-view-action-document-draggable-icon {
       background-position: 44px 0px;
     }
+
     .design-view-action-document-draggable-text {
-      width:116px;
+      width: 116px;
     }
   }
 
-
   &.design-view-action-document-draggable-checkbox {
+    
     .design-view-action-document-draggable-icon {
       background-position: 21px 0px;
     }
+    
     .design-view-action-document-draggable-text {
       width:94px;
     }
@@ -118,22 +132,22 @@
   .design-view-action-document-draggable-wrapper {
     border: @draggables-border;
     border-radius: 2px;
-    padding:5px;
+    padding: 5px;
   }
 
   .design-view-action-document-draggable-inner-wrapper {
     background-color: @brand-secondary-light;
-    height:44px;
-    border-radius:2px;
+    border-radius: 2px;
+    height: 44px;
   }
 
   .design-view-action-document-draggable-icon-wrapper {
-    border-radius: 2px 0px 0px 2px;
-    display:inline-block;
     background-color: @brand-secondary;
-    height:100%;
-    width:44px;
-    text-align:center;
+    border-radius: 2px 0px 0px 2px;
+    display: inline-block;
+    height: 100%;
+    text-align: center;
+    width: 44px;
   }
 
   .design-view-action-document-draggable-text {
@@ -142,6 +156,7 @@
     text-align:center;
     position: relative;
     top: -7px;
+
     span {
       color: @white;
       position: relative;
@@ -151,11 +166,11 @@
 
   .design-view-action-document-draggable-icon {
     background-image: url(../../img/place-fields-sprite.png);
-    width: 21px;
-    height: 20px;
     display: inline-block;
-    margin-top:11px;
-    margin-left:3px;
+    height: 20px;
+    margin-top: 11px;
+    margin-left: 3px;
+    width: 21px;
   }
 }
 
@@ -165,32 +180,44 @@
 
 .text-field-placement-setter-field-name {
   width: 221px;
+
   .name {
     border: 1px solid red;
-    width: 150px;
-    vertical-align: top;
     height: 19px;
     padding: 5px;
+    vertical-align: top;
+    width: 150px;
   }
+
   input {
-    height: 24px;
     font-size: 14px;
+    height: 24px;
     margin-top: -5px;
   }
+
   .button {
     padding: 8px 12px 9px;
     vertical-align: top;
   }
 }
 
-.text-field-placement-setter-field-selector, .text-field-placement-setter-field-field-selector {
+.text-field-placement-setter-field-selector,
+.text-field-placement-setter-field-field-selector {
   font-size: 14.5px; // keep consistent with size of .placedfield.ui-draggable when placing fields.
   height: 29px;
   width: 189px;
+  
   .select-button {
     height: 29px;
-    .select-button-label { padding-top: 5px }
-    .select-button-right, .select-button-left { top: -2px; }
+    
+    .select-button-label {
+      padding-top: 5px;
+    }
+
+    .select-button-right,
+    .select-button-left {
+      top: -2px;
+    }
   }
   .select-opts {
     top: 28px !important;
@@ -198,7 +225,7 @@
 }
 
 .text-field-placement-setter-field-editor {
-  width: 208px;
   height: 20px;
   padding: 5px;
+  width: 208px;
 }

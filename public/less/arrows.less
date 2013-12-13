@@ -8,95 +8,96 @@
   @action-arrow-height: 38px;
 
   .hidden {
+    filter: alpha(opacity=0);
     opacity: 0;
-    filter: alpha(opacity=0)
   }
 
   .scroll-arrow {
-    height:    @scroll-arrow-size;
-    min-width: @scroll-arrow-size;
     background-repeat: no-repeat;
-    position: fixed;
     display: block;
+    height: @scroll-arrow-size;
+    min-width: @scroll-arrow-size;
+    position: fixed;
     z-index: 999;
   }
 
   .down.arrow {
     .scroll-arrow;
-    bottom: @scroll-arrow-margin;
-    background: url(../img/sign-arrow-down.png);
-    position: fixed;
 
+    background: url(../img/sign-arrow-down.png);
+    bottom: @scroll-arrow-margin;
+    position: fixed;
   }
 
   .up.arrow {
     .scroll-arrow;
-    up: @scroll-arrow-margin;
+
+    up: @scroll-arrow-margin; // TODO: remove this comment if "up" is the right attribute to use
     background: url(../img/sign-arrow-up.png);
     background-repeat: no-repeat;
   }
 
-
   .action-arrow {
-    position: absolute;
     display: block;
+    position: absolute;
     z-index: 999;
   }
 
   .front {
-    height:    @action-arrow-height;
+    background-repeat: no-repeat;
+    height: @action-arrow-height;
     width: @action-arrow-front-width;
-    background-repeat: no-repeat;
-
   }
+
   .back {
-    height:    @action-arrow-height;
-    width: @action-arrow-back-width;
     background-repeat: no-repeat;
+    height: @action-arrow-height;
+    width: @action-arrow-back-width;
   }
 
   .label {
     background-repeat: repeat-x;
     color: @white;
     font-size: 14px;
+    height: @action-arrow-height;
+    min-width: 43px;
     padding-top: 6px;
-    height : @action-arrow-height;
-    white-space:nowrap;
-    min-width : 43px;
-
+    white-space: nowrap;
   }
 
   .action-arrow.right .front {
-    float : left;
     background-image: url(../img/sign-arrow-action-right-front.png);
+    float: left;
   }
+
   .action-arrow.right .back {
-    float : left;
     background-image: url(../img/sign-arrow-action-right-back.png);
+    float: left;
   }
+
   .action-arrow.right .label {
-    float : left;
+    background-image: url(../img/sign-arrow-action-label.png);
+    float: left;
+    line-height: 1.8;
     padding-left: 3px;
     padding-right: 3px;
-    background-image: url(../img/sign-arrow-action-label.png);
-    line-height: 1.8;
   }
 
   .action-arrow.left .front {
-    float : right;
     background-image: url(../img/sign-arrow-action-left-front.png);
+    float: right;
     margin-top: -1px; // is this an image problem? i just rotated the right one 180 deg.
   }
+
   .action-arrow.left .back {
-    float : right;
     background-image: url(../img/sign-arrow-action-left-back.png);
+    float: right;
   }
+
   .action-arrow.left .label {
-    float : right;
-    padding-right: 3px;
     background-image: url(../img/sign-arrow-action-label.png);
+    float: right;
     line-height: 1.8;
+    padding-right: 3px;
   }
-
-
 }

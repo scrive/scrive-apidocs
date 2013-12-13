@@ -1,26 +1,29 @@
 @import 'branding/variables';
 
 .apidashboard {
+
   p {
     font-size: 14px;
   }
 
   .subbox {
-    display : none;
+    display: none;
   }
 
   .account .col {
     width: 100%;
   }
+
   .oauth-section {
     margin-bottom: 55px;
+    
     &:last-child {
-      margin-bottom:0px;
+      margin-bottom: 0px;
     }
 
     .oauth-section-header {
-      border-bottom: 1px solid #DEE4ED;
-      color: #000;
+      border-bottom: 1px solid #dee4ed;
+      color: @black;
       display: block;
       font-size: 25px;
       font-weight:300;
@@ -30,8 +33,8 @@
       padding-bottom: 10px;
       position: relative;
       text-align: left;
-      display: block;
     }
+
     .oauth-section-label {
       color: #333333;
       display: block;
@@ -41,12 +44,12 @@
       margin: 15px 0px 15px;
       position: relative;
       text-align: left;
-      display: block;
-
     }
+
     label.delete {
+      color: #b50008;
       cursor: pointer;
-      color: #B50008;
+      
       &:hover {
         color: red;
       }
@@ -56,18 +59,16 @@
   .account .col p {
     margin-right: 30px;
     display: inline-block;
-
   }
 
   .col.float-right {
     display: none;
   }
 
-
   .col {
     display: table;
-    overflow: hidden;
     height: 33px;
+    overflow: hidden;
   }
 
   .middle {
