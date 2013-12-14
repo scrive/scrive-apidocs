@@ -4,7 +4,7 @@ import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe (fromJust, isNothing)
 import DB (getMinutesTime)
-import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..))
+import Doc.DocStateData (SignatoryField(..), SignatoryLink(..), FieldType(..), DeliveryMethod(..))
 import Doc.DocumentID (unsafeDocumentID)
 import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
 import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
@@ -12,13 +12,13 @@ import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
 import Version (versionID)
 
 import Control.Applicative ((<$>))
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, when)
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
 import MinutesTime (formatMinutesTimeUTC, MinutesTime, parseMinutesTimeDMY)
 import TestKontra (TestEnvSt, teGlobalTemplates)
 import qualified Text.StringTemplates.Fields as F
-import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), evidenceLogText)
+import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
 import Templates (runTemplatesT)
 import Test.Framework (Test)
 import TestingUtil (testThat)
@@ -56,10 +56,12 @@ dumpEvidenceTexts now lang = do
                   , SignatoryField EmailFT "signatory@example.com" True False []
                   ]
             , signatoryispartner = True
+            , signatorylinkdeliverymethod = EmailAndMobileDelivery
             }
   let messageText = Just "This is a <b>message text.</b>"
-  let fields = do
-        F.value "author" $ actorEmail actor
+  let fields t = do
+        when (t `elem` [AutomaticReminderSent, ReminderSend, DeleteSigAttachmentEvidence, SaveSigAttachmentEvidence]) $ do
+          F.value "author" $ actorEmail actor
         F.value "description" ("This is a description." :: String)
         F.value "lang" $ show lang
         F.value "msg" ("Really long message from external e-ID system." :: String)
@@ -90,7 +92,7 @@ dumpEvidenceTexts now lang = do
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
          forM (evidencetypes) $ \evt -> do
-       elog <- evidenceLogText evt fields asl messageText actor
+       elog <- evidenceLogText evt (fields evt) asl messageText actor
        let simpletext mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
                                then Just <$> simplyfiedEventText mactor lang ev
                                else return Nothing

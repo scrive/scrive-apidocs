@@ -2221,7 +2221,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddSignatoryLinkVisitedEvid
 
 data PostReminderSend = PostReminderSend SignatoryLink (Maybe String) Bool Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
-   update (PostReminderSend sl mmsg automatic actor) = updateDocumentWithID $ \docid -> do
+   update (PostReminderSend sl mmsg automatic actor) = updateDocument $ \doc -> do
+     let docid = documentid doc
      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
        sqlFrom "documents"
        sqlSet "read_invitation" SqlNull
@@ -2236,7 +2237,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m PostReminderSend () w
 
      _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           (if automatic then AutomaticReminderSent else ReminderSend)
-          (return ())
+          (F.value "author" $ getIdentifier $ $(fromJust) $ getAuthorSigLink doc)
           (Just sl)
           mmsg
           actor
