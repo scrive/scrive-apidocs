@@ -61,7 +61,6 @@ docStateTests env = testGroup "DocState" [
   testThat "Document with extensible but broken digital signature can be extended by special Guardtime tools" env testExtendSignaturesCore1,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
-  testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
@@ -299,17 +298,6 @@ testRestartDocumentEvidenceLog = do
   assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg2
-
-testSetDocumentInviteTimeEvidenceLog :: TestEnv ()
-testSetDocumentInviteTimeEvidenceLog = do
-  author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
-    now <- getMinutesTime
-    t <- (\d -> 1 `minutesAfter` fromMaybe now (signtime <$> documentinvitetime d)) <$> theDocument
-    success <- dbUpdate $ SetDocumentInviteTime t (systemActor t)
-    assert success
-    lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current SetDocumentInviteTimeEvidence) lg
 
 getScreenshots :: (MonadIO m, MonadDB m) => m SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do

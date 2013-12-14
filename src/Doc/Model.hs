@@ -1912,21 +1912,10 @@ data SetDocumentInviteTime = SetDocumentInviteTime MinutesTime Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime () where
   update (SetDocumentInviteTime invitetime actor) = updateDocumentWithID $ \did -> do
     let ipaddress  = fromMaybe noIP $ actorIP actor
-    let decode acc tm ip = (tm,ip) : acc
-    (old_tm, old_ip) <- kRunAndFetch1OrThrowWhyNot decode $ sqlUpdate "documents" $ do
-       sqlFrom "documents AS documents_old"
-       sqlWhere "documents.id = documents_old.id"
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "invite_time" invitetime
        sqlSet "invite_ip" ipaddress
-       sqlResult "documents_old.invite_time"
-       sqlResult "documents_old.invite_ip"
        sqlWhereDocumentIDIs did
-    when (old_tm /= Just invitetime || old_ip /= Just ipaddress) $ do
-      void $ update $ InsertEvidenceEvent
-        SetDocumentInviteTimeEvidence
-        (return ())
-        actor
-        did
 
 data SetInviteText = SetInviteText String Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where

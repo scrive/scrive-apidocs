@@ -235,7 +235,6 @@ data CurrentEvidenceEventType =
   PreparationToPendingEvidence                    |
   DeleteSigAttachmentEvidence                     |
   RejectDocumentEvidence                          |
-  SetDocumentInviteTimeEvidence                   |
   InvitationEvidence                              |
   SendToPadDevice                                 |
   RemovedFromPadDevice                            |
@@ -305,7 +304,8 @@ data ObsoleteEvidenceEventType =
   SetStandardAuthenticationMethodEvidence         |
   SetELegAuthenticationMethodEvidence             |
   AuthorUsesCSVEvidence                           |
-  ErrorDocumentEvidence
+  ErrorDocumentEvidence                           |
+  SetDocumentInviteTimeEvidence
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -351,7 +351,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert (Obsolete ErrorDocumentEvidence)                           = return 40
   safeConvert (Obsolete MarkDocumentSeenEvidence)                        = return 41
   safeConvert (Current RejectDocumentEvidence)                           = return 42
-  safeConvert (Current SetDocumentInviteTimeEvidence)                    = return 43
+  safeConvert (Obsolete SetDocumentInviteTimeEvidence)                   = return 43
   safeConvert (Obsolete SetDocumentTimeoutTimeEvidence)                  = return 44
   safeConvert (Obsolete RestoreArchivedDocumentEvidence)                 = return 45
   safeConvert (Current InvitationEvidence)                               = return 46
@@ -435,7 +435,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 40 = return (Obsolete ErrorDocumentEvidence)
     safeConvert 41 = return (Obsolete MarkDocumentSeenEvidence)
     safeConvert 42 = return (Current RejectDocumentEvidence)
-    safeConvert 43 = return (Current SetDocumentInviteTimeEvidence)
+    safeConvert 43 = return (Obsolete SetDocumentInviteTimeEvidence)
     safeConvert 44 = return (Obsolete SetDocumentTimeoutTimeEvidence)
     safeConvert 45 = return (Obsolete RestoreArchivedDocumentEvidence)
     safeConvert 46 = return (Current InvitationEvidence)
