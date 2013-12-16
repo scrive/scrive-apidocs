@@ -1,100 +1,124 @@
 // Here be dragons, lots of overriding.
+// TODO(johan.nilo): remove dragons
 .change-language {
-    .select-opts, .select-button, .select-button-label {
-	background: #29313c !important;
-	color: @white !important;
-	font-weight: 600;
-    }
 
-    li {
-	padding-left: 2px !important;
-	padding-bottom: 8px !important;
-	&:hover {
+  .select-opts,
+  .select-button,
+  .select-button-label {
+  	background: #29313c !important;
+  	color: @white !important;
+  	font-weight: 600;
+  }
+
+  li {
+  	padding-bottom: 8px !important;
+    padding-left: 2px !important;
+  	
+    &:hover {
 	    background: #39414c !important;
-	}
     }
+  }
 
-    ul {
-	left: 0px !important;
-    }
+  ul {
+    left: 0px !important;
+  }
 }
 
 footer.site {
+  background: @brand-primary;
+  font-size: 16px;
   min-width: 1020px;
-  width:100%;
-  &.thin { min-width: 960px; }
+  padding-bottom: 36px;
+  padding-top: 67px;
+  width: 100%;
+  z-index: 90;
+
+  .clearfix;
+
+  &.thin {
+    min-width: 960px;
+  }
+
   &.logged-in {
     background: @white;
-    border-top: 1px solid #DEE4ED;
-    padding-top: 40px;
-    padding-bottom: 35px;
-    height:45px;   /* Height of the footer */
-    position: absolute;
+    border-top: 1px solid #dee4ed;
     bottom: 0;
+    height: 45px; // Height of the footer
+    padding-bottom: 35px;
+    padding-top: 40px;
+    position: absolute;
   }
-  font-size : 16px;
-  padding-top: 67px;
-  padding-bottom: 36px;
-  background: @brand-primary;
-  z-index: 90;
-  .clearfix;
+  
   .ct {
-      margin: 0 auto;
-      width: 1020px;
-      &.thin {
-        width: 960px;
-      }
+    margin: 0 auto;
+    width: 1020px;
+    
+    &.thin {
+      width: 960px;
+    }
   }
+
   .visions p {
-      font-family: @font-family-source;
-      font-size: 24px;
-      color: #1d2231;
-      margin: 0 0 28px;
-      padding: 0 16px;
+    color: #1d2231;
+    font-family: @font-family-source;
+    font-size: 24px;
+    margin: 0 0 28px;
+    padding: 0 16px;
   }
 
   nav {
-    box-sizing: border-box;
     -moz-box-sizing: border-box;
-    width: 192px;
+    box-sizing: border-box;
     float: left;
     padding: 0 1em;
+    width: 192px;
 
     &.last {
-        padding-right: 0px;
-        .content {
-            float: right;
-        }
+      padding-right: 0px;
+      
+      .content {
+        float: right;
+      }
     }
 
     header h4 {
-        font-size: 16px;
-        font-weight: 600;
-        color: @text-very-light;
-        text-align: left;
-        margin-bottom: 8px;
+      color: @text-very-light;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: left;
     }
 
-   .content {
-       ul.icons {
-         .clearfix;
-         float: right;
-         margin: 0 4px 16px;
-         li {
+    .content {
+
+      ul.icons {
+        float: right;
+        margin: 0 4px 16px;
+
+        .clearfix;
+
+        li {
           float: left;
           margin: 0 8px 8px 0;
-          &.last { margin-right: 0px; }
+
+          &.last {
+            margin-right: 0px;
+          }
+
           a {
-            display: block;
             background: #29313c;
+            display: block;
             transition: .15s ease-in-out;
+            
             img {
               display: block;
               opacity: .83333;
               transition: .15s ease-in-out;
             }
+
             &:hover {
               background: #39414c;
+              
               img {
                 opacity: 1;
               }
@@ -104,6 +128,7 @@ footer.site {
       }
 
       ul.tree {
+        
         li.branch {
           color: @text-light;
           font-size: 14px;
@@ -112,47 +137,54 @@ footer.site {
           p {
             margin: 0 0 1.33333em;
           }
+
           ul.select {
             margin: 0 0 1em;
           }
+
           > a {
             color: @text-lighter;
+            
             &:hover {
               color: @text-very-light;
             }
           }
         }
-     }
-   }
- }
- .langSwitcher .select {
-    margin-bottom: 1em;
-    height: 38px;
+      }
+    }
+  }
+
+  .langSwitcher .select {
     float: right;
     font-size: 15px;
-    .select-button {
-        border: none;
-        background-color: #29313c;
-        .select-button-label {
-            color: #fff;
-            font-weight: 600;
-        }
-    }
- }
- .poweredbyscrive {
-  width: 80px;
-  font-size : 15px;
-  color: #333;
-  margin: 0 auto;
-  position:relative;
-  text-align: center;
-  width: 100%;
-  .logo {
-    background-image: url("/img/logo-small-grey.png");
-    width: 80px;
-    height: 17px;
-    margin: 0 auto;
-  }
- }
-}
+    height: 38px;
+    margin-bottom: 1em;
 
+    .select-button {
+      background-color: #29313c;
+      border: none;
+
+      .select-button-label {
+        color: @white;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .poweredbyscrive {
+    width: 80px;
+    font-size : 15px;
+    color: #333;
+    margin: 0 auto;
+    position:relative;
+    text-align: center;
+    width: 100%;
+
+    .logo {
+      background-image: url(/img/logo-small-grey.png);
+      width: 80px;
+      height: 17px;
+      margin: 0 auto;
+    }
+  }
+}

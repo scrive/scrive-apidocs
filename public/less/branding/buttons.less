@@ -2,44 +2,50 @@
 
 .button {
   background-color: @brand-primary-darker;
-  max-height: 16px;
-  min-width: 50px;
-  .border-radius(1px,1px,1px,1px);
+  color: @white !important;
+  cursor: pointer;
+  display: inline-block;
+  *display: inline; // IE 7 Hack
+  font-family: @font-family-source;
   font-size: 15px;
   font-weight: 400;
-  text-decoration: none;
-  padding: 13px 20px;
+  line-height: 16px;
   margin: 0;
-  color: @white !important;
+  max-height: 16px;
+  min-width: 50px;
+  padding: 13px 20px;
   text-align: center;
-  .transition(.15s, ease-in-out);
-  cursor: pointer;
+  text-decoration: none;
+  -webkit-transform: translateZ(0);
   -webkit-user-select: none;
   user-select: none;
-  display: inline-block;
-  font-family: @font-family-source;
-  line-height : 16px;
-  -webkit-transform: translateZ(0);
-  zoom:1; /* IE 7 Hack starts here*/
-  *display:inline;
+  zoom: 1; // IE 7 Hack
+  
+  .border-radius(1px, 1px, 1px, 1px);
+  .transition(.15s, ease-in-out);
 
-  &:hover { background-color: @blue-hover; }
-  &:active, &.active { background-color: @brand-primary-darker; }
+  &:hover {
+    background-color: @blue-hover;
+  }
+
+  &:active,
+  &.active {
+    background-color: @brand-primary-darker;
+  }
 
   &.button-small {
-    max-height: 14px;
-    min-width: 35px;
     font-size: 13px;
     line-height: 14px;
+    max-height: 14px;
+    min-width: 35px;
     padding: 8px 12px;
   }
 
   &.button-large {
-    max-height: 18px;
     font-size: 18px;
     line-height: 18px;
-    /* to fix Firefox bug, have to use padding instead of line height */
-    padding: 17px 25px 17px;
+    max-height: 18px;
+    padding: 17px 25px 17px; // to fix Firefox bug, have to use padding instead of line height
 
     .small-screen & {
         font-size: 42px;
@@ -50,38 +56,55 @@
   }
 
   &.button-round {
-    .border-radius(25px,25px,25px,25px);
     border: @light-border 4px solid;
+    
+    .border-radius(25px, 25px, 25px, 25px);
 
     &.button-small {
-      .border-radius(16px,16px,16px,16px);
       border-width: 3px;
+
+      .border-radius(16px, 16px, 16px, 16px);
     }
 
     &.button-round.button-large {
-       .border-radius(32px,32px,32px,32px);
-        border: #EEE 5px solid;
-        &.black { border:none; }
+      border: #eeeeee 5px solid;
+
+      .border-radius(32px, 32px, 32px, 32px);
+
+      &.black {
+        border: none;
+      }
     }
 
-    &.red,&.black {
-        border-color: @dark-border;
+    &.red,
+    &.black {
+      border-color: @dark-border;
     }
+
     &.green {
-        // There is a problem in Safari where the bordered element expands into the border when
-        // the border is transparent. What we want is this:
-        // border-color: rgba(0,0,0,0.1);
-        // but we go with this hack to make the border look OK on both backgrounds.
-        border-color: #e1e1e1;
-        & .greybg { border-color: #d4d4d4; }
+      // There is a problem in Safari where the bordered element expands into the border when
+      // the border is transparent. What we want is this:
+      // border-color: rgba(0, 0, 0, .1);
+      // but we go with this hack to make the border look OK on both backgrounds.
+      border-color: #e1e1e1;
+
+      & .greybg {
+        border-color: #d4d4d4;
+      }
     }
   }
 }
 
 .colored-button(@color, @hovercolor) {
   background-color: @color;
-  &:hover { background-color: @hovercolor }
-  &:active { background-color: @color }
+
+  &:hover {
+    background-color: @hovercolor;
+  }
+
+  &:active {
+    background-color: @color;
+  }
 }
 
 .button-green {
@@ -90,6 +113,7 @@
 
 .button-gray {
   .colored-button(@grey, darken(@grey, 5%));
+
   color: @primary-font-color !important;
 }
 
@@ -99,6 +123,7 @@
 
 .button-light-blue {
   .colored-button(@light-blue, darken(@light-blue, 25%));
+
   &.button-small {
     font-weight: 400;
   }
@@ -108,12 +133,14 @@
   .colored-button(@btn-negative-bg, @btn-negative-bg-hover);
 }
 
-/* Special fixes for special browsers */
+// Special fixes for special browsers
 input[type=submit].button.button-large,
 button.button.button-large {
-  /* ie8 and below input height fix */
+  // ie8 and below input height fix
   line-height: 24px\9;
   padding: 12px 30px 13px\9;
 }
 
-input[type="submit"]::-moz-focus-inner {border:0;}
+input[type="submit"]::-moz-focus-inner {
+  border: 0;
+}

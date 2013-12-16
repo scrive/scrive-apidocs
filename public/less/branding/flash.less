@@ -1,108 +1,124 @@
 .flash-content-wrapper {
-  width: 1018px;
-  margin: 0 auto;
-  position: relative;
   border: 6px solid rgba(255, 255, 255, 0.05);
-  xbackground: transparent;
-  overflow: hidden;
   border-radius: 3px;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+  width: 1018px;
 }
 
 .flash-content {
-  height: 64px - 4px;
+  color: @white;
   border-radius: 3px;
-  color:@white;
+  height: 64px - 4px; // TODO(johan.nilo): is this a valid rule?
 }
 
 .flash-icon-wrapper {
-  width: 60px;
-  height: 60px;
-  float: left;
   border-radius: 3px 0px 0px 3px;
+  float: left;
+  height: 60px;
+  width: 60px;
 }
 
 .flash-icon {
-  width:60px;
-  height:40px;
+  background-image: url(../../img/notification-sprite.png);
+  height: 40px;
   margin: 10px auto;
-  background-image: url("../../img/notification-sprite.png");
+  width: 60px;
 }
 
 .flash-body {
+  font-family: @font-family-source;
+  font-size: 1.25em;
   float: left;
+  line-height: 60px;
+  max-width: 840px;
   padding-left: 16px;
   text-align: left;
-  font-size: 1.25em;
-  line-height: 60px;
-  font-family: @font-family-source;
-  max-width: 840px;
+
   &.twoLines {
     line-height: 22px;
-    padding-top: 8px;
     padding-bottom: 8px;
+    padding-top: 8px;
   }
 }
 
 .flash-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 22px;
+  cursor: pointer;
   height: 22px;
   padding: 20px;
-  cursor: pointer;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 22px;
+
   img {
     display: block;
     opacity: .45;
+
     .transition(.15s,ease-in-out);
   }
+
   &:hover img {
     opacity: 1;
   }
 }
 
 .flash {
-  position: fixed;
-  z-index: 100001;
-  top: -96px;
-  left: 0;
-  width: 100%;
-  padding: 4px 0;
   background: transparent;
-  .transition(.25s,ease-in-out);
+  left: 0;
+  padding: 4px 0;
+  position: fixed;
+  top: -96px;
+  width: 100%;
+  z-index: 100001;
+
+  .transition(.25s, ease-in-out);
+
   &.active {
     top: 0;
   }
+
   &.success {
+    
     .flash-content {
       background-color: @brand-secondary-light;
     }
+
     .flash-icon {
       background-position: 3px;
     }
+
     .flash-icon-wrapper {
       background-color: @brand-secondary;
     }
-
   }
+
   &.error {
+    
     .flash-content {
-      background-color:@red;
+      background-color: @red;
     }
+
     .flash-icon {
       background-position: 58px;
     }
+
     .flash-icon-wrapper {
-      background-color:@red-secondary;
+      background-color: @red-secondary;
     }
   }
+
   &.warning {
+    
     .flash-content {
-      background-color:@blue-secondary;
+      background-color: @blue-secondary;
     }
+
     .flash-icon {
       background-position: 112px;
     }
+
     .flash-icon-wrapper {
       background-color: @brand-primary-darker;
     }

@@ -1,51 +1,55 @@
 .info-text-input{
-  display : inline-block;
-  padding: 5px;
-  border: 1px solid #DDDDDD;
   background: none repeat scroll 0 0 @white;
-  line-height: 21px;
+  border: 1px solid #dddddd;
+  display : inline-block;
   font-size: 16px;
+  line-height: 21px;
+  padding: 5px;
+  
   &:focus, &:hover {
-    border-color: #7A94B8;
+    border-color: #7a94b8;
   }
+
   input {
-    font-weight: 300;
-    width : 100%;
-    padding: 0px;
     border: 0px;
+    font-weight: 300;
     height: 30px;
     line-height: 21px;
+    padding: 0px;  
+    width: 100%;
   }
+
   .closer {
-    width: 24px;
-    height: 22px;
-    display: inline-block;
-    position: absolute;
-    top: -9px;
-    left: -9px;
-    background: url("/img/editor-view-remove-party.png");
+    background: url(/img/editor-view-remove-party.png);
     background-position: 0px 0px;
     cursor: pointer;
+    display: inline-block;
+    height: 22px;
+    left: -9px;
+    position: absolute;
+    top: -9px;
+    width: 24px;
+
     &:hover {
       background-position: -24px 0px;
     }
   }
+
   .ok-button {
+    background: #bfbfbf;
+    border: 1px solid #808080;
+    border-radius: 3px;
+    color: @white;
+    padding: 3px;
     position: absolute;
     right: 5px;
-    top: 3px;
-    width: 30px;
-    background: #BFBFBF;
-    color: @white;
     text-decoration: bold;
-    border: 1px solid #808080;
+    top: 3px;
+    width: auto;
+
     &:hover {
-      background: #CFCFCF;
+      background: #cfcfcf;
       border: 1px solid #909090;
     }
-    border-radius: 3px;
-    width: auto;
-    padding: 3px;
-
   }
 }

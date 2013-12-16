@@ -1,23 +1,31 @@
 @media all and (max-width: 1160px) {
-  aside.contact nav.contact  { display: none; }
+
+  aside.contact nav.contact  {
+    display: none;
+  }
 }
 
 aside.contact nav.contact {
-  left: 0;
   height: 180px;
+  left: 0;
   margin-left: 4px;
   margin-top: -90px;
   position: fixed;
   top: 50%;
   z-index: 1097;
   width: 60px;
+
   ul {
+
     li {
-      &:last-child a .hover { height: 36px;}
       height: 60px;
       position: relative;
       width: 60px;
 
+      &:last-child a .hover {
+        height: 36px;
+      }
+      
       a {
         display: block;
         border-left: 4px solid transparent;
@@ -27,12 +35,12 @@ aside.contact nav.contact {
         width: 64px;
 
         .icon {
-          border: 1px solid @blue-border;
-          text-align: center;
-          position: relative;
           background: @white;
-          width: 60px;
+          border: 1px solid @blue-border;
           height: 60px;
+          position: relative;
+          text-align: center;
+          width: 60px;
           z-index: 10;
 
           img {
@@ -41,12 +49,13 @@ aside.contact nav.contact {
             transition: .15s ease-in-out all;
           }
         }
+
         .hover {
           background: @white;
           border: 1px solid @blue-border;
           border-left: none;
-          left: -180px;
           height: 34px;
+          left: -180px;
           padding: 12px 16px;
           position: absolute;
           opacity: 0;
@@ -60,23 +69,26 @@ aside.contact nav.contact {
             margin: 0;
             margin-bottom: 0;
           }
+
           small {
-            color : @text-dark;
-            font : .75em/1 @font-family-source;
+            color: @text-dark;
+            font: .75em/1 @font-family-source;
           }
         }
+
         &:hover {
-          border-color : @blue-medium;
+          border-color: @blue-medium;
 
           .icon {
+
             img {
-              opacity : 1;
+              opacity: 1;
             }
           }
 
           .hover {
-            left :60px;
-            opacity : 1;
+            left: 60px;
+            opacity: 1;
           }
         }
       }
