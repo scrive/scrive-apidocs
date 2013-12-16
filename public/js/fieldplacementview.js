@@ -666,17 +666,12 @@ var TextPlacementPlacedView = Backbone.View.extend({
     updateErrorBackground: function() {
         var placement = this.model;
         var field = placement.field();
-
+        var document = field.signatory().document();
         if(field) {
             field.unbind('change', this.updateErrorBackground);
             field.bind('change', this.updateErrorBackground);
         }
-
-        if(field && field.isValid(true)) {
-            $(this.el).css('background-color', '');
-        } else {
-            $(this.el).css('background-color', '#f33');
-        }
+        $(this.el).toggleClass("invalid",field && !field.isValid(true));
     },
     possibleFields: [
         {name: "fstname",
