@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -865,6 +865,7 @@
 "_textFieldObligatory":"Obligatoriskt att signera här",
 "_to":" till ",
 "_toFilter":"Till:",
+"_toNoSpaces":"till",
 "_tooltipcancelled":"Återkallat",
 "_tooltipdelivered":"Levererat",
 "_tooltipdeliveryproblem":"Leveransproblem",

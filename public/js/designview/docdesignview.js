@@ -379,7 +379,7 @@
             } else {
               content = $("<p/>").append($("<span/>").append(localization.process.confirmsendtext));
               if (!document.authorIsOnlySignatory())
-                content.append($("<span/>").text(localization.to + ': ')).append("<br /><span class='unsignedpartynotcurrent'/>");
+                content.append($("<span/>").text(' ' + localization.toNoSpaces + ': ')).append("<br /><span class='unsignedpartynotcurrent'/>");
               box.append(DocumentDataFiller.fill(document,content));
             }
 
