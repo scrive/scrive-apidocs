@@ -735,7 +735,7 @@
             var div = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
 
             var setter = function() {
-                var value = self.input.value()
+                var value = self.input.value();
                 console.log("Starting setter with value " + value);
                 if(value) {
                     var samenameexists = _.any(sig.customFields(), function(c) { return value == c.name() && c != field;});
