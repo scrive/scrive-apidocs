@@ -236,7 +236,7 @@ var TabsView = Backbone.View.extend({
 
         if (model.inner()) {
             container.addClass('inner');
-            var li = $('<li/>');
+            var li = $('<li class="inner-tab" />');
             li.addClass('float-left');
             var h4 = $('<h4/>').text(model.innerText());
             h4.append($('<img class="tab-arrow" src="/img/gray-arrow.png" />'));
