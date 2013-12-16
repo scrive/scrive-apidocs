@@ -838,7 +838,18 @@ var TextPlacementPlacedView = Backbone.View.extend({
         div.addClass('text-field-placement-setter-field-name');
 
         function setName() {
-            if(input.value()) {
+            var value = input.value();
+            if(value) {
+
+                var samenameexists = _.any(signatory.customFields(), function(c) { return value == c.name();});
+                if (samenameexists) {
+                  new FlashMessage({color: "red", content : localization.designview.fieldWithSameNameExists});
+                  return;
+                }
+                field.setName(value);
+                if (view.place != undefined)
+                  view.place();
+
                 mixpanel.track('Set placement field name');
                 placement.trigger('change:field');
                 signatory.trigger('change:fields');
@@ -848,11 +859,10 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         var input = new InfoTextInput({
             infotext: localization.designview.fieldName,
-            value: field.name(),
+            value: field.name() || field.nameTMP(),
             cssClass: "name",
             onChange : function(value) {
-                field.setName(value);
-                view.myFieldSelector.setName(value);
+                field.setNameTMP(value);
                 if (view.place != undefined)
                   view.place();
             },

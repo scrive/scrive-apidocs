@@ -361,6 +361,7 @@ javascriptLocalisation =
              , fromCSV : "$_fromCSV()$"
              , partOf : "$_partOf()$"
              , preparingDocumentFor : "$_preparingDocumentFor()$"
+             , fieldWithSameNameExists : "$_fieldWithSameNameExists()$"
            }
 
          , validation : {

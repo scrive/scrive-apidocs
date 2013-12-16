@@ -361,6 +361,7 @@
 "_february":"February",
 "_fieldNameFieldName":"field name",
 "_fieldValueFieldName":"field value",
+"_fieldWithSameNameExists":"You already have a field with this name. Each field must have a unique name.",
 "_fileTooLarge":"The file you have chosen superseeds our max limit of 4 MB. Please try a smaller file.",
 "_filladitionfields":"Additional details",
 "_filladitionfieldsdescription":"Please submit additional information about yourself.",

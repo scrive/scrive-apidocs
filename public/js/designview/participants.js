@@ -728,19 +728,28 @@
             return div;
         },
         detailsInformationCustomFieldName: function(field) {
-            var view = this;
-            var sig = view.model;
-            var viewmodel = view.viewmodel;
+            var self = this;
+            var sig = self.model;
+            var viewmodel = self.viewmodel;
 
             var div = $("<div class='design-view-action-participant-details-information-field-wrapper'/>");
 
             var setter = function() {
-                if(input.value()) {
+                var value = self.input.value()
+                console.log("Starting setter with value " + value);
+                if(value) {
+                    var samenameexists = _.any(sig.customFields(), function(c) { return value == c.name() && c != field;});
+                    if (samenameexists) {
+                      $(self.input.el()).addClass("conflict");
+                      new FlashMessage({color: "red", content : localization.designview.fieldWithSameNameExists});
+                      return;
+                    }
+
                     mixpanel.track('Enter custom field name', {
-                        'Field name': input.value()
+                        'Field name': self.input.value()
                     });
 
-                    field.setName(input.value());
+                    field.setName(self.input.value());
                     sig.trigger('change:fields');
                     field.unbind('change:name', changer);
                 }
@@ -755,13 +764,14 @@
             };
 
             var changer = function() {
-                input.setValue(field.name());
+                self.input.setValue(field.name());
             };
 
-            var input = new InfoTextInput({
+            self.input = new InfoTextInput({
                 cssClass: 'design-view-action-participant-new-field-name-input',
                 infotext: localization.designview.fieldName,
                 value: '',
+                onChange : function() { $(self.input.el()).removeClass("conflict");},
                 onEnter: setter,
                 onRemove : remover
             });
@@ -769,9 +779,9 @@
             field.bind('change:name', changer);
 
             if(!field.isValid(true))
-                $(input.el()).addClass('redborder');
+                $(self.input.el()).addClass('redborder');
             else
-                $(input.el()).removeClass('redborder');
+                $(self.input.el()).removeClass('redborder');
 
             var button = new Button({
                 color: 'black',
@@ -781,7 +791,7 @@
             });
 
 
-            div.append(input.el());
+            div.append(self.input.el());
             div.append(button.el());
 
             return div;

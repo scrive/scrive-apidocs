@@ -279,7 +279,7 @@
 .design-view-action-participant-details-field {
   border: 1px solid #ccc;
   width: 194px;
-  
+
   &:focus {
     border: 1px solid #ccc;
   }
@@ -309,7 +309,7 @@
 
 .design-view-action-participant-new-single-text {
   text-align: left;
-  
+
   .center-vh(100%, 1em);
 }
 
@@ -369,6 +369,9 @@
 
   &.redborder {
     border: 1px solid @brand-secondary;
+    &.conflict {
+      border: 1px solid @brand-negative;
+    }
   }
 }
 
@@ -397,7 +400,7 @@
 
 .design-view-action-participant-details-information-field {
   .design-view-action-participant-details-field;
-  
+
   margin-bottom: 8px;
   width: 287px;
 

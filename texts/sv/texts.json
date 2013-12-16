@@ -361,6 +361,7 @@
 "_february":"februari",
 "_fieldNameFieldName":"namn på fält",
 "_fieldValueFieldName":"värde på fält",
+"_fieldWithSameNameExists":"Du har redan ett fält med detta namn. Varje fält måste ha ett unikt namn.",
 "_fileTooLarge":"Filen du valt överstiger vår maxgräns på 4 MB. Vänligen försök med en mindre fil.",
 "_filladitionfields":"Extra uppgifter",
 "_filladitionfieldsdescription":"Vänligen uppge extra information om dig själv.",
