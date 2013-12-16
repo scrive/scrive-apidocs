@@ -119,12 +119,12 @@ var CompanyAccountsModel = Backbone.Model.extend({
                 new Cell({name: localization.account.companyAccounts.columnRole, width: "260px", field:"role", special: "rendered",
                           rendering: function(value, idx, user) {
                             var label = localization.account.companyAccounts.roleStandard;
-                            if (user.field("role")=="RoleAdmin") {
+                            if (user.field("role")=="RoleInvite" || user.field("tos") == undefined) {
+                              label =  localization.account.companyAccounts.rolePending;
+                            } else if (user.field("role")=="RoleAdmin") {
                               label = localization.account.companyAccounts.roleAdmin;
                             } else if (user.field("role")=="RoleStandard") {
                               label =  localization.account.companyAccounts.roleStandard;
-                            } else if (user.field("role")=="RoleInvite") {
-                              label =  localization.account.companyAccounts.rolePending;
                             }
                             if (user.field("isctxuser") || user.field("role")=="RoleInvite") {
                               return  $("<span>").text(label);

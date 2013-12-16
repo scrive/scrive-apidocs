@@ -130,7 +130,7 @@ data CompanyAccount = CompanyAccount
 
 data Role = RoleAdmin    -- ^ an admin user
           | RoleStandard -- ^ a standard user
-          | RoleInvite   -- ^ an invite of a user that is in different company
+          | RoleInvite   -- ^ an invite for a user that is in different company
   deriving (Eq, Ord, Show)
 
 -- Searching, sorting and paging
@@ -216,7 +216,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   newuser <- guardJustM $ dbQuery $ GetUserByID resendid
   if (usercompany newuser /= companyid company)
      then  do
-       -- We need to check if there is a company invitation, and if it is we send email again
+       -- We need to check if there is a company invitation, and if it is, we send takeover email again
        _ <- guardJustM $ dbQuery $ GetCompanyInvite (companyid company) resendid
        sendTakeoverSingleUserMail user company newuser
      else  do
@@ -266,12 +266,14 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   isdeletable <- isUserDeletable removeuser
   case (companyid company == usercompany removeuser,isdeletable) of
     (True,True) -> do
-             _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (userid removeuser)
+            -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
+             _ <- dbUpdate $ RemoveUserCompanyInvites (userid removeuser)
              _ <- dbUpdate $ DeleteUser (userid removeuser)
              runJSONGenT $ value "removed" True
     (True,False) -> do
              runJSONGenT $ value "removed" False
     _            -> do
+             -- We remove only this invite - user account in different company will still be valid
              _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (userid removeuser)
              runJSONGenT $ value "removed" True
 
@@ -299,6 +301,7 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
   _ <- dbUpdate $ SetUserCompany (userid user) (companyid newcompany)
+  _ <- dbUpdate $ RemoveCompanyInvite cid (userid user)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany

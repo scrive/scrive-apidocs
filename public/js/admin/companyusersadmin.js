@@ -128,15 +128,39 @@ window.CompanyUsersListDefinition = function(args) {
                           return jQuery("<span>Admin</span>");
                         } else if (user.field("role")=="RoleStandard") {
                           return jQuery("<span>Standard</span>");
-                        } else {
-                          return jQuery("<span>Pending</span>");
+                        } else if (user.field("role")=="RoleInvite") {
+                          return jQuery("<span>!User in different company!</span>");
                         }
                       }}),
-            new Cell({name: "TOS date", width:"100px", field:"tos", special:"rendered",
-                                    rendering: function(time, idx, doc) {
-                                            if (time != undefined && time != "")
+            new Cell({name: "TOS date", width:"100px", field:"id", special:"rendered",
+                                    rendering: function(_, idx, user) {
+                                            var time = user.field("tos");
+                                            if (user.field("role") == "RoleInvite") {
+                                              return $("<a style='color:red;' href='#'> Click to delete this invitation </a>").click(
+                                                function() {
+                                                  Confirmation.popup({
+                                                    title : "Delete invitation",
+                                                    acceptText: "Delete",
+                                                    content : $("<div style='text-align:center;'>Are you sure that you want to delete this invitation?<BR/>"
+                                                                 + " User will still exist in hid original company.</div>"),
+                                                    onAccept : function() {
+                                                      new Submit({
+                                                        url: "/adminonly/useradmin/deleteinvite/" + args.companyid + "/" +user.field("id"),
+                                                        method: "POST",
+                                                        ajaxsuccess: function() {
+                                                            window.location.reload();
+                                                            return false;
+                                                        },
+                                                        ajaxerror: function() {
+                                                          new FlashMessage({color: "red", content : "Failed"});
+                                                          return false;
+                                                        }}).sendAjax();
+                                                    }
+                                                  });
+                                                });
+                                            } else if (time != undefined && time != "") {
                                               return $("<small/>").text(new Date(Date.parse(time)).toTimeAbrev());
-                                            else return $("<small/>");
+                                            } else return $("<small/>");
                                     }
                        })
 

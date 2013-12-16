@@ -5,6 +5,7 @@ module CompanyAccounts.Model (
   , CompanyInvite(..)
   , AddCompanyInvite(..)
   , RemoveCompanyInvite(..)
+  , RemoveUserCompanyInvites(..)
   , GetCompanyInvite(..)
   , GetCompanyInvites(..)
   , GetCompanyInvitesWithUsersData(..)
@@ -47,6 +48,12 @@ instance MonadDB m => DBUpdate m RemoveCompanyInvite Bool where
   update (RemoveCompanyInvite companyid user_id) = do
     kRun01 $ SQL "DELETE FROM companyinvites WHERE (company_id = ? AND user_id = ?)"
              [toSql companyid, toSql user_id]
+
+data RemoveUserCompanyInvites = RemoveUserCompanyInvites UserID
+instance MonadDB m => DBUpdate m RemoveUserCompanyInvites Bool where
+  update (RemoveUserCompanyInvites user_id) = do
+    kRun01 $ SQL "DELETE FROM companyinvites WHERE (user_id = ?)"
+             [toSql user_id]
 
 data GetCompanyInvite = GetCompanyInvite CompanyID UserID
 instance MonadDB m => DBQuery m GetCompanyInvite (Maybe CompanyInvite) where
