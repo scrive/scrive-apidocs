@@ -1,16 +1,15 @@
 header.site {
-  background : @brand-primary;
+  background: @brand-primary;
   font-family: @font-family-source;
   font-size: @font-size-base;
-  left: 0;
   min-width: 1018px;
+  left: 0;
   top: 0;
   width: 100%;
   z-index: 100;
   
   &.thin {
     min-width: 960px; // related to tablets
-  
   } 
   
   nav {
@@ -21,12 +20,13 @@ header.site {
     .box-shadow(0 4px 0 rgba(0, 0, 0, 0.1));
     
     ul.ct {
-      .clearfix;
 
       margin: 0 auto;
       min-height: 80px;
       position: relative;
       width: 1018px;
+
+      .clearfix;
   
       &.thin { 
         width: 960px; // related to tablets, can't be wider in ipad

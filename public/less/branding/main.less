@@ -1,31 +1,107 @@
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary, time, mark, audio, video {
-  margin: 0;
-  padding: 0;
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
   border: 0;
+  margin: 0;
   outline: 0;
+  padding: 0;
 }
 
 html {
   // always show scrollbar, even if it's not needed for the current page
   // effect: the content isn't moved a few pixels to the left/right, when
   // switching between pages that have and don't have scrollbars
-  overflow-y:scroll;
-  height:100%;
+  
+  height: 100%;
+  overflow-y: scroll;
 }
 
 body {
-  font-size: 15px;
-  font-family: @font-family-source;
-  line-height: 22px;
-  color: @text-dark;
   background-color: @body-bg;
-  font-weight:300;
-  height:100%;
+  color: @text-dark;
+  font-family: @font-family-source;
+  font-size: 15px;
+  font-weight: 300;
+  height: 100%;
+  line-height: 22px;
 }
 
 table {
@@ -37,33 +113,47 @@ p {
   color: @text-dark;
 }
 
-h1, h2, h3, h4, h5, h6,
-.h1, .h2, .h3, .h4, .h5, .h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+  color: @primary-font-color;
   font-family: @font-family-source;
   margin: 0;
-  color: @primary-font-color;
 }
 
-h1, .h1 {
+h1,
+.h1 {
   font-size: 3.5*@em;
-  letter-spacing: -1px;
   letter-spacing: -2px;
   line-height: 1.2em;
   margin: 0;
 }
 
-h2, .h2 {
+h2,
+.h2 {
   font-size: 2*@em;
   font-weight: normal;
   line-height: 1.5em;
 }
-h3, .h3 {
+
+h3,
+.h3 {
   font-size: 2*@em;
   font-weight: bold;
   line-height: 1.2em;
 }
 
-h4, .h4 {
+h4,
+.h4 {
   font-size: 1.5*@em;
   font-weight: 300;
   line-height: 1.2em;
@@ -83,65 +173,77 @@ h6 {
 
 .big-input {
   background: none repeat scroll 0 0 @white;
-  border: 1px solid #DDDDDD;
+  border: 1px solid #dddddd;
   box-shadow: none;
   font: 16px/1 @font-family-source;
-  padding: 14px;
   line-height: 19px;
+  padding: 14px;
   width: 100%;
+
   &:focus {
-    border-color: #7A94B8;
+    border-color: #7a94b8;
     outline: medium none;
   }
 }
 
-ol, ul {
+ol,
+ul {
   list-style: none outside none;
 }
 
 input::-webkit-input-placeholder {
-  color:    #AAA;
-}
-input:-moz-placeholder {
-  color:    #AAA;
-}
-input:-ms-input-placeholder {
-  color:    #AAA;
-}
-input.grayed {
-  color : #AAA;
+  color: #aaaaaa;
 }
 
-input, textarea {
-  font-family : @font-family-source;
+input:-moz-placeholder {
+  color: #aaaaaa;
+}
+
+input:-ms-input-placeholder {
+  color: #aaaaaa;
+}
+
+input.grayed {
+  color: #aaaaaa;
+}
+
+input,
+textarea {
   background: none repeat scroll 0 0 @white;
-  border: 1px solid #DDDDDD;
+  border: 1px solid #dddddd;
   box-shadow: none;
+  font-family: @font-family-source;
   height: 20px;
   padding: 5px;
-  &:focus, &:hover {
+
+  &:focus,
+  &:hover {
     border-color: @dark-border;
     outline: medium none;
   }
 }
 
 label {
-  color : @dim;
+  color: @dim;
   display: inline-block;
   font-size: 15px;
+
   &.clickable {
     color: @blue-medium;
     cursor: pointer;
   }
 }
+
 a {
-  text-decoration: none;
   cursor: pointer;
+  text-decoration: none;
 }
+
 a.clickable {
   color: @blue-medium;
   cursor: pointer;
   text-decoration: none;
+  
   &:hover {
     color : @blue-dark;
   }
@@ -156,6 +258,6 @@ a.clickable {
 }
 
 iframe[name='google_conversion_frame'] {
-    bottom: 0;
-    position: fixed;
+  bottom: 0;
+  position: fixed;
 }

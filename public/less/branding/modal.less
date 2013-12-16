@@ -1,21 +1,20 @@
 .modal {
-  position: absolute;
-  top: 0;
-  left: 0;
+  background: transparent; // TODO: is this a Fallback when rgba is not supported?
+  background: rgba(0,0,0,0.8);
   bottom: 0;
-  right: 0;
   height: 100%;
-  z-index: 2000;
-  -webkit-transition: opacity .5s ease-in;
-  -moz-transition: opacity .5s ease-in;
-  -o-transition: opacity .5s ease-in;
-  transition: opacity .5s ease-in;
+  left: 0;
   opacity: 0;
   pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  -moz-transition: opacity .5s ease-in;
+  -o-transition: opacity .5s ease-in;
+  -webkit-transition: opacity .5s ease-in;
+  transition: opacity .5s ease-in;
+  z-index: 2000;
 
-
-  background: transparent ;
-  background: rgba(0,0,0,0.8);
   .ie8 &, .ie7 & {
       filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=1, StartColorStr='#CC000000', EndColorStr='#CC000000');
       zoom: 1;
@@ -24,15 +23,16 @@
   &.active {
     pointer-events: auto;
     opacity: 1;
+
     .modal-container {
-      -webkit-transform: scale(1.0);
       -moz-transform: scale(1.0);
       -o-transform: scale(1.0);
+      -webkit-transform: scale(1.0);
       transform: scale(1.0);
     }
   }
 
-  /* Force all inputs to default to a nice and big size */
+  // Force all inputs to default to a nice and big size
   input {
     height: 28px;
     width: 317px;
@@ -41,12 +41,16 @@
 
 .modal.screenblockingdialog .modal-container {
   width: 650px;
-  .transition(.0s,ease-in-out);
+
+  .transition(.0s, ease-in-out);
+
   .screenblockingsubheader {
     color: #808080;
     font-size: 18px;
   }
+
   .modal-content {
+    
     .body {
       padding: 20px 23px;
     }
@@ -54,65 +58,70 @@
 }
 
 .modal-container:after {
-    border: 10px solid #000000;
-    border-radius: 8px 8px 8px 8px;
-    bottom: -10px;
-    content: "";
-    left: -10px;
-    position: absolute;
-    opacity: 0.4;
-    right: -10px;
-    top: -10px;
-    z-index: -1;
-}
-
-.modal-container {
-    &.small-device {
-        &:after {
-            border: 20px solid #000000;
-            opacity: 1;
-        }
-        .small-device-go-back-button {
-            font-size: 52px;
-            margin-top: 57px;
-            display: inline-block;
-            margin-left: 46px;
-            color: @brand-negative;
-
-            &:hover {
-                color: @brand-negative-darker;
-            }
-            &:active {
-                color: @brand-negative;
-            }
-        }
-    }
-}
-
-.modal-container {
-  width: 600px;
+  border: 10px solid @black;
+  border-radius: 8px;
+  bottom: -10px;
+  content: "";
+  left: -10px;
+  opacity: .4;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-top: -240px;
-  margin-left: -300px;
+  right: -10px;
+  top: -10px;
+  z-index: -1;
+}
+
+.modal-container {
+
+  &.small-device {
+
+    &:after {
+      border: 20px solid @black;
+      opacity: 1;
+    }
+
+    .small-device-go-back-button {
+      color: @brand-negative;
+      display: inline-block;
+      font-size: 52px;
+      margin-left: 46px;
+      margin-top: 57px;
+      
+      &:hover {
+          color: @brand-negative-darker;
+      }
+
+      &:active {
+          color: @brand-negative;
+      }
+    }
+  }
+}
+
+.modal-container {
   background: #fafafa;
   border: 1px solid #686868;
-  .box-shadow(rgba(0,0,0,.33) 0 .125em 1em);
+  left: 50%;
+  margin-left: -300px;
+  margin-top: -240px;
+  position: absolute;
+  top: 50%;
+  -moz-transform: scale(.1);
+  -o-transform: scale(.1);
+  -webkit-transform: scale(.1);
+  transform: scale(.1);
+  width: 600px;
   z-index: 102;
-  .transition(.5s,ease-in-out);
-  -webkit-transform: scale(0.1);
-  -moz-transform: scale(0.1);
-  -o-transform: scale(0.1);
-  transform: scale(0.1);
+
+  .box-shadow(rgba(0, 0, 0, .33) 0 .125em 1em);
+  .transition(.5s, ease-in-out);
 }
 
 .modal-header {
-  padding: 25px 20px;
-  height: 222px;
+  color: @text-very-light;
   background: repeat scroll 0 0 @brand-secondary;
   border-bottom: 1px solid @blue-border;
-  color: @text-very-light;
+  height: 222px;
+  padding: 25px 20px;
 
   .grey & {
     background: @darker-grey-background;
@@ -124,35 +133,38 @@
 
     .modal-title {
       padding-top: 0px;
+
       .grey & {
-        text-align: left;
-        margin-left: 15px;
         color: @text-dark;
         font-weight: 400;
+        margin-left: 15px;
+        text-align: left;
       }
     }
   }
 }
+
 .modal-header-inner {
   margin: auto;
-  width: 350px;
   text-align: center;
+  width: 350px;
+
   .grey & {
     margin: 0;
   }
 }
 
 .modal-title {
+  display: block;
   font-family: @font-family-source;
   font-size: 28px;
   line-height: 25px;
-  display: block;
   padding-top: 28px;
 }
 
 .modal-subtitle {
-  padding-top: 5px;
   font-size: 16px;
+  padding-top: 5px;
 }
 
 .modal-container.small-screen .modal-title {
@@ -160,34 +172,38 @@
 }
 
 .modal-icon {
-    padding-top: 45px;
-    height: 60px;
-    width: 60px;
-    display: block;
-    margin: auto;
+  display: block;
+  height: 60px;
+  margin: auto;
+  padding-top: 45px;
+  width: 60px;
 }
 
 .modal-close {
-    background: url("/img/sprite-green-X.png") no-repeat scroll 0 0 transparent;
-    .grey & {
-      background: url("/img/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
-    }
-    cursor: pointer;
-    display: block;
-    height: 12px;
-    width: 12px;
-    position: absolute;
-    top: 20px;
-    right: 15px;
-    float: right;
-    &:hover {
-      background-position: -12px 0px;
-    }
+  background: url(/img/sprite-green-X.png) no-repeat scroll 0 0 transparent;
+  cursor: pointer;
+  display: block;
+  float: right;
+  height: 12px;
+  position: absolute;
+  right: 15px;
+  top: 20px;
+  width: 12px;
+
+  .grey & {
+    background: url(/img/sprite-grey-X.png) no-repeat scroll 0 0 transparent;
+  }
+
+  &:hover {
+    background-position: -12px 0px;
+  }
 }
 
 .modal-content {
+ 
  .body {
     padding: 20px 35px;
+    
     p {
       margin: 10px 0;
       
@@ -195,32 +211,35 @@
         text-align: center;
       }
     }
-    table td, table td label {
+
+    table td,
+    table td label {
       color: @primary-font-color;
     }
   }
 }
 
 .modal-container.small-screen .modal-content {
-   font-size: 22px;
-   line-height: 30px;
+  font-size: 22px;
+  line-height: 30px;
+
   .body {
-      padding: 40px 49px;
-    }
+    padding: 40px 49px;
+  }
 }
 
 .modal-footer {
+  border-top: 1px solid @blue-border;
   height: 32px;
-  padding: 35px 0px;
   margin-left: 35px;
   margin-right: 35px;
-  border-top: 1px solid @blue-border;
+  padding: 35px 0px;
 
   .grey & {
     background: @darker-grey-background;
     border-top: none;
-    padding: 21px 35px; // make it as high as the top bar
     margin: 0; // make sure the bg goes all the way
+    padding: 21px 35px; // make it as high as the top bar
   }
 
   .drawing-modal & {
@@ -231,12 +250,18 @@
     margin-top: -11px;
   }
 
-  .left { float: left; }
-  .right { float: right; }
+  .left {
+    float: left;
+  }
+
+  .right {
+    float: right;
+  }
 
   label {
     cursor: pointer;
     line-height: 32px;
+    
     &.close {
       color: @primary-font-color;
     }
