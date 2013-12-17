@@ -8,6 +8,7 @@ module EvidenceLog.Model (
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
   , GetEvidenceLog(..)
   , DocumentEvidenceEvent
+  , DocumentEvidenceEventWithSignatoryLink
   , DocumentEvidenceEvent'(..)
   , evidenceLogText
   , copyEvidenceLogToNewDocument
@@ -105,6 +106,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool wh
   update (InsertEvidenceEvent event textFields actor did) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor did)
 
 type DocumentEvidenceEvent = DocumentEvidenceEvent' SignatoryLinkID
+
+-- | For generating evidence texts, we substitute full signatory links for their IDs
+type DocumentEvidenceEventWithSignatoryLink = DocumentEvidenceEvent' SignatoryLink
+
 data DocumentEvidenceEvent' s = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
   , evTime       :: MinutesTime

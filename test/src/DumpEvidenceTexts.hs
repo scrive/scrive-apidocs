@@ -16,9 +16,10 @@ import Control.Monad (forM, forM_, when)
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
 import MinutesTime (formatMinutesTimeUTC, MinutesTime, parseMinutesTimeDMY)
-import TestKontra (TestEnvSt, teGlobalTemplates)
+import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
 import qualified Text.StringTemplates.Fields as F
 import EvidenceLog.Model (DocumentEvidenceEvent'(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
+import System.FilePath ((</>))
 import Templates (runTemplatesT)
 import Test.Framework (Test)
 import TestingUtil (testThat)
@@ -31,8 +32,10 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
   forM_ [minBound .. maxBound] $ \lang -> do
     gts <- asks teGlobalTemplates
     now <- getMinutesTime
-    runTemplatesT (lang, gts) $ dumpEvidenceTexts now lang >>= liftIO . writeFile ("dist/evidence-texts-" ++ codeFromLang lang ++ ".html")
-
+    t <- runTemplatesT (lang, gts) $ dumpEvidenceTexts now lang
+    case teOutputDirectory env of
+      Just d  -> liftIO $ writeFile (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
+      Nothing -> t == t `seq` return ()
 
 dumpEvidenceTexts :: (TemplatesMonad m) => MinutesTime -> Lang -> m String
 dumpEvidenceTexts now lang = do

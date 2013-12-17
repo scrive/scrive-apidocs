@@ -68,6 +68,7 @@ data TestEnvSt = TestEnvSt {
   , teActiveTests     :: TVar (Bool, Int)
   , teGlobalTemplates :: KontrakcjaGlobalTemplates
   , teRejectedDocuments :: TVar Int
+  , teOutputDirectory :: Maybe String -- ^ Put test artefact output in this directory if given
   }
 
 type InnerTestEnv = ReaderT TestEnvSt (DBT IO)

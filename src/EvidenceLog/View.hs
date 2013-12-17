@@ -17,7 +17,6 @@ import Data.Char (isSpace)
 import qualified Data.Set as Set
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
-import Doc.SignatoryLinkID (SignatoryLinkID)
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified Doc.Screenshot as Screenshot
 import Text.StringTemplates.Templates
@@ -50,7 +49,7 @@ eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => Document -> [Do
 eventsJSListFromEvidenceLog doc dees = mapM (J.runJSONGenT . eventJSValue doc) =<< getSignatoryLinks (eventsForLog dees)
 
 -- | Lookup signatory links in events
-getSignatoryLinks :: MonadDB m => [DocumentEvidenceEvent' SignatoryLinkID] -> m [DocumentEvidenceEvent' SignatoryLink]
+getSignatoryLinks :: MonadDB m => [DocumentEvidenceEvent] -> m [DocumentEvidenceEventWithSignatoryLink]
 getSignatoryLinks evs = do
   let docids = Set.fromList $ catMaybes $ map evSigLink evs ++ map evAffectedSigLink evs
   docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList docids
@@ -65,7 +64,7 @@ eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&^ (not . emptyEvent))
 
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
-approximateActor :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent' SignatoryLink -> m String
+approximateActor :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> m String
 approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
                          | otherwise =
   case evSigLink dee of
@@ -90,7 +89,7 @@ approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
                         Just sl -> return $ getSmartName sl
                         Nothing -> renderTemplate_ "_authorParty"
 
-eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEvent' SignatoryLink -> JSONGenT m ()
+eventJSValue :: (MonadDB m, TemplatesMonad m) => Document -> DocumentEvidenceEventWithSignatoryLink -> JSONGenT m ()
 eventJSValue doc dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"  $ formatMinutesTimeRealISO (evTime dee)
@@ -179,12 +178,12 @@ emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffect
 emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
 
-eventForVerificationPage :: DocumentEvidenceEvent' a -> Bool
+eventForVerificationPage :: DocumentEvidenceEventWithSignatoryLink -> Bool
 eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence]) . evType
 
 -- | Produce simplified text for an event.  If actor is provided, the
 -- text is for the verification page, otherwise it is for the archive.
-simplyfiedEventText :: (HasLang doc, TemplatesMonad m) => Maybe String -> doc -> DocumentEvidenceEvent' SignatoryLink -> m String
+simplyfiedEventText :: (HasLang doc, TemplatesMonad m) => Maybe String -> doc -> DocumentEvidenceEventWithSignatoryLink -> m String
 simplyfiedEventText mactor doc dee = case evType dee of
   Obsolete _ -> return ""
   Current et -> (if isJust mactor then renderLocalTemplate doc else renderTemplate) (eventTextTemplateName et) $ do

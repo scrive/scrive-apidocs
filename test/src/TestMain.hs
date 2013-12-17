@@ -8,6 +8,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Either
+import System.Directory (createDirectoryIfMissing)
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
@@ -115,8 +116,16 @@ testsToRun (t:ts)
     rest = testsToRun ts
     params = drop 1 $ dropWhile (/= ("$")) ts
 
+modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
+modifyTestEnv [] = ([], id)
+modifyTestEnv ("--output-dir":d:r) = second (. (\te -> te{ teOutputDirectory = Just d})) $
+                                   modifyTestEnv r
+modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
+
+
 testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
-testMany (args, ts) = Log.withLogger $ do
+testMany (allargs, ts) = Log.withLogger $ do
+  let (args, envf) =  modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
@@ -128,13 +137,17 @@ testMany (args, ts) = Log.withLogger $ do
     nex <- getNexus
     active_tests <- liftIO . atomically $ newTVar (True, 0)
     rejected_documents <- liftIO . atomically $ newTVar 0
-    let env = TestEnvSt {
+    let env = envf $ TestEnvSt {
           teNexus = nex
         , teRNGState = rng
         , teGlobalTemplates = templates
         , teActiveTests = active_tests
         , teRejectedDocuments = rejected_documents
+        , teOutputDirectory = Nothing
         }
+    case teOutputDirectory env of
+      Nothing -> return ()
+      Just d  -> liftIO $ createDirectoryIfMissing True d
     liftIO . E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
       -- upon interruption (eg. Ctrl+C), prevent next tests in line
       -- from running and wait until all that are running are finished.
