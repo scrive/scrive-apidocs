@@ -39,6 +39,9 @@ apiCallCheckClient = api $ do
       throwIO . SomeKontraException $ serverError "No client description"
     runJSONGenT $ do
       value "valid" True
+      value "upgrade_warning" False
       value "valid_until" JSNull
       value "upgrade_url" JSNull
-
+      value "title" JSNull
+      value "message" JSNull
+      value "later_button" JSNull
