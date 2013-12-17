@@ -44,4 +44,5 @@ apiCallCheckClient = api $ do
       value "upgrade_url" JSNull
       value "title" JSNull
       value "message" JSNull
+      value "upgrade_button" JSNull
       value "later_button" JSNull
