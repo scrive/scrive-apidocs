@@ -829,7 +829,7 @@
 "_signedNotClosed":"You have signed",
 "_signedNotClosedSubText":"When every party has signed the finalised document will be sent to your email.",
 "_signviewAttachmentUploadedInOtherWindow":"Sorry, we are unable to upload your file because this document is open in another window. Please reload your page to continue.",
-"_signviewBranding":"Signview branding",
+"_signviewBranding":"Sign view branding",
 "_signviewSigningFailed":"Sorry, something went wrong while signing the document. Please try again.",
 "_smsClosedNotification":"The document has now been signed. Find the document by following this link: $link$$if(withEmail)$. We have also sent the signed document to your email inbox.$endif$",
 "_smsCorrectedNotification":"We noticed that we previously sent you a document that was incorrect in that it lacked a digital signature, but we have now corrected this error. Find the document with proper digital signature by following this link: $link$$if(withEmail)$. We have also sent the corrected document to your email inbox.$endif$",
