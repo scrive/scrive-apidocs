@@ -54,6 +54,7 @@ window.ScreenBlockingDialog = {
       if (dialog.size() == 0) {
         return buildDialog(cfg);
       } else {
+        dialog.height($(document).height());
         return dialog;
       }
     },

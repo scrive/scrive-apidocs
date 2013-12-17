@@ -364,6 +364,7 @@
             // any changes to the signatories of a document and we rerender
             // this includes adding and removing signatories
             view.model.document().bind('change:signatories', view.reset);
+            view.model.document().bind('change:signatories', view.addNew.render);
             view.model.bind('change:participantDetail', view.rescroll);
             $(window).resize(view.resizeOnWindowResize);
         },
