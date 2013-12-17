@@ -756,7 +756,7 @@
 "_prolongModalTitle":"Extend due date",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> would like to remind you that you haven't signed the document <strong>$documenttitle$</strong> yet.",
 "_remindMailNotSignedTitleContract":"Reminder to e-sign contract: $documenttitle$",
-"_remindMailSignedContractStandardHeaderSendRequest":"You have previously signed the document <strong>$documenttitle$</strong> through the Scrive service. <strong>$author$</strong> has requested we resend the document <strong>$documenttitle$</strong> to you.",
+"_remindMailSignedContractStandardHeaderSendRequest":"You have previously signed the document <strong>$documenttitle$</strong> through the Scrive e-signing service. <strong>$author$</strong> has requested we resend the document <strong>$documenttitle$</strong> to you.",
 "_remindMailSignedContractStandardHeaderSendRequest2":"Please find the document attached.",
 "_remindMailSignedTitle":"Resent document: $documenttitle$",
 "_reminderByEmailMobileQuestion":"Do you want to send a reminder via email and SMS",
