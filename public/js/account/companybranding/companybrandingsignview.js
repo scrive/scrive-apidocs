@@ -80,7 +80,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
   prerender: function() {
     var company = this.model;
 
-    this.container = $("<div class='sample-sign-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;background: url(\"/img/bg-body.png\") repeat scroll 0 0 transparent'/>");
+    this.container = $("<div class='sample-sign-view' style='margin:auto; width: 560px;border: 1px solid #EEEEEE;'/>");
     this.header = $("<div class='sample-sign-view-header' />");
 
     this.logo = $('<img/>');
@@ -98,7 +98,7 @@ window.CompanyBrandingSignViewSampleView = Backbone.View.extend({
 
     var document = $("<div/>").css("border", "1px solid #cccccc")
       .css("padding", "10px").css("padding-bottom", "0").css("text-align","center").css("background", "#e9e9e9").css("border-bottom-right-radius", "4px").css("border-bottom-left-radius", "4px");
-    
+
     document.append(documentpic);
     var rejectbuttoncontainer = $('<div style="float: left;padding:10px;"/>');
     var rejectbutton = new Button({size: 'tiny',

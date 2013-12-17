@@ -217,8 +217,11 @@ var AccountSettingsModel = Backbone.Model.extend({
         Language.changeOnCurrentPage(self.lang() , function() {
                 new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue", withReload: true});
         });
-      else
+      else {
         new FlashMessage({content : localization.account.accountDetails.detailSaved , color: "blue", withReload: false});
+        self.user().fetch({cache: false, processData: true});
+      }
+
     });
   },
   refresh : function() {
