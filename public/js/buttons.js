@@ -41,7 +41,7 @@ var ButtonModel = Backbone.Model.extend({
        this.set({text : text});
   },
   oneClick : function() {
-       this.get("oneClick");
+       return this.get("oneClick");
   },
   clicked : function(){
        this.get("onClick")();
