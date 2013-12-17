@@ -258,7 +258,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacementFN, widthFunction,
                 }),
                 name: options[selected].name,
                 cssClass : 'design-view-action-participant-details-information-field-options ' + (view.extraClass || ""),
-                style: 'font-size: 16px',
+                style: 'font-size: 16px; width: 220px;',
                 textWidth: "191px",
                 optionsWidth: "218px",
                 onSelect: function(v) {
@@ -1060,6 +1060,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             name: signame,
             options: options,
             cssClass: 'signature-field-placement-setter-field-selector',
+            style: "width: 220px;",
             textWidth: "191px",
             optionsWidth: "218px",
             onSelect: function(s) {
@@ -1532,6 +1533,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         var selector = new Select({
             name: signame,
             options: options,
+            style: "width: 220px;",
             textWidth: "191px",
             optionsWidth: "218px",
             cssClass: 'signature-field-placement-setter-field-selector',
