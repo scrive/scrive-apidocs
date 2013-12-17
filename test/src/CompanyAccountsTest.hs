@@ -31,7 +31,6 @@ companyAccountsTests :: TestEnvSt -> Test
 companyAccountsTests env = testGroup "CompanyAccounts" [
     testGroup "Model" [
         testThat "Adding an invite for a new email works" env test_addInviteForNewEmail
-      , testThat "Adding an invite for an existing email works" env test_addInviteForExistingEmail
       , testThat "Removing a existing invite works" env test_removingExistingInvite
       , testThat "Removing a non-existant invite works" env test_removingNonExistantInvite
       ]
@@ -51,33 +50,23 @@ companyAccountsTests env = testGroup "CompanyAccounts" [
 test_addInviteForNewEmail :: TestEnv ()
 test_addInviteForNewEmail = do
   company <- addNewCompany
-  let firstinvite = mkInvite company "a@a.com" "Anna" "Android"
-      secondinvite = mkInvite company "b@b.com" "Bob" "Blue"
-  _ <- dbUpdate $ AddCompanyInvite firstinvite
-  _ <- dbUpdate $ AddCompanyInvite secondinvite
-  assertCompanyInvitesAre company [firstinvite, secondinvite]
-
-test_addInviteForExistingEmail :: TestEnv ()
-test_addInviteForExistingEmail = do
-  company <- addNewCompany
-  let firstinvite = mkInvite company "a@a.com" "Anna" "Android"
-      secondinvite = mkInvite company "a@a.com" "Bob" "Blue"
-  _ <- dbUpdate $ AddCompanyInvite firstinvite
-  _ <- dbUpdate $ AddCompanyInvite secondinvite
-  assertCompanyInvitesAre company [secondinvite]
+  (user1, _) <- addNewAdminUserAndCompany "a@a.com" "Anna" "Android"
+  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company user1
+  assertCompanyInvitesAre company [mkInvite company user1]
 
 test_removingExistingInvite :: TestEnv ()
 test_removingExistingInvite = do
   company <- addNewCompany
-  let invite = mkInvite company "a@a.com" "Anna" "Android"
-  _ <- dbUpdate $ AddCompanyInvite invite
-  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (invitedemail invite)
+  (user, _) <- addNewAdminUserAndCompany "a@a.com" "Anna" "Android"
+
+  _ <- dbUpdate $ AddCompanyInvite $  mkInvite company user
+  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (userid user)
   assertCompanyInvitesAre company []
 
 test_removingNonExistantInvite :: TestEnv ()
 test_removingNonExistantInvite = do
   company <- addNewCompany
-  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email "a@a.com")
+  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (unsafeUserID 0)
   assertCompanyInvitesAre company []
 
 test_addingANewCompanyAccount :: TestEnv ()
@@ -102,7 +91,7 @@ test_addingANewCompanyAccount = do
   assertEqual "New user is standard user" False (useriscompanyadmin newuser)
   assertEqual "New user has the invited name" "Bob Blue" (getFullName newuser)
 
-  assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
+  assertCompanyInvitesAre company [] -- We don't add an invite if we created a user
 
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
@@ -131,7 +120,7 @@ test_addingExistingCompanyUserAsCompanyAccount = do
   assertEqual "Invited user's company stays the same" (usercompany updatedexistinguser)
                                                       (companyid existingcompany)
 
-  assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
+  assertCompanyInvitesAre company [mkInvite company existinguser]
 
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
@@ -140,7 +129,7 @@ test_resendingInviteToNewCompanyAccount :: TestEnv ()
 test_resendingInviteToNewCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just newuser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
+  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company newuser
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
@@ -208,14 +197,15 @@ test_switchingAdminToStandardUser = do
 test_removingCompanyAccountInvite :: TestEnv ()
 test_removingCompanyAccountInvite = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
+  (standarduser,_) <- addNewAdminUserAndCompany "Bob" "Blue" "jony@blue.com"
+
+  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("remove", inText "True")
-                        , ("removeid", inText $ "0")
-                        , ("removeemail", inText $ "bob@blue.com")
+                        , ("removeid", inText $ show $ userid standarduser)
                         ]
   (res, _ctx') <- runTestKontra req ctx $ handleRemoveCompanyAccount
 
@@ -230,7 +220,7 @@ test_removingCompanyAccountWorks = do
   doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Closed])
   let docid = documentid doc
 
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "jony@blue.com" "Bob" "Blue"
+  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
 
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
     <$> mkContext defaultValue
@@ -263,7 +253,7 @@ test_privateUserTakoverWorks = do
   docid <- documentid <$> addRandomDocumentWithAuthorAndCondition user (\d -> not $ (documentstatus d) `elem` [Preparation])
 
 
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
+  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company user
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
@@ -311,9 +301,9 @@ assertCompanyInvitesAre company expectedinvites = do
                                       (inviteSort actualinvites)
   mapM_ assertInviteExists expectedinvites
   where
-    inviteSort = sortBy (comparing invitedemail)
+    inviteSort = sortBy (comparing inviteduserid)
     assertInviteExists expectedinvite = do
-      mactualinvite <- dbQuery $ GetCompanyInvite (companyid company) (invitedemail expectedinvite)
+      mactualinvite <- dbQuery $ GetCompanyInvite (companyid company) (inviteduserid expectedinvite)
       assertEqual "Wrong company invite" (Just expectedinvite) mactualinvite
 
 addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
@@ -324,12 +314,10 @@ addNewAdminUserAndCompany fstname sndname email = do
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   return (updateduser, company)
 
-mkInvite :: Company -> String -> String -> String -> CompanyInvite
-mkInvite company email fstname sndname =
+mkInvite :: Company -> User -> CompanyInvite
+mkInvite company user =
   CompanyInvite {
-      invitedemail = Email email
-    , invitedfstname = fstname
-    , invitedsndname = sndname
+      inviteduserid= userid user
     , invitingcompany = companyid company
   }
 

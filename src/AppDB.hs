@@ -14,6 +14,7 @@ import ActionQueue.Migrations
 import Company.Tables
 import Company.Migrations
 import CompanyAccounts.Tables
+import CompanyAccounts.Migrations
 import Doc.Tables
 import Doc.Migrations
 import Doc.API.Callback.Tables
@@ -173,6 +174,7 @@ kontraMigrations = [
   , migrateUsersUniqueIndexOnEmail
   , makeSealStatusNonNullInMainFiles
   , migrateDocumentsAddDaysToRemind
+  , normalizeCompanyInvites
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

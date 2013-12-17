@@ -19,6 +19,7 @@
     }
     
     li {
+      cursor: pointer;
       font-size: 11px;
       height: 20px;
       padding: 23px 24px;
@@ -48,7 +49,6 @@
       h5,
       h6 {
         color: @black;
-        cursor: pointer;
         font-weight: 300;
         
         &:hover {
@@ -61,7 +61,6 @@
       }
       
       h4 {
-        cursor: default;
         font-size: 25px;
         font-weight: 300;
         margin-left: -5px;
@@ -101,6 +100,9 @@
     .tabs {
       border-bottom: 2px solid #eee;
       padding-bottom: 5px;
+      .inner-tab {
+        cursor: default;
+      }
     }
     
     .tab-arrow {

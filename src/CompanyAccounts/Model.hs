@@ -5,8 +5,10 @@ module CompanyAccounts.Model (
   , CompanyInvite(..)
   , AddCompanyInvite(..)
   , RemoveCompanyInvite(..)
+  , RemoveUserCompanyInvites(..)
   , GetCompanyInvite(..)
   , GetCompanyInvites(..)
+  , GetCompanyInvitesWithUsersData(..)
   ) where
 
 import Control.Monad
@@ -15,6 +17,7 @@ import Company.Model
 import DB
 import OurPrelude
 import User.Model
+import DB.SQL2
 
 {- |
     A CompanyInvite is a record
@@ -22,9 +25,7 @@ import User.Model
     to takeover an existing user.
 -}
 data CompanyInvite = CompanyInvite {
-    invitedemail    :: Email --who was invited
-  , invitedfstname  :: String --the fstname they were invited as
-  , invitedsndname  :: String --the sndname they were invited as
+    inviteduserid   :: UserID
   , invitingcompany :: CompanyID --the company they are invited to
   } deriving (Eq, Ord, Show)
 
@@ -32,31 +33,33 @@ data AddCompanyInvite = AddCompanyInvite CompanyInvite
 instance MonadDB m => DBUpdate m AddCompanyInvite CompanyInvite where
   update (AddCompanyInvite CompanyInvite{..}) = do
     _ <- kRunRaw "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
-    kRun_ $ SQL "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
-            [toSql invitingcompany, toSql invitedemail]
+    kRun_ $ SQL "DELETE FROM companyinvites WHERE (company_id = ? AND user_id = ?)"
+            [toSql invitingcompany, toSql inviteduserid]
     kRun_ $ SQL ("INSERT INTO companyinvites ("
-      <> "  email"
-      <> ", first_name"
-      <> ", last_name"
-      <> ", company_id) VALUES (?, ?, ?, ?)")
-      [ toSql invitedemail
-      , toSql invitedfstname
-      , toSql invitedsndname
+      <> "  user_id"
+      <> ", company_id) VALUES (?, ?)")
+      [ toSql inviteduserid
       , toSql invitingcompany
       ]
-    $fromJust `liftM` query (GetCompanyInvite invitingcompany invitedemail)
+    $fromJust `liftM` query (GetCompanyInvite invitingcompany inviteduserid)
 
-data RemoveCompanyInvite = RemoveCompanyInvite CompanyID Email
+data RemoveCompanyInvite = RemoveCompanyInvite CompanyID UserID
 instance MonadDB m => DBUpdate m RemoveCompanyInvite Bool where
-  update (RemoveCompanyInvite companyid email) = do
-    kRun01 $ SQL "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
-             [toSql companyid, toSql email]
+  update (RemoveCompanyInvite companyid user_id) = do
+    kRun01 $ SQL "DELETE FROM companyinvites WHERE (company_id = ? AND user_id = ?)"
+             [toSql companyid, toSql user_id]
 
-data GetCompanyInvite = GetCompanyInvite CompanyID Email
+data RemoveUserCompanyInvites = RemoveUserCompanyInvites UserID
+instance MonadDB m => DBUpdate m RemoveUserCompanyInvites Bool where
+  update (RemoveUserCompanyInvites user_id) = do
+    kRun01 $ SQL "DELETE FROM companyinvites WHERE (user_id = ?)"
+             [toSql user_id]
+
+data GetCompanyInvite = GetCompanyInvite CompanyID UserID
 instance MonadDB m => DBQuery m GetCompanyInvite (Maybe CompanyInvite) where
-  query (GetCompanyInvite companyid email) = do
-    kRun_ $ SQL (selectCompanyInvitesSQL <> "WHERE (ci.company_id = ? AND ci.email = ?)")
-            [toSql companyid, toSql email]
+  query (GetCompanyInvite companyid uid) = do
+    kRun_ $ SQL (selectCompanyInvitesSQL <> "WHERE (ci.company_id = ? AND ci.user_id = ?)")
+            [toSql companyid, toSql uid]
     fetchCompanyInvites >>= oneObjectReturnedGuard
 
 data GetCompanyInvites = GetCompanyInvites CompanyID
@@ -66,12 +69,26 @@ instance MonadDB m => DBQuery m GetCompanyInvites [CompanyInvite] where
             [toSql companyid]
     fetchCompanyInvites
 
+data GetCompanyInvitesWithUsersData = GetCompanyInvitesWithUsersData CompanyID
+instance MonadDB m => DBQuery m GetCompanyInvitesWithUsersData [(CompanyInvite,String,String,String)] where
+  query (GetCompanyInvitesWithUsersData companyid) = do
+    kRun_ $ sqlSelect2 "companyinvites as i, users as u" $ do
+      sqlWhere "i.user_id = u.id"
+      sqlWhereEq "i.company_id" companyid
+      sqlResult "i.user_id"
+      sqlResult "i.company_id"
+      sqlResult "u.first_name"
+      sqlResult "u.last_name"
+      sqlResult "u.email"
+    kFold decode []
+   where
+    decode acc uid cid  fn ln eml = (CompanyInvite uid cid, fn, ln,eml) : acc
+
+
 -- helpers
 selectCompanyInvitesSQL :: RawSQL
 selectCompanyInvitesSQL = "SELECT"
-  <> "  ci.email"
-  <> ", ci.first_name"
-  <> ", ci.last_name"
+  <> "  ci.user_id"
   <> ", ci.company_id"
   <> "  FROM companyinvites ci"
   <> " "
@@ -79,9 +96,7 @@ selectCompanyInvitesSQL = "SELECT"
 fetchCompanyInvites :: MonadDB m => m [CompanyInvite]
 fetchCompanyInvites = kFold decoder []
   where
-    decoder acc email fstname sndname cid = CompanyInvite {
-        invitedemail = email
-      , invitedfstname = fstname
-      , invitedsndname = sndname
+    decoder acc uid cid = CompanyInvite {
+        inviteduserid = uid
       , invitingcompany = cid
       } : acc

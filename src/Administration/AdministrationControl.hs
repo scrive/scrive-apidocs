@@ -88,6 +88,7 @@ adminonlyRoutes =
         , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
         , dir "useradmin" $ dir "details" $ hGet $ toK1 $ handleUserGetProfile
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
+        , dir "useradmin" $ dir "deleteinvite" $ hPost $ toK2 $ handleDeleteInvite
         , dir "useradmin" $ dir "delete" $ hPost $ toK1 $ handleDeleteUser
         , dir "useradmin" $ dir "move" $ hPost $ toK1 $ handleMoveUserToDifferentCompany
 
@@ -338,8 +339,14 @@ handleUserChange uid = onlySalesOrAdmin $ do
   return $ LinkUserAdmin $ uid
 
 
+handleDeleteInvite :: Kontrakcja m => CompanyID -> UserID -> m ()
+handleDeleteInvite cid uid = onlySalesOrAdmin $ do
+  _ <- dbUpdate $ RemoveCompanyInvite cid uid
+  return ()
+
 handleDeleteUser :: Kontrakcja m => UserID -> m ()
 handleDeleteUser uid = onlySalesOrAdmin $ do
+  _ <- dbUpdate $ RemoveUserCompanyInvites uid
   _ <- dbUpdate $ DeleteUser uid
   return ()
 
@@ -360,7 +367,7 @@ handleMergeToOtherCompany scid = onlySalesOrAdmin $ do
       return ()
   invites <- dbQuery $ GetCompanyInvites scid
   forM_ invites $ \i-> do
-      _ <- dbUpdate $ RemoveCompanyInvite scid (invitedemail i)
+      _ <- dbUpdate $ RemoveCompanyInvite scid (inviteduserid i)
       return ()
 
 

@@ -7,17 +7,18 @@ import DB
 tableCompanyInvites :: Table
 tableCompanyInvites = tblTable {
     tblName = "companyinvites"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
-      tblColumn { colName = "email", colType = TextT, colNullable = False }
-    , tblColumn { colName = "first_name", colType = TextT, colNullable = False }
-    , tblColumn { colName = "last_name", colType = TextT, colNullable = False }
-    , tblColumn { colName = "company_id", colType = BigIntT, colNullable = False }
+      tblColumn { colName = "company_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["email", "company_id"]
-  , tblForeignKeys = [fkOnColumn "company_id" "companies" "id"]
+  , tblPrimaryKey = pkOnColumns ["company_id","user_id"]
+  , tblForeignKeys = [
+      fkOnColumn "company_id" "companies" "id"
+    , fkOnColumn "user_id" "users" "id"
+    ]
   , tblIndexes = [
       indexOnColumn "company_id"
-    , indexOnColumn "email"
+    , indexOnColumn "user_id"
     ]
   }

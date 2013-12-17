@@ -63,6 +63,7 @@ window.ScreenBlockingDialog = {
       modalcontainer.css('margin-top', ($(window).height()- 200) /2);
       modalcontainer.css('left', $(window).scrollLeft());
       modalcontainer.css('margin-left', ($(window).width() - 650) / 2);
+      dialog.height($(document).height());
     },
     open: function (cfg) {
       var dialog = ScreenBlockingDialog.dialog(cfg);
