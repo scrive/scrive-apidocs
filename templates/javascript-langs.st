@@ -209,6 +209,7 @@ javascriptLocalisation =
            , eleg : "$_eleg()$"
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
            , to : "$_to()$"
+           , toNoSpaces : "$_toNoSpaces()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
            , ok : "$_ok()$"
            , selectFiles: "$_selectFilesYouWantToUpload()$"
