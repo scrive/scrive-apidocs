@@ -169,21 +169,30 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           self.signatory = document.signatoriesThatCanSignNow()[0];
           var modalContent = function() {
             var div = $("<div style='height:32px;'/>");
-            div.append($("<label style='float:left;padding-right:10px;line-height: 32px;'>").text(localization.pad.giveForSigningThisDevice + " " ));
-            var options = [];
-            _.each(document.signatoriesThatCanSignNow(),function(sig) {
-               if (sig != model.padNextSignatory())
-               options.push({
-                 name: (sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty),
-                 onSelect : function() {model.setPadNextSignatory(sig); return true;}
+            var label = $("<label style='float:left;padding-right:10px;line-height: 32px;'>").text(localization.pad.giveForSigningThisDevice + " " )
+            div.append(label);
+            if (document.signatoriesThatCanSignNow().length > 1)
+            {
+              var options = [];
+              _.each(document.signatoriesThatCanSignNow(),function(sig) {
+                if (sig != model.padNextSignatory())
+                options.push({
+                  name: (sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty),
+                  onSelect : function() {model.setPadNextSignatory(sig); return true;}
+                });
               });
-            });
-            var select = new Select({
-              name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : localization.pad.notNamedParty),
-              cssClass : "float-left",
-              options : options
-            });
-            return div.append(select.el());
+              var select = new Select({
+                name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : localization.pad.notNamedParty),
+                cssClass : "float-left",
+                options : options
+              });
+              div.append(select.el());
+            }
+            else {
+              label.append($("<strong/>").text(sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty.toLowerCase()));
+            }
+            return div;
+
           };
           self.padNextSignatoryModalContent = modalContent();
           model.bind("change:padNextSignatory", function() {
