@@ -14,8 +14,6 @@ module User.UserControl(
   , handleAcceptTOSGet
   , handleAcceptTOSPost
   , handleAccountSetupGet
-  , handleAccountSetupGetWithMethod
-  , handleAccountSetupPostWithMethod
   , handleAccountSetupPost
   , handleAccessNewAccountGet
   , handleAccessNewAccountPost
@@ -284,11 +282,8 @@ handleAcceptTOSPost = do
       addFlashM flashMessageUserDetailsSaved
   return ()
 
-handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
-handleAccountSetupGet uid token = handleAccountSetupGetWithMethod uid token AccountRequest
-
-handleAccountSetupGetWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m (Either KontraLink Response)
-handleAccountSetupGetWithMethod uid token sm = do
+handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m (Either KontraLink Response)
+handleAccountSetupGet uid token sm = do
   ctx <- getContext
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser, ctxmaybeuser ctx) of
@@ -312,8 +307,8 @@ handleAccountSetupGetWithMethod uid token sm = do
     (Just _user, Just _, Nothing) -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
     _ -> return $ Left $ LinkSignup $ ctxlang ctx
 
-handleAccountSetupPostWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
-handleAccountSetupPostWithMethod uid token sm = do
+handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
+handleAccountSetupPost uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
   company <-  getCompanyForUser user
   if isJust $ userhasacceptedtermsofservice user
@@ -338,9 +333,6 @@ handleAccountSetupPostWithMethod uid token sm = do
             value "ok" True
             value "location" $ show link
             value "userid" $ show uid
-
-handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
-handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token AccountRequest
 
 {- |
     This is where we get to when the user clicks the link in their new-account

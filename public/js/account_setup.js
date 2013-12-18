@@ -8,9 +8,6 @@
       validators: [],
       tosValidator: null
     },
-    signuplink: function() {
-      return this.get('signuplink');
-    },
     fstname: function() {
       return this.get('fstname');
     },
@@ -118,7 +115,6 @@
 
       new Submit({
         method: 'POST',
-        url: model.signuplink(),
         ajax: true,
         tos: 'on',
         fstname: model.fstname(),

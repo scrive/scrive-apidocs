@@ -9,7 +9,7 @@
 (function( window){
 window.Submit = Backbone.Model.extend({
     defaults : {
-        url : "",
+        url : window.location, // Fix for IE - new version can cut off last part of url, if not followed by slash
         method : "GET",
         inputs : jQuery(),
         onSend : function () {},

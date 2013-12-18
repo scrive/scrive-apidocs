@@ -88,7 +88,7 @@ assertSignupSuccessful ctx = do
 followActivationLink :: Context -> UserID -> MagicHash -> TestEnv Context
 followActivationLink ctx uid token = do
   req <- mkRequest GET []
-  fmap snd $ runTestKontra req ctx $ handleAccountSetupGet uid token
+  fmap snd $ runTestKontra req ctx $ handleAccountSetupGet uid token AccountRequest
 
 assertActivationPageOK :: Context -> TestEnv ()
 assertActivationPageOK ctx = do
@@ -106,7 +106,7 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
                           , ("password2", inText password2)
                           ] ++
                           ([("callme", inText "YES"), ("phone", inText $ fromJust phone)] <| isJust phone |> [])
-  (_, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token
+  (_, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
   return ctx'
 
 assertAccountActivatedFor :: UserID -> String -> String -> Context -> TestEnv ()

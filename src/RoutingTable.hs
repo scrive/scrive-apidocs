@@ -154,11 +154,8 @@ staticRoutes = choice
      , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , allLangDirs $ dir "mynewaccount"  $ hGet $ toK2 $ UserControl.handleAccessNewAccountGet
      , allLangDirs $ dir "mynewaccount"  $ hPostNoXToken $ toK2 $ UserControl.handleAccessNewAccountPost
-     , allLangDirs $ dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
-     , allLangDirs $ dir "accountsetup"  $ hGet $ toK3 $ UserControl.handleAccountSetupGetWithMethod
-     -- This can go away ~14 days after this code reaches production
-     , allLangDirs $ dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
-     , allLangDirs $ dir "accountsetup"  $ hPostNoXToken $ toK3 $ UserControl.handleAccountSetupPostWithMethod
+     , allLangDirs $ dir "accountsetup"  $ hGet $ toK3 $ UserControl.handleAccountSetupGet
+     , allLangDirs $ dir "accountsetup"  $ hPostNoXToken $ toK3 $ UserControl.handleAccountSetupPost
 
      , dir "payments" $ dir "contact" $ hPostAllowHttp $ toK0 $ UserControl.handleContactUs
 

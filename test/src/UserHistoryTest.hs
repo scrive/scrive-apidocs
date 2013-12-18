@@ -192,7 +192,7 @@ testHandlerForTOSAccept = do
                            , ("password", inText "test1111test")
                            , ("password2", inText "test1111test")
                            ]
-    _ <- runTestKontra req2 ctx1 $ handleAccountSetupPost uarUserID uarToken
+    _ <- runTestKontra req2 ctx1 $ handleAccountSetupPost uarUserID uarToken AccountRequest
     history <- dbQuery $ GetUserHistoryByUserID uarUserID
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains TOS accept event"
