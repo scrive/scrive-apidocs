@@ -142,7 +142,7 @@
         },
         updateSaveButton : function() {
            if (this.sendButton != undefined) {
-             if (this.model.document().hasProblems(true)) {
+             if (this.model.document().hasProblems(true) || !this.model.document().ready()) {
               this.sendButton.addClass('disabled');
               this.sendButton.unbind('click').click(this.cantSignModal);
              } else  {
