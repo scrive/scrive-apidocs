@@ -184,11 +184,11 @@ nicebutton=
                   background-color: $buttoncolour$;
                   background: $buttoncolour$;
                   border: 2px solid $buttoncolour$;
-                  -webkit-box-shadow: $buttonborder()$ 0 0 0 1px;
-                  -moz-box-shadow: inset $buttonborder()$ 0 0 0 1px;
-                  -ms-box-shadow: inset $buttonborder()$ 0 0 0 1px;
-                  -o-box-shadow: inset $buttonborder()$ 0 0 0 1px;
-                  box-shadow: inset $buttonborder()$ 0 0 0 1px;
+                  -webkit-box-shadow: $buttoncolour$ 0 0 0 1px;
+                  -moz-box-shadow: inset $buttoncolour$ 0 0 0 1px;
+                  -ms-box-shadow: inset $buttoncolour$ 0 0 0 1px;
+                  -o-box-shadow: inset $buttoncolour$ 0 0 0 1px;
+                  box-shadow: inset $buttoncolour$ 0 0 0 1px;
                 $endif$
                 text-decoration: none;
                 font: 16px/16px Helvetica Neue, Arial, sans-serif;
@@ -222,8 +222,6 @@ nicebutton=
     </td>
   </tr>
 </table>
-####
-buttonborder=$if(skipbuttonborder)$$buttoncolour$$else$#CCCCCC$endif$
 ####
 poweredByScrive=
 <a style="text-decoration: none;" href="$ctxhostpart$">
