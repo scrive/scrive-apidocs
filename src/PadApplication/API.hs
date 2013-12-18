@@ -42,5 +42,4 @@ apiCallCheckClient = api $ do
       value "upgrade_warning" False
       value "valid_until" JSNull
       value "upgrade_url" JSNull
-      value "title" JSNull
       value "message" JSNull
