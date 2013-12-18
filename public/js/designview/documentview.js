@@ -32,7 +32,7 @@
         },
         render: function() {
             var view = this;
-            if(view.file) {
+            if(view.file && (view.file.model != view.model.mainfile())) {
                 view.file.destroy();
                 view.file = undefined;
             }

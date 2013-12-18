@@ -7,6 +7,7 @@ javascriptLocalisation =
   window.localization =
         {      code : "$_code()$"
              , welcomeback : "$_welcomeback()$"
+             , reloadPage : "$_reloadPage()$"
              , problemContactingServer : "$_problemContactingServer()$"
              , esigningpoweredbyscrive : "E-signing powered by Scrive"
              , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"

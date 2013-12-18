@@ -292,8 +292,11 @@
       var tosAccept = $("<div class='checkbox-box' style='text-align: left;'/>");
       var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
       if (model.accepted()) tosCBox.addClass('checked');
-      tosCBox.click(function() { tosCBox.toggleClass('checked'); model.setAccepted(tosCBox.hasClass('checked'));});
-
+      var toggleCheckBox = function() {
+        tosCBox.toggleClass('checked');
+        model.setAccepted(tosCBox.hasClass('checked'));
+      };
+      tosCBox.click(toggleCheckBox);
 
       model.setTosValidator(function() {
         tosCBox.validate(new CheckboxReqValidation({
@@ -309,8 +312,10 @@
       if (model.servicelinkcolour()) {
         toslink.css('color', model.servicelinkcolour());
       }
+      var tosAcceptText = $('<span class="clickable"/>').text(localization.accountSetupModal.modalAccountSetupBodyAccept);
+      tosAcceptText.click(toggleCheckBox);
       tosAccept.append($('<label/>')
-                  .append($("<span/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
+                  .append(tosAcceptText)
                   .append(toslink)
                 );
       tosAccept.append($('<br/>'));

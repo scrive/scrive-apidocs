@@ -73,7 +73,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
             if (d != undefined && d.status == 409) {
               var button =  new Button({color: 'blue',
                                          size: 'small',
-                                         text: 'Reload page',
+                                         text: localization.reloadPage,
                                          onClick: function() {
                                            document.location.reload(true);
                                          }
