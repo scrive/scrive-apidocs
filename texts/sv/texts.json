@@ -125,7 +125,7 @@
 "_bankidNumberMismatch":"Personnnumren matchar inte",
 "_bankidPersInfoMismatch":"Dina personuppgifter matchade inte informationen från e-legitimationsservern",
 "_bankidStartApp":"Starta din säkerhetsapp för mobilt BankID.",
-"_bankidUnknownUser":"Den e-legitimation du valde går inte att använda. Välj att använda en annan e-legitimation eller kontakta din bank för att beställa ett nytt.",
+"_bankidUnknownUser":"Den e-legitimation du valde går inte att använda. Vänligen välj en annan e-legitimation eller kontakta din bank för att beställa en ny.",
 "_bankidUserCancel":"Åtgärden avbruten",
 "_bankidVerificationFailed":"E-legitimationstjänsten misslyckades att verifiera din signatur",
 "_blockingButtonContact":"Kontakt oss",

@@ -125,7 +125,7 @@
 "_bankidNumberMismatch":"The personal ID numbers do not match",
 "_bankidPersInfoMismatch":"Your personal details did not match information from the e-ID server",
 "_bankidStartApp":"Start your application for mobile BankID.",
-"_bankidUnknownUser":"The e-ID you chose cannot be used. Choose to use a different e-ID or contact your bank to order a new e-ID.",
+"_bankidUnknownUser":"The e-ID you chose cannot be used. Please select a different e-ID or contact your bank to order a new e-ID.",
 "_bankidUserCancel":"Operation aborted",
 "_bankidVerificationFailed":"The e-ID service provider failed to verify your signature.",
 "_blockingButtonContact":"Contact us",
