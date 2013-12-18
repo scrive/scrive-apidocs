@@ -97,6 +97,10 @@ window.WelcomeUser = {
                 LoadingDialog.open();
 
                 SessionStorage.set('welcome', 'accepted', true);
+                
+                // When the user reaches the authors view, show a special version,
+                // catered to people who've never seen the authors view before.
+                AuthorViewFirstTime.markAsFTUE();
 
                 DocumentUploader.uploadByURL(function(documentData) {
                     window.location.pathname = '/d/' + documentData.id;

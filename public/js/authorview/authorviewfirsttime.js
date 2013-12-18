@@ -17,43 +17,39 @@ window.AuthorViewFirstTime = {
      * Return true if the user got here from the FTUE
      */
     isFromFTUE: function() {
-      return true;
         return SessionStorage.get('FTUE', 'visitor') === 'true';
     },
 
     /**
-     * Handles people who may be here from the design view in FTUE mode.
+     * Mark this user session as a FTUE session.
      */
-    fromFTUEWelcome: function() {
-        if (!this.isFromFTUE())
-            return;
-
-        this.noLongerFromFTUE(); // show the special focus on doc history + a call to action
-
-        return this.fromFTUEContent();   
+    markAsFTUE: function() {
+      SessionStorage.set('FTUE', 'visitor', true);
     },
 
 
     /**
      * Tell the user about the tracking capabilities of Scrive.
-     *
-     * @param {object} option Which of the possible subtitles that will be rendered. [1,3].
      */
-    fromFTUEContent: function(option) {
+    fromFTUEContent: function() {
         /* We want to highlight the first row of the table body. */
         $('body').addClass('ftue-authorview');
 
         mixpanel.track('FTUE Authorview shown');
 
 	var container = $('<div></div>');
-        container.append($('<h4 class="thanks"></h4>').html(localization.authorview.firsttime.docsent + '<br />' + localization.authorview.firsttime.dochistory));
+        container.append($('<h4 class="thanks"></h4>').html(localization.authorview.firsttime.docsent + '<br /><br />' + localization.authorview.firsttime.dochistory));
 
-        var tableContainer = $('<div class="history-box"><div class="document-history-container"><div class="list-container" style="opacity: 1;"><div class="table"></div></div></div></div>');
-        var table = $('<table></table>');
-        tableContainer.find('div.table').append(table);
-        table.append($('<thead><tr><th style="width: 46px;"><span>Status</span></th><th style="width: 150px;"><span>'+localization.history.time+'</span></th><th style="width: 200px;"><span>'+localization.history.party+'</span></th><th style="width: 460px;"><span>'+localization.history.description+'</span></th></tr></thead>'));
-        var tbody = $('<tbody></tbody>');
-        table.append(tbody);
+        container.append(this.fakeHistoryBox());
+
+        container.append(this.callToAction());
+
+        return container;
+    },
+    fakeHistoryBox: function() {
+        // This is a copy of the history box that's usually in the regular authorview.
+        var tableContainer = $('<div class="history-box"><div class="document-history-container"><div class="list-container" style="opacity: 1;"><div class="table"><table><thead><tr><th style="width: 46px;"><span>Status</span></th><th style="width: 150px;"><span>'+localization.history.time+'</span></th><th style="width: 200px;"><span>'+localization.history.party+'</span></th><th style="width: 460px;"><span>'+localization.history.description+'</span></th></tr></thead><tbody></tbody></table></div></div></div></div>');
+        var tbody = tableContainer.find('tbody');
 
         var makeRow = function(status, time, party, text) {
           return $('<tr><td class="row "><div class="icon status '+status+'"></div></td><td class="row "><span>'+time+'</span></td><td class="row "><span>'+party+'</span></td><td class="row "><div style="margin-right:30px">'+text+'</div></td></tr>');
@@ -78,8 +74,9 @@ window.AuthorViewFirstTime = {
           })(statuses[i]);
         }
 
-        container.append(tableContainer);
-
+        return tableContainer;
+    },
+    callToAction: function() {
         var ctacontainer = $("<div class='cta-container'/>");
 
         ctacontainer.append($('<h4 class="explore-more"></h4>').text(localization.authorview.firsttime.tryYourself));
@@ -87,19 +84,17 @@ window.AuthorViewFirstTime = {
         ctacontainer.append(new Button({color: 'green', size: 'big', text: localization.authorview.firsttime.upload, shape: 'rounded', onClick: function() { 
           window.location.pathname = '/newdocument';
         }}).el())
-        ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.contact, shape: 'rounded', onClick: function() {
+        ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.contact, shape: 'rounded', cssClass: 'contact', onClick: function() {
           mixpanel.track('FTUE Authorview contact clicked');
-          ctacontainer.empty();
-          ctacontainer.append($('<h4></h4>').text(localization.authorview.firsttime.contactdetails));
+          ctacontainer.find('.button.contact').replaceWith($('<h5 class="contact"></h5>').html(localization.authorview.firsttime.contactdetails));
         }}).el())
         ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.branding, shape: 'rounded', onClick: function() {
           window.location.href = '/account#branding-email';
         }}).el())
 
-        container.append(ctacontainer);
-
-        return container;
+        return ctacontainer;
     }
+
 };
 
 })(window);

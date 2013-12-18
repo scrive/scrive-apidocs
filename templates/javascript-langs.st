@@ -473,16 +473,16 @@ javascriptLocalisation =
                    counterpart: "you"
                  , emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR')$"
                  , emailRead : "$MarkInvitationReadEvidenceText(signatory_email='EMAIL')$"
-                 , tryYourself : "$_authorsViewFTUETryYourself()$"
+                 , tryYourself : "$_authorviewFTUETryYourself()$"
                  , linkOpened : "$SignatoryLinkVisitedText(actor='ACTOR')$"
                  , documentSigned : "$SignDocumentEvidenceText(actor='ACTOR')$"
                  , documentSealed : "$AttachGuardtimeSealedFileEvidenceText()$"
-                 , branding: "$_authorsViewFTUEBrand()$"
-                 , contact: "$_authorsViewFTUEContact()$"
-                 , contactdetails: "$_authorsViewFTUEContactDetails()$"
-                 , upload: "$_authorsViewFTUEUpload()$"
-                 , docsent: "$_authorsViewFTUEDocSent()$"
-                 , dochistory: "$_authorsViewFTUEDocHistory()$"
+                 , branding: "$_authorviewFTUEBrand()$"
+                 , contact: "$_authorviewFTUEContact()$"
+                 , contactdetails: "$_authorviewFTUEContactDetails()$"
+                 , upload: "$_authorviewFTUEUpload()$"
+                 , docsent: "$_authorviewFTUEDocSent()$"
+                 , dochistory: "$_authorviewFTUEDocHistory()$"
              }
          }
          , history : {

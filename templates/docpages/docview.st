@@ -7,6 +7,7 @@ pageDocumentView=
 <script>
 jQuery(function(){
   if (AuthorViewFirstTime.isFromFTUE()) {
+    AuthorViewFirstTime.noLongerFromFTUE();
     jQuery(".place-for-authorview").replaceWith(AuthorViewFirstTime.fromFTUEContent());
   } else {
     var authorView = new AuthorView({
