@@ -7,7 +7,6 @@ import Test.Framework
 import ActionQueue.UserAccountRequest
 import DB
 import Context
-import Crypto.RNG (CryptoRNG)
 import TestingUtil
 import TestKontra as T
 import User.Model
@@ -32,19 +31,18 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 import Util.Actor
 import qualified Log as Log
-import Control.Concurrent
 import Data.Maybe
 import DB.TimeZoneName (mkTimeZoneName)
 
-mailsTests :: [String] -> TestEnvSt -> Test
-mailsTests params env  = testGroup "Mails" [
-    testThat "Document emails" env $ testDocumentMails $ toMailAddress params
-  , testThat "Branded document emails" env $ testBrandedDocumentMails $ toMailAddress params
-  , testThat "User emails" env $ testUserMails $ toMailAddress params
+mailsTests :: TestEnvSt -> Test
+mailsTests env  = testGroup "Mails" [
+    testThat "Document emails" env $ testDocumentMails
+  , testThat "Branded document emails" env $ testBrandedDocumentMails
+  , testThat "User emails" env $ testUserMails
   ]
 
-testBrandedDocumentMails :: Maybe String -> TestEnv ()
-testBrandedDocumentMails mailTo = do
+testBrandedDocumentMails :: TestEnv ()
+testBrandedDocumentMails = do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
@@ -69,15 +67,15 @@ testBrandedDocumentMails mailTo = do
       , companycustombackgroundcolour = Nothing
       }
   _ <- dbUpdate $ SetCompanyUI (companyid company') cui
-  sendDocumentMails mailTo author
+  sendDocumentMails author
 
-testDocumentMails :: Maybe String -> TestEnv ()
-testDocumentMails mailTo = do
+testDocumentMails ::TestEnv ()
+testDocumentMails = do
   author <- addNewRandomUser
-  sendDocumentMails mailTo author
+  sendDocumentMails author
 
-sendDocumentMails :: Maybe String -> User -> TestEnv ()
-sendDocumentMails mailTo author = do
+sendDocumentMails :: User -> TestEnv ()
+sendDocumentMails author = do
   forM_ allLangs $ \l ->  do
       -- make  the context, user and document all use the same lang
       ctx <- mailingContext l
@@ -108,7 +106,6 @@ sendDocumentMails mailTo author = do
                               Log.debug $ "Checking mail " ++ s
                               m <- mg
                               validMail s m
-                              sendoutForManualChecking ctx mailTo m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) False =<< theDocument
         -- DELIVERY MAILS
         checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailsconfig ctx) Nothing (ctxhostpart ctx) sl =<< theDocument
@@ -129,14 +126,10 @@ sendDocumentMails mailTo author = do
         -- Reminder after send
         checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing (head $ documentsignatorylinks d) False d
   kCommit
-  when (isJust mailTo) $ do
-    Log.debug "Delay for mails to get send"
-    liftIO $ threadDelay 200000000
-    Log.debug "Mails not send will be purged"
 
 
-testUserMails :: Maybe String -> TestEnv ()
-testUserMails mailTo = do
+testUserMails :: TestEnv ()
+testUserMails = do
   forM_ allLangs $ \l ->  do
     -- make a user and context that use the same lang
     ctx <- mailingContext l
@@ -147,7 +140,6 @@ testUserMails mailTo = do
                            Log.debug $ "Checking mail " ++ s
                            m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
-                           sendoutForManualChecking ctx mailTo m
     checkMail "New account" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
           newUserMail ctx (getEmail user) (getEmail user) al
@@ -158,10 +150,6 @@ testUserMails mailTo = do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
           resetPasswordMail ctx user al
   kCommit
-  when (isJust mailTo) $ do
-    Log.debug "Delay for mails to get send"
-    liftIO $ threadDelay 200000000
-    Log.debug "Mails not send will be purged"
 
 
 
@@ -190,19 +178,3 @@ mailingContext :: Lang -> TestEnv Context
 mailingContext lang = do
     ctx <- mkContext lang
     return $ ctx { ctxhostpart = "http://dev.skrivapa.se" }
-
-
-sendoutForManualChecking :: (CryptoRNG m, MonadDB m) => Context ->  Maybe String -> Mail -> m ()
-sendoutForManualChecking _ Nothing _ = assertSuccess
-sendoutForManualChecking ctx (Just email) m = do
-           _ <- scheduleEmailSendout (ctxmailsconfig ctx) $ m {
-                  to = [MailAddress { fullname = "Tester",
-                                      email = email}]
-           }
-           assertSuccess
-
-toMailAddress :: [String] -> Maybe String
-toMailAddress [] = Nothing
-toMailAddress (a:_) = if ('@' `elem` a)
-                        then Just a
-                        else Nothing

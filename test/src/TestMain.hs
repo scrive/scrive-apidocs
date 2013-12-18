@@ -64,57 +64,55 @@ import FlashMessages
 import PaymentsTest
 import ThirdPartyStats
 
-allTests :: [(String, [String] -> TestEnvSt -> Test)]
+allTests :: [(String, TestEnvSt -> Test)]
 allTests = tail tests
   where
     tests = [
         undefined
-      , ("companystate", const companyStateTests)
-      , ("companycontrol", const companyControlTests)
-      , ("docstate", const docStateTests)
-      , ("doccontrol", const docControlTests)
-      , ("docapi", const docAPITests)
-      , ("docstatequery", const $ const docStateQueryTests)
-      , ("evidenceattachments", const $ const evidenceAttachmentsTest)
-      , ("html", const $ const htmlTests)
-      , ("localization", const $ const localizationTest)
-      , ("inputvalidation", const $ const inputValidationTests)
-      , ("login", const loginTests)
-      , ("signup", const signupTests)
-      , ("accountinfo", const accountInfoTests)
-      , ("userstate", const userStateTests)
-      , ("userhistory", const userHistoryTests)
-      , ("csvutil", const $ const csvUtilTests)
-      , ("mailmodel", const mailModelTests)
-      , ("lang", const langTests)
-      , ("companyaccounts", const companyAccountsTests)
+      , ("companystate",  companyStateTests)
+      , ("companycontrol",  companyControlTests)
+      , ("docstate",  docStateTests)
+      , ("doccontrol",  docControlTests)
+      , ("docapi",  docAPITests)
+      , ("docstatequery", const $ docStateQueryTests)
+      , ("evidenceattachments", const $ evidenceAttachmentsTest)
+      , ("html", const $ htmlTests)
+      , ("localization", const $ localizationTest)
+      , ("inputvalidation", const $ inputValidationTests)
+      , ("login", loginTests)
+      , ("signup", signupTests)
+      , ("accountinfo", accountInfoTests)
+      , ("userstate", userStateTests)
+      , ("userhistory", userHistoryTests)
+      , ("csvutil", const $ csvUtilTests)
+      , ("mailmodel", mailModelTests)
+      , ("lang", langTests)
+      , ("companyaccounts", companyAccountsTests)
       , ("mails", mailsTests )
-      , ("jsonutil", const jsonUtilTests )
-      , ("file", const fileTests )
-      , ("sqlutil", const sqlUtilsTests )
-      , ("evidencelog", const evidenceLogTests)
-      , ("evidencetexts", const dumpAllEvidenceTexts)
-      , ("pad", const padTests)
+      , ("jsonutil", jsonUtilTests )
+      , ("file", fileTests )
+      , ("sqlutil", sqlUtilsTests )
+      , ("evidencelog", evidenceLogTests)
+      , ("evidencetexts", dumpAllEvidenceTexts)
+      , ("pad", padTests)
 --      , ("livedocx", const $ const liveDocxTests)
-      , ("oauth", const oauthTest)
-      , ("flashmessages", const $ const flashMessagesTests)
-      , ("payments", const paymentsTests)
-      , ("sessions", const sessionsTests)
-      , ("thirdpartystats", const thirdPartyStatsTests)
+      , ("oauth", oauthTest)
+      , ("flashmessages", const $ flashMessagesTests)
+      , ("payments", paymentsTests)
+      , ("sessions", sessionsTests)
+      , ("thirdpartystats", thirdPartyStatsTests)
       ]
 
 testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]
 testsToRun [] = []
 testsToRun (t:ts)
-  | lt == "$" = []
-  | lt == "all" = map (\(_,f) -> Right $ f params) allTests ++ rest
+  | lt == "all" = map (\(_,f) -> Right $ f) allTests ++ rest
   | otherwise = case lookup lt allTests of
-                  Just testcase -> Right (testcase params) : rest
+                  Just testcase -> Right (testcase) : rest
                   Nothing       -> Left t : rest
   where
     lt = map toLower t
     rest = testsToRun ts
-    params = drop 1 $ dropWhile (/= ("$")) ts
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], id)
