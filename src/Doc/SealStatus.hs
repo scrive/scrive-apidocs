@@ -52,7 +52,7 @@ instance Ord SealStatus where
 instance Convertible SqlValue SealStatus where
   safeConvert s = do
     i :: Int <- safeConvert s
-    if i < 0 || i > 5 then convError "Doc.SealStatus" i
+    if i < -1 || i > 5 then convError "Doc.SealStatus" i
                       else return (toEnum i)
 
 instance Convertible SealStatus SqlValue where
