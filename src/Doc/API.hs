@@ -20,6 +20,7 @@ import API.APIVersion (APIVersion(..))
 import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
+import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
 import File.File
 import Text.JSON.Pretty
@@ -664,6 +665,12 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
 
   content <- case documentstatus doc of
                 Closed -> do
+                  when (documentsealstatus doc == Just Missing) $ do
+                    now <- getMinutesTime
+                    -- Give Guardtime signing a few seconds to complete before we respond
+                    when (toSeconds now - toSeconds (documentmtime doc) < 8) $ do
+                      Log.debug $ "Waiting for Guardtime signing, document was modified " ++ show (toSeconds now - toSeconds (getLastSignedTime doc)) ++ " seconds ago"
+                      throwIO $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
                   file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ documentsealedfileM doc
                   getFileIDContents $ fileid file
                 _ -> do
