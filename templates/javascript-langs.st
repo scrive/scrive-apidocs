@@ -260,7 +260,7 @@ javascriptLocalisation =
              , step4description: "$_FTUEstep4description()$"
              , useSampleDocument: "$_FTUEuseSampleDocument()$"
              , addYourself: "$_FTUEaddYourself()$"
-             , addAScriver: "$_FTUEaddAScriver()$"
+             , addYourselfPhone: "$_FTUEaddYourselfPhone()$"
            }
          , designview : {
               editMessagePlaceholder: "$_editMessagePlaceholder()$",

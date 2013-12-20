@@ -46,11 +46,14 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
                 });
 
                 // TODO can I set this in a better way?
-                newSignatory.emailField().setValue(email);
+                if (email) newSignatory.emailField().setValue(email);
                 if (phone) newSignatory.mobileField().setValue(phone);
                 if (company) newSignatory.companyField().setValue(company);
                 newSignatory.fstnameField().setValue(name.substring(0, name.indexOf(' '))); 
                 newSignatory.sndnameField().setValue(name.substring(name.indexOf(' '))); 
+
+                if (!email) newSignatory.setDelivery('mobile');
+
                 document.addExistingSignatory(newSignatory);
 
                 // Show participant 
@@ -74,13 +77,13 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
                 }
             });
 
-            var addAScriverButton = new Button({
+            var addAYourselfPhoneButton = new Button({
                 color: 'green',
-                text: localization.ftue.addAScriver,
+                text: localization.ftue.addYourselfPhone,
                 onClick: function() {
-                    mixpanel.track('Click add signatory', {'ftuebutton': 'Add someone at Scrive'});
-                    that.userAddedScriver = true;
-                    addParticipant('Viktor Wrede', 'viktor@scrive.com', '+46708884749', 'Scrive AB');
+                    mixpanel.track('Click add signatory', {'ftuebutton': 'Add yourself w/ text'});
+                    that.userAddedSelf = true;
+                    addParticipant(name);
                 }
             });
 
@@ -89,7 +92,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
 
             buttons
               .append(buttonWrapper.clone().append(addYourselfButton.el()))
-              .append(buttonWrapper.css('margin-left', '20px').append(addAScriverButton.el()));
+              .append(buttonWrapper.css('margin-left', '20px').append(addAYourselfPhoneButton.el()));
 
             var content = $('<div></div>');
             content.append($('<h1 class="arrowed"></h1>').text(localization.ftue.step2));
@@ -100,7 +103,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
             this.model.highlight().moveTo({
                 el: $('.design-view-action-participant-new-single .button'), 
                 margins: {top: 15, left: 15, bottom: 40, right: 55},
-                explanation: {placement: 'left', content: content, height: '180', width: '408'}
+                explanation: {placement: 'left', content: content, height: '180', width: '458'}
             });
             this.model.progressbar().setStep(2);
         }
