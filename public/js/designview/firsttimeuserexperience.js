@@ -51,6 +51,7 @@ var FirstTimeUserExperienceView = Backbone.View.extend({
                 if (company) newSignatory.companyField().setValue(company);
                 newSignatory.fstnameField().setValue(name.substring(0, name.indexOf(' '))); 
                 newSignatory.sndnameField().setValue(name.substring(name.indexOf(' '))); 
+                newSignatory.setDelivery('mobile');
                 document.addExistingSignatory(newSignatory);
 
                 // Show participant 
