@@ -102,8 +102,7 @@ input.daystosign {
 }
 
 .designCSVSignatoryPopupScroll {
-  height: 260px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   overflow-x: auto;
 }
 
@@ -258,7 +257,7 @@ th.editSignatoryAttachmentTDRemove {
 }
 
 .designCSVSignatoryPopupContent .generalProblems {
-  margin: 12px auto 8px;
+  margin: 30px auto 8px;
   width: 657px;
 }
 
@@ -268,12 +267,19 @@ th.editSignatoryAttachmentTDRemove {
 }
 
 .designCSVSignatoryPopupContent .generalProblems .problem {
-  color: red; // TODO: use variable in less?
-  font-size: 32px;
-  margin: 0 0 25px 0;
-  padding: 31px 15px 15px 15px;
+  color: @gray-50-percent;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 20p;
+  margin: 0;
   text-align: center;
   width: 657px;
+
+  &.problem-header {
+    color: @gray-85-percent;
+    font-weight: 400;
+    margin-bottom: 10px;
+  }
 }
 
 .signStepsBody.fixed {
