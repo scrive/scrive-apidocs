@@ -34,7 +34,7 @@ guardJustM action = guardJust =<< action
 guardRight :: (MonadBase IO m, MonadIO m, Show msg, Log.MonadLog m) => Either msg a -> m a
 guardRight (Right val) = return val
 guardRight (Left  msg) = do
-  Log.debug (show msg)
+  Log.mixlog_ (show msg)
   internalError
 
 {- |
