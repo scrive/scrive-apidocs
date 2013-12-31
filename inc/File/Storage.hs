@@ -26,7 +26,7 @@ getFileContents file = do
         mcontentAWS <- liftIO $ AWS.getFileContents (AWS.mkAWSAction $ AWS.amazonConfig ac) file
         case mcontentAWS of
           Nothing -> do
-            Log.debug $ "Couldn't get content for file " ++ show (fileid file) ++ ", returning empty ByteString."
+            Log.mixlog_ $ "Couldn't get content for file " ++ show (fileid file) ++ ", returning empty ByteString."
             return BS.empty
           Just contentAWS -> do
             MemCache.put (fileid file) contentAWS (AWS.fileCache ac)
