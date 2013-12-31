@@ -92,7 +92,7 @@ makeSoapCall :: (XmlContent request, XmlContent result)
 makeSoapCall url action extraargs request = tryAndJoinEither $ do
   let input = showXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
-  Log.debug $ input
+  Log.mixlog_ $ input
   let args = [ "-X", "POST",
                "-k", "--show-error" ] ++ extraargs ++
              [ "--data-binary", "@-",
@@ -136,9 +136,9 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
     ExitSuccess -> do
       BSL.appendFile "soap.xml" xml
       let s = BSL.toString xml
-      Log.debug $ "length of xml string from soap call: " ++ show (length s)
+      Log.mixlog_ $ "length of xml string from soap call: " ++ show (length s)
       let rx = readXml s
-      Log.debug $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
+      Log.mixlog_ $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
       case rx of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
