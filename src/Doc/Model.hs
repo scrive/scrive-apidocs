@@ -453,7 +453,7 @@ checkEqualByAllowSecondNothing name func obj1 obj2
 assertEqualDocuments :: (Monad m, Log.MonadLog m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
                            | otherwise = do
-                                Log.debug message
+                                Log.mixlog_ message
                                 error message
   where
     message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
@@ -1464,7 +1464,7 @@ selectDocumentsWithSoftLimit allowzeroresults softlimit sqlquery = do
     kRun_ $ "EXPLAIN (ANALYZE, VERBOSE, COSTS, BUFFERS)" <+> toSQLCommand sqlquery
     let fetchTextLines acc line = line:acc
     textlines <- kFold fetchTextLines []
-    mapM_ Log.debug (reverse textlines)
+    mapM_ Log.mixlog_ (reverse textlines)
     -}
 
     allDocumentsCount <- case softlimit of
@@ -1739,7 +1739,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
     case midoc of
         Just _ -> return midoc
         Nothing -> do
-          Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+          Log.mixlog_ $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
           return Nothing
 
 
@@ -1796,7 +1796,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
               (documentid d)
             return $ Just d
       Left err -> do
-        Log.error err
+        Log.mixlog_ err
         return Nothing
    where
 
@@ -2091,7 +2091,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m) => DBUpdate m ResetSig
             return True
 
           s -> do
-            Log.error $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
+            Log.mixlog_ $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
             return False
 
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
