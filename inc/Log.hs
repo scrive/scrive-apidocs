@@ -1,28 +1,9 @@
-module Log (
-    amazon
-  , stats
-  , eleg
-  , debug
-  , error
-  , cron
-  , forkIOLogWhenError
-  , mail
-  , mailContent
-  , mailingServer
-  , messengerServer
-  , docConverter
-  , security
-  , server
-  , integration
+module Log
+  ( forkIOLogWhenError
   , teardownLogger
   , withLogger
   , setupLogger
-  , scrivebymail
-  , scrivebymailfailure
-  , docevent
-  , jsonMailAPI
-  , mailAPI
-  , payments
+
   , MonadLog(..)
 
   , mixlog
@@ -304,71 +285,12 @@ teardownLogger (LoggerHandle loggers) = do
 withLogger :: IO a -> IO a
 withLogger = bracket setupLogger teardownLogger . const
 
-debug :: (MonadLog m) => String -> m ()
-debug msg = logM "Kontrakcja.Debug" NOTICE msg
-
-error :: (MonadLog m) => String -> m ()
-error msg = logM "Kontrakcja.Error" NOTICE msg
-
-cron :: (MonadLog m) => String -> m ()
-cron msg = logM "Kontrakcja.Cron" NOTICE msg
-
-mail :: (MonadLog m) => String -> m ()
-mail msg = logM "Kontrakcja.Mail" NOTICE msg
-
-mailContent :: (MonadLog m) => String -> m ()
-mailContent msg = logM "Kontrakcja.MailContent" NOTICE msg
-
-mailingServer :: (MonadLog m) => String -> m ()
-mailingServer msg = logM "Kontrakcja.MailingServer" NOTICE msg
-
-messengerServer :: (MonadLog m) => String -> m ()
-messengerServer msg = logM "Kontrakcja.MessengerServer" NOTICE msg
-
-docConverter :: (MonadLog m) => String -> m ()
-docConverter msg = logM "Kontrakcja.DocConverter" NOTICE msg
-
-amazon :: (MonadLog m) => String -> m ()
-amazon msg = logM "Kontrakcja.Amazon" NOTICE msg
-
-security :: (MonadLog m) => String -> m ()
-security msg = logM "Kontrakcja.Security" NOTICE msg
-
-server :: (MonadLog m) => String -> m ()
-server msg = logM "Happstack.Server" NOTICE msg
-
-eleg :: (MonadLog m) => String -> m ()
-eleg msg = logM "Kontrakcja.Eleg" NOTICE msg
-
-stats :: (MonadLog m) => String -> m ()
-stats msg = logM "Kontrakcja.Stats" NOTICE msg
-
-integration :: (MonadLog m) => String -> m ()
-integration msg = logM "Kontrakcja.Integration" NOTICE msg
-
-scrivebymail :: (MonadLog m) => String -> m ()
-scrivebymail msg = logM "Kontrakcja.ScriveByMail" NOTICE msg
-
-jsonMailAPI :: (MonadLog m) => String -> m ()
-jsonMailAPI msg = logM "Kontrakcja.JSONMailAPI" NOTICE msg
-
-mailAPI :: (MonadLog m) => String -> m ()
-mailAPI msg = logM "Kontrakcja.MailAPI" NOTICE msg
-
-scrivebymailfailure :: (MonadLog m) => String -> m ()
-scrivebymailfailure msg = logM "Kontrakcja.ScriveByMailFailures" ERROR msg
-
-docevent :: (MonadLog m) => String -> m ()
-docevent msg = logM "Kontrakcja.DocEvent" NOTICE msg
-
-payments :: (MonadLog m) => String -> m ()
-payments msg = logM "Kontrakcja.Payments" NOTICE msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action =
   liftIO $ do
-    _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
+    _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> mixlog_ $ errmsg ++ " " ++ show e)
     return ()
 
 mixlog :: (MonadLog m) => String -> JSONGen () -> m ()
