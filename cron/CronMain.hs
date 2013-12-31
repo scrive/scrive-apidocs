@@ -37,7 +37,7 @@ import Purging.Files
 import Templates
 import Doc.Model
 import qualified Amazon as AWS
-import qualified Log (cron, withLogger, error)
+import qualified Log
 
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
@@ -47,12 +47,12 @@ main = Log.withLogger $ do
   appConf <- do
     appname <- getProgName
     args <- getArgs
-    readConfig Log.cron appname args "kontrakcja.conf"
+    readConfig Log.mixlog_ appname args "kontrakcja.conf"
 
   checkExecutables
 
   withPostgreSQL (dbConfig appConf) $
-    checkDatabase Log.cron kontraTables
+    checkDatabase Log.mixlog_ kontraTables
 
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   rng <- newCryptoRNGState
@@ -66,41 +66,41 @@ main = Log.withLogger $ do
   -- than creating a new thread or something like that, since
   -- asyncProcessEvents removes events after processing.
   mmixpanel <- case mixpanelToken appConf of
-    ""    -> Log.error "WARNING: no Mixpanel token present!" >> return Nothing
+    ""    -> Log.mixlog_ "WARNING: no Mixpanel token present!" >> return Nothing
     token -> return $ Just $ processMixpanelEvent token
 
   withCronJobs
     ([ forkCron_ True "findAndExtendDigitalSignatures" (60 * 60 * 3) $ do
-         Log.cron "Running findAndExtendDigitalSignatures..."
+         Log.mixlog_ "Running findAndExtendDigitalSignatures..."
          runScheduler findAndExtendDigitalSignatures
      , forkCron_ True "findAndDoPostDocumentClosedActions (new)" (60 * 10) $ do
-         Log.cron "Running findAndDoPostDocumentClosedActions (new)..."
+         Log.mixlog_ "Running findAndDoPostDocumentClosedActions (new)..."
          runScheduler $ findAndDoPostDocumentClosedActions (Just 6) -- hours
      , forkCron_ True "findAndDoPostDocumentClosedActions" (60 * 60 * 6) $ do
-         Log.cron "Running findAndDoPostDocumentClosedActions..."
+         Log.mixlog_ "Running findAndDoPostDocumentClosedActions..."
          runScheduler $ findAndDoPostDocumentClosedActions Nothing
      , forkCron_ True "findAndTimeoutDocuments" (60 * 10) $ do
-         Log.cron "Running findAndTimeoutDocuments..."
+         Log.mixlog_ "Running findAndTimeoutDocuments..."
          runScheduler findAndTimeoutDocuments
      , forkCron_ False "PurgeDocuments" (60 * 10) $ do
-         Log.cron "Running PurgeDocuments..."
+         Log.mixlog_ "Running PurgeDocuments..."
          runScheduler $ do
            purgedCount <- dbUpdate $ PurgeDocuments 30 30
-           Log.cron $ "Purged " ++ show purgedCount ++ " documents."
+           Log.mixlog_ $ "Purged " ++ show purgedCount ++ " documents."
      , forkCron_ True "EmailChangeRequests" (60 * 60) $ do
-         Log.cron "Evaluating EmailChangeRequest actions..."
+         Log.mixlog_ "Evaluating EmailChangeRequest actions..."
          runScheduler $ actionQueue emailChangeRequest
      , forkCron_ True "PasswordReminders" (60 * 60) $ do
-         Log.cron "Evaluating PasswordReminder actions..."
+         Log.mixlog_ "Evaluating PasswordReminder actions..."
          runScheduler $ actionQueue passwordReminder
      , forkCron_ True "UserAccountRequests" (60 * 60) $ do
-         Log.cron "Evaluating UserAccountRequest actions..."
+         Log.mixlog_ "Evaluating UserAccountRequest actions..."
          runScheduler $ actionQueue userAccountRequest
      , forkCron False "Clock error collector" (60 * 60) $
                        withPostgreSQL (dbConfig appConf) .
                        collectClockError (ntpServers appConf)
      , forkCron_ True "Sessions" (60 * 60) $ do
-         Log.cron "Evaluating sessions..."
+         Log.mixlog_ "Evaluating sessions..."
          runScheduler $ actionQueue session
      , forkCron_ True "EventsProcessing" 5 $ do
          runScheduler Mails.Events.processEvents
@@ -125,12 +125,12 @@ main = Log.withLogger $ do
            then [forkCron_ True "AmazonDeleting" (3*60*60) $ runScheduler purgeSomeFiles]
            else []) ++
      [ forkCron_ True "removeOldDrafts" (60 * 60) $ do
-         Log.cron "Removing old, unsaved draft documents..."
+         Log.mixlog_ "Removing old, unsaved draft documents..."
          runScheduler $ do
            delCount <- dbUpdate $ RemoveOldDrafts 100
-           Log.cron $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
+           Log.mixlog_ $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
      , forkCron_ True "Async Event Dispatcher" (10) . inDB $ do
          asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
      ]) $ \_ -> do
        waitForTermination
-       Log.cron $ "Termination request received, waiting for jobs to finish..."
+       Log.mixlog_ $ "Termination request received, waiting for jobs to finish..."
