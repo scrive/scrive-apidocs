@@ -186,7 +186,7 @@ sendReminderEmail custommessage  actor automatic siglink = do
   when sent $ do
     whenM ((\d -> isPending d &&  not (hasSigned siglink)) <$> theDocument) $ do
       -- Reset delivery status if the signatory has not signed yet
-      Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
+      Log.mixlog_ $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
       dbUpdate $ PostReminderSend siglink custommessage automatic actor
     triggerAPICallbackIfThereIsOne =<< theDocument
   return siglink
@@ -340,7 +340,7 @@ handlePostSignSignup email fn ln cnm cnr = do
 -- | Send out mail and/or SMS or not, depending on delivery method.  Return 'False' iff nothing was sent.
 sendNotifications :: (Monad m, Log.MonadLog m) => SignatoryLink -> m () -> m () -> m Bool
 sendNotifications sl domail dosms = do
-  Log.debug $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
+  Log.mixlog_ $ "Chosen delivery method: " ++ show (signatorylinkdeliverymethod sl) ++ " for phone=" ++ getMobile sl ++ ", email=" ++ getEmail sl
   case signatorylinkdeliverymethod sl of
     EmailDelivery   -> domail >> return True
     MobileDelivery  -> dosms >> return True
@@ -370,4 +370,3 @@ runMailTInScheduler doc m = do
   where
    runMailT lt mctx =
      runTemplatesT lt . runMailContextT mctx
-
