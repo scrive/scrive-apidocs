@@ -24,6 +24,11 @@ module Log (
   , mailAPI
   , payments
   , MonadLog(..)
+
+  , mixlog
+  , mixlogjs
+  , mixlog_
+
   ) where
 
 import Control.Exception.Extensible (bracket)
@@ -46,6 +51,9 @@ import qualified Control.Monad.Writer.Lazy as LW
 import qualified Control.Monad.Writer.Strict as SW
 import qualified Control.Monad.RWS.Lazy as LRWS
 import qualified Control.Monad.RWS.Strict as SRWS
+import Data.Char
+import Numeric
+import Data.Ratio
 import Control.Monad.Cont
 import Control.Monad.Error
 import Control.Monad.List
@@ -54,6 +62,8 @@ import Crypto.RNG
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Identity
 
+import Text.JSON.Gen
+import Text.JSON
 
 -- | MonadLog is for situations when you want to have access to
 -- logging, but to not expose whole IO functionality. It is a safe
@@ -360,3 +370,33 @@ forkIOLogWhenError errmsg action =
   liftIO $ do
     _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
     return ()
+
+mixlog :: (MonadLog m) => String -> JSONGen () -> m ()
+mixlog title jsgen = mixlogjs title (runJSONGen jsgen)
+
+mixlogjs :: (ToJSValue js, MonadLog m) => String -> js -> m ()
+mixlogjs title js = logM "Kontrakcja.Debug" NOTICE (title ++ "\n" ++ jsonShowYamlLn False 4 (toJSValue js))
+
+mixlog_ :: (MonadLog m) => String -> m ()
+mixlog_ title = logM "Kontrakcja.Debug" NOTICE title
+
+showStringYaml :: String -> String
+showStringYaml str = "\"" ++ concatMap escape str ++ "\""
+  where escape '"' = "\\\""
+        escape '\\' = "\\\\"
+        escape c | ord c < 32 = "\\x" ++ showHex (ord c `div` 16) (showHex (ord c `mod` 16) "")
+        escape c = [c]
+
+
+jsonShowYamlLn :: Bool -> Int -> JSValue -> String
+jsonShowYamlLn _neednl _indent JSNull = "null\n"
+jsonShowYamlLn _neednl _indent (JSBool val) = if val then "true\n" else "false\n"
+jsonShowYamlLn _neednl _indent (JSRational _asFloat val) | denominator val == 1 = show (numerator val) ++ "\n"
+jsonShowYamlLn _neednl _indent (JSRational _asFloat val) = showFloat (fromRational val :: Double) "\n"
+jsonShowYamlLn _neednl _indent (JSString val) = showStringYaml (fromJSString val) ++ "\n"
+jsonShowYamlLn _neednl _indent (JSArray []) = "[]\n"
+jsonShowYamlLn neednl indent (JSArray vals) = (if neednl then "\n" else "") ++ concatMap p vals
+  where p val = take indent (repeat ' ') ++ "- " ++ jsonShowYamlLn True (indent+1) val
+jsonShowYamlLn _neednl _indent (JSObject vals) | null (fromJSObject vals) = "{}\n"
+jsonShowYamlLn neednl indent (JSObject vals) = (if neednl then "\n" else "") ++ concatMap p (fromJSObject vals)
+  where p (key,val) = take indent (repeat ' ') ++ showStringYaml key ++ ": " ++ jsonShowYamlLn True (indent+1) val
