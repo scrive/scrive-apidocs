@@ -106,7 +106,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         securitymsg
         ++ "Maybe they're trying to attempt to merge accounts and need help, "
         ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
-  Log.security securitymsg
+  Log.mixlog_ securitymsg
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
       to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
     , title = "Request to Change Email to Existing Account"
