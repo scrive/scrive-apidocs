@@ -10,8 +10,8 @@ import qualified Log
 
 cleaner :: CryptoRNGState -> String -> IO ()
 cleaner rng dbconf = withPostgreSQL dbconf . runCryptoRNGT rng $ do
-  Log.messengerServer $ "Removing mails that were (or should be) sent " ++ show daylimit ++ " days ago."
+  Log.mixlog_ $ "Removing mails that were (or should be) sent " ++ show daylimit ++ " days ago."
   removedCount <- dbUpdate $ DeleteSMSesOlderThenDays daylimit
-  Log.messengerServer $ show removedCount ++ " mails were removed."
+  Log.mixlog_ $ show removedCount ++ " mails were removed."
   where
     daylimit = 3
