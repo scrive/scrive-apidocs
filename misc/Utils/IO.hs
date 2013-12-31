@@ -115,16 +115,16 @@ importantExecutables =
 
 checkExecutables :: IO ()
 checkExecutables = do
-  Log.debug "Checking paths to executables:"
+  Log.mixlog_ "Checking paths to executables:"
   mapM_ check (sort importantExecutables)
   where
     check (filepath,options) = do
       realpathlines <- lines `fmap` checkPathToExecutable filepath
       if null realpathlines
-         then Log.debug $ "    " ++ filepath ++ ": *** not found ***"
+         then Log.mixlog_ $ "    " ++ filepath ++ ": *** not found ***"
          else do
-            Log.debug $ "    " ++ filepath ++ ": " ++ head (realpathlines)
+            Log.mixlog_ $ "    " ++ filepath ++ ": " ++ head (realpathlines)
             when (options/=[]) $ do
               ver <- checkExecutableVersion (head realpathlines) options
               let ver2 = map ("      " ++) $ filter (/="") $ lines ver
-              mapM_ Log.debug ver2
+              mapM_ Log.mixlog_ ver2
