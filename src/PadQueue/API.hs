@@ -48,7 +48,7 @@ addToQueue did slid = api $ do
     sl <-  apiGuardJustM (serverError "Not a signatory") $ return $ getSigLinkFor slid doc
     if (signatorylinkdeliverymethod sl == PadDelivery)
         then do
-            Log.debug $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show $ userid user)
+            Log.mixlog_ $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show $ userid user)
             dbUpdate $ AddToPadQueue (userid user) did slid actor
             runJSONGenT $ return ()
         else throwIO . SomeKontraException $ serverError "Not a pad document."
