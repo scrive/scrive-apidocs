@@ -1074,7 +1074,7 @@ kWhyNot1Ex cmd = do
              sqlLimit 1
              sqlOffset 0
            statement = statement' { sqlSelectWhere = conds }
-       --Log.debug $ "Explanation SQL:\n" ++ show statement
+       --Log.mixlog_ $ "Explanation SQL:\n" ++ show statement
        kRun_ $ statement
        result <- kFold2 (\_acc row -> return row) []
        return (important, fromRight $ exception result)
