@@ -17,7 +17,7 @@ import MailingServerConf
 import Mails.Model
 import Utils.IO
 import OurPrelude
-import qualified Log (mailingServer, mailContent)
+import qualified Log
 import DB
 import qualified Amazon as AWS
 
@@ -49,12 +49,12 @@ createExternalSender name program createargs = Sender { senderName = name, sendM
         let receivers = intercalate ", " (map addrEmail mailTo)
         case code of
           ExitFailure retcode -> do
-            Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
+            Log.mixlog_ $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
             return False
           ExitSuccess -> do
             let subject = filter (not . (`elem` "\r\n")) mailTitle
-            Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
-            Log.mailContent $ unlines [
+            Log.mixlog_ $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
+            Log.mixlog_ $ unlines [
                 "Subject: " ++ subject
               , "To: " ++ intercalate ", " (map addrEmail mailTo)
               , "Attachments: " ++ show (length mailAttachments)
@@ -90,7 +90,7 @@ createLocalSender config = Sender { senderName = "localSender", sendMail = send 
       let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
       liftIO $ do
         BSL.writeFile filename content
-        Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
+        Log.mixlog_ $ "Email #" ++ show mailID ++ " saved to file " ++ filename
         case localOpenCommand config of
           Nothing  -> return ()
           Just cmd -> do
@@ -104,4 +104,3 @@ createLocalSender config = Sender { senderName = "localSender", sendMail = send 
 
 createNullSender :: SenderConfig -> Sender
 createNullSender _ = Sender { senderName = "nullSender", sendMail = const (return True) }
-
