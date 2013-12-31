@@ -48,7 +48,7 @@ userAccountRequest = Action {
       _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
       success <- dbUpdate $ RemoveInactiveUser uarUserID
       when success $
-            Log.debug $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
+            Log.mixlog_ $ "Inactive user (no plan) with id = " ++ show uarUserID ++ " successfully removed from database"
 
   }
   where
