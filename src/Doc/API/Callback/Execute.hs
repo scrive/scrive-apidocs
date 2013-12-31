@@ -53,7 +53,7 @@ executeStandardCallback doc url = do
               ] BSL.empty
   case exitcode of
               ExitSuccess -> return True
-              ExitFailure _ -> (Log.debug $ "API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
+              ExitFailure _ -> (Log.mixlog_ $ "API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
 
 executeSalesforceCallback :: (MonadDB m, MonadIO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
 executeSalesforceCallback doc rtoken url = do
@@ -74,4 +74,4 @@ executeSalesforceCallback doc rtoken url = do
                     ] BSL.empty
         case exitcode of
                     ExitSuccess -> return True
-                    ExitFailure _ -> (Log.debug $ "Salesforce API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
+                    ExitFailure _ -> (Log.mixlog_ $ "Salesforce API callback for #" ++ show (documentid doc)  ++ " failed: " ++ BSL.toString stderr) >> return False
