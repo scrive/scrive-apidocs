@@ -49,7 +49,7 @@ import Doc.DocumentID
 import Attachment.AttachmentID
 import Numeric
 import IPAddress
-import qualified Log (security)
+import qualified Log
 import Happstack.Fields hiding (getFields)
 import User.Model
 import Data.Monoid
@@ -173,7 +173,7 @@ logIfBad x@(input, Bad) = do
                " user " ++ username ++
                " invalid input: " ++
                " raw value info [" ++ show input ++ "]"
-  _ <- liftIO $ Log.security logtext
+  _ <- liftIO $ Log.mixlog_ logtext
   return x
 logIfBad x = return x
 
@@ -623,4 +623,3 @@ stripWhitespace =
     return . stripLeadingWhitespace . stripTrailingWhitespace
     where stripLeadingWhitespace = dropWhile isSpace
           stripTrailingWhitespace = reverse . stripLeadingWhitespace . reverse
-
