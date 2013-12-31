@@ -114,6 +114,6 @@ purgeSomeFiles = do
           kCommit
         else do
           kRollback
-          Log.debug "Purging from Amazon failed, sleeping for 5 minutes."
+          Log.mixlog_ "Purging from Amazon failed, sleeping for 5 minutes."
           liftIO $ threadDelay $ 5 * 60 * 1000000
     purge (_id', _amazon_bucket, _amazon_url, _isonamazon) = return ()
