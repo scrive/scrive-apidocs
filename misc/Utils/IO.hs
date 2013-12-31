@@ -15,6 +15,7 @@ import qualified Data.ByteString.Lazy as BSL
 import Data.List (sort)
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Log
+import Text.JSON.Gen
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()
@@ -115,16 +116,16 @@ importantExecutables =
 
 checkExecutables :: IO ()
 checkExecutables = do
-  Log.mixlog_ "Checking paths to executables:"
-  mapM_ check (sort importantExecutables)
+  Log.mixlogt "Checking paths to executables:" $ do
+    mapM_ check (sort importantExecutables)
   where
     check (filepath,options) = do
-      realpathlines <- lines `fmap` checkPathToExecutable filepath
-      if null realpathlines
-         then Log.mixlog_ $ "    " ++ filepath ++ ": *** not found ***"
-         else do
-            Log.mixlog_ $ "    " ++ filepath ++ ": " ++ head (realpathlines)
-            when (options/=[]) $ do
-              ver <- checkExecutableVersion (head realpathlines) options
-              let ver2 = map ("      " ++) $ filter (/="") $ lines ver
-              mapM_ Log.mixlog_ ver2
+      realpathlines <- lines `fmap` (liftIO $ checkPathToExecutable filepath)
+      case realpathlines of
+        [] -> value filepath ("*** not found ***" :: String)
+        (realpath:_) -> do
+            if null options
+               then value filepath realpath
+               else do
+                  ver <- liftIO $ checkExecutableVersion realpath options
+                  value filepath (realpath : lines ver)
