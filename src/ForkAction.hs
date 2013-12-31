@@ -24,17 +24,17 @@ forkAction title action = do
   -- we will keep this hack below for now.
   nex <- kClone
   _ <- C.fork $ flip E.finally (liftIO $ disconnect nex) $ localNexus (const nex) $ do
-    Log.debug $ "forkAction: " ++ title ++ " started"
+    Log.mixlog_ $ "forkAction: " ++ title ++ " started"
     startTime <- liftIO getClockTime
     result <- E.try action
     endTime <- liftIO getClockTime
     case result of
       Left (e :: E.SomeException) -> do
         kRollback
-        Log.debug $ "forkAction: " ++ title ++ " finished in " ++ showDiffTime endTime startTime ++ "s with exception " ++ show e
+        Log.mixlog_ $ "forkAction: " ++ title ++ " finished in " ++ showDiffTime endTime startTime ++ "s with exception " ++ show e
         return ()
       Right _ -> do
         kCommit
-        Log.debug $ "forkAction: " ++ title ++ " finished in " ++ showDiffTime endTime startTime ++ "s"
+        Log.mixlog_ $ "forkAction: " ++ title ++ " finished in " ++ showDiffTime endTime startTime ++ "s"
         return ()
   return ()
