@@ -446,7 +446,7 @@ instance (MonadBase IO (T.TemplatesT m), MonadDB m) => MonadDB (T.TemplatesT m) 
   getMinutesTime = lift getMinutesTime
 
 instance (MonadLog m) => MonadLog (T.TemplatesT m) where
-  logM a b c = lift $ logM a b c
+  logM a = lift $ logM a
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.

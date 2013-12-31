@@ -224,7 +224,7 @@ Executable kontrakcja-server
   Build-depends: hashable == 1.2.1.0
   Build-depends: haskell-lexer == 1.0
   Build-depends: hostname == 1.0
-  Build-depends: hslogger == 1.2.1
+  -- Build-depends: hslogger == 1.2.1
   Build-depends: html == 1.0.1.2
   Build-depends: hxt == 9.3.1.1
   Build-depends: hxt-charproperties == 9.1.1.1

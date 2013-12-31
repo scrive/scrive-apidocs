@@ -14,7 +14,7 @@ import Happstack.Server
 import Log
 
 instance (MonadLog m) => MonadLog (ServerPartT m) where
-  logM a b c = lift $ logM a b c
+  logM a = lift $ logM a
 
 
 -- | The purpose of this wrapper is to override ServerPartT implementation
