@@ -68,7 +68,7 @@ updateSession old_ses ses = do
       when (isNothing (sesUserID old_ses) && isJust (sesUserID ses)) $ do
         let uid = fromJust $ sesUserID ses
         n <- deleteSuperfluousUserSessions uid
-        Log.debug $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
+        Log.mixlog_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
       expires <- sessionNowModifier `liftM` getMinutesTime
       let Session{..} = ses
       dbUpdate (NewAction session expires (sesUserID, sesPadUserID, sesToken, sesCSRFToken))
@@ -82,7 +82,7 @@ updateSession old_ses ses = do
       when (sesID old_ses == tempSessionID && sesID ses /= tempSessionID) $
         startSessionCookie ses
       when (not success) $
-        Log.debug "UpdateAction didn't update session where it should have to"
+        Log.mixlog_ "UpdateAction didn't update session where it should have to"
     _ -> return ()
 
 getUserFromSession :: MonadDB m => Session -> m (Maybe User)
