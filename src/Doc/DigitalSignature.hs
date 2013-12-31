@@ -53,23 +53,23 @@ addDigitalSignature = theDocumentID >>= \did -> do
       case vr of
            GT.Valid gsig -> do
                 res <- liftIO $ BS.readFile mainpath
-                Log.debug $ "GuardTime verification result: " ++ show vr
-                Log.debug $ "GuardTime signed successfully #" ++ show did
+                Log.mixlog_ $ "GuardTime verification result: " ++ show vr
+                Log.mixlog_ $ "GuardTime signed successfully #" ++ show did
                 return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
                 res <- liftIO $ BS.readFile mainpath
-                Log.debug $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
-                Log.error $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
+                Log.mixlog_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
+                Log.mixlog_ $ "GuardTime verification after signing failed for document #" ++ show did ++ ": " ++ show vr
                 return (res, Missing)
     ExitFailure c -> do
       res <- liftIO $ BS.readFile mainpath
-      Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show did
-      Log.error $ "GuardTime failed for document #" ++ show did
+      Log.mixlog_ $ "GuardTime failed " ++ show c ++ " of document #" ++ show did
+      Log.mixlog_ $ "GuardTime failed for document #" ++ show did
       return (res, Missing)
   when (status /= Missing) $ do
-    Log.debug $ "Adding new sealed file to DB"
+    Log.mixlog_ $ "Adding new sealed file to DB"
     sealedfileid <- dbUpdate $ NewFile (filename file) newfilepdf
-    Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+    Log.mixlog_ $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
     dbUpdate $ AppendSealedFile sealedfileid status $ systemActor now
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
@@ -111,27 +111,27 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
       vr1 <- liftIO $ GT.verify ctxgtconf pdfpath
       vr <- case vr1 of
         GT.Invalid "SYNTACTIC_CHECK_FAILURE" -> do
-          Log.debug "Verification failed with SYNTACTIC_CHECK_FAILURE - trying temporary Guardtime extension tool"
+          Log.mixlog_ "Verification failed with SYNTACTIC_CHECK_FAILURE - trying temporary Guardtime extension tool"
           _ <- liftIO $ GT.digitallyExtendCore1 pdfpath
           liftIO $ GT.verify ctxgtconf pdfpath
         _ -> return vr1
       case vr of
            GT.Valid gsig | GT.extended gsig -> do
                 res <- liftIO $ BS.readFile pdfpath
-                Log.debug $ "GuardTime verification result: " ++ show vr
-                Log.debug $ "GuardTime extended successfully #" ++ show documentid
+                Log.mixlog_ $ "GuardTime verification result: " ++ show vr
+                Log.mixlog_ $ "GuardTime extended successfully #" ++ show documentid
                 return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
-                Log.error $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
+                Log.mixlog_ $ "GuardTime verification after extension failed for document #" ++ show documentid ++ ": " ++ show vr
                 return Nothing
     ExitFailure c -> do
-      Log.error $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
+      Log.mixlog_ $ "GuardTime failed " ++ show c ++ " for document #" ++ show documentid
       return Nothing
   case mr of
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
-      Log.debug $ "Adding new extended file to DB"
+      Log.mixlog_ $ "Adding new extended file to DB"
       sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
-      Log.debug $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+      Log.mixlog_ $ "Finished adding extended file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
       dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor ctxtime
       return True
