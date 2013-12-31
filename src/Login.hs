@@ -14,7 +14,7 @@ import Redirect
 import User.Model
 import IPAddress
 import Company.Model
-import qualified Log (debug)
+import qualified Log
 import Util.HasSomeUserInfo
 import User.History.Model
 
@@ -98,7 +98,7 @@ handleLoginPost = do
                 Just user@User{userpassword}
                     | verifyPassword userpassword passwd
                     && ipIsOK -> do
-                        Log.debug $ "User " ++ show email ++ " logged in"
+                        Log.mixlog_ $ "User " ++ show email ++ " logged in"
                         _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
                           lang = ctxlang ctx
                         }
@@ -125,14 +125,14 @@ handleLoginPost = do
                             logUserToContext muuser
                         runJSONGenT $ value "logged" True
                 Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
-                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
+                        Log.mixlog_ $ "User " ++ show email ++ " login failed (invalid password)"
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         runJSONGenT $ value "logged" False
 
                 Just u -> do
-                        Log.debug $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx)
+                        Log.mixlog_ $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx)
                                 ++ " not on allowed list)"
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
@@ -148,7 +148,7 @@ handleLoginPost = do
                           _ -> runJSONGenT $ do
                                          value "logged" False
                 Nothing -> do
-                    Log.debug $ "User " ++ show email ++ " login failed (user not found)"
+                    Log.mixlog_ $ "User " ++ show email ++ " login failed (user not found)"
                     runJSONGenT $ value "logged" False
         _ -> runJSONGenT $ value "logged" False
 
