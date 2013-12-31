@@ -47,12 +47,12 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
   where
     processEvent (eid, smsid, eventType, Invitation _did slid ) = do
 
-      Log.cron $ "Messages.processEvent: " ++ show (eid, smsid, eventType, slid)
+      Log.mixlog_ $ "Messages.procesEvent: " ++ show (eid, smsid, eventType, slid)
 
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \case
         Nothing -> do
           _ <- dbUpdate $ MarkSMSEventAsRead eid
-          Log.cron $ "No document with signatory link id = " ++ show slid
+          Log.mixlog_ $ "No document with signatory link id = " ++ show slid
           deleteSMS smsid
         Just doc' -> withDocument doc' $ do
           _ <- dbUpdate $ MarkSMSEventAsRead eid
@@ -72,7 +72,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
               -- success/failure for old signatory address, so we need to compare
               -- addresses here (for dropped/bounce events)
               handleEv (SMSEvent phone ev) = do
-                Log.cron $ signphone ++ " == " ++ phone
+                Log.mixlog_ $ signphone ++ " == " ++ phone
                 theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
                   SMSDelivered -> handleDeliveredInvitation slid
                   SMSUndelivered _ -> when (signphone == phone) $ handleUndeliveredSMSInvitation mbd host mc slid
@@ -85,12 +85,12 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(a,b,c,d) -> processEvent
     deleteSMS mid = do
       success <- dbUpdate $ DeleteSMS mid
       if (not success)
-        then Log.error $ "Couldn't delete email #" ++ show mid
-        else Log.debug $ "Deleted email #" ++ show mid
+        then Log.mixlog_ $ "Couldn't delete email #" ++ show mid
+        else Log.mixlog_ $ "Deleted email #" ++ show mid
 
 handleDeliveredInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m) => SignatoryLinkID -> m ()
 handleDeliveredInvitation signlinkid = do
-  theDocumentID >>= \did -> Log.cron $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+  theDocumentID >>= \did -> Log.mixlog_ $ "handleDeliveredInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- getMinutesTime
@@ -101,7 +101,7 @@ handleDeliveredInvitation signlinkid = do
 
 handleUndeliveredSMSInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
 handleUndeliveredSMSInvitation mbd hostpart mc signlinkid = do
-  theDocumentID >>= \did -> Log.cron $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
+  theDocumentID >>= \did -> Log.mixlog_ $ "handleUndeliveredSMSInvitation: docid=" ++ show did ++ ", siglinkid=" ++ show signlinkid
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- getMinutesTime
