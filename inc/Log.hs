@@ -7,6 +7,7 @@ module Log
   , MonadLog(..)
 
   , mixlog
+  , mixlogt
   , mixlogjs
   , mixlog_
 
@@ -150,6 +151,9 @@ forkIOLogWhenError errmsg action =
 
 mixlog :: (MonadLog m) => String -> JSONGen () -> m ()
 mixlog title jsgen = mixlogjs title (runJSONGen jsgen)
+
+mixlogt :: (MonadLog m) => String -> JSONGenT m () -> m ()
+mixlogt title jsgent = runJSONGenT jsgent >>= mixlogjs title
 
 mixlogjs :: (ToJSValue js, MonadLog m) => String -> js -> m ()
 mixlogjs title js = logM (title ++ "\n" ++ jsonShowYamlLn False 4 (toJSValue js))
