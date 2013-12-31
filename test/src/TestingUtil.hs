@@ -518,7 +518,7 @@ addNewRandomUser = do
       _ <- dbUpdate $ SetUserInfo (userid user) userinfo
       return user
     Nothing -> do
-      Log.debug "Could not create user, trying again."
+      Log.mixlog_ "Could not create user, trying again."
       addNewRandomUser
 
 addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
