@@ -125,7 +125,7 @@ uploadFilesToAmazon = do
         then kCommit
         else do
           kRollback
-          Log.debug "Uploading to Amazon failed, sleeping for 5 minutes."
+          Log.mixlog_ "Uploading to Amazon failed, sleeping for 5 minutes."
           liftIO $ threadDelay $ 5 * 60 * 1000000
       uploadFilesToAmazon
 
@@ -166,15 +166,15 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
   result <- liftIO $ AWS.runAction action
   case result of
     Right _ -> do
-      Log.debug $ "AWS uploaded " ++ bucket </> url
+      Log.mixlog_ $ "AWS uploaded " ++ bucket </> url
       _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
       return True
     Left err -> do -- FIXME: do much better error handling
-      Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
+      Log.mixlog_ $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
       return False
 
 exportFile _ _ = do
-  Log.debug "No uploading to Amazon as bucket is ''"
+  Log.mixlog_ "No uploading to Amazon as bucket is ''"
   return False
 
 deleteFile :: (MonadIO m, MonadDB m) => S3Action -> String -> String -> m Bool
@@ -188,10 +188,10 @@ deleteFile ctxs3action bucket url = do
   result <- liftIO $ AWS.runAction action
   case result of
     Right res -> do
-      Log.debug $ "AWS deleted " ++ bucket </> url ++ " (result: " ++ show res ++ ")"
+      Log.mixlog_ $ "AWS deleted " ++ bucket </> url ++ " (result: " ++ show res ++ ")"
       return True
     Left err -> do -- FIXME: do much better error handling
-      Log.debug $ "AWS failed to delete " ++ bucket </> url ++ " failed with error: " ++ show err
+      Log.mixlog_ $ "AWS failed to delete " ++ bucket </> url ++ " failed with error: " ++ show err
       return False
 
 
@@ -200,12 +200,12 @@ getFileContents s3action File{..} = do
   mcontent <- liftIO $ getContent filestorage
   case mcontent of
     Nothing -> do
-      Log.debug $ "No content for file " ++ show fileid
+      Log.mixlog_ $ "No content for file " ++ show fileid
       return Nothing
     Just content -> do
       if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
         then do
-          Log.debug $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
+          Log.mixlog_ $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
           return Nothing
         else return $ Just content
   where
@@ -218,5 +218,5 @@ getFileContents s3action File{..} = do
       case result of
         Right rsp -> return . Just . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
         Left err -> do
-          Log.error $ "AWS.runAction failed with: " ++ show err
+          Log.mixlog_ $ "AWS.runAction failed with: " ++ show err
           return Nothing
