@@ -185,7 +185,7 @@ attachmentSearchingFromParams params =
 
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
-    Log.debug $ "makeAttachmentFromFile: beggining"
+    Log.mixlog_ $ "makeAttachmentFromFile: beggining"
     guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
@@ -193,10 +193,10 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
     cres <- liftIO $ preCheckPDF (concatChunks content)
     case cres of
       Left _ -> do
-         Log.debug "Attachment file is not a valid PDF"
+         Log.mixlog_ "Attachment file is not a valid PDF"
          internalError
       Right content' -> do
-        Log.debug "Got the content, creating document"
+        Log.mixlog_ "Got the content, creating document"
         let title = takeBaseName filename
         actor <- guardJustM $ mkAuthorActor <$> getContext
         ctx <- getContext
