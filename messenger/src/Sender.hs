@@ -15,7 +15,7 @@ import MessengerServerConf
 --import SMS.Model
 import SMS.Data
 import OurPrelude
-import qualified Log (messengerServer)
+import qualified Log
 import Data.Char
 import Data.Hash.MD5
 import qualified Codec.Text.IConv as IConv
@@ -50,7 +50,7 @@ createGlobalMouthSender user password url = Sender { senderName = "GlobalMouth",
     send :: CryptoRNG m => ShortMessage -> m Bool
     send sms@ShortMessage{..} = do
       liftIO $ do
-        Log.messengerServer $ show sms
+        Log.mixlog_ $ show sms
         sendSMS2 (user,password,url) smOriginator smMSISDN smBody (show smID)
 
 sendSMS2 :: (String, String, String) -> String -> String -> String -> String -> IO Bool
@@ -60,7 +60,7 @@ sendSMS2 (user, password, baseurl) originator msisdn body ref = do
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 ->
       return True
     _ -> do
-      Log.messengerServer $ "sendSMS2 failed with code: " ++ show code ++ " and message:" ++ BSLU.toString stdout ++ " and stderr:"++ BSLU.toString stderr
+      Log.mixlog_ $ "sendSMS2 failed with code: " ++ show code ++ " and message:" ++ BSLU.toString stdout ++ " and stderr:"++ BSLU.toString stderr
       return False
   where
     latin_user = toLatin user
@@ -118,7 +118,7 @@ createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
       let filename = localDirectory config ++ "/SMS-" ++ show smID ++ ".html"
       liftIO $ do
         BSL.writeFile filename (BSLU.fromString content)
-        Log.messengerServer $ "SMS #" ++ show smID ++ " saved to file " ++ filename
+        Log.mixlog_ $ "SMS #" ++ show smID ++ " saved to file " ++ filename
         case localOpenCommand config of
           Nothing  -> return ()
           Just cmd -> do
