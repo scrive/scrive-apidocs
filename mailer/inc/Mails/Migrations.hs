@@ -5,7 +5,7 @@ module Mails.Migrations (
 import DB
 import DB.SQL2
 import Mails.Tables
-import qualified Log as Log
+import qualified Log
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 mailerMigrations :: MonadDB m => [Migration m]
@@ -42,7 +42,7 @@ moveAtachmentsToSeparateTable =
           decoder1 _ value = value
       count <- kFold decoder1 0
 
-      Log.debug $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
+      Log.mixlog_ $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
 
       kRunRaw $ "WITH"
           <+> "toinsert AS (SELECT mails.id AS id"
@@ -53,7 +53,7 @@ moveAtachmentsToSeparateTable =
           <+> "     SELECT id AS MailID, arr[1] AS Name, decode(arr[2],'base64') AS Content"
           <+> "       FROM toinsert"
 
-      Log.debug "Attachments moved to separate table, now dropping attachments column from mails"
+      Log.mixlog_ "Attachments moved to separate table, now dropping attachments column from mails"
 
       kRunRaw "ALTER TABLE mails DROP COLUMN attachments"
   }
