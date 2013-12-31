@@ -58,7 +58,7 @@ tempCredRequest = api $ do
   case etcr of
     Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tcr -> do
-      Log.debug $ "TempCredRequest: " ++ show tcr
+      Log.mixlog_ $ "TempCredRequest: " ++ show tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
       return $ FormEncoded [("oauth_token", show temptoken),
                             ("oauth_token_secret", show tempsecret),
