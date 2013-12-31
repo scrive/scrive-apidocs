@@ -69,7 +69,7 @@ handleAccountSetupFromSign signatorylink = do
 
 handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m (Maybe User)
 handleActivate mfstname msndname (actvuser,company) signupmethod = do
-  Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
+  Log.mixlog_ $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
   when (isJust $ userhasacceptedtermsofservice actvuser) $ do  -- Don't remove - else people will be able to hijack accounts
     internalError
   switchLang (getLang actvuser)
@@ -122,18 +122,18 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
                 scheduleNewAccountMail ctx actvuser
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
-              Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
+              Log.mixlog_ $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               when (not stoplogin) $ do
                 logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest (Just tosuser) phone
               when (promo) $ addCompanyPlanManual (companyid company) TrialTeamPricePlan ActiveStatus
               return $ Just tosuser
             else do
-              Log.debug $ "No TOS accepted. We cant activate user."
+              Log.mixlog_ $ "No TOS accepted. We cant activate user."
               addFlashM flashMessageMustAcceptTOS
               return Nothing
     _ -> do
-        Log.debug $ "Create account attempt failed (params missing)"
+        Log.mixlog_ $ "Create account attempt failed (params missing)"
         return Nothing
 
 scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m) => Context -> User -> m ()
