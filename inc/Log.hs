@@ -26,6 +26,7 @@ import qualified Control.Monad.Writer.Lazy as LW
 import qualified Control.Monad.Writer.Strict as SW
 import qualified Control.Monad.RWS.Lazy as LRWS
 import qualified Control.Monad.RWS.Strict as SRWS
+import System.IO.Unsafe
 import Data.Char
 import Numeric
 import Data.Ratio
@@ -89,13 +90,40 @@ instance (MonadLog m, LRWS.Monoid w) => MonadLog (LRWS.RWST r w s m) where
   logM msg = lift $ logM msg
 
 
+
+-- Here we do use Prelude.putStrLn because it prints character
+-- by character and in case there are many thread it will interleave
+-- messages. Using ByteStrings prevents interleaving at least on
+-- page boundary (4096). Usually it is whole message boundary but as
+-- far as I know it is not guaranteed.
+--
+-- We have one global output channel that should serialize output
+-- directly, but there is always the risk that somebody will print
+-- things directly.
+--
+-- Output channel should have a list of unevaluated chunks. Those will
+-- be evaluated in the thread outputing text. This is optimization as
+-- it reduces latency.
+--
+-- FIXME: there is a risk that evaluating the string will cause
+-- exceptions. We need to catch and ignore them here although not
+-- everything should be ignored (notably ThreadKilled should not be
+-- ignored).
+
+{-# NOINLINE outputChannel #-}
+outputChannel :: C.Chan String
+outputChannel = unsafePerformIO $ do
+  chan <- C.newChan
+  let loop = do
+        msg <- C.readChan chan
+        BSC.putStrLn (BSU.fromString msg) `C.catch` \(e :: C.SomeException) -> mixlog_ $ "Exception caught while logging: " ++ show e
+        loop
+  _ <- C.forkIO loop
+  return chan
+
+
 instance MonadLog IO where
-  -- Here we cannot use Prelude.putStrLn because it prints character
-  -- by character and in case there are many thread it will interleave
-  -- messages. Using ByteStrings prevents interleaving at least on
-  -- page boundary (4096). Usually it is whole message boundary but as
-  -- far as I know it is not guaranteed.
-  logM = BSC.putStrLn . BSU.fromString
+  logM = C.writeChan outputChannel
 
 setupLogger :: IO ()
 setupLogger = do
