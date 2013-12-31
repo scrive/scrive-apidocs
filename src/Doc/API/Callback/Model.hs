@@ -64,14 +64,14 @@ documentAPICallback = Action {
             8 -> evaluateAgainAfter 240
             9 -> evaluateAgainAfter 480
             _ -> do
-              Log.debug "10th call attempt failed, discarding."
+              Log.mixlog_ "10th call attempt failed, discarding."
               deleteAction
       where
         deleteAction = do
           _ <- dbUpdate $ DeleteAction documentAPICallback dacDocumentID
           return ()
         evaluateAgainAfter n = do
-          Log.debug $ "Deferring call for " ++ show n ++ " minutes"
+          Log.mixlog_ $ "Deferring call for " ++ show n ++ " minutes"
           expires <- minutesAfter n <$> getMinutesTime
           _ <- dbUpdate . UpdateAction documentAPICallback $ dac {
               dacExpires = expires
@@ -95,9 +95,8 @@ triggerAPICallbackIfThereIsOne doc = do
   where
     addAPICallback url = do
           -- Race condition. Andrzej said that he can fix it later.
-          Log.debug $ "Triggering API callback for document " ++ show (documentid doc)
+          Log.mixlog_ $ "Triggering API callback for document " ++ show (documentid doc)
           now <- getMinutesTime
           _ <- dbUpdate $ DeleteAction documentAPICallback (documentid doc)
           _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
           return ()
-
