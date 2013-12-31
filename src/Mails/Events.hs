@@ -50,7 +50,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
     processEvent (eid, _mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
-          Log.debug $ "Processing invitation event: " ++ show (Invitation docid signlinkid)
+          Log.mixlog_ $ "Processing invitation event: " ++ show (Invitation docid signlinkid)
           withDocumentID docid $ do
               markEventAsRead eid
               appConf <- sdAppConf <$> ask
@@ -70,7 +70,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                   -- success/failure for old signatory address, so we need to compare
                   -- addresses here (for dropped/bounce events)
                   handleEv (SendGridEvent email ev _) = do
-                    Log.debug $ signemail ++ " == " ++ email
+                    Log.mixlog_ $ signemail ++ " == " ++ email
                     case ev of
                       SG_Opened -> handleOpenedInvitation signlinkid email muid
                       SG_Delivered _ -> handleDeliveredInvitation mbd host mc signlinkid
@@ -82,7 +82,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                       SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation mbd host mc signlinkid
                       _ -> return ()
                   handleEv (MailGunEvent email ev) = do
-                    Log.debug $ signemail ++ " == " ++ email
+                    Log.mixlog_ $ signemail ++ " == " ++ email
                     case ev of
                       MG_Opened -> handleOpenedInvitation signlinkid email muid
                       MG_Delivered -> handleDeliveredInvitation mbd host mc signlinkid
@@ -97,7 +97,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
       now <- getMinutesTime
       success <- dbUpdate $ MarkEventAsRead eid now
       when (not success) $
-        Log.error $ "Couldn't mark event #" ++ show eid ++ " as read"
+        Log.mixlog_ $ "Couldn't mark event #" ++ show eid ++ " as read"
 
 handleDeliveredInvitation :: (CryptoRNG m, DocumentMonad m, TemplatesMonad m)
                           => Maybe BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
@@ -180,4 +180,3 @@ mailUndeliveredInvitation mc mbd hostpart signlink doc =
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" hostpart
     brandingMailFields mbd Nothing
-
