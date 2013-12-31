@@ -67,7 +67,7 @@ handleScaleImage = do
   logo' <- if base64ImgPrefix `BS.isPrefixOf` logo then
             case B64.decode $ BS.drop (BS.length base64ImgPrefix) logo of
               Left e -> do
-                Log.debug $ "Problem scaling image: " ++ show e
+                Log.mixlog_ $ "Problem scaling image: " ++ show e
                 internalError
               Right x -> return x
           else do
@@ -78,7 +78,7 @@ handleScaleImage = do
   (procResult, out, _) <- readProcessWithExitCode' "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
   case procResult of
     ExitFailure msg -> do
-      Log.debug $ "Problem scaling image: " ++ show msg
+      Log.mixlog_ $ "Problem scaling image: " ++ show msg
       internalError
     ExitSuccess -> do
       let result64 = base64ImgPrefix `BS.append` B64.encode (lazyBStoStrictBS out)
@@ -115,7 +115,7 @@ handleTextToImage = do
       drawerexitcode <- waitForProcess drawer
       case drawerexitcode of
           ExitFailure msg -> do
-            Log.debug $ "Problem text_to_image " ++ show msg
+            Log.mixlog_ $ "Problem text_to_image " ++ show msg
             return Nothing
           ExitSuccess -> (BSL.readFile fpath) >>= (return . Just)
     case mfcontent of
@@ -131,4 +131,3 @@ handleTextToImage = do
 pointSize :: Int -> Int  -> Int -> Int -> Int
 pointSize width height textl fontSize =
     min ((height - 20)  * fontSize `div` 30) ((width `div` (textl + 1)) * fontSize `div` 11)
-
