@@ -47,7 +47,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import Data.Char
 import File.Storage as F
-import qualified Log as Log
+import qualified Log
 import Control.Logic
 import Control.Monad.Identity
 import Text.JSON.String (runGetJSON)
@@ -69,7 +69,7 @@ handleDelete = do
               csl <- (\d -> (getAuthorSigLink $ documentsignatorylinks d) <| (useriscompanyadmin user) |> Nothing) <$> theDocument
               let msl =  usl `mplus` csl
               when (isNothing msl) $ do
-                theDocumentID >>= \did -> Log.debug $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show did
+                theDocumentID >>= \did -> Log.mixlog_ $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show did
                 internalError
               whenM (isPending <$> theDocument) $
                  if (isAuthor msl)
@@ -118,10 +118,10 @@ handleShare =  do
 
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do
-  Log.debug $ "Downloading zip list"
+  Log.mixlog_ $ "Downloading zip list"
   docids <- take 100 <$> getCriticalField asValidDocIDList "documentids"
   mentries <- forM docids $ \did -> do
-                Log.debug "Getting file for zip download"
+                Log.mixlog_ "Getting file for zip download"
                 doc <- getDocByDocID did
                 docToEntry doc
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
@@ -138,7 +138,7 @@ showArchive = checkUserTOSGet $ do
 
 jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do
-  Log.debug $ "Long list " ++ (show $ map fromEnum [SCDraft,SCCancelled,SCRejected,SCTimedout,SCError,SCDeliveryProblem,SCSent,SCDelivered,SCRead,SCOpened,SCSigned])
+  Log.mixlog_ $ "Long list " ++ (show $ map fromEnum [SCDraft,SCCancelled,SCRejected,SCTimedout,SCError,SCDeliveryProblem,SCSent,SCDelivered,SCRead,SCOpened,SCSigned])
   user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
   doctype <- getField' "documentType"
   params <- getListParams
