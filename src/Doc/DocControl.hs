@@ -271,7 +271,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
     (False, Just siglink)            -> do
        Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
     _                                -> do
-       Log.error $ "internalError in handleIssueShowGet for document #" ++ show (documentid document)
+       Log.mixlog_ $ "internalError in handleIssueShowGet for document #" ++ show (documentid document)
        internalError
 
 
@@ -374,10 +374,10 @@ showPage' fileid pageno = do
     Just (JpegPages pages) -> do
       let contents = pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-      Log.debug $ "JPEG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
+      Log.mixlog_ $ "JPEG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
       return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
     _ -> do
-      Log.debug $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
+      Log.mixlog_ $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
       notFound (toResponse "temporarily unavailable (document has files pending for process)")
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
