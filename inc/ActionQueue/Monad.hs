@@ -53,5 +53,5 @@ actionQueue qa = getMinutesTime
         kCommit
     )
   where
-    printSuccess a = Log.debug $ "Action " ++ show a ++ " evaluated successfully"
-    printError a e = Log.error $ "Oops, qaEvaluateExpired with " ++ show a ++ " failed with error: " ++ show e
+    printSuccess a = Log.mixlog_ $ "Action " ++ show a ++ " evaluated successfully"
+    printError a e = Log.mixlog_ $ "Oops, qaEvaluateExpired with " ++ show a ++ " failed with error: " ++ show e
