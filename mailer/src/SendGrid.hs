@@ -18,7 +18,7 @@ import DB
 import Happstack.Fields
 import Mails.Model
 import Mailer
-import qualified Log (MonadLog, mailingServer)
+import qualified Log
 import Text.JSON.FromJSValue
 import Utils.Read
 import Control.Monad.Trans.Reader
@@ -115,10 +115,10 @@ handleSendGridEventsV1 = do
   ok $ toResponse ("Thanks" :: String)
 
 logMsg :: (Log.MonadLog m) => String -> m ()
-logMsg msg = Log.mailingServer $ "handleSendgridEvents: " ++ msg
+logMsg msg = Log.mixlog_ $ "handleSendgridEvents: " ++ msg
 
 logError :: (Log.MonadLog m) => String -> m ()
-logError msg = Log.mailingServer $ "handleSendgridEvents: Error " ++ msg
+logError msg = Log.mixlog_ $ "handleSendgridEvents: Error " ++ msg
 
 readEventType :: Maybe String -> Mailer (Maybe SendGridEvent)
 readEventType (Just "processed") = return $ Just SG_Processed
