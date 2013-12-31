@@ -11,7 +11,7 @@ import Control.Monad.Reader
 import Utils.IO
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
-import qualified Log as Log
+import qualified Log
 import Text.JSON.FromJSValue
 import System.Exit
 import Text.JSON hiding (Ok)
@@ -43,10 +43,10 @@ getRefreshTokenFromCode code = do
               ,  salesforceTokenUrl sc
               ] BSL.empty
   case exitcode of
-      ExitFailure _ -> (Log.debug $ "Failed to recieve token from salesforce: " ++ show stderr) >> return Nothing
+      ExitFailure _ -> (Log.mixlog_ $ "Failed to recieve token from salesforce: " ++ show stderr) >> return Nothing
       ExitSuccess ->  case decode $ BSL.toString stdout of
                          J.Ok js -> withJSValue js $ fromJSValueField "refresh_token"
-                         _ -> (Log.debug $ "Parsing error with:" ++ show stdout) >> return Nothing
+                         _ -> (Log.mixlog_ $ "Parsing error with:" ++ show stdout) >> return Nothing
 
 {- Every time we do a salesforce callback, we need to get new access token. We get it using refresh token -}
 getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m,MonadReader c m, HasSalesforceConf c) => String -> m (Maybe String)
@@ -61,7 +61,7 @@ getAccessTokenFromRefreshToken rtoken = do
               ,  salesforceTokenUrl sc
               ] BSL.empty
   case exitcode of
-      ExitFailure _ -> (Log.debug $ "Failed to recieve token from salesforce: " ++ show stderr) >> return Nothing
+      ExitFailure _ -> (Log.mixlog_ $ "Failed to recieve token from salesforce: " ++ show stderr) >> return Nothing
       ExitSuccess ->  case decode $ BSL.toString stdout of
                          J.Ok js -> withJSValue js $ fromJSValueField "access_token"
-                         _ -> (Log.debug $ "Parsing error with:" ++ show stdout) >> return Nothing
+                         _ -> (Log.mixlog_ $ "Parsing error with:" ++ show stdout) >> return Nothing
