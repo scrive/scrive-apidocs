@@ -296,7 +296,7 @@ moveCancelationReasonFromDocumentsToSignatoryLinks = Migration {
           sqlWhereEq "id" slid
           sqlWhereEq "document_id" did
         when (r /= 1) $
-          Log.debug $ "Migration failed at " ++ show v
+          Log.mixlog_ $ "Migration failed at " ++ show v
       kRun_ $ sqlUpdate "documents" $ do
         sqlSet "cancelation_reason" SqlNull
         sqlWhere "cancelation_reason = '\"ManualCancel\"'"
@@ -317,7 +317,7 @@ dropCancelationReasonFromDocuments = Migration {
                  sqlResult "id, title, cancelation_reason"
                  sqlWhere "cancelation_reason IS NOT NULL"
       values <- kFold fetch []
-      mapM_ (\(a,b,c) -> Log.debug $ "ID: " ++ show a ++ " (" ++ b ++ "): " ++ c) $ values
+      mapM_ (\(a,b,c) -> Log.mixlog_ $ "ID: " ++ show a ++ " (" ++ b ++ "): " ++ c) $ values
 
       --when (not (null values)) $
       --     error "There are some useful cancelation_reason fields in documents still"
@@ -770,7 +770,7 @@ addIdSerialOnSignatoryLinks =
       _ <- kRunRaw $ "CREATE SEQUENCE signatory_links_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
       Just n <- getOne $ SQL "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))" []
-      Log.debug $ "Table signatory_links has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
+      Log.mixlog_ $ "Table signatory_links has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
       _ <- kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
       return ()
@@ -786,7 +786,7 @@ addIdSerialOnDocuments =
       _ <- kRunRaw $ "CREATE SEQUENCE documents_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
       Just n <- getOne $ SQL "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))" []
-      Log.debug $ "Table documents has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
+      Log.mixlog_ $ "Table documents has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
       _ <- kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
       return ()
@@ -844,7 +844,7 @@ addSignatoryLinkIdToSignatoryAttachment =
       atts <- kFold decoder []
       kRunRaw $ "DELETE FROM signatory_attachments WHERE signatory_link_id = 0"
       mapM_ (\(d, n, e, s) ->
-        Log.debug $ "Deleted bad attachment: document_id = " ++ show d
+        Log.mixlog_ $ "Deleted bad attachment: document_id = " ++ show d
                  ++ ", name = " ++ show n
                  ++ ", email = " ++ show e
                  ++ ", description = " ++ show s) atts
@@ -919,7 +919,7 @@ moveAttachmentsFromDocumentsToAttachments =
                               <> " WHERE type = 3") []
       deleted <- kRun $ SQL ("DELETE FROM documents WHERE type = 3") []
       when (deleted /= inserted) $
-         Log.debug  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
+         Log.mixlog_  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
   }
 
 removeOldDocumentLog :: (MonadDB m, MonadIO m) => Migration m
@@ -966,7 +966,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
   , mgrDo = do
       kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN mimetype"
       kRunRaw "ALTER TABLE signatory_screenshots ADD COLUMN file_id BIGINT"
-      Log.debug $ "This is a long running migration with O(n^2) complexity. Please wait!"
+      Log.mixlog_ $ "This is a long running migration with O(n^2) complexity. Please wait!"
       kRunRaw "CREATE INDEX ON signatory_screenshots((digest(image,'sha1')))"
       filesInserted <- kRun $ sqlInsertSelect "files" "signatory_screenshots" $ do
           sqlSetCmd "content" "signatory_screenshots.image"
@@ -979,7 +979,7 @@ moveBinaryDataForSignatoryScreenshotsToFilesTable =
         sqlSetCmd "file_id" "(SELECT id FROM files WHERE content = signatory_screenshots.image AND name=signatory_screenshots.type || '_screenshot.jpeg' LIMIT 1)"
 
       kRunRaw "ALTER TABLE signatory_screenshots DROP COLUMN image"
-      Log.debug $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
+      Log.mixlog_ $ "Moved " ++ show screenshotsUpdated ++ " into " ++ show filesInserted ++ " files (removing duplicates)"
   }
 
 migrateSignatoryLinksDeletedTime :: MonadDB m => Migration m
