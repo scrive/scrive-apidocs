@@ -432,7 +432,7 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- joinEmpty <$> getField "custommessage"
-  Log.debug $ "Custom message when creating an account " ++ show custommessage
+  Log.mixlog_ $ "Custom message when creating an account " ++ show custommessage
   lang <- guardJustM $ readField "lang"
   admin <- isFieldSet "iscompanyadmin"
   muser <- createNewUserByAdmin email (fstname, sndname) custommessage (companyid, admin) lang
@@ -572,7 +572,7 @@ sendInviteAgain = onlySalesOrAdmin $ do
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ withDocumentID docid $ do
-  Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
+  Log.mixlog_ $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   ctx <- getContext
   actor <- guardJust $ mkAdminActor ctx
   _ <- dbUpdate $ InsertEvidenceEvent
@@ -595,7 +595,7 @@ daveDocument documentid = onlyAdmin $ do
     -- but I could not come up with a better one than this
     --  -Eric
     location <- rqUri <$> askRq
-    Log.debug $ "location: " ++ location
+    Log.mixlog_ $ "location: " ++ location
     if "/" `isSuffixOf` location
      then do
       document <- dbQuery $ GetDocumentByDocumentID documentid
@@ -693,4 +693,3 @@ handleAdminCompanyUsageStatsDays cid = onlySalesOrAdmin $ do
 handleAdminCompanyUsageStatsMonths :: Kontrakcja m => CompanyID -> m JSValue
 handleAdminCompanyUsageStatsMonths cid = onlySalesOrAdmin $ do
   getMonthsStats (Right $ cid)
-
