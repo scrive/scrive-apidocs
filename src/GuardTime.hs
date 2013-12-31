@@ -18,7 +18,7 @@ import Utils.IO
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad.IO.Class
 import System.Exit
-import qualified Log as Log
+import qualified Log
 import Text.JSON
 import Text.JSON.String
 import Text.JSON.FromJSValue
@@ -86,11 +86,11 @@ digitallySign conf inputFileName = do
              , inputFileName
              ]
   when (code /= ExitSuccess) $ do
-    Log.debug $ "GuardTime exit code " ++ show code
+    Log.mixlog_ $ "GuardTime exit code " ++ show code
     when (not (BSL.null stdout)) $ do
-      Log.debug $ "GuardTime stdout  : " ++ BSL.toString stdout
+      Log.mixlog_ $ "GuardTime stdout  : " ++ BSL.toString stdout
     when (not (BSL.null stderr)) $ do
-      Log.debug $ "GuardTime errout  : " ++ BSL.toString stderr
+      Log.mixlog_ $ "GuardTime errout  : " ++ BSL.toString stderr
 
   return code
 
@@ -105,11 +105,11 @@ digitallyExtend conf inputFileName = do
              , inputFileName
              ]
   when (code /= ExitSuccess) $ do
-    Log.debug $ "GuardTime exit code " ++ show code
+    Log.mixlog_ $ "GuardTime exit code " ++ show code
     when (not (BSL.null stdout)) $ do
-      Log.debug $ "GuardTime stdout  : " ++ BSL.toString stdout
+      Log.mixlog_ $ "GuardTime stdout  : " ++ BSL.toString stdout
     when (not (BSL.null stderr)) $ do
-      Log.debug $ "GuardTime errout  : " ++ BSL.toString stderr
+      Log.mixlog_ $ "GuardTime errout  : " ++ BSL.toString stderr
 
   return code
 
@@ -122,11 +122,11 @@ digitallyExtendCore1 inputFileName = do
              , inputFileName
              ]
   when (not (BSL.null stderr)) $ do
-    Log.debug $ "digitallyExtendCore1 stderr  : " ++ BSL.toString stderr
+    Log.mixlog_ $ "digitallyExtendCore1 stderr  : " ++ BSL.toString stderr
   when (not (BSL.null stdout)) $ do
-    Log.debug $ "GuardTime stdout  : " ++ BSL.toString stdout
+    Log.mixlog_ $ "GuardTime stdout  : " ++ BSL.toString stdout
   when (code /= ExitSuccess) $ do
-    Log.debug $ "GuardTime exit code " ++ show code
+    Log.mixlog_ $ "GuardTime exit code " ++ show code
 
   return code
 
@@ -197,7 +197,7 @@ verify conf inputFileName = do
                 Left s -> return $ Problem $ "GuardTime verification result bad format: " ++ s ++", stdout: " ++ BSL.toString stdout ++ ", stderr " ++ BSL.toString stderr
                 Right json -> case fromJSValue json of
                                   Nothing -> do
-                                      Log.debug $ "GT parsing error " ++ BSL.toString stdout
+                                      Log.mixlog_ $ "GT parsing error " ++ BSL.toString stdout
                                       return $ Problem $ "GuardTime verification result parsing error"
                                   Just res -> return res
        _ -> return $ Problem $ "GuardTime verification failed: " ++ BSL.toString stderr
