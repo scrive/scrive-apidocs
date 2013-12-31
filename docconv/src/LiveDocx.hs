@@ -22,7 +22,7 @@ import qualified Data.ByteString.UTF8 as BS
 
 import Utils.Read
 import SOAP.SOAP
-import qualified Log (docConverter)
+import qualified Log
 
 import LiveDocxConf
 import LiveDocxTypes
@@ -103,10 +103,10 @@ convertToPDF conf filecontents format = do
   end <- getCPUTime
   case res of
     Left err ->
-      Log.docConverter $ "failed conversion from " ++ show format ++ " to PDF: " ++ show err
+      Log.mixlog_ $ "failed conversion from " ++ show format ++ " to PDF: " ++ show err
     Right _ ->
       let diff = ((fromIntegral (end - start) * 0.00000000001) :: Double) in
-      Log.docConverter $ "successful conversion from " ++ show format ++ " to PDF (took " ++ show diff ++ "s)"
+      Log.mixlog_ $ "successful conversion from " ++ show format ++ " to PDF (took " ++ show diff ++ "s)"
   return res
   where
     {- | API calls are as follows:
