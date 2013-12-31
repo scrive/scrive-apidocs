@@ -27,10 +27,10 @@ import Analytics.Include
 padQueueState :: Kontrakcja m => m JSValue
 padQueueState = do
     ctx <- getContext
-    Log.debug "Checking state"
+    Log.mixlog_ "Checking state"
     case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
          Nothing  -> do
-             Log.debug "Not logged in"
+             Log.mixlog_ "Not logged in"
              padQueueStateJSONNotLoggedIn
          Just user -> do
              pq <- dbQuery $ GetPadQueue (userid user)
@@ -52,7 +52,7 @@ showPadQueuePage = do
 padQueueToSignatoryData :: Kontrakcja m => PadQueue -> m (Maybe (Document,SignatoryLink))
 padQueueToSignatoryData Nothing = return Nothing
 padQueueToSignatoryData (Just (did,slid)) = do
-        Log.debug $ "Some document for padqueue found"
+        Log.mixlog_ $ "Some document for padqueue found"
         doc <- dbQuery $ GetDocumentByDocumentID did
         sl <- guardJust $ getSigLinkFor slid doc
         if (Preparation /= documentstatus doc)
@@ -62,7 +62,7 @@ padQueueToSignatoryData (Just (did,slid)) = do
 -- PadQueue Logout
 handlePadLogout :: Kontrakcja m => m KontraLink
 handlePadLogout = do
-    Log.debug "Loging out of pad device"
+    Log.mixlog_ "Loging out of pad device"
     logoutPadUser
     return LoopBack
 
