@@ -13,7 +13,7 @@ import DB
 import Happstack.Fields
 import Mails.Model
 import Mailer
-import qualified Log (mailingServer)
+import qualified Log
 
 -- Note: This function is almost the same as the one used for handling sendgrid
 -- events, yet slightly different. I could abstract away some parts of them, but
@@ -55,7 +55,7 @@ handleMailGunEvents = do
   ok $ toResponse "Thanks"
 
 logMsg :: String -> Mailer ()
-logMsg msg = Log.mailingServer $ "handleMailGunEvents: " ++ msg
+logMsg msg = Log.mixlog_ $ "handleMailGunEvents: " ++ msg
 
 readEventType :: Maybe String -> Mailer (Maybe MailGunEvent)
 readEventType (Just "opened") = return $ Just MG_Opened
