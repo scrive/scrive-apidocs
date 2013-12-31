@@ -19,7 +19,7 @@ import Doc.DocStateData
 import Control.Monad.Reader
 import Doc.DocMails
 import Util.Actor
-import qualified Log as Log
+import qualified Log
 import Crypto.RNG
 import Data.Typeable
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
@@ -81,5 +81,3 @@ setAutoreminder did mdays tzn = do
                 sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
                                 <+> "+ ((interval '1 day') * " <?> (show days) <+> " ) + (interval '7 hours 30 minutes')"
                 sqlSet "document_id" did
-
-
