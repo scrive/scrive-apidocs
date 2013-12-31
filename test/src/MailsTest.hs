@@ -30,7 +30,7 @@ import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 import Util.Actor
-import qualified Log as Log
+import qualified Log
 import Data.Maybe
 import DB.TimeZoneName (mkTimeZoneName)
 
@@ -103,7 +103,7 @@ sendDocumentMails author = do
         [sl] <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
         --Invitation Mails
         let checkMail s mg = do
-                              Log.debug $ "Checking mail " ++ s
+                              Log.mixlog_ $ "Checking mail " ++ s
                               m <- mg
                               validMail s m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) False =<< theDocument
@@ -137,7 +137,7 @@ testUserMails = do
 
     req <- mkRequest POST []
     let checkMail s mg = do
-                           Log.debug $ "Checking mail " ++ s
+                           Log.mixlog_ $ "Checking mail " ++ s
                            m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
     checkMail "New account" $ do
