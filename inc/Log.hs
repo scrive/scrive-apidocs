@@ -156,7 +156,7 @@ mixlogt :: (MonadLog m) => String -> JSONGenT m () -> m ()
 mixlogt title jsgent = runJSONGenT jsgent >>= mixlogjs title
 
 mixlogjs :: (ToJSValue js, MonadLog m) => String -> js -> m ()
-mixlogjs title js = logM (title ++ "\n" ++ jsonShowYamlLn False 4 (toJSValue js))
+mixlogjs title js = logM (title ++ "\n" ++ unlines (map ("    " ++) (jsonShowYamlLn (toJSValue js))))
 
 mixlog_ :: (MonadLog m) => String -> m ()
 mixlog_ title = logM title
@@ -169,15 +169,18 @@ showStringYaml str = "\"" ++ concatMap escape str ++ "\""
         escape c = [c]
 
 
-jsonShowYamlLn :: Bool -> Int -> JSValue -> String
-jsonShowYamlLn _neednl _indent JSNull = "null\n"
-jsonShowYamlLn _neednl _indent (JSBool val) = if val then "true\n" else "false\n"
-jsonShowYamlLn _neednl _indent (JSRational _asFloat val) | denominator val == 1 = show (numerator val) ++ "\n"
-jsonShowYamlLn _neednl _indent (JSRational _asFloat val) = showFloat (fromRational val :: Double) "\n"
-jsonShowYamlLn _neednl _indent (JSString val) = showStringYaml (fromJSString val) ++ "\n"
-jsonShowYamlLn _neednl _indent (JSArray []) = "[]\n"
-jsonShowYamlLn neednl indent (JSArray vals) = (if neednl then "\n" else "") ++ concatMap p vals
-  where p val = take indent (repeat ' ') ++ "- " ++ jsonShowYamlLn True (indent+1) val
-jsonShowYamlLn _neednl _indent (JSObject vals) | null (fromJSObject vals) = "{}\n"
-jsonShowYamlLn neednl indent (JSObject vals) = (if neednl then "\n" else "") ++ concatMap p (fromJSObject vals)
-  where p (key,val) = take indent (repeat ' ') ++ showStringYaml key ++ ": " ++ jsonShowYamlLn True (indent+1) val
+jsonShowYamlLn :: JSValue -> [String]
+jsonShowYamlLn JSNull = ["null"]
+jsonShowYamlLn (JSBool True) = ["true"]
+jsonShowYamlLn (JSBool False) = ["false"]
+jsonShowYamlLn (JSRational _asFloat val) | denominator val == 1 = [show (numerator val)]
+jsonShowYamlLn (JSRational _asFloat val) = [showFFloat Nothing (fromRational val) ""]
+jsonShowYamlLn (JSString val) = [showStringYaml (fromJSString val)]
+jsonShowYamlLn (JSArray []) = ["[]"]
+jsonShowYamlLn (JSArray vals) = concatMap p vals
+  where p val = zipWith (\prep line -> prep ++ line) ("- " : repeat "  ") (jsonShowYamlLn val)
+jsonShowYamlLn (JSObject vals) | null (fromJSObject vals) = ["{}"]
+jsonShowYamlLn (JSObject vals) = concatMap p (fromJSObject vals)
+  where p (key,val@(JSObject con)) | not (null (fromJSObject con)) = (showStringYaml key ++ ": ") : map ("  " ++) (jsonShowYamlLn val)
+        p (key,val@(JSArray con)) | not (null con) = (showStringYaml key ++ ": ") : map ("  " ++) (jsonShowYamlLn val)
+        p (key,val) = zipWith (\prep line -> prep ++ line) ((showStringYaml key ++ ": ") : repeat "  ") (jsonShowYamlLn val)
