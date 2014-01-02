@@ -88,6 +88,7 @@ import System.Directory
 import MinutesTime
 import Analytics.Include
 import Data.String.Utils (replace)
+import Codec.Compression.Zlib
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -229,11 +230,9 @@ handleEvidenceAttachment docid file = do
   es <- EvidenceAttachments.fetch doc
   e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
   let mimetype = fromMaybe "text/html" (EvidenceAttachments.mimetype e)
-  -- Evidence attachments embedded in PDFs are already encoded using
-  -- FlateEncode method, which is same as HTTP 'deflate'.  Since
-  -- 'deflate' is required by standard, lets just pass content
-  -- unmodified.
-  return $ setHeaderBS "Content-encoding" "deflate" (toResponseBS mimetype (EvidenceAttachments.content e))
+  -- Evidence attachments embedded in PDFs are compressed using RFC #1950. This is NOT the same
+  -- as what browsers are supporting (under names gzip and deflate), and we need to decompress server side.
+  return $ (toResponseBS mimetype (decompress $ EvidenceAttachments.content e))
 
 {- |
    Handles the request to show a document to a logged in user.
