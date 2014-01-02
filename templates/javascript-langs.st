@@ -239,6 +239,9 @@ javascriptLocalisation =
                 title : "$_dialogCsvupload1Head()$"
               , subtitle : "$_dialogCsvupload1Subtitle()$"
               , selectFile :  "$_dialogCsvupload2CSVMultiChooseFile()$"
+              , formatError : "$_dialogCsvuploadFormatError()$"
+              , atLeast3Columns : "$_dialogCsvuploadAtLeast3Columns()$"
+              , atLeast1Party : "$_dialogCsvuploadAtLeast1Party()$"
             }
          , signature : {
                placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }

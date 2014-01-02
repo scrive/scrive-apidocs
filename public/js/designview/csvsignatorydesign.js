@@ -7,6 +7,7 @@ var CsvProblem = Backbone.Model.extend({
       defaults : {
       row : undefined,
       cell : undefined,
+      header : false,
       description : "Some problem"
   },
   row: function() {
@@ -15,7 +16,9 @@ var CsvProblem = Backbone.Model.extend({
   cell: function() {
      return this.get("cell");
   },
-
+  header: function() {
+    return this.get('header');
+  },
   aboutCell: function(r,c)
   {
      return this.row() == r && this.cell() == c;
@@ -94,15 +97,16 @@ var CsvProblem = Backbone.Model.extend({
            var jresp = JSON.parse(resp);
            var problems = [];
            if (jresp.parseError)
-              problems.push(new CsvProblem({description: "Parse problem"}));
+              problems.push(new CsvProblem({description: localization.csv.formatError,
+                                            header: true}));
            if(BlockingInfo && jresp.rows && BlockingInfo.shouldBlockDocs(jresp.rows.length)) {
                problems.push(new CsvProblem({description:BlockingInfo.csvMessage(jresp.rows.length)}));
            }
            if (jresp.header == undefined || jresp.header.length < 3) {
-              problems.push(new CsvProblem({description: "At least 3 columns must be defined"}));
+              problems.push(new CsvProblem({description: localization.csv.atLeast3Columns}));
            }
            if (jresp.length < 2) {
-              problems.push(new CsvProblem({description: "At least 1 party must be defined"}));
+              problems.push(new CsvProblem({description: localization.csv.atLeast1Party}));
            }
            if (jresp.header != undefined) {
               for(var i=0;i<jresp.header.length;i++)
@@ -127,7 +131,11 @@ var CsvSignatoryDesignView = Backbone.View.extend({
        var model = this.model;
        var box = $("<div class='generalProblems'>");
        _.each(model.generalProblems(), function(p) {
-          box.append($("<div class='problem'>").html(p.description()));
+          var problem = $("<div class='problem'>").html(p.description());
+          if (p.header()) {
+            problem.addClass('problem-header');
+          }
+          box.append(problem);
         });
        return box;
     },
@@ -192,10 +200,11 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                     name: "csv",
                     color : "black",
                     shape: 'rounded',
-                    width: 300,
+                    width: 200,
                     size: "big",
                     text: localization.csv.selectFile,
                     type: "application/csv",
+                    labelstyle: 'font-size: 15px; font-weight: 300;',
                     onAppend : function(input) {
                         setTimeout(function() {model.upload($(input));},100);
 
@@ -254,7 +263,7 @@ window.CsvSignatoryDesignPopup =  function(args) {
               icon: '/img/modal-icons/multisend.png',
               subtitle: localization.csv.subtitle,
               title  : localization.csv.title,
-              width: 1018,
+              width: 530,
               acceptVisible : model.ready(),
               onAccept : function() {
                   if (csvSignatory == undefined) {
