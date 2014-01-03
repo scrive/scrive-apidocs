@@ -7,7 +7,7 @@ tableUsers = tblTable {
     tblName = "users"
   , tblVersion = 18
     , tblColumns = [
-      tblColumn { colName = "id", colType = BigIntT, colNullable = False }
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "password", colType = BinaryT }
     , tblColumn { colName = "salt", colType = BinaryT }
     , tblColumn { colName = "is_company_admin", colType = BoolT, colNullable = False }
@@ -32,8 +32,4 @@ tableUsers = tblTable {
       indexOnColumn "company_id"
     , (indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") }
     ]
-  , tblPutProperties = do
-    kRunRaw "CREATE SEQUENCE users_id_seq"
-    kRunRaw "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
-    kRunRaw "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
   }
