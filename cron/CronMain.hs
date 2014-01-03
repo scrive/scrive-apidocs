@@ -13,13 +13,10 @@ import ActionQueue.Monad
 import ActionQueue.PasswordReminder
 import ActionQueue.UserAccountRequest
 import AppConf
-import AppDB
 import Configuration
 import Crypto.RNG
 import qualified Data.ByteString as BS
 import DB
-import DB.Checks
-import DB.SQLFunction
 import DB.PostgreSQL
 import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
@@ -51,10 +48,6 @@ main = Log.withLogger $ do
     readConfig Log.cron appname args "kontrakcja.conf"
 
   checkExecutables
-
-  withPostgreSQL (dbConfig appConf) $ do
-    performDBChecks Log.cron kontraTables kontraMigrations
-    defineMany kontraFunctions
 
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   rng <- newCryptoRNGState

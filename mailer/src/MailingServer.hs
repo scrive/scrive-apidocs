@@ -10,11 +10,7 @@ import Cleaner
 import Crypto.RNG (newCryptoRNGState)
 import Configuration
 import Dispatcher
-import DB.Checks
-import DB.PostgreSQL
 import Handlers
-import Mails.Migrations
-import Mails.Tables
 import MailingServerConf
 import Sender
 import ServiceChecker
@@ -34,8 +30,7 @@ main = Log.withLogger $ do
   fcache <- MemCache.new BS.length 52428800
   let amazonconf = AWS.AmazonConfig (mscAmazonConfig conf) fcache
   rng <- newCryptoRNGState
-  withPostgreSQL (mscDBConfig conf) $
-    performDBChecks Log.mailingServer mailerTables mailerMigrations
+
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }

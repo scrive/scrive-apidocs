@@ -16,7 +16,7 @@ import qualified Log
 import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 
-import AppDB
+import AppDB hiding (main)
 import Crypto.RNG
 import DB
 import DB.Checks
@@ -130,8 +130,9 @@ testMany (allargs, ts) = Log.withLogger $ do
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   templates <- readGlobalTemplates
   withPostgreSQL pgconf $ do
-    performDBChecks Log.debug kontraTables kontraMigrations
+    migrateDatabase Log.debug kontraTables kontraMigrations
     defineMany kontraFunctions
+
     nex <- getNexus
     active_tests <- liftIO . atomically $ newTVar (True, 0)
     rejected_documents <- liftIO . atomically $ newTVar 0

@@ -354,6 +354,43 @@ Executable cron
               TypeSynonymInstances,
               UndecidableInstances
 
+Executable kontrakcja-migrate
+  Hs-source-dirs: inc misc src messenger/inc mailer/inc docconv/src
+
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
+  if flag(server-coverage)
+    GHC-Options: -fhpc
+  if os(windows)
+    cpp-options: -DWINDOWS
+
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is AppDB
+
+  Main-is: AppDB.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              FunctionalDependencies,
+              GeneralizedNewtypeDeriving,
+              LambdaCase,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              OverloadedStrings,
+              PatternGuards,
+              RankNTypes,
+              RecordWildCards,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TupleSections,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
 Executable mailing-server
   if flag(mailing-server)
     Buildable: True

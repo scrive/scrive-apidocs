@@ -10,11 +10,7 @@ import Cleaner
 import Crypto.RNG (newCryptoRNGState)
 import Configuration
 import Dispatcher
-import DB.Checks
-import DB.PostgreSQL
 import Handlers
-import SMS.Migrations
-import SMS.Tables
 import MessengerServerConf
 import Sender
 import Utils.Cron
@@ -28,8 +24,7 @@ main = Log.withLogger $ do
   conf <- readConfig Log.messengerServer appname [] "messenger_server.conf"
   checkExecutables
   rng <- newCryptoRNGState
-  withPostgreSQL (mscDBConfig conf) $
-    performDBChecks Log.messengerServer messengerTables messengerMigrations
+
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }

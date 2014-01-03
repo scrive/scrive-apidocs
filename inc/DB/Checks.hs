@@ -1,6 +1,6 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module DB.Checks (
-    performDBChecks
+    migrateDatabase
   ) where
 
 import Control.Arrow (second)
@@ -35,8 +35,8 @@ instance Monoid ValidationResult where
   mappend _ err@ValidationError{} = err
 
 -- | Runs all checks on a database
-performDBChecks :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
-performDBChecks logger tables migrations = do
+migrateDatabase :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
+migrateDatabase logger tables migrations = do
   set <- setByteaOutput logger
   when set $ do
     kCommit

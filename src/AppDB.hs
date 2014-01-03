@@ -2,12 +2,20 @@ module AppDB (
     kontraFunctions
   , kontraMigrations
   , kontraTables
+  , main
   ) where
 
 import DB.Core
 import DB.Model
 import DB.SQLFunction
 import Control.Monad.IO.Class
+import System.IO
+import System.Environment
+--import qualified Log
+import AppConf
+import Configuration
+import DB.Checks
+import DB.PostgreSQL
 
 import ActionQueue.Tables
 import ActionQueue.Migrations
@@ -33,6 +41,8 @@ import Session.Tables
 import Mails.Migrations
 import OAuth.Tables
 import OAuth.Migrations
+import SMS.Tables
+import SMS.Migrations
 import ELegitimation.ELegTransaction.Tables
 import EvidenceLog.Tables
 import EvidenceLog.Migrations
@@ -176,6 +186,7 @@ kontraMigrations = [
   , migrateDocumentsAddDaysToRemind
   , normalizeCompanyInvites
   ] ++ mailerMigrations
+    ++ messengerMigrations
 
 kontraTables :: [Table]
 kontraTables = [
@@ -216,3 +227,18 @@ kontraTables = [
   , tableCompanyUIs
   , tableDocumentAutomaticReminders
   ] ++ mailerTables
+    ++ messengerTables
+
+main :: IO ()
+main = do
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
+
+  appConf <- do
+    appname <- getProgName
+    args <- getArgs
+    readConfig (liftIO . putStrLn) appname args "kontrakcja.conf"
+
+  withPostgreSQL (dbConfig appConf) $ do
+    migrateDatabase (liftIO . putStrLn) kontraTables kontraMigrations
+    defineMany kontraFunctions

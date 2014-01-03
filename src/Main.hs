@@ -11,12 +11,9 @@ import qualified Data.ByteString.Char8 as BS
 
 import AppConf
 import AppControl
-import AppDB
 import Configuration
 import Crypto.RNG
 import DB
-import DB.Checks
-import DB.SQLFunction
 import DB.PostgreSQL
 import Utils.Default
 import Utils.IO
@@ -66,10 +63,6 @@ main = Log.withLogger $ do
       , cryptorng = rng
       , staticResources = staticResources
       }
-
-  withPostgreSQL (dbConfig appConf) $ do
-    performDBChecks Log.server kontraTables kontraMigrations
-    defineMany kontraFunctions
 
   startSystem appGlobals appConf
 
