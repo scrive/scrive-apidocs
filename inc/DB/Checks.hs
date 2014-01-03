@@ -98,16 +98,32 @@ checkDBConsistency :: forall m. MonadDB m
                    => (String -> m ()) -> [Table] -> [Migration m]
                    -> m ()
 checkDBConsistency logger tables migrations = do
-  (to_create, to_migration) <- checkTables
+
+  versions <- mapM checkTableVersion tables
+
+  let to_create = catMaybes (zipWith (\table ver -> if isNothing ver then Just table else Nothing) tables versions)
+  let to_migration = catMaybes (zipWith (\table ver -> case ver of
+                                                          Just v -> Just (table,v)
+                                                          _ -> Nothing) tables versions)
 
   when (not . null $ to_create) $
     forM_ to_create $ \table@Table{..} -> do
       forM_ (createTableSQLs table) $ logged kRun_
+      -- Database might have a stale version entry in
+      -- 'table_versions'. Remove it here.
+      kRun_ .sqlDelete "table_versions" $ do
+        sqlWhereEq "name" (tblNameString table)
       kRun_ . sqlInsert "table_versions" $ do
         sqlSet "name" (tblNameString table)
         sqlSet "version" tblVersion
-      _ <- checkTable table
-      return ()
+      result <- checkTableStructure table
+      case result of
+        ValidationResult [] -> return ()
+        ValidationResult errmsgs -> do
+          mapM_ logger errmsgs
+          error "Failed"
+
+  mapM_ normalizePropertyNames tables
 
   -- run migrations, if necessary
   when (not . null $ to_migration) $ do
@@ -201,7 +217,7 @@ checkDBConsistency logger tables migrations = do
     checkTable :: Table -> m (Either Table (Maybe (Table, Int)))
     checkTable table@Table{..} = do
       logger $ arrListTable table ++ "checking version..."
-      mver <- checkVersion table
+      mver <- checkTableVersion table
       case mver of
         Nothing -> do
           return $ Left table
@@ -218,8 +234,8 @@ checkDBConsistency logger tables migrations = do
           return . Right . Just $ (table, ver)
         Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
 
-    checkVersion :: Table -> m (Maybe Int)
-    checkVersion table = do
+    checkTableVersion :: Table -> m (Maybe Int)
+    checkTableVersion table = do
       doesExist <- getOne $ sqlSelect "pg_catalog.pg_class c" $ do
         sqlResult "TRUE"
         sqlLeftJoinOn "pg_catalog.pg_namespace n" "n.oid = c.relnamespace"
@@ -232,20 +248,13 @@ checkDBConsistency logger tables migrations = do
             Just ver -> return $ Just ver
             Nothing  -> error $ "Table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."
         Nothing -> do
-          when (tblName table /= tblName tableVersions) $ do
-            -- if table is not present, it will be created and version info attempted
-            -- to be written to table_versions, so if it's already there, delete it
-            deleted <- kRun01 $ SQL "DELETE FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
-            when deleted $ do
-              logger $ "Old version info of table '" ++ tblNameString table ++ "' deleted from 'table_versions'."
           return Nothing
 
     migrate :: [Migration m] -> [(Table, Int)] -> m ()
     migrate ms ts = forM_ ms $ \Migration{..} -> forM_ ts $ \(t, from) -> do
-      normalizePropertyNames t
       if tblName mgrTable == tblName t && mgrFrom >= from
          then do
-           Just ver <- checkVersion mgrTable
+           Just ver <- checkTableVersion mgrTable
            logger $ arrListTable mgrTable ++ "migrating: " ++ show ver ++ " => " ++ show (mgrFrom + 1) ++ "..."
            when (ver /= mgrFrom) $
              error $ "Migrations are in wrong order in migrations list."
