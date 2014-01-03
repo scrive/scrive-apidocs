@@ -448,7 +448,7 @@ handleSignWithEleg signatorylinkid magichash fields screenshots provider = do
   case esigninfo of
     BankID.Problem msg -> return $ Just msg
     BankID.Mismatch msg sfn sln spn -> do
-      handleMismatch signatorylinkid msg sfn sln spn
+      handleMismatch signatorylinkid sfn sln spn
       return $ Just msg
     BankID.Sign sinfo -> do
       signDocument signatorylinkid magichash fields (Just sinfo) screenshots
@@ -469,13 +469,13 @@ signDocument slid mh fields msinfo screenshots = do
   dbUpdate $ UpdateFieldsForSigning slid fields actor
   dbUpdate $ SignDocument slid mh msinfo screenshots actor
 
-handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> String -> String -> String -> String -> m ()
-handleMismatch sid msg sfn sln spn = do
+handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> String -> String -> String -> m ()
+handleMismatch sid sfn sln spn = do
         ctx <- getContext
         Just sl <- getSigLinkFor sid <$> theDocument
-        Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
-        dbUpdate $ ELegAbortDocument sid msg sfn sln spn (signatoryActor ctx sl)
-        postDocumentCanceledChange =<< theDocument
+        Log.eleg $ "Information from eleg did not match information stored for signatory in document."
+        dbUpdate $ LogSignWithELegFailureForDocument sid sfn sln spn (signatoryActor ctx sl)
+        triggerAPICallbackIfThereIsOne =<< theDocument
 
 {- End of utils-}
 

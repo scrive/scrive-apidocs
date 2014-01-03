@@ -9,7 +9,6 @@ module Doc.DocMails (
   , sendClosedEmails
   , sendRejectEmails
   , sendDocumentErrorEmail
-  , sendElegDataMismatchEmails
   , runMailTInScheduler
   , MailT
   ) where
@@ -32,7 +31,6 @@ import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocViewSMS
-import Doc.SignatoryLinkID
 import SMS.SMS (scheduleSMS)
 import InputValidation
 import IPAddress (noIP)
@@ -53,56 +51,11 @@ import Util.Actor
 import Util.SignatoryLinkUtils
 import ActionQueue.UserAccountRequest
 import User.Action
-import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import Doc.API.Callback.Model
 import Company.Model
 
-sendElegDataMismatchEmails :: Kontrakcja m => User -> Document -> m ()
-sendElegDataMismatchEmails author document = do
-    let signlinks = [sl | sl <- documentsignatorylinks document
-                        , isActivatedSignatory (documentcurrentsignorder document) sl
-                        , not $ isAuthor sl]
-        badsig = $(fromJust) $ find (isJust . signatorylinkelegdatamismatchmessage) (documentsignatorylinks document)
-        msg = $(fromJust) $ signatorylinkelegdatamismatchmessage badsig
-        badname  = getFullName badsig
-        bademail = getEmail badsig
-    forM_ signlinks $ sendDataMismatchEmailSignatory document (signatorylinkid badsig) badname msg
-    sendDataMismatchEmailAuthor author (lines msg) badname bademail document
-
-sendDataMismatchEmailSignatory :: Kontrakcja m => Document -> SignatoryLinkID -> String -> String -> SignatoryLink -> m ()
-sendDataMismatchEmailSignatory document badid badname msg signatorylink = do
-    mctx <- getMailContext
-    let isbad = badid == signatorylinkid signatorylink
-    case getAuthorSigLink document of
-      Nothing -> error "No author in Document"
-      Just authorsl -> do
-        void $ sendNotifications authorsl
-          (do
-            mail <- mailMismatchSignatory
-                    (getEmail authorsl)
-                    (getFullName authorsl)
-                    (mctxhostpart mctx ++ (show $ LinkSignDoc document signatorylink))
-                    (getFullName signatorylink)
-                    badname
-                    msg
-                    isbad
-                    document
-            scheduleEmailSendout (mctxmailsconfig mctx) $ mail { to = [getMailAddress signatorylink]})
-          (scheduleSMS =<<  smsMismatchSignatory document signatorylink)
-
-sendDataMismatchEmailAuthor :: Kontrakcja m => User -> [String] -> String -> String -> Document -> m ()
-sendDataMismatchEmailAuthor author messages badname bademail document = do
-    mctx <- getMailContext
-    let authorname = getFullName authorlink
-        authoremail = getEmail authorlink
-        authorlink = $(fromJust) $ getAuthorSigLink document
-    void $ sendNotifications authorlink
-      (do
-        mail <- mailMismatchAuthor authorname messages badname bademail (getLang author) document
-        scheduleEmailSendout (mctxmailsconfig mctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]})
-      (scheduleSMS =<<  smsMismatchAuthor document authorlink)
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
