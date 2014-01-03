@@ -16,7 +16,6 @@ import Data.Convertible
 import Data.Char
 import Database.HDBC.SqlValue
 
-import DB.Core
 import DB.Model.Check
 import DB.Model.Index
 import DB.Model.ForeignKey
@@ -109,7 +108,6 @@ data Table = Table {
 , tblChecks        :: [TableCheck]
 , tblForeignKeys   :: [ForeignKey]
 , tblIndexes       :: [TableIndex]
-, tblPutProperties :: MonadDB m => m ()
 }
 
 tblTable :: Table
@@ -121,7 +119,6 @@ tblTable = Table {
 , tblChecks = []
 , tblForeignKeys = []
 , tblIndexes = []
-, tblPutProperties = return ()
 }
 
 sqlCreateTable :: RawSQL -> SQL

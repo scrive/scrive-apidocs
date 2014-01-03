@@ -7,11 +7,11 @@ import Control.Monad.IO.Class
 import Data.Int
 import Data.Monoid
 import Data.Maybe
-import Database.HDBC
 import Text.JSON
 import Text.JSON.FromJSValue
 
 import DB
+import DB.Checks
 import DB.SQL2
 import Doc.Tables
 import qualified Log
@@ -998,6 +998,33 @@ migrateSignatoryLinksDeletedTime =
        return ()
     }
 
+createMainFilesTable :: MonadDB m => Migration m
+createMainFilesTable =
+  Migration {
+      mgrTable = tableMainFiles
+    , mgrFrom = 0
+    , mgrDo = do
+        createTable $ tblTable {
+                        tblName = "main_files"
+                      , tblVersion = 1
+                      , tblColumns = [
+                         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+                        , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
+                        , tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
+                        , tblColumn { colName = "document_status", colType = SmallIntT, colNullable = False }
+                        , tblColumn { colName = "seal_status", colType = SmallIntT }
+                        ]
+                      , tblPrimaryKey = pkOnColumn "id"
+                      , tblForeignKeys = [
+                         (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
+                        , fkOnColumn "file_id" "files" "id"
+                        ]
+                      , tblIndexes = [
+                         indexOnColumn "document_id"
+                        , indexOnColumn "file_id"
+                        ]
+                      }
+}
 
 migrateSeparateDeliveryStatuses :: MonadDB m => Migration m
 migrateSeparateDeliveryStatuses =
@@ -1144,4 +1171,3 @@ makeSealStatusNonNullInMainFiles =
        _ <- kRunRaw $ "ALTER TABLE main_files ALTER seal_status SET NOT NULL"
        return ()
     }
-

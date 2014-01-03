@@ -198,6 +198,17 @@ migrateUsersUniqueIndexOnEmail =
       mgrTable = tableUsers
     , mgrFrom = 17
     , mgrDo = do
+       kRun_ $ sqlDelete "users" $ do
+                 sqlWhereNotExists (sqlSelect "signatory_links" $ do -- there are not documents connected to this account)
+                                      sqlWhere "signatory_links.user_id = users.id")
+                 -- but there is another account for this email address
+                 sqlWhereExists $ sqlSelect "users u2" $ do
+                    sqlWhere "u2.email = users.email"    -- same email
+                    sqlWhere "u2.id <> users.id"         -- different id
+                    sqlWhere "u2.deleted IS NULL"        -- the other one is not deleted
+         -- note: this may delete both accounts, but that is ok
+
+
        kRun_ $ sqlDropIndex "users" (indexOnColumn "email")
        kRun_ $ sqlCreateIndex "users" ((indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") })
        return ()

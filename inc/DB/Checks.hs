@@ -1,11 +1,11 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module DB.Checks (
     migrateDatabase
+  , checkDatabase
+  , createTable
   ) where
 
-import Control.Arrow (second)
 import Control.Monad.Reader
-import Data.Either
 import Data.List.Utils
 import Data.Maybe
 import Data.Monoid
@@ -37,15 +37,38 @@ migrateDatabase logger tables migrations = do
   when set $ do
     kCommit
     error $ "Bytea_output was changed to 'hex'. Restart application so the change is visible."
-  checkDBTimeZone logger
+  _ <- checkDBTimeZone logger
   checkNeededExtensions logger
   checkDBConsistency logger (tableVersions : tables) migrations
+  checkDBStructure logger (tableVersions : tables)
 
   -- everything is OK, commit changes
   kCommit
 
   checkUnknownTables logger tables
   return ()
+
+checkDatabase :: MonadDB m => (String -> m ()) -> [Table] -> m ()
+checkDatabase logger tables = do
+  versions <- mapM checkTableVersion tables
+  let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
+
+  let results = flip map tablesWithVersions $ \(t,v) ->
+                if tblVersion t == v
+                   then ValidationResult []
+                   else if v==0
+                        then ValidationResult ["Table '" ++ tblNameString t ++ "' must be created"]
+                        else ValidationResult ["Table '" ++ tblNameString t ++ "' must be migrated " ++ show v ++ "->" ++ show (tblVersion t)]
+
+  case mconcat results of
+    ValidationResult [] -> return ()
+    ValidationResult errmsgs -> do
+      mapM_ logger errmsgs
+      error "Failed"
+
+  checkDBStructure logger (tableVersions : tables)
+  return ()
+
 
 -- | Return SQL fragment of current catalog within quotes
 currentCatalog :: MonadDB m => m RawSQL
@@ -61,20 +84,27 @@ checkNeededExtensions logger = do
   return ()
 
 -- |  Checks whether database returns timestamps in UTC
-checkDBTimeZone :: MonadDB m => (String -> m ()) -> m ()
+checkDBTimeZone :: MonadDB m => (String -> m ()) -> m Bool
 checkDBTimeZone logger = do
-  dbname <- currentCatalog
-  logger $ "Setting '" ++ unRawSQL dbname ++ "' database to return timestamps in UTC"
-  kRunRaw $ "ALTER DATABASE " <> dbname <> " SET TIMEZONE = 'UTC'"
-  return ()
+  Just timezone <- getOne "SHOW timezone"
+  if timezone /= ("UTC" :: String)
+    then do
+      dbname <- currentCatalog
+      logger $ "Setting '" ++ unRawSQL dbname ++ "' database to return timestamps in UTC"
+      kRunRaw $ "ALTER DATABASE " <> dbname <> " SET TIMEZONE = 'UTC'"
+      return True
+    else return False
+
+tblNameString :: Table -> String
+tblNameString = unRawSQL . tblName
 
 setByteaOutput :: MonadDB m => (String -> m ()) -> m Bool
 setByteaOutput logger = do
-  dbname <- currentCatalog
   Just bytea_output <- getOne "SHOW bytea_output"
   if bytea_output /= ("hex" :: String)
     then do
       logger $ "Setting bytea_output to 'hex'..."
+      dbname <- currentCatalog
       kRunRaw $ "ALTER DATABASE " <> dbname <> " SET bytea_output = 'hex'"
       return True
     else return False
@@ -90,190 +120,47 @@ checkUnknownTables logger tables = do
   desc <- kFold (\acc tn -> tn : acc) []
   let absent = desc L.\\ map (unRawSQL . tblName) tables
   when (not (null absent)) $
-    mapM_ (\t -> logger $ "Unknown table '" ++ t ++ "': DROP TABLE " ++ t ++ " CASCADE") absent
+    mapM_ (\t -> logger $ "Unknown table '" ++ t) absent
+
+
+createTable :: MonadDB m => Table -> m ()
+createTable table@Table{..} = do
+  forM_ createTableSQLs $ kRun_
+
+  kRun_ . sqlInsert "table_versions" $ do
+    sqlSet "name" (tblNameString table)
+    sqlSet "version" tblVersion
+  where
+    createTableSQLs :: [SQL]
+    createTableSQLs = concat
+      [ [sqlCreateTable tblName]
+      , [sqlAlterTable tblName $ map sqlAddColumn tblColumns | not (null tblColumns)]
+      , [sqlAlterTable tblName [sqlAddPK tblName pk] | let Just pk = tblPrimaryKey ]
+      , [sqlAlterTable tblName $ map sqlAddCheck tblChecks | not (null tblChecks)]
+      , map (sqlCreateIndex tblName) tblIndexes
+      , [sqlAlterTable tblName $ map (sqlAddFK tblName) tblForeignKeys | not (null tblForeignKeys)]
+      ]
 
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: forall m. MonadDB m
-                   => (String -> m ()) -> [Table] -> [Migration m]
+checkDBStructure :: forall m. MonadDB m
+                   => (String -> m ()) -> [Table]
                    -> m ()
-checkDBConsistency logger tables migrations = do
-
-  versions <- mapM checkTableVersion tables
-
-  let to_create = catMaybes (zipWith (\table ver -> if isNothing ver then Just table else Nothing) tables versions)
-  let to_migration = catMaybes (zipWith (\table ver -> case ver of
-                                                          Just v -> Just (table,v)
-                                                          _ -> Nothing) tables versions)
-
-  when (not . null $ to_create) $
-    forM_ to_create $ \table@Table{..} -> do
-      forM_ (createTableSQLs table) $ logged kRun_
-      -- Database might have a stale version entry in
-      -- 'table_versions'. Remove it here.
-      kRun_ .sqlDelete "table_versions" $ do
-        sqlWhereEq "name" (tblNameString table)
-      kRun_ . sqlInsert "table_versions" $ do
-        sqlSet "name" (tblNameString table)
-        sqlSet "version" tblVersion
+checkDBStructure logger tables = do
+  -- final checks for table structure, we do this both when creating stuff and when migrating
+  result <- forM tables $ \table@Table{..} -> do
       result <- checkTableStructure table
       case result of
-        ValidationResult [] -> return ()
+        ValidationResult [] -> return result
         ValidationResult errmsgs -> do
-          mapM_ logger errmsgs
-          error "Failed"
+          return $ ValidationResult (("There are problems with table '" ++ tblNameString table ++ "'"):errmsgs)
 
-  mapM_ normalizePropertyNames tables
-
-  -- run migrations, if necessary
-  when (not . null $ to_migration) $ do
-    logger "Running migrations..."
-    migrate migrations to_migration
-    logger "Done."
-    (_, to_migration_again) <- checkTables
-    when (not . null $ to_migration_again) $
-      error $ "The following tables were not migrated to their latest versions: " ++ concatMap showNotMigrated to_migration_again
-
-  -- add foreign keys and properties to new tables
-  forM_ to_create $ \table@Table{..} -> do
-    when (not . null $ tblForeignKeys) $ do
-      logger $ arrListTable table ++ "creating foreign keys..."
-      logged kRun_ $ sqlAlterTable tblName $ map (sqlAddFK tblName) tblForeignKeys
-    logger $ arrListTable table ++ "putting properties..."
-    tblPutProperties
-  -- check foreign key consistency
-  forM_ tables checkForeignKeys
-
+  case mconcat result of
+    ValidationResult [] -> return ()
+    ValidationResult errmsgs -> do
+      mapM_ logger errmsgs
+      error "Failed"
   where
-    logged :: (SQL -> m a) -> SQL -> m a
-    logged exec sql = do
-      logger $ "Executing " ++ show sql ++ "..."
-      exec sql
-
-    tblNameString :: Table -> String
-    tblNameString = unRawSQL . tblName
-
-    showNotMigrated :: (Table, Int) -> String
-    showNotMigrated (t, from) = "\n * " ++ tblNameString t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
-
-    createTableSQLs :: Table -> [SQL]
-    createTableSQLs Table{..} = concat
-      [ [sqlCreateTable tblName]
-      , if null tblColumns
-        then []
-        else [sqlAlterTable tblName $ map sqlAddColumn tblColumns]
-      , case tblPrimaryKey of
-          Nothing -> []
-          Just pk -> [sqlAlterTable tblName [sqlAddPK tblName pk]]
-      , if null tblChecks
-            then []
-            else [sqlAlterTable tblName $ map sqlAddCheck tblChecks]
-      , map (sqlCreateIndex tblName) tblIndexes
-      ]
-
-    normalizePropertyNames :: Table -> m ()
-    normalizePropertyNames table@Table{..} = do
-          kRun_ $ sqlGetPrimaryKey table
-          pk <- kFold fetchPrimaryKey Nothing
-          kRun_ $ sqlGetIndexes table
-          indexes <- kFold fetchTableIndexes []
-          kRun_ $ sqlGetForeignKeys table
-          fkeys <- kFold fetchForeignKeys []
-          let renames = concat [
-                  normalizePK pk
-                , concatMap normalizeIndex indexes
-                , concatMap normalizeFK fkeys
-                ]
-          when (not . null $ renames) $ do
-            logger $ arrListTable table ++ "normalizing property names..."
-            forM_ renames $ logged kRun_
-          where
-            normalizePK :: Maybe (PrimaryKey, RawSQL) -> [SQL]
-            normalizePK Nothing = []
-            normalizePK (Just (_, name)) = case pkName tblName of
-              pkname
-                | pkname == raw name -> []
-                | otherwise -> ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> pkname]
-
-            normalizeIndex :: (TableIndex, RawSQL) -> [SQL]
-            normalizeIndex (idx, name) = case indexName tblName idx of
-              idxname
-                | idxname == raw name -> []
-                | otherwise -> ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> idxname]
-
-            normalizeFK :: (ForeignKey, RawSQL) -> [SQL]
-            normalizeFK (fk, name) = case fkName tblName fk of
-              fkname
-                | fkname == raw name -> []
-                | otherwise -> [sqlAlterTable tblName [
-                    "DROP CONSTRAINT" <+> raw name
-                  , sqlAddFK tblName fk
-                  ]
-                ]
-
-    checkTables :: m ([Table], [(Table, Int)])
-    checkTables = (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
-
-    checkTable :: Table -> m (Either Table (Maybe (Table, Int)))
-    checkTable table@Table{..} = do
-      logger $ arrListTable table ++ "checking version..."
-      mver <- checkTableVersion table
-      case mver of
-        Nothing -> do
-          return $ Left table
-        Just ver | ver == tblVersion -> do
-          logger $ arrListTable table ++ "checking structure (v" ++ show ver ++ ")..."
-          validation <- checkTableStructure table
-          case validation of
-            ValidationResult [] -> return $ Right Nothing
-            ValidationResult errmsgs -> do
-              mapM_ logger errmsgs
-              error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
-        Just ver | ver < tblVersion -> do
-          logger $ arrListTable table ++ "scheduling for migration: " ++ show ver ++ " => " ++ show tblVersion
-          return . Right . Just $ (table, ver)
-        Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
-
-    checkTableVersion :: Table -> m (Maybe Int)
-    checkTableVersion table = do
-      doesExist <- getOne $ sqlSelect "pg_catalog.pg_class c" $ do
-        sqlResult "TRUE"
-        sqlLeftJoinOn "pg_catalog.pg_namespace n" "n.oid = c.relnamespace"
-        sqlWhereEq "c.relname" $ tblNameString table
-        sqlWhere "pg_catalog.pg_table_is_visible(c.oid)"
-      case doesExist of
-        Just (_::Bool) -> do
-          mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
-          case mver of
-            Just ver -> return $ Just ver
-            Nothing  -> error $ "Table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."
-        Nothing -> do
-          return Nothing
-
-    migrate :: [Migration m] -> [(Table, Int)] -> m ()
-    migrate ms ts = forM_ ms $ \Migration{..} -> forM_ ts $ \(t, from) -> do
-      if tblName mgrTable == tblName t && mgrFrom >= from
-         then do
-           Just ver <- checkTableVersion mgrTable
-           logger $ arrListTable mgrTable ++ "migrating: " ++ show ver ++ " => " ++ show (mgrFrom + 1) ++ "..."
-           when (ver /= mgrFrom) $
-             error $ "Migrations are in wrong order in migrations list."
-           mgrDo
-           kRun_ $ SQL "UPDATE table_versions SET version = ? WHERE name = ?"
-                   [toSql . succ $ mgrFrom, toSql $ tblNameString t]
-           return ()
-         else return ()
-
-    -- *** TABLE STRUCTURE ***
-
-    sqlGetTableID :: Table -> SQL
-    sqlGetTableID table = parenthesize . toSQLCommand $
-      sqlSelect "pg_catalog.pg_class c" $ do
-        sqlResult "c.oid"
-        sqlLeftJoinOn "pg_catalog.pg_namespace n" "n.oid = c.relnamespace"
-        sqlWhereEq "c.relname" $ tblNameString table
-        sqlWhere "pg_catalog.pg_table_is_visible(c.oid)"
-
     checkTableStructure :: Table -> m ValidationResult
     checkTableStructure table@Table{..} = do
       -- get table description from pg_catalog as describeTable
@@ -300,11 +187,13 @@ checkDBConsistency logger tables migrations = do
       checks <- kFold fetchTableChecks []
       kRun_ $ sqlGetIndexes table
       indexes <- kFold fetchTableIndexes []
+      foreignkeys <- checkForeignKeys logger table
       return $ mconcat [
           checkColumns 1 tblColumns desc
         , checkPrimaryKey tblPrimaryKey pk
         , checkChecks tblChecks checks
         , checkIndexes tblIndexes indexes
+        , foreignkeys
         ]
       where
         fetchTableColumn :: [TableColumn] -> String -> ColumnType -> Bool -> Maybe String -> [TableColumn]
@@ -371,148 +260,261 @@ checkDBConsistency logger tables migrations = do
           , checkNames (indexName tblName) indexes
           ]
 
-    checkForeignKeys :: Table -> m ()
-    checkForeignKeys table@Table{..} = do
-      logger $ arrListTable table ++ "checking foreign keys..."
+-- | Checks whether database is consistent (performs migrations if necessary)
+checkDBConsistency :: forall m. MonadDB m
+                   => (String -> m ()) -> [Table] -> [Migration m]
+                   -> m ()
+checkDBConsistency logger tables migrations = do
+
+  -- check if migrations list has the following properties:
+  -- - consecutive mgrFrom numbers
+  -- - no duplicates
+  -- - all mgrFrom are less than table version number of the table in the database (or the just created table)
+  forM_ tables $ \table -> do
+    let presentMigrationVersions = map mgrFrom $
+                  filter (\m -> tblNameString (mgrTable m) == tblNameString table) migrations
+        expectedMigrationVersions = reverse (take (length presentMigrationVersions) (reverse  [0 .. tblVersion table - 1]))
+    when (presentMigrationVersions /= expectedMigrationVersions) $ do
+      error $ "Migrations for table '" ++ tblNameString table ++ "'are wrong " ++ show presentMigrationVersions ++ " expected " ++ show expectedMigrationVersions
+
+  versions <- mapM checkTableVersion tables
+  let tablesWithVersions = zip tables (map (fromMaybe 0) versions)
+
+  forM_ tablesWithVersions $ \(table,ver) -> when (tblVersion table /= ver) $ do
+    case L.find (\m -> tblNameString (mgrTable m) == tblNameString table) migrations of
+      Nothing -> do
+        error $ "No migrations found for table '" ++ tblNameString table ++ "', cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
+      Just m | mgrFrom m > ver -> do
+        error $ "Earliest migration for table '" ++ tblNameString table ++ "' is from version " ++ show (mgrFrom m) ++ ", cannot migrate " ++ show ver ++ "->" ++ show (tblVersion table)
+      Just _ -> return ()
+
+  if all ((==) 0 . snd) tablesWithVersions
+    then do -- no tables are present, create everything from scratch
+      logger "Creating tables..."
+      mapM_ createTable tables
+      logger "Creating tables...done"
+
+    else do -- migration mode
+      mapM_ (normalizePropertyNames logger) tables
+
+      let migrationsToRun = filter (\m -> any (\(t, from) -> tblName (mgrTable m) == tblName t && mgrFrom m >= from) tablesWithVersions) migrations
+
+      -- run migrations, if necessary
+      when (not . null $ migrationsToRun) $ do
+        logger "Running migrations..."
+        forM_ migrationsToRun $ \migration -> do
+          logger $ arrListTable (mgrTable migration) ++ show (mgrFrom migration) ++ "->" ++ show (mgrFrom migration +1)
+          mgrDo migration
+          kRun_ $ sqlUpdate "table_versions" $ do
+            sqlSet "version" $ succ (mgrFrom migration)
+            sqlWhereEq "name" $ tblNameString (mgrTable migration)
+        logger "Running migrations... done."
+
+normalizePropertyNames :: (MonadDB m) => (String -> m ()) ->Table -> m ()
+normalizePropertyNames logger table@Table{..} = do
+      kRun_ $ sqlGetPrimaryKey table
+      pk <- kFold fetchPrimaryKey Nothing
+      kRun_ $ sqlGetIndexes table
+      indexes <- kFold fetchTableIndexes []
       kRun_ $ sqlGetForeignKeys table
       fkeys <- kFold fetchForeignKeys []
-      case validate tblForeignKeys fkeys of
-        ValidationResult [] -> return ()
-        ValidationResult errmsgs -> do
-          mapM_ logger errmsgs
-          error $ "Foreign keys on table '" ++ tblNameString table ++ "' are invalid."
+      let renames = concat [
+              normalizePK pk
+            , concatMap normalizeIndex indexes
+            , concatMap normalizeFK fkeys
+            ]
+      when (not . null $ renames) $ do
+        logger $ arrListTable table ++ "normalizing property names..."
+        forM_ renames $ kRun_
       where
-        validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
-        validate defs fkeys = mconcat [
-            checkEquality "FOREIGN KEYs" defs (map fst fkeys)
-          , checkNames (fkName tblName) fkeys
-          ]
+        normalizePK :: Maybe (PrimaryKey, RawSQL) -> [SQL]
+        normalizePK Nothing = []
+        normalizePK (Just (_, name)) = case pkName tblName of
+          pkname
+            | pkname == raw name -> []
+            | otherwise -> ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> pkname]
 
-    -- *** PRIMARY KEY ***
+        normalizeIndex :: (TableIndex, RawSQL) -> [SQL]
+        normalizeIndex (idx, name) = case indexName tblName idx of
+          idxname
+            | idxname == raw name -> []
+            | otherwise -> ["ALTER INDEX" <+> raw name <+> "RENAME TO" <+> idxname]
 
-    sqlGetPrimaryKey :: Table -> SQL
-    sqlGetPrimaryKey table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
-      sqlResult "c.conname"
-      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)), ',') as columns" -- list of affected columns
-      sqlWhereEq "c.contype" 'p'
-      sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
+        normalizeFK :: (ForeignKey, RawSQL) -> [SQL]
+        normalizeFK (fk, name) = case fkName tblName fk of
+          fkname
+            | fkname == raw name -> []
+            | otherwise -> [sqlAlterTable tblName [
+                "DROP CONSTRAINT" <+> raw name
+              , sqlAddFK tblName fk
+              ]
+            ]
 
-    fetchPrimaryKey :: Maybe (PrimaryKey, RawSQL) -> String -> String -> Maybe (PrimaryKey, RawSQL)
-    fetchPrimaryKey Nothing name columns = (, unsafeFromString name)
-      `liftM` (pkOnColumns . map unsafeFromString . split "," $ columns)
-    fetchPrimaryKey _ _ _ =
-      error $ "fetchPrimaryKey: more than one primary key (shouldn't happen)"
+checkTableVersion :: (MonadDB m) => Table -> m (Maybe Int)
+checkTableVersion table = do
+  doesExist <- getOne $ sqlSelect "pg_catalog.pg_class c" $ do
+    sqlResult "TRUE"
+    sqlLeftJoinOn "pg_catalog.pg_namespace n" "n.oid = c.relnamespace"
+    sqlWhereEq "c.relname" $ tblNameString table
+    sqlWhere "pg_catalog.pg_table_is_visible(c.oid)"
+  case doesExist of
+    Just (_::Bool) -> do
+      mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblNameString table]
+      case mver of
+        Just ver -> return $ Just ver
+        Nothing  -> error $ "Table '" ++ tblNameString table ++ "' is present in the database, but there is no corresponding version info in 'table_versions'."
+    Nothing -> do
+      return Nothing
 
-    -- *** CHECKS ***
 
-    sqlGetChecks :: Table -> SQL
-    sqlGetChecks table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
-      sqlResult "c.conname"
-      sqlResult $  "regexp_replace(pg_get_constraintdef(c.oid, true), 'CHECK \\((.*)\\)', '\\1') as body" -- check body
-      sqlWhereEq "c.contype" 'c'
-      sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
+-- *** TABLE STRUCTURE ***
 
-    fetchTableChecks :: [TableCheck] -> String -> String -> [TableCheck]
-    fetchTableChecks acc name condition = TableCheck {
-        chkName = unsafeFromString name
-      , chkCondition = unsafeFromString condition
-      } : acc
+sqlGetTableID :: Table -> SQL
+sqlGetTableID table = parenthesize . toSQLCommand $
+  sqlSelect "pg_catalog.pg_class c" $ do
+    sqlResult "c.oid"
+    sqlLeftJoinOn "pg_catalog.pg_namespace n" "n.oid = c.relnamespace"
+    sqlWhereEq "c.relname" $ tblNameString table
+    sqlWhere "pg_catalog.pg_table_is_visible(c.oid)"
 
-    -- *** INDEXES ***
 
-    sqlGetIndexes :: Table -> SQL
-    sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
-      sqlResult "c.relname" -- index name
-      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid), ',')" -- array of affected columns
-      sqlResult "i.indisunique" -- is it unique?
-      sqlResult "CASE WHEN pg_get_indexdef(i.indexrelid, 0, true) LIKE '%WHERE%' THEN regexp_replace(pg_get_indexdef(i.indexrelid, 0, true), '.*WHERE (.*)', '\\1') ELSE NULL END" -- if partial, get constraint def
-      sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
-      sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
-      sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
-      sqlWhereIsNULL "r.contype" -- fetch only "pure" indexes
+checkForeignKeys :: (MonadDB m) => (String -> m ()) -> Table -> m ValidationResult
+checkForeignKeys _logger table@Table{..} = do
+  kRun_ $ sqlGetForeignKeys table
+  fkeys <- kFold fetchForeignKeys []
+  return (validate tblForeignKeys fkeys)
+  where
+    validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
+    validate defs fkeys = mconcat [
+        checkEquality "FOREIGN KEYs" defs (map fst fkeys)
+      , checkNames (fkName tblName) fkeys
+      ]
 
-    fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> Maybe String -> [(TableIndex, RawSQL)]
-    fetchTableIndexes acc name columns unique mconstraint = (TableIndex {
-        idxColumns = map unsafeFromString . split "," $ columns
-      , idxUnique = unique
-      , idxWhere = unsafeFromString `liftM` mconstraint
-      }, unsafeFromString name) : acc
+-- *** PRIMARY KEY ***
 
-    -- *** FOREIGN KEYS ***
+sqlGetPrimaryKey :: Table -> SQL
+sqlGetPrimaryKey table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
+  sqlResult "c.conname"
+  sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)), ',') as columns" -- list of affected columns
+  sqlWhereEq "c.contype" 'p'
+  sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
 
-    sqlGetForeignKeys :: Table -> SQL
-    sqlGetForeignKeys table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint r" $ do
-      sqlResult "r.conname" -- fk name
-      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.conrelid AND a.attnum = ANY (r.conkey)), ',') as columns" -- constrained columns
-      sqlResult "c.relname" -- referenced table
-      sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.confrelid AND a.attnum = ANY (r.confkey)), ',') as refcolumns" -- referenced columns
-      sqlResult "r.confupdtype" -- on update
-      sqlResult "r.confdeltype" -- on delete
-      sqlResult "r.condeferrable" -- deferrable?
-      sqlResult "r.condeferred" -- initially deferred?
-      sqlJoinOn "pg_catalog.pg_class c" "c.oid = r.confrelid"
-      sqlWhereEqSql "r.conrelid" $ sqlGetTableID table
-      sqlWhereEq "r.contype" 'f'
+fetchPrimaryKey :: Maybe (PrimaryKey, RawSQL) -> String -> String -> Maybe (PrimaryKey, RawSQL)
+fetchPrimaryKey Nothing name columns = (, unsafeFromString name)
+  `liftM` (pkOnColumns . map unsafeFromString . split "," $ columns)
+fetchPrimaryKey _ _ _ =
+  error $ "fetchPrimaryKey: more than one primary key (shouldn't happen)"
 
-    fetchForeignKeys :: [(ForeignKey, RawSQL)] -> String -> String -> String -> String -> Char -> Char -> Bool -> Bool -> [(ForeignKey, RawSQL)]
-    fetchForeignKeys acc name columns reftable refcolumns on_update on_delete deferrable deferred = (ForeignKey {
-        fkColumns = S.fromList . map unsafeFromString . split "," $ columns
-      , fkRefTable = unsafeFromString reftable
-      , fkRefColumns = S.fromList . map unsafeFromString . split "," $ refcolumns
-      , fkOnUpdate = charToForeignKeyAction on_update
-      , fkOnDelete = charToForeignKeyAction on_delete
-      , fkDeferrable = deferrable
-      , fkDeferred = deferred
-      }, unsafeFromString name) : acc
-      where
-        charToForeignKeyAction c = case c of
-          'a' -> ForeignKeyNoAction
-          'r' -> ForeignKeyRestrict
-          'c' -> ForeignKeyCascade
-          'n' -> ForeignKeySetNull
-          'd' -> ForeignKeySetDefault
-          _   -> error $ "Invalid foreign key action code: " ++ show c
+-- *** CHECKS ***
+
+sqlGetChecks :: Table -> SQL
+sqlGetChecks table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint c" $ do
+  sqlResult "c.conname"
+  sqlResult $  "regexp_replace(pg_get_constraintdef(c.oid, true), 'CHECK \\((.*)\\)', '\\1') as body" -- check body
+  sqlWhereEq "c.contype" 'c'
+  sqlWhereEqSql "c.conrelid" $ sqlGetTableID table
+
+fetchTableChecks :: [TableCheck] -> String -> String -> [TableCheck]
+fetchTableChecks acc name condition = TableCheck {
+    chkName = unsafeFromString name
+  , chkCondition = unsafeFromString condition
+  } : acc
+
+-- *** INDEXES ***
+
+sqlGetIndexes :: Table -> SQL
+sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
+  sqlResult "c.relname" -- index name
+  sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid), ',')" -- array of affected columns
+  sqlResult "i.indisunique" -- is it unique?
+  sqlResult "CASE WHEN pg_get_indexdef(i.indexrelid, 0, true) LIKE '%WHERE%' THEN regexp_replace(pg_get_indexdef(i.indexrelid, 0, true), '.*WHERE (.*)', '\\1') ELSE NULL END" -- if partial, get constraint def
+  sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
+  sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
+  sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
+  sqlWhereIsNULL "r.contype" -- fetch only "pure" indexes
+
+fetchTableIndexes :: [(TableIndex, RawSQL)] -> String -> String -> Bool -> Maybe String -> [(TableIndex, RawSQL)]
+fetchTableIndexes acc name columns unique mconstraint = (TableIndex {
+    idxColumns = map unsafeFromString . split "," $ columns
+  , idxUnique = unique
+  , idxWhere = unsafeFromString `liftM` mconstraint
+  }, unsafeFromString name) : acc
+
+-- *** FOREIGN KEYS ***
+
+sqlGetForeignKeys :: Table -> SQL
+sqlGetForeignKeys table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint r" $ do
+  sqlResult "r.conname" -- fk name
+  sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.conrelid AND a.attnum = ANY (r.conkey)), ',') as columns" -- constrained columns
+  sqlResult "c.relname" -- referenced table
+  sqlResult "array_to_string(array(SELECT a.attname FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.confrelid AND a.attnum = ANY (r.confkey)), ',') as refcolumns" -- referenced columns
+  sqlResult "r.confupdtype" -- on update
+  sqlResult "r.confdeltype" -- on delete
+  sqlResult "r.condeferrable" -- deferrable?
+  sqlResult "r.condeferred" -- initially deferred?
+  sqlJoinOn "pg_catalog.pg_class c" "c.oid = r.confrelid"
+  sqlWhereEqSql "r.conrelid" $ sqlGetTableID table
+  sqlWhereEq "r.contype" 'f'
+
+fetchForeignKeys :: [(ForeignKey, RawSQL)] -> String -> String -> String -> String -> Char -> Char -> Bool -> Bool -> [(ForeignKey, RawSQL)]
+fetchForeignKeys acc name columns reftable refcolumns on_update on_delete deferrable deferred = (ForeignKey {
+    fkColumns = S.fromList . map unsafeFromString . split "," $ columns
+  , fkRefTable = unsafeFromString reftable
+  , fkRefColumns = S.fromList . map unsafeFromString . split "," $ refcolumns
+  , fkOnUpdate = charToForeignKeyAction on_update
+  , fkOnDelete = charToForeignKeyAction on_delete
+  , fkDeferrable = deferrable
+  , fkDeferred = deferred
+  }, unsafeFromString name) : acc
+  where
+    charToForeignKeyAction c = case c of
+      'a' -> ForeignKeyNoAction
+      'r' -> ForeignKeyRestrict
+      'c' -> ForeignKeyCascade
+      'n' -> ForeignKeySetNull
+      'd' -> ForeignKeySetDefault
+      _   -> error $ "Invalid foreign key action code: " ++ show c
 
     -- *** UTILS ***
 
-    checkEquality :: (Eq t, Show t) => String -> [t] -> [t] -> ValidationResult
-    checkEquality pname defs props = case (defs L.\\ props, props L.\\ defs) of
-      ([], []) -> mempty
-      (def_diff, db_diff) -> ValidationResult [concat [
-          "Table and its definition have diverged and have "
-        , show $ length db_diff
-        , " and "
-        , show $ length def_diff
-        , " different "
-        , pname
-        , " each, respectively (table: "
-        , show db_diff
-        , ", definition: "
-        , show def_diff
-        , ")."
-        ]]
+checkEquality :: (Eq t, Show t) => String -> [t] -> [t] -> ValidationResult
+checkEquality pname defs props = case (defs L.\\ props, props L.\\ defs) of
+  ([], []) -> mempty
+  (def_diff, db_diff) -> ValidationResult [concat [
+      "Table and its definition have diverged and have "
+    , show $ length db_diff
+    , " and "
+    , show $ length def_diff
+    , " different "
+    , pname
+    , " each, respectively (table: "
+    , show db_diff
+    , ", definition: "
+    , show def_diff
+    , ")."
+    ]]
 
-    checkNames :: Show t => (t -> SQL) -> [(t, RawSQL)] -> ValidationResult
-    checkNames prop_name = mconcat . map check
-      where
-        check (prop, name) = case prop_name prop of
-          pname
-            | pname == raw name -> mempty
-            | otherwise -> ValidationResult [ concat [
-                "Property "
-              , show prop
-              , " has invalid name (expected: "
-              , show pname
-              , ", given: "
-              , show (raw name)
-              , ")."
-              ]]
+checkNames :: Show t => (t -> SQL) -> [(t, RawSQL)] -> ValidationResult
+checkNames prop_name = mconcat . map check
+  where
+    check (prop, name) = case prop_name prop of
+      pname
+        | pname == raw name -> mempty
+        | otherwise -> ValidationResult [ concat [
+            "Property "
+          , show prop
+          , " has invalid name (expected: "
+          , show pname
+          , ", given: "
+          , show (raw name)
+          , ")."
+          ]]
 
-    tableHasLess :: Show t => String -> t -> String
-    tableHasLess ptype missing = "Table in the database has *less* " ++ ptype ++ " than its definition (missing: " ++ show missing ++ ")"
+tableHasLess :: Show t => String -> t -> String
+tableHasLess ptype missing = "Table in the database has *less* " ++ ptype ++ " than its definition (missing: " ++ show missing ++ ")"
 
-    tableHasMore :: Show t => String -> t -> String
-    tableHasMore ptype extra = "Table in the database has *more* " ++ ptype ++ " than its definition (extra: " ++ show extra ++ ")"
+tableHasMore :: Show t => String -> t -> String
+tableHasMore ptype extra = "Table in the database has *more* " ++ ptype ++ " than its definition (extra: " ++ show extra ++ ")"
 
-    arrListTable :: Table -> String
-    arrListTable table = " -> " ++ tblNameString table ++ ": "
+arrListTable :: Table -> String
+arrListTable table = " -> " ++ tblNameString table ++ ": "

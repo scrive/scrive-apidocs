@@ -23,6 +23,8 @@ import Templates
 import User.Model
 import Company.Model
 import Control.Logic
+import AppDBTables (kontraTables)
+import DB.Checks
 import qualified Log
 import qualified MemCache
 import qualified Version
@@ -45,6 +47,9 @@ main = Log.withLogger $ do
     readConfig Log.server appname args "kontrakcja.conf"
 
   checkExecutables
+
+  withPostgreSQL (dbConfig appConf) $
+    checkDatabase Log.server kontraTables
 
   -- Generating static resources (JS and CSS). For development this does nothing. For production it generates joins.
   staticResources' <- SR.getResourceSetsForImport (SR.Production <| production appConf |> SR.Development) (srConfig appConf) ""

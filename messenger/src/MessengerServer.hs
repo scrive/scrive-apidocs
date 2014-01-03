@@ -11,6 +11,9 @@ import Crypto.RNG (newCryptoRNGState)
 import Configuration
 import Dispatcher
 import Handlers
+import SMS.Tables
+import DB.Checks
+import DB.PostgreSQL
 import MessengerServerConf
 import Sender
 import Utils.Cron
@@ -23,6 +26,10 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.messengerServer appname [] "messenger_server.conf"
   checkExecutables
+
+  withPostgreSQL (mscDBConfig conf) $
+    checkDatabase Log.messengerServer messengerTables
+
   rng <- newCryptoRNGState
 
   E.bracket (do

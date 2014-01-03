@@ -17,6 +17,9 @@ import ServiceChecker
 import Utils.Cron
 import Utils.IO
 import Utils.Network
+import DB.PostgreSQL
+import DB.Checks
+import Mails.Tables
 import qualified Data.ByteString.Char8 as BS
 import qualified MemCache
 import qualified Log (withLogger, mailingServer)
@@ -27,6 +30,9 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
   checkExecutables
+  withPostgreSQL (mscDBConfig conf) $
+    checkDatabase Log.mailingServer mailerTables
+
   fcache <- MemCache.new BS.length 52428800
   let amazonconf = AWS.AmazonConfig (mscAmazonConfig conf) fcache
   rng <- newCryptoRNGState

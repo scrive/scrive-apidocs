@@ -5,7 +5,7 @@ import DB
 tableAttachments :: Table
 tableAttachments = tblTable {
     tblName = "attachments"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }

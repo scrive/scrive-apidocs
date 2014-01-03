@@ -16,7 +16,8 @@ import qualified Log
 import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 
-import AppDB hiding (main)
+import AppDBTables
+import AppDBMigrations hiding (main)
 import Crypto.RNG
 import DB
 import DB.Checks

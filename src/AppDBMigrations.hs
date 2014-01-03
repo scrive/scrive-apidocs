@@ -1,7 +1,5 @@
-module AppDB (
-    kontraFunctions
-  , kontraMigrations
-  , kontraTables
+module AppDBMigrations (
+    kontraMigrations
   , main
   ) where
 
@@ -17,49 +15,24 @@ import Configuration
 import DB.Checks
 import DB.PostgreSQL
 
-import ActionQueue.Tables
+import AppDBTables
 import ActionQueue.Migrations
-import Company.Tables
 import Company.Migrations
-import CompanyAccounts.Tables
 import CompanyAccounts.Migrations
-import Doc.Tables
 import Doc.Migrations
-import Doc.API.Callback.Tables
-import Doc.API.Callback.Migrations
-import Doc.Tokens.Tables
-import HostClock.Tables
-import User.Migrations
-import User.Tables
-import User.History.Tables
-import File.Tables
-import File.Migrations
-import Mails.Tables
-import PadQueue.Tables
-import PadQueue.Migrations
-import Session.Tables
-import Mails.Migrations
-import OAuth.Tables
-import OAuth.Migrations
-import SMS.Tables
-import SMS.Migrations
-import ELegitimation.ELegTransaction.Tables
-import EvidenceLog.Tables
-import EvidenceLog.Migrations
-import Payments.Tables
-import Payments.Migrations
-import Attachment.Tables
-import ThirdPartyStats.Tables
-import ThirdPartyStats.Migrations
-import User.CallbackScheme.Tables
-import User.CallbackScheme.Migrations
 import Doc.AutomaticReminder.Tables
-
-kontraFunctions :: [SQLFunction]
-kontraFunctions = [
-    insertDocumentSessionToken
-  , mergeELegTransaction
-  ]
+import Doc.API.Callback.Migrations
+import User.Migrations
+import File.Migrations
+import PadQueue.Migrations
+import Mails.Migrations
+import OAuth.Migrations
+import SMS.Migrations
+import EvidenceLog.Migrations
+import Payments.Migrations
+import Attachment.Migrations
+import ThirdPartyStats.Migrations
+import User.CallbackScheme.Migrations
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
@@ -170,6 +143,7 @@ kontraMigrations = [
   , addPurgedTimeToFiles
   , migrateDocumentsAddPurgedTime
   , addRejectRedirectURL
+  , createMainFilesTable
   , migrateDocumentsMoveFilesToMainFilesTable
   , removeDuplicateIndexFromPaymentPlans
   , removeDuplicateIndexFromAccessNewAccounts
@@ -183,51 +157,12 @@ kontraMigrations = [
   , fixSignatureFieldsWithAnySize
   , migrateUsersUniqueIndexOnEmail
   , makeSealStatusNonNullInMainFiles
+  , createDocumentAutomaticRemindersTable
   , migrateDocumentsAddDaysToRemind
   , normalizeCompanyInvites
+  , addProbablyMissingIndexesOnAttachments
   ] ++ mailerMigrations
     ++ messengerMigrations
-
-kontraTables :: [Table]
-kontraTables = [
-    tableUsers
-  , tableUsersHistory
-  , tableCompanies
-  , tableCompanyInvites
-  , tableFiles
-  , tableMainFiles
-  , tableDocuments
-  , tableSignatoryLinks
-  , tableAuthorAttachments
-  , tableSignatoryAttachments
-  , tableEvidenceLog
-  , tablePadQueue
-  , tableDocumentTags
-  , tableSignatoryLinkFields
-  , tableSignatoryScreenshots
-  , tableTempCredential
-  , tableTempPrivileges
-  , tableAPIToken
-  , tableAccessToken
-  , tablePrivilege
-  , tablePasswordReminders
-  , tableAccessNewAccounts
-  , tableEmailChangeRequests
-  , tableUserAccountRequests
-  , tablePaymentPlans
-  , tableAttachments
-  , tablePaymentStats
-  , tableDocumentApiCallbacks
-  , tableSessions
-  , tableDocumentSessionTokens
-  , tableELegTransactions
-  , tableAsyncEventQueue
-  , tableHostClock
-  , tableUsersCallbackScheme
-  , tableCompanyUIs
-  , tableDocumentAutomaticReminders
-  ] ++ mailerTables
-    ++ messengerTables
 
 main :: IO ()
 main = do

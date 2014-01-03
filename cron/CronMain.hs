@@ -17,10 +17,12 @@ import Configuration
 import Crypto.RNG
 import qualified Data.ByteString as BS
 import DB
+import DB.Checks
 import DB.PostgreSQL
 import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.Action
+import AppDBTables
 import qualified MemCache
 import Utils.Cron
 import Utils.IO
@@ -49,9 +51,13 @@ main = Log.withLogger $ do
 
   checkExecutables
 
+  withPostgreSQL (dbConfig appConf) $
+    checkDatabase Log.cron kontraTables
+
   templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
   rng <- newCryptoRNGState
   filecache <- MemCache.new BS.length 52428800
+
 
   let runScheduler = inDB . CronEnv.runScheduler appConf filecache templates
       inDB = liftIO . withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng
