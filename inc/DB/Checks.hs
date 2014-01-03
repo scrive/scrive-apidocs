@@ -24,15 +24,11 @@ import DB.Versions
 
 default (SQL)
 
-data ValidationResult =
-    ValidationOk
-  | ValidationError String -- ^ error message
+newtype ValidationResult = ValidationResult [String] -- ^ list of error messages
 
 instance Monoid ValidationResult where
-  mempty = ValidationOk
-  mappend ValidationOk ValidationOk = ValidationOk
-  mappend err@ValidationError{} _ = err
-  mappend _ err@ValidationError{} = err
+  mempty = ValidationResult []
+  mappend (ValidationResult a) (ValidationResult b) = ValidationResult (a ++ b)
 
 -- | Runs all checks on a database
 migrateDatabase :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
@@ -213,10 +209,10 @@ checkDBConsistency logger tables migrations = do
           logger $ arrListTable table ++ "checking structure (v" ++ show ver ++ ")..."
           validation <- checkTableStructure table
           case validation of
-            ValidationError errmsg -> do
-              logger errmsg
+            ValidationResult [] -> return $ Right Nothing
+            ValidationResult errmsgs -> do
+              mapM_ logger errmsgs
               error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
-            ValidationOk -> return $ Right Nothing
         Just ver | ver < tblVersion -> do
           logger $ arrListTable table ++ "scheduling for migration: " ++ show ver ++ " => " ++ show tblVersion
           return . Right . Just $ (table, ver)
@@ -312,8 +308,8 @@ checkDBConsistency logger tables migrations = do
 
         checkColumns :: Int -> [TableColumn] -> [TableColumn] -> ValidationResult
         checkColumns _ [] [] = mempty
-        checkColumns _ rest [] = ValidationError $ tableHasLess "columns" rest
-        checkColumns _ [] rest = ValidationError $ tableHasMore "columns" rest
+        checkColumns _ rest [] = ValidationResult [tableHasLess "columns" rest]
+        checkColumns _ [] rest = ValidationResult [tableHasMore "columns" rest]
         checkColumns !n (d:defs) (c:cols) = mconcat [
             validateNames $ colName d == colName c
           -- bigserial == bigint + autoincrement and there is no
@@ -327,16 +323,16 @@ checkDBConsistency logger tables migrations = do
           ]
           where
             validateNames True = mempty
-            validateNames False = ValidationError $ errorMsg ("no. " ++ show n) "names" (unRawSQL . colName)
+            validateNames False = ValidationResult [errorMsg ("no. " ++ show n) "names" (unRawSQL . colName)]
 
             validateTypes True = mempty
-            validateTypes False = ValidationError $ (errorMsg cname "types" (show . colType)) ++ " " ++ sql_hint ("TYPE" <+> columnTypeToSQL (colType d))
+            validateTypes False = ValidationResult [(errorMsg cname "types" (show . colType)) ++ " " ++ sql_hint ("TYPE" <+> columnTypeToSQL (colType d))]
 
             validateNullables True = mempty
-            validateNullables False = ValidationError $ (errorMsg cname "nullables" (show . colNullable)) ++ " " ++ sql_hint ((if colNullable d then "DROP" else "SET") <+> "NOT NULL")
+            validateNullables False = ValidationResult [(errorMsg cname "nullables" (show . colNullable)) ++ " " ++ sql_hint ((if colNullable d then "DROP" else "SET") <+> "NOT NULL")]
 
             validateDefaults True = mempty
-            validateDefaults False = ValidationError $ (errorMsg cname "defaults" (show . colDefault)) ++ " " ++ sql_hint set_default
+            validateDefaults False = ValidationResult [(errorMsg cname "defaults" (show . colDefault)) ++ " " ++ sql_hint set_default]
               where
                 set_default = case colDefault d of
                   Just v  -> "SET DEFAULT" <+> v
@@ -357,8 +353,8 @@ checkDBConsistency logger tables migrations = do
 
         checkChecks :: [TableCheck] -> [TableCheck] -> ValidationResult
         checkChecks defs checks = case checkEquality "CHECKs" defs checks of
-          ValidationOk -> ValidationOk
-          ValidationError errmsg -> ValidationError $ errmsg ++ " (HINT: If checks are equal modulo number of parentheses/whitespaces used in conditions, just copy and paste expected output into source code)"
+          ValidationResult [] -> ValidationResult []
+          ValidationResult errmsgs -> ValidationResult $ errmsgs ++ [" (HINT: If checks are equal modulo number of parentheses/whitespaces used in conditions, just copy and paste expected output into source code)"]
 
         checkIndexes :: [TableIndex] -> [(TableIndex, RawSQL)] -> ValidationResult
         checkIndexes defs indexes = mconcat [
@@ -372,10 +368,10 @@ checkDBConsistency logger tables migrations = do
       kRun_ $ sqlGetForeignKeys table
       fkeys <- kFold fetchForeignKeys []
       case validate tblForeignKeys fkeys of
-        ValidationError errmsg -> do
-          logger errmsg
+        ValidationResult [] -> return ()
+        ValidationResult errmsgs -> do
+          mapM_ logger errmsgs
           error $ "Foreign keys on table '" ++ tblNameString table ++ "' are invalid."
-        ValidationOk -> return ()
       where
         validate :: [ForeignKey] -> [(ForeignKey, RawSQL)] -> ValidationResult
         validate defs fkeys = mconcat [
@@ -473,7 +469,7 @@ checkDBConsistency logger tables migrations = do
     checkEquality :: (Eq t, Show t) => String -> [t] -> [t] -> ValidationResult
     checkEquality pname defs props = case (defs L.\\ props, props L.\\ defs) of
       ([], []) -> mempty
-      (def_diff, db_diff) -> ValidationError $ concat [
+      (def_diff, db_diff) -> ValidationResult [concat [
           "Table and its definition have diverged and have "
         , show $ length db_diff
         , " and "
@@ -485,7 +481,7 @@ checkDBConsistency logger tables migrations = do
         , ", definition: "
         , show def_diff
         , ")."
-        ]
+        ]]
 
     checkNames :: Show t => (t -> SQL) -> [(t, RawSQL)] -> ValidationResult
     checkNames prop_name = mconcat . map check
@@ -493,7 +489,7 @@ checkDBConsistency logger tables migrations = do
         check (prop, name) = case prop_name prop of
           pname
             | pname == raw name -> mempty
-            | otherwise -> ValidationError $ concat [
+            | otherwise -> ValidationResult [ concat [
                 "Property "
               , show prop
               , " has invalid name (expected: "
@@ -501,7 +497,7 @@ checkDBConsistency logger tables migrations = do
               , ", given: "
               , show (raw name)
               , ")."
-              ]
+              ]]
 
     tableHasLess :: Show t => String -> t -> String
     tableHasLess ptype missing = "Table in the database has *less* " ++ ptype ++ " than its definition (missing: " ++ show missing ++ ")"
