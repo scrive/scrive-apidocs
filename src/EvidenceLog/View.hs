@@ -117,6 +117,7 @@ simpleEvents (Current RestartDocumentEvidence)           = True
 simpleEvents (Current SignDocumentEvidence)              = True
 simpleEvents (Current SignatoryLinkVisited)              = True
 simpleEvents (Current TimeoutDocumentEvidence)           = True
+simpleEvents (Current SignWithELegFailureEvidence)       = True
 simpleEvents _                                           = False
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
@@ -142,6 +143,7 @@ getEvidenceEventStatusClass (Current ProlongDocumentEvidence)           = SCProl
 getEvidenceEventStatusClass (Current AttachSealedFileEvidence)          = SCSigned
 getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed
 getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)  = SCExtended
+getEvidenceEventStatusClass (Current SignWithELegFailureEvidence)       = SCError
 getEvidenceEventStatusClass _                                           = SCError
 
 -- Remove signatory events that happen after signing (link visited, invitation read)

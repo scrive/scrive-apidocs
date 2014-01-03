@@ -58,7 +58,7 @@ import qualified Log
 import LiveDocx
 import Doc.DocView
 import Doc.DocInfo
-import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocumentM, theDocument, theDocumentID)
+import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocumentM, theDocument)
 import Doc.Action
 import Text.JSON.FromJSValue
 import Doc.DocDraft
@@ -418,41 +418,38 @@ apiCallSign  did slid = api $ do
 
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
   withDocument olddoc $ do
-    res <- (case mprovider of
-              Nothing -> do signDocument slid mh fields Nothing screenshots
-                            return Nothing
-              Just provider -> handleSignWithEleg slid mh fields screenshots provider)
+    (case mprovider of
+              Nothing -> do
+                  signDocument slid mh fields Nothing screenshots
+                  postDocumentPendingChange olddoc
+                  handleAfterSigning slid
+                  (Right . Accepted) <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
+              Just provider -> do
+                  transactionid <- getDataFnM $ look "transactionid"
+                  esigninfo <- case provider of
+                      MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
+                      _ -> do
+                            signature <- getDataFnM $ look "signature"
+                            BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
+                  case esigninfo of
+                      BankID.Problem msg -> do
+                        Log.error $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
+                        (Left . Failed) <$> (runJSONGenT $ return ())
+                      BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
+                        handleMismatch slid sfn sln spn
+                        Log.error $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
+                        (Left . Failed) <$> (runJSONGenT $ return ())
+                      BankID.Sign sinfo -> do
+                        signDocument slid mh fields (Just sinfo) screenshots
+                        postDocumentPendingChange olddoc
+                        handleAfterSigning slid
+                        (Right . Accepted) <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
+     )
            `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
            `catchKontra` (\(SignatoryHasAlreadySigned) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
-    Log.debug $ "Signing done, result is " ++ show (isNothing res)
-    case res of
-      Nothing -> do
-        postDocumentPendingChange olddoc
-        handleAfterSigning slid
-      Just msg -> do
-        -- On eleg error we return document, but it will have status cancelled instead of closed.
-        Log.error $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
-    theDocument >>= \d -> Accepted <$> documentJSON mu False True True Nothing Nothing d
 
 {- | Utils for signing with eleg -}
 
-handleSignWithEleg :: (Kontrakcja m, DocumentMonad m)
-                   => SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.SignatoryScreenshots -> SignatureProvider -> m (Maybe String)
-handleSignWithEleg signatorylinkid magichash fields screenshots provider = do
-  transactionid <- getDataFnM $ look "transactionid"
-  esigninfo <- case provider of
-    MobileBankIDProvider -> theDocumentID >>= \did -> BankID.verifySignatureAndGetSignInfoMobile did signatorylinkid magichash fields transactionid
-    _ -> do
-          signature <- getDataFnM $ look "signature"
-          BankID.verifySignatureAndGetSignInfo signatorylinkid magichash fields provider signature transactionid
-  case esigninfo of
-    BankID.Problem msg -> return $ Just msg
-    BankID.Mismatch msg sfn sln spn -> do
-      handleMismatch signatorylinkid sfn sln spn
-      return $ Just msg
-    BankID.Sign sinfo -> do
-      signDocument signatorylinkid magichash fields (Just sinfo) screenshots
-      return Nothing
 
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID

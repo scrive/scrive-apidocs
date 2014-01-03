@@ -42,7 +42,6 @@ import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
-import qualified Text.StringTemplates.Fields as F
 import Data.List
 import Data.Maybe
 
@@ -157,7 +156,7 @@ generationFailed desc code msg = do
  -}
 
 data VerifySignatureResult  = Problem String
-                            | Mismatch String String String String
+                            | Mismatch (Bool,Bool) (String,String,String) -- First bool == True if name did not match, second if personal number. Strings are details from eleg.
                             | Sign SignatureInfo
 
 -- Just a note: we should not pass these in the url; these url parameters should be passed as JSON
@@ -194,6 +193,7 @@ verifySignatureAndGetSignInfo signid magic fields provider signature transaction
                 signature
                 ( transactionnonce <|  provider == BankIDProvider |> Nothing )
                 transactionid
+    Log.eleg $ "Verification done - checking result"
     case res of
         -- error state
         Left (ImplStatus _a _b code msg) -> do
@@ -204,22 +204,22 @@ verifySignatureAndGetSignInfo signid magic fields provider signature transaction
         Right (cert, attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
-            info <- compareSigLinkToElegData siglink fields attrs
-            case info of
+            case (compareSigLinkToElegData siglink fields attrs) of
                 -- either number or name do not match
-                Left (msg, sfn, sln, spn) -> do
-                    return $ Mismatch msg sfn sln spn
+                (MergeFail,MergeFail) -> return $ Mismatch (True,  True)  (getDetailsFromResponseAttrs attrs)
+                (MergeFail,_)         -> return $ Mismatch (True,  False) (getDetailsFromResponseAttrs attrs)
+                (_,MergeFail)         -> return $ Mismatch (False, True)  (getDetailsFromResponseAttrs attrs)
                 -- we have merged the info!
-                Right (bn, bpn) -> do
+                (bn, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     let mocsp = lookup "Validation.ocsp.response" attrs
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = cert
                                                      , signatureinfoprovider     = provider
-                                                     , signaturefstnameverified  = bn
-                                                     , signaturelstnameverified  = bn
-                                                     , signaturepersnumverified  = bpn
+                                                     , signaturefstnameverified  = bn  == MergeMatch
+                                                     , signaturelstnameverified  = bn  == MergeMatch
+                                                     , signaturepersnumverified  = bpn == MergeMatch
                                                      , signatureinfoocspresponse = mocsp
                                                     }
 
@@ -286,22 +286,25 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
       Right (cert, attrs) -> do
         authorsl <- guardJust $ getAuthorSigLink doc
         -- compare information from document (and fields) to that obtained from BankID
-        info <- compareSigLinkToElegData authorsl [] attrs
-        case info of
-          Left (msg, _, _, _) -> do
-            Log.eleg $ "merge failed: " ++ msg
-            prob <- renderTemplate "bankidPersInfoMismatch" $ F.value "message" msg
-            return $ Problem prob
-          -- we have merged the info!
-          Right (bn, bpn) -> do
+        case (compareSigLinkToElegData authorsl [] attrs) of
+          (MergeFail,MergeFail) -> do
+            Log.eleg ("merge failed: Could not merge author details : name and number")
+            return (Problem "Could not merge author details : name and number")
+          (MergeFail,_)         -> do
+            Log.eleg ("merge failed: Could not merge author details : name")
+            return (Problem "Could not merge author details : name")
+          (_,MergeFail)         -> do
+            Log.eleg ("merge failed: Could not merge author details : number")
+            return (Problem "Could not merge author details : number")
+          (bn, bpn) -> do
             Log.eleg "author merge succeeded. (details omitted)"
             return $ Sign $ SignatureInfo    { signatureinfotext        = transactiontbs
                                              , signatureinfosignature    = signature
                                              , signatureinfocertificate  = cert
                                              , signatureinfoprovider     = provider
-                                             , signaturefstnameverified  = bn
-                                             , signaturelstnameverified  = bn
-                                             , signaturepersnumverified  = bpn
+                                             , signaturefstnameverified  = bn == MergeMatch
+                                             , signaturelstnameverified  = bn == MergeMatch
+                                             , signaturepersnumverified  = bpn == MergeMatch
                                              , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                              }
 
@@ -506,21 +509,21 @@ verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
       Right (CRComplete _ signature attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
-            info <- compareSigLinkToElegData siglink fields attrs
-            case info of
+            case (compareSigLinkToElegData siglink fields attrs) of
                 -- either number or name do not match
-                Left (msg, sfn, sln, spn) -> do
-                    return $ Mismatch msg sfn sln spn
+                (MergeFail,MergeFail) -> return $ Mismatch (True,  True)  (getDetailsFromResponseAttrs attrs)
+                (MergeFail,_)         -> return $ Mismatch (True,  False) (getDetailsFromResponseAttrs attrs)
+                (_,MergeFail)         -> return $ Mismatch (False, True)  (getDetailsFromResponseAttrs attrs)
                 -- we have merged the info!
-                Right (bn, bpn) -> do
+                (bn, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
                                                      , signatureinfoprovider     = MobileBankIDProvider
-                                                     , signaturefstnameverified  = bn
-                                                     , signaturelstnameverified  = bn
-                                                     , signaturepersnumverified  = bpn
+                                                     , signaturefstnameverified  = bn == MergeMatch
+                                                     , signaturelstnameverified  = bn == MergeMatch
+                                                     , signaturepersnumverified  = bpn == MergeMatch
                                                      , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                                     }
       Left s -> return $ Problem s
@@ -543,21 +546,21 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
       Right (CRComplete _ signature attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
-            info <- compareSigLinkToElegData siglink [] attrs
-            case info of
+            case (compareSigLinkToElegData siglink [] attrs) of
                 -- either number or name do not match
-                Left (msg, sfn, sln, spn) -> do
-                    return $ Mismatch msg sfn sln spn
+                (MergeFail,MergeFail) -> return $ Mismatch (True,  True)  (getDetailsFromResponseAttrs attrs)
+                (MergeFail,_)         -> return $ Mismatch (True,  False) (getDetailsFromResponseAttrs attrs)
+                (_,MergeFail)         -> return $ Mismatch (False, True)  (getDetailsFromResponseAttrs attrs)
                 -- we have merged the info!
-                Right (bn, bpn) -> do
+                (bn, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
                                                      , signatureinfoprovider     = MobileBankIDProvider
-                                                     , signaturefstnameverified  = bn
-                                                     , signaturelstnameverified  = bn
-                                                     , signaturepersnumverified  = bpn
+                                                     , signaturefstnameverified  = bn == MergeMatch
+                                                     , signaturelstnameverified  = bn == MergeMatch
+                                                     , signaturepersnumverified  = bpn == MergeMatch
                                                      , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                                     }
       Left s -> return $ Problem s
