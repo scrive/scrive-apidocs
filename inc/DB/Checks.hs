@@ -102,7 +102,17 @@ checkDBConsistency :: forall m. MonadDB m
                    => (String -> m ()) -> [Table] -> [Migration m]
                    -> m ()
 checkDBConsistency logger tables migrations = do
-  (created, to_migration) <- checkTables
+  (to_create, to_migration) <- checkTables
+
+  when (not . null $ to_create) $
+    forM_ to_create $ \table@Table{..} -> do
+      forM_ (createTableSQLs table) $ logged kRun_
+      kRun_ . sqlInsert "table_versions" $ do
+        sqlSet "name" (tblNameString table)
+        sqlSet "version" tblVersion
+      _ <- checkTable table
+      return ()
+
   -- run migrations, if necessary
   when (not . null $ to_migration) $ do
     logger "Running migrations..."
@@ -111,8 +121,9 @@ checkDBConsistency logger tables migrations = do
     (_, to_migration_again) <- checkTables
     when (not . null $ to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap showNotMigrated to_migration_again
+
   -- add foreign keys and properties to new tables
-  forM_ created $ \table@Table{..} -> do
+  forM_ to_create $ \table@Table{..} -> do
     when (not . null $ tblForeignKeys) $ do
       logger $ arrListTable table ++ "creating foreign keys..."
       logged kRun_ $ sqlAlterTable tblName $ map (sqlAddFK tblName) tblForeignKeys
@@ -120,6 +131,7 @@ checkDBConsistency logger tables migrations = do
     tblPutProperties
   -- check foreign key consistency
   forM_ tables checkForeignKeys
+
   where
     logged :: (SQL -> m a) -> SQL -> m a
     logged exec sql = do
@@ -132,53 +144,23 @@ checkDBConsistency logger tables migrations = do
     showNotMigrated :: (Table, Int) -> String
     showNotMigrated (t, from) = "\n * " ++ tblNameString t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 
-    checkTables :: m ([Table], [(Table, Int)])
-    checkTables = (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
-
-    checkTable :: Table -> m (Either Table (Maybe (Table, Int)))
-    checkTable table@Table{..} = do
-      logger $ arrListTable table ++ "checking version..."
-      mver <- checkVersion table
-      case mver of
-        Nothing -> do
-          forM_ createTableSQLs $ logged kRun_
-          kRun_ . sqlInsert "table_versions" $ do
-            sqlSet "name" (tblNameString table)
-            sqlSet "version" tblVersion
-          _ <- checkTable table
-          return $ Left table
-        Just ver | ver == tblVersion -> do
-          normalizePropertyNames
-          logger $ arrListTable table ++ "checking structure (v" ++ show ver ++ ")..."
-          validation <- checkTableStructure table
-          case validation of
-            ValidationError errmsg -> do
-              logger errmsg
-              error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
-            ValidationOk -> return $ Right Nothing
-        Just ver | ver < tblVersion -> do
-          normalizePropertyNames
-          logger $ arrListTable table ++ "scheduling for migration: " ++ show ver ++ " => " ++ show tblVersion
-          return . Right . Just $ (table, ver)
-        Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
-      where
-        createTableSQLs :: [SQL]
-        createTableSQLs = concat [
-            [sqlCreateTable tblName]
-          , if null tblColumns
-              then []
-              else [sqlAlterTable tblName $ map sqlAddColumn tblColumns]
-          , case tblPrimaryKey of
-              Nothing -> []
-              Just pk -> [sqlAlterTable tblName [sqlAddPK tblName pk]]
-          , if null tblChecks
+    createTableSQLs :: Table -> [SQL]
+    createTableSQLs Table{..} = concat
+      [ [sqlCreateTable tblName]
+      , if null tblColumns
+        then []
+        else [sqlAlterTable tblName $ map sqlAddColumn tblColumns]
+      , case tblPrimaryKey of
+          Nothing -> []
+          Just pk -> [sqlAlterTable tblName [sqlAddPK tblName pk]]
+      , if null tblChecks
             then []
             else [sqlAlterTable tblName $ map sqlAddCheck tblChecks]
-          , map (sqlCreateIndex tblName) tblIndexes
-          ]
+      , map (sqlCreateIndex tblName) tblIndexes
+      ]
 
-        normalizePropertyNames :: m ()
-        normalizePropertyNames = do
+    normalizePropertyNames :: Table -> m ()
+    normalizePropertyNames table@Table{..} = do
           kRun_ $ sqlGetPrimaryKey table
           pk <- kFold fetchPrimaryKey Nothing
           kRun_ $ sqlGetIndexes table
@@ -217,6 +199,29 @@ checkDBConsistency logger tables migrations = do
                   ]
                 ]
 
+    checkTables :: m ([Table], [(Table, Int)])
+    checkTables = (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
+
+    checkTable :: Table -> m (Either Table (Maybe (Table, Int)))
+    checkTable table@Table{..} = do
+      logger $ arrListTable table ++ "checking version..."
+      mver <- checkVersion table
+      case mver of
+        Nothing -> do
+          return $ Left table
+        Just ver | ver == tblVersion -> do
+          logger $ arrListTable table ++ "checking structure (v" ++ show ver ++ ")..."
+          validation <- checkTableStructure table
+          case validation of
+            ValidationError errmsg -> do
+              logger errmsg
+              error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid."
+            ValidationOk -> return $ Right Nothing
+        Just ver | ver < tblVersion -> do
+          logger $ arrListTable table ++ "scheduling for migration: " ++ show ver ++ " => " ++ show tblVersion
+          return . Right . Just $ (table, ver)
+        Just ver -> error $ "Table '" ++ tblNameString table ++ "' in the database has higher version than the definition (database: " ++ show ver ++ ", definition: " ++ show tblVersion ++ ")"
+
     checkVersion :: Table -> m (Maybe Int)
     checkVersion table = do
       doesExist <- getOne $ sqlSelect "pg_catalog.pg_class c" $ do
@@ -241,6 +246,7 @@ checkDBConsistency logger tables migrations = do
 
     migrate :: [Migration m] -> [(Table, Int)] -> m ()
     migrate ms ts = forM_ ms $ \Migration{..} -> forM_ ts $ \(t, from) -> do
+      normalizePropertyNames t
       if tblName mgrTable == tblName t && mgrFrom >= from
          then do
            Just ver <- checkVersion mgrTable
