@@ -126,7 +126,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var document = this.document();
     var signatory = document.currentSignatory();
 
-    if (signatory.author) {
+    if (signatory.author()) {
      var content = $("<div />");
      if (document.authorIsOnlySignatory())
             content = $(localization.process.signatorysignmodalcontentauthoronly);
