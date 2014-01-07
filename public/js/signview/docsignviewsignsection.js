@@ -134,11 +134,20 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var signviewbranding = this.model.signviewbranding();
     var signatory = document.currentSignatory();
     var self = this;
+    var title;
     self.screenshotDone = false;
+
+    if (signatory.author()) {
+      title = localization.signByAuthor.modalTitle;
+    } else if (signatory.elegAuthentication()) {
+      title = localization.process.signatorysignmodaltitleeleg;
+    } else {
+      title = localization.process.signatorysignmodaltitle;
+    }
 
     var confirmation = Confirmation.popup({
       cssClass: 'grey',
-      title: signatory.author ? localization.signByAuthor.modalTitle : localization.process.signatorysignmodaltitle,
+      title: title,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       onRender: function() {
         document.takeSigningScreenshot(function() {

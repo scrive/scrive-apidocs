@@ -180,6 +180,7 @@ javascriptLocalisation =
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
                signatorysignmodaltitle: "$_contractsignatorysignmodaltitle()$",
+               signatorysignmodaltitleeleg: "$_contractsignatorysignmodaltitleeleg()$",
                signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
                signatorysignmodalcontentdesignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
