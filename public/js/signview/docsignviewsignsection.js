@@ -19,7 +19,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   elegMishmatchErrorMessage : function(onName,onNumber) {
     var document = this.document();
     var signatory = document.currentSignatory();
-    var numberCanBeChanged = (signatory.personalnumberField() != undefined && !signatory.personalnumberField().isClosed())
+    var numberCanBeChanged = (signatory.personalnumberField() != undefined && !signatory.personalnumberField().isClosed());
     var nameCanBeChanged = (signatory.fstnameField() != undefined && !signatory.fstnameField().isClosed()) || (signatory.sndnameField() != undefined && !signatory.sndnameField().isClosed());
     if (onName && onNumber && (!numberCanBeChanged || !nameCanBeChanged))
       return localization.sign.eleg.mismatch.mismatchOnNameAndNumberCantChange;
