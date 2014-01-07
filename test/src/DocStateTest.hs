@@ -458,7 +458,7 @@ testSignWithELegFailureEvidenceDocumentEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending) `withDocumentM` do
     Just sl <- getAuthorSigLink <$> theDocument
-    randomUpdate $ \t-> LogSignWithELegFailureForDocument (signatorylinkid sl) "first" "last" "198404011234" (systemActor t)
+    randomUpdate $ \t-> LogSignWithELegFailureForDocument (signatorylinkid sl) Nothing Nothing "first" "last" "198404011234" (systemActor t)
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
     assertJust $ find (\e -> evType e == Current SignWithELegFailureEvidence) lg
 

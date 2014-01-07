@@ -1249,13 +1249,12 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocum
         sqlWhereEq "id" did
         sqlWhereEq "status" $ DocumentError undefined
 
-data LogSignWithELegFailureForDocument = LogSignWithELegFailureForDocument SignatoryLinkID String String String Actor
+data LogSignWithELegFailureForDocument = LogSignWithELegFailureForDocument SignatoryLinkID (Maybe String) (Maybe String) String String String Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m LogSignWithELegFailureForDocument () where
-  update (LogSignWithELegFailureForDocument slid firstName lastName personNumber actor) = updateDocumentWithID $ \did -> do
+  update (LogSignWithELegFailureForDocument slid mname mnumber firstName lastName personNumber actor) = updateDocumentWithID $ \did -> do
     sl <- query $ GetSignatoryLinkByID did slid Nothing
-    let trips = [("First name",      getFirstName      sl, firstName)
-                ,("Last name",       getLastName       sl, lastName)
-                ,("Personal number", getPersonalNumber sl, personNumber)]
+    let trips = [("Name",    fromMaybe (getFullName sl) mname, firstName ++ " " ++ lastName)
+                ,("Personal number", fromMaybe (getPersonalNumber sl) mnumber, personNumber)]
         uneql = filter (\(_,a,b)->a/=b) trips
         msg2 = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg

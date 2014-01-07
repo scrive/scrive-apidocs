@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the",
@@ -941,5 +941,11 @@
 "_youCantCancelThisDocuments":"You can't withdraw selected documents.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your e-ID provider.",
-"_zip":"Zip"
+"_zip":"Zip",
+"_mismatchOnNameAndNumberCantChange":"The name and the pers. no. given in the document do not match your e-ID. Please contact the sender.",
+"_mismatchOnNameAndNumberCanChange":"The name and the pers. no. given in the document do not match your e-ID.",
+"_mismatchOnNameAndCantChange": "The name given in the document does not match your e-ID. Please contact the document sender.",
+"_mismatchOnNumberAndCantChange":"The pers. no. given in the document does not match your e-ID. Please contact the document sender.",
+"_mismatchOnNameAndCanChange" : "The name given in the document does not match your e-ID.",
+"_mismatchOnNumberAndCanChange" : "The pers. no. given in the document does not match your e-ID."
 }

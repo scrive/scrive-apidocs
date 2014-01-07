@@ -299,13 +299,13 @@ testDocumentDeleteInBulk = do
 
 testBankIDMismatch :: TestEnv ()
 testBankIDMismatch = do
-    r1 <- compareNames "Mariusz Rak" "Mariusz Rak"
+    r1 <- return $ compareNames "Mariusz Rak" "Mariusz Rak"
     assertEqual "Valid match" MergeMatch r1
-    r2 <- compareNames "Mariusz Rak" "Moriusz  Rok"
+    r2 <- return $ compareNames "Mariusz Rak" "Moriusz  Rok"
     assertEqual "Valid match" MergeMatch r2
-    r3 <- compareNames "Michal Sloink" "Rak Mariusz"
+    r3 <- return $ compareNames "Michal Sloink" "Rak Mariusz"
     assertBool "Invalid match " (MergeMatch /= r3)
-    r4 <- compareNames "AAAA" "BBBB"
+    r4 <- return $ compareNames "AAAA" "BBBB"
     assertBool "Invalid match " (MergeMatch /= r4)
 
 testGetLoggedIn :: TestEnv ()

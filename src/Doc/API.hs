@@ -94,6 +94,7 @@ import Attachment.Model
 import Utils.Read
 import Doc.DocMails
 import Doc.AutomaticReminder.Model
+import Utils.Monoid
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -436,9 +437,9 @@ apiCallSign  did slid = api $ do
                         Log.error $ "Eleg verification for document #" ++ show did ++ " failed with message: " ++ msg
                         (Left . Failed) <$> (runJSONGenT $ return ())
                       BankID.Mismatch (onname,onnumber) (sfn,sln,spn) -> do
-                        handleMismatch slid sfn sln spn
+                        handleMismatch slid ((\(t,v) -> SignatoryField t v False False []) <$> fields) sfn sln spn
                         Log.error $ "Eleg verification for document #" ++ show did ++ " failed with mismatch " ++ show ((onname,onnumber),(sfn,sln,spn))
-                        (Left . Failed) <$> (runJSONGenT $ return ())
+                        (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
                       BankID.Sign sinfo -> do
                         signDocument slid mh fields (Just sinfo) screenshots
                         postDocumentPendingChange olddoc
@@ -466,12 +467,12 @@ signDocument slid mh fields msinfo screenshots = do
   dbUpdate $ UpdateFieldsForSigning slid fields actor
   dbUpdate $ SignDocument slid mh msinfo screenshots actor
 
-handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> String -> String -> String -> m ()
-handleMismatch sid sfn sln spn = do
+handleMismatch :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [SignatoryField] -> String -> String -> String -> m ()
+handleMismatch sid sf sfn sln spn = do
         ctx <- getContext
         Just sl <- getSigLinkFor sid <$> theDocument
         Log.eleg $ "Information from eleg did not match information stored for signatory in document."
-        dbUpdate $ LogSignWithELegFailureForDocument sid sfn sln spn (signatoryActor ctx sl)
+        dbUpdate $ LogSignWithELegFailureForDocument sid (nothingIfEmpty $ getFullName sf) (nothingIfEmpty $ getPersonalNumber sf)  sfn sln spn (signatoryActor ctx sl)
         triggerAPICallbackIfThereIsOne =<< theDocument
 
 {- End of utils-}
