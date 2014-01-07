@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 import java.net.URL;
+import java.net.MalformedURLException;
 import java.lang.Character.UnicodeBlock;
 import org.yaml.snakeyaml.*;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -33,6 +34,7 @@ import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfSmartCopy;
 import com.itextpdf.text.pdf.PdfCopy;
@@ -323,24 +325,12 @@ public class PDFSeal {
                         float realx = field.x * cropBox.getWidth() + cropBox.getLeft();
                         float realy = (1 - field.y - field.image_h) * cropBox.getHeight() + cropBox.getBottom();
 
-                        byte rawdata[] = Base64.decode(field.valueBase64);
-                        if( rawdata==null ) {
-                            throw new Base64DecodeException();
-                        }
-                        Image image = Image.getInstance(rawdata);
+                        Image image = createImageWithKeyColor(field);
 
                         image.setAbsolutePosition(realx, realy);
                         image.scaleAbsoluteWidth(field.image_w * cropBox.getWidth());
                         image.scaleAbsoluteHeight(field.image_h * cropBox.getHeight());
 
-                        if( field.keyColor!=null ) {
-                            image.setTransparency(new int[] { field.keyColor.get(0),
-                                                              field.keyColor.get(0),
-                                                              field.keyColor.get(1),
-                                                              field.keyColor.get(1),
-                                                              field.keyColor.get(2),
-                                                              field.keyColor.get(2)} );
-                        }
                         canvas.addImage(image);
                     }
                 }
@@ -432,6 +422,40 @@ public class PDFSeal {
         return result;
     }
 
+    static Image createImageWithKeyColor(Field field) throws Base64DecodeException, BadElementException, MalformedURLException, IOException
+    {
+        byte rawdata[] = Base64.decode(field.valueBase64);
+        if( rawdata==null ) {
+            throw new Base64DecodeException();
+        }
+
+        Image image = Image.getInstance(rawdata);
+
+        if( field.keyColor!=null ) {
+            /*
+             * Color space is 3 for RGB, 1 for
+             * Gray. No idea what to do if this
+             * returns something else.
+             */
+            int colorSpace = image.getColorspace();
+
+            int r = field.keyColor.get(0);
+            int g = field.keyColor.get(1);
+            int b = field.keyColor.get(2);
+            int ave = (r + g + b) / 3;
+
+            switch(colorSpace) {
+            case 3: // RGB
+                image.setTransparency(new int[] { r, r, g, g, b, b } );
+                break;
+            case 1: // Gray, this is negative color space
+                image.setTransparency(new int[] { 255 - ave, 255 - ave } );
+                break;
+            }
+        }
+        return image;
+    }
+
     /*
      * Helper function that creates a box for each person involved in a
      * document signing process.
@@ -493,21 +517,8 @@ public class PDFSeal {
                 if( field.valueBase64!=null &&
                     field.valueBase64!="" &&
                     field.includeInSummary ) {
-                        byte rawdata[] = Base64.decode(field.valueBase64);
-                        if( rawdata==null ) {
-                            throw new Base64DecodeException();
-                        }
 
-                        Image image = Image.getInstance(rawdata);
-
-                        if( field.keyColor!=null ) {
-                            image.setTransparency(new int[] { field.keyColor.get(0),
-                                                              field.keyColor.get(0),
-                                                              field.keyColor.get(1),
-                                                              field.keyColor.get(1),
-                                                              field.keyColor.get(2),
-                                                              field.keyColor.get(2)} );
-                        }
+                        Image image = createImageWithKeyColor(field);
 
                         /*
                          * The magic below is to add a bottom line to
