@@ -43,7 +43,7 @@ var CsvProblem = Backbone.Model.extend({
      return this.get("problems");
   },
   ready : function() {
-           return (this.rows().length > 0) &&  (this.problems().length  == 0);
+           return (this.rows() != undefined) && (this.rows().length > 0) &&  (this.problems().length  == 0);
   },
   header: function() {
      return this.get("header");
@@ -63,6 +63,9 @@ var CsvProblem = Backbone.Model.extend({
   },
   isEmpty : function() {
      return ((this.header() == undefined || this.rows() ==  undefined)) &&  (this.problems().length  == 0);
+  },
+  hasData: function() {
+     return this.header() != undefined || this.rows() != undefined;
   },
   problemWithRow : function(r) {
       var res;
@@ -298,7 +301,14 @@ window.CsvSignatoryDesignPopup =  function(args) {
              if (model.ready())
                  popup.showAccept();
              else
-                 popup.hideAccept(); });
+                 popup.hideAccept();
+
+             if (model.hasData()) {
+               popup.setWidth(1018);
+             } else {
+               popup.setWidth(530);
+             }
+        });
 };
 
 
