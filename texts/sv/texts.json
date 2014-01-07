@@ -1,4 +1,4 @@
-{
+{ 
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -567,6 +567,12 @@
 "_mandatoryAction":"Obligatoriskt att fylla i",
 "_march":"mars",
 "_may":"maj",
+"_mismatchOnNameAndCanChange":"Namnet i dokumentet stämmer inte överens med din e-legitimation.",
+"_mismatchOnNameAndCantChange":"Namnet i dokumentet stämmer inte överens med din e-legitimation. Vänligen kontakta avsändaren.",
+"_mismatchOnNameAndNumberCanChange":"Namnet och personnumret i dokumentet stämmer inte överens med din e-legitimation.",
+"_mismatchOnNameAndNumberCantChange":"Namnet och personnumret i dokumentet stämmer inte överens med din e-legitimation. Kontakta avsändaren..",
+"_mismatchOnNumberAndCanChange":"Personnumret i dokumentet stämmer inte överens med din e-legitimation.",
+"_mismatchOnNumberAndCantChange":"Personnumret i dokumentet stämmer inte överens med din e-legitimation. Vänligen kontakta avsändaren.",
 "_missingPlacedAuthorFieldValue":"Alla avsändarens fält måste vara ifyllda.",
 "_modalAccountPasswordRequirements":"Minimum 8 tecken. Minst en bokstav och en siffra.",
 "_modalAccountSetupBodyAccept":"Jag har läst och accepterar ",
@@ -941,13 +947,5 @@
 "_youCantCancelThisDocuments":"Du kan inte återkalla valda dokument.",
 "_youCantSendRemindersToThisDocuments":"Det går inte att skicka påminnelser för några av de valda dokumenten.",
 "_yourSigningPluginFailed":"Din signerings-plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.",
-"_zip":"Postnummer",
-"_mismatchOnNameAndNumberCantChange":"Namnet och personnumret i dokumentet stämmer inte överens med din e-legitimation. Kontakta avsändaren..",
-"_mismatchOnNameAndNumberCanChange":"Namnet och personnumret i dokumentet stämmer inte överens med din e-legitimation.",
-"_mismatchOnNameAndCantChange": "Namnet i dokumentet stämmer inte överens med din e-legitimation. Vänligen kontakta avsändaren.",
-"_mismatchOnNumberAndCantChange":"Personnumret i dokumentet stämmer inte överens med din e-legitimation. Vänligen kontakta avsändaren.",
-"_mismatchOnNameAndCanChange":"Namnet i dokumentet stämmer inte överens med din e-legitimation.",
-"_mismatchOnNumberAndCanChange":"Personnumret i dokumentet stämmer inte överens med din e-legitimation."
-
-
+"_zip":"Postnummer"
 }
