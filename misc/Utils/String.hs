@@ -1,4 +1,4 @@
-module Utils.String(concatChunks, pureString, levenshtein, maxLev, maybeS, escapeString) where
+module Utils.String(concatChunks, pureString, maxLev, maybeS, escapeString) where
 
 import Data.Char
 import qualified Data.ByteString as BS
@@ -9,22 +9,6 @@ concatChunks = BS.concat . BSL.toChunks
 
 pureString :: String -> String
 pureString = unwords . words . filter (not . isControl)
-
-{- |
-    Calculate the Levenshtein distance (edit distance) between two strings
- -}
-levenshtein :: String -> String -> Int
-levenshtein s1 s2 = levenshtein' (' ':s1) (' ':s2) (length s1) (length s2)
-
-levenshtein' :: String -> String -> Int -> Int -> Int
-levenshtein' s1 s2 i j
-    | i == 0 = j
-    | j == 0 = i
-    | (s1 !! i) == (s2 !! j) = levenshtein' s1 s2 (i - 1) (j - 1)
-    | otherwise = foldl1 min [(1 + levenshtein' s1 s2 (i - 1) j)        --deletion
-                             ,(1 + levenshtein' s1 s2 i (j - 1))        --insertion
-                             ,(1 + levenshtein' s1 s2 (i - 1) (j - 1))] --substitution
-
 
 maxLev :: String -> String -> Int -> Bool
 maxLev s1 s2 m = maxLev' (' ':s1) (' ':s2) m (length s1) (length s2)

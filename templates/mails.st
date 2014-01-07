@@ -341,46 +341,8 @@ passwordChangeLinkMail=
         mailp3=_passwordChangeLinkMailContentBody2()
     )$
 ###
-### MISMATCH MAILS
+### Account takeover
 ###
-mailMismatchSignatory=
-$_mailMismatchSignatoryTitle()$
-    $nicemail(
-        mailheader=_mailMismatchSignatoryTitle();
-        mailp1=mailMismatchSignatoryMainP();
-        mailp2=nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailMismatchSignatoryContentBodyButton())
-    )$
-#####
-mailMismatchSignatoryMainP=
-<br/>
-$_mailMismatchSignatoryContentBodyFirst()$
-<br/>
-<br/>
-$_mailMismatchSignatoryContentBodySecond()$
-<br/>
-<br/>
-$_mailMismatchSignatoryContentBodyThird()$
-####
-mailMismatchAuthor=
-$_mailMismatchAuthorTitle()$
-$nicemail(
-        mailheader=_mailMismatchAuthorTitle();
-        mailp1=mailMismatchAuthorMainP()
-    )$
-####
-mailMismatchAuthorMainP =
-<br/>
-$_mailMismatchAuthorContentBodyFirst()$
-<br/>
-<br/>
-$_mailMismatchAuthorContentBodySecond()$
-<br/>
-<br/>
-$nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailMismatchAuthorButton())$
-<br/>
-$_mailMismatchAuthorContentBodyThird()$
-####
-####
 mailTakeoverSingleUserInvite=
   $_mailTakeoverPrivateUserInviteTitle()$
   $nicemail(

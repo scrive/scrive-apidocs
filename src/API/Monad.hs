@@ -24,6 +24,7 @@ module API.Monad (
                  Ok(..),
                  Created(..),
                  Accepted(..),
+                 Failed(..),
                  getAPIUser,
                  getAPIUserWithPad,
                  FormEncoded(..)
@@ -63,6 +64,9 @@ data Created a = Created a
 
 -- | Respond with a 202 Accepted status
 data Accepted a = Accepted a
+
+-- | Respond with a 400 Bad Input status. Use it when you need to mark that request failed, but you don't want to rollback
+data Failed a = Failed a
 
 -- | Values to be form encoded
 data FormEncoded = FormEncoded [(String, String)]
@@ -179,6 +183,9 @@ instance ToAPIResponse a => ToAPIResponse (Created a) where
 
 instance ToAPIResponse a => ToAPIResponse (Accepted a) where
   toAPIResponse (Accepted a) = (toAPIResponse a) { rsCode = 202 }
+
+instance ToAPIResponse a => ToAPIResponse (Failed a) where
+  toAPIResponse (Failed a) = (toAPIResponse a) { rsCode = 400 }
 
 instance ToAPIResponse () where
   toAPIResponse () = toResponse ""

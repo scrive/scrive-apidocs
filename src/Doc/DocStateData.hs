@@ -391,8 +391,8 @@ getFieldOfType _ [] = Nothing
 getFieldOfType t (sf:rest) =
   if sfType sf == t then Just sf else getFieldOfType t rest
 
-getValueOfType :: FieldType -> SignatoryLink -> String
-getValueOfType t = fromMaybe "" . fmap sfValue . getFieldOfType t . signatoryfields
+getValueOfType :: FieldType -> [SignatoryField] -> String
+getValueOfType t = fromMaybe "" . fmap sfValue . getFieldOfType t
 
 data Document = Document {
     documentid                     :: DocumentID

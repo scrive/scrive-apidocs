@@ -10,8 +10,6 @@ module Doc.DocViewMail
     , InvitationTo(..)
     , mailInvitation
     , mailInvitationContent
-    , mailMismatchAuthor
-    , mailMismatchSignatory
     , documentMailWithDocLang
     , brandingMailFields
     ) where
@@ -44,10 +42,6 @@ import User.Model
 import Util.HasSomeCompanyInfo
 import qualified Text.StringTemplates.Fields as F
 import BrandedDomains
-
--- FIXME: why do we even use that?
-para :: String -> String
-para s = "<p>" ++ s ++ "</p>"
 
 mailDocumentRemind :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
                    => Maybe String
@@ -292,35 +286,6 @@ mailDocumentAwaitingForAuthor authorlang document = do
         F.value "someonesigned" $ not $ null $ filter (isSignatory &&^ hasSigned) (documentsignatorylinks document)
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile
-
-mailMismatchSignatory :: (MonadDB m, TemplatesMonad m, MailContextMonad m)
-                      => String
-                      -> String
-                      -> String
-                      -> String
-                      -> String
-                      -> String
-                      -> Bool
-                      -> Document
-                      -> m Mail
-mailMismatchSignatory authoremail authorname doclink signame badname msg isbad document = do
-   documentMailWithDocLang document "mailMismatchSignatory" $ do
-        F.value "authorname" authorname
-        F.value "signame" signame
-        F.value "badname" badname
-        F.value "authoremail" authoremail
-        F.value "doclink" doclink
-        F.value "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing)
-        F.value "loginlink" $ show $ LinkLogin (getLang document) NotLogged
-
-mailMismatchAuthor :: (HasLang a, MonadDB m, TemplatesMonad m, MailContextMonad m) => String -> [String] -> String -> String -> a -> Document -> m Mail
-mailMismatchAuthor authorname badmessages badname bademail authorlang document = do
-    documentMail authorlang document "mailMismatchAuthor" $ do
-        F.value "messages" $ concat $ map para $ badmessages
-        F.value "authorname" authorname
-        F.value "bademail" bademail
-        F.value "badname" badname
-        F.value "loginlink" $ show $ LinkLogin (getLang authorlang) NotLogged
 
 -- helpers
 

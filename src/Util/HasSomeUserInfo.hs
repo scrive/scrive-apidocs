@@ -48,6 +48,13 @@ instance HasSomeUserInfo User where
 
 
 instance HasSomeUserInfo SignatoryLink where
+  getEmail          = getEmail . signatoryfields
+  getFirstName      = getFirstName . signatoryfields
+  getLastName       = getLastName . signatoryfields
+  getPersonalNumber = getPersonalNumber . signatoryfields
+  getMobile         = getMobile . signatoryfields
+
+instance HasSomeUserInfo [SignatoryField] where
   getEmail          = strip . getValueOfType EmailFT
   getFirstName      = getValueOfType FirstNameFT
   getLastName       = getValueOfType LastNameFT

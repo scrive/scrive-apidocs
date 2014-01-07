@@ -8,6 +8,7 @@ module ELegitimation.BankIDUtils (
            , compareNumbers
            , compareNames
            , compareSigLinkToElegData
+           , getDetailsFromResponseAttrs
            , MergeResult(..)
     ) where
 
@@ -25,24 +26,17 @@ import qualified Text.StringTemplates.Fields as F
 
 data MergeResult = MergeMatch
                  | MergeKeep
-                 | MergeFail String
+                 | MergeFail
      deriving (Eq, Show)
 
 {- | Compare signatory information from contract with that from the
      E-Legitimation provider. Returns Either and error message or the
      correct value.
  -}
-mergeInfo :: TemplatesMonad m => (String, String, String)
-                              -> (String, String, String)
-                              -> m (Either (String, String, String, String) (Bool, Bool))
+mergeInfo :: (String, String, String) -> (String, String, String) -> (MergeResult,MergeResult)
 mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) = do
-  results <- sequence [ compareNames (contractFirst ++ " "++ contractLast)  (elegFirst ++ " "++ elegLast)
-                      , compareNumbers    contractNumber elegNumber]
-  let failmsgs = [msg | MergeFail msg <- results]
-      matches  = map (== MergeMatch) results
-  if not $ null failmsgs
-    then return $ Left  (intercalate ".\n " failmsgs, elegFirst, elegLast, elegNumber)
-    else return $ Right (matches !! 0, matches !! 1)
+  (compareNames (contractFirst ++ " "++ contractLast)  (elegFirst ++ " "++ elegLast), compareNumbers contractNumber elegNumber)
+
 
 getTBS :: TemplatesMonad m => D.Document -> m String
 getTBS doc = renderTemplate "tbs" $ do
@@ -70,56 +64,49 @@ fieldvaluebyid fid ((k, v):xs)
     | otherwise = fieldvaluebyid fid xs
 
 
-compareNames :: TemplatesMonad m => String -> String -> m MergeResult
+compareNames :: String -> String -> MergeResult
 compareNames fnContractName fnElegName =
         let fnsc = words $ map toLower fnContractName
             fnse = words $ map toLower fnElegName
-            difs = [levenshtein a b | a <- fnsc, b <- fnse]
-        in if any (<= 2) difs
-            then return MergeMatch
-            else do
-             f <- renderTemplate "bankidNameMismatch" $ do
-               F.value "name" fnContractName
-               F.value "eleg" fnElegName
-             return $ MergeFail f
+            difs = [maxLev a b 2 | a <- fnsc, b <- fnse]
+        in if any (== True) difs
+            then MergeMatch
+            else MergeFail
 
 
 normalizeNumber :: String -> String
 normalizeNumber = filter isDigit
 
-compareNumbers :: TemplatesMonad m => String -> String -> m MergeResult
+compareNumbers :: String -> String -> MergeResult
 compareNumbers nContract nEleg
-    | null nContract = do
-      f <- renderTemplate "bankidNoNumber" $ return ()
-      return $ MergeFail f
-    | null nEleg     = return MergeKeep
+    | null nContract = MergeFail
+    | null nEleg     = MergeKeep
     | otherwise =
         let nsc = normalizeNumber nContract
             nse = normalizeNumber nEleg
-            dif = levenshtein nsc nse
-        in if dif <= 3
-            then return MergeMatch
-            else do
-             f <- renderTemplate "bankidNumberMismatch" $ do
-               F.value "contract" nContract
-               F.value "eleg" nEleg
-             return $ MergeFail f
+        in if (maxLev nsc nse 3)
+            then MergeMatch
+            else MergeFail
 
 --GHC.Unicode.toLower
 -- import GHC.Unicode ( toLower )
 --import qualified Data.ByteString.Lazy.Char8 as B
 
 
-compareSigLinkToElegData :: TemplatesMonad m => SignatoryLink ->  [(FieldType, String)] -> [(String, String)] -> m (Either (String, String, String, String) (Bool, Bool))
+getDetailsFromResponseAttrs :: [(String, String)] -> (String,String,String)
+getDetailsFromResponseAttrs attrs =
+  let
+      elegFirst  = fieldvaluebyid "Subject.GivenName"    attrs
+      elegLast   = fieldvaluebyid "Subject.Surname"      attrs
+      elegNumber = fieldvaluebyid "Subject.SerialNumber" attrs
+  in (elegFirst,     elegLast,     elegNumber)
+
+compareSigLinkToElegData :: SignatoryLink ->  [(FieldType, String)] -> [(String, String)] -> (MergeResult,MergeResult)
 compareSigLinkToElegData sl fields attrs =
   -- compare information from document (and fields) to that obtained from BankID
   let contractFirst  = fromMaybe (getFirstName sl)      (snd <$> (find (\(ft,_) -> ft == FirstNameFT) fields))
       contractLast   = fromMaybe (getLastName sl)       (snd <$> (find (\(ft,_) -> ft == LastNameFT) fields))
       contractNumber = fromMaybe (getPersonalNumber sl) (snd <$> (find (\(ft,_) -> ft == PersonalNumberFT) fields))
 
-      elegFirst  = fieldvaluebyid "Subject.GivenName"    attrs
-      elegLast   = fieldvaluebyid "Subject.Surname"      attrs
-      elegNumber = fieldvaluebyid "Subject.SerialNumber" attrs
+  in mergeInfo (contractFirst, contractLast, contractNumber) (getDetailsFromResponseAttrs attrs)
 
-  in mergeInfo (contractFirst, contractLast, contractNumber)
-               (elegFirst,     elegLast,     elegNumber)

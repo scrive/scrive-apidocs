@@ -26,8 +26,7 @@ import Data.Maybe hiding (fromJust)
 import Doc.API.Callback.Model
 import Doc.DigitalSignature (addDigitalSignature, extendDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (sendInvitationEmails, sendRejectEmails, sendElegDataMismatchEmails, sendDocumentErrorEmail, sendInvitationEmailsToViewers, sendClosedEmails,
-  runMailTInScheduler)
+import Doc.DocMails (sendInvitationEmails, sendRejectEmails, sendDocumentErrorEmail, sendInvitationEmailsToViewers, sendClosedEmails, runMailTInScheduler)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID, withDocument)
@@ -139,23 +138,10 @@ postDocumentCanceledChange doc@Document{..} = do
   triggerAPICallbackIfThereIsOne doc
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
-  Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
-  -- if canceled because of ElegDataMismatch, send out emails
+  Log.docevent $ "Pending -> Canceled" ++ show documentid
   author <- getDocAuthor doc
-  let f sl = do
-        msg <- signatorylinkelegdatamismatchmessage sl
-        fn <- signatorylinkelegdatamismatchfirstname sl
-        ln <- signatorylinkelegdatamismatchlastname sl
-        pno <- signatorylinkelegdatamismatchpersonalnumber sl
-        return (msg,fn,ln,pno)
-  let issues = (catMaybes (map f (documentsignatorylinks)))
-  mapM_ (\r -> logDocEvent "Doc Canceled" author [reasonProp r] doc) issues
+  logDocEvent "Doc Canceled" author [] doc
 
-  when (not (null issues)) $ do
-      Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-      sendElegDataMismatchEmails author doc
-  where
-    reasonProp = stringProp "Reason" . show
 
 -- | After a party has signed - check if we need to close document and
 -- take further actions.

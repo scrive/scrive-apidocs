@@ -16,6 +16,24 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   document : function() {
     return this.model.document();
   },
+  elegMishmatchErrorMessage : function(onName,onNumber) {
+    var document = this.document();
+    var signatory = document.currentSignatory();
+    var numberCanBeChanged = (signatory.personalnumberField() != undefined && !signatory.personalnumberField().isClosed());
+    var nameCanBeChanged = (signatory.fstnameField() != undefined && !signatory.fstnameField().isClosed()) || (signatory.sndnameField() != undefined && !signatory.sndnameField().isClosed());
+    if (onName && onNumber && (!numberCanBeChanged || !nameCanBeChanged))
+      return localization.sign.eleg.mismatch.mismatchOnNameAndNumberCantChange;
+    if (onName && onNumber && numberCanBeChanged && nameCanBeChanged)
+      return localization.sign.eleg.mismatch.mismatchOnNameAndNumberCanChange;
+    if (onName && !nameCanBeChanged)
+      return localization.sign.eleg.mismatch.mismatchOnNameAndCantChange;
+    if (onNumber && !numberCanBeChanged)
+      return localization.sign.eleg.mismatch.mismatchOnNumberAndCantChange;
+    if (onName && nameCanBeChanged)
+      return localization.sign.eleg.mismatch.mismatchOnNameAndCanChange;
+    if (onNumber && numberCanBeChanged)
+      return localization.sign.eleg.mismatch.mismatchOnNumberAndCanChange;
+  },
   createElegButtonElems: function() {
     var document = this.document();
     var signatory = document.currentSignatory();
@@ -33,8 +51,29 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       }
       mixpanel.track('Click ' + bankName);
 
+      var errorCallback = function(xhr) {
+            var data = {};
+            try {
+            data = JSON.parse(xhr.responseText);
+            } catch (e) {}
+
+
+            if (xhr.status == 403) {
+              // session timed out
+              ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+            } else if (xhr.status == 400 && data.mismatch){
+              new FlashMessage({content: self.elegMishmatchErrorMessage(data.onName,data.onNumber),
+                                color: 'red'});
+            } else {
+              new FlashMessage({content: localization.signviewSigningFailed,
+                                color: 'red',
+                                withReload: true});
+            }
+      };
+
+
       bankSign(document, signatory, function(p) {
-          document.sign().addMany(p).sendAjax();
+          document.sign(errorCallback).addMany(p).sendAjax();
         }, bankSignExtraOpt);
       return false;
 
@@ -166,7 +205,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       // Remove the modal header but keep the close button
       var modalHeader = $('.modal-container .modal-header');
       modalHeader.remove();
-      
+
       // Set up close button
       // localization.process.goback is a shared translation
       var close = $('<a class="small-device-go-back-button">' + localization.process.goback + '</a>');

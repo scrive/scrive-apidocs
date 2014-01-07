@@ -14,7 +14,7 @@ module Doc.Model
   , AppendSealedFile(..)
   , AppendExtendedSealedFile(..)
   , CancelDocument(..)
-  , ELegAbortDocument(..)
+  , LogSignWithELegFailureForDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , ChangeSignatoryPhoneWhenUndelivered(..)
   , CloseDocument(..)
@@ -1249,35 +1249,16 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocum
         sqlWhereEq "id" did
         sqlWhereEq "status" $ DocumentError undefined
 
-data ELegAbortDocument = ELegAbortDocument SignatoryLinkID String String String String Actor
-instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ELegAbortDocument () where
-  update (ELegAbortDocument slid msg firstName lastName personNumber actor) = updateDocumentWithID $ \did -> do
-    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-                 sqlSet "status" Canceled
-                 sqlWhereDocumentIDIs did
-                 sqlWhereDocumentTypeIs Signable
-                 sqlWhereDocumentStatusIs Pending
-
-    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-                 sqlFrom "documents"
-                 sqlWhere "documents.id = signatory_links.document_id"
-                 sqlSet "eleg_data_mismatch_message" msg
-                 sqlSet "eleg_data_mismatch_first_name" firstName
-                 sqlSet "eleg_data_mismatch_last_name" firstName
-                 sqlSet "eleg_data_mismatch_personal_number" personNumber
-
-                 sqlWhereDocumentIDIs did
-                 sqlWhereDocumentTypeIs Signable
-                 sqlWhereSignatoryLinkIDIs slid
-
+data LogSignWithELegFailureForDocument = LogSignWithELegFailureForDocument SignatoryLinkID (Maybe String) (Maybe String) String String String Actor
+instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m LogSignWithELegFailureForDocument () where
+  update (LogSignWithELegFailureForDocument slid mname mnumber firstName lastName personNumber actor) = updateDocumentWithID $ \did -> do
     sl <- query $ GetSignatoryLinkByID did slid Nothing
-    let trips = [("First name",      getFirstName      sl, firstName)
-                ,("Last name",       getLastName       sl, lastName)
-                ,("Personal number", getPersonalNumber sl, personNumber)]
+    let trips = [("Name",    fromMaybe (getFullName sl) mname, firstName ++ " " ++ lastName)
+                ,("Personal number", fromMaybe (getPersonalNumber sl) mnumber, personNumber)]
         uneql = filter (\(_,a,b)->a/=b) trips
         msg2 = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
     _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                    CancelDocumenElegEvidence
+                    SignWithELegFailureEvidence
                     (value "msg" msg2)
                     (Just sl)
                     Nothing

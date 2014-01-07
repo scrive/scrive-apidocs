@@ -31,6 +31,10 @@ instance HasSomeCompanyInfo (Maybe Company) where
   getCompanyNumber = maybe "" getCompanyNumber
 
 instance HasSomeCompanyInfo SignatoryLink where
+  getCompanyName   = getCompanyName . signatoryfields
+  getCompanyNumber = getCompanyNumber . signatoryfields
+
+instance HasSomeCompanyInfo [SignatoryField] where
   getCompanyName   = getValueOfType CompanyFT
   getCompanyNumber = getValueOfType CompanyNumberFT
 

@@ -79,9 +79,17 @@ javascriptLocalisation =
                                    , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
                                    , body2 : " $_pageDocumentForSignContentElegBody3()$ "
                                    , mobile : {
-                                       startingMobileBankID : "$_bankidStartApp()$"
+                                         startingMobileBankID : "$_bankidStartApp()$"
                                    }
-                                 }
+                                   , mismatch : {
+                                         mismatchOnNameAndNumberCantChange : "$_mismatchOnNameAndNumberCantChange()$"
+                                       , mismatchOnNameAndNumberCanChange : "$_mismatchOnNameAndNumberCanChange()$"
+                                       , mismatchOnNameAndCantChange : "$_mismatchOnNameAndCantChange()$"
+                                       , mismatchOnNumberAndCantChange : "$_mismatchOnNumberAndCantChange()$"
+                                       , mismatchOnNameAndCanChange : "$_mismatchOnNameAndCanChange()$"
+                                       , mismatchOnNumberAndCanChange : "$_mismatchOnNumberAndCanChange()$"
+                                   }
+                          }
                     }
              , signByAuthor : {
                           modalTitle : "$_dialogConfirmSignByAuthorHead()$"
