@@ -9,6 +9,7 @@
             message: localization.startingSaveSigning,
             fetching: false,
             callback: function() {},
+            errorcallback: function() {},
             remaining: [10, // wait 10s before first poll
                         3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // then we can poll 20 times with 3s intervals
                         10,10,10,10,10,10,10,10,10] // then we finish with 10s intervals; docs say we get Fault before the end
@@ -49,6 +50,9 @@
         callback: function() {
             return this.get("callback")();
         },
+        errorcallback: function() {
+            return this.get("errorcallback")();
+        },
         poll: function() {
             var polling = this;
             if(polling.keepPolling()) {
@@ -56,8 +60,6 @@
                 console.log("Setting up timer: " + next);
                 if(next)
                     setTimeout(function() {
-                        if(polling.trid() && polling.collectUrl())
-                            console.log("yo!");
                         $.ajax(polling.collectUrl(),
                                {
                                    "data" : {
@@ -67,6 +69,7 @@
                                    "success": function(d) {
                                        if(d.error) {
                                            polling.status("error");
+                                           polling.errorcallback();
                                        } else {
                                            polling.status(d.status);
                                            polling.message(d.message);

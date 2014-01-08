@@ -354,6 +354,12 @@ window.Eleg = {
                                                                "eleg"  : "mobilebankid"
                                                               });
                                                  }
+                                                 ,errorcallback: function() {
+                                                     // TODO: see #240 in trello concerning the wrong error message here.
+                                                     new FlashMessage({ content: localization.yourSigningPluginFailed, color: "red"});
+                                                     LoadingDialog.close();
+                                                     return;
+                                                 }
                                                 });
                 var mv = new MobileBankIDPollingView({model:m});
                 m.poll();
