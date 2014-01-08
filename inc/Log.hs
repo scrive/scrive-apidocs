@@ -92,11 +92,12 @@ instance (MonadLog m, LRWS.Monoid w) => MonadLog (LRWS.RWST r w s m) where
 
 
 
--- Here we do use Prelude.putStrLn because it prints character
--- by character and in case there are many thread it will interleave
--- messages. Using ByteStrings prevents interleaving at least on
--- page boundary (4096). Usually it is whole message boundary but as
--- far as I know it is not guaranteed.
+-- Here we use 'ByteString.putStrLn' because 'Prelude.putStrLn' prints
+-- character by character and in case there are many thread it will
+-- interleave messages. Using ByteStrings prevents interleaving at
+-- least on page boundary (4096). (I'm not sure if ByteString.putStrLn
+-- guarantees that a whole message will go though at once, but we have
+-- that one handled on channel level).
 --
 -- We have one global output channel that should serialize output
 -- directly, but there is always the risk that somebody will print
@@ -149,18 +150,47 @@ forkIOLogWhenError errmsg action =
     _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> mixlog_ $ errmsg ++ " " ++ show e)
     return ()
 
+-- | Log a line of text with possibly non-empty set of properties attached to the text.
+--
+-- In the textual output the line will be prefixed in the output with
+-- a timestamp. Properties will follow indented by 4 spaces and
+-- generally following restricted yaml format. Example:
+--
+-- > 2022-12-12 12:34 Something important happened
+-- >    "userid": 12344
+-- >    "username": "Eric Ericsson"
+-- >    "fields":
+-- >      - "first_name"
+-- >      - "last_name"
+-- >      - "email"
+--
+-- Properties data is restricted to JSON object model and can easily
+-- be stored in some external logging database.w
 mixlog :: (MonadLog m) => String -> JSONGen () -> m ()
 mixlog title jsgen = mixlogjs title (runJSONGen jsgen)
 
+-- | A transformer version of 'mixlog'. Can be used to fetch data from
+-- the underlying monad should it be needed sometimes. Example:
+--
+-- > mixlogt "Frobnicated" $ do
+-- >     x <- lift (get_something_from_upper_monad)
+-- >     value "x" x
+--
 mixlogt :: (MonadLog m) => String -> JSONGenT m () -> m ()
 mixlogt title jsgent = runJSONGenT jsgent >>= mixlogjs title
 
+-- | This is a variation on 'mixlog' that takes a premade version of
+-- properties object. Useful for logging data directly from API calls
+-- for example.
 mixlogjs :: (ToJSValue js, MonadLog m) => String -> js -> m ()
 mixlogjs title js = logM (title ++ "\n" ++ unlines (map ("    " ++) (jsonShowYamlLn (toJSValue js))))
 
+-- | Log a line without any additional properties.
 mixlog_ :: (MonadLog m) => String -> m ()
 mixlog_ title = logM title
 
+-- | Cannonicalize a string for yaml output. Yaml has a lot of different
+-- ways to encode strings, we choose double quoted style as canonical.
 showStringYaml :: String -> String
 showStringYaml str = "\"" ++ concatMap escape str ++ "\""
   where escape '"' = "\\\""
@@ -168,7 +198,9 @@ showStringYaml str = "\"" ++ concatMap escape str ++ "\""
         escape c | ord c < 32 = "\\x" ++ showHex (ord c `div` 16) (showHex (ord c `mod` 16) "")
         escape c = [c]
 
-
+-- | Show JSON as Yaml in defined by us canonical form. Important is
+-- that it does not introduce spurious newlines so it can be reliably
+-- grepped.
 jsonShowYamlLn :: JSValue -> [String]
 jsonShowYamlLn JSNull = ["null"]
 jsonShowYamlLn (JSBool True) = ["true"]
