@@ -4,14 +4,17 @@ $_paymentsEmailThanksForChoosingScrive()$
 $nicemail(
   mailheader=_paymentsEmailThanksForChoosingScrive();
   mailp1=paymentsSignupEmail1();
+  mailspacing1="";
   mailp2=paymentsSignupEmail2();
+  mailspacing2="";
   mailp3=paymentsSignupEmail3();
+  mailspacing3="";
   mailp4=paymentsSignupEmail4()
 )$
 ###
 paymentsSignupEmail1=
 <p>
-$_paymentsEmailThanksForChoosingScrive()$. $_paymentsEmailSeeDetailsBelow()$:
+$_paymentsEmailThanksForChoosingScrive()$. $_paymentsEmailSeeDetailsBelow()$
 </p>
 <p>
 $_paymentsEmailDescription()$: $planname$<br />

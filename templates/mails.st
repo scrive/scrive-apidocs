@@ -376,9 +376,10 @@ $_mailMismatchAuthorContentBodyFirst()$
 $_mailMismatchAuthorContentBodySecond()$
 <br/>
 <br/>
-$nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailMismatchAuthorButton())$
-<br/>
 $_mailMismatchAuthorContentBodyThird()$
+<br/>
+<br/>
+$nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailMismatchAuthorButton())$
 ####
 ####
 mailTakeoverSingleUserInvite=
@@ -396,7 +397,6 @@ mailTakeoverPrivateUserInviteP=
   $_mailTakeoverPrivateUserInviteContentBodySecond()$
   <br/>
   <br/>
-  $_mailTakeoverPrivateUserInviteContentInstructionFirst()$
   <ol>
     $_mailTakeoverPrivateUserInviteContentInstructionSecond()$
   </ol>
