@@ -1159,7 +1159,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
             }).el();
     },
     title: function() {
-        return $("<div class='title'/>").text(localization.designview.checkboxes.checkbox);
+        return $("<div class='title'/>").text(localization.designview.checkboxes.checkbox).attr("title",this.model.field().name());
     },
     subtitle : function() {
         var box = $("<div class='subtitle'/>");

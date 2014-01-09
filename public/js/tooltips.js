@@ -12,13 +12,12 @@ window.ToolTip= {
            body.append(args.tip);
            var arrow = $("<div class='tooltip-arrow'/>");
            var container = $("<div class='tooltip-container'/>");
-           if (args.theme != undefined)
-             container.addClass(args.theme + "-theme");
            container.append(arrow);
            container.append(body);
             $(args.on).mouseenter(function(e) {
                 var checker = function() {
-                    if ($(':hover',args.on).size() == 0)
+
+                    if ($(':hover',args.on).size() == 0 && !$(':hover',args.on.parent()).is(args.on))
                     {
                         container.remove();
                     }
