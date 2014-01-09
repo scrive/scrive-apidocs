@@ -117,6 +117,20 @@ window.Eleg = {
      });
      return text;
    },
+   isUserCancelError: function(res) {
+     var res = new String(res);
+     // The error message for user abortion differs between e-ID providers and versions
+     if (res && res.match(/8002|USER_ABORT|USER_CANCEL/))
+       return true;
+
+     return false;
+   },
+   getErrorMessage: function(res) {
+      if (window.Eleg.isUserCancelError(res))
+        return localization.youCancelledSigning;
+
+      return localization.yourSigningPluginFailed + " " + res;
+   },
    bankidSign : function(document, signatory, callback) {
       if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
@@ -160,7 +174,7 @@ window.Eleg = {
                var res = signer.PerformAction('Sign');
                if (res !== 0) // 0 means success
                 {
-                    new FlashMessage({ content: localization.yourSigningPluginFailed + " " + res, color: "red"});
+                    new FlashMessage({ content: window.Eleg.getErrorMessage(res), color: "red"});
                     LoadingDialog.close();
                     return;
                 }
@@ -226,7 +240,7 @@ window.Eleg = {
                 var res = signer.Sign();
                 if (res !== 0) // 0 means success
                 {
-                    new FlashMessage({ content: localization.yourSigningPluginFailed + " " + signer.GetErrorString(), color: "red"});
+                    new FlashMessage({ content: window.Eleg.getErrorMessage(signer.GetErrorString()), color: "red"});
                     LoadingDialog.close();
                     return;
                 }
@@ -292,7 +306,7 @@ window.Eleg = {
                 signer.SetProperty('IncludeCaCert', 'true');
                 var res = signer.Invoke('Sign');
                 if (res !== 0) {
-                    new FlashMessage({ content: localization.yourSigningPluginFailed + " error code: " + res, color: "red"});
+                    new FlashMessage({ content: window.Eleg.getErrorMessage(res), color: "red"});
                     LoadingDialog.close();
                     return;
                 }
