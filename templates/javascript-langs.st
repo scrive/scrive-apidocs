@@ -21,6 +21,7 @@ javascriptLocalisation =
              , more : "$_more()$"
              , yourSigningPluginFailed : "$_yourSigningPluginFailed()$"
              , startingSaveSigning : "$_startingSaveSigning()$"
+             , youCancelledSigning : "$_youCancelledSigning()$"
              , noNordeaInstalled  : "$_noNordeaInstalled()$"
              , noTeliaInstalled  : "$_noTeliaInstalled()$"
              , noBankIdInstalled  : "$_noBankIdInstalled()$"

@@ -945,6 +945,7 @@
 "_welcomeTitle":"Ditt signerade dokument har sparats i ditt personliga e-arkiv",
 "_welcomeback":"Välkommen!",
 "_you":"du",
+"_youCancelledSigning":"Åtgärden avbruten. Var god välj e-legitimation igen.",
 "_youCantCancelThisDocuments":"Du kan inte återkalla valda dokument.",
 "_youCantSendRemindersToThisDocuments":"Det går inte att skicka påminnelser för några av de valda dokumenten.",
 "_yourSigningPluginFailed":"Din signerings-plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.",

@@ -945,6 +945,7 @@
 "_welcomeTitle":"Your signed document has now been safely stored in your own e-archive",
 "_welcomeback":"Welcome!",
 "_you":"you",
+"_youCancelledSigning":"Action cancelled. Please select your e-ID again.",
 "_youCantCancelThisDocuments":"You can't withdraw selected documents.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_yourSigningPluginFailed":"Your signing plug-in failed to sign the document. Please contact your e-ID provider.",
