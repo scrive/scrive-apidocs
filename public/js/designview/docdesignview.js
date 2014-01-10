@@ -270,11 +270,7 @@
             spinnerContainer.append(spinner.el);
 
             if (signatory.elegAuthentication()) {
-                acceptButton = $("<span style='margin-top: -8px;' />");
-                var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
-                var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
-                var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
-                var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
+                acceptButton = $("<span />");
                 var callback = function(params) {
                     document.afterSave(function(){
                       document.verifyEleg().addMany(params).sendAjax(function(resp) {
@@ -296,43 +292,45 @@
 
                     });
                 };
-                var bankidclicked = false;
-                bankid.click(function() {
-                    if (bankidclicked) return false; else bankidclicked = true;
+                var bankid = new Button({
+                  text: localization.sign.eleg.bankid,
+                  cssClass: 'bankid',
+                  color: 'blue',
+                  oneClick: true,
+                  onClick: function() {
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'BankID'
                     });
                     document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, callback); });
-                    return false;
+                  }
                 });
-                var teliaclicked = false;
-                telia.click(function() {
-                    if (teliaclicked) return false; else teliaclicked = true;
+
+                var telia = new Button({
+                  text: localization.sign.eleg.telia,
+                  cssClass: 'bankid',
+                  color: 'blue',
+                  oneClick: true,
+                  onClick: function() {
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Telia'
                     });
                     document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, callback); });
-                    return false;
+                  }
                 });
-                var nordeaclicked = false;
-                nordea.click(function() {
-                    if (nordeaclicked) return false; else nordeaclicked = true;
-                    mixpanel.track('Select eleg provider', {
-                        'Eleg provider' : 'Nordea'
-                    });
-                    document.takeSigningScreenshot(function() { Eleg.nordeaSign(document,signatory,callback); });
-                    return false;
-                });
-                var mbiclicked = false;
-                mbi.click(function() {
-                    if (mbiclicked) return false; else mbiclicked = true;
+
+                var mbi = new Button({
+                  text: localization.sign.eleg.mobilebankid,
+                  cssClass: 'bankid',
+                  color: 'blue',
+                  oneClick: true,
+                  onClick: function() {
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Mobile BankID'
                     });
                     document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,callback); });
-                    return false;
+                  }
                 });
-                acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
+                acceptButton.append(bankid.el()).append(telia.el()).append(mbi.el());
             } else {
                 acceptButton = new Button({
                     color : "green",

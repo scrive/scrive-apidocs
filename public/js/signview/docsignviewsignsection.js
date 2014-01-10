@@ -58,11 +58,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var signatory = document.currentSignatory();
     var self = this;
 
-    var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
-    var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
-    var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
-    var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
-
     var errorCallback = function(xhr) {
         self.stopBlockingReload();
 
@@ -87,8 +82,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         }
     };
 
-
     var makeCallback = function(bankName, bankSign, bankSignExtraOpt) {
+      mixpanel.track('Click ' + bankName);
       bankSign(document, signatory, function(p) {
         document.checksign(function() {
             self.startBlockingReload();
@@ -112,12 +107,31 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     };
 
-    bankid.click(function() { return makeCallback('BankID', Eleg.bankidSign); });
-    telia.click(function() { return makeCallback('Telia', Eleg.teliaSign); });
-    nordea.click(function() { return makeCallback('Nordea', Eleg.nordeaSign); });
-    mbi.click(function() { return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value()); });
+    var bankid = new Button({
+      text: localization.sign.eleg.bankid,
+      cssClass: 'bankid',
+      color: 'blue',
+      oneClick: true,
+      onClick: function() { return makeCallback('BankID', Eleg.bankidSign); }
+    });
 
-    return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
+    var telia = new Button({
+      text: localization.sign.eleg.telia,
+      cssClass: 'bankid',
+      color: 'blue',
+      oneClick: true,
+      onClick: function() { return makeCallback('Telia', Eleg.teliaSign); }
+    });
+
+    var mbi = new Button({
+      text: localization.sign.eleg.mobilebankid,
+      cssClass: 'bankid',
+      color: 'blue',
+      oneClick: true,
+      onClick: function() { return makeCallback('Mobile BankID', Eleg.mobileBankIDSign, signatory.personalnumberField().value()); }
+    });
+
+    return $("<span class='elegButtonFooter' />").append(bankid.el()).append(telia.el()).append(mbi.el());
   },
   createSignButtonElems: function() {
     var document = this.document();
@@ -239,7 +253,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       title: title,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
-      width: signatory.elegAuthentication() ? (800) : (BrowserInfo.isSmallScreen() ? 825 : 520),
+      // use default width for eleg, as there is less text
+      width: signatory.elegAuthentication() ? undefined : (BrowserInfo.isSmallScreen() ? 825 : 520),
       margin : BrowserInfo.isSmallScreen() ? '150px auto 0px' : undefined,
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
       textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,

@@ -173,7 +173,6 @@ instance Arbitrary SignatoryLink where
 instance Arbitrary SignatureProvider where
   arbitrary = elements [ BankIDProvider
                        , TeliaProvider
-                       , NordeaProvider
                        ]
 
 instance Arbitrary SignatureInfo where

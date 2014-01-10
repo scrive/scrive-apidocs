@@ -1,12 +1,4 @@
 // checks for ie
-function hasIESigner1Plugin() {
-    try {
-        return !!(new ActiveXObject(Nexus.SignerCtl));
-    } catch(e) {
-        return false;
-    }
-}
-
 function hasSign2PluginIE() {
     try {
         return !!(new ActiveXObject("Nexus.SignerV2Ctl"));
@@ -23,14 +15,6 @@ function hasNetIDPluginIE() {
     }
 }
 
-// checks for others
-function hasMozillaSigner1Plugin() {
-    return (navigator.plugins
-            && navigator.plugins.length > 0
-            && navigator.mimeTypes && navigator.mimeTypes["application/x-personal-signer"]
-            && navigator.mimeTypes["application/x-personal-signer"].enabledPlugin);
-}
-
 function hasSign2PluginMozilla() {
     return (navigator.plugins
             && navigator.plugins.length > 0
@@ -45,11 +29,6 @@ function hasNetIDPluginMozilla() {
             && navigator.mimeTypes["application/x-iid"].enabledPlugin);
 }
 
-// ie installers
-function IEInstallSigner1Object() {
-    $('body').append("<OBJECT ID='signerId' CLASSID='CLSID:6969E7D5-223A-4982-9B79-CC4FAC2D5E5E'> </OBJECT>");
-}
-
 function installSign2IE() {
     $("body").append('<OBJECT ID="signer2" CLASSID="CLSID:FB25B6FD-2119-4cef-A915-A056184C565E"> </OBJECT>');
 }
@@ -58,10 +37,6 @@ function installNetIDIE() {
     $("body").append("<OBJECT NAME='iid' id='iid' WIDTH=0 HEIGHT=0 CLASSID='CLSID:5BF56AD2-E297-416E-BC49-00B327C4426E'> </OBJECT>");
 }
 
-//other installers
-function mozillaInstallSigner1Object() {
-    $('body').append('<OBJECT id="signerId" type="application/x-personal-signer" length=0 height=0> </OBJECT>');
-}
 
 function installSign2Mozilla() {
     $("body").append('<OBJECT id="signer2" type="application/x-personal-signer2" length=0 height=0></OBJECT>');
@@ -69,11 +44,6 @@ function installSign2Mozilla() {
 
 function installNetIDMozilla() {
     $("body").append("<OBJECT NAME='iid' id='iid' WIDTH=0 HEIGHT=0 TYPE='application/x-iid'></OBJECT>");
-}
-
-function flashNordeaMessage() {
-    new FlashMessage({ content: localization.noNordeaInstalled, color: "red"});
-    return false;
 }
 
 function flashBankIDMessage() {
@@ -194,75 +164,6 @@ window.Eleg = {
             },
             error: repeatForeverWithDelay(250)
       });
-    },
-    nordeaSign : function(document, signatory, callback) {
-      if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
-        return;
-      var url;
-      if(document.preparation()) // // designview
-        url = "/d/eleg/" + document.documentid();
-      else
-        url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
-      var tbs = window.Eleg.generateTBS(document.title(), document.documentid(), document.signatories());
-      LoadingDialog.open(localization.startingSaveSigning);
-    $.ajax({
-            'url': url,
-            'dataType': 'json',
-            'data': {  'provider' : 'nordea' ,
-                       'tbs' : tbs
-                    },
-
-            'scriptCharset': "utf-8",
-            'success': function(data) {
-              if (data && data.status === 0)  {
-               LoadingDialog.close(); // this was opened just before starting
-                if (BrowserInfo.isIE() && hasIESigner1Plugin())
-                    IEInstallSigner1Object();
-                else if (hasMozillaSigner1Plugin())
-                    mozillaInstallSigner1Object();
-                else {
-                    flashNordeaMessage();
-                    return; }
-                var signer = $('#signerId')[0];
-                if(!signer)  {
-                     new FlashMessage({ content: localization.yourSigningPluginFailed, color: "red"});
-                     LoadingDialog.close();
-                     failEleg(localization.yourSigningPluginFailed);
-                     return;
-                }
-                signer.SetDataToBeSigned(data.tbs);
-                signer.SetIncludeCaCert('true');
-                signer.SetIncludeRootCaCert('true');
-                signer.SetBase64('true');
-                signer.SetCharacterEncoding('UTF8');
-                signer.SetMimeType('text/plain');
-                signer.SetViewData('false');
-                var res = signer.Sign();
-                if (res !== 0) // 0 means success
-                {
-                    new FlashMessage({ content: window.Eleg.getErrorMessage(signer.GetErrorString()), color: "red"});
-                    LoadingDialog.close();
-                    return;
-                }
-                var signresult =  unescape(signer.GetSignature());
-                if (!signresult)
-                    return;
-                LoadingDialog.open(localization.verifyingSignature);
-                callback({
-                      "signature" :signresult,
-                      "transactionid" : data.transactionid,
-                      "eleg" : "nordea"
-                 });
-            }
-            else
-                new FlashMessage({ content: data.msg, color: "red"});
-            LoadingDialog.close();
-            },
-            error: repeatForeverWithDelay(250)
-      });
-
-
-
     },
     teliaSign : function(document, signatory, callback) {
       if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))

@@ -22,7 +22,6 @@ javascriptLocalisation =
              , yourSigningPluginFailed : "$_yourSigningPluginFailed()$"
              , startingSaveSigning : "$_startingSaveSigning()$"
              , youCancelledSigning : "$_youCancelledSigning()$"
-             , noNordeaInstalled  : "$_noNordeaInstalled()$"
              , noTeliaInstalled  : "$_noTeliaInstalled()$"
              , noBankIdInstalled  : "$_noBankIdInstalled()$"
              , verifyingSignature : "$_verifyingSignature()$"
@@ -79,6 +78,9 @@ javascriptLocalisation =
                                    , body1: " $_pageDocumentForSignContentElegBody1()$ "
                                    , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
                                    , body2 : " $_pageDocumentForSignContentElegBody3()$ "
+                                   , telia: "$_telia()$"
+                                   , mobilebankid: "$_mobileBankID()$"
+                                   , bankid: "$_bankid()$"
                                    , mobile : {
                                          startingMobileBankID : "$_bankidStartApp()$"
                                    }

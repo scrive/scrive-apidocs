@@ -32,7 +32,7 @@ instance SafeEnum SignatureProvider where
 
 data SignatureProvider = BankIDProvider
                        | TeliaProvider
-                       | NordeaProvider
+                       | NordeaProvider -- Nordea is currently not used, but kept for legacy purposes.
                        | MobileBankIDProvider
     deriving (Eq, Ord, Show)
 
