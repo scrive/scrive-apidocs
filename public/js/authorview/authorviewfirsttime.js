@@ -48,6 +48,7 @@ window.AuthorViewFirstTime = {
     },
     fakeHistoryBox: function() {
         // This is a copy of the history box that's usually in the regular authorview.
+        // TODO: make this use KontraList as soon as I can figure out how to feed it data.
         var tableContainer = $('<div class="history-box"><div class="document-history-container"><div class="list-container" style="opacity: 1;"><div class="table"><table><thead><tr><th style="width: 46px;"><span>Status</span></th><th style="width: 150px;"><span>'+localization.history.time+'</span></th><th style="width: 200px;"><span>'+localization.history.party+'</span></th><th style="width: 460px;"><span>'+localization.history.description+'</span></th></tr></thead><tbody></tbody></table></div></div></div></div>');
         var tbody = tableContainer.find('tbody');
 

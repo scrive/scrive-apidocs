@@ -470,7 +470,7 @@ javascriptLocalisation =
              , goToSignView : "$_authorviewGoToSignview()$"
              , downloadPdf : "$_DownloadPDF()$"
              , firsttime : {
-                   counterpart: "you"
+                   counterpart: "$_you()$"
                  , emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR')$"
                  , emailRead : "$MarkInvitationReadEvidenceText(signatory_email='EMAIL')$"
                  , tryYourself : "$_authorviewFTUETryYourself()$"
