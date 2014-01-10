@@ -37,7 +37,6 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument, theDocumentID)
 import Doc.Rendering
-import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.SignatoryLinkID
@@ -450,12 +449,14 @@ checkFileAccessWith :: Kontrakcja m =>
 checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
-       doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
-       when (not $ fileInDocument doc fid) $ internalError
+       _doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+       indoc <- dbQuery $ FileInDocument did fid
+       when (not indoc) $ internalError
     (_,_,Just did,_) -> do
        guardLoggedIn
-       doc <- getDocByDocID did
-       when (not $ fileInDocument doc fid) $ internalError
+       _doc <- getDocByDocID did
+       indoc <- dbQuery $ FileInDocument did fid
+       when (not indoc) $ internalError
     (_,_,_,Just attid) -> do
        guardLoggedIn
        user <- guardJustM $ ctxmaybeuser <$> getContext

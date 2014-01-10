@@ -26,7 +26,6 @@ module Doc.DocUtils(
   , getSignatoryAttachment
   , documentfileM
   , documentsealedfileM
-  , fileInDocument
   , documentDeletedForUser
   , documentReallyDeletedForUser
   , userCanPerformSigningAction
@@ -267,13 +266,6 @@ documentfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) .
 
 documentsealedfileM :: MonadDB m => Document -> m (Maybe File)
 documentsealedfileM = maybe (return Nothing) (fmap Just . dbQuery . GetFileByFileID) . documentsealedfile
-
-fileInDocument :: Document -> FileID -> Bool
-fileInDocument doc fid =
-    elem fid $      maybeToList (documentfile doc)
-                 ++ maybeToList (documentsealedfile doc)
-                 ++ (fmap authorattachmentfile $ documentauthorattachments doc)
-                 ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
 
 
 documentDeletedForUser :: Document -> UserID -> Bool
