@@ -68,10 +68,11 @@ mailRejectContractMail=
 ####
 mailRejectMailContentHeader=
 $if(customMessage)$
+  <br/>
+  <br/>
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
   <i>$customMessage:noescape()$</i>
-  <br/>
 $else$
   <div class="editable" name="custommessage"></div>
 $endif$
@@ -357,8 +358,6 @@ mailTakeoverPrivateUserInviteP=
   <br/>
   $_mailTakeoverPrivateUserInviteContentBodySecond()$
   <br/>
-  <br/>
-  $_mailTakeoverPrivateUserInviteContentInstructionFirst()$
   <ol>
     $_mailTakeoverPrivateUserInviteContentInstructionSecond()$
   </ol>

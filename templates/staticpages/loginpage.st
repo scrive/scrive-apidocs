@@ -5,7 +5,9 @@ loginPage=
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.inner').append(new Login({referer:   "$referer$",
+    var referer =  "$referer$";
+    if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
+    jQuery('.inner').append(new Login({referer:   referer,
                                        autofocus: true}).el());
     mixpanel.register({
       Context : 'Login page'
@@ -31,9 +33,11 @@ $htmlopentag()$
   </div>
   <script type="text/javascript">
     jQuery(document).ready(function() {
+      var referer =  "$referer$";
+      if (window.location.hash != "" && referer.indexOf("#") == -1) referer = referer + window.location.hash;
       jQuery('.inner').append(new Login({
                                          branded : true,
-                                         referer:   "$referer$",
+                                         referer:   referer,
                                          logolink:   "$logolink$",
                                          buttoncolorclass : "$buttoncolorclass$",
                                          servicelinkcolour: $if(servicelinkcolour)$"$servicelinkcolour$"$else$null$endif$,

@@ -49,7 +49,8 @@
             return view;
         },
         loading: function() {
-            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper'/>");
+            this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper-outer'/>");
+            var innerWrapper = $("<div class='design-view-document-buttons-wrapper'/>");
             var div = $("<div class='design-view-document-loading'/>");
             this.innerDiv = $("<div class='design-view-document-loading-inner''/>");
             div.html(this.innerDiv);
@@ -63,7 +64,7 @@
 	        trail  : 74,     // Afterglow percentage
 	        shadow : false   // Whether to render a shadow
             }).spin(this.innerDiv.get(0));
-            this.wrapperDiv.append(div);
+            this.wrapperDiv.append(innerWrapper.append(div));
             this.refreshMargins();
             return this.wrapperDiv;
         },
@@ -111,6 +112,7 @@
         uploadButtons: function() {
             var view = this;
             this.wrapperDiv = $("<div class='design-view-document-buttons-wrapper-outer'/>");
+            this.wrapperDiv.addClass('white-background');
             var innerWrapper = $("<div class='design-view-document-buttons-wrapper'/>");
             var div = $("<div class='design-view-document-buttons'/>");
 
