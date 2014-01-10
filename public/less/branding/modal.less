@@ -39,23 +39,26 @@
   }
 }
 
-.modal.screenblockingdialog .modal-container {
-  width: 650px;
+.modal.screenblockingdialog {
 
   // Screenblocking modals should be above normal modals
   z-index: 2001;
 
-  .transition(.0s, ease-in-out);
+  .modal-container {
+    width: 650px;
 
-  .screenblockingsubheader {
-    color: #808080;
-    font-size: 18px;
-  }
+    .transition(.0s, ease-in-out);
 
-  .modal-content {
+    .screenblockingsubheader {
+      color: #808080;
+      font-size: 18px;
+    }
 
-    .body {
-      padding: 20px 23px;
+    .modal-content {
+
+      .body {
+        padding: 20px 23px;
+      }
     }
   }
 }

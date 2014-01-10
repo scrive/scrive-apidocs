@@ -131,20 +131,14 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     // Should only be visible when its actually possible to fill in the fields
     if (document.currentSignatoryCanSign()) {
-        
-        // Since we always have at least one mandatory field, wa can always show legend for mandatory fields
-        var arrowLegend = $("<div class='arrow-legend'/>");
-        arrowLegend.append($("<p class='row' />").append($("<span class='icon-legend mandatory' />")).append("<span class='copy'>" + localization.docsignview.mandatoryAction + "</span>"));
-
-
-
-        // If we have any optional fields, show legend for optional fields
         var hasOptionalFields = _.any( document.currentSignatory().fields(), function(f) { return f.hasPlacements() && !f.obligatory() && !f.isClosed() } );
-        if(hasOptionalFields) {          
-            arrowLegend.append($("<p class='row'/>").append($("<span class='icon-legend optional' />")).append("<span class='copy'>" + localization.docsignview.optionalAction + "</span>"));
+        if(hasOptionalFields) {
+          // Since we always have at least one mandatory field, wa can always show legend for mandatory fields
+          var arrowLegend = $("<div class='arrow-legend'/>");
+          arrowLegend.append($("<p class='row'/>").append($("<span class='icon-legend mandatory' />")).append("<span class='copy'>" + localization.docsignview.mandatoryAction + "</span>"));
+          arrowLegend.append($("<p class='row'/>").append($("<span class='icon-legend optional' />")).append("<span class='copy'>" + localization.docsignview.optionalAction + "</span>"));
+          container.append(arrowLegend);
         }
-        
-        container.append(arrowLegend);
     }
 
     $(this.el).append(container);

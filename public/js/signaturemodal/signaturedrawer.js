@@ -5,15 +5,6 @@
 (function(window){
 
 
-// Number used to generate bigger final images. We want final image to be few times bigger then original one.
-var signaturePictureScale = function(w,h) {
-  if (w < 50 || h < 20)
-    return 16;
-  else if (w < 200 || h < 80)
-    return 8;
-  return 4;
-};
-
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: {
         text: true
@@ -208,12 +199,11 @@ var SignatureDrawerView = Backbone.View.extend({
           img.src = image;
           img.onload = function() {
                var canvas = $("<canvas class='signatureCanvas' />");
-               var scale = signaturePictureScale(self.model.width(),self.model.height());
-               canvas.attr("width",scale* self.model.width());
-               canvas.attr("height",scale* self.model.height());
+               canvas.attr("width",820);
+               canvas.attr("height",Math.floor(820 * self.model.height()/ self.model.width()));
                canvas[0].getContext('2d').fillStyle = "#ffffff";
-               canvas[0].getContext('2d').fillRect (0,0,scale*self.model.width(),scale*self.model.height());
-               canvas[0].getContext('2d').drawImage(img,0,0,scale*self.model.width(),scale*self.model.height());
+               canvas[0].getContext('2d').fillRect(0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
+               canvas[0].getContext('2d').drawImage(img,0,0,820,Math.floor(820 * self.model.height()/ self.model.width()));
 
 
                field.setValue(canvas[0].toDataURL("image/jpeg",1.0));

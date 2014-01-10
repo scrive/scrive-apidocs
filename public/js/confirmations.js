@@ -81,6 +81,9 @@ var ConfirmationModel = Backbone.Model.extend({
   width: function() {
       return this.get("width");
   },
+  setWidth: function(width) {
+    this.set('width', width);
+  },
   textfont: function() {
       return this.get("textfont");
   },
@@ -116,7 +119,8 @@ var ConfirmationView = Backbone.View.extend({
         "click .close"  :  "reject"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'reject', 'renderAcceptButton', 'clear');
+        _.bindAll(this, 'render', 'reject', 'renderAcceptButton', 'clear', 'resize');
+        this.model.bind('change:width', this.resize);
         this.model.bind('change:acceptVisible', this.renderAcceptButton);
         this.model.bind('close', this.clear);
         this.model.view = this;
@@ -133,16 +137,16 @@ var ConfirmationView = Backbone.View.extend({
     render: function () {
        var view = this;
        var model = this.model;
-       var container = $("<div class='modal-container'/>");
-       if(BrowserInfo.isSmallScreen()) container.addClass("small-screen");
-       container.css("top",$(window).scrollTop());
-       container.css("margin-top","50px");
-       container.css("left","0px");
+       this.container = $("<div class='modal-container'/>");
+       if(BrowserInfo.isSmallScreen()) this.container.addClass("small-screen");
+       this.container.css("top",$(window).scrollTop());
+       this.container.css("margin-top","50px");
+       this.container.css("left","0px");
        var left = Math.floor(($(window).width() - model.width()) / 2);
-       container.css("margin-left",left > 20 ? left : 20);
+       this.container.css("margin-left",left > 20 ? left : 20);
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
-       container.width(model.width());
+       this.container.width(model.width());
        var header = $("<div class='modal-header'></div>");
        var inner = $("<div class='modal-header-inner'></div>");
        var title = $("<div class='modal-title'/>");
@@ -212,15 +216,20 @@ var ConfirmationView = Backbone.View.extend({
        }
        this.renderAcceptButton();
        footer.append( this.acceptButton);
-       container.append(header);
-       container.append(body);
+       this.container.append(header);
+       this.container.append(body);
        if (model.footerVisible())
-         container.append(footer);
-       $(this.el).append(container);
+         this.container.append(footer);
+       $(this.el).append(this.container);
        return this;
     },
     onRender: function() {
       this.model.onRender();
+    },
+    resize: function() {
+      var left = Math.floor(($(window).width() - this.model.width()) / 2);
+      this.container.css("margin-left",left > 20 ? left : 20);
+      this.container.width(this.model.width());
     },
     reject: function(silent){
         var self = this;
