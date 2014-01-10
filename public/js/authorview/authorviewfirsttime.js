@@ -84,14 +84,14 @@ window.AuthorViewFirstTime = {
 
         ctacontainer.append(new Button({color: 'green', size: 'big', text: localization.authorview.firsttime.upload, shape: 'rounded', onClick: function() { 
           window.location.pathname = '/newdocument';
-        }}).el())
+        }}).el());
         ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.contact, shape: 'rounded', cssClass: 'contact', onClick: function() {
           mixpanel.track('FTUE Authorview contact clicked');
           ctacontainer.find('.button.contact').replaceWith($('<h5 class="contact"></h5>').html(localization.authorview.firsttime.contactdetails));
-        }}).el())
+        }}).el());
         ctacontainer.append(new Button({color: 'black', size: 'big', text: localization.authorview.firsttime.branding, shape: 'rounded', onClick: function() {
           window.location.href = '/account#branding-email';
-        }}).el())
+        }}).el());
 
         return ctacontainer;
     }
