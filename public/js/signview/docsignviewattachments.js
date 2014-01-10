@@ -91,7 +91,9 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
           attachment.notLoading();
         },
         ajaxsuccess: function(docdata) {
-              var newdoc = new Document(new Document({}).parse(docdata));
+              var olddocument = attachment.signatory().document();
+
+              var newdoc = new Document(new Document({id: olddocument.documentid(), viewer : olddocument.viewer()}).parse(docdata));
               _.each(newdoc.currentSignatory().attachments(), function(a) {
                 if (a.name() == attachment.name())
                     attachment.setFile(a.file());

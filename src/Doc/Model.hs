@@ -1334,16 +1334,19 @@ instance (MonadDB m) => DBQuery m FileInDocument Bool where
     let s1 = sqlSelect "main_files" $ do
                    sqlWhereEq "file_id" fid
                    sqlWhereEq "document_id" did
+                   sqlResult "TRUE"
     let s2 = sqlSelect "author_attachments" $ do
                    sqlWhereEq "file_id" fid
                    sqlWhereEq "document_id" did
+                   sqlResult "TRUE"
     let s3 = sqlSelect "signatory_attachments" $ do
                    sqlJoinOn "signatory_links" "signatory_attachments.signatory_link_id = signatory_links.id"
                    sqlWhereEq "file_id" fid
                    sqlWhereEq "document_id" did
-    Just result <- getOne ("SELECT (EXISTS " <> toSQLCommand s1 <> ") OR" <>
-                                  "(EXISTS " <> toSQLCommand s2 <> ") OR" <>
-                                  "(EXISTS " <> toSQLCommand s3 <> ")")
+                   sqlResult "TRUE"
+    Just result <- getOne ("SELECT EXISTS (" <> toSQLCommand s1 <> ") OR " <>
+                                  "EXISTS (" <> toSQLCommand s2 <> ") OR " <>
+                                  "EXISTS (" <> toSQLCommand s3 <> ")")
     return result
 
 
