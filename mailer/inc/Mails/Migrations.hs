@@ -13,6 +13,7 @@ mailerMigrations = [
     addTestServiceToMails
    , moveAtachmentsToSeparateTable
    , addFileIdToAttachmentsTable
+   , addAttemptCountToMails
   ]
 
 addTestServiceToMails :: MonadDB m => Migration m
@@ -56,6 +57,17 @@ moveAtachmentsToSeparateTable =
 
       kRunRaw "ALTER TABLE mails DROP COLUMN attachments"
   }
+
+addAttemptCountToMails :: MonadDB m => Migration m
+addAttemptCountToMails =
+  Migration {
+    mgrTable = tableMails
+  , mgrFrom = 3
+  , mgrDo = do
+      kRunRaw "ALTER TABLE mails ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0"
+  }
+
+
 
 addFileIdToAttachmentsTable :: MonadDB m => Migration m
 addFileIdToAttachmentsTable =

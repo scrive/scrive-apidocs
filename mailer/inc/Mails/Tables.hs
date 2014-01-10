@@ -17,7 +17,7 @@ mailerTables = [
 tableMails :: Table
 tableMails = tblTable {
     tblName = "mails"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
@@ -29,6 +29,7 @@ tableMails = tblTable {
     , tblColumn { colName = "to_be_sent", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "sent", colType = TimestampWithZoneT }
     , tblColumn { colName = "service_test", colType = BoolT, colNullable = False }
+    , tblColumn { colName = "attempt", colType = IntegerT, colNullable = False, colDefault = Just "0"}
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

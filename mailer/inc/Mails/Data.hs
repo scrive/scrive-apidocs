@@ -87,6 +87,7 @@ data Mail = Mail {
   , mailAttachments :: [Attachment]
   , mailXSMTPAttrs  :: XSMTPAttrs
   , mailServiceTest :: Bool
+  , mailAttempt     :: Integer
   } deriving (Eq, Ord, Show)
 
 

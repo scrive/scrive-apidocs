@@ -34,7 +34,7 @@ import qualified Data.Map as Map
 data CreateEmail = CreateEmail MagicHash Address [Address] MinutesTime
 instance MonadDB m => DBUpdate m CreateEmail MailID where
   update (CreateEmail token sender to to_be_sent) =
-    $(fromJust) `liftM` insertEmail False token sender to to_be_sent
+    $(fromJust) `liftM` insertEmail False token sender to to_be_sent 0
 
 data AddContentToEmail = AddContentToEmail MailID String String [Attachment] XSMTPAttrs
 instance MonadDB m => DBUpdate m AddContentToEmail Bool where
@@ -128,7 +128,7 @@ instance MonadDB m => DBQuery m GetEmailsByRecipient [Mail] where
 data CreateServiceTest = CreateServiceTest MagicHash Address [Address] MinutesTime
 instance MonadDB m => DBUpdate m CreateServiceTest MailID where
   update (CreateServiceTest token sender to to_be_sent) =
-    $(fromJust) `liftM` insertEmail True token sender to to_be_sent
+    $(fromJust) `liftM` insertEmail True token sender to to_be_sent 0
 
 data GetServiceTestEvents = GetServiceTestEvents
 instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, XSMTPAttrs, Event)] where
@@ -153,6 +153,7 @@ instance MonadDB m => DBUpdate m DeferEmail Bool where
   update (DeferEmail mid time) =
     kRun01 $ sqlUpdate "mails" $ do
         sqlSet "to_be_sent" time
+        sqlSetCmd "attempt" "attempt + 1"
         sqlWhereEq "id" mid
 
 data MarkEmailAsSent = MarkEmailAsSent MailID MinutesTime
@@ -177,18 +178,20 @@ sqlSelectMails refine = sqlSelect "mails" $ do
                     sqlResult "mails.content"
                     sqlResult "mails.x_smtp_attrs"
                     sqlResult "mails.service_test"
+                    sqlResult "mails.attempt"
                     sqlOrderBy "service_test ASC"
                     sqlOrderBy "id DESC"
                     refine
 
-insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> m (Maybe MailID)
-insertEmail service_test token sender to to_be_sent =
+insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> Int -> m (Maybe MailID)
+insertEmail service_test token sender to to_be_sent attempt =
   getOne $ sqlInsert "mails" $ do
       sqlSet "token" token
       sqlSet "sender" sender
       sqlSet "receivers" to
       sqlSet "to_be_sent" to_be_sent
       sqlSet "service_test" service_test
+      sqlSet "attempt" attempt
       sqlResult "id"
 
 getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, XSMTPAttrs, Event)]
@@ -213,7 +216,7 @@ fetchMails = kFold decoder []
     -- Note: this function gets mails in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.
     decoder acc mid token sender receivers title content
-     x_smtp_attrs service_test = Mail {
+     x_smtp_attrs service_test attampt = Mail {
           mailID = mid
         , mailToken = token
         , mailFrom = sender
@@ -223,6 +226,7 @@ fetchMails = kFold decoder []
         , mailAttachments = []
         , mailXSMTPAttrs = x_smtp_attrs
         , mailServiceTest = service_test
+        , mailAttempt = attampt
         } : acc
 
 fetchMailAttachments :: MonadDB m => m (Map.Map MailID [Attachment])

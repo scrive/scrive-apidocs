@@ -34,9 +34,17 @@ dispatcher rng _master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rn
              when (not res) $
                Log.messengerServer $ "Failed to mark sms #" ++ show smID ++ " as sent."
            else do
-             Log.messengerServer $ "Failed to send sms #" ++ show smID ++ " (deferring this sms for 5 minutes)."
-             res <- dbUpdate $ DeferSMS smID $ 5 `minutesAfter` now
-             when (not res) $
-               Log.messengerServer $ "Failed to defer sms #" ++ show smID ++ " sendout."
-         kCommit -- commit after email was handled properly
+             Log.messengerServer $ "Failed to send sms #" ++ show smID
+             if (smAttemtp sms < 100)
+                then do
+                  Log.messengerServer $ "Deferring sms #" ++ show smID ++" for 5 minutes"
+                  res <- dbUpdate $ DeferSMS smID $ 5 `minutesAfter` now
+                  when (not res) $
+                    Log.messengerServer $ "Failed to defer sms #" ++ show smID ++ " sendout."
+                else do
+                  Log.messengerServer $ "Deleting sms #" ++ show smID ++" since there was over 100 tries to send it"
+                  res <- dbUpdate $ DeleteSMS smID
+                  when (not res) $
+                    Log.messengerServer $ "Deleting sms #" ++ show smID ++ " failed."
+         kCommit -- commit after sms was handled properly
     Log.messengerServer $ "SMS Dispatcher is done"

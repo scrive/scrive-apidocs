@@ -16,6 +16,7 @@ data ShortMessage = ShortMessage {
   , smMSISDN     :: String
   , smBody       :: String
   , smData       :: String
+  , smAttemtp    :: Integer
   } deriving (Eq, Ord, Show)
 
 newtype SMSEventID = SMSEventID Int64

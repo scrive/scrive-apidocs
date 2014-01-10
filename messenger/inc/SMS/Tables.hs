@@ -15,7 +15,7 @@ messengerTables = [
 tableSMSes :: Table
 tableSMSes = tblTable {
     tblName = "smses"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "originator", colType = TextT, colNullable = False }
@@ -24,6 +24,8 @@ tableSMSes = tblTable {
     , tblColumn { colName = "to_be_sent", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "sent", colType = TimestampWithZoneT }
     , tblColumn { colName = "data", colType = TextT, colNullable = False }
+    , tblColumn { colName = "attempt", colType = IntegerT, colNullable = False, colDefault = Just "0"}
+
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

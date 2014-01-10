@@ -15,6 +15,7 @@ sqlSelectSMSes refine = sqlSelect "smses" $ do
                     sqlResult "smses.msisdn"
                     sqlResult "smses.body"
                     sqlResult "smses.data"
+                    sqlResult "smses.attempt"
                     --sqlResult "smses.to_be_sent"
                     --sqlResult "smses.sent"
                     sqlOrderBy "id DESC"
@@ -31,28 +32,30 @@ fetchSMSes = kFold decoder []
   where
     -- Note: this function gets mails in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.
-    decoder acc smsid originator msisdn body sdata
+    decoder acc smsid originator msisdn body sdata attempt
      = ShortMessage {
          smID         = smsid
        , smOriginator = originator
        , smMSISDN     = msisdn
        , smBody       = body
        , smData       = sdata
+       , smAttemtp    = attempt
        } : acc
 
 data CreateSMS = CreateSMS String String String String MinutesTime
 instance MonadDB m => DBUpdate m CreateSMS ShortMessageID where
   update (CreateSMS originator msisdn body sdata to_be_sent) =
-    $fromJust `fmap` insertSMS originator msisdn body sdata to_be_sent
+    $fromJust `fmap` insertSMS originator msisdn body sdata to_be_sent 0
 
-insertSMS :: MonadDB m => String -> String -> String -> String -> MinutesTime -> m (Maybe ShortMessageID)
-insertSMS originator msisdn body sdata to_be_sent =
+insertSMS :: MonadDB m => String -> String -> String -> String -> MinutesTime -> Int -> m (Maybe ShortMessageID)
+insertSMS originator msisdn body sdata to_be_sent attemtp =
   getOne $ sqlInsert "smses" $ do
     sqlSet "originator" originator
     sqlSet "msisdn" msisdn
     sqlSet "body" body
     sqlSet "to_be_sent" to_be_sent
     sqlSet "data" sdata
+    sqlSet "attempt" attemtp
     sqlResult "id"
 
 data GetIncomingSMSes = GetIncomingSMSes
@@ -72,6 +75,7 @@ instance MonadDB m => DBUpdate m DeferSMS Bool where
   update (DeferSMS mid time) =
     kRun01 $ sqlUpdate "smses" $ do
         sqlSet "to_be_sent" time
+        sqlSetCmd "attempt" "attempt + 1"
         sqlWhereEq "id" mid
 
 

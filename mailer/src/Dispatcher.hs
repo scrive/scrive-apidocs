@@ -44,10 +44,18 @@ dispatcher rng master msender dbconf amazonconf = withPostgreSQL dbconf . runCry
              when (not res) $
                Log.mailingServer $ "Failed to mark email #" ++ show mailID ++ " as sent."
            else do
-             Log.mailingServer $ "Failed to send email #" ++ show mailID ++ " (deferring this email for 5 minutes)."
-             res <- dbUpdate $ DeferEmail mailID $ 5 `minutesAfter` now
-             when (not res) $
-               Log.mailingServer $ "Failed to defer email #" ++ show mailID ++ " sendout."
+             Log.mailingServer $ "Failed to send email #" ++ show mailID
+             if (mailAttempt mail < 100)
+                then do
+                  Log.mailingServer $ "Deferring email #" ++ show mailID ++" for 5 minutes"
+                  res <- dbUpdate $ DeferEmail mailID $ 5 `minutesAfter` now
+                  when (not res) $
+                    Log.mailingServer $ "Failed to defer email #" ++ show mailID ++ " sendout."
+                else do
+                  Log.mailingServer $ "Deleting email #" ++ show mailID ++" since there was over 100 tries to send it"
+                  res <- dbUpdate $ DeleteEmail mailID
+                  when (not res) $
+                    Log.mailingServer $ "Deleting email #" ++ show mailID ++ " failed."
       kCommit -- commit after email was handled properly
       Log.mailingServer $ "Dispatcher is done"
   where

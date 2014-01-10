@@ -6,7 +6,6 @@ import DB
 import DB.Checks
 import SMS.Tables
 
-
 createSMSesTable  :: MonadDB m => Migration m
 createSMSesTable =
   Migration {
@@ -60,4 +59,15 @@ messengerMigrations :: MonadDB m => [Migration m]
 messengerMigrations =
   [ createSMSesTable
   , createSMSEventsTable
+  , addAttemptCountToSMSes
   ]
+
+
+addAttemptCountToSMSes :: MonadDB m => Migration m
+addAttemptCountToSMSes =
+  Migration {
+    mgrTable = tableSMSes
+  , mgrFrom = 1
+  , mgrDo = do
+      kRunRaw "ALTER TABLE smses ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0"
+  }
