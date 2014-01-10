@@ -20,18 +20,33 @@ window.TemplatesListDefinition = function(archive) { return {
                   rendering: function(time) {
                          return $("<span/>").text(new Date(Date.parse(time)).toYMDString()).attr("title",new Date(Date.parse(time)).fullTime());
                   }}),
-        new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
+        new Cell({name: localization.archive.templates.columns.verificationMethod, width:"150px", field:"id",  special: "rendered",
                   rendering: function(value, idx, model) {
-                         var res= $("<div/>");
-                         if (model.field("authentication") == "eleg")
-                             res.text(localization.eleg);
-                         else if (model.field("delivery") == "pad")
-                             res.text(localization.pad.delivery);
-                         else
-                             res.text(localization.email);
-                         return res;
+
+                         var dms = model.field("deliveryMethods") || [];
+                         dms = _.map(dms,function(dm) {
+                           if (dm == "email")
+                             return capitaliseFirstLetter(localization.delivery.email);
+                           else if (dm == "pad")
+                             return capitaliseFirstLetter(localization.delivery.pad);
+                           else if (dm == "mobile")
+                             return capitaliseFirstLetter(localization.delivery.mobile);
+                           else if (dm == "email_mobile")
+                             return capitaliseFirstLetter(localization.delivery.email_mobile);
+                           else if (dm == "api")
+                             return capitaliseFirstLetter(localization.delivery.api);
+                           return "";
+                         });
+                         dms = _.uniq(dms);
+                         dms.sort();
+
+                         var text = dms[0] || "";
+                         for(var i =1 ; i< dms.length; i++)
+                            text += ", " + dms[i];
+
+                         return  $("<div/>").text(text);
                   }}),
-        new Cell({name: localization.archive.templates.columns.template, width:"585px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.templates.columns.template, width:"535px", field:"title",  special: "link"}),
         new Cell({name: localization.archive.templates.columns.shared, width:"50px", field:"shared", special: "rendered",
                   rendering: function(shared) {
                          return $("<div/>").addClass((shared) ? "sharedIcon" : "notSharedIcon");

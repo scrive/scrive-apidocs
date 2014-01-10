@@ -1017,5 +1017,12 @@ javascriptLocalisation =
              , december  : "$_datesDecember()$"
       }
       , createFromTemplateDescription : "$_createFromTemplateDescription()$"
+      , delivery : {
+               email        : "$_deliveryEmail()$"
+             , pad          : "$_deliveryPad()$"
+             , mobile       : "$_deliveryMobile()$"
+             , email_mobile : "$_deliveryEmailMobile()$"
+             , api          : "$_deliveryAPI()$"
+      }
     };
 ###
