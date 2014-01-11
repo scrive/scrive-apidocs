@@ -28,10 +28,10 @@ scheduleSMS msg@SMS{..} = do
        then do
         now <- getMinutesTime
         sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData) now
-        Log.debug $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
+        Log.mixlog_ $ "SMS " ++ show msg ++ " with id #" ++ show sid ++ " scheduled for sendout"
         return ()
        else do
-        Log.error $ "SMS:  trying to send SMS, but not mobile number was defined. This should not happend after mid II.2014. Till then we need to support it"
+        Log.mixlog_ $ "SMS:  trying to send SMS, but not mobile number was defined. This should not happend after mid II.2014. Till then we need to support it"
         return ()
 
 
