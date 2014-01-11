@@ -94,7 +94,7 @@ generateBankIDTransaction docid signid = do
                                             , transactionstatus          = Left "Only necessary for mobile bankid"
                                             , transactionoref            = Nothing
                                             }
-                    Log.eleg "Eleg challenge generation sucessfull"
+                    Log.mixlog_ "Eleg challenge generation sucessfull"
                     return $ runJSONGen $ do
                         J.value "status"        (0::Int)
                         J.value "servertime" $  show seconds
@@ -146,7 +146,7 @@ generateBankIDTransactionForAuthor  docid = do
 
 generationFailed:: Kontrakcja m => String -> Int -> String -> m JSValue
 generationFailed desc code msg = do
-  Log.eleg $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
+  Log.mixlog_ $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
   return $ runJSONGen $ do
     J.value "status" code
     J.value "msg"    msg
@@ -186,23 +186,23 @@ verifySignatureAndGetSignInfo signid magic fields provider signature transaction
     etbs <- guardJust transactionencodedtbs
 
      -- end validation
-    Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
+    Log.mixlog_ $ "Successfully found eleg transaction: " ++ show transactionid
     -- send signature to ELeg
     res <- liftIO $ verifySignature logicaconf provider
                 etbs
                 signature
                 ( transactionnonce <|  provider == BankIDProvider |> Nothing )
                 transactionid
-    Log.eleg $ "Verification done - checking result"
+    Log.mixlog_ $ "Verification done - checking result"
     case res of
         -- error state
         Left (ImplStatus _a _b code msg) -> do
-            Log.eleg $ "verifySignature failed: code " ++  show code ++ " message: "++  msg
+            Log.mixlog_ $ "verifySignature failed: code " ++  show code ++ " message: "++  msg
             prob <- renderTemplate "bankidVerificationFailed" $ return ()
             return $ Problem prob
         -- successful request
         Right (cert, attrs) -> do
-            Log.eleg "Successfully identified using eleg. (Omitting private information)."
+            Log.mixlog_ "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
             case (compareSigLinkToElegData siglink fields attrs) of
                 -- either number or name do not match
@@ -211,7 +211,7 @@ verifySignatureAndGetSignInfo signid magic fields provider signature transaction
                 (_,MergeFail)         -> return $ Mismatch (False, True)  (getDetailsFromResponseAttrs attrs)
                 -- we have merged the info!
                 (bn, bpn) -> do
-                    Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
+                    Log.mixlog_ $ "Successfully merged info for transaction: " ++ show transactionid
                     let mocsp = lookup "Validation.ocsp.response" attrs
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
@@ -254,13 +254,13 @@ verifySignatureAndGetSignInfo signid magic fields provider signature transaction
 
 verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String -> String -> m VerifySignatureResult
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
+    Log.mixlog_ $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
     doc <- getDocByDocID docid
     logicaconf <- ctxlogicaconf <$> getContext
 
     unless (isAuthor (doc, author)) internalError -- necessary because someone other than author cannot initiate eleg
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Author verified"
+    Log.mixlog_ $ ("Document " ++ show docid ) ++ ": Author verified"
     ELegTransaction { transactiondocumentid
                     , transactiontbs
                     , transactionencodedtbs = Just etbs
@@ -268,10 +268,10 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                     } <- guardJustM $ dbQuery $ GetELegTransaction transactionid
 
     unless (transactiondocumentid == docid) internalError
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
+    Log.mixlog_ $ ("Document " ++ show docid ) ++ ": Transaction validated"
+    Log.mixlog_ $ ("Document " ++ show docid ) ++ ": Document matched"
 
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
+    Log.mixlog_ $ ("Document " ++ show docid ) ++ ": Document allows eleg"
     res <- liftIO $ verifySignature logicaconf provider
                       etbs
                       signature
@@ -280,7 +280,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
 
     case res of
       Left (ImplStatus _a _b code msg) -> do
-        Log.eleg $ ("Document " ++ show docid ) ++ "verifySignature failed: code " ++  show code ++ " message: "++  msg
+        Log.mixlog_ $ ("Document " ++ show docid ) ++ "verifySignature failed: code " ++  show code ++ " message: "++  msg
         prob <- renderTemplate "bankidVerificationFailed" $ return ()
         return $ Problem prob
       Right (cert, attrs) -> do
@@ -288,16 +288,16 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
         -- compare information from document (and fields) to that obtained from BankID
         case (compareSigLinkToElegData authorsl [] attrs) of
           (MergeFail,MergeFail) -> do
-            Log.eleg ("merge failed: Could not merge author details : name and number")
+            Log.mixlog_ ("merge failed: Could not merge author details : name and number")
             return (Problem "Could not merge author details : name and number")
           (MergeFail,_)         -> do
-            Log.eleg ("merge failed: Could not merge author details : name")
+            Log.mixlog_ ("merge failed: Could not merge author details : name")
             return (Problem "Could not merge author details : name")
           (_,MergeFail)         -> do
-            Log.eleg ("merge failed: Could not merge author details : number")
+            Log.mixlog_ ("merge failed: Could not merge author details : number")
             return (Problem "Could not merge author details : number")
           (bn, bpn) -> do
-            Log.eleg "author merge succeeded. (details omitted)"
+            Log.mixlog_ "author merge succeeded. (details omitted)"
             return $ Sign $ SignatureInfo    { signatureinfotext        = transactiontbs
                                              , signatureinfosignature    = signature
                                              , signatureinfocertificate  = cert
@@ -507,7 +507,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
 
     case status of
       Right (CRComplete _ signature attrs) -> do
-            Log.eleg "Successfully identified using eleg. (Omitting private information)."
+            Log.mixlog_ "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
             case (compareSigLinkToElegData siglink fields attrs) of
                 -- either number or name do not match
@@ -516,7 +516,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
                 (_,MergeFail)         -> return $ Mismatch (False, True)  (getDetailsFromResponseAttrs attrs)
                 -- we have merged the info!
                 (bn, bpn) -> do
-                    Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
+                    Log.mixlog_ $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
@@ -544,7 +544,7 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
     unless (tdocid == docid) internalError
     case status of
       Right (CRComplete _ signature attrs) -> do
-            Log.eleg "Successfully identified using eleg. (Omitting private information)."
+            Log.mixlog_ "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
             case (compareSigLinkToElegData siglink [] attrs) of
                 -- either number or name do not match
@@ -553,7 +553,7 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
                 (_,MergeFail)         -> return $ Mismatch (False, True)  (getDetailsFromResponseAttrs attrs)
                 -- we have merged the info!
                 (bn, bpn) -> do
-                    Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
+                    Log.mixlog_ $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
