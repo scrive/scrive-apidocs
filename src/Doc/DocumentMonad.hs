@@ -21,10 +21,12 @@ import GuardTime (GuardTimeConfMonad)
 import Happstack.Server (FilterMonad, HasRqData, ServerMonad, WebMonad)
 import Kontra (Kontrakcja)
 import KontraMonad (KontraMonad)
-import Log (MonadLog)
+import Log (MonadLog(..))
 import MailContext (MailContextMonad)
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT(..))
 import Instances ()
+import Text.JSON
+import Text.JSON.Gen
 
 -- This monad is currently implemented as a thin layer over
 -- DB.RowCache.  More (document-specific) operations may be coming.
@@ -48,7 +50,15 @@ class MonadDB m => DocumentMonad m where
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
-  deriving (Applicative, Monad, Functor, MonadIO, MonadDB, MonadLog, MonadTrans, MonadBase b)
+  deriving (Applicative, Monad, Functor, MonadIO, MonadDB, MonadTrans, MonadBase b)
+
+instance (MonadLog m) => MonadLog (DocumentT m) where
+  mixlogjs title js = do
+    case toJSValue js of
+      JSObject jso -> DocumentT $ do
+        did <- rowCacheID
+        mixlogjs title (JSObject (toJSObject (("documentid",toJSValue (show did)) : fromJSObject jso)))
+      jsx -> DocumentT $ mixlogjs title jsx
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given the document

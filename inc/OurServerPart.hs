@@ -14,7 +14,7 @@ import Happstack.Server
 import Log
 
 instance (MonadLog m) => MonadLog (ServerPartT m) where
-  logM a = lift $ logM a
+  mixlogjs title js = lift (mixlogjs title js)
 
 
 -- | The purpose of this wrapper is to override ServerPartT implementation

@@ -242,6 +242,7 @@ apiCallUpdate did = api $ do
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
+    Log.mixlog "Just checking documentid" (return ())
     Log.mixlogjs "Document updated with:" json
     draftData   <- apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ flip fromJSValueWithUpdate json . Just <$> theDocument
     whenM (draftIsChangingDocument draftData <$> theDocument) $ do
