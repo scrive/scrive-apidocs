@@ -71,7 +71,7 @@ approximateActor doc dee | systemEvents $ evType dee = return "Scrive"
     Just sl -> if (isAuthor sl)
              then authorName
              else case (getSmartName sl) of
-                    "" -> renderTemplate_ "(_notNamedParty)"
+                    "" -> renderTemplate_ "_notNamedParty" >>= \t -> return $ "(" ++ t ++ ")"
                     name -> return name
     Nothing -> case (evUserID dee) of
                Just uid -> if (isAuthor (doc,uid))
