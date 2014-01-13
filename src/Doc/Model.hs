@@ -25,7 +25,6 @@ module Doc.Model
   , GetDocuments(..)
   , GetDocuments2(..)
   , GetDocumentByDocumentID(..)
-  , GetDocumentsByDocumentIDs(..)
   , GetDocumentBySignatoryLinkID(..)
   , GetDocumentsBySignatoryLinkIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
@@ -1562,13 +1561,6 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentID Document where
     selectDocument $ selectTablesForDocumentSelectors $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
-
-data GetDocumentsByDocumentIDs = GetDocumentsByDocumentIDs [DocumentID]
-instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
-  query (GetDocumentsByDocumentIDs dids) = do
-    selectDocuments $ selectTablesForDocumentSelectors $ do
-      mapM_ sqlResult documentsSelectors
-      sqlWhereIn "documents.id" dids
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance MonadDB m => DBQuery m GetDocumentBySignatoryLinkID (Maybe Document) where

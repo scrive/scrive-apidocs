@@ -124,7 +124,10 @@ versionedAPI _version = choice [
   dir "remind"             $ hPost $ toK1 $ apiCallRemind,
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
+
   dir "list"               $ hGetAllowHttp $ apiCallList,
+  dir "checkavailable"     $ hPostAllowHttp $ apiCallCheckAvailable,
+
   dir "history"           $ hGetAllowHttp $ apiCallHistory,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallDownloadMainFile,
   dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallDownloadFile,
@@ -625,6 +628,21 @@ apiCallList = api $ do
   res <- jsonDocumentsList
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
+
+
+apiCallCheckAvailable :: Kontrakcja m => m Response
+apiCallCheckAvailable = api $ do
+  (user, _actor, _) <- getAPIUser APIDocCheck
+  (mids :: Maybe [DocumentID]) <- readField "ids"
+  when (isNothing mids) $ do
+    throwIO . SomeKontraException $ serverError "No ids parameter was provided or it had wrong format"
+  let ids = fromJust mids
+  when (length ids > 10000) $ do
+    throwIO . SomeKontraException $ serverError "This request can't check more then 10000 documents"
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] [] (0,-1)
+  Ok <$> (runJSONGenT $ value "ids" (show . documentid <$> docs))
+
+
 
 apiCallHistory :: Kontrakcja m => DocumentID -> m Response
 apiCallHistory did = api $ do
