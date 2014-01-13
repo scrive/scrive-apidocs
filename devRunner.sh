@@ -3,6 +3,10 @@
 echo "DEV RUNNER:"
 echo ""
 
+echo "MIGRATING DATABASE"
+dist/build/kontrakcja-migrate/kontrakcja-migrate
+
+
 echo "STARTING MAILER SERVER"
     dist/build/mailing-server/mailing-server &
     echo $! > _mailer_pid
@@ -32,5 +36,3 @@ echo "STARTING MAIN SERVER"
     echo "started server with pid $(cat _server_pid)"
 
 wait
-
-
