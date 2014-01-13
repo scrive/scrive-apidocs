@@ -1,21 +1,11 @@
 module AppDBMigrations (
     kontraMigrations
-  , main
   ) where
 
 import DB.Core
 import DB.Model
-import DB.SQLFunction
 import Control.Monad.IO.Class
-import System.IO
-import System.Environment
---import qualified Log
-import AppConf
-import Configuration
-import DB.Checks
-import DB.PostgreSQL
 
-import AppDBTables
 import ActionQueue.Migrations
 import Company.Migrations
 import CompanyAccounts.Migrations
@@ -163,17 +153,3 @@ kontraMigrations = [
   , addProbablyMissingIndexesOnAttachments
   ] ++ mailerMigrations
     ++ messengerMigrations
-
-main :: IO ()
-main = do
-  hSetEncoding stdout utf8
-  hSetEncoding stderr utf8
-
-  appConf <- do
-    appname <- getProgName
-    args <- getArgs
-    readConfig (liftIO . putStrLn) appname args "kontrakcja.conf"
-
-  withPostgreSQL (dbConfig appConf) $ do
-    migrateDatabase (liftIO . putStrLn) kontraTables kontraMigrations
-    defineMany kontraFunctions

@@ -17,7 +17,7 @@ import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 
 import AppDBTables
-import AppDBMigrations hiding (main)
+import AppDBMigrations
 import Crypto.RNG
 import DB
 import DB.Checks

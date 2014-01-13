@@ -365,9 +365,9 @@ Executable kontrakcja-migrate
   if os(windows)
     cpp-options: -DWINDOWS
 
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is AppDBMigrations
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -main-is AppDBMain
 
-  Main-is: AppDBMigrations.hs
+  Main-is: AppDBMain.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,
