@@ -169,11 +169,11 @@ handleAfterSigning signatorylinkid = do
 -- call Apple service and enable cookies (again) on their phone.
 handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSignShowSaveMagicHash did sid mh = do
-  dbUpdate $ AddDocumentSessionToken sid mh
-
   -- Getting some evidence
   ctx <- getContext
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+    dbUpdate $ AddDocumentSessionToken sid mh
+
     invitedlink <- guardJust . getSigLinkFor sid =<< theDocument
     dbUpdate . AddSignatoryLinkVisitedEvidence (signatoryActor ctx invitedlink) =<< theDocumentID
 
