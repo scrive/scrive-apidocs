@@ -340,8 +340,8 @@ handleAccountSetupPost uid token sm = do
 -}
 handleAccessNewAccountGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink (Either Response ThinPage))
 handleAccessNewAccountGet uid token = do
-  muser <- getAccessNewAccountUser uid token
-  case muser of
+  museraccount <- getAccessNewAccountUser uid token
+  case museraccount of
     Just user -> do
       switchLang (getLang user)
       let changePassLink = show $ LinkAccessNewAccount uid token
@@ -362,8 +362,20 @@ handleAccessNewAccountGet uid token = do
                         F.value "linkchangepassword" $ changePassLink
           return $ Right $ Right $ ThinPage content
     Nothing -> do
-      addFlashM flashMessageAccessNewAccountLinkNotValid
-      return $ Left LinkLoginDirect
+      muser <- dbQuery $ GetUserByID uid
+      Left <$> case muser of
+        Just user@User{userpassword = Just _} -> do
+          -- user has already set up an account, redirect to the archive
+          ctx <- getContext
+          case ctxmaybeuser ctx of
+            Just currentUser | currentUser == user -> return LinkArchive
+            Just currentUser -> do
+              Log.debug $ "New account email button link for user " ++ show uid ++ " clicked by logged user " ++ show (userid currentUser)
+              return LinkArchive
+            Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
+        _ -> do
+          addFlashM flashMessageAccessNewAccountLinkNotValid
+          return LinkLoginDirect
 
 -- TODO: Too much code duplication around new account access and password reminders
 handleAccessNewAccountPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
