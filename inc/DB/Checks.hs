@@ -41,11 +41,10 @@ migrateDatabase logger tables migrations = do
   checkNeededExtensions logger
   checkDBConsistency logger (tableVersions : tables) migrations
   checkDBStructure logger (tableVersions : tables)
+  checkUnknownTables logger tables
 
   -- everything is OK, commit changes
   kCommit
-
-  checkUnknownTables logger tables
   return ()
 
 checkDatabase :: MonadDB m => (String -> m ()) -> [Table] -> m ()
