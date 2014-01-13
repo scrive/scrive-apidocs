@@ -19,6 +19,7 @@ module Doc.Model
   , ChangeSignatoryPhoneWhenUndelivered(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
+  , FileInDocument(..)
   , RemoveOldDrafts(..)
   , ErrorDocument(..)
   , GetDocuments(..)
@@ -1307,6 +1308,29 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailW
       updateMTimeAndObjectVersion (actorTime actor)
       return ()
 
+
+data FileInDocument = FileInDocument DocumentID FileID
+instance (MonadDB m) => DBQuery m FileInDocument Bool where
+  query (FileInDocument did fid) = do
+    let s1 = sqlSelect "main_files" $ do
+                   sqlWhereEq "file_id" fid
+                   sqlWhereEq "document_id" did
+                   sqlResult "TRUE"
+    let s2 = sqlSelect "author_attachments" $ do
+                   sqlWhereEq "file_id" fid
+                   sqlWhereEq "document_id" did
+                   sqlResult "TRUE"
+    let s3 = sqlSelect "signatory_attachments" $ do
+                   sqlJoinOn "signatory_links" "signatory_attachments.signatory_link_id = signatory_links.id"
+                   sqlWhereEq "file_id" fid
+                   sqlWhereEq "document_id" did
+                   sqlResult "TRUE"
+    Just result <- getOne ("SELECT EXISTS (" <> toSQLCommand s1 <> ") OR " <>
+                                  "EXISTS (" <> toSQLCommand s2 <> ") OR " <>
+                                  "EXISTS (" <> toSQLCommand s3 <> ")")
+    return result
+
+
 data ChangeSignatoryPhoneWhenUndelivered = ChangeSignatoryPhoneWhenUndelivered SignatoryLinkID String Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m ChangeSignatoryPhoneWhenUndelivered () where
   update (ChangeSignatoryPhoneWhenUndelivered slid phone actor) = updateDocumentWithID $ const $ do
@@ -2428,4 +2452,3 @@ updateMTimeAndObjectVersion mtime = updateDocumentWithID $ \did -> do
 
 instance MonadDB m => GetRow Document m where
   getRow did = dbQuery $ GetDocumentByDocumentID did
-
