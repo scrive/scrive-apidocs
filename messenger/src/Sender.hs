@@ -104,7 +104,7 @@ createLocalSender config = Sender { senderName = "localSender", sendSMS = send }
     send ShortMessage{..} = do
 
 
-      let matchResult = (match (makeRegex ("https?://[a-zA-Z-:0-9.]+/[a-zA-Z_-:/0-9#?]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
+      let matchResult = (match (makeRegex ("https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
       let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
       let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ smMSISDN ++ "</title></head><body>" ++
                     "ID: " ++ show smID ++ "<br>" ++
