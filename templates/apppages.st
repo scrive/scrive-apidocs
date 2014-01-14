@@ -325,6 +325,10 @@ $if(custombarstextcolour)$
     color: $custombarstextcolour$;
     text-shadow: none;
   }
+
+  header.site nav ul.ct li a.page.active  {
+    color: $custombarstextcolour$;
+  }
 $endif$
 
 

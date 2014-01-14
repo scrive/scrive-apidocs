@@ -23,13 +23,13 @@ window.CompanyBrandingServiceViewModel = Backbone.Model.extend({
         }),
         custombarstextcolour: new CompanyBrandingColour({
           customised: companyui.custombarstextcolour().trim() != '',
-          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#FFFFFF",
+          defaultcolour:  companyui.domainbarstextcolour() != "" ? companyui.domainbarstextcolour() : "#D9D9D9",
           colour: companyui.custombarstextcolour(),
           label: localization.companyBranding.barsTextColour
         }),
         custombarssecondarycolour: new CompanyBrandingColour({
           customised: companyui.custombarssecondarycolour().trim() != '',
-          defaultcolour: companyui.domainbarssecondarycolour() != "" ? companyui.domainbarssecondarycolour() : "#333333",
+          defaultcolour: companyui.domainbarssecondarycolour() != "" ? companyui.domainbarssecondarycolour() : "#FFFFFF",
           colour: companyui.custombarssecondarycolour(),
           label: localization.companyBranding.barsSecondaryColour
         }),
@@ -107,7 +107,7 @@ window.CompanyBrandingServiceViewSampleView = Backbone.View.extend({
     this.header.append(this.innerheader);
     this.innerheader.append(this.header2).append(this.header3).append(this.header4).append(this.header5).append(this.header6).append($('<div style="clear:both;"/>'));
     this.header.append("<style>"
-                          + ".sample-custom-view-header .hoverable {display:block;padding: 12px 4px; color:#d9d9d9;}"
+                          + ".sample-custom-view-header .hoverable {display:block;padding: 12px 4px;}"
                         +"</style>");
 
     this.stylepeace = $("<style></style>");
