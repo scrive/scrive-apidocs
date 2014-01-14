@@ -155,7 +155,7 @@ Executable kontrakcja-server
   if os(windows)
     cpp-options: -DWINDOWS
 
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   Build-depends: base < 6
   Build-depends: bytestring == 0.10.0.2
@@ -488,7 +488,6 @@ Executable kontrakcja-test
   else
     Buildable: False
 
-  ghc-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
   Hs-source-dirs: inc misc test/src src mailer/inc docconv/src docconv/test/src messenger/src messenger/inc pdftools
 
@@ -503,7 +502,7 @@ Executable kontrakcja-test
   if os(windows)
     cpp-options: -DWINDOWS
 
-  GHC-Options: -main-is TestMain
+  GHC-Options:  -rtsopts -fprof-auto -fno-prof-count-entries -fprof-auto-calls -main-is TestMain
   Main-is: TestMain.hs
 
   Extensions: BangPatterns,

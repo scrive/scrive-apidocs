@@ -237,7 +237,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
             return $ Right res
         , E.Handler $ \(e::E.SomeException) -> do
           Log.error $ "Exception caught in routeHandlers: " ++ show e
-          handleKontraError InternalError
+          handleKontraError (InternalError ["routeHandlers"])
         ]
       ctx' <- getContext
       return (res, ctx')
@@ -247,7 +247,10 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       liftIO (tryReadMVar $ rqInputsBody rq)
         >>= Log.error . shows e . (++) ": " . showRequest rq
       case e of
-        InternalError -> internalServerErrorPage >>= internalServerError
+        InternalError stack -> do
+          Log.error $ "InternalError with call stack: "
+          mapM_ (\s -> Log.error ("    " ++ s)) (reverse stack)
+          internalServerErrorPage >>= internalServerError
         Respond404 -> notFoundPage >>= notFound
 
     createContext session = do
