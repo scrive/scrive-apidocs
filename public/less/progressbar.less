@@ -1,3 +1,5 @@
+@import 'branding/elements';
+
 .progressbar {
   // generic positioning of progress bar
   
@@ -21,7 +23,7 @@
     .inner {
       @height: 32px;
 
-      background-image: url(../../img/sprite-progress-bar.png);
+      background-image: url(~"@{img-base-url}/sprite-progress-bar.png");
       height: @height;
 
       .step-X (@step) {

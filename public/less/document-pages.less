@@ -1,3 +1,4 @@
+@import 'branding/elements';
 @import 'branding/variables';
 @import 'designview/util';
 
@@ -21,7 +22,7 @@
 
   .waiting4page {
     background-color: #fafafa;
-    background-image: url(/img/wait30trans.gif);
+    background-image: url(~"@{img-base-url}/wait30trans.gif");
     background-position: center center;
     background-repeat: no-repeat;
     border: 1px solid #777;
@@ -173,17 +174,17 @@
 }
 
 .placedcheckbox {
-  background: url(../img/checkbox-blue-unchecked.png) no-repeat scroll 0 0;
+  background: url(~"@{img-base-url}/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
   height: 12px;
   width: 12px;
 }
 
 .placedcheckbox:active {
-  background: url(../img/checkbox-blue-active.png) no-repeat scroll 0 0;
+  background: url(~"@{img-base-url}/checkbox-blue-active.png") no-repeat scroll 0 0;
 }
 
 .placedcheckbox.checked {
-  background: url(../img/checkbox-blue-checked.png) no-repeat scroll 0 0;
+  background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
 }
 
 .signatureBox {
@@ -204,7 +205,7 @@
 }
 
 .signatureBox .signatureHeader {
-  background-image: url(/img/drag.png);
+  background-image: url(~"@{img-base-url}/drag.png");
   background-repeat: no-repeat;
   background-position: 2px 2px;
   color: #666666;

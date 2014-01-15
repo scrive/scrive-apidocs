@@ -1,3 +1,4 @@
+@import 'branding/elements';
 @import 'branding/variables';
 
 .signview .arrows {
@@ -24,7 +25,7 @@
   .down.arrow {
     .scroll-arrow;
 
-    background: url(../img/sign-arrow-down.png);
+    background: url(~"@{img-base-url}/sign-arrow-down.png");
     bottom: @scroll-arrow-margin;
     position: fixed;
   }
@@ -33,7 +34,7 @@
     .scroll-arrow;
 
     up: @scroll-arrow-margin; // TODO: remove this comment if "up" is the right attribute to use
-    background: url(../img/sign-arrow-up.png);
+    background: url(~"@{img-base-url}/sign-arrow-up.png");
     background-repeat: no-repeat;
   }
 
@@ -66,17 +67,17 @@
   }
 
   .action-arrow.right .front {
-    background-image: url(../img/sign-arrow-action-right-front.png);
+    background-image: url(~"@{img-base-url}/sign-arrow-action-right-front.png");
     float: left;
   }
 
   .action-arrow.right .back {
-    background-image: url(../img/sign-arrow-action-right-back.png);
+    background-image: url(~"@{img-base-url}/sign-arrow-action-right-back.png");
     float: left;
   }
 
   .action-arrow.right .label {
-    background-image: url(../img/sign-arrow-action-label.png);
+    background-image: url(~"@{img-base-url}/sign-arrow-action-label.png");
     float: left;
     line-height: 1.8;
     padding-left: 3px;
@@ -84,18 +85,18 @@
   }
 
   .action-arrow.left .front {
-    background-image: url(../img/sign-arrow-action-left-front.png);
+    background-image: url(~"@{img-base-url}/sign-arrow-action-left-front.png");
     float: right;
     margin-top: -1px; // is this an image problem? i just rotated the right one 180 deg.
   }
 
   .action-arrow.left .back {
-    background-image: url(../img/sign-arrow-action-left-back.png);
+    background-image: url(~"@{img-base-url}/sign-arrow-action-left-back.png");
     float: right;
   }
 
   .action-arrow.left .label {
-    background-image: url(../img/sign-arrow-action-label.png);
+    background-image: url(~"@{img-base-url}/sign-arrow-action-label.png");
     float: right;
     line-height: 1.8;
     padding-right: 3px;

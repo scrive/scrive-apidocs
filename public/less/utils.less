@@ -1,9 +1,10 @@
+@import 'branding/elements';
 // Icons and simillar stuff
 // -------------------------
 
 .icon.status,
 .icon.small {
-  background: url(../img/spr-icons.png) 0 0 no-repeat;
+  background: url(~"@{img-base-url}/spr-icons.png") 0 0 no-repeat;
   display: inline-block;
   height: 15px;
   margin-bottom: -6px;
@@ -42,7 +43,7 @@
 @icon-width: 26px;
 
 .icon.status {
-  background: url(../img/status-icons.png) 0 0 no-repeat;
+  background: url(~"@{img-base-url}/status-icons.png") 0 0 no-repeat;
   height: @icon-height;
   width: @icon-width;
 }
@@ -114,7 +115,7 @@
 }
 
 .icon.cross {
-  background: url(../img/x.png) 0 0 no-repeat;
+  background: url(~"@{img-base-url}/x.png") 0 0 no-repeat;
   display: inline-block;
   height: 22px;
   width: 31px;
@@ -124,32 +125,32 @@
 }
 
 .icon.delete {
-  background: url(../img/icon-delete.png) 0 0 no-repeat;
+  background: url(~"@{img-base-url}/icon-delete.png") 0 0 no-repeat;
   display: block;
   height: 16px;
   width: 16px;
 
   &.gray {
-    background: url(../img/icon-delete-gray.png) 0 0 no-repeat;
+    background: url(~"@{img-base-url}/icon-delete-gray.png") 0 0 no-repeat;
   }
 }
 
 .icon.edit {
-  background-image: url(/img/iconPen.png);
+  background-image: url(~"@{img-base-url}/iconPen.png");
   display: inline-block;
   height: 14px;
   width: 14px;
 }
 
 .icon.remind {
-  background: url(../img/remind.png) 0 0 no-repeat;
+  background: url(~"@{img-base-url}/remind.png") 0 0 no-repeat;
   display: block;
   height: 16px;
   width: 16px;
 }
 
 .backicon {
-  background: url(../img/back.png) no-repeat transparent;
+  background: url(~"@{img-base-url}/back.png") no-repeat transparent;
   background-position: 0px 0px;
   display: block;
   height: 16px;
@@ -159,13 +160,13 @@
 
 .gotodave {
   display: block;
-  background-image: url(../img/iconPen.png);
+  background-image: url(~"@{img-base-url}/iconPen.png");
   height: 15px;
   width: 15px;
 }
 
 .notSharedIcon {
-  background-image: url(/img/notshared.png);
+  background-image: url(~"@{img-base-url}/notshared.png");
   display : block;
   height: 14px;
   margin-left: 10px;
@@ -173,7 +174,7 @@
 }
 
 .sharedIcon {
-  background-image: url(/img/shared.png);
+  background-image: url(~"@{img-base-url}/shared.png");
   display: block;
   height: 14px;
   margin-left: 10px;
@@ -181,21 +182,21 @@
 }
 
 .actionIcon.removefromqueue {
-  background-image: url(../img/icon-delete.png);
+  background-image: url(~"@{img-base-url}/icon-delete.png");
   float: left;
   height: 16px;
   width: 16px;
 }
 
 .actionIcon.addtoqueue {
-  background-image: url(../img/foreward.png);
+  background-image: url(~"@{img-base-url}/foreward.png");
   float: left;
   height: 14px;
   width: 14px;
 }
 
 .go-back-image {
-  background: url(/img/undo.png) 0 -0 no-repeat;
+  background: url(~"@{img-base-url}/undo.png") 0 -0 no-repeat;
   display: block;
   margin: 1px;
   height: 16px;
@@ -203,7 +204,7 @@
 }
 
 .logout-image {
-  background: url(/img/exit.png) 0 -0 no-repeat;
+  background: url(~"@{img-base-url}/exit.png") 0 -0 no-repeat;
   display: block;
   height: 16px;
   margin:1px;
@@ -232,7 +233,7 @@
 }
 
 .waiting4data {
-  background-image: url(/img/wait30trans.gif);
+  background-image: url(~"@{img-base-url}/wait30trans.gif");
   background-position: center center;
   background-repeat: no-repeat;
   height: 100px;
@@ -241,7 +242,7 @@
 }
 
 .loadingMail {
-  background-image: url(/img/wait30trans.gif);
+  background-image: url(~"@{img-base-url}/wait30trans.gif");
   background-repeat: no-repeat;
   background-position: center center;
   height: 400px;
@@ -320,7 +321,7 @@
 }
 
 .divider-line {
-  background-image: url("/img/divider-line.png");
+  background-image: url(~"@{img-base-url}/divider-line.png");
   display: block;
   height: 9px;
   margin: 10px auto;

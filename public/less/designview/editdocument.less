@@ -1,4 +1,5 @@
 @import 'util.less';
+@import '../branding/elements';
 @import '../branding/variables.less';
 
 // @DRAGGABLES
@@ -31,7 +32,7 @@
   .box-sizing(border-box);
 
   .icon {
-    background-image: url(../../img/Add-field-help-sprite.png);
+    background-image: url(~"@{img-base-url}/Add-field-help-sprite.png");
     display: inline-block;
     height: 35px;
     position: relative;
@@ -165,7 +166,7 @@
   }
 
   .design-view-action-document-draggable-icon {
-    background-image: url(../../img/place-fields-sprite.png);
+    background-image: url(~"@{img-base-url}/place-fields-sprite.png");
     display: inline-block;
     height: 20px;
     margin-top: 11px;

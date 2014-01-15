@@ -1,8 +1,9 @@
+@import 'branding/elements';
 // Highlight styling
 // -------------------------
 
 .element-highlight {
-  background: url(/img/highlight-bg.png);
+  background: url(~"@{img-base-url}/highlight-bg.png");
   background-repeat: repeat;
   bottom: 0; // overriden by js
   height: 100%;
@@ -32,7 +33,7 @@
     .text-shadow;
 
     &.arrowed:before {
-      content: url('/img/highlight-arrow.png');
+      content: url(~"@{img-base-url}/highlight-arrow.png");
       left: -50px;
       position: absolute;
       top: 0;

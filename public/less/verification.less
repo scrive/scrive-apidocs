@@ -1,3 +1,5 @@
+@import 'branding/elements';
+
 .box.verificationBox {
   padding: 164px 0px;
   text-align: center;
@@ -29,7 +31,7 @@
 }
 
 .verificationSuccessIcon {
-  background: url(../img/icons.png) 0 0 no-repeat;
+  background: url(~"@{img-base-url}/icons.png") 0 0 no-repeat;
   background-position: 0 -339px;
   height: 61px;
   margin: 15px;
@@ -38,7 +40,7 @@
 
 .verificationFailedIcon,
 .verificationErrorIcon {
-  background-image: url(/img/spr-flash-icons.png);
+  background-image: url(~"@{img-base-url}/spr-flash-icons.png");
   background-position: 0px 0px;
   background-repeat: no-repeat;
   display: block;

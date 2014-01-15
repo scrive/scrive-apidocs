@@ -1,3 +1,4 @@
+@import 'branding/elements';
 @import 'branding/variables';
 
 .authorattachments {
@@ -31,7 +32,7 @@
   }
 
   .icon {
-    background: url(../img/attachment-icon.png);
+    background: url(~"@{img-base-url}/attachment-icon.png");
     float: left;
     height: 14px;
     margin-right: 2px;
@@ -146,7 +147,7 @@
   }
 
   .document-history-footer .option .expandable {
-    background: url(../img/iconPlus.png) no-repeat scroll 0 0 transparent;
+    background: url(~"@{img-base-url}/iconPlus.png") no-repeat scroll 0 0 transparent;
     display: inline-block;
     float: left;
     height: 16px;
@@ -154,6 +155,6 @@
   }
 
   .document-history-footer .option .expandable.expanded {
-    background: url(../img/iconMinus.png) no-repeat scroll 0 0 transparent;
+    background: url(~"@{img-base-url}/iconMinus.png") no-repeat scroll 0 0 transparent;
   }
 }

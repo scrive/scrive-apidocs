@@ -1,3 +1,4 @@
+@import 'branding/elements';
 @import 'branding/variables.less';
 
 
@@ -34,16 +35,16 @@ input.daystosign {
 }
 
 .calendarbutton {
-  background-image: url(/img/calendar.png);
+  background-image: url(~"@{img-base-url}/calendar.png");
 }
 
 .editinvitemessageicon {
-  background-image: url(/img/iconPen.png);
+  background-image: url(~"@{img-base-url}/iconPen.png");
 }
 
 .authorattachmentssetupicon,
 &.signatoryattachmentssetupicon{
-  background-image: url(/img/attachment.gif);
+  background-image: url(~"@{img-base-url}/attachment.gif");
 }
 
 .option-box {
@@ -142,7 +143,7 @@ input.daystosign {
 }
 
 .selectAuthorAttachmentPopupContent .back {
-  background: url(../img/back.png) no-repeat scroll 0 0 transparent;
+  background: url(~"@{img-base-url}/back.png") no-repeat scroll 0 0 transparent;
   cursor: pointer;
   display: block;
   height: 16px;
@@ -288,7 +289,7 @@ th.editSignatoryAttachmentTDRemove {
 }
 
 .ui-resizable-handle.ui-resizable-se {
-  background-image: url(/img/resize.png);
+  background-image: url(~"@{img-base-url}/resize.png");
   bottom: 2px;
   cursor: se-resize;
   height: 10px;
@@ -357,7 +358,7 @@ th.editSignatoryAttachmentTDRemove {
   }
 
   .checkboxTypeSetter-arrow {
-    background: url(../img/tooltip-arrow.png);
+    background: url(~"@{img-base-url}/tooltip-arrow.png");
     height: 33px;
     left: -17px;
     position: absolute;
@@ -417,7 +418,7 @@ th.editSignatoryAttachmentTDRemove {
 
   .subcontainer {
     background-color: #f0f0f0;
-    background-image: url(../img/horizontal-shading-bar.png);
+    background-image: url(~"@{img-base-url}/horizontal-shading-bar.png");
     background-repeat: no-repeat;
     -moz-box-shadow: inset 1px 1px 5px #505050;
     -webkit-box-shadow: inset 1px 1px 5px #505050;
