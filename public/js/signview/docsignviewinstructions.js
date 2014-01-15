@@ -132,7 +132,8 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     // Should only be visible when its actually possible to fill in the fields
     if (document.currentSignatoryCanSign()) {
         var hasOptionalFields = _.any( document.currentSignatory().fields(), function(f) { return f.hasPlacements() && !f.obligatory() && !f.isClosed() } );
-        if(hasOptionalFields) {
+        var hasAttachments =   document.authorattachments().length > 0 || document.currentSignatory().attachments().length > 0;
+        if(hasOptionalFields || hasAttachments) {
           // Since we always have at least one mandatory field, wa can always show legend for mandatory fields
           var arrowLegend = $("<div class='arrow-legend'/>");
           arrowLegend.append($("<p class='row'/>").append($("<span class='icon-legend mandatory' />")).append("<span class='copy'>" + localization.docsignview.mandatoryAction + "</span>"));
