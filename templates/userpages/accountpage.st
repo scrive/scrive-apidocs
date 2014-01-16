@@ -25,7 +25,7 @@ pageDoYouWantToBeCompanyAccount=
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
     content.append(jQuery('<p/>').append('$_modalDoYouWantToBeCompanyAccountBody()$'));
-    Confirmation.popup({onAccept: function() {
+    new Confirmation({onAccept: function() {
                                     new Submit({method: 'POST', url: ''}).send();
                                   },
                         onReject : function() { window.location = '/account' ; },
