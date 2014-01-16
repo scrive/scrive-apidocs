@@ -270,7 +270,7 @@
                 onClick: function() {
                     mixpanel.track('Open author attachments');
                     document.save();
-                    DesignAuthorAttachmentsPopup.popup({document: document});
+                    new DesignAuthorAttachmentsPopup({document: document});
                 }
             });
 
@@ -281,7 +281,7 @@
                 onClick: function() {
                     mixpanel.track('Open sig attachments');
                     document.save();
-                    DesignSignatoryAttachmentsPopup.popup({document: document});
+                    new DesignSignatoryAttachmentsPopup({document: document});
                 }
             });
 

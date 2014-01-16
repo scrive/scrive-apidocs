@@ -255,13 +255,30 @@ window.Document = Backbone.Model.extend({
             function() { callDone() },
             3000);
     },
-    sign: function(errorCallback) {
-        var document = this;
+    fieldsForSigning : function() {
         var fields = [];
         _.each(this.currentSignatory().fields(), function(field) {
             if (field.isClosed()) return;
             fields.push({name: field.name(), value: field.value(), type: field.type()});
         });
+        return fields;
+    },
+    checksign: function(successCallback, errorCallback) {
+        var document = this;
+        var fields = this.fieldsForSigning();
+        return new Submit({
+            url : "/api/frontend/checksign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
+            method: "POST",
+            fields: JSON.stringify(fields),
+            ajax: true,
+            expectedType : "text",
+            ajaxsuccess : successCallback,
+            ajaxerror : errorCallback
+            });
+    },
+    sign: function(errorCallback,whileSigningAction,postSignAction) {
+        var document = this;
+        var fields = this.fieldsForSigning();
         return new Submit({
             url : "/api/frontend/sign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
             method: "POST",
@@ -271,18 +288,22 @@ window.Document = Backbone.Model.extend({
             expectedType : "text",
             ajaxsuccess : function(docdata) {
               var docjson = JSON.parse(docdata);
-              var newdoc = new Document(new Document({}).parse(docjson));
-              var success = _.any(newdoc.signatories(), function(s) { return s.signatoryid() == document.currentSignatory().signatoryid() && s.hasSigned() });
-              if (success &&  document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "") {
-                window.location = document.currentSignatory().signsuccessredirect();
-              }
-              else if (!success &&  document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
-                window.location = document.currentSignatory().rejectredirect();
-              }
-              else {
-                window.scroll(0,0);
-                window.location.reload();
-              }
+
+              var postSign = function() {
+                if (whileSigningAction != undefined && !whileSigningAction.done()) {
+                  whileSigningAction.setCanBeFinished();
+                  setTimeout(postSign,100);
+                } else {
+                  if (postSignAction != undefined) postSignAction();
+                  if (document.currentSignatory().signsuccessredirect() != undefined && document.currentSignatory().signsuccessredirect() != "") {
+                    window.location = document.currentSignatory().signsuccessredirect();
+                  }
+                  else {
+                    new Submit().send(); // Same as window.location.reload(), but will reset scrolling
+                  }
+                }
+              };
+              postSign();
             },
             ajaxerror : function(xhr) {
               if (errorCallback != undefined) {

@@ -416,7 +416,7 @@ var AccountSettingsView = Backbone.View.extend({
             body.append(table);
 
 
-            var confirmation = Confirmation.popup({
+            var confirmation = new Confirmation({
               onAccept: function() {
                 if ( ! new EmailValidation().validateData(model.newemail())) {
                   new FlashMessage({color: "red", content : localization.account.accountDetails.invalidEmail });

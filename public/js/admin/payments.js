@@ -146,7 +146,7 @@ var AdminPaymentsView = Backbone.View.extend({
       var model = this.model;
       this.migrationModalContent = $("<div/>");
       this.refreshMigrationModalContent();
-      var popup = Confirmation.popup({
+      var popup = new Confirmation({
         title : "Migrate recurly subscription",
         acceptText: "Migrate",
         content : this.migrationModalContent,

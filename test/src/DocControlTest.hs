@@ -305,7 +305,7 @@ testBankIDMismatch = do
     assertEqual "Valid match" MergeMatch r2
     r3 <- return $ compareNames "Michal Sloink" "Rak Mariusz"
     assertBool "Invalid match " (MergeMatch /= r3)
-    r4 <- return $ compareNames "AAAA" "BBBB"
+    r4 <- return $ compareNames "AAAA CCCC" "BBBB DDDD"
     assertBool "Invalid match " (MergeMatch /= r4)
 
 testGetLoggedIn :: TestEnv ()

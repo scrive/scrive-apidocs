@@ -9,11 +9,11 @@ var ConfirmationModel = Backbone.Model.extend({
       rejectText: localization.cancel,
       acceptColor : "green",
       content  : jQuery("<p/>"),
-      cantCancel : false,
-      cantClose  : false,
       width: BrowserInfo.isSmallScreen() ? 980 : 640,
       footerVisible : true,
       acceptVisible : true,
+      closeVisible  : true,
+      cancelVisible : true,
       extraOption : undefined,
       textfont : undefined,
       textcolor : undefined
@@ -72,12 +72,6 @@ var ConfirmationModel = Backbone.Model.extend({
   acceptButton: function() {
       return this.get("acceptButton");
   },
-  canCancel : function() {
-      return this.get("cantCancel") != true;
-  },
-  canClose : function() {
-      return this.get("cantClose") != true;
-  },
   width: function() {
       return this.get("width");
   },
@@ -90,17 +84,26 @@ var ConfirmationModel = Backbone.Model.extend({
   textcolor: function() {
       return this.get("textcolor");
   },
-  showAccept : function() {
-      this.set({acceptVisible : true});
+  setCancelVisible: function(bool) {
+      this.set({cancelVisible : bool});
   },
-  hideAccept : function() {
-      this.set({acceptVisible : false});
+  setCloseVisible: function(bool) {
+      this.set({closeVisible : bool});
   },
-  footerVisible : function() {
-      return this.get("footerVisible");
+  setAcceptVisible : function(bool) {
+      this.set({acceptVisible : bool});
   },
   acceptVisible : function() {
       return this.get("acceptVisible");
+  },
+  cancelVisible : function() {
+      return this.get("cancelVisible");
+  },
+  closeVisible : function() {
+      return this.get("closeVisible");
+  },
+  footerVisible : function() {
+      return this.get("footerVisible");
   },
   extraClass : function() {
             return this.get("extraClass");
@@ -119,9 +122,11 @@ var ConfirmationView = Backbone.View.extend({
         "click .close"  :  "reject"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'reject', 'renderAcceptButton', 'clear', 'resize');
+        _.bindAll(this, 'render', 'reject', 'renderAcceptButton', 'renderCloseButton', 'renderCancelButton', 'clear','resize');
         this.model.bind('change:width', this.resize);
         this.model.bind('change:acceptVisible', this.renderAcceptButton);
+        this.model.bind('change:closeVisible', this.renderCloseButton);
+        this.model.bind('change:cancelVisible', this.renderCancelButton);
         this.model.bind('close', this.clear);
         this.model.view = this;
         this.render();
@@ -133,6 +138,20 @@ var ConfirmationView = Backbone.View.extend({
         else
           this.acceptButton.hide();
 
+    },
+    renderCloseButton : function() {
+        var model = this.model;
+        if (model.closeVisible())
+          this.closeButton.show();
+        else
+          this.closeButton.hide();
+    },
+    renderCancelButton : function() {
+        var model = this.model;
+        if (model.cancelVisible())
+          this.cancelButton.show();
+        else
+          this.cancelButton.hide();
     },
     render: function () {
        var view = this;
@@ -149,6 +168,7 @@ var ConfirmationView = Backbone.View.extend({
        this.container.width(model.width());
        var header = $("<div class='modal-header'></div>");
        var inner = $("<div class='modal-header-inner'></div>");
+       inner.css('width', (model.width()-100) + "px"); // TODO(johan.nilo): this should be solved in the css files
        var title = $("<div class='modal-title'/>");
        var subtitle = $("<div class='modal-subtitle'/>");
        var icon = $("<img class='modal-icon'/>");
@@ -172,8 +192,10 @@ var ConfirmationView = Backbone.View.extend({
          inner.append(title);
          inner.append(subtitle);
        }
-       if (model.canClose())
-        header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
+       this.closeButton = $("<a class='modal-close'></a>").click(function() {view.reject(); return false;});
+       this.renderCloseButton();
+       header.append(this.closeButton);
+
        header.append(inner);
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
@@ -184,14 +206,14 @@ var ConfirmationView = Backbone.View.extend({
        content.append($("<div class='body'/>").html(this.model.content()));
        body.append(content);
        var footer = $("<div class='modal-footer'/>");
-       if (model.canCancel()) {
-        var cancel = $("<label class='cancel clickable close float-left'/>");
-        if (model.textfont())
-          cancel.css("font-family",model.textfont());
 
-        cancel.text(this.model.rejectText());
-        footer.append(cancel);
-       }
+       this.cancelButton = $("<label class='cancel clickable close float-left'/>");
+       if (model.textfont())
+          this.cancelButton.css("font-family",model.textfont());
+       this.cancelButton.text(this.model.rejectText());
+       footer.append(this.cancelButton);
+       this.renderCancelButton();
+
        if (model.extraOption())
         footer.append(model.extraOption());
 
@@ -250,31 +272,56 @@ var ConfirmationView = Backbone.View.extend({
 });
 
 
-window.Confirmation = {
-    popup: function (args) {
+window.Confirmation = function (args) {
           var model = new ConfirmationModel(args);
           var overlay = $("<div class='modal'/>");
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
           overlay.height($(document).height());
-          var view = new ConfirmationView({model : model, el : overlay});
-          $("body").append(overlay);
-          setTimeout(function() {
-            overlay.addClass("active");
-            // wait for a second so the browser has the time to
-            // render everything and display the animation
-            // animation takes 600ms, but waiting for a shorter period
-            // results in not fully rendered modals sometimes
-            setTimeout(function() {
-              // Sometimes when the overlay pushes the document down,
-              // we have to make sure that the overlay covers the whole doc.
-              overlay.height($(document).height());
-              view.onRender();
-            }, 1000);
-          }, 100);
-          return model;
-   }
 
+          if (BrowserInfo.isPadDevice()) {
+            //Pad devices have a different aproach to body.width
+            //Check http://stackoverflow.com/questions/6695676/100-width-css-issue-only-on-mobile-safari
+            // Note also that width of sign page is dynamic due to arrows
+            overlay.css("min-width",$(document).width());
+          }
+
+          var view = new ConfirmationView({model : model, el : overlay});
+          // Initiate the view
+          if (args.fast != undefined && args.fast == true) {
+            $("body").append(overlay.addClass('active'));
+            overlay.height($(document).height());
+            view.onRender();
+          } else {
+            $("body").append(overlay);
+            setTimeout(function() {
+              overlay.addClass("active");
+              // wait for a second so the browser has the time to
+              // render everything and display the animation
+              // animation takes 600ms, but waiting for a shorter period
+              // results in not fully rendered modals sometimes
+              setTimeout(function() {
+                // Sometimes when the overlay pushes the document down,
+                // we have to make sure that the overlay covers the whole doc.
+                overlay.height($(document).height());
+                view.onRender();
+              }, 1000);
+            }, 100);
+          }
+         // Export the interface
+         return {
+           clear      : function() { view.clear();},
+           close      : function(fast) { model.close();},
+           showAccept : function() { model.setAcceptVisible(true);},
+           hideAccept : function() { model.setAcceptVisible(false);},
+           showClose  : function() { model.setCloseVisible(true);},
+           hideClose  : function() { model.setCloseVisible(false);},
+           showCancel : function() { model.setCancelVisible(true);},
+           hideCancel : function() { model.setCancelVisible(false);},
+           acceptButton : function() { return view.acceptButton;},
+           reject     : function() { model.reject();},
+           setWidth   : function(w) { model.setWidth(w);}
+          };
 };
 
 });

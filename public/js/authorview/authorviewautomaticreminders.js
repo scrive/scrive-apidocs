@@ -106,7 +106,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
   },
   startSetReminderDateModal : function() {
       var self = this;
-      self.modal = Confirmation.popup({
+      self.modal = new Confirmation({
                 title: localization.autoreminders.setAutoReminderTitle,
                 subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),
@@ -152,7 +152,7 @@ var AuthorViewAutomaticRemindersView = Backbone.View.extend({
   },
   startChangeReminderDateModal : function() {
       var self = this;
-      self.modal = Confirmation.popup({
+      self.modal = new Confirmation({
                 title: localization.autoreminders.changeAutoReminderTitle,
                 subtitle : $("<div/>").html(localization.autoreminders.changeAutoreminderDescription),
                 content: $(self.changeReminderDateBody()),

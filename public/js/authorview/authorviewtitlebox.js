@@ -117,7 +117,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
                                         return s.hasSigned() && !s.author();
                                       });
           var modalcontent = somebodysigned ? localization.process.cancelmodaltextwithsignatures : localization.process.cancelmodaltext;
-        Confirmation.popup({
+        new Confirmation({
           title: localization.process.cancelmodaltitle,
           content: $('<p class="center">' + modalcontent + '</p>'),
           icon: '/img/modal-icons/withdraw.png',
@@ -200,7 +200,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             self.padNextSignatoryModalContent.replaceWith(c);
             self.padNextSignatoryModalContent = c;
           });
-          Confirmation.popup({
+          new Confirmation({
             title : localization.authorview.goToSignView,
             content :self.padNextSignatoryModalContent,
             onAccept : function() {

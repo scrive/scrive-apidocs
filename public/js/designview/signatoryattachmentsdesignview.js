@@ -182,12 +182,11 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
 });
 
 
-window.DesignSignatoryAttachmentsPopup = {
-    popup: function(args) {
+window.DesignSignatoryAttachmentsPopup = function(args) {
          var document = args.document;
          var model = new DesignSignatoryAttachments({ document : document  });
          var view = new DesignSignatoryAttachmentsView({model : model, el : $("<div/>")});
-         var popup = Confirmation.popup({
+         var popup = new Confirmation({
               content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
               subtitle  : localization.signatoryAttachments.defineRequests,
@@ -226,7 +225,6 @@ window.DesignSignatoryAttachmentsPopup = {
 
 
          });
-    }
 };
 
 

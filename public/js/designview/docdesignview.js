@@ -206,9 +206,8 @@
           contentP3.append($('<div class="sample" />').text(localization.designview.cantSignModal.mobileSample));
           content.append(contentP3);
 
-          Confirmation.popup({title: localization.designview.cantSignModal.title,
-                              cantCancel: true,
-                              cantClose: false,
+          new Confirmation({title: localization.designview.cantSignModal.title,
+                              cancelVisible: false,
                               content: content});
         },
         finalClick: function() {
@@ -247,14 +246,31 @@
             else
                 view.sendConfirmation();
         },
+        spinnerSmall : function() {
+            return new Spinner({
+                lines  : 9,     // The number of lines to draw
+                length : 3,     // The length of each line
+                width  : 2,     // The line thickness
+                radius : 5,     // The radius of the inner circle
+                color  : '#000000', // #rbg or #rrggbb
+                speed  : 1.5,    // Rounds per second
+                trail  : 74,     // Afterglow percentage
+                shadow : false   // Whether to render a shadow
+            }).spin();
+        },
         signConfirmation : function() {
-            var view = this;
-            var model = view.model;
+            var self = this;
+            var model = self.model;
             var document = model.document();
             var signatory = document.currentSignatory();
             var acceptButton;
+
+            var spinner = this.spinnerSmall();
+            var spinnerContainer = $("<span class='spinner-container' />");
+            spinnerContainer.append(spinner.el);
+
             if (signatory.elegAuthentication()) {
-                acceptButton = $("<span style='margin-top: -8px;'/>");
+                acceptButton = $("<span style='margin-top: -8px;' />");
                 var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
                 var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
                 var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
@@ -274,7 +290,7 @@
                         }
                         else {
                           new FlashMessage({color: "red", content: "Elegitimation verification failed"});
-                          if (view.confirmationpopup != undefined) view.confirmationpopup.close();
+                          if (self.confirmationpopup != undefined) self.confirmationpopup.close();
                         }
                       });
 
@@ -324,14 +340,20 @@
                     text : localization.designview.sign,
                     oneClick : true,
                     onClick : function() {
+
+                        acceptButton.addClass('is-inactive').prepend(spinnerContainer); // Add the spinner and make inactive
+                        self.confirmationpopup.hideCancel();
+                        self.confirmationpopup.hideClose();
+
                         mixpanel.track('Click accept sign', {
                             'Button' : 'sign'
                         });
                         document.takeSigningScreenshot(function() {
                             document.afterSave(function() {
-                                view.signWithCSV(document, 1 , document.isCsv() ? document.csv().length - 1 : undefined);
+                                self.signWithCSV(document, 1 , document.isCsv() ? document.csv().length - 1 : undefined);
                             });
                         });
+
                     }
                 }).el();
             }
@@ -350,7 +372,7 @@
                 var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
                 content = content.add($("<span/>").append(subhead).append(p));
             }
-            this.confirmationpopup = Confirmation.popup({
+            self.confirmationpopup = new Confirmation({
                 title : localization.signByAuthor.modalTitle,
                 icon : '/img/modal-icons/sign.png',
                 acceptButton : acceptButton,
@@ -383,7 +405,11 @@
               box.append(DocumentDataFiller.fill(document,content));
             }
 
-            Confirmation.popup({
+            var spinner = this.spinnerSmall();
+            var spinnerContainer = $("<span class='spinner-container' />");
+            spinnerContainer.append(spinner.el);
+
+            var confirmation = new Confirmation({
                 title : otherSignatoriesSignInPerson ? localization.process.startsigningtitle : localization.process.confirmsendtitle,
                 icon: otherSignatoriesSignInPerson ? '/img/modal-icons/start-signing.png' : '/img/modal-icons/send.png',
                 acceptButton : new Button({
@@ -392,6 +418,11 @@
                     text : otherSignatoriesSignInPerson ? localization.process.startsigningbuttontext : localization.process.sendbuttontext,
                     oneClick : true,
                     onClick : function() {
+
+                        confirmation.acceptButton().addClass('is-inactive').prepend(spinnerContainer);  // Add the spinner and make inactive
+                        confirmation.hideCancel();
+                        confirmation.hideClose();
+
                         mixpanel.track('Click accept sign', {
                             'Button' : 'send'
                         });

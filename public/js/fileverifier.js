@@ -40,7 +40,7 @@ var FileVerifierView = Backbone.View.extend({
               bright.append($("<div/>").text(localization.verification.failedMessage));
               dialog.addClass("failed");
           }
-          Confirmation.popup({title: title, content : $("<div style='height:100px;width: 546px;margin: auto;'/>").append(bleft).append(bright)});
+          new Confirmation({title: title, content : $("<div style='height:100px;width: 546px;margin: auto;'/>").append(bleft).append(bright)});
 
     },
     uploadButton : function() {

@@ -210,12 +210,11 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
 });
 
 
-window.DesignAuthorAttachmentsPopup = {
-    popup: function(args) {
+window.DesignAuthorAttachmentsPopup = function(args) {
          var document = args.document;
          var model = new DesignAuthorAttachments({ document : document  });
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")});
-         var popup = Confirmation.popup({
+         var popup = new Confirmation({
               content  : $(view.el),
               title  : localization.authorattachments.selectAttachments,
               subtitle : localization.selectFiles,
@@ -256,7 +255,6 @@ window.DesignAuthorAttachmentsPopup = {
                   return false;
             }
          });
-    }
 };
 
 

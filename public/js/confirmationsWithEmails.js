@@ -297,6 +297,14 @@ window.ConfirmationWithEmail = {
             // but for other browsers make the overlay big asap so it looks good immediately
             overlay.height($(document).height());
           }
+
+          if (BrowserInfo.isPadDevice()) {
+            //Pad devices have a different aproach to body.width
+            //Check http://stackoverflow.com/questions/6695676/100-width-css-issue-only-on-mobile-safari
+            // Note also that width of sign page is dynamic due to arrows
+            overlay.css("min-width",$(document).width());
+          }
+
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
           $("body").append(overlay);
           if (BrowserInfo.isIE8orLower()) {

@@ -365,7 +365,7 @@ var AdminUserDetailsView = Backbone.View.extend({
                     }
                   });
       var label = $("<label> Company ID: <label>").append(input.el()).append(nameBox);
-      var popup = Confirmation.popup({
+      var popup = new Confirmation({
         title : "Move user to different company",
         acceptText: "Move",
         content : label,
@@ -387,7 +387,7 @@ var AdminUserDetailsView = Backbone.View.extend({
     },
     openDeleteModal : function() {
       var model = this.model;
-      var popup = Confirmation.popup({
+      new Confirmation({
         title : "Delete",
         acceptText: "Delete",
         content : $("<div style='text-align:center;'>Are you sure that you want to delete this user?</div>"),

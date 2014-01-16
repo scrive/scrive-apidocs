@@ -55,7 +55,7 @@
               body.append(table);
 
 
-              Confirmation.popup({
+              new Confirmation({
                 onAccept : function() {
                               var callback = function(t,e,v) {
                                   e.css("background", "red");

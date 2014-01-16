@@ -88,7 +88,7 @@ window.TemplatesListDefinition = function(archive) { return {
                 emptyMessage :  localization.archive.templates.share.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
-                            var confirmationPopup = Confirmation.popup({
+                            var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.share.head,
@@ -102,7 +102,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.templates.share.successMessage});
                                                     archive.templates().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 }
                                           }).sendAjax();
                                 }
@@ -124,7 +124,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                confirmtext.append(docs.length + (" " + localization.templates).toLowerCase());
                              }
                              confirmtext.append("?");
-                             var confirmationPopup = Confirmation.popup({
+                             var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.remove.action,
@@ -138,7 +138,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.templates.remove.successMessage});
                                                     archive.templates().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 }
                                           }).sendAjax();
                                 }

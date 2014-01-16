@@ -201,7 +201,7 @@ javascriptLocalisation =
                authorsignatoryname: "$_contractauthorsignatoryname()$",
                signatoryname: "$_contractsignatoryname()$",
                nonsignatoryname: "$_contractnonsignatoryname()$",
-               goback: "$_goBack()$"
+               cancel: "$_cancel()$"
               }
             , filterByTime: {
                 filterForm: "$_fromFilter()$",
@@ -1027,5 +1027,16 @@ javascriptLocalisation =
              , email_mobile : "$_deliveryEmailMobile()$"
              , api          : "$_deliveryAPI()$"
       }
+      , signinginprogressmodal : {
+               title : "$_signinginprogressmodalTitle()$"
+             , action1 : "$_signinginprogressmodalAction1()$"
+             , action2 : "$_signinginprogressmodalAction2()$"
+             , youHaveSigned : "$_signinginprogressmodalYouHaveSigned()$"
+             , pleaseWaitWhile : "$_signinginprogressmodalPleaseWaitWhile()$"
+      }
+      , signingInProgressDontCloseWindow : "$_signingInProgressDontCloseWindow()$"
+      , signingErrorMessage1 : "$_signingErrorMessage1()$"
+      , signingErrorMessage2 : "$_signingErrorMessage2()$"
+      , signingErrorReload   : "$_signingErrorReload()$"
     };
 ###

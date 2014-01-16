@@ -20,7 +20,7 @@ window.BinListDefinition = function(archive) { return {
                 emptyMessage :  localization.archive.bin.restore.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
-                            var confirmationPopup = Confirmation.popup({
+                            var confirmationPopup = new Confirmation({
                                 acceptText: localization.archive.bin.restore.head,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.restore.head,
@@ -34,7 +34,7 @@ window.BinListDefinition = function(archive) { return {
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.bin.restore.successMessage});
                                                     archive.bin().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 }
                                           }).sendAjax();
                                 }

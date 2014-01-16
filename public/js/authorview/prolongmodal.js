@@ -86,7 +86,7 @@ window.ProlongModal = function(args){
                         model: model,
                         el: $("<div class='prolong-modal-content'/>")
                     });
-        Confirmation.popup({
+        new Confirmation({
                 title: localization.prolongmodal.title,
                 content: $(view.el),
                 width: 382,

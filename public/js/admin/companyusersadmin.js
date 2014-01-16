@@ -58,7 +58,7 @@ var newUserInCompanyButton = function(companyid) {
               body.append(table);
 
 
-              Confirmation.popup({
+              new Confirmation({
                 onAccept : function() {
                               var callback = function(t,e,v) {
                                   e.css("background", "red");
@@ -138,7 +138,7 @@ window.CompanyUsersListDefinition = function(args) {
                                             if (user.field("role") == "RoleInvite") {
                                               return $("<a style='color:red;' href='#'> Click to delete this invitation </a>").click(
                                                 function() {
-                                                  Confirmation.popup({
+                                                  new Confirmation({
                                                     title : "Delete invitation",
                                                     acceptText: "Delete",
                                                     content : $("<div style='text-align:center;'>Are you sure that you want to delete this invitation?<BR/>"

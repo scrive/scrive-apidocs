@@ -124,7 +124,7 @@ signatoryFieldsListForJSON padqueue doc sl = do
     J.value "delivery" $ signatorylinkdeliverymethod sl
     where
         sign = signtime <$> maybesigninfo sl
-        seen = signtime <$> maybesigninfo sl
+        seen = signtime <$> maybeseeninfo sl
         reject = signatorylinkrejectiontime sl
         open = maybereadinvite sl
 

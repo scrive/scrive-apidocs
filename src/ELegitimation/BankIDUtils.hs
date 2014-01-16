@@ -63,13 +63,14 @@ fieldvaluebyid fid ((k, v):xs)
     | k == fid  = v
     | otherwise = fieldvaluebyid fid xs
 
-
+{- We want at least two words (First name and Last name) in name provided to Scrive to match any other two words in data from eleg.
+   I guess this is best we can do.
+-}
 compareNames :: String -> String -> MergeResult
 compareNames fnContractName fnElegName =
-        let fnsc = words $ map toLower fnContractName
-            fnse = words $ map toLower fnElegName
-            difs = [maxLev a b 2 | a <- fnsc, b <- fnse]
-        in if any (== True) difs
+        let matchAnyElegData w = any (\x -> maxLev w x 2 ) $ words $ map toLower fnElegName
+            matches = length $ filter matchAnyElegData $ words $ map toLower fnContractName
+        in if matches >= 2
             then MergeMatch
             else MergeFail
 

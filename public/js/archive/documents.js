@@ -158,7 +158,7 @@ window.DocumentsListDefinition = function(archive) { return {
                              } else {
                                content.text(localization.archive.documents.sendreminder.bodymulti + " "+ docs.length + (" " + localization.documents +"?").toLowerCase());
                              }
-                             var confirmationPopup = Confirmation.popup({
+                             var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.sendreminder.action,
@@ -173,12 +173,12 @@ window.DocumentsListDefinition = function(archive) { return {
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.documents.sendreminder.successMessage});
                                                     archive.documents().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 },
                                                 ajaxerror : function() {
                                                     new FlashMessage({color : "red", content : localization.archive.documents.sendreminder.errorMessage});
                                                     archive.documents().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 }
                                           }).sendAjax();
                                 }
@@ -198,7 +198,7 @@ window.DocumentsListDefinition = function(archive) { return {
                      doc.field("status") == "opened";
             },
             onSelect : function(docs) {
-                             var confirmationPopup = Confirmation.popup({
+                             var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.cancel.action,
@@ -213,11 +213,11 @@ window.DocumentsListDefinition = function(archive) { return {
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.documents.cancel.successMessage});
                                                     archive.documents().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 },
                                                 ajaxerror : function() {
                                                     archive.documents().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 }
                                           }).sendAjax();
                                 }
@@ -239,7 +239,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                confirmtext.append(docs.length + (" " + localization.documents).toLowerCase());
                              }
                              confirmtext.append("?");
-                             var confirmationPopup = Confirmation.popup({
+                             var confirmationPopup = new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.remove.action,
@@ -254,7 +254,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                                 ajaxsuccess : function() {
                                                     new FlashMessage({color : "green", content : localization.archive.documents.remove.successMessage});
                                                     archive.documents().recall();
-                                                    confirmationPopup.view.clear();
+                                                    confirmationPopup.clear();
                                                 }
                                           }).sendAjax();
                                 }

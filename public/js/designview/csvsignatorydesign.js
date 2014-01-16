@@ -261,7 +261,7 @@ window.CsvSignatoryDesignPopup =  function(args) {
 
          var model = new CsvSignatoryDesign({ header: _.first(csv),  rows : _.rest(csv)  });
          var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")});
-         var popup = Confirmation.popup({
+         var popup = new Confirmation({
               content  : $(view.el),
               icon: '/img/modal-icons/multisend.png',
               subtitle: localization.csv.subtitle,

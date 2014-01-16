@@ -52,7 +52,7 @@ window.AttachmentsListDefinition = function(archive) {
                 emptyMessage :  localization.archive.attachments.share.emptyMessage,
                 avaible : function(){return true;},
                 onSelect: function(docs){
-                            var confirmationPopup = Confirmation.popup({
+                            new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.share.head,
@@ -87,14 +87,14 @@ window.AttachmentsListDefinition = function(archive) {
                                confirmtext.append(docs.length + (" " + localization.attachments).toLowerCase());
                              }
                              confirmtext.append("?");
-                             var confirmationPopup = Confirmation.popup({
+                             new Confirmation({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.remove.action,
                                 icon: '/img/modal-icons/delete.png',
                                 content: confirmtext,
                                 onAccept : function() {
-                                    var confirmationPopup = new Submit({
+                                    new Submit({
                                                 url: "/a/delete",
                                                 method: "POST",
                                                 attachmentids: "["+ _.map(docs, function(doc){return doc.field("id");}) + "]",

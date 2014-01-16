@@ -234,7 +234,7 @@
         },
         paymentsPopup: function(opts) {
             var div = $('<div />').addClass('price-plan');
-            Confirmation.popup({
+            new Confirmation({
                 title: opts.title,
                 content: div,
                 acceptVisible: false,
@@ -287,7 +287,7 @@
         overdueCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.overdue.create.body);
-            Confirmation.popup({
+            new Confirmation({
                 title: localization.blocking.overdue.create.title,
                 content: p,
                 acceptText: localization.blocking.button.doublecheck,
@@ -303,7 +303,7 @@
         canceledCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.canceled.create.body);
-            Confirmation.popup({
+            new Confirmation({
                 title: localization.blocking.canceled.create.title,
                 content: p,
                 acceptText: localization.blocking.button.reinstate,
@@ -319,7 +319,7 @@
         deactivatedCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.deactivated.create.body);
-            Confirmation.popup({
+            new Confirmation({
                 title: localization.blocking.deactivated.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,
@@ -335,7 +335,7 @@
         payingCreatePopup: function() {
             var p = $('<p />');
             p.html(localization.blocking.paying.create.body);
-            Confirmation.popup({
+            new Confirmation({
                 title: localization.blocking.paying.create.title,
                 content: p,
                 acceptText: localization.blocking.button.contact,

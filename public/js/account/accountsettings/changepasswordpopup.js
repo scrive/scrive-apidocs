@@ -1,4 +1,4 @@
-/* 
+/*
  * Defines the model and view for the change password popup.
  */
 
@@ -112,7 +112,7 @@ var ChangePasswordPopupView = Backbone.View.extend({
     render: function () {
        var self = this;
        var model = this.model;
-       var popup = Confirmation.popup({
+       var popup = new Confirmation({
           title: localization.account.accountSecurity.passwordSection,
           icon: '/img/modal-icons/password.png',
           content: $("<div>").append(this.passwordSettings()),

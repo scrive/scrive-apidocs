@@ -581,11 +581,11 @@
                 } else if(data.user_exists && !data.has_plan && !data.is_admin) {
                     loadingicon.hide();
                     //LoadingDialog.close();
-                    var popup = Confirmation.popup({
+                    var popup = new Confirmation({
                         title: localization.payments.mustBeAdmin,
                         content: $('<p />').text(localization.payments.contactAdmin),
                         onAccept: function() {
-                            popup.view.clear();
+                            popup.clear();
                         }
                     });
                 } else if(data.user_exists && !data.has_plan &&  data.is_admin) {
@@ -602,11 +602,11 @@
                     loadingicon.hide();
                     var text = localization.payments.outside.sorryExistingUser;
                     var header = localization.payments.outside.sorryExistingUserHeader;
-                    var popup = Confirmation.popup({
+                    var popup = new Confirmation({
                         title: header,
                         content: $('<p />').text(text),
                         onAccept: function(){
-                            popup.view.clear();
+                            popup.clear();
                         }
                     });
                 }
@@ -812,7 +812,7 @@
                             text = localization.payments.outside.confirmAccountExistingUser;
                             header = localization.payments.outside.confirmAccountExistingUserHeader;
                         }
-                        var popup = Confirmation.popup({
+                        new Confirmation({
                             title: header,
                             content: $('<p />').text(text),
                             onAccept: function() {
@@ -906,14 +906,14 @@
             var header = $('<div class="account-header" />')
                 .append($('<h4></h4>').text(localization.payments.table.currentplan));
           var table = $('<div class="account-body" />');
-                
+
 	  var planInformation = $('<div class="plan-information" />');
           var planName = $('<p class="plan-name"></p>').text(localization.payments.plans[model.paidPlan()].name);
           var numberOfUsers = $('<p></p>').text(localization.payments.numberOfUsers + " : " + model.quantity() + " " + localization.payments.users);
 	  planInformation.append(planName);
 	  planInformation.append(numberOfUsers);
 	  table.append(planInformation);
-	        
+
 	  var askviktor = $('<p class="askviktor"></p>').html(localization.payments.askviktor);
 	  table.append(askviktor);
 
@@ -936,7 +936,7 @@
             var payments = $('<div class="col" />');
             var paymentsheader = $('<div class="account-header" />').append($('<h4 />')
 									    .text(localization.payments.table.payments));
-           
+
             var paymentstable = $('<div class="account-body" />')
                 .append(view.nextPayment())
                 .append(view.previousPayments());
@@ -1118,7 +1118,7 @@
                 mixpanel.track('Click cancel subscription button');
                 var message = localization.payments.cancelDialog;
 
-                var conf = Confirmation.popup({
+                var popup = new Confirmation({
                     title: localization.payments.cancelsubscription,
                     acceptText: localization.payments.cancelsubscription,
                     content: $('<p />').text(message),
@@ -1137,7 +1137,7 @@
                                         onSend: function() {
                                             mixpanel.track('Accept',
                                                            {'Accept' : 'Cancel subscription'});
-                                            conf.view.clear();
+                                            popup.clear();
                                             LoadingDialog.open(localization.payments.cancelingSubscription);
                                         }
                                        })
@@ -1193,7 +1193,7 @@
                                           mixpanel.track('Click renew subscription');
                                           var message = localization.payments.renewDialog.replace("X1", price);
 
-                                          var conf = Confirmation.popup({
+                                          var popup = new Confirmation({
                                               title: localization.payments.renewSubscription,
                                               acceptText: localization.payments.renewSubscription,
                                               content: $('<p />').text(message),
@@ -1206,14 +1206,14 @@
                                                                           LoadingDialog.close();
                                                                           model.trigger('fetch');
                                                                           new FlashMessage({color:'green', content: localization.payments.subscriptionRenewed });
-									  view.unbind();
-									  view.remove();
+                                                                          view.unbind();
+                                                                          view.remove();
                                                                       }});
                                                                   },
                                                                   onSend: function() {
                                                                       mixpanel.track('Accept',
                                                                                      {'Accept' : 'Renew subscription'});
-                                                                      conf.view.clear();
+                                                                      popup.clear();
                                                                       LoadingDialog.open(localization.payments.renewingSubscription);
                                                                   }
                                                                  })

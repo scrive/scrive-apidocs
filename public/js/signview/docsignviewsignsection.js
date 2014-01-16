@@ -34,6 +34,25 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (onNumber && numberCanBeChanged)
       return localization.sign.eleg.mismatch.mismatchOnNumberAndCanChange;
   },
+  startBlockingReload : function() {
+    window.onbeforeunload = function() {return localization.signingInProgressDontCloseWindow;};
+  },
+  stopBlockingReload : function() {
+    window.onbeforeunload = function() {};
+  },
+  openSigningFailedAndReloadModal : function() {
+      var text = $("<div>").append($("<span/>").text(localization.signingErrorMessage1))
+                           .append("<BR/>")
+                           .append($("<span/>").text(localization.signingErrorMessage2));
+      var button = new Button({color: 'green',
+                               style : "margin:20px",
+                               text: localization.signingErrorReload,
+                               onClick : function() {
+                                    new Submit().send(); // Same as window.location.reload(), but will reset scrolling
+                               }
+                             }).el();
+      ScreenBlockingDialog.open({header:text,  content : button});
+  },
   createElegButtonElems: function() {
     var document = this.document();
     var signatory = document.currentSignatory();
@@ -44,36 +63,47 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
     var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
 
+    var errorCallback = function(xhr) {
+        self.stopBlockingReload();
+
+        if (self.confirmation != undefined)         self.confirmation.clear();
+        if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
+        var data = {};
+        try {
+          data = JSON.parse(xhr.responseText);
+        } catch (e) {}
+
+        if (xhr.status == 403) {
+            // session timed out
+            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+        } else if (xhr.status == 400 && data.mismatch){
+            new FlashMessage({content: self.elegMishmatchErrorMessage(data.onName,data.onNumber),
+                              color: 'red'});
+        } else {
+            self.openSigningFailedAndReloadModal();
+        }
+    };
+
+
     var makeCallback = function(bankName, bankSign, bankSignExtraOpt) {
-      if (!self.screenshotDone) {
-        setTimeout(function() { makeCallback(bankName, bankSign, bankSignExtraOpt);}, 100);
-        return false;
-      }
-      mixpanel.track('Click ' + bankName);
-
-      var errorCallback = function(xhr) {
-            var data = {};
-            try {
-            data = JSON.parse(xhr.responseText);
-            } catch (e) {}
-
-
-            if (xhr.status == 403) {
-              // session timed out
-              ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-            } else if (xhr.status == 400 && data.mismatch){
-              new FlashMessage({content: self.elegMishmatchErrorMessage(data.onName,data.onNumber),
-                                color: 'red'});
-            } else {
-              new FlashMessage({content: localization.signviewSigningFailed,
-                                color: 'red',
-                                withReload: true});
-            }
-      };
-
-
       bankSign(document, signatory, function(p) {
-          document.sign(errorCallback).addMany(p).sendAjax();
+        document.checksign(function() {
+            self.startBlockingReload();
+            self.confirmation.clear();
+            self.signinprogressmodal = new SigningInProgressModal({
+                                            document : document,
+                                            textcolor : self.model.usebranding() ? self.model.signviewbranding().signviewtextcolour() : undefined,
+                                            textfont : self.model.usebranding() ? self.model.signviewbranding().signviewtextfont() : undefined
+                                       });
+            self.screenshotDone = false;
+            document.takeSigningScreenshot(function() {
+                  self.screenshotDone = true;
+            });
+
+            document.sign(errorCallback, self.signinprogressmodal, function(){self.stopBlockingReload();}).addMany(p).sendAjax();
+
+        }, errorCallback).addMany(p).send();
+
         }, bankSignExtraOpt);
       return false;
 
@@ -88,6 +118,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   },
   createSignButtonElems: function() {
     var document = this.document();
+    var signviewbranding = this.model.signviewbranding();
     var guardModel = this.guardModel;
     var self = this;
     return new Button({
@@ -98,26 +129,44 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       text: localization.process.signbuttontext,
       oneClick : true,
       onClick: function() {
-        var f = function() {
-          if (!self.screenshotDone) {
-            setTimeout(f, 100);
-            return false;
-          }
-          trackTimeout('Accept', {'Accept' : 'sign document'});
-          var errorCallback = function(xhr) {
+        self.startBlockingReload();
+        var errorCallback = function(xhr) {
+            self.stopBlockingReload();
+            if (self.confirmation != undefined)         self.confirmation.clear();
+            if (self.signinprogressmodal != undefined) self.signinprogressmodal.close();
             if (xhr.status == 403) {
               // session timed out
               ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
             } else {
-              new FlashMessage({content: localization.signviewSigningFailed,
-                                color: 'red',
-                                withReload: true});
+              self.openSigningFailedAndReloadModal();
             }
-          };
-          document.sign(errorCallback).send();
         };
-        f();
-        return false;
+
+
+        document.checksign(function() {
+          self.confirmation.clear();
+          self.signinprogressmodal = new SigningInProgressModal({
+                                          document : document,
+                                          textcolor : self.model.usebranding() ? self.model.signviewbranding().signviewtextcolour() : undefined,
+                                          textfont : self.model.usebranding() ? self.model.signviewbranding().signviewtextfont() : undefined
+                                     });
+          self.screenshotDone = false;
+          document.takeSigningScreenshot(function() {
+                self.screenshotDone = true;
+          });
+          var f = function() {
+            if (!self.screenshotDone) {
+              setTimeout(f, 100);
+              return false;
+            }
+            trackTimeout('Accept', {'Accept' : 'sign document'});
+
+
+            document.sign(errorCallback,self.signinprogressmodal,function(){self.stopBlockingReload();}).send();
+          };
+          f();
+      }, errorCallback).send();
+      return false;
       }
     }).el().css('margin-top', '-10px')
               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px' : '0px');
@@ -184,14 +233,10 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       title = localization.process.signatorysignmodaltitle;
     }
 
-    var confirmation = Confirmation.popup({
+    self.confirmation = new Confirmation({
       cssClass: 'grey',
       title: title,
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
-      onRender: function() {
-        document.takeSigningScreenshot(function() {
-          self.screenshotDone = true;
-        });},
       rejectText: localization.cancel,
       width: signatory.elegAuthentication() ? (800) : (BrowserInfo.isSmallScreen() ? 825 : 520),
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
@@ -207,9 +252,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       modalHeader.remove();
 
       // Set up close button
-      // localization.process.goback is a shared translation
-      var close = $('<a class="small-device-go-back-button">' + localization.process.goback + '</a>');
-      close.click(function() { confirmation.close(); });
+      var close = $('<a class="small-device-go-back-button">' + localization.process.cancel + '</a>');
+      close.click(function() { self.confirmation.close(); });
 
       // Remove the modal footer but keep the button
       var modalFooter = $('.modal-container .modal-footer');

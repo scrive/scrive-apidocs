@@ -173,7 +173,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                          }
                                      });
                                  } else if( signatory.mobileDelivery()) {
-                                     Confirmation.popup({
+                                     new Confirmation({
                                          title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
                                          content: $("<div>").text(localization.reminder.mobileQuestion),
                                          acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
@@ -193,7 +193,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                          }
                                      });
                                  } else if( signatory.emailMobileDelivery()) {
-                                     Confirmation.popup({
+                                     new Confirmation({
                                          title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
                                          content: $("<div>").text(localization.reminder.emailMobileQuestion),
                                          acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
@@ -299,7 +299,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                             onClick: function() {
                                  mixpanel.track('Click give for signing',
                                                 {'Signatory index':signatory.signIndex()});
-                                     Confirmation.popup({
+                                     new Confirmation({
                                             title : localization.pad.signingOnSameDeviceConfirmHeader,
                                             content : localization.pad.signingOnSameDeviceConfirmText,
                                             acceptText : localization.pad.signingOnSameDevice ,
@@ -350,7 +350,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                     onClick: function() {
                          mixpanel.track('Click add to pad queue',
                                         {'Signatory index':signatory.signIndex()});
-                             Confirmation.popup({
+                             new Confirmation({
                                     title : localization.pad.addToPadQueueConfirmHeader,
                                     content : localization.pad.addToPadQueueConfirmText,
                                     acceptText : localization.pad.addToPadQueue ,

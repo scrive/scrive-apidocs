@@ -48,7 +48,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
             body.append(table);
 
 
-            var popup = Confirmation.popup({
+            var popup = new Confirmation({
               onAccept : function() {
 
                  var callback = function(t,e,v) {   e.css("border-color", "red"); };
@@ -148,7 +148,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                               icon.addClass("remind").addClass("icon").css("margin-top","3px");
 
                               var popupResendConfirmation = function() {
-                                var popup = Confirmation.popup({
+                                var popup = new Confirmation({
                                   onAccept: function() {
                                      mixpanel.track('Click resend confirmation');
                                       var submit = new Submit({
@@ -188,7 +188,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                     var text = localization.account.companyAccounts.deleteModalBody + self.userFullName(user) + "?";
                                     var content = jQuery("<p/>").text(text);
                                     console.log("text: " + text);
-                                    var popup = Confirmation.popup({
+                                    var popup = new Confirmation({
                                       onAccept: function() {
                                         mixpanel.track('Click delete user');
                                         var submit = new Submit({

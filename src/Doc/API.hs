@@ -114,6 +114,7 @@ versionedAPI _version = choice [
   dir "ready"              $ hPostAllowHttp $ toK1 $ apiCallReady,
   dir "cancel"             $ hPost $ toK1 $ apiCallCancel,
   dir "reject"             $ hPost $ toK2 $ apiCallReject,
+  dir "checksign"          $ hPost $ toK2 $ apiCallCheckSign,
   dir "sign"               $ hPost $ toK2 $ apiCallSign,
 
   dir "restart"            $ hPost $ toK1 $ apiCallRestart,
@@ -360,16 +361,7 @@ apiCallCancel did =  api $ do
 apiCallReject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
 apiCallReject did slid = api $ do
   checkObjectVersionIfProvided did
-  (mh,mu) <- do
-    mh' <- dbQuery $ GetDocumentSessionToken slid
-    case mh' of
-      Just mh'' ->  return (mh'',Nothing)
-      Nothing -> do
-         (user, _ , _) <- getAPIUser APIPersonal
-         mh'' <- getMagicHashForDocumentSignatoryWithUser  did slid user
-         case mh'' of
-           Nothing -> throwIO . SomeKontraException $ serverError "Magic hash for signatory was not provided"
-           Just mh''' -> return (mh''',Just user)
+  (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     ctx <- getContext
     Just sll <- getSigLinkFor slid <$> theDocument
@@ -383,6 +375,39 @@ apiCallReject did slid = api $ do
     Accepted <$> (documentJSON mu False True True Nothing Nothing =<< theDocument)
 
 
+apiCallCheckSign :: Kontrakcja m
+             => DocumentID      -- ^ The DocumentID of the document to sign
+             -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
+             -> m Response
+apiCallCheckSign did slid = api $ do
+  checkObjectVersionIfProvided did
+  Log.debug $ "Checking if we can sign a document"
+  (mh,_) <- getMagicHashAndUserForSignatoryAction did slid
+  Log.debug "We have magic hash for this operation"
+  fields <- getFieldForSigning
+  mprovider <- readField "eleg"
+  doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+  when (not $ isPending doc)
+    (throwIO . SomeKontraException $ conflictError $ "Document not pending")
+  when (isJust $ join $ maybesigninfo <$> getSigLinkFor slid doc)
+    (throwIO . SomeKontraException $ conflictError $ "Document already signed")
+  withDocument doc $ do
+     case mprovider of
+       Just provider -> do
+                  transactionid <- getDataFnM $ look "transactionid"
+                  esigninfo <- case provider of
+                      MobileBankIDProvider -> BankID.verifySignatureAndGetSignInfoMobile did slid mh fields transactionid
+                      _ -> do
+                            signature <- getDataFnM $ look "signature"
+                            BankID.verifySignatureAndGetSignInfo slid mh fields provider signature transactionid
+                  case esigninfo of
+                        BankID.Sign _ -> return $ Right $ Ok ()
+                        BankID.Mismatch (onname,onnumber) _ -> do
+                          (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
+                        _ -> throwIO . SomeKontraException $ badInput $ "Document already signed"
+       _ -> return $ Right $ Ok ()
+
+
 apiCallSign :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
@@ -390,33 +415,10 @@ apiCallSign :: Kontrakcja m
 apiCallSign  did slid = api $ do
   checkObjectVersionIfProvided did
   Log.debug $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
-  (mh,mu) <- do
-    mh' <- dbQuery $ GetDocumentSessionToken slid
-    case mh' of
-      Just mh'' ->  return (mh'',Nothing)
-      Nothing -> do
-         (user, _ , _) <- getAPIUser APIPersonal
-         Log.debug $ "User is " ++ show user
-         mh'' <- getMagicHashForDocumentSignatoryWithUser  did slid user
-         case mh'' of
-           Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
-           Just mh''' -> return (mh''',Just $ user)
+  (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   Log.debug "We have magic hash for this operation"
   screenshots <- fromMaybe emptySignatoryScreenshots <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
-  fields <- do
-      eFieldsJSON <- getFieldJSON "fields"
-      case eFieldsJSON of
-           Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
-           Just fieldsJSON -> do
-             mvalues <- withJSValue fieldsJSON $ fromJSValueCustomMany $ do
-                  ft <- fromJSValueM
-                  val <- fromJSValueField "value"
-                  return $ case (ft,val) of
-                            (Just ft', Just val') -> Just (ft',val')
-                            _ -> Nothing
-             case mvalues of
-               Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
-               Just values -> return values
+  fields <- getFieldForSigning
   mprovider <- readField "eleg"
   Log.debug $ "All parameters read and parsed"
 
@@ -805,17 +807,7 @@ apiCallSetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -
 apiCallSetSignatoryAttachment did sid aname = api $ do
   checkObjectVersionIfProvided did
   Log.debug $ "Setting signatory attachments" ++ show did ++ " for signatory " ++ show sid ++ " name " ++ aname
-  (mh,mu) <- do
-    mh' <- dbQuery $ GetDocumentSessionToken sid
-    case mh' of
-      Just mh'' ->  return (mh'',Nothing)
-      Nothing -> do
-         (user, _ , _) <- getAPIUser APIPersonal
-         Log.debug $ "User is " ++ show user
-         mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
-         case mh'' of
-           Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
-           Just mh''' -> return (mh''',Just $ user)
+  (mh,mu) <- getMagicHashAndUserForSignatoryAction did sid
   Log.debug "We are authorized to set signatory attachment"
   -- We check permission here - because we are able to get a valid magichash here
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
@@ -860,3 +852,36 @@ checkObjectVersionIfProvidedAndThrowError did err = do
                       `catchKontra` (\DocumentObjectVersionDoesNotMatch -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
         Nothing -> return ()
     throwIO . SomeKontraException $ err
+
+
+-- Utils
+
+getMagicHashAndUserForSignatoryAction :: (Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m (MagicHash,Maybe User)
+getMagicHashAndUserForSignatoryAction did sid = do
+    mh' <- dbQuery $ GetDocumentSessionToken sid
+    case mh' of
+      Just mh'' ->  return (mh'',Nothing)
+      Nothing -> do
+         (user, _ , _) <- getAPIUser APIPersonal
+         Log.debug $ "User is " ++ show user
+         mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
+         case mh'' of
+           Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
+           Just mh''' -> return (mh''',Just $ user)
+
+
+getFieldForSigning ::(Kontrakcja m) => m [(FieldType,String)]
+getFieldForSigning = do
+      eFieldsJSON <- getFieldJSON "fields"
+      case eFieldsJSON of
+           Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
+           Just fieldsJSON -> do
+             mvalues <- withJSValue fieldsJSON $ fromJSValueCustomMany $ do
+                  ft <- fromJSValueM
+                  val <- fromJSValueField "value"
+                  return $ case (ft,val) of
+                            (Just ft', Just val') -> Just (ft',val')
+                            _ -> Nothing
+             case mvalues of
+               Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
+               Just values -> return values

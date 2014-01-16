@@ -734,3 +734,129 @@
     }
   }
 }
+
+
+// Post sign view modal
+.post-sign-modal-content {
+  font-size: 14px;
+
+  strong {
+    font-weight: 600;
+  }
+
+  .small-screen {
+
+    strong {
+      font-weight: 400;
+    }
+
+    &.modal-container {
+
+      &:after {
+        border-width: 20px;
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      background-color: transparent;
+      border: none;
+
+      .modal-title {
+        font-size: 64px !important; // JS is setting this on the element, therfore the !important
+        line-height: 1;
+        margin-top: 40px;
+        text-align: center;
+      }
+    }
+
+    .left-container {
+      display: none;
+    }
+
+    .title {
+      font-size: 48px;
+      line-height: 72px;
+    }
+
+    .spinner-checkbox-list {
+      padding-top: 66px;
+
+      li {
+        font-size: 48px;
+        font-weight: 400;
+        line-height: 72px;
+        padding-bottom: 9px;
+        padding-left: 92px;
+
+        .spinner {
+          left: 23px;
+          top: 33px;
+        }
+      }
+
+      .checkmark {
+        background-image: url(~"@{img-base-url}/shared-58x58.png");
+      }
+    }
+
+    .right-container {
+      float: left;
+      width: auto;
+    }
+
+    .modal-footer {
+      display: none;
+    }
+  }
+
+  .title {
+    line-height: 1.45;
+    margin-top: 3px !important; // Ovveride ".modal-content .body p"
+  }
+
+  .img-doc {
+    border: 1px solid #d9d9d9; // TODO(johan.nilo): Change border color to use a variable
+    width: 117px;
+  }
+
+  .left-container {
+    float: left;
+    width: 146px;
+  }
+
+  .right-container {
+    float: right;
+    width: 290px;
+  }
+
+  .spinner-checkbox-list {
+    margin-left: 27px;
+    padding-top: 2px;
+
+    li {
+      font-weight: 600;
+      line-height: 1.9;
+      padding-left: 22px;
+      position: relative;
+
+      .spinner {
+        left: 6px;
+        position: absolute !important; // Override spinner default set by js
+        top: 13px;
+
+        .ie7 & {
+          top: 8px;
+        }
+      }
+    }
+
+    .checkmark {
+      background: url(~"@{img-base-url}/shared.png") no-repeat 0 7px;
+    }
+  }
+
+  .clearfix {
+    width: 100%; // Without the width the clerfix will not work on IE7 in this case
+  }
+}

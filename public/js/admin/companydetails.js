@@ -212,7 +212,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
                     }
                   });
       var label = $("<label> Company ID: <label>").append(input.el()).append(nameBox);
-      var popup = Confirmation.popup({
+      new Confirmation({
         title : "Merge this company to different company",
         acceptText: "Merge",
         content : label,
