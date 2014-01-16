@@ -403,6 +403,7 @@ var DocumentSignViewView = Backbone.View.extend({
         var view = this;
         this.model.bind('change', this.render);
         this.model.view = this;
+        view.model.document().setReferenceScreenshot("standard");
         this.prerender();
         this.render();
     },

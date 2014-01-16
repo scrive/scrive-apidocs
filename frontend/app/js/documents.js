@@ -160,6 +160,12 @@ window.Document = Backbone.Model.extend({
            this.trigger('change:daystoremind');
 
     },
+    setReferenceScreenshot: function(d) {
+      this.get("screenshots").reference = d;
+    },
+    hasReferenceScreenshot : function() {
+      return this.get("screenshots").reference != undefined;
+    },
     infotext: function() {
         return this.get("infotext");
     },
@@ -243,7 +249,8 @@ window.Document = Backbone.Model.extend({
         }
         window.takeScreenshot(
             function(canvas) {
-                var shot = [ new Date().toISOString(), canvas.toDataURL("image/jpeg",0.7) ];
+                var shot = { "time" : new Date().toISOString(),
+                             "image": canvas.toDataURL("image/jpeg",0.7) };
                 if (first)
                     document.get("screenshots").first = shot;
                 else

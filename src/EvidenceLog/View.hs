@@ -258,8 +258,8 @@ evidenceOfIntentHTML title l = do
   renderTemplate "evidenceOfIntent" $ do
     F.value "documenttitle" title
     let values Nothing = return ()
-        values (Just (t,s)) = do
-          F.value "time" $ formatMinutesTimeUTC t ++ " UTC"
+        values (Just s) = do
+          F.value "time" $ formatMinutesTimeUTC (Screenshot.time s) ++ " UTC"
           F.value "image" $ RFC2397.encode (detectImageMimeType (unBinary (Screenshot.image s)))
                                            (unBinary (Screenshot.image s))
     F.objects "entries" $ for l $ \(sl, entry) -> do
@@ -267,4 +267,4 @@ evidenceOfIntentHTML title l = do
       F.value "ip"         $ show . signipnumber <$> maybesigninfo sl
       F.object "first"     $ values (SignatoryScreenshots.first entry)
       F.object "signing"   $ values (SignatoryScreenshots.signing entry)
-      F.object "reference" $ values (Just (SignatoryScreenshots.reference entry))
+      F.object "reference" $ values (SignatoryScreenshots.getReferenceScreenshot entry)

@@ -34,7 +34,7 @@ import Utils.String
 import Utils.Monad
 import System.FilePath
 import Data.Maybe
-import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
+import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import qualified ELegitimation.Control as BankID
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -82,7 +82,6 @@ import Data.String.Utils (replace)
 import EvidenceLog.Control
 import Control.Exception.Lifted
 import Doc.DocControl
-import Doc.SignatoryScreenshots
 import Doc.Conditions
 import Company.Model
 import Company.CompanyUI
@@ -419,7 +418,9 @@ apiCallSign  did slid = api $ do
   Log.debug $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   Log.debug "We have magic hash for this operation"
-  screenshots <- fromMaybe emptySignatoryScreenshots <$> join <$> fmap fromJSValue <$> getFieldJSON "screenshots"
+  screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
+               (fromJSValue =<<) <$> getFieldJSON "screenshots"
+  screenshots <- resolveReferenceScreenshotNames screenshots'
   fields <- getFieldForSigning
   mprovider <- readField "eleg"
   Log.debug $ "All parameters read and parsed"
@@ -464,7 +465,7 @@ signDocument :: (Kontrakcja m, DocumentMonad m)
              -> MagicHash
              -> [(FieldType, String)]
              -> Maybe SignatureInfo
-             -> SignatoryScreenshots.SignatoryScreenshots
+             -> SignatoryScreenshots
              -> m ()
 signDocument slid mh fields msinfo screenshots = do
   switchLang =<< getLang <$> theDocument
