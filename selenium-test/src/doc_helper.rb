@@ -82,7 +82,7 @@ class DocHelper
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'text-field-placement-setter-field-field-selector')]//div[contains(@class,'select-button')]"}).click
     (@h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']"}).click
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'checkboxTypeSetter-container')]//a[contains(@class,'button-green')]"}).click
+    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-container')]//a[contains(@class,'button-green')]"}).click
 
 # this doesn't work, possibly due to a bug in the Firefox driver:
 # http://code.google.com/p/selenium/issues/detail?id=3729
@@ -178,7 +178,7 @@ class DocHelper
     sleep 2
     # the build server has a really tiny screen where the sendbutton is not always visible, so
     # we do this workaround. otherwise we get an error about the element being out of bounds.
-    @driver.execute_script("$('.sendButton').click()"); 
+    @driver.execute_script("$('.sendButton').click()");
     puts "Final approval modal"
     sleep 1
     acceptStandardModal
