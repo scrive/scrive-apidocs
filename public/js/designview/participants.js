@@ -898,9 +898,9 @@
             var csvname = localization.designview.fullName + "(" + localization.designview.fromCSV + ")";
 
             var input = new InfoTextInput({
-                cssClass: 'design-view-action-participant-details-information-field',
+                cssClass: 'design-view-action-participant-details-information-field ' + (csvfield || sig.author() ? "transparent" : "" ),
                 infotext: csvfield ? csvname : localization.designview.fullName,
-                readonly : csvfield,
+                readonly : csvfield || sig.author(),
                 value: value,
                 onChange: function(val) {
                     var str = val.trim();
@@ -976,9 +976,9 @@
             div.addClass('design-view-action-participant-details-information-field-wrapper');
 
             var input = new InfoTextInput({
-                cssClass: 'design-view-action-participant-details-information-field',
+                cssClass: 'design-view-action-participant-details-information-field ' + (csvfield || field.isAuthorUnchangeableField() ? "transparent" : ""),
                 infotext: csvfield ? csvname : (placeholder || name),
-                readonly : csvfield,
+                readonly : csvfield || field.isAuthorUnchangeableField(),
                 value:  value,
                 onChange: function(val) {
                     if(typeof val === 'string')

@@ -152,7 +152,8 @@ var InfoTextInputView = Backbone.View.extend({
                           .attr("type",model.inputtype())
                           .attr("autocomplete",model.autocompleate ? "on" : "off")
                           .attr("style",model.inputStyle())
-                          .attr("readonly",model.readonly() ? "true" : undefined);
+                          .attr("readonly",model.readonly() ? "true" : undefined)
+                          .attr("disabled",model.readonly() ? "true" : undefined);
         if (!BrowserInfo.isIE9orLower())
           this.input.attr("placeholder",model.infotext());
 
@@ -160,6 +161,7 @@ var InfoTextInputView = Backbone.View.extend({
         //Wrapper with extra styles
         $(this.el).attr("style", model.style())
                   .addClass(model.cssClass())
+                  .toggleClass("readonly",model.readonly() == true)
                   .append(this.input);
 
         // Remove (x) icon in top left corner

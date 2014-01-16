@@ -1,13 +1,32 @@
 .info-text-input{
-  background: none repeat scroll 0 0 @white;
+  &:not(transparent) {
+    background: none repeat scroll 0 0 @white;
+  }
   border: 1px solid #dddddd;
   display : inline-block;
   font-size: 16px;
   line-height: 21px;
   padding: 5px;
-  
-  &:focus, &:hover {
+
+  &.readonly {
+    color: @disabled-grey-background;
+    cursor: default;
+
+    input {
+      cursor: default;
+    }
+  }
+
+  &:focus:not(.readonly), &:hover:not(.readonly) {
     border-color: #7a94b8;
+  }
+
+  &.transparent {
+    background-color: transparent;
+
+    input {
+      background-color: transparent;
+    }
   }
 
   input {
@@ -15,7 +34,7 @@
     font-weight: 300;
     height: 30px;
     line-height: 21px;
-    padding: 0px;  
+    padding: 0px;
     width: 100%;
   }
 

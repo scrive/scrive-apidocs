@@ -377,6 +377,9 @@ javascriptLocalisation =
              , partOf : "$_partOf()$"
              , preparingDocumentFor : "$_preparingDocumentFor()$"
              , fieldWithSameNameExists : "$_fieldWithSameNameExists()$"
+             , emailCanBeChangedInAccountSection : "$_emailCanBeChangedInAccountSection()$"
+             , nameCanBeChangedInAccountSection : "$_nameCanBeChangedInAccountSection()$"
+
            }
 
          , validation : {

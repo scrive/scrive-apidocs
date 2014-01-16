@@ -303,7 +303,7 @@ th.editSignatoryAttachmentTDRemove {
   z-index: 1001;
 }
 
-.checkboxTypeSetter-container {
+.fieldTypeSetter-container {
   color: #666;
   font: 13px "Helvetica Neue";
   position: absolute;
@@ -315,19 +315,27 @@ th.editSignatoryAttachmentTDRemove {
   }
 
   .title {
+    padding: 12px 0px 10px 0px;
     color: #222222;
     font-size: 15px;
     font-weight: bold;
     letter-spacing: 1px;
-    margin-bottom: 18px;
-    margin-top: 10px;
   }
 
   .subtitle {
-    color: #222222;
-    font-size: 15px;
-    margin-bottom: 2px;
+    color: @gray-70-percent;
+    font-size: 14px;
+    font-weight: 500;
   }
+
+  .microcopy {
+    color: @gray-50-percent;
+    font-size: 12px;
+    font-weight : 300;
+    padding-bottom: 12px;
+    width: 220px;
+  }
+
 
   .help {
     font-size: 9px;
@@ -335,10 +343,17 @@ th.editSignatoryAttachmentTDRemove {
     width: 180px;
   }
 
-  .checkboxTypeSetter-body {
+  .fieldTypeSetter-body {
     background: @white;
     margin: 5px;
-    padding: 5px 10px 7px;
+    padding: 0px 10px 0px 10px;
+    position: relative;
+    z-index: 107;
+  }
+
+  .fieldTypeSetter-button {
+    margin-top: 8px;
+    margin-bottom : 10px;
     position: relative;
     z-index: 107;
   }
@@ -358,7 +373,7 @@ th.editSignatoryAttachmentTDRemove {
     z-index: 105;
   }
 
-  .checkboxTypeSetter-arrow {
+  .fieldTypeSetter-arrow {
     background: url(~"@{img-base-url}/tooltip-arrow.png");
     height: 33px;
     left: -17px;
@@ -368,11 +383,9 @@ th.editSignatoryAttachmentTDRemove {
     z-index: 105;
   }
 
-  .checkboxTypeSetter-option{
+  .fieldTypeSetter-option{
     font-size: small;
-    height: 26px;
-    margin-bottom: 3px;
-    margin-top: 3px;
+    height: 14px;
     text-align: left;
     z-index: 200;
 

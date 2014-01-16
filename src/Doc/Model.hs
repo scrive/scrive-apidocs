@@ -2318,6 +2318,7 @@ instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool wher
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
     ]
 
+
 data GetDocsSentBetween = GetDocsSentBetween UserID MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocsSentBetween Int where
   query (GetDocsSentBetween uid start end) = do

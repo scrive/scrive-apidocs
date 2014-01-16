@@ -356,7 +356,7 @@ var TextTypeSetterView = Backbone.View.extend({
         if(name === 'sigpersnr' && sig.needsPersonalNumber())
             optionOptions = _.without(optionOptions, 'optional');
 
-        return $("<div style='display:block;margin-top:4px;'/>").append(
+        return $("<div style='display:block;margin-bottom:5px;'/>").append(
           new FieldOptionsView({
               model: this.model.field(),
               extraClass: 'typesetter-obligatory-option',
@@ -414,7 +414,6 @@ var TextTypeSetterView = Backbone.View.extend({
         div.text(fname + ' ' + localization.designview.requestedFrom);
         div.append($('<br/>'));
         div.append(document.createTextNode(sname));
-
         return div;
     },
     doneOption : function() {
@@ -423,7 +422,7 @@ var TextTypeSetterView = Backbone.View.extend({
         return new Button({color:"green",
                             size: "tiny",
                             text: localization.designview.textFields.done,
-                            style: "position: relative;  z-index: 107;margin-top: 4px;",
+                            cssClass : "fieldTypeSetter-button",
                             onClick : function() {
                                 var done = field.name() != undefined && field.name() != "";
                                 done = done && _.all(field.signatory().fields(), function(f) {
@@ -457,15 +456,25 @@ var TextTypeSetterView = Backbone.View.extend({
 
         if(placement.step() === 'edit' && field.name()) {
 
-            container.addClass("checkboxTypeSetter-container");
+            container.addClass("fieldTypeSetter-container");
             container.css("position", "absolute");
-            var body = $("<div class='checkboxTypeSetter-body'/>");
-            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+            var body = $("<div class='fieldTypeSetter-body'/>");
+            var arrow = $("<div class='fieldTypeSetter-arrow'/>");
 
 
             body.append(this.title());
 
-            body.append(this.obligatoryOption());
+            if (field.isAuthorUnchangeableField()) {
+              var text = "";
+              if (field.isEmail())
+                text = localization.designview.emailCanBeChangedInAccountSection;
+              else if (field.isFstName() || field.isSndName())
+                text = localization.designview.nameCanBeChangedInAccountSection;
+              body.append($("<div class='microcopy'/>").text(text));
+            }
+
+            if (!field.isAuthorUnchangeableField())
+              body.append(this.obligatoryOption());
             body.append(this.placementOptions());
 
 
@@ -933,7 +942,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         } else if(field.noName()) {
             place.append(this.fieldNamer());
             place.find('input').focus();
-        } else if(view.hasTypeSetter() && !field.isCsvField()) {
+        } else if(view.hasTypeSetter() && !field.isCsvField() && !field.isAuthorUnchangeableField()) {
             var editor = this.editor();
             place.append(editor.el());
             editor.focus(); // We need to focus when element is appended;
@@ -1078,13 +1087,13 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         });
 
         box.text(localization.designview.textFields.forThis + " ");
-        box.append(selector.el());
+        box.append($("<div style='margin-top:5px;margin-bottom:10px;'>").append(selector.el()));
 
         return box;
     },
     obligatoryOption : function() {
 
-        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
+        var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
         var checkbox = $("<div class='checkbox'>");
         var label = $("<label/>").text(localization.designview.checkboxes.obligatory);
         var field = this.model.field();
@@ -1110,7 +1119,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         return option;
     },
     precheckedOption: function() {
-        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
+        var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
         var checkbox = $("<div class='checkbox'>");
         var label = $("<label/>").text(localization.designview.checkboxes.prechecked);
         var field = this.model.field();
@@ -1141,7 +1150,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         return new Button({color:"green",
                             size: "tiny",
                             text: localization.designview.checkboxes.done,
-                            style: "position: relative;  z-index: 107;margin-top: 4px;",
+                            cssClass : "fieldTypeSetter-button",
                             onClick : function() {
 
                                 var done = field.name() != undefined && field.name() != "";
@@ -1180,17 +1189,17 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            var view = this;
            var container = $(this.el);
            container.empty();
-           container.addClass("checkboxTypeSetter-container");
+           container.addClass("fieldTypeSetter-container");
            container.css("position", "absolute");
-           var body = $("<div class='checkboxTypeSetter-body'/>");
-           var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+           var body = $("<div class='fieldTypeSetter-body'/>");
+           var arrow = $("<div class='fieldTypeSetter-arrow'/>");
            container.append(arrow);
            container.append(body);
 
            body.append(this.title());
            body.append(this.selector());
            body.append(this.precheckedOption());
-           body.append(this.obligatoryOption());
+           body.append(this.obligatoryOption().css(style='margin-top','5px'));
 
            body.append(this.doneOption());
            this.place();
@@ -1468,7 +1477,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
-        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
+        var option = $("<div class='fieldTypeSetter-option checkbox-box'/>");
         var checkbox = $("<div class='checkbox'>");
         var label = $("<label/>").text(localization.designview.textFields.obligatory);
         var field = this.model.field();
@@ -1493,7 +1502,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         return new Button({color:"green",
                             size: "tiny",
                             text: localization.designview.textFields.done,
-                            style: "position: relative;  z-index: 107;margin-top: 4px;",
+                            cssClass : "fieldTypeSetter-button",
                             onClick : function() {
                                 var done = field.name() != undefined && field.name() != "";
                                 done = done && _.all(field.signatory().fields(), function(f) {
@@ -1547,7 +1556,7 @@ var SignatureTypeSetterView = Backbone.View.extend({
         });
 
         box.text(localization.designview.textFields.forThis + " ");
-        box.append(selector.el());
+        box.append($("<div style='margin-top:5px;margin-bottom:10px;'>").append(selector.el()));
 
         return box;
     },
@@ -1561,10 +1570,10 @@ var SignatureTypeSetterView = Backbone.View.extend({
     render: function() {
            var view = this;
            var container = $(this.el);
-           container.addClass("checkboxTypeSetter-container");
+           container.addClass("fieldTypeSetter-container");
            container.css("position", "absolute");
-           var body = $("<div class='checkboxTypeSetter-body'/>");
-           var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+           var body = $("<div class='fieldTypeSetter-body'/>");
+           var arrow = $("<div class='fieldTypeSetter-arrow'/>");
 
            body.append(this.title());
            body.append(this.selector());

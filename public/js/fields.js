@@ -273,6 +273,9 @@ window.Field = Backbone.Model.extend({
     isCsvField : function() {
         return this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.name());
     },
+    isAuthorUnchangeableField :function() {
+        return (this.isFstName() || this.isSndName() || this.isEmail()) && this.signatory().author();
+    },
     csvFieldValues : function() {
        var csv = this.signatory().csv();
        var index = _.indexOf(csv[0],this.name());

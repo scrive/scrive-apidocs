@@ -55,7 +55,7 @@ import User.UserID
 import Data.Maybe
 import Control.Monad
 import DB.SQL2
-import Doc.DocStateData (DocumentStatus(..))
+import Doc.DocStateData (DocumentStatus(..),FieldType(..))
 import Doc.DocumentID
 import Utils.Read
 
@@ -262,9 +262,11 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
 data SetUserEmail = SetUserEmail UserID Email
 instance MonadDB m => DBUpdate m SetUserEmail Bool where
   update (SetUserEmail uid email) = do
-    kRun01 $ SQL ("UPDATE users SET email = ?"
+    res <- kRun01 $ SQL ("UPDATE users SET email = ?"
                   <> " WHERE id = ? AND deleted IS NULL")
              [toSql $ map toLower $ unEmail email, toSql uid]
+    _ <- update $ UpdateDraftsAndTemplatesWithUserData uid
+    return res
 
 data SetUserPassword = SetUserPassword UserID Password
 instance MonadDB m => DBUpdate m SetUserPassword Bool where
@@ -278,7 +280,7 @@ instance MonadDB m => DBUpdate m SetUserPassword Bool where
 data SetUserInfo = SetUserInfo UserID UserInfo
 instance MonadDB m => DBUpdate m SetUserInfo Bool where
   update (SetUserInfo uid info) = do
-    kRun01 $ SQL ("UPDATE users SET"
+    res <- kRun01 $ SQL ("UPDATE users SET"
                   <> "  first_name = ?"
                   <> ", last_name = ?"
                   <> ", personal_number = ?"
@@ -294,6 +296,8 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
              , toSql $ map toLower $ unEmail $ useremail info
              , toSql uid
              ]
+    _ <- update $ UpdateDraftsAndTemplatesWithUserData uid
+    return res
 
 data SetUserSettings = SetUserSettings UserID UserSettings
 instance MonadDB m => DBUpdate m SetUserSettings Bool where
@@ -564,3 +568,35 @@ instance MonadDB m => DBQuery m GetUsersWithCompanies
          , " OFFSET" <?> offset <+> "LIMIT" <?> limit
          ]
     fetchUsersWithCompanies
+
+
+data UpdateDraftsAndTemplatesWithUserData = UpdateDraftsAndTemplatesWithUserData UserID
+instance MonadDB m => DBUpdate m UpdateDraftsAndTemplatesWithUserData () where
+ update (UpdateDraftsAndTemplatesWithUserData userid) = do
+     muser <- query $ GetUserByID userid
+     case muser of
+          Nothing -> return ();
+          Just user -> do
+            -- Update first name
+            kRun_ $ sqlUpdate "signatory_link_fields" $ do
+              sqlSet "value" (userfstname $ userinfo user)
+              sqlWhereEq "type" FirstNameFT
+              whereSignatoryLinkCanBeChanged
+
+            kRun_ $ sqlUpdate "signatory_link_fields" $ do
+              sqlSet "value" (usersndname $ userinfo user)
+              sqlWhereEq "type" LastNameFT
+              whereSignatoryLinkCanBeChanged
+
+            kRun_ $ sqlUpdate "signatory_link_fields" $ do
+              sqlSet "value" (useremail $ userinfo user)
+              sqlWhereEq "type" EmailFT
+              whereSignatoryLinkCanBeChanged
+  where
+    whereSignatoryLinkCanBeChanged =
+      sqlWhereExists $ sqlSelect "documents" $ do
+                              sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+                              sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
+                              sqlWhereEq "documents.status" Preparation
+                              sqlWhereEq "signatory_links.is_author" True
+                              sqlWhereEq "signatory_links.user_id" userid
