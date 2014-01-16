@@ -46,7 +46,7 @@ pageDoYouWantToChangeEmail=
     content.append(jQuery('<p/>').append('$_modalDoYouWantToChangeEmailBody()$'));
     var password_input = jQuery('<input type="password" name="password" autocomplete="off"/>');
     content.append(jQuery('<p/>').append(password_input));
-    Confirmation.popup({onAccept: function() {
+    new Confirmation({onAccept: function() {
                                     new Submit({method: 'POST',
                                                 url: '',
                                                 password: password_input.val()}).send();

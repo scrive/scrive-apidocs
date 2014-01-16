@@ -170,6 +170,8 @@ class DocHelper
     puts "sign the document"
     sleep 1
     click "div.modal-footer a.float-right"
+    sleep 8
+
   end
 
 
