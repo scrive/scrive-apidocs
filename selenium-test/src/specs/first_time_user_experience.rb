@@ -32,7 +32,7 @@ describe "sign up from post sign view and take the first time user experience to
     @h.dochelper.partSign
 
     puts "YYY we should be given the option to save the doc in the archive and create an account"
-    sleep 2
+    sleep 10
     @h.wait_until { @h.driver.find_element :css => "a.button.button-large" }.click
 
     puts "XXX we should now be in archive and click the large green button to accept an offer to send a sample document"
