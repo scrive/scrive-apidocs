@@ -16,7 +16,7 @@
         currentActionIndex : 0,
         done: false,
         canFinish : false
-        }
+        };
     },
     actions: function() {
       return this.get("actions");
@@ -105,6 +105,7 @@
       var self = this;
       var model = this.model;
       self.spinnerCheckboxList.empty();
+      self.spinnerCheckboxList.append("<li class='checkmark' style='display:none'/>"); // We append invisible position - so checkbox is loaded early
       _.each(model.actions(),function(a){
         var spinner = BrowserInfo.isSmallScreen() ? self.spinnerSmallSmallScreen() : self.spinnerSmall();
         var li = $("<li/>").text(a);
