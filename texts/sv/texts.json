@@ -831,6 +831,7 @@
 "_showAnyStatusClass":"Alla statusar",
 "_showDetails":"Visa mer",
 "_sign":"Signera",
+"_signElegFailed":"Vi har problem att hantera din e-legitimation.",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Välj en PDF-fil",
 "_signStepsMenuEmptyStepSaveAsTemplate":"Spara som mall",
 "_signUp":"Skapa konto",

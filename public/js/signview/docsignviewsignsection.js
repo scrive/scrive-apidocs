@@ -76,8 +76,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         if (xhr.status == 403) {
             // session timed out
             ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-        } else if (xhr.status == 400 && data.mismatch){
+        } else if (xhr.status == 400 && data.elegProblem && data.mismatch){
             new FlashMessage({content: self.elegMishmatchErrorMessage(data.onName,data.onNumber),
+                              color: 'red'});
+        } else if (xhr.status == 400 && data.elegProblem){
+            new FlashMessage({content: localization.sign.eleg.failed,
                               color: 'red'});
         } else {
             self.openSigningFailedAndReloadModal();

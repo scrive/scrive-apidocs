@@ -403,8 +403,9 @@ apiCallCheckSign did slid = api $ do
                   case esigninfo of
                         BankID.Sign _ -> return $ Right $ Ok ()
                         BankID.Mismatch (onname,onnumber) _ -> do
-                          (Left . Failed) <$> (runJSONGenT $ value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
-                        _ -> throwIO . SomeKontraException $ badInput $ "Document already signed"
+                          (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True >> value "mismatch" True >> value "onName" onname >> value "onNumber" onnumber)
+                        _ -> do
+                          (Left . Failed) <$> (runJSONGenT $ value "elegProblem" True)
        _ -> return $ Right $ Ok ()
 
 

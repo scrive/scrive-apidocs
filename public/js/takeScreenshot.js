@@ -23,6 +23,7 @@
         function timedout() {
             if (!callbackCalled) {
                 callbackCalled = true;
+                mixpanel.track('Take screenshot failed', {'Reason' : 'Timeout'});
                 timeout();
             }
         };
@@ -31,7 +32,7 @@
             window.setTimeout(timedout, timeoutval);
 
         try {
-           if (!BrowserInfo.isIE8orLower() && !BrowserInfo.isIphone() && !BrowserInfo.isIpad())
+           if (!BrowserInfo.isIE8orLower() && !BrowserInfo.isIphone() && !BrowserInfo.isIpad()) {
               html2canvas( $('body'),
                           { onrendered: function(canvas)
                             {
@@ -48,10 +49,15 @@
                             proxy: null
                           }
                         );
+           }
+           else {
+             mixpanel.track('Take screenshot failed', {'Reason' : 'Not supported browser'});
+           }
         }
         catch(e) {
             if (!callbackCalled) {
                 callbackCalled = true;
+                mixpanel.track('Take screenshot failed', {'Reason' : 'Error'});
                 error(e);
             }
         }

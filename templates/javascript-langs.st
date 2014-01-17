@@ -82,6 +82,7 @@ javascriptLocalisation =
                                    , mobile : {
                                          startingMobileBankID : "$_bankidStartApp()$"
                                    }
+                                   , failed : "$_signElegFailed()$"
                                    , mismatch : {
                                          mismatchOnNameAndNumberCantChange : "$_mismatchOnNameAndNumberCantChange()$"
                                        , mismatchOnNameAndNumberCanChange : "$_mismatchOnNameAndNumberCanChange()$"

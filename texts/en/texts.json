@@ -830,6 +830,7 @@
 "_showAnyStatusClass":"All statuses",
 "_showDetails":"Show more",
 "_sign":"Sign",
+"_signElegFailed":"We're experiencing difficulties handling your eID.",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Open a PDF file",
 "_signStepsMenuEmptyStepSaveAsTemplate":"Save as template",
 "_signUp":"Sign up",
