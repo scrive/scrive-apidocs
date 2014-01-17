@@ -10,11 +10,13 @@
 
 (function(window) {
   var SigningInProgressModalModel = Backbone.Model.extend({
-    defaults : {
-      actions : [localization.signinginprogressmodal.action1,localization.signinginprogressmodal.action2],
-      currentActionIndex : 0,
-      done: false,
-      canFinish : false
+    defaults : function() { // Making defaults a function will allow us to change of localization object
+       return {
+        actions : [localization.signinginprogressmodal.action1,localization.signinginprogressmodal.action2],
+        currentActionIndex : 0,
+        done: false,
+        canFinish : false
+        }
     },
     actions: function() {
       return this.get("actions");

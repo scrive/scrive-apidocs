@@ -225,12 +225,10 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var title;
     self.screenshotDone = false;
 
-    if (signatory.author()) {
-      title = localization.signByAuthor.modalTitle;
-    } else if (signatory.elegAuthentication()) {
+    if (signatory.elegAuthentication()) {
       title = localization.process.signatorysignmodaltitleeleg;
     } else {
-      title = localization.process.signatorysignmodaltitle;
+      title = localization.signByAuthor.modalTitle;
     }
 
     self.confirmation = new Confirmation({
