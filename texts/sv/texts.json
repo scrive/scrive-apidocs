@@ -1,4 +1,4 @@
-{ 
+{
 "_CompanyAccounts":"Användare",
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Är du säker på att du vill skicka en påminnelse till berörda parter för",
@@ -103,7 +103,6 @@
 "_authorParty":"Upphovsman",
 "_authorviewCanceled":"Detta dokument har återkallats",
 "_authorviewClosed":"Dokumentet har förseglats av Scrive",
-"_authorviewFTUEBrand":"Sätt din egna logga och färger på Scrive",
 "_authorviewFTUEBrand":"Sätt dina egna färger och logga på Scrive",
 "_authorviewFTUEContact":"Lär dig mer om Scrive från en expert",
 "_authorviewFTUEContactDetails":"Du har blivit tilldelad Viktor som din expert.<br />Du kan nå honom på 0708 88 47 49 eller via epost <a href='mailto:viktor@scrive.com'>viktor@scrive.com</a>",
