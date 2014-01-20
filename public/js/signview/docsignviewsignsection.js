@@ -262,7 +262,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var signButton = modalFooter.find('.button').detach();
       if (signButton.length == 0) {
         // No sign button means bankid
-        signButton = modalFooter.find('.mbi').addClass("button").detach().prepend('Signera');
+        signButton = modalFooter.find('.mbi').addClass("button button-green").detach().prepend(localization.process.signbuttontext);
         signButton.find('img').remove();
       }
       modalFooter.remove();
