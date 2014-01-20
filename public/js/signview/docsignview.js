@@ -180,6 +180,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       if (this.get("authorattachmentssection") == undefined)
         this.set({'authorattachmentssection' :
                         new DocumentAuthorAttachments({
+                            forSigning: this.document().currentSignatoryCanSign(),
                             document : this.document(),
                             el: $("<div class='section spacing'/>"),
                             title: (this.document().currentSignatory().attachments().length > 1) ?

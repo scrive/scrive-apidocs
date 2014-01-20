@@ -102,7 +102,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   reviewButton: function() {
       var model = this.model;
-      var button = new Button({color: "signview-blue", text: localization.reviewPDF, size:'small', cssClass : 's-review-sigattachment', onClick: function() {
+      var button = new Button({color: "black", text: localization.reviewPDF, size:'small', cssClass : 's-review-sigattachment', onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
           }});
       return button;
