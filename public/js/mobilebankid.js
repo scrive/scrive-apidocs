@@ -4,15 +4,17 @@
 
     // keeps track of the polling state
     window.MobileBankIDPolling = Backbone.Model.extend({
-        defaults: {
+        defaults: function() {
+          return {
+            done : false,
             status: "outstanding",
             message: localization.startingSaveSigning,
-            fetching: false,
             callback: function() {},
             errorcallback: function() {},
             remaining: [10, // wait 10s before first poll
                         3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // then we can poll 20 times with 3s intervals
                         10,10,10,10,10,10,10,10,10] // then we finish with 10s intervals; docs say we get Fault before the end
+          };
         },
         status: function(s) {
             if(s) {
@@ -34,6 +36,12 @@
         },
         keepPolling: function() {
             return this.get("status") === "outstanding" || this.get("status") === "usersign";
+        },
+        done: function() {
+          return this.get("done");
+        },
+        setDone : function() {
+          this.set({"done":true});
         },
         docid: function() {
             return this.get("docid");
@@ -69,11 +77,15 @@
                                    "success": function(d) {
                                        if(d.error) {
                                            polling.status("error");
-                                           polling.errorcallback();
+                                           if (!polling.done()) {
+                                             polling.setDone();
+                                             polling.errorcallback();
+                                           }
                                        } else {
                                            polling.status(d.status);
                                            polling.message(d.message);
-                                           if(polling.status() === "complete") {
+                                           if(polling.status() === "complete" && !polling.done()) {
+                                               polling.setDone();
                                                polling.callback();
                                            }
                                        }
@@ -91,7 +103,10 @@
         },
         render: function() {
             var polling = this.model;
-            LoadingDialog.open(polling.message());
+            if (!pooling.done())
+              LoadingDialog.open(polling.message());
+            else
+              LoadingDialog.close();
         }
     });
 })(window);
