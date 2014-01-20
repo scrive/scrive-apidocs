@@ -158,8 +158,10 @@
       textcolor : args.textcolor,
       textfont : args.textfont,
       content: $(view.el),
-      width: BrowserInfo.isSmallScreen() ? 825 : 520
+      width: BrowserInfo.isSmallScreen() ? 825 : 520,
+      margin : BrowserInfo.isSmallScreen() ? '150px auto 0px' : undefined
     });
+
     model.startActions();
     return {
       close: function() {
