@@ -240,6 +240,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       acceptButton: signatory.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
       width: signatory.elegAuthentication() ? (800) : (BrowserInfo.isSmallScreen() ? 825 : 520),
+      margin : BrowserInfo.isSmallScreen() ? '150px auto 0px' : undefined,
       textcolor : this.model.usebranding() ? signviewbranding.signviewtextcolour() : undefined,
       textfont : this.model.usebranding() ? signviewbranding.signviewtextfont() : undefined,
       content: this.createContentElems
@@ -288,10 +289,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
       $('.modal-container .modal-body').css({'padding-bottom': '50px'});
 
-      $('.modal-container').css({'border-bottom': '0px',
-                                'margin': '0px auto',
-                                'position': 'relative',
-                                'margin-top': '150px'});
+      $('.modal-container').css({'border-bottom': '0px'});
 
       $('.modal-container .modal-body').append(signButton);
       $('.modal-container .modal-body').append(close);

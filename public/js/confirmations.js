@@ -16,7 +16,8 @@ var ConfirmationModel = Backbone.Model.extend({
       cancelVisible : true,
       extraOption : undefined,
       textfont : undefined,
-      textcolor : undefined
+      textcolor : undefined,
+      margin: undefined
   },
   title : function(){
        return this.get("title");
@@ -83,6 +84,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   textcolor: function() {
       return this.get("textcolor");
+  },
+  margin: function() {
+      return this.get("margin");
   },
   setCancelVisible: function(bool) {
       this.set({cancelVisible : bool});
@@ -157,12 +161,22 @@ var ConfirmationView = Backbone.View.extend({
        var view = this;
        var model = this.model;
        this.container = $("<div class='modal-container'/>");
+
+
+
        if(BrowserInfo.isSmallScreen()) this.container.addClass("small-screen");
        this.container.css("top",$(window).scrollTop());
-       this.container.css("margin-top","50px");
        this.container.css("left","0px");
-       var left = Math.floor(($(window).width() - model.width()) / 2);
-       this.container.css("margin-left",left > 20 ? left : 20);
+
+       if (model.margin() != undefined) {
+         this.container.css("margin", model.margin());
+         this.container.css('position','relative');
+       }
+       else {
+        this.container.css("margin-top","50px");
+        var left = Math.floor(($(window).width() - model.width()) / 2);
+        this.container.css("margin-left",left > 20 ? left : 20);
+       }
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
        this.container.width(model.width());
