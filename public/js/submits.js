@@ -56,6 +56,9 @@ window.Submit = Backbone.Model.extend({
         this.set({inputs : this.get("inputs").remove(k)});
         return this;
     },
+    hasFile : function() {
+       return this.get("inputs").filter(":file").size() > 0 || this.get("inputs").find(":file").size() > 0;
+    },
     sendAjax : function(callback,errorcallback) {
         this.set({ajax : true});
         if (callback != undefined)
@@ -68,7 +71,7 @@ window.Submit = Backbone.Model.extend({
         var form = $("<form style='display:hidden'/>");
         form.attr("action", this.get("url"));
         form.attr("method", this.get("method"));
-        if (this.get("method") == "POST")
+        if (this.get("method") == "POST" && this.hasFile())
             form.attr("enctype","multipart/form-data");
         for (var k in this.attributes) {
             var val = this.get(k);
