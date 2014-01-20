@@ -414,6 +414,7 @@ apiCallSign :: Kontrakcja m
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
              -> m Response
 apiCallSign  did slid = api $ do
+  _ <- internalError
   checkObjectVersionIfProvided did
   Log.debug $ "Ready to sign a document " ++ show did ++ " for signatory " ++ show slid
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
