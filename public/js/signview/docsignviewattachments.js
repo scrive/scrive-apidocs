@@ -29,7 +29,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
                     expectedType : "json",
                     url: self.setattachmentURL(),
                     ajax: true,
-                    expectedType : "text",
                     ajaxerror: function(d, a) {
                       attachment.notLoading();
                     },
@@ -84,8 +83,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
               content.append(button.el());
               ScreenBlockingDialog.open({header: content});
           }
-          else if (a === 'parsererror') // file too large
-            new FlashMessage({content: localization.fileTooLarge, color: "red"});
           else
             new FlashMessage({content: localization.couldNotUpload, color: "red"});
           attachment.notLoading();
