@@ -34,7 +34,7 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
   attachmentFile : function(attachment) {
     var container = $("<div class='item' />");
     if (attachment.hasFile()) {
-        var button = new Button({color: "signview-blue", text: localization.reviewPDF, cssClass: 'float-right', size:'small', onClick: function() {
+        var button = new Button({color: "black", text: localization.reviewPDF, cssClass: 'float-right', size:'small', onClick: function() {
                         window.open(attachment.file().downloadLink(), '_blank');
                         }});
         container.append(button.el());

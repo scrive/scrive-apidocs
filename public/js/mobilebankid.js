@@ -99,11 +99,11 @@
     window.MobileBankIDPollingView = Backbone.View.extend({
         initialize: function (args) {
             _.bindAll(this, 'render');
-            this.model.bind('change:message', this.render);
+            this.model.bind('change:message change:done', this.render);
         },
         render: function() {
             var polling = this.model;
-            if (!pooling.done())
+            if (!polling.done())
               LoadingDialog.open(polling.message());
             else
               LoadingDialog.close();

@@ -197,6 +197,7 @@ javascriptLocalisation =
                signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
                signbuttontext: "$_contractsignbuttontext()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
+               mobileBankID: "$_mobileBankID()$",
                remindagainbuttontext: "$_contractremindagainbuttontext()$",
                authorname: "$_contractauthorname()$",
                authorsignatoryname: "$_contractauthorsignatoryname()$",

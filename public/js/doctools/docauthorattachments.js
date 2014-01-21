@@ -8,12 +8,16 @@ var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   defaults : {
      title  : localization.authorAttachmentBoxHeader,
      textcolour : undefined,
-     textfont : undefined
+     textfont : undefined,
+     forSigning : false
   },
   initialize: function (args) {
   },
   document :function() {
      return this.get("document");
+  },
+  forSigning : function() {
+     return this.get("forSigning");
   },
   title : function() {
      return this.get("title");
@@ -46,9 +50,10 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     return container;
   },
   authorAttachmentFile: function(attachment, labelCss) {
+    var model = this.model;
     var container = $("<div class='item' />");
     var buttonSize = 'small';
-    var button = new Button({color: "signview-blue", text: localization.reviewPDF, cssClass: 'float-right', size: buttonSize, onClick: function() {
+    var button = new Button({color: model.forSigning() ? "signview-blue" : "black", text: localization.reviewPDF, cssClass: 'float-right', size: buttonSize, onClick: function() {
                         window.open(attachment.downloadLink(), '_blank');
                         }});
     container.append(button.el());
