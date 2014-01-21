@@ -329,6 +329,10 @@ $if(custombarstextcolour)$
   header.site nav ul.ct li a.page.active  {
     color: $custombarstextcolour$;
   }
+
+  header.site nav ul.ct li a.page:hover  {
+    color: $custombarstextcolour$;
+  }
 $endif$
 
 
