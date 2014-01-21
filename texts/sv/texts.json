@@ -588,6 +588,7 @@
 "_mismatchOnNumberAndCanChange":"Personnumret i dokumentet stämmer inte överens med din e-legitimation.",
 "_mismatchOnNumberAndCantChange":"Personnumret i dokumentet stämmer inte överens med din e-legitimation. Vänligen kontakta avsändaren.",
 "_missingPlacedAuthorFieldValue":"Alla avsändarens fält måste vara ifyllda.",
+"_mobileBankID":"Mobilt BankID",
 "_modalAccountPasswordRequirements":"Minimum 8 tecken. Minst en bokstav och en siffra.",
 "_modalAccountSetupBodyAccept":"Jag har läst och accepterar ",
 "_modalAccountSetupBodyTOS":"Allmänna Villkor",
